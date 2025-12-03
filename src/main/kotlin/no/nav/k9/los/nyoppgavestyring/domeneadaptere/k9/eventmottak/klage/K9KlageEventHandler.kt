@@ -1,23 +1,22 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.klage
 
 import io.opentelemetry.instrumentation.annotations.WithSpan
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.runBlocking
 import no.nav.k9.klage.kodeverk.behandling.oppgavetillos.EventHendelse
-import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.EventHandlerMetrics
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetillos.K9KlageTilLosAdapterTjeneste
-import no.nav.k9.los.nyoppgavestyring.ko.KøpåvirkendeHendelse
-import no.nav.k9.los.nyoppgavestyring.ko.OppgaveHendelseMottatt
-import no.nav.k9.los.nyoppgavestyring.query.db.EksternOppgaveId
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventNøkkel
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventlagerKonverteringsservice
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.EventTilOppgaveAdapter
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.OpentelemetrySpanUtil
+import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
 import org.slf4j.LoggerFactory
 
 
-class K9KlageEventHandler constructor(
+class K9KlageEventHandler (
     private val behandlingProsessEventKlageRepository: K9KlageEventRepository,
-    private val k9KlageTilLosAdapterTjeneste: K9KlageTilLosAdapterTjeneste,
-    private val køpåvirkendeHendelseChannel: Channel<KøpåvirkendeHendelse>,
+    private val transactionalManager: TransactionalManager,
+    private val eventlagerKonverteringsservice: EventlagerKonverteringsservice,
+    private val oppgaveAdapter: EventTilOppgaveAdapter,
 ) {
     private val log = LoggerFactory.getLogger(K9KlageEventHandler::class.java)
 
@@ -32,21 +31,33 @@ class K9KlageEventHandler constructor(
             return
         }
 
-        behandlingProsessEventKlageRepository.lagre(event.eksternId!!) { k9KlageModell ->
-            if (k9KlageModell == null) {
-                return@lagre K9KlageModell(mutableListOf(event))
+        transactionalManager.transaction { tx ->
+            val lås = behandlingProsessEventKlageRepository.hentMedLås(tx, event.eksternId)
+
+            val modell = behandlingProsessEventKlageRepository.lagre(event.eksternId, tx) { k9KlageModell ->
+                if (k9KlageModell == null) {
+                    return@lagre K9KlageModell(mutableListOf(event))
+                }
+                if (k9KlageModell.eventer.contains(event)) {
+                    log.info("""Skipping eventen har kommet tidligere ${event.eventTid}""")
+                    return@lagre k9KlageModell
+                }
+                k9KlageModell.eventer.add(event)
+                k9KlageModell
             }
-            if (k9KlageModell.eventer.contains(event)) {
-                log.info("""Skipping eventen har kommet tidligere ${event.eventTid}""")
-                return@lagre k9KlageModell
+
+            eventlagerKonverteringsservice.konverterEvent(event, tx)
+
+            modell
+        }
+        OpentelemetrySpanUtil.span("k9KlageTilLosAdapterTjeneste.oppdaterOppgaveForBehandlingUuid") {
+            try {
+                oppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(null, Fagsystem.K9KLAGE, event.eksternId.toString()))
+            } catch (e: Exception) {
+                log.error("Oppatering av k9-klage-oppgave feilet for ${event.eksternId}. Oppgaven er ikke oppdatert, men blir plukket av vaktmester", e)
             }
-            k9KlageModell.eventer.add(event)
-            k9KlageModell
         }
-        OpentelemetrySpanUtil.span("k9KlageTilLosAdapterTjeneste.oppdaterOppgaveForBehandlingUuid") { k9KlageTilLosAdapterTjeneste.oppdaterOppgaveForBehandlingUuid(event.eksternId) }
-        runBlocking {
-            køpåvirkendeHendelseChannel.send(OppgaveHendelseMottatt(Fagsystem.K9KLAGE, EksternOppgaveId("K9", event.eksternId.toString())))
-        }
+
         EventHandlerMetrics.observe("k9klage", "gjennomført", t0)
     }
 

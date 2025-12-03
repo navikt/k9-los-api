@@ -160,7 +160,11 @@
       "listetype": false,
       "tolkesSom": "String",
       "visTilBruker": true,
-      "kokriterie": false
+      "kokriterie": false,
+      "kodeverkreferanse": {
+        "område": "K9",
+        "eksternId": "behandlendeEnhet"
+      }
     },
     {
       "id": "ansvarligSaksbehandler",
@@ -559,7 +563,11 @@
       "listetype": false,
       "tolkesSom": "String",
       "visTilBruker": true,
-      "kokriterie": true
+      "kokriterie": true,
+      "kodeverkreferanse": {
+        "område": "K9",
+        "eksternId": "behandlendeEnhet"
+      }
     },
     {
       "id": "fagsakÅr",

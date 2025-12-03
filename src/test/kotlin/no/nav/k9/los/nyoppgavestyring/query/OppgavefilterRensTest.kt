@@ -4,7 +4,6 @@ import assertk.Assert
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import assertk.assertions.support.fail
-import no.nav.k9.los.domene.lager.oppgave.v2.equalsWithPrecision
 import no.nav.k9.los.nyoppgavestyring.FeltType
 import no.nav.k9.los.nyoppgavestyring.felter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.CombineOppgavefilter

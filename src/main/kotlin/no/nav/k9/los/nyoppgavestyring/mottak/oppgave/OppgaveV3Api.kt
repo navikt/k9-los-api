@@ -6,6 +6,7 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.k9.los.Configuration
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.K9Oppgavetypenavn
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.RequestContextService
 import org.koin.ktor.ext.inject
@@ -33,13 +34,14 @@ internal fun Route.OppgaveV3Api() {
         }
     }
 
-    get("/{område}/{eksternId}/{eksternVersjon}") {
+    get("/{område}/{oppgavetype}/{eksternId}/{eksternVersjon}") {
         if (config.nyOppgavestyringRestAktivert()) {
             requestContextService.withRequestContext(call) {
                 call.respond(
                     transactionalManager.transaction { tx ->
                         oppgaveV3Tjeneste.hentOppgaveversjon(
                             område = call.parameters["område"]!!,
+                            oppgavetype = call.parameters["oppgavetype"]!!,
                             eksternId = call.parameters["eksternId"]!!,
                             eksternVersjon = call.parameters["eksternVersjon"]!!,
                             tx = tx

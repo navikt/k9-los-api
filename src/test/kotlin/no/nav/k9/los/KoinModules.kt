@@ -7,14 +7,13 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.runs
 import kotlinx.coroutines.channels.Channel
-import no.nav.k9.los.domene.lager.oppgave.Oppgave
-import no.nav.k9.los.domene.lager.oppgave.v2.BehandlingsmigreringTjeneste
-import no.nav.k9.los.domene.lager.oppgave.v2.OppgaveRepositoryV2
-import no.nav.k9.los.domene.lager.oppgave.v2.OppgaveTjenesteV2
-import no.nav.k9.los.domene.repository.*
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.adhocjobber.reservasjonkonvertering.ReservasjonKonverteringJobb
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.adhocjobber.reservasjonkonvertering.ReservasjonOversetter
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.AvstemmingsTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventRepository
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventlagerKonverteringsjobb
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventlagerKonverteringsservice
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.klage.K9KlageEventHandler
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.klage.K9KlageEventRepository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventHandler
@@ -23,21 +22,28 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEve
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventRepository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.K9TilbakeEventHandler
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.K9TilbakeEventRepository
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.EventTilOppgaveAdapter
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.EventTilOppgaveMapper
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.HistorikkvaskTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.OppgaveOppdatertHandler
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetillos.K9KlageTilLosAdapterTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetillos.KlageEventTilOppgaveMapper
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetillos.beriker.K9KlageBerikerInterfaceKludge
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetillos.beriker.K9KlageBerikerKlientLocal
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.punsjtillos.K9PunsjTilLosAdapterTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.punsjtillos.PunsjEventTilOppgaveMapper
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.K9SakTilLosAdapterTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.beriker.K9SakBerikerInterfaceKludge
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.beriker.K9SakBerikerKlientLocal
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.SakEventTilOppgaveMapper
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.beriker.K9SakSystemKlientInterfaceKludge
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.beriker.K9SakSystemKlientLocal
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.tilbaketillos.K9TilbakeTilLosAdapterTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.tilbaketillos.TilbakeEventTilOppgaveMapper
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.tilbaketillos.k9TilbakeEksternId
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.modia.SakOgBehandlingProducer
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.refreshk9sakoppgaver.RefreshK9v3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.refreshk9sakoppgaver.restklient.IK9SakService
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.refreshk9sakoppgaver.restklient.K9SakServiceLocal
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.*
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.StatistikkRepository
 import no.nav.k9.los.nyoppgavestyring.driftsmelding.DriftsmeldingRepository
 import no.nav.k9.los.nyoppgavestyring.feltutlederforlagring.GyldigeFeltutledere
 import no.nav.k9.los.nyoppgavestyring.forvaltning.ForvaltningRepository
@@ -53,6 +59,8 @@ import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.PdlServiceLocal
 import no.nav.k9.los.nyoppgavestyring.ko.KøpåvirkendeHendelse
 import no.nav.k9.los.nyoppgavestyring.ko.OppgaveKoTjeneste
 import no.nav.k9.los.nyoppgavestyring.ko.db.OppgaveKoRepository
+import no.nav.k9.los.nyoppgavestyring.lagretsok.LagretSøkRepository
+import no.nav.k9.los.nyoppgavestyring.lagretsok.LagretSøkTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
@@ -65,7 +73,10 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeTjeneste
 import no.nav.k9.los.nyoppgavestyring.nyeogferdigstilte.NyeOgFerdigstilteService
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
 import no.nav.k9.los.nyoppgavestyring.query.db.OppgaveQueryRepository
-import no.nav.k9.los.nyoppgavestyring.reservasjon.*
+import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonApisTjeneste
+import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3DtoBuilder
+import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Repository
+import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerAdminTjeneste
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
 import no.nav.k9.los.nyoppgavestyring.sisteoppgaver.SisteOppgaverRepository
@@ -78,15 +89,10 @@ import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.OppgaverGrupp
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.dagenstall.DagensTallService
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.ferdigstilteperenhet.FerdigstiltePerEnhetService
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.status.StatusService
-import no.nav.k9.los.tjenester.avdelingsleder.AvdelingslederTjeneste
-import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.NokkeltallTjeneste
-import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveKøOppdaterer
-import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveTjeneste
-import no.nav.k9.los.tjenester.saksbehandler.oppgave.ReservasjonTjeneste
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.statusfordeling.StatusFordelingService
 import org.koin.core.module.Module
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
-import java.time.LocalDateTime
 import java.util.*
 import javax.sql.DataSource
 
@@ -97,11 +103,8 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     single(named("oppgaveKøOppdatert")) {
         Channel<UUID>(Channel.UNLIMITED)
     }
-    single(named("oppgaveChannel")) {
-        Channel<Oppgave>(Channel.UNLIMITED)
-    }
     single(named("oppgaveRefreshChannel")) {
-        Channel<Oppgave>(Channel.UNLIMITED)
+        Channel<UUID>(Channel.UNLIMITED)
     }
     single(named("KøpåvirkendeHendelseChannel")) {
         Channel<KøpåvirkendeHendelse>(Channel.UNLIMITED)
@@ -132,13 +135,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
 
     single { dataSource }
     single { pepClient }
-    single {
-        OppgaveRepository(
-            dataSource = get(),
-            pepClient = get(),
-            refreshOppgave = get(named("oppgaveRefreshChannel"))
-        )
-    }
+
     single {
         AktivOppgaveRepository(
             oppgavetypeRepository = get()
@@ -146,17 +143,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     }
 
     single { DriftsmeldingRepository(get()) }
-    single { no.nav.k9.los.domene.repository.StatistikkRepository(get()) }
 
-    single {
-        OppgaveKøRepository(
-            dataSource = get(),
-            oppgaveRepositoryV2 = get(),
-            oppgaveKøOppdatert = get(named("oppgaveKøOppdatert")),
-            oppgaveRefreshChannel = get(named("oppgaveRefreshChannel")),
-            pepClient = get()
-        )
-    }
     single {
         SaksbehandlerRepository(
             dataSource = get(),
@@ -167,16 +154,6 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     single {
         GyldigeFeltutledere(
             saksbehandlerRepository = get()
-        )
-    }
-
-    single {
-        ReservasjonRepository(
-            oppgaveKøRepository = get(),
-            oppgaveRepository = get(),
-            oppgaveRepositoryV2 = get(),
-            saksbehandlerRepository = get(),
-            dataSource = get()
         )
     }
 
@@ -199,28 +176,6 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
         ) as IAzureGraphService
     }
 
-    val reservasjonOversetterMock = mockk<ReservasjonOversetter>()
-    every {
-        reservasjonOversetterMock.taNyReservasjonFraGammelKontekst(any(), any(), any(), any(), any())
-    } returns ReservasjonV3(
-        reservertAv = 123,
-        reservasjonsnøkkel = "test1",
-        gyldigFra = LocalDateTime.now(),
-        gyldigTil = LocalDateTime.now().plusDays(1).plusMinutes(1),
-        kommentar = "",
-        endretAv = null
-    )
-    every {
-        reservasjonOversetterMock.hentAktivReservasjonFraGammelKontekst(any())
-    } returns ReservasjonV3(
-        reservertAv = 1,
-        reservasjonsnøkkel = "test1",
-        gyldigFra = LocalDateTime.now(),
-        gyldigTil = LocalDateTime.now().plusDays(1).plusMinutes(1),
-        kommentar = "",
-        endretAv = null
-    )
-
     single {
         ReservasjonKonverteringJobb(
             config = get(),
@@ -231,57 +186,12 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     }
 
     single {
-        OppgaveTjeneste(
-            oppgaveRepository = get(),
-            oppgaverGruppertRepository = get(),
-            oppgaveKøRepository = get(),
-            saksbehandlerRepository = get(),
-            pdlService = get(),
-            reservasjonRepository = get(),
-            configuration = get(),
-            azureGraphService = get(),
-            pepClient = get(),
-            statistikkRepository = get(),
-            reservasjonOversetter = reservasjonOversetterMock,
-            statistikkChannel = get(named("statistikkRefreshChannel")),
-            koinProfile = config.koinProfile(),
-        )
-    }
-
-
-    single {
         ReservasjonOversetter(
-            transactionalManager = get(),
-            oppgaveV3Repository = get(),
-            reservasjonV3Tjeneste = get(),
-            oppgaveV1Repository = get(),
             oppgaveV3RepositoryMedTxWrapper = get(),
         )
     }
 
-    single { OppgaveRepositoryV2(dataSource = get()) }
     single { TransactionalManager(dataSource = get()) }
-    single {
-        OppgaveTjenesteV2(
-            oppgaveRepository = get(),
-            migreringstjeneste = get(),
-            tm = get()
-        )
-    }
-
-    single { BehandlingsmigreringTjeneste(K9SakEventRepository(dataSource = get())) }
-
-    single {
-        NokkeltallTjeneste(
-            pepClient = get(),
-            oppgaverGruppertRepository = get(),
-            oppgaveRepository = get(),
-            statistikkRepository = get(),
-            nøkkeltallRepository = get(),
-            nøkkeltallRepositoryV3 = get(),
-            koinProfile = config.koinProfile(),
-        )
-    }
 
     val sakOgBehadlingProducer = mockk<SakOgBehandlingProducer>()
     every { sakOgBehadlingProducer.behandlingOpprettet(any()) } just runs
@@ -289,89 +199,66 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
 
     single {
         K9SakEventHandler(
-            get(),
             k9SakEventRepository = K9SakEventRepository(dataSource = get()),
             sakOgBehandlingProducer = sakOgBehadlingProducer,
-            oppgaveKøRepository = get(),
-            reservasjonRepository = get(),
-            statistikkChannel = get(named("statistikkRefreshChannel")),
-            statistikkRepository = get(),
-            reservasjonTjeneste = get(),
-            k9SakTilLosAdapterTjeneste = get(),
+            transactionalManager = get(),
+            eventlagerKonverteringsservice = get(),
+            eventTilOppgaveAdapter = get()
         )
     }
 
     single {
         K9KlageEventHandler(
             K9KlageEventRepository(dataSource = get()),
-            k9KlageTilLosAdapterTjeneste = get(),
-            køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
+            transactionalManager = get(),
+            eventlagerKonverteringsservice = get(),
+            oppgaveAdapter = get(),
         )
     }
 
     single {
         K9TilbakeEventHandler(
-            get(),
             K9TilbakeEventRepository(dataSource = get()),
             sakOgBehandlingProducer = sakOgBehadlingProducer,
-            oppgaveKøRepository = get(),
-            reservasjonRepository = get(),
-            statistikkRepository = get(),
-            statistikkChannel = get(named("statistikkRefreshChannel")),
-            reservasjonTjeneste = get(),
-            køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
-            k9TilbakeTilLosAdapterTjeneste = get(),
+            transactionalManager = get(),
+            eventlagerKonverteringsservice = get(),
+            oppgaveAdapter = get(),
         )
     }
 
     single {
         K9PunsjEventHandler(
-            oppgaveRepository = get(),
-            oppgaveTjenesteV2 = get(),
             punsjEventK9Repository = get(),
-            statistikkChannel = get(),
-            reservasjonRepository = get(),
-            oppgaveKøRepository = get(),
-            reservasjonTjeneste = get(),
-            statistikkRepository = get(),
-            azureGraphService = get(),
-            punsjTilLosAdapterTjeneste = get(),
-            køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
+            transactionalManager = get(),
+            eventlagerKonverteringsservice = get(),
+            oppgaveAdapter = get(),
         )
     }
 
     single {
-        ReservasjonTjeneste(
-            reservasjonRepository = get(),
-            saksbehandlerRepository = get()
+        EventlagerKonverteringsjobb(
+            transactionalManager = get(),
+            punsjEventRepository = get(),
+            klageEventRepository = get(),
+            tilbakeEventRepository = get(),
+            sakEventRepository = get(),
+            eventlagerKonverteringsservice = get(),
         )
     }
 
     single {
-        K9PunsjEventHandler(
-            oppgaveRepository = get(),
-            oppgaveTjenesteV2 = get(),
-            punsjEventK9Repository = K9PunsjEventRepository(dataSource = get()),
-            statistikkChannel = get(named("statistikkRefreshChannel")),
-            oppgaveKøRepository = get(),
-            reservasjonRepository = get(),
-            reservasjonTjeneste = get(),
-            statistikkRepository = get(),
-            azureGraphService = get(),
-            punsjTilLosAdapterTjeneste = get(),
-            køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
+        EventlagerKonverteringsservice(
+            nyttEventrepository = get(),
+            punsjEventRepository = get(),
+            klageEventRepository = get(),
+            tilbakeEventRepository = get(),
+            sakEventRepository = get()
         )
     }
 
-    single { OppgaveKøOppdaterer(get(), get(), get()) }
-
     single {
-        AvdelingslederTjeneste(
-            oppgaveKøRepository = get(),
-            saksbehandlerRepository = get(),
-            oppgaveTjeneste = get(),
-            pepClient = get(),
-            reservasjonV3Tjeneste = get(),
+        EventRepository(
+            dataSource = get(),
         )
     }
 
@@ -381,9 +268,6 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             transactionalManager = get(),
             saksbehandlerRepository = get(),
             oppgaveKøV3Repository = get(),
-
-            oppgaveKøRepository = get(),
-            oppgaveTjeneste = get(),
         )
     }
 
@@ -392,7 +276,9 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     single(createdAtStart = true) {
         OmrådeSetup(
             områdeRepository = get(),
-            feltdefinisjonTjeneste = get()
+            feltdefinisjonTjeneste = get(),
+            oppgavetypeTjeneste = get(),
+            config = get(),
         )
     }
     single { OppgavetypeRepository(dataSource = get(), feltdefinisjonRepository = get(), områdeRepository = get(), gyldigeFeltutledere = get()) }
@@ -410,7 +296,6 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             oppgavetypeRepository = get()
         )
     }
-    single { NøkkeltallRepository(dataSource = get()) }
 
     single { NøkkeltallRepositoryV3(dataSource = get()) }
 
@@ -420,12 +305,10 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
 
     single {
         OppgavestatistikkTjeneste(
-            oppgavetypeRepository = get(),
             statistikkPublisher = get(),
             transactionalManager = get(),
             statistikkRepository = get(),
             pepClient = get(),
-            config = get()
         )
     }
 
@@ -455,17 +338,79 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     }
 
     single {
+        EventRepository(
+            dataSource = get(),
+        )
+    }
+
+    single {
         K9SakEventRepository(
             dataSource = get()
         )
     }
 
     single {
+        EventTilOppgaveAdapter(
+            eventRepository = get(),
+            oppgaveV3Tjeneste = get(),
+            transactionalManager = get(),
+            eventTilOppgaveMapper = get(),
+            oppgaveOppdatertHandler = get()
+        )
+    }
+
+    single {
+        HistorikkvaskTjeneste(
+            eventRepository = get(),
+            oppgaveV3Tjeneste = get(),
+            eventTilOppgaveMapper = get(),
+            transactionalManager = get()
+        )
+    }
+
+    single {
+        EventTilOppgaveMapper(
+            klageEventTilOppgaveMapper = get(),
+            punsjEventTilOppgaveMapper = get(),
+            sakEventTilOppgaveMapper = get(),
+            tilbakeEventTilOppgaveMapper = get()
+        )
+    }
+
+    single {
+        SakEventTilOppgaveMapper(
+            k9SakBerikerKlient = get(),
+        )
+    }
+
+    single {
+        KlageEventTilOppgaveMapper(
+            k9klageBeriker = get()
+        )
+    }
+
+    single {
+        TilbakeEventTilOppgaveMapper()
+    }
+
+    single {
+        PunsjEventTilOppgaveMapper()
+    }
+
+    single {
+        OppgaveOppdatertHandler(
+            oppgaveRepository = get(),
+            reservasjonV3Tjeneste = get(),
+            eventTilOppgaveMapper = get(),
+            pepCacheService = get(),
+            køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
+        )
+    }
+
+    single {
         K9SakTilLosAdapterTjeneste(
             k9SakEventRepository = get(),
-            oppgavetypeTjeneste = get(),
             oppgaveV3Tjeneste = get(),
-            config = get(),
             transactionalManager = get(),
             k9SakBerikerKlient = get(),
             pepCacheService = get(),
@@ -479,19 +424,18 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     single {
         K9TilbakeTilLosAdapterTjeneste(
             behandlingProsessEventTilbakeRepository = K9TilbakeEventRepository(get()),
-            oppgavetypeTjeneste = get(),
             oppgaveV3Tjeneste = get(),
-            config = get(),
             transactionalManager = get(),
             pepCacheService = get(),
             oppgaveRepository = get(),
             reservasjonV3Tjeneste = get(),
             historikkvaskChannel = get(named("historikkvaskChannelK9Tilbake")),
+            køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
         )
     }
 
-    single<K9SakBerikerInterfaceKludge> {
-        K9SakBerikerKlientLocal()
+    single<K9SakSystemKlientInterfaceKludge> {
+        K9SakSystemKlientLocal()
     }
 
     single {
@@ -503,13 +447,10 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     single {
         K9KlageTilLosAdapterTjeneste(
             k9KlageEventRepository = get(),
-            områdeRepository = get(),
-            feltdefinisjonTjeneste = get(),
-            oppgavetypeTjeneste = get(),
             oppgaveV3Tjeneste = get(),
             transactionalManager = get(),
-            config = get(),
             k9klageBeriker = get(),
+            køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
         )
     }
 
@@ -520,12 +461,11 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     single {
         K9PunsjTilLosAdapterTjeneste(
             k9PunsjEventRepository = get(),
-            oppgavetypeTjeneste = get(),
             oppgaveV3Tjeneste = get(),
             reservasjonV3Tjeneste = get(),
-            config = config,
             transactionalManager = get(),
             pepCacheService = get(),
+            køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
         )
     }
 
@@ -539,7 +479,6 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
         ReservasjonV3Tjeneste(
             transactionalManager = get(),
             reservasjonV3Repository = get(),
-            oppgaveV1Repository = get(),
             oppgaveV3Repository = get(),
             pepClient = get(),
             saksbehandlerRepository = get(),
@@ -550,7 +489,6 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     single {
         ReservasjonV3DtoBuilder(
             pdlService = get(),
-            oppgaveTjeneste = get(),
             saksbehandlerRepository = get()
         )
     }
@@ -560,15 +498,10 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             transactionalManager = get(),
             oppgaveKoRepository = get(),
             oppgaveQueryService = get(),
-            oppgaveRepository = get(),
-            oppgaveRepositoryTxWrapper = get(),
             reservasjonV3Tjeneste = get(),
             saksbehandlerRepository = get(),
-            oppgaveTjeneste = get(),
-            reservasjonRepository = get(),
-            pdlService = get(),
             pepClient = get(),
-            statistikkChannel = get(named("statistikkRefreshChannel")),
+            pdlService = get(),
             køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
             feltdefinisjonTjeneste = get(),
         )
@@ -593,14 +526,14 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
 
     single {
         ReservasjonApisTjeneste(
-            oppgaveTjeneste = get(),
-            oppgaveV1Repository = get(),
             saksbehandlerRepository = get(),
             reservasjonV3Tjeneste = get(),
             oppgaveV3Repository = get(),
             transactionalManager = get(),
             reservasjonV3DtoBuilder = get(),
             reservasjonOversetter = get(),
+            pepClient = get(),
+            azureGraphService = get(),
         )
     }
 
@@ -622,6 +555,14 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
         )
     }
 
+    single<AvstemmingsTjeneste> {
+        AvstemmingsTjeneste(
+            oppgaveQueryService = get(),
+            k9SakAvstemmingsklient = get(),
+            k9KlageAvstemmingsklient = get()
+        )
+    }
+
     single {
         RefreshK9v3Tjeneste(
             k9SakService = get(),
@@ -637,8 +578,8 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             queryService = get(),
             oppgaveRepository = get(),
             pdlService = get(),
-            reservasjonV3Tjeneste = get(),
-            saksbehandlerRepository = get()
+            saksbehandlerRepository = get(),
+            pepClient = get(),
         )
     }
 
@@ -672,7 +613,6 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
 
     single {
         FerdigstiltePerEnhetService(
-            enheter = config.enheter(),
             queryService = get()
         )
     }
@@ -680,6 +620,24 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     single {
         NyeOgFerdigstilteService(
             queryService = get()
+        )
+    }
+
+    single {
+        StatusFordelingService(
+            queryService = get()
+        )
+    }
+
+    single<LagretSøkRepository> {
+        LagretSøkRepository(dataSource = get())
+    }
+
+    single<LagretSøkTjeneste> {
+        LagretSøkTjeneste(
+            saksbehandlerRepository = get(),
+            lagretSøkRepository = get(),
+            oppgaveQueryService = get()
         )
     }
 }

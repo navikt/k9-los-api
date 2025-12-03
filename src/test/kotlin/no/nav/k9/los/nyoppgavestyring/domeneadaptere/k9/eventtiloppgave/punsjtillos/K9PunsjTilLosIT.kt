@@ -5,7 +5,7 @@ import assertk.assertions.isNull
 import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.OppgaveTestDataBuilder
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.PunsjEventDtoBuilder
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.PunsjEventDtoBuilder
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.TestSaksbehandler
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventHandler
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.PunsjEventDto
@@ -32,6 +32,7 @@ class K9PunsjTilLosIT : AbstractK9LosIntegrationTest() {
     lateinit var reservasjonApisTjeneste: ReservasjonApisTjeneste
     lateinit var transactionalManager: TransactionalManager
     lateinit var aktivOppgaveRepository: AktivOppgaveRepository
+    lateinit var punsjTilLosAdapterTjeneste: K9PunsjTilLosAdapterTjeneste
 
     @BeforeEach
     fun setup() {
@@ -40,6 +41,7 @@ class K9PunsjTilLosIT : AbstractK9LosIntegrationTest() {
         reservasjonApisTjeneste = get<ReservasjonApisTjeneste>()
         transactionalManager = get<TransactionalManager>()
         aktivOppgaveRepository = get<AktivOppgaveRepository>()
+        punsjTilLosAdapterTjeneste = get<K9PunsjTilLosAdapterTjeneste>()
 
         TestSaksbehandler().init()
         OppgaveTestDataBuilder()
@@ -97,6 +99,8 @@ class K9PunsjTilLosIT : AbstractK9LosIntegrationTest() {
         eventHandler.prosesser(event1)
         eventHandler.prosesser(event2)
         eventHandler.prosesser(event3)
+
+        punsjTilLosAdapterTjeneste.oppdaterOppgaveForEksternId(punsjId)
 
         val aktivOppgave = transactionalManager.transaction { tx -> aktivOppgaveRepository.hentOppgaveForEksternId(tx, EksternOppgaveId("K9", punsjId.toString())) }
         assertThat(aktivOppgave).isNull() //når oppgaven lukkes fjernes den også fra aktiv-tabellene

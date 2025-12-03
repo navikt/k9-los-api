@@ -4,6 +4,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import kotliquery.*
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
+import org.apache.commons.text.similarity.LevenshteinDistance
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.*
@@ -264,7 +265,7 @@ class SaksbehandlerRepository(
 
     fun finnSaksbehandlerIdForIdent(ident: String): Long? {
         return using(sessionOf(dataSource)) { session ->
-            session.transaction { tx->
+            session.transaction { tx ->
                 finnSaksbehandlerIdForIdent(ident, tx)
             }
         }
@@ -285,7 +286,7 @@ class SaksbehandlerRepository(
         val skjermet = pepClient.harTilgangTilKode6()
 
         val saksbehandler = using(sessionOf(dataSource)) {
-            it.transaction {tx->
+            it.transaction { tx ->
                 tx.run(
                     queryOf(
                         "select * from saksbehandler where lower(saksbehandlerid) = lower(:ident) and skjermet = :skjermet",
@@ -333,12 +334,44 @@ class SaksbehandlerRepository(
     }
 
     fun slettSaksbehandler(tx: TransactionalSession, epost: String, skjermet: Boolean) {
+        val saksbehandlerId = tx.run(
+            queryOf(
+                """
+                    select id from saksbehandler where lower(epost) = lower(:epost) and skjermet = :skjermet
+                """.trimIndent(),
+                mapOf("epost" to epost.lowercase(Locale.getDefault()), "skjermet" to skjermet)
+            ).map { row ->
+                row.long("id")
+            }.asSingle
+        )
+
+        if (saksbehandlerId == null) { throw IllegalStateException("Fant ikke saksbehandler med epost $epost") }
+
+        //Sletting av reservasjoner ligger her og ikke i reservasjonV3Repository, siden dette ikke er en del av "vanlig"
+        //saksgang. Tanken var egentlig at reservasjoner og reservasjon_v3_endring ikke skulle slettes.
         tx.run(
             queryOf(
                 """
-                            delete from saksbehandler 
-                            where lower(epost) = lower(:epost) and skjermet = :skjermet""",
-                mapOf("epost" to epost.lowercase(Locale.getDefault()), "skjermet" to skjermet)
+                    delete from reservasjon_v3_endring where endretav = :saksbehandlerId
+                """.trimIndent(),
+                mapOf("saksbehandlerId" to saksbehandlerId)
+            ).asUpdate
+        )
+
+        tx.run(
+            queryOf(
+                """
+                    delete from reservasjon_v3 where reservertav = :saksbehandlerId
+                """.trimIndent(),
+                mapOf("saksbehandlerId" to saksbehandlerId)
+            ).asUpdate
+        )
+
+        tx.run(
+            queryOf(
+                """
+                            delete from saksbehandler where id = :saksbehandlerId""",
+                mapOf("saksbehandlerId" to saksbehandlerId)
             ).asUpdate
         )
     }
@@ -357,6 +390,54 @@ class SaksbehandlerRepository(
             )
         }
         return identer
+    }
+
+    suspend fun sokSaksbehandler(søkestreng: String): Saksbehandler {
+        val alleSaksbehandlere = hentAlleSaksbehandlere()
+
+        fun levenshtein(lhs: CharSequence, rhs: CharSequence): Double {
+            return LevenshteinDistance().apply(lhs, rhs).toDouble()
+        }
+
+        var d = Double.MAX_VALUE
+        var i = -1
+        for ((index, saksbehandler) in alleSaksbehandlere.withIndex()) {
+            if (saksbehandler.brukerIdent == null) {
+                continue
+            }
+            if (saksbehandler.navn != null && saksbehandler.navn!!.lowercase(Locale.getDefault())
+                    .contains(søkestreng, true)
+            ) {
+                i = index
+                break
+            }
+
+            var distance = levenshtein(
+                søkestreng.lowercase(Locale.getDefault()),
+                saksbehandler.brukerIdent!!.lowercase(Locale.getDefault())
+            )
+            if (distance < d) {
+                d = distance
+                i = index
+            }
+            distance = levenshtein(
+                søkestreng.lowercase(Locale.getDefault()),
+                saksbehandler.navn?.lowercase(Locale.getDefault()) ?: ""
+            )
+            if (distance < d) {
+                d = distance
+                i = index
+            }
+            distance = levenshtein(
+                søkestreng.lowercase(Locale.getDefault()),
+                saksbehandler.epost.lowercase(Locale.getDefault())
+            )
+            if (distance < d) {
+                d = distance
+                i = index
+            }
+        }
+        return alleSaksbehandlere[i]
     }
 
     fun hentAlleSaksbehandlereEkskluderKode6(): List<Saksbehandler> {

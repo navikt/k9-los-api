@@ -1,7 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.infrastruktur.abac
 
 import kotlinx.coroutines.runBlocking
-import no.nav.k9.los.domene.lager.oppgave.Oppgave
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.audit.K9Auditlogger
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.azuregraph.IAzureGraphService
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.idToken
@@ -9,6 +8,8 @@ import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.Saksbehandler
 import no.nav.sif.abac.kontrakt.abac.Diskresjonskode
 import no.nav.sif.abac.kontrakt.abac.dto.SaksnummerDto
 import no.nav.sif.abac.kontrakt.person.AktørId
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import java.util.*
 import kotlin.coroutines.coroutineContext
 
@@ -17,6 +18,7 @@ class PepClient(
     private val k9Auditlogger: K9Auditlogger,
     private val sifAbacPdpKlient: ISifAbacPdpKlient
 ) : IPepClient {
+    private val log: Logger = LoggerFactory.getLogger(PepClient::class.java)
 
     override suspend fun erOppgaveStyrer(): Boolean {
         //TODO inline metode
@@ -40,7 +42,7 @@ class PepClient(
 
     override suspend fun harTilgangTilKode6(ident: String): Boolean {
         if (ident == coroutineContext.idToken().getNavIdent()) {
-            return harTilgangTilKode6();
+            return harTilgangTilKode6()
         }
         val grupper = azureGraphService.hentGrupperForSaksbehandler(ident)
         return grupper.contains(UUID.fromString(System.getenv("BRUKER_GRUPPE_ID_KODE6")))
@@ -79,36 +81,21 @@ class PepClient(
         return diskresjonskoder.contains(Diskresjonskode.KODE7) || diskresjonskoder.contains(Diskresjonskode.SKJERMET)
     }
 
-    override suspend fun harTilgangTilOppgave(oppgave: Oppgave): Boolean {
-        val oppgavetype = if (oppgave.behandlingType.gjelderPunsj()) {
-            "k9punsj"
-        } else {
-            "k9sak"
-        }
-        return harTilgang(
-            oppgavetype,
-            azureGraphService.hentIdentTilInnloggetBruker(),
-            Action.read,
-            oppgave.fagsakSaksnummer,
-            oppgave.aktorId,
-            oppgave.pleietrengendeAktørId,
-            Auditlogging.IKKE_LOGG
-        )
-    }
-
     override suspend fun harTilgangTilOppgaveV3(
         oppgave: no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave,
         action: Action,
-        auditlogging: Auditlogging
+        auditlogging: Auditlogging,
+        grupperForSaksbehandler: Set<UUID>?
     ): Boolean {
         return harTilgang(
-            oppgave.oppgavetype.eksternId,
-            azureGraphService.hentIdentTilInnloggetBruker(),
-            action,
-            oppgave.hentVerdi("saksnummer"),
-            oppgave.hentVerdi("aktorId"),
-            oppgave.hentVerdi("pleietrengendeAktorId"),
-            auditlogging
+            oppgavetype = oppgave.oppgavetype.eksternId,
+            identTilInnloggetBruker = azureGraphService.hentIdentTilInnloggetBruker(),
+            action = action,
+            saksnummer = oppgave.hentVerdi("saksnummer"),
+            aktørIdSøker = oppgave.hentVerdi("aktorId"),
+            aktørIdPleietrengende = oppgave.hentVerdi("pleietrengendeAktorId"),
+            auditlogging = auditlogging,
+            grupperForSaksbehandler = grupperForSaksbehandler
         )
     }
 
@@ -120,13 +107,13 @@ class PepClient(
     ): Boolean {
         return runBlocking {
             harTilgang(
-                oppgave.oppgavetype.eksternId,
-                saksbehandler.brukerIdent!!,
-                action,
-                oppgave.hentVerdi("saksnummer"),
-                oppgave.hentVerdi("aktorId"),
-                oppgave.hentVerdi("pleietrengendeAktorId"),
-                auditlogging
+                oppgavetype = oppgave.oppgavetype.eksternId,
+                identTilInnloggetBruker = saksbehandler.brukerIdent!!,
+                action = action,
+                saksnummer = oppgave.hentVerdi("saksnummer"),
+                aktørIdSøker = oppgave.hentVerdi("aktorId"),
+                aktørIdPleietrengende = oppgave.hentVerdi("pleietrengendeAktorId"),
+                auditlogging = auditlogging
             )
         }
     }
@@ -138,21 +125,22 @@ class PepClient(
         saksnummer: String?,
         aktørIdSøker: String?,
         aktørIdPleietrengende: String?,
-        auditlogging: Auditlogging
+        auditlogging: Auditlogging,
+        grupperForSaksbehandler: Set<UUID>? = null
     ): Boolean {
         return when (oppgavetype) {
             "k9sak", "k9klage", "k9tilbake" -> {
                 //TODO når abac-k9 er ryddet bort: vurder å bruk sifAbacPdpKlient.harTilgangTilSak(action, saksnummer) de steder hvor vi sjekker innlogget bruker
-                val saksbehandlersGrupper = azureGraphService.hentGrupperForSaksbehandler(identTilInnloggetBruker)
+                val saksbehandlersGrupper = grupperForSaksbehandler ?: azureGraphService.hentGrupperForSaksbehandler(identTilInnloggetBruker)
                 val tilgang = sifAbacPdpKlient.harTilgangTilSak(
-                    action,
-                    SaksnummerDto(saksnummer!!),
-                    identTilInnloggetBruker,
-                    saksbehandlersGrupper
+                    action = action,
+                    saksnummerDto = SaksnummerDto(saksnummer!!),
+                    saksbehandlersIdent = identTilInnloggetBruker,
+                    saksbehandlersGrupper = saksbehandlersGrupper
                 )
 
                 k9Auditlogger.betingetLogging(tilgang, auditlogging) {
-                    loggTilgangK9Sak(saksnummer!!, aktørIdSøker!!, identTilInnloggetBruker, action, tilgang)
+                    loggTilgangK9Sak(saksnummer, aktørIdSøker!!, identTilInnloggetBruker, action, tilgang)
                 }
 
                 tilgang
@@ -161,13 +149,16 @@ class PepClient(
             "k9punsj" -> {
                 val berørteAktørId = setOfNotNull(aktørIdSøker, aktørIdPleietrengende)
                 val aktørIder = berørteAktørId.map { AktørId(it) }
-                val saksbehandlersGrupper = azureGraphService.hentGrupperForSaksbehandler(identTilInnloggetBruker)
-                val tilgang = sifAbacPdpKlient.harTilgangTilPersoner(
-                    action,
-                    aktørIder,
-                    identTilInnloggetBruker,
-                    saksbehandlersGrupper
-                )
+                val saksbehandlersGrupper = grupperForSaksbehandler ?: azureGraphService.hentGrupperForSaksbehandler(identTilInnloggetBruker)
+                val tilgang = if (aktørIder.isNotEmpty()) sifAbacPdpKlient.harTilgangTilPersoner(
+                    action = action,
+                    aktørIder = aktørIder,
+                    saksbehandlersIdent = identTilInnloggetBruker,
+                    saksbehandlersGrupper = saksbehandlersGrupper
+                ) else {
+                    log.warn("Ingen aktørIder funnet for punsj-oppgave. Gir som fallback tilgang til oppgaven, for å unngå at den havner utenfor alle køer.")
+                    true
+                }
 
                 berørteAktørId.firstOrNull()?.let { aktørId ->
                     k9Auditlogger.betingetLogging(tilgang, auditlogging) {

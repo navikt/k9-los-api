@@ -72,7 +72,7 @@ class OppgaveRepository(
                 from oppgave_v3 ov 
                 where reservasjonsnokkel in (${InClauseHjelper.tilParameternavn(reservasjonsnøkler, "n")})
                 and aktiv = true
-                and status in ('VENTER', 'AAPEN')
+                and status in ('VENTER', 'AAPEN', 'UAVKLART')
             """.trimIndent()
 
         val oppgaver = tx.run(

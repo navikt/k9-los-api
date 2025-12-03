@@ -3,11 +3,12 @@ package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktill
 import kotlinx.coroutines.*
 import kotliquery.TransactionalSession
 import no.nav.k9.los.Configuration
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.K9Oppgavetypenavn
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventRepository
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.beriker.K9SakSystemKlientInterfaceKludge
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.metrikker.DetaljerMetrikker
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.metrikker.HistorikkvaskMetrikker
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventRepository
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.beriker.K9SakBerikerInterfaceKludge
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
 import no.nav.k9.sak.kontrakt.produksjonsstyring.los.BehandlingMedFagsakDto
@@ -21,7 +22,7 @@ class K9SakTilLosHistorikkvaskTjeneste(
     private val config: Configuration,
     private val transactionalManager: TransactionalManager,
     private val k9SakTilLosAdapterTjeneste: K9SakTilLosAdapterTjeneste,
-    private val k9SakBerikerKlient: K9SakBerikerInterfaceKludge,
+    private val k9SakBerikerKlient: K9SakSystemKlientInterfaceKludge,
 ) {
 
     private val log: Logger = LoggerFactory.getLogger(K9SakTilLosHistorikkvaskTjeneste::class.java)
@@ -67,13 +68,13 @@ class K9SakTilLosHistorikkvaskTjeneste(
             }
 
             log.info("Historikkvask k9sak ferdig")
-            nullstillhistorikkvask()
+            nullstillHistorikkvask()
             HistorikkvaskMetrikker.observe(METRIKKLABEL, t0)
 
         } else log.info("Ny oppgavestyring er deaktivert")
     }
 
-    private fun nullstillhistorikkvask() {
+    fun nullstillHistorikkvask() {
         behandlingProsessEventK9Repository.nullstillHistorikkvask()
         log.info("Nullstilt historikkvaskmarkering k9-sak")
     }
@@ -81,7 +82,7 @@ class K9SakTilLosHistorikkvaskTjeneste(
     private fun spillAvBehandlingProsessEventer(
         dispatcher: ExecutorCoroutineDispatcher,
         behandlingsIder: List<UUID>
-    ): Long {
+    ): Int {
         val scope = CoroutineScope(dispatcher)
 
         val jobber = behandlingsIder.map {
@@ -95,8 +96,8 @@ class K9SakTilLosHistorikkvaskTjeneste(
         return eventTeller
     }
 
-    private fun vaskOppgaveForBehandlingUUIDOgMarkerVasket(uuid: UUID): Long {
-        var eventTeller = 0L
+    private fun vaskOppgaveForBehandlingUUIDOgMarkerVasket(uuid: UUID): Int {
+        var eventTeller = 0
         DetaljerMetrikker.time("k9sakHistorikkvask", "vaskOppgaveForBehandlingKomplett") {
             val nyeBehandlingsopplysningerFraK9Sak = DetaljerMetrikker.time(
                 "k9sakHistorikkvask",
@@ -113,7 +114,7 @@ class K9SakTilLosHistorikkvaskTjeneste(
         return eventTeller
     }
 
-    fun vaskOppgaveForBehandlingUUID(uuid: UUID): Long {
+    fun vaskOppgaveForBehandlingUUID(uuid: UUID): Int {
         return DetaljerMetrikker.time("k9sakHistorikkvask", "vaskOppgaveForBehandling") {
             val nyeBehandlingsopplysningerFraK9Sak = DetaljerMetrikker.time(
                 "k9sakHistorikkvask",
@@ -129,8 +130,7 @@ class K9SakTilLosHistorikkvaskTjeneste(
         uuid: UUID,
         nyeBehandlingsopplysningerFraK9Sak: BehandlingMedFagsakDto?,
         tx: TransactionalSession
-    ): Long {
-        log.info("Vasker historikk for k9sak-oppgave med eksternId: $uuid")
+    ): Int {
         var forrigeOppgave: OppgaveV3? = null
 
         val behandlingProsessEventer = DetaljerMetrikker.time("k9sakHistorikkvask", "hentEventer") {
@@ -142,27 +142,27 @@ class K9SakTilLosHistorikkvaskTjeneste(
         val høyesteInternVersjon = DetaljerMetrikker.time("k9sakHistorikkvask", "hentHøyesteInternVersjon") {
             oppgaveV3Tjeneste.hentHøyesteInternVersjon(uuid.toString(), "k9sak", "K9", tx)!!
         }
-        var eventNrForBehandling = 0L
+        var eventNrForBehandling = 0
         var oppgaveV3: OppgaveV3? = null
         for (e in behandlingProsessEventer) {
             var event = e
             if (eventNrForBehandling > høyesteInternVersjon) {
                 log.info("Avbryter historikkvask for ${event.eksternId} ved eventTid ${event.eventTid}. Forventer at håndteres av vanlig adaptertjeneste.")
                 break //Historikkvasken har funnet eventer som ennå ikke er lastet inn med normalflyt. Dirty eventer skal håndteres av vanlig adaptertjeneste
-            }
+            } //erstattet
             if (event.eldsteDatoMedEndringFraSøker == null && nyeBehandlingsopplysningerFraK9Sak != null && nyeBehandlingsopplysningerFraK9Sak.eldsteDatoMedEndringFraSøker != null) {
                 event =
                     event.copy(eldsteDatoMedEndringFraSøker = nyeBehandlingsopplysningerFraK9Sak.eldsteDatoMedEndringFraSøker)
                 //ser ut som noen gamle mottatte dokumenter kan mangle innsendingstidspunkt.
                 //da faller vi tilbake til å bruke behandling_opprettet i mapperen
-            }
-            var oppgaveDto = EventTilDtoMapper.lagOppgaveDto(event, forrigeOppgave)
+            } //erstattet
+            var oppgaveDto = SakEventTilOppgaveMapper.lagOppgaveDto(event, forrigeOppgave) //NA
 
             oppgaveDto = k9SakTilLosAdapterTjeneste.ryddOppObsoleteOgResultatfeilFra2020(
                 event,
                 oppgaveDto,
                 nyeBehandlingsopplysningerFraK9Sak
-            )
+            ) //erstattet
 
             oppgaveV3 = DetaljerMetrikker.time(
                 "k9sakHistorikkvask",
@@ -175,7 +175,7 @@ class K9SakTilLosHistorikkvaskTjeneste(
 
             forrigeOppgave = DetaljerMetrikker.time("k9sakHistorikkvask", "hentOppgaveversjon") {
                 oppgaveV3Tjeneste.hentOppgaveversjon(
-                    område = "K9", eksternId = oppgaveDto.id, eksternVersjon = oppgaveDto.versjon, tx = tx
+                    område = "K9", oppgavetype = K9Oppgavetypenavn.SAK.kode, eksternId = oppgaveDto.eksternId, eksternVersjon = oppgaveDto.eksternVersjon, tx = tx
                 )
             }
             eventNrForBehandling++
@@ -186,7 +186,6 @@ class K9SakTilLosHistorikkvaskTjeneste(
             val ytelsetypefraOppgaven =
                 oppgaveV3.felter.filter { it.oppgavefelt.feltDefinisjon.eksternId == "ytelsestype" }.map { it.verdi }
                     .firstOrNull()
-            log.info("sakstype fra kall er $sakstypekodefraK9sakKall og fra oppgaven er det $ytelsetypefraOppgaven")
             if (sakstypekodefraK9sakKall == no.nav.k9.kodeverk.behandling.FagsakYtelseType.FRISINN.kode || ytelsetypefraOppgaven == no.nav.k9.kodeverk.behandling.FagsakYtelseType.FRISINN.kode) {
                 log.info("oppgave ${oppgaveV3.eksternId} gjelder FRISINN, ignorerer oppgaven")
             } else {
@@ -196,7 +195,6 @@ class K9SakTilLosHistorikkvaskTjeneste(
                 ) { oppgaveV3Tjeneste.ajourholdOppgave(oppgaveV3, eventNrForBehandling, tx) }
             }
         }
-        log.info("Vasket $eventNrForBehandling hendelser for k9sak-oppgave med eksternId: $uuid")
         return eventNrForBehandling
     }
 }

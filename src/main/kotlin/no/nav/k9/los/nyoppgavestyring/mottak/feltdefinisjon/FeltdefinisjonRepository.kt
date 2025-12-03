@@ -7,7 +7,7 @@ import no.nav.k9.los.nyoppgavestyring.feilhandtering.IllegalDeleteException
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.Område
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
 import no.nav.k9.los.nyoppgavestyring.query.mapping.transientfeltutleder.GyldigeTransientFeltutleder
-import no.nav.k9.los.spi.felter.TransientFeltutleder
+import no.nav.k9.los.nyoppgavestyring.spi.felter.TransientFeltutleder
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.Cache
 import org.postgresql.util.PSQLException
 import org.slf4j.LoggerFactory

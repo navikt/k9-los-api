@@ -4,7 +4,7 @@ import assertk.assertThat
 import assertk.assertions.any
 import assertk.assertions.matchesPredicate
 import no.nav.k9.los.AbstractK9LosIntegrationTest
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.PunsjEventDtoBuilder
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.PunsjEventDtoBuilder
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
 import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
 import no.nav.k9.los.nyoppgavestyring.FeltType
@@ -16,7 +16,7 @@ class PunsjEventTilDtoMapperTest : AbstractK9LosIntegrationTest() {
     fun `defaulter til ukjent`() {
         val forrigeOppgave = OppgaveTestDataBuilder().lag()
         val event = PunsjEventDtoBuilder(ytelse = null, type = null).build()
-        val oppgaveDto = EventTilDtoMapper.lagOppgaveDto(event, forrigeOppgave)
+        val oppgaveDto = PunsjEventTilOppgaveMapper.lagOppgaveDto(event, forrigeOppgave)
         assertThat(oppgaveDto.feltverdier)
             .any { it.matchesPredicate { feltverdi -> feltverdi.nøkkel == "ytelsestype" && feltverdi.verdi == "UKJENT" } }
         assertThat(oppgaveDto.feltverdier)
@@ -30,7 +30,7 @@ class PunsjEventTilDtoMapperTest : AbstractK9LosIntegrationTest() {
             .medOppgaveFeltVerdi(FeltType.BEHANDLING_TYPE, "UKJENT")
             .lag()
         val event = PunsjEventDtoBuilder(ytelse = FagsakYtelseType.PLEIEPENGER_SYKT_BARN, type = BehandlingType.PAPIRSØKNAD).build()
-        val oppgaveDto = EventTilDtoMapper.lagOppgaveDto(event, forrigeOppgave)
+        val oppgaveDto = PunsjEventTilOppgaveMapper.lagOppgaveDto(event, forrigeOppgave)
         assertThat(oppgaveDto.feltverdier)
             .any { it.matchesPredicate { feltverdi -> feltverdi.nøkkel == "ytelsestype" && feltverdi.verdi == "PSB" } }
         assertThat(oppgaveDto.feltverdier)
@@ -44,7 +44,7 @@ class PunsjEventTilDtoMapperTest : AbstractK9LosIntegrationTest() {
             .medOppgaveFeltVerdi(FeltType.BEHANDLING_TYPE, "PAPIRSØKNAD")
             .lag()
         val event = PunsjEventDtoBuilder(ytelse = null, type = null).build()
-        val oppgaveDto = EventTilDtoMapper.lagOppgaveDto(event, forrigeOppgave)
+        val oppgaveDto = PunsjEventTilOppgaveMapper.lagOppgaveDto(event, forrigeOppgave)
         assertThat(oppgaveDto.feltverdier)
             .any { it.matchesPredicate { feltverdi -> feltverdi.nøkkel == "ytelsestype" && feltverdi.verdi == "PSB" } }
         assertThat(oppgaveDto.feltverdier)

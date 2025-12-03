@@ -58,7 +58,7 @@ class EventTilDtoMapperTest {
         )
 
 
-        val oppgaveDto = EventTilDtoMapper.lagOppgaveDto(k9KlageEvent, null)
+        val oppgaveDto = KlageEventTilOppgaveMapper.lagOppgaveDto(k9KlageEvent, null)
 
         assertThat(oppgaveDto.feltverdier).any { it.matchesPredicate { feltverdi -> feltverdi.nøkkel == "liggerHosBeslutter" && feltverdi.verdi == "true" } }
     }
@@ -92,7 +92,7 @@ class EventTilDtoMapperTest {
             vedtaksdato = LocalDate.now(),
             behandlingsårsaker = listOf("test"),
         )
-        val oppgaveDto = EventTilDtoMapper.lagOppgaveDto(k9KlageEvent, null)
+        val oppgaveDto = KlageEventTilOppgaveMapper.lagOppgaveDto(k9KlageEvent, null)
 
         assertThat(oppgaveDto.feltverdier).any { it.matchesPredicate { feltverdi -> feltverdi.nøkkel == "liggerHosBeslutter" && feltverdi.verdi == "false" } }
     }

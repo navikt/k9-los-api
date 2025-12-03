@@ -5,11 +5,9 @@ import assertk.assertions.isEqualTo
 import assertk.assertions.isNull
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus
 import no.nav.k9.los.AbstractK9LosIntegrationTest
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
-import no.nav.k9.los.domene.repository.OppgaveRepository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.K9TilbakeEventHandler
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.tilbaketillos.K9TilbakeTilLosAdapterTjeneste
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.AktivOppgaveRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
@@ -18,23 +16,18 @@ import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.koin.test.get
-import java.util.*
-import kotlin.test.assertTrue
 
 
 class K9TilbakeEventHandlerTest : AbstractK9LosIntegrationTest() {
 
     lateinit var k9TilbakeEventHandler: K9TilbakeEventHandler
-    lateinit var oppgaveRepository: OppgaveRepository
     lateinit var aktivOppgaveRepository: AktivOppgaveRepository
     lateinit var transactionalManager: TransactionalManager
 
     @BeforeEach
     fun setup() {
         get<OmrådeSetup>().setup()
-        get<K9TilbakeTilLosAdapterTjeneste>().setup()
         k9TilbakeEventHandler = get<K9TilbakeEventHandler>()
-        oppgaveRepository = get<OppgaveRepository>()
         aktivOppgaveRepository = get<AktivOppgaveRepository>()
         transactionalManager = get<TransactionalManager>()
     }
@@ -53,9 +46,7 @@ class K9TilbakeEventHandlerTest : AbstractK9LosIntegrationTest() {
         val event = AksjonspunktLagetTilbake().deserialize(null, json.toByteArray())!!
 
         k9TilbakeEventHandler.prosesser(event)
-        val oppgave = oppgaveRepository.hent(UUID.fromString("29cbdc33-0e59-4559-96a8-c2154bf17e5a"))
 
-        assertTrue { !oppgave.aktiv } //oppgaven er ikke aktiv, siden behandlngen har autopunkt 7001
         val oppgaveV3 = transactionalManager.transaction { tx ->
             aktivOppgaveRepository.hentOppgaveForEksternId(tx,EksternOppgaveId("K9", "29cbdc33-0e59-4559-96a8-c2154bf17e5a"))}
         assertThat(oppgaveV3!!.status).isEqualTo(Oppgavestatus.VENTER.kode)
@@ -74,8 +65,7 @@ class K9TilbakeEventHandlerTest : AbstractK9LosIntegrationTest() {
         val event = AksjonspunktLagetTilbake().deserialize(null, json.toByteArray())!!
 
         k9TilbakeEventHandler.prosesser(event)
-        val oppgave = oppgaveRepository.hent(UUID.fromString("29cbdc33-0e59-4559-96a8-c2154bf17e5a"))
-        assertTrue { !oppgave.aktiv }
+
         val oppgaveV3 = transactionalManager.transaction { tx ->
             aktivOppgaveRepository.hentOppgaveForEksternId(tx,EksternOppgaveId("K9", "29cbdc33-0e59-4559-96a8-c2154bf17e5a"))}
         assertThat(oppgaveV3).isNull()
@@ -94,8 +84,7 @@ class K9TilbakeEventHandlerTest : AbstractK9LosIntegrationTest() {
         val event = AksjonspunktLagetTilbake().deserialize(null, json.toByteArray())!!
 
         k9TilbakeEventHandler.prosesser(event)
-        val oppgave = oppgaveRepository.hent(UUID.fromString("29cbdc33-0e59-4559-96a8-c2154bf17e5a"))
-        assertTrue { oppgave.aktiv }
+
         val oppgaveV3 = transactionalManager.transaction { tx ->
             aktivOppgaveRepository.hentOppgaveForEksternId(tx,EksternOppgaveId("K9", "29cbdc33-0e59-4559-96a8-c2154bf17e5a"))}
         assertThat(oppgaveV3!!.status).isEqualTo(Oppgavestatus.AAPEN.kode)
@@ -119,9 +108,6 @@ class K9TilbakeEventHandlerTest : AbstractK9LosIntegrationTest() {
         val event = AksjonspunktLagetTilbake().deserialize(null, json.toByteArray())!!
 
         k9TilbakeEventHandler.prosesser(event)
-        val oppgave = oppgaveRepository.hent(UUID.fromString("29cbdc33-0e59-4559-96a8-c2154bf17e5a"))
-        assertTrue { oppgave.aktiv }
-        assertTrue { oppgave.tilBeslutter }
 
         val oppgaveV3 = transactionalManager.transaction { tx ->
             aktivOppgaveRepository.hentOppgaveForEksternId(tx,EksternOppgaveId("K9", "29cbdc33-0e59-4559-96a8-c2154bf17e5a"))}

@@ -28,6 +28,7 @@ import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.koin.test.get
+import java.util.*
 
 class SisteOppgaverTjenesteTest : AbstractK9LosIntegrationTest() {
 
@@ -56,6 +57,7 @@ class SisteOppgaverTjenesteTest : AbstractK9LosIntegrationTest() {
         azureGraphService = mockk(relaxed = true)
         
         coEvery { azureGraphService.hentIdentTilInnloggetBruker() } returns "test@nav.no"
+        coEvery { azureGraphService.hentGrupperForSaksbehandler(any()) } returns setOf(UUID.randomUUID())
 
         sisteOppgaverTjeneste = SisteOppgaverTjeneste(
             sisteOppgaverRepository = sisteOppgaverRepository,
@@ -93,7 +95,7 @@ class SisteOppgaverTjenesteTest : AbstractK9LosIntegrationTest() {
         coEvery { pdlService.person(aktorId1) } returns PersonPdlResponse(false, mockPerson)
 
         coEvery {
-            pepClient.harTilgangTilOppgaveV3(any(), eq(Action.read), eq(Auditlogging.IKKE_LOGG))
+            pepClient.harTilgangTilOppgaveV3(any(), eq(Action.read), eq(Auditlogging.IKKE_LOGG), any())
         } returns true
 
         // Lagre oppgaven som siste besøkt
@@ -130,7 +132,7 @@ class SisteOppgaverTjenesteTest : AbstractK9LosIntegrationTest() {
         
         // Bruker har tilgang til oppgave1 men ikke oppgave2
         coEvery {
-            pepClient.harTilgangTilOppgaveV3(any(), eq(Action.read), eq(Auditlogging.IKKE_LOGG))
+            pepClient.harTilgangTilOppgaveV3(any(), eq(Action.read), eq(Auditlogging.IKKE_LOGG), any())
         } answers {
             val oppgave = firstArg<Oppgave>()
             oppgave.eksternId == oppgave1.eksternId

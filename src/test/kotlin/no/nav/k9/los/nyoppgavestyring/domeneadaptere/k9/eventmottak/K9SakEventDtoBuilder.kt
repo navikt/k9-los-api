@@ -112,7 +112,7 @@ class K9SakEventDtoBuilder(
         this.behandlingSteg = BehandlingStegType.FORESLÅ_VEDTAK
         this.resultatType = BehandlingResultatType.INNVILGET
         this.aksjonspunkter = mutableListOf(
-            AksjonspunktTilstandBuilder.KONTROLLER_LEGEERKLÆRING.medStatus(AksjonspunktStatus.UTFØRT),
+            AksjonspunktTilstandBuilder.KONTROLLER_LEGEERKLÆRING.medStatus(AksjonspunktStatus.OPPRETTET),
             AksjonspunktTilstandBuilder.FORESLÅ_VEDTAK.medStatus(AksjonspunktStatus.AVBRUTT),
             AksjonspunktTilstandBuilder.FATTER_VEDTAK.medStatus(AksjonspunktStatus.UTFØRT)
         )
@@ -216,7 +216,8 @@ class K9SakEventDtoBuilder(
             eventTid = eventTid ?: overstyrRekkefølge ?.let { LocalDateTime.now().plusSeconds(overstyrRekkefølge) } ?: LocalDateTime.now().plusSeconds(teller++),
             aksjonspunktKoderMedStatusListe = aksjonspunkter.associate { it.kode to it.status.kode }.toMutableMap(),
             ytelseTypeKode = ytelseType.kode,
-            eldsteDatoMedEndringFraSøker = LocalDateTime.now()
+            eldsteDatoMedEndringFraSøker = LocalDateTime.now(),
+            merknader = emptyList()
         )
     }
 }

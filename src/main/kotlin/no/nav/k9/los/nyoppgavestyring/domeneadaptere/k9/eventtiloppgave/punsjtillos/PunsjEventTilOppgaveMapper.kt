@@ -1,0 +1,131 @@
+package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.punsjtillos
+
+import com.fasterxml.jackson.module.kotlin.readValue
+import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventLagret
+import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
+import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.PunsjEventDto
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
+import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveDto
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdiDto
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
+
+class PunsjEventTilOppgaveMapper {
+    fun lagOppgaveDto(eventLagret: EventLagret, forrigeOppgave: OppgaveV3?): OppgaveDto {
+        if (eventLagret.fagsystem != Fagsystem.PUNSJ) {
+            throw IllegalStateException()
+        }
+        val event = LosObjectMapper.instance.readValue<PunsjEventDto>(eventLagret.eventJson)
+
+        return OppgaveDto(
+            eksternId = event.eksternId.toString(),
+            eksternVersjon = event.eventTid.toString(),
+            område = "K9",
+            kildeområde = "K9",
+            type = "k9punsj",
+            status = utledOppgavestatus(event).kode,
+            endretTidspunkt = event.eventTid,
+            reservasjonsnøkkel = utledReservasjonsnøkkel(event),
+            feltverdier = lagFeltverdier(event, forrigeOppgave)
+        )
+    }
+
+    companion object {
+        fun lagOppgaveDto(event: PunsjEventDto, forrigeOppgave: OppgaveV3?): OppgaveDto {
+            return OppgaveDto(
+                eksternId = event.eksternId.toString(),
+                eksternVersjon = event.eventTid.toString(),
+                område = "K9",
+                kildeområde = "K9",
+                type = "k9punsj",
+                status = utledOppgavestatus(event).kode,
+                endretTidspunkt = event.eventTid,
+                reservasjonsnøkkel = utledReservasjonsnøkkel(event),
+                feltverdier = lagFeltverdier(event, forrigeOppgave)
+            )
+        }
+
+        fun utledOppgavestatus(event: PunsjEventDto): Oppgavestatus {
+            return if (event.sendtInn == true || event.status == Oppgavestatus.LUKKET || event.aksjonspunktKoderMedStatusListe.isEmpty()) {
+                Oppgavestatus.LUKKET
+            } else if (oppgaveSkalHaVentestatus(event)) {
+                Oppgavestatus.VENTER
+            } else {
+                Oppgavestatus.AAPEN
+            }
+        }
+
+        fun utledReservasjonsnøkkel(event: PunsjEventDto): String {
+            return "K9_p_${event.eksternId}"
+        }
+
+
+        private fun oppgaveSkalHaVentestatus(event: PunsjEventDto): Boolean {
+            return event.aksjonspunktKoderMedStatusListe.filter { entry -> entry.value == AksjonspunktStatus.OPPRETTET.kode }
+                .containsKey("MER_INFORMASJON")
+        }
+
+        private fun lagFeltverdier(
+            event: PunsjEventDto,
+            forrigeOppgave: OppgaveV3?
+        ): List<OppgaveFeltverdiDto> {
+            val journalførtTidspunkt = forrigeOppgave?.hentVerdi("journalfortTidspunkt") ?: event.journalførtTidspunkt?.toString()
+
+            return listOfNotNull(
+                event.aktørId?.let {
+                    OppgaveFeltverdiDto(
+                        nøkkel = "aktorId",
+                        verdi = it.aktørId,
+                    )
+                },
+                event.pleietrengendeAktørId?.let {
+                    OppgaveFeltverdiDto(
+                        nøkkel = "pleietrengendeAktorId",
+                        verdi = it,
+                    )
+                },
+                OppgaveFeltverdiDto(
+                    nøkkel = "behandlingTypekode",
+                    verdi = event.type ?: forrigeOppgave?.hentVerdi("behandlingTypekode") ?: BehandlingType.UKJENT.kode,
+                ),
+                OppgaveFeltverdiDto(
+                    nøkkel = "ytelsestype",
+                    verdi = event.ytelse ?: forrigeOppgave?.hentVerdi("ytelsestype") ?: FagsakYtelseType.UKJENT.kode,
+                ),
+                event.ferdigstiltAv?.let {
+                    OppgaveFeltverdiDto(
+                        nøkkel = "ansvarligSaksbehandler",
+                        verdi = it,
+                    )
+                },
+                OppgaveFeltverdiDto(
+                    nøkkel = "journalpostId",
+                    verdi = event.journalpostId.verdi.toString(),
+                ),
+                OppgaveFeltverdiDto(
+                    nøkkel = "journalfortTidspunkt",
+                    verdi = journalførtTidspunkt,
+                ),
+                OppgaveFeltverdiDto(
+                    nøkkel = "journalfort",
+                    verdi = (journalførtTidspunkt != null).toString(),
+                ),
+                OppgaveFeltverdiDto(
+                    nøkkel = "registrertDato",
+                    verdi = forrigeOppgave?.hentVerdi("registrertDato") ?: event.eventTid.toString(),
+                ),
+                OppgaveFeltverdiDto(
+                    nøkkel = "mottattDato",
+                    verdi = forrigeOppgave?.hentVerdi("mottattDato") ?: event.eventTid.toString(),
+                ),
+                OppgaveFeltverdiDto(
+                    nøkkel = "helautomatiskBehandlet",
+                    verdi = "false"
+                )
+            )
+        }
+    }
+}

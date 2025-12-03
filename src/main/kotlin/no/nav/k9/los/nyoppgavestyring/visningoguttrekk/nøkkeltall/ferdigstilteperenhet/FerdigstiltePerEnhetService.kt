@@ -5,6 +5,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.Cache
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.CacheObject
+import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlendeEnhet
 import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
@@ -20,10 +21,11 @@ import java.time.format.DateTimeFormatter
 import kotlin.time.measureTime
 
 class FerdigstiltePerEnhetService(
-    enheter: List<String>,
     private val queryService: OppgaveQueryService
+
 ) {
-    private val parametre = enheter.map { enhet -> FerdigstiltParameter.Enhet(enhet) } + FerdigstiltParameter.Helautomatisk
+    private val enheter = BehandlendeEnhet.entries.minusElement(BehandlendeEnhet.UKJENT)
+    private val parametre = enheter.map { enhet -> FerdigstiltParameter.Enhet(enhet) } + FerdigstiltParameter.Helautomatisk + FerdigstiltParameter.Andre
     private var oppdatertTidspunkt: LocalDateTime? = null
     private val cache = Cache<LocalDate, List<FerdigstiltePerEnhetTall>>(null)
     private val log: Logger = LoggerFactory.getLogger(FerdigstiltePerEnhetService::class.java)
@@ -33,6 +35,7 @@ class FerdigstiltePerEnhetService(
         FerdigstiltePerEnhetGruppe.PPN,
         FerdigstiltePerEnhetGruppe.OMSORGSDAGER,
         FerdigstiltePerEnhetGruppe.OMSORGSPENGER,
+        FerdigstiltePerEnhetGruppe.OPPLÆRINGSPENGER,
     )
 
     fun hentCachetVerdi(gruppe: FerdigstiltePerEnhetGruppe, uker: Int): FerdigstiltePerEnhetResponse {
@@ -40,7 +43,7 @@ class FerdigstiltePerEnhetService(
         cache.removeExpiredObjects(LocalDateTime.now())
 
         val idag = LocalDate.now()
-        val datoer = idag.minusDays(7L * uker).datesUntil(idag).toList()
+        val datoer = idag.minusDays(7L * uker - 1).datesUntil(idag.plusDays(1)).toList()
 
         return FerdigstiltePerEnhetResponse(
             oppdatertTidspunkt = oppdatertTidspunkt,
@@ -62,10 +65,11 @@ class FerdigstiltePerEnhetService(
 
     fun oppdaterCache(coroutineScope: CoroutineScope) {
         coroutineScope.launch(Dispatchers.IO) {
+            log.info("Oppdaterer cache for ferdigstilte per enhet")
             cache.removeExpiredObjects(LocalDateTime.now())
 
             val idag = LocalDate.now()
-            val datoer = idag.minusDays(28).datesUntil(idag)
+            val datoer = idag.minusDays(27).datesUntil(idag)
 
             var antallDagerHenter = 0
             val tidBruktPåOppdatering = measureTime {
@@ -75,6 +79,11 @@ class FerdigstiltePerEnhetService(
                         antallDagerHenter++
                     }
                 }
+
+                // Tallene for idag skal alltid oppdateres, siden ferdigstilte endrer seg gjennom dagen
+                cache.set(idag, CacheObject(hentFraDatabase(idag), idag.plusDays(29).atStartOfDay()))
+                antallDagerHenter++
+
                 oppdatertTidspunkt = LocalDateTime.now()
             }
             log.info("Oppdaterte $antallDagerHenter datoer for ferdigstilte per enhet på $tidBruktPåOppdatering")
@@ -146,7 +155,7 @@ class FerdigstiltePerEnhetService(
                                     "K9",
                                     "ferdigstiltEnhet",
                                     EksternFeltverdiOperator.EQUALS,
-                                    listOf(parameter.enhet)
+                                    listOf(parameter.enhet.kode)
                                 )
                             )
                         }
@@ -160,6 +169,27 @@ class FerdigstiltePerEnhetService(
                                 )
                             )
                         }
+
+                        FerdigstiltParameter.Andre -> {
+                            add(
+                                FeltverdiOppgavefilter(
+                                    "K9",
+                                    "ferdigstiltEnhet",
+                                    EksternFeltverdiOperator.NOT_IN,
+                                    enheter.map { it.kode }
+                                )
+                            )
+                            add(
+                                FeltverdiOppgavefilter(
+                                    "K9",
+                                    "helautomatiskBehandlet",
+                                    EksternFeltverdiOperator.NOT_EQUALS,
+                                    listOf(true.toString())
+                                )
+                            )
+                        }
+
+
                     }
                     if (ytelser != null) {
                         add(

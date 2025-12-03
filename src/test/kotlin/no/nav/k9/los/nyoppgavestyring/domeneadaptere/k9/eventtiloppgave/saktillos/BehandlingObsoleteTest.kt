@@ -11,7 +11,7 @@ import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
 import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventDto
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.EventHendelse
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.beriker.K9SakBerikerKlientLocal
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.beriker.K9SakSystemKlientLocal
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdiDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
@@ -27,15 +27,13 @@ import kotlin.test.assertEquals
 
 class BehandlingObsoleteTest : AbstractK9LosIntegrationTest() {
     private lateinit var k9SakTilLosAdapterTjeneste: K9SakTilLosAdapterTjeneste
-    private val k9SakBerikerKlientLocal: K9SakBerikerKlientLocal = mockk<K9SakBerikerKlientLocal>()
+    private val k9SakBerikerKlientLocal: K9SakSystemKlientLocal = mockk<K9SakSystemKlientLocal>()
 
     @BeforeEach
     fun setUp() {
         k9SakTilLosAdapterTjeneste = K9SakTilLosAdapterTjeneste(
             k9SakEventRepository = get(),
-            oppgavetypeTjeneste = get(),
             oppgaveV3Tjeneste = get(),
-            config = get(),
             transactionalManager = get(),
             k9SakBerikerKlient = k9SakBerikerKlientLocal,
             pepCacheService = get(),
@@ -131,14 +129,15 @@ class BehandlingObsoleteTest : AbstractK9LosIntegrationTest() {
             opprettetBehandling = LocalDateTime.now(),
             eldsteDatoMedEndringFraSøker = LocalDateTime.now(),
             aksjonspunktKoderMedStatusListe = emptyMap<String, String>().toMutableMap(),
-            aksjonspunktTilstander = emptyList()
+            aksjonspunktTilstander = emptyList(),
+            merknader = emptyList()
         )
     }
 
     private fun opprettOppgaveDto(resultat: BehandlingResultatType) : OppgaveDto {
         return OppgaveDto(
-            id = "12345",
-            versjon = "1",
+            eksternId = "12345",
+            eksternVersjon = "1",
             område = "K9",
             kildeområde = "K9",
             type = "k9-sak",
