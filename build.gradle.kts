@@ -67,7 +67,7 @@ dependencies {
     }
 
     // Tilgangskontroll
-    implementation("no.nav.sif.abac:kontrakt:1.4.0")
+    implementation("no.nav.sif.abac:kontrakt:1.6.0")
 
     // Kontrakter
     implementation("no.nav.k9.sak:kontrakt:$k9SakVersion")
