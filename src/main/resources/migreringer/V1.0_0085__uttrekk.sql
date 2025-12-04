@@ -8,5 +8,6 @@ CREATE TABLE uttrekk (
     feilmelding TEXT,
     type_kjoring TEXT,
     startet_tidspunkt TIMESTAMP,
-    fullfort_tidspunkt TIMESTAMP
+    fullfort_tidspunkt TIMESTAMP,
+    antall INT
 );

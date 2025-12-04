@@ -16,12 +16,7 @@ class UttrekkRepository(val dataSource: DataSource) {
                 queryOf(
                     """
                 SELECT id, opprettet_tidspunkt, status, lagret_sok, kjoreplan, type_kjoring,
-                       feilmelding, startet_tidspunkt, fullfort_tidspunkt,
-                       CASE
-                           WHEN type_kjoring = 'OPPGAVER' AND resultat IS NOT NULL
-                           THEN jsonb_array_length(resultat)
-                           ELSE NULL
-                       END as antall_rader
+                       feilmelding, startet_tidspunkt, fullfort_tidspunkt, antall
                 FROM uttrekk
                 WHERE id = :id
             """.trimIndent(), mapOf("id" to id)
@@ -73,13 +68,13 @@ class UttrekkRepository(val dataSource: DataSource) {
             val sql = if (resultat != null) {
                 """
                 UPDATE uttrekk
-                SET status = :status, resultat = :resultat::jsonb, feilmelding = :feilmelding, startet_tidspunkt = :startetTidspunkt, fullfort_tidspunkt = :fullfortTidspunkt
+                SET status = :status, resultat = :resultat::jsonb, feilmelding = :feilmelding, startet_tidspunkt = :startetTidspunkt, fullfort_tidspunkt = :fullfortTidspunkt, antall = :antall
                 WHERE id = :id
                 """.trimIndent()
             } else {
                 """
                 UPDATE uttrekk
-                SET status = :status, feilmelding = :feilmelding, startet_tidspunkt = :startetTidspunkt, fullfort_tidspunkt = :fullfortTidspunkt
+                SET status = :status, feilmelding = :feilmelding, startet_tidspunkt = :startetTidspunkt, fullfort_tidspunkt = :fullfortTidspunkt, antall = :antall
                 WHERE id = :id
                 """.trimIndent()
             }
@@ -89,7 +84,8 @@ class UttrekkRepository(val dataSource: DataSource) {
                 "status" to uttrekk.status.name,
                 "feilmelding" to uttrekk.feilmelding,
                 "startetTidspunkt" to uttrekk.startetTidspunkt,
-                "fullfortTidspunkt" to uttrekk.fullførtTidspunkt
+                "fullfortTidspunkt" to uttrekk.fullførtTidspunkt,
+                "antall" to uttrekk.antall
             )
             if (resultat != null) {
                 params["resultat"] = resultat
@@ -121,12 +117,7 @@ class UttrekkRepository(val dataSource: DataSource) {
                 queryOf(
                     """
                 SELECT id, opprettet_tidspunkt, status, lagret_sok, kjoreplan, type_kjoring,
-                       feilmelding, startet_tidspunkt, fullfort_tidspunkt,
-                       CASE
-                           WHEN type_kjoring = 'OPPGAVER' AND resultat IS NOT NULL
-                           THEN jsonb_array_length(resultat)
-                           ELSE NULL
-                       END as antall_rader
+                       feilmelding, startet_tidspunkt, fullfort_tidspunkt, antall
                 FROM uttrekk
                 ORDER BY opprettet_tidspunkt DESC
             """.trimIndent()
@@ -143,12 +134,7 @@ class UttrekkRepository(val dataSource: DataSource) {
                 queryOf(
                     """
                 SELECT id, opprettet_tidspunkt, status, lagret_sok, kjoreplan, type_kjoring,
-                       feilmelding, startet_tidspunkt, fullfort_tidspunkt,
-                       CASE
-                           WHEN type_kjoring = 'OPPGAVER' AND resultat IS NOT NULL
-                           THEN jsonb_array_length(resultat)
-                           ELSE NULL
-                       END as antall_rader
+                       feilmelding, startet_tidspunkt, fullfort_tidspunkt, antall
                 FROM uttrekk
                 WHERE lagret_sok = :lagretSokId
                 ORDER BY opprettet_tidspunkt DESC
@@ -172,6 +158,6 @@ private fun Row.toUttrekk(): Uttrekk {
         feilmelding = stringOrNull("feilmelding"),
         startetTidspunkt = localDateTimeOrNull("startet_tidspunkt"),
         fullførtTidspunkt = localDateTimeOrNull("fullfort_tidspunkt"),
-        antall = intOrNull("antall_rader")
+        antall = intOrNull("antall")
     )
 }

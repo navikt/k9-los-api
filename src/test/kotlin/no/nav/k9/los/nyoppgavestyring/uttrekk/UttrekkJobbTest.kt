@@ -70,10 +70,9 @@ class UttrekkJobbTest : AbstractK9LosIntegrationTest() {
         // Verifiser resultat
         val fullførtUttrekk = uttrekkRepository.hent(uttrekkId)!!
         assertThat(fullførtUttrekk.status).isEqualTo(UttrekkStatus.FULLFØRT)
-        val resultat = uttrekkRepository.hentResultat(uttrekkId)
-        assertThat(resultat).isNotNull()
-        // Resultat skal være et tall som string (antall oppgaver)
-        assertThat(resultat!!.toIntOrNull()).isNotNull()
+        // For ANTALL skal antall være satt, men ikke resultat
+        assertThat(fullførtUttrekk.antall).isNotNull()
+        assertThat(uttrekkRepository.hentResultat(uttrekkId)).isNull()
         assertThat(fullførtUttrekk.feilmelding).isNull()
     }
 

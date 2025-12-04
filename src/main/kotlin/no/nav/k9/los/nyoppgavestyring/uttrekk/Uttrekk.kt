@@ -24,7 +24,7 @@ class Uttrekk private constructor(
     feilmelding: String?,
     startetTidspunkt: LocalDateTime?,
     fullførtTidspunkt: LocalDateTime?,
-    val antall: Int?
+    antall: Int?
 ) {
     var status: UttrekkStatus = status
         private set
@@ -38,6 +38,9 @@ class Uttrekk private constructor(
     var fullførtTidspunkt: LocalDateTime? = fullførtTidspunkt
         private set
 
+    var antall: Int? = antall
+        private set
+
     fun markerSomKjører() {
         if (status != UttrekkStatus.OPPRETTET) {
             throw IllegalStateException("Kan kun starte uttrekk som er i status OPPRETTET")
@@ -46,11 +49,12 @@ class Uttrekk private constructor(
         startetTidspunkt = LocalDateTime.now()
     }
 
-    fun markerSomFullført() {
+    fun markerSomFullført(antall: Int) {
         if (status != UttrekkStatus.KJØRER) {
             throw IllegalStateException("Kan kun fullføre uttrekk som er i status KJØRER")
         }
         status = UttrekkStatus.FULLFØRT
+        this.antall = antall
         fullførtTidspunkt = LocalDateTime.now()
     }
 

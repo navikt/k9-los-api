@@ -19,14 +19,19 @@ class UttrekkJobb(
         try {
             val uttrekk = uttrekkTjeneste.startUttrekk(uttrekkId)
             val lagretSøk = lagretSøkTjeneste.hent(uttrekk.lagretSøkId)
-            val resultat = when (uttrekk.typeKjøring) {
-                TypeKjøring.ANTALL ->
-                    oppgaveQueryService.queryForAntall(QueryRequest(lagretSøk.query)).toString()
 
-                TypeKjøring.OPPGAVER ->
-                    LosObjectMapper.instance.writeValueAsString(oppgaveQueryService.query(QueryRequest(lagretSøk.query)))
+            when (uttrekk.typeKjøring) {
+                TypeKjøring.ANTALL -> {
+                    val antall = oppgaveQueryService.queryForAntall(QueryRequest(lagretSøk.query))
+                    uttrekkTjeneste.fullførUttrekk(uttrekkId, antall.toInt())
+                }
+
+                TypeKjøring.OPPGAVER -> {
+                    val oppgaver = oppgaveQueryService.query(QueryRequest(lagretSøk.query))
+                    val resultatJson = LosObjectMapper.instance.writeValueAsString(oppgaver)
+                    uttrekkTjeneste.fullførUttrekk(uttrekkId, oppgaver.size, resultatJson)
+                }
             }
-            uttrekkTjeneste.fullførUttrekk(uttrekkId, resultat)
         } catch (e: Exception) {
             uttrekkTjeneste.feilUttrekk(uttrekkId, e.message ?: "Ukjent feil under uttrekk")
         }

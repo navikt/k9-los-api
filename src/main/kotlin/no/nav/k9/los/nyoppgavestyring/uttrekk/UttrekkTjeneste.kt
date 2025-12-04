@@ -51,11 +51,11 @@ class UttrekkTjeneste(
         return uttrekk
     }
 
-    fun fullførUttrekk(id: Long, resultat: String): Uttrekk {
+    fun fullførUttrekk(id: Long, antall: Int, resultat: String? = null): Uttrekk {
         val uttrekk = uttrekkRepository.hent(id)
             ?: throw IllegalArgumentException("Uttrekk med id $id finnes ikke")
 
-        uttrekk.markerSomFullført()
+        uttrekk.markerSomFullført(antall)
         uttrekkRepository.oppdater(uttrekk, resultat)
         return uttrekk
     }

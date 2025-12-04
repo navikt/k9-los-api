@@ -92,7 +92,7 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
         val oppdatertUttrekk = uttrekkRepository.hent(id)!!
         assertThat(oppdatertUttrekk.status).isEqualTo(UttrekkStatus.KJØRER)
 
-        hentetUttrekk.markerSomFullført()
+        hentetUttrekk.markerSomFullført(0)
         uttrekkRepository.oppdater(hentetUttrekk, "[]")
 
         val fullførtUttrekk = uttrekkRepository.hent(id)!!
