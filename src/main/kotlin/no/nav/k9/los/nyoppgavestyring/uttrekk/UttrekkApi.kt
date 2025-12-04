@@ -16,6 +16,7 @@ fun Route.UttrekkApi() {
     val requestContextService by inject<RequestContextService>()
     val uttrekkTjeneste by inject<UttrekkTjeneste>()
     val uttrekkCsvGenerator by inject<UttrekkCsvGenerator>()
+    val uttrekkCsvStreamingGenerator by inject<UttrekkCsvStreamingGenerator>()
 
     get({
         response {
@@ -152,8 +153,6 @@ fun Route.UttrekkApi() {
                     return@withRequestContext
                 }
 
-                val csv = uttrekkCsvGenerator.genererCsv(uttrekk.resultat!!)
-
                 call.response.header(
                     HttpHeaders.ContentDisposition,
                     ContentDisposition.Attachment.withParameter(
@@ -161,7 +160,10 @@ fun Route.UttrekkApi() {
                         "uttrekk-$id.csv"
                     ).toString()
                 )
-                call.respondText(csv, ContentType.parse("text/csv"), HttpStatusCode.OK)
+
+                call.respondOutputStream(ContentType.parse("text/csv"), HttpStatusCode.OK) {
+                    uttrekkCsvStreamingGenerator.genererCsv(uttrekk.resultat!!, this)
+                }
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
