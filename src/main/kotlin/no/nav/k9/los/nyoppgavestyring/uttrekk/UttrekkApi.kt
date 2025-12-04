@@ -15,6 +15,7 @@ fun Route.UttrekkApi() {
     val pepClient by inject<IPepClient>()
     val requestContextService by inject<RequestContextService>()
     val uttrekkTjeneste by inject<UttrekkTjeneste>()
+    val uttrekkRepository by inject<UttrekkRepository>()
     val uttrekkCsvGenerator by inject<UttrekkCsvGenerator>()
     val uttrekkCsvStreamingGenerator by inject<UttrekkCsvStreamingGenerator>()
 
@@ -153,6 +154,12 @@ fun Route.UttrekkApi() {
                     return@withRequestContext
                 }
 
+                val resultat = uttrekkRepository.hentResultat(id)
+                if (resultat == null) {
+                    call.respond(HttpStatusCode.NotFound, "Uttrekk har ingen resultat")
+                    return@withRequestContext
+                }
+
                 call.response.header(
                     HttpHeaders.ContentDisposition,
                     ContentDisposition.Attachment.withParameter(
@@ -162,7 +169,7 @@ fun Route.UttrekkApi() {
                 )
 
                 call.respondOutputStream(ContentType.parse("text/csv"), HttpStatusCode.OK) {
-                    uttrekkCsvStreamingGenerator.genererCsv(uttrekk.resultat!!, this)
+                    uttrekkCsvStreamingGenerator.genererCsv(resultat, this)
                 }
             } else {
                 call.respond(HttpStatusCode.Forbidden)

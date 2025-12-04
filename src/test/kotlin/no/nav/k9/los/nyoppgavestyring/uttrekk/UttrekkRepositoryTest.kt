@@ -66,7 +66,8 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
         assertThat(hentetUttrekk.lagretSøkId).isEqualTo(lagretSøkId)
         assertThat(hentetUttrekk.kjøreplan).isEqualTo("0 0 8 * * ?")
         assertThat(hentetUttrekk.status).isEqualTo(UttrekkStatus.OPPRETTET)
-        assertThat(hentetUttrekk.resultat).isNull()
+        assertThat(uttrekkRepository.hentResultat(id)).isNull()
+        assertThat(hentetUttrekk.antall).isNull()
     }
 
     @Test
@@ -91,13 +92,14 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
         val oppdatertUttrekk = uttrekkRepository.hent(id)!!
         assertThat(oppdatertUttrekk.status).isEqualTo(UttrekkStatus.KJØRER)
 
-        hentetUttrekk.markerSomFullført("{\"antall\": 42}")
-        uttrekkRepository.oppdater(hentetUttrekk)
+        hentetUttrekk.markerSomFullført()
+        uttrekkRepository.oppdater(hentetUttrekk, "[]")
 
         val fullførtUttrekk = uttrekkRepository.hent(id)!!
         assertThat(fullførtUttrekk.status).isEqualTo(UttrekkStatus.FULLFØRT)
-        assertThat(fullførtUttrekk.resultat).isEqualTo("{\"antall\": 42}")
+        assertThat(uttrekkRepository.hentResultat(id)).isEqualTo("[]")
         assertThat(fullførtUttrekk.fullførtTidspunkt).isNotNull()
+        assertThat(fullførtUttrekk.antall).isEqualTo(0)
     }
 
     @Test
@@ -109,10 +111,10 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
             lagretSokId = lagretSøkId,
             kjoreplan = null,
             typeKjoring = TypeKjøring.OPPGAVER,
-            resultat = null,
             feilmelding = null,
             startetTidspunkt = java.time.LocalDateTime.now(),
-            fullførtTidspunkt = null
+            fullførtTidspunkt = null,
+            antall = null
         )
 
         val exception = assertThrows<IllegalStateException> {
@@ -224,7 +226,7 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
         val feiletUttrekk = uttrekkRepository.hent(id)!!
         assertThat(feiletUttrekk.status).isEqualTo(UttrekkStatus.FEILET)
         assertThat(feiletUttrekk.feilmelding).isEqualTo("Database connection timeout")
-        assertThat(feiletUttrekk.resultat).isNull()
+        assertThat(uttrekkRepository.hentResultat(id)).isNull()
         assertThat(feiletUttrekk.fullførtTidspunkt).isNotNull()
     }
 }

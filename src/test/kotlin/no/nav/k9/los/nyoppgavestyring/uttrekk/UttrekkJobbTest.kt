@@ -70,9 +70,10 @@ class UttrekkJobbTest : AbstractK9LosIntegrationTest() {
         // Verifiser resultat
         val fullførtUttrekk = uttrekkRepository.hent(uttrekkId)!!
         assertThat(fullførtUttrekk.status).isEqualTo(UttrekkStatus.FULLFØRT)
-        assertThat(fullførtUttrekk.resultat).isNotNull()
+        val resultat = uttrekkRepository.hentResultat(uttrekkId)
+        assertThat(resultat).isNotNull()
         // Resultat skal være et tall som string (antall oppgaver)
-        assertThat(fullførtUttrekk.resultat!!.toIntOrNull()).isNotNull()
+        assertThat(resultat!!.toIntOrNull()).isNotNull()
         assertThat(fullførtUttrekk.feilmelding).isNull()
     }
 
@@ -92,9 +93,12 @@ class UttrekkJobbTest : AbstractK9LosIntegrationTest() {
         // Verifiser resultat
         val fullførtUttrekk = uttrekkRepository.hent(uttrekkId)!!
         assertThat(fullførtUttrekk.status).isEqualTo(UttrekkStatus.FULLFØRT)
-        assertThat(fullførtUttrekk.resultat).isNotNull()
+        val resultat = uttrekkRepository.hentResultat(uttrekkId)
+        assertThat(resultat).isNotNull()
         // Resultat skal være JSON array (selv om det er tomt)
-        assertThat(fullførtUttrekk.resultat!!).startsWith("[")
+        assertThat(resultat!!).startsWith("[")
         assertThat(fullførtUttrekk.feilmelding).isNull()
+        // AntallRader skal være satt for OPPGAVER
+        assertThat(fullførtUttrekk.antall).isNotNull()
     }
 }

@@ -55,8 +55,8 @@ class UttrekkTjeneste(
         val uttrekk = uttrekkRepository.hent(id)
             ?: throw IllegalArgumentException("Uttrekk med id $id finnes ikke")
 
-        uttrekk.markerSomFullført(resultat)
-        uttrekkRepository.oppdater(uttrekk)
+        uttrekk.markerSomFullført()
+        uttrekkRepository.oppdater(uttrekk, resultat)
         return uttrekk
     }
 
