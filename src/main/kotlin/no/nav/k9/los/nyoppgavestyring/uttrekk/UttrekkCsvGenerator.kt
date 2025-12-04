@@ -1,6 +1,8 @@
 package no.nav.k9.los.nyoppgavestyring.uttrekk
 
+import com.fasterxml.jackson.core.type.TypeReference
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
+import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.Oppgavefeltverdi
 import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.Oppgaverad
 
 class UttrekkCsvGenerator {
@@ -8,8 +10,8 @@ class UttrekkCsvGenerator {
     fun genererCsv(resultatJson: String): String {
         val oppgaverader = LosObjectMapper.instance.readValue(
             resultatJson,
-            LosObjectMapper.instance.typeFactory.constructCollectionType(List::class.java, Oppgaverad::class.java)
-        ) as List<Oppgaverad>
+            object : TypeReference<List<List<Oppgavefeltverdi>>>() {}
+        )
 
         return genererCsv(oppgaverader)
     }
