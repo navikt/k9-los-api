@@ -94,7 +94,7 @@ class TilbakeEventTilOppgaveMapper {
             return event.aksjonspunktKoderMedStatusListe.any {
                 it.value == OPPRETTET.kode && AksjonspunktDefinisjonK9Tilbake.fraKode(it.key) == AksjonspunktDefinisjonK9Tilbake.FATTE_VEDTAK
             } && event.aksjonspunktKoderMedStatusListe.none {
-                it.value == OPPRETTET.kode && AksjonspunktDefinisjonK9Tilbake.fraKode(it.key) != AksjonspunktDefinisjonK9Tilbake.FORESLÅ_VEDTAK
+                it.value == OPPRETTET.kode && AksjonspunktDefinisjonK9Tilbake.fraKode(it.key) == AksjonspunktDefinisjonK9Tilbake.FORESLÅ_VEDTAK
             }
 
         }
