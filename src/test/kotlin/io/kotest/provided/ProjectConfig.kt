@@ -103,6 +103,7 @@ fun cleanupTables(dataSource: DataSource) {
                 oppgave_id_part,
                 oppgave_v3,
                 oppgave_v3_aktiv,
+                uttrekk,
                 lagret_sok,
                 event,
                 event_historikkvask_bestilt,

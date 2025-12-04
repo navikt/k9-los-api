@@ -175,4 +175,56 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
         assertThat(uttrekkForLagretSok).hasSize(2)
         assertThat(uttrekkForLagretSok.all { it.lagretSøkId == lagretSøkId }).isEqualTo(true)
     }
+
+    @Test
+    fun `skal opprette uttrekk med TypeKjøring ANTALL`() {
+        val uttrekk = Uttrekk.opprettUttrekk(
+            lagretSokId = lagretSøkId,
+            kjoreplan = null,
+            typeKjoring = TypeKjøring.ANTALL
+        )
+
+        val id = uttrekkRepository.opprett(uttrekk)
+        val hentetUttrekk = uttrekkRepository.hent(id)
+
+        assertThat(hentetUttrekk).isNotNull()
+        assertThat(hentetUttrekk!!.typeKjøring).isEqualTo(TypeKjøring.ANTALL)
+    }
+
+    @Test
+    fun `skal opprette uttrekk med standardverdi TypeKjøring OPPGAVER`() {
+        val uttrekk = Uttrekk.opprettUttrekk(
+            lagretSokId = lagretSøkId,
+            kjoreplan = null
+        )
+
+        val id = uttrekkRepository.opprett(uttrekk)
+        val hentetUttrekk = uttrekkRepository.hent(id)
+
+        assertThat(hentetUttrekk).isNotNull()
+        assertThat(hentetUttrekk!!.typeKjøring).isEqualTo(TypeKjøring.OPPGAVER)
+    }
+
+    @Test
+    fun `skal sette feilmelding når uttrekk feiler`() {
+        val uttrekk = Uttrekk.opprettUttrekk(
+            lagretSokId = lagretSøkId,
+            kjoreplan = null
+        )
+
+        val id = uttrekkRepository.opprett(uttrekk)
+        val hentetUttrekk = uttrekkRepository.hent(id)!!
+
+        hentetUttrekk.markerSomKjører()
+        uttrekkRepository.oppdater(hentetUttrekk)
+
+        hentetUttrekk.markerSomFeilet("Database connection timeout")
+        uttrekkRepository.oppdater(hentetUttrekk)
+
+        val feiletUttrekk = uttrekkRepository.hent(id)!!
+        assertThat(feiletUttrekk.status).isEqualTo(UttrekkStatus.FEILET)
+        assertThat(feiletUttrekk.feilmelding).isEqualTo("Database connection timeout")
+        assertThat(feiletUttrekk.resultat).isNull()
+        assertThat(feiletUttrekk.fullførtTidspunkt).isNotNull()
+    }
 }
