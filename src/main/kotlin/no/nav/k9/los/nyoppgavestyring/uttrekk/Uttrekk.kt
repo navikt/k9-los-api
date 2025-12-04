@@ -22,6 +22,7 @@ class Uttrekk private constructor(
     val kjøreplan: String?,
     val typeKjøring: TypeKjøring,
     resultat: String?,
+    feilmelding: String?,
     startetTidspunkt: LocalDateTime?,
     fullførtTidspunkt: LocalDateTime?,
 ) {
@@ -31,8 +32,12 @@ class Uttrekk private constructor(
     var resultat: String? = resultat
         private set
 
+    var feilmelding: String? = feilmelding
+        private set
+
     var startetTidspunkt: LocalDateTime? = startetTidspunkt
         private set
+
     var fullførtTidspunkt: LocalDateTime? = fullførtTidspunkt
         private set
 
@@ -44,12 +49,12 @@ class Uttrekk private constructor(
         startetTidspunkt = LocalDateTime.now()
     }
 
-    fun markerSomFullført(resultatData: String) {
+    fun markerSomFullført(resultat: String) {
         if (status != UttrekkStatus.KJØRER) {
             throw IllegalStateException("Kan kun fullføre uttrekk som er i status KJØRER")
         }
         status = UttrekkStatus.FULLFØRT
-        resultat = resultatData
+        this.resultat = resultat
         fullførtTidspunkt = LocalDateTime.now()
     }
 
@@ -58,7 +63,8 @@ class Uttrekk private constructor(
             throw IllegalStateException("Kan kun feile uttrekk som er i status KJØRER")
         }
         status = UttrekkStatus.FEILET
-        resultat = feilmelding
+        resultat = null
+        this.feilmelding = feilmelding
         fullførtTidspunkt = LocalDateTime.now()
     }
 
@@ -72,6 +78,7 @@ class Uttrekk private constructor(
                 kjøreplan = kjoreplan,
                 typeKjøring = typeKjoring,
                 resultat = null,
+                feilmelding = null,
                 startetTidspunkt = null,
                 fullførtTidspunkt = null
             )
@@ -85,10 +92,12 @@ class Uttrekk private constructor(
             kjoreplan: String?,
             typeKjoring: TypeKjøring,
             resultat: String?,
+            feilmelding: String?,
             startetTidspunkt: LocalDateTime?,
             fullførtTidspunkt: LocalDateTime?,
         ): Uttrekk {
-            return Uttrekk(id, opprettetTidspunkt, status, lagretSokId, kjoreplan, typeKjoring, resultat, startetTidspunkt, fullførtTidspunkt)
+            return Uttrekk(id, opprettetTidspunkt, status, lagretSokId, kjoreplan, typeKjoring,
+                resultat, feilmelding, startetTidspunkt, fullførtTidspunkt)
         }
     }
 }

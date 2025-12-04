@@ -110,6 +110,7 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
             kjoreplan = null,
             typeKjoring = TypeKjøring.OPPGAVER,
             resultat = null,
+            feilmelding = null,
             startetTidspunkt = java.time.LocalDateTime.now(),
             fullførtTidspunkt = null
         )

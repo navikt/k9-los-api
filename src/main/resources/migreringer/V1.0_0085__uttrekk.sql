@@ -5,6 +5,8 @@ CREATE TABLE uttrekk (
     lagret_sok INT REFERENCES lagret_sok(id),
     kjoreplan TEXT,
     resultat JSONB,
+    feilmelding TEXT,
+    type_kjoring TEXT,
     startet_tidspunkt TIMESTAMP,
     fullfort_tidspunkt TIMESTAMP
 );

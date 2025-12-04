@@ -53,13 +53,14 @@ class UttrekkRepository(val dataSource: DataSource) {
                 queryOf(
                     """
                 UPDATE uttrekk
-                SET status = :status, resultat = :resultat::jsonb, startet_tidspunkt = :startetTidspunkt, fullfort_tidspunkt = :fullfortTidspunkt
+                SET status = :status, resultat = :resultat::jsonb, feilmelding = :feilmelding, startet_tidspunkt = :startetTidspunkt, fullfort_tidspunkt = :fullfortTidspunkt
                 WHERE id = :id
                 """.trimIndent(),
                     mapOf(
                         "id" to uttrekk.id,
                         "status" to uttrekk.status.name,
                         "resultat" to uttrekk.resultat,
+                        "feilmelding" to uttrekk.feilmelding,
                         "startetTidspunkt" to uttrekk.startetTidspunkt,
                         "fullfortTidspunkt" to uttrekk.fullførtTidspunkt
                     )
@@ -127,6 +128,7 @@ private fun Row.toUttrekk(): Uttrekk {
         kjoreplan = stringOrNull("kjoreplan"),
         typeKjoring = TypeKjøring.valueOf(string("type_kjoring")),
         resultat = stringOrNull("resultat"),
+        feilmelding = stringOrNull("feilmelding"),
         startetTidspunkt = localDateTimeOrNull("startet_tidspunkt"),
         fullførtTidspunkt = localDateTimeOrNull("fullfort_tidspunkt")
     )

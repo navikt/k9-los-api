@@ -1,5 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.uttrekk
 
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.nyoppgavestyring.lagretsok.LagretSøkTjeneste
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
 import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
@@ -11,17 +12,19 @@ class UttrekkJobb(
     val uttrekkTjeneste: UttrekkTjeneste,
     val lagretSøkTjeneste: LagretSøkTjeneste
 ) {
+    private var antallKjøringerUtenTreff = 0
     private val log = LoggerFactory.getLogger(UttrekkJobb::class.java)
 
-    suspend fun kjørUttrekk(uttrekkId: Long) {
-        val uttrekk = uttrekkTjeneste.startUttrekk(uttrekkId)
-        val lagretSøk = lagretSøkTjeneste.hent(uttrekk.lagretSøkId)
+    fun kjørUttrekk(uttrekkId: Long) {
         try {
+            val uttrekk = uttrekkTjeneste.startUttrekk(uttrekkId)
+            val lagretSøk = lagretSøkTjeneste.hent(uttrekk.lagretSøkId)
             val resultat = when (uttrekk.typeKjøring) {
                 TypeKjøring.ANTALL ->
                     oppgaveQueryService.queryForAntall(QueryRequest(lagretSøk.query)).toString()
+
                 TypeKjøring.OPPGAVER ->
-                    oppgaveQueryService.queryToFile(QueryRequest(lagretSøk.query))
+                    LosObjectMapper.instance.writeValueAsString(oppgaveQueryService.query(QueryRequest(lagretSøk.query)))
             }
             uttrekkTjeneste.fullførUttrekk(uttrekkId, resultat)
         } catch (e: Exception) {
@@ -29,11 +32,14 @@ class UttrekkJobb(
         }
     }
 
-    suspend fun kjørAlleUttrekkSomIkkeHarKjørt() {
+    fun kjørAlleUttrekkSomIkkeHarKjørt() {
         val uttrekkListe = uttrekkTjeneste.hentAlle()
             .filter { it.status == UttrekkStatus.OPPRETTET }
         if (uttrekkListe.isEmpty()) {
-            log.info("Sjekket om det er noen uttrekk å kjøre, men ingen funnet")
+            antallKjøringerUtenTreff++
+            if (antallKjøringerUtenTreff % 10 == 0) {
+                log.info("Sjekket om det er noen uttrekk å kjøre, men ingen funnet. Logger bare hvert tiende forsøk.")
+            }
             return
         }
         log.info("Starter kjøring av ${uttrekkListe.size} uttrekk")

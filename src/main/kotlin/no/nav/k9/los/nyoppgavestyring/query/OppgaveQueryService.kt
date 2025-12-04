@@ -103,6 +103,13 @@ class OppgaveQueryService {
     }
 
     @WithSpan
+    fun query(oppgaveQuery: QueryRequest): List<Oppgaverad> {
+        return using(sessionOf(datasource)) {
+            it.transaction { tx -> runBlocking { query(tx, oppgaveQuery) } }
+        }
+    }
+
+    @WithSpan
     fun query(oppgaveQuery: QueryRequest, idToken: IIdToken): List<Oppgaverad> {
         return using(sessionOf(datasource)) {
             it.transaction { tx -> query(tx, oppgaveQuery, idToken) }
