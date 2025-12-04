@@ -37,14 +37,14 @@ class UttrekkCsvStreamingGenerator {
                 if (isFirstRow) {
                     // Skriv header basert på første rad
                     headers = row.map { it.first }
-                    writer.write(headers.joinToString(";"))
+                    writer.write(headers.joinToString(","))
                     writer.write("\n")
                     isFirstRow = false
                 }
 
                 // Skriv data-rad
                 val values = row.map { (_, value) -> escapeCsvValue(value) }
-                writer.write(values.joinToString(";"))
+                writer.write(values.joinToString(","))
                 writer.write("\n")
 
                 // Flush hver 100. rad for å unngå store buffere
