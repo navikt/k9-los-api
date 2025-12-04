@@ -3,6 +3,7 @@ package no.nav.k9.los.nyoppgavestyring.mottak.oppgave
 import kotliquery.TransactionalSession
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
+import org.jetbrains.annotations.VisibleForTesting
 
 class OppgaveV3Tjeneste(
     private val oppgaveV3Repository: OppgaveV3Repository,
@@ -11,14 +12,26 @@ class OppgaveV3Tjeneste(
     private val områdeRepository: OmrådeRepository
 ) {
 
-    fun sjekkDuplikatOgProsesser(dto: OppgaveDto, tx: TransactionalSession): OppgaveV3? {
-        var oppgave: OppgaveV3? = null
-        val skalOppdatere = nyEksternversjon(dto, tx)
+    fun sjekkDuplikatOgProsesser(innsending: NyOppgaveVersjonInnsending, tx: TransactionalSession): OppgaveV3? {
+        when (innsending) {
+            is NyOppgaveversjon -> {
+                val skalOppdatere = nyEksternversjon(innsending.dto, tx)
 
-        if (skalOppdatere) {
-            oppgave = lagreNyOppgaveversjon(dto, tx)
+                if (skalOppdatere) {
+                    return lagreNyOppgaveversjon(innsending.dto, tx)
+                } else {
+                    return null
+                }
+            }
+            is VaskOppgaveversjon -> {
+                val eksisterer = oppgaveV3Repository.hentOppgaveIdStatusOgHøyesteInternversjon(tx, innsending.dto.eksternId, innsending.dto.type, innsending.dto.område).first != null
+                if (eksisterer) {
+                    return vaskEksisterendeOppgaveversjon(innsending.dto, innsending.eventNummer.toInt(), tx)
+                } else {
+                    return lagreNyOppgaveversjon(innsending.dto, tx)
+                }
+            }
         }
-        return oppgave
     }
 
     private fun lagreNyOppgaveversjon(oppgaveDto: OppgaveDto, tx: TransactionalSession): OppgaveV3 {
@@ -54,6 +67,7 @@ class OppgaveV3Tjeneste(
         }
     }
 
+    @VisibleForTesting
     fun hentAktivOppgave(eksternId: String, oppgavetypeEksternId: String, områdeEksternId: String, tx: TransactionalSession) : OppgaveV3 {
         tx.run {
             val område = områdeRepository.hentOmråde(områdeEksternId, tx)
@@ -104,25 +118,7 @@ class OppgaveV3Tjeneste(
         AktivOppgaveRepository.slettAktivOppgave(tx, innkommendeOppgave)
     }
 
-    fun hentOppgaveversjonenFør(
-        område: String,
-        oppgavetype: String,
-        eksternId: String,
-        eksternVersjon: String,
-        tx: TransactionalSession
-    ): OppgaveV3? {
-        val område = områdeRepository.hentOmråde(område, tx)
-
-        val oppgavetype = oppgavetypeRepository.hentOppgavetype(
-            område = område,
-            eksternId = oppgavetype,
-            tx = tx
-        )
-
-        return oppgaveV3Repository.hentOppgaveversjonenFør(område, oppgavetype, eksternId, eksternVersjon, tx)
-    }
-
-    fun utledEksisterendeOppgaveversjon(oppgaveDto: OppgaveDto, eventNr: Int, tx: TransactionalSession) : OppgaveV3 {
+    fun vaskEksisterendeOppgaveversjon(oppgaveDto: OppgaveDto, eventNr: Int, tx: TransactionalSession) : OppgaveV3 {
         val oppgavetype = oppgavetypeRepository.hentOppgavetype(
             område = oppgaveDto.område,
             eksternId = oppgaveDto.type,
@@ -150,10 +146,6 @@ class OppgaveV3Tjeneste(
 
         innkommendeOppgave = OppgaveV3(innkommendeOppgave, innkommendeOppgave.felter.plus(utledeteFelter))
         innkommendeOppgave.valider()
-        return innkommendeOppgave
-    }
-
-    fun oppdaterEksisterendeOppgaveversjon(innkommendeOppgave: OppgaveV3, eventNr: Int, tx: TransactionalSession)  {
 
         //historikkvasktjenesten skal sørge for at oppgaven med internVersjon = eventNr faktisk eksisterer
         oppgaveV3Repository.slettFeltverdier(
@@ -177,6 +169,14 @@ class OppgaveV3Tjeneste(
             internVersjon = eventNr,
             reservasjonsnokkel = innkommendeOppgave.reservasjonsnøkkel,
             tx = tx)
+
+        return oppgaveV3Repository.hentOppgaveversjon(
+            område = område,
+            oppgavetype = oppgavetype,
+            eksternId = oppgaveDto.eksternId,
+            internVersjon = eventNr,
+            tx = tx
+        )!!
     }
 
     fun hentHøyesteInternVersjon(oppgaveEksternId: String, opppgaveTypeEksternId: String, områdeEksternId: String, tx: TransactionalSession): Int? {

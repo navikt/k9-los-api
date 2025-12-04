@@ -26,21 +26,13 @@ import java.util.*
 import kotlin.test.assertEquals
 
 class BehandlingObsoleteTest : AbstractK9LosIntegrationTest() {
-    private lateinit var k9SakTilLosAdapterTjeneste: K9SakTilLosAdapterTjeneste
+    private lateinit var eventMapper: SakEventTilOppgaveMapper
     private val k9SakBerikerKlientLocal: K9SakSystemKlientLocal = mockk<K9SakSystemKlientLocal>()
 
     @BeforeEach
     fun setUp() {
-        k9SakTilLosAdapterTjeneste = K9SakTilLosAdapterTjeneste(
-            k9SakEventRepository = get(),
-            oppgaveV3Tjeneste = get(),
-            transactionalManager = get(),
-            k9SakBerikerKlient = k9SakBerikerKlientLocal,
-            pepCacheService = get(),
-            oppgaveRepository = get(),
-            reservasjonV3Tjeneste = get(),
-            historikkvaskChannel = get(named("historikkvaskChannelK9Sak")),
-            køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
+        eventMapper = SakEventTilOppgaveMapper(
+            k9SakBerikerKlient = get()
         )
     }
 
@@ -50,7 +42,8 @@ class BehandlingObsoleteTest : AbstractK9LosIntegrationTest() {
             FagsakYtelseType.PLEIEPENGER_SYKT_BARN,
             BehandlingResultatType.DELVIS_INNVILGET
         )
-        val oppgaveDto = k9SakTilLosAdapterTjeneste.ryddOppObsoleteOgResultatfeilFra2020(
+
+        val oppgaveDto = eventMapper.ryddOppObsoleteOgResultatfeilFra2020(
             opprettEvent(FagsakYtelseType.OBSOLETE, BehandlingStatus.UTREDES),
             opprettOppgaveDto(BehandlingResultatType.IKKE_FASTSATT),
             k9SakBerikerKlientLocal.hentBehandling(UUID.randomUUID())
@@ -66,7 +59,7 @@ class BehandlingObsoleteTest : AbstractK9LosIntegrationTest() {
             BehandlingResultatType.DELVIS_INNVILGET
         )
 
-        val oppgaveDto = k9SakTilLosAdapterTjeneste.ryddOppObsoleteOgResultatfeilFra2020(
+        val oppgaveDto = eventMapper.ryddOppObsoleteOgResultatfeilFra2020(
             opprettEvent(FagsakYtelseType.PLEIEPENGER_SYKT_BARN, BehandlingStatus.AVSLUTTET),
             opprettOppgaveDto(BehandlingResultatType.IKKE_FASTSATT),
             k9SakBerikerKlientLocal.hentBehandling(UUID.randomUUID())
@@ -79,7 +72,7 @@ class BehandlingObsoleteTest : AbstractK9LosIntegrationTest() {
     fun `avsluttet Behandling uten fastsatt resultat skal slå opp i k9-sak, Henlegg oppgaver hvor behandling ikke finnes`() {
         every { k9SakBerikerKlientLocal.hentBehandling(any()) } returns null
 
-        val oppgaveDto = k9SakTilLosAdapterTjeneste.ryddOppObsoleteOgResultatfeilFra2020(
+        val oppgaveDto = eventMapper.ryddOppObsoleteOgResultatfeilFra2020(
             opprettEvent(FagsakYtelseType.PLEIEPENGER_SYKT_BARN, BehandlingStatus.AVSLUTTET),
             opprettOppgaveDto(BehandlingResultatType.IKKE_FASTSATT),
             k9SakBerikerKlientLocal.hentBehandling(UUID.randomUUID())
@@ -95,7 +88,7 @@ class BehandlingObsoleteTest : AbstractK9LosIntegrationTest() {
             BehandlingResultatType.INGEN_ENDRING
         )
 
-        val oppgaveDto = k9SakTilLosAdapterTjeneste.ryddOppObsoleteOgResultatfeilFra2020(
+        val oppgaveDto = eventMapper.ryddOppObsoleteOgResultatfeilFra2020(
             opprettEvent(FagsakYtelseType.PLEIEPENGER_SYKT_BARN, BehandlingStatus.AVSLUTTET),
             opprettOppgaveDto(BehandlingResultatType.IKKE_FASTSATT),
             k9SakBerikerKlientLocal.hentBehandling(UUID.randomUUID())

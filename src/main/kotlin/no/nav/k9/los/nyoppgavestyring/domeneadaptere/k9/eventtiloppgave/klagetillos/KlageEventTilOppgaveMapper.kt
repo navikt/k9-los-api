@@ -9,6 +9,7 @@ import no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
 import no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus
 import no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktType
 import no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.Venteårsak
+import no.nav.k9.klage.kodeverk.behandling.oppgavetillos.EventHendelse
 import no.nav.k9.klage.kontrakt.behandling.oppgavetillos.Aksjonspunkttilstand
 import no.nav.k9.klage.typer.AktørId
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventLagret
@@ -16,10 +17,13 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.klage.K9Klag
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetillos.beriker.K9KlageBerikerInterfaceKludge
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.NyOppgaveVersjonInnsending
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.NyOppgaveversjon
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdiDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.VaskOppgaveversjon
 import org.jetbrains.annotations.VisibleForTesting
 
 class KlageEventTilOppgaveMapper(
@@ -27,8 +31,9 @@ class KlageEventTilOppgaveMapper(
 ) {
     internal fun lagOppgaveDto(
         eventLagret: EventLagret,
-        forrigeOppgave: OppgaveV3?
-    ): OppgaveDto {
+        forrigeOppgave: OppgaveV3?,
+        eventnummer: Int,
+    ): NyOppgaveVersjonInnsending {
         if (eventLagret.fagsystem != Fagsystem.K9KLAGE) {
             throw IllegalArgumentException("Fagsystem er ikke KLAGE")
         }
@@ -47,7 +52,7 @@ class KlageEventTilOppgaveMapper(
                 utenlandstilsnitt = losOpplysningerSomManglerIKlageDto?.isUtenlandstilsnitt
             )
 
-        return OppgaveDto(
+        val oppgaveDto = OppgaveDto(
             eksternId = eventBeriket.eksternId.toString(),
             eksternVersjon = eventBeriket.eventTid.toString(),
             område = "K9",
@@ -58,6 +63,17 @@ class KlageEventTilOppgaveMapper(
             reservasjonsnøkkel = utledReservasjonsnøkkel(eventBeriket, erTilBeslutter(eventBeriket)),
             feltverdier = lagFeltverdier(eventBeriket, forrigeOppgave)
         )
+
+        if (event.eventHendelse == EventHendelse.VASKEEVENT) {
+            return VaskOppgaveversjon(
+                dto = oppgaveDto,
+                eventNummer = eventnummer
+            )
+        } else {
+            return NyOppgaveversjon(
+                dto = oppgaveDto
+            )
+        }
     }
 
     companion object {

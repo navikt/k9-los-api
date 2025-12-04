@@ -2,6 +2,7 @@ package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.tilbake
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import no.nav.k9.kodeverk.behandling.BehandlingResultatType
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.EventHendelse
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventLagret
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.AksjonspunktDefinisjonK9Tilbake
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.K9TilbakeEventDto
@@ -10,20 +11,21 @@ import no.nav.k9.los.nyoppgavestyring.kodeverk.AksjonspunktStatus
 import no.nav.k9.los.nyoppgavestyring.kodeverk.AksjonspunktStatus.OPPRETTET
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingStatus
 import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveDto
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdiDto
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.*
 import org.jetbrains.annotations.VisibleForTesting
 import java.time.temporal.ChronoUnit
 
 class TilbakeEventTilOppgaveMapper {
-    fun lagOppgaveDto(eventLagret: EventLagret, forrigeOppgave: OppgaveV3?) : OppgaveDto {
+    fun lagOppgaveDto(
+        eventLagret: EventLagret,
+        forrigeOppgave: OppgaveV3?,
+        eventnummer: Int
+    ): NyOppgaveVersjonInnsending {
         if (eventLagret.fagsystem != Fagsystem.K9TILBAKE) {
             throw IllegalArgumentException("Fagsystem er ikke TILBAKE")
         }
         val event = LosObjectMapper.instance.readValue<K9TilbakeEventDto>(eventLagret.eventJson)
-        return OppgaveDto(
+        val oppgaveDto = OppgaveDto(
             eksternId = event.eksternId.toString(),
             eksternVersjon = event.eventTid.toString(),
             område = "K9",
@@ -34,6 +36,15 @@ class TilbakeEventTilOppgaveMapper {
             reservasjonsnøkkel = utledReservasjonsnøkkel(event, erTilBeslutter(event)),
             feltverdier = lagFeltverdier(event, forrigeOppgave)
         )
+
+        if (event.eventHendelse == EventHendelse.VASKEEVENT) {
+            return VaskOppgaveversjon(
+                dto = oppgaveDto,
+                eventNummer = eventnummer
+            )
+        } else {
+            return NyOppgaveversjon(oppgaveDto)
+        }
     }
 
     companion object {
@@ -63,9 +74,17 @@ class TilbakeEventTilOppgaveMapper {
                 BehandlingStatus.IVERKSETTER_VEDTAK,
                 BehandlingStatus.UTREDES -> {
                     val harÅpentAutopunkt =
-                        event.aksjonspunktKoderMedStatusListe.any { it.value == OPPRETTET.kode && AksjonspunktDefinisjonK9Tilbake.fraKode(it.key).erAutopunkt }
+                        event.aksjonspunktKoderMedStatusListe.any {
+                            it.value == OPPRETTET.kode && AksjonspunktDefinisjonK9Tilbake.fraKode(
+                                it.key
+                            ).erAutopunkt
+                        }
                     val harÅpentAksjonspunkt =
-                        event.aksjonspunktKoderMedStatusListe.any { it.value == OPPRETTET.kode && !AksjonspunktDefinisjonK9Tilbake.fraKode(it.key).erAutopunkt }
+                        event.aksjonspunktKoderMedStatusListe.any {
+                            it.value == OPPRETTET.kode && !AksjonspunktDefinisjonK9Tilbake.fraKode(
+                                it.key
+                            ).erAutopunkt
+                        }
 
                     if (harÅpentAutopunkt) {
                         Oppgavestatus.VENTER
@@ -180,7 +199,7 @@ class TilbakeEventTilOppgaveMapper {
                 verdi = event.førsteFeilutbetaling ?: forrigeOppgave?.hentVerdi("førsteFeilutbetalingDato")
             ),
             utledTidFørsteGangHosBeslutter(forrigeOppgave, event),
-            ).filterNotNull().toMutableList()
+        ).filterNotNull().toMutableList()
 
         @VisibleForTesting
         fun utledTidFørsteGangHosBeslutter(

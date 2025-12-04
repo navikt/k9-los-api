@@ -9,8 +9,6 @@ import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
 import no.nav.k9.kodeverk.produksjonsstyring.UtvidetSøknadÅrsak
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetillos.KlageEventTilOppgaveMapper
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.K9SakTilLosAdapterTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.tilbaketillos.K9TilbakeTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.nyoppgavestyring.kodeverk.*
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonTjeneste
@@ -52,7 +50,7 @@ class OmrådeSetup(
     private fun oppdaterFeltdefinisjoner() {
         val objectMapper = jacksonObjectMapper()
         val feltdefinisjonerDto = objectMapper.readValue(
-            K9SakTilLosAdapterTjeneste::class.java.getResource("/adapterdefinisjoner/k9-feltdefinisjoner-v2.json")!!
+            OmrådeSetup::class.java.getResource("/adapterdefinisjoner/k9-feltdefinisjoner-v2.json")!!
                 .readText(),
             FeltdefinisjonerDto::class.java
         )
@@ -63,7 +61,7 @@ class OmrådeSetup(
     @WithSpan
     private fun ajourholdOppgavetype(oppgavedefinisjon: String, frontendUrl: String) {
         val oppgavetyperDto = LosObjectMapper.instance.readValue(
-            K9TilbakeTilLosAdapterTjeneste::class.java.getResource(oppgavedefinisjon)!!
+            OmrådeSetup::class.java.getResource(oppgavedefinisjon)!!
                 .readText(),
             OppgavetyperDto::class.java
         )
