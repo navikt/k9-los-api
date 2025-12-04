@@ -15,6 +15,7 @@ fun Route.UttrekkApi() {
     val pepClient by inject<IPepClient>()
     val requestContextService by inject<RequestContextService>()
     val uttrekkTjeneste by inject<UttrekkTjeneste>()
+    val uttrekkCsvGenerator by inject<UttrekkCsvGenerator>()
 
     get({
         response {
@@ -124,6 +125,43 @@ fun Route.UttrekkApi() {
                 val lagretSokId = call.parameters["lagretSokId"]!!.toLong()
                 val uttrekk = uttrekkTjeneste.hentForLagretSok(lagretSokId)
                 call.respond(uttrekk)
+            } else {
+                call.respond(HttpStatusCode.Forbidden)
+            }
+        }
+    }
+
+    get("{id}/csv", {
+        request {
+            pathParameter<Long>("id") {
+                required = true
+            }
+        }
+        response {
+            HttpStatusCode.OK to { }
+            HttpStatusCode.NotFound to { }
+        }
+    }) {
+        requestContextService.withRequestContext(call) {
+            if (pepClient.harBasisTilgang()) {
+                val id = call.parameters["id"]!!.toLong()
+                val uttrekk = uttrekkTjeneste.hent(id)
+
+                if (uttrekk == null) {
+                    call.respond(HttpStatusCode.NotFound)
+                    return@withRequestContext
+                }
+
+                val csv = uttrekkCsvGenerator.genererCsv(uttrekk.resultat!!)
+
+                call.response.header(
+                    HttpHeaders.ContentDisposition,
+                    ContentDisposition.Attachment.withParameter(
+                        ContentDisposition.Parameters.FileName,
+                        "uttrekk-$id.csv"
+                    ).toString()
+                )
+                call.respondText(csv, ContentType.parse("text/csv"), HttpStatusCode.OK)
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }

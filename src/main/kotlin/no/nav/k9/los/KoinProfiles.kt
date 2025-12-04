@@ -99,6 +99,7 @@ import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
 import no.nav.k9.los.nyoppgavestyring.sisteoppgaver.SisteOppgaverRepository
 import no.nav.k9.los.nyoppgavestyring.sisteoppgaver.SisteOppgaverTjeneste
 import no.nav.k9.los.nyoppgavestyring.søkeboks.SøkeboksTjeneste
+import no.nav.k9.los.nyoppgavestyring.uttrekk.UttrekkCsvGenerator
 import no.nav.k9.los.nyoppgavestyring.uttrekk.UttrekkJobb
 import no.nav.k9.los.nyoppgavestyring.uttrekk.UttrekkRepository
 import no.nav.k9.los.nyoppgavestyring.uttrekk.UttrekkTjeneste
@@ -769,6 +770,10 @@ fun common(app: Application, config: Configuration) = module {
             oppgaveQueryService = get(),
             lagretSøkTjeneste = get(),
         )
+    }
+
+    single<UttrekkCsvGenerator> {
+        UttrekkCsvGenerator()
     }
 }
 
