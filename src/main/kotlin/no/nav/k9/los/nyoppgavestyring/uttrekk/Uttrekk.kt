@@ -6,7 +6,8 @@ enum class UttrekkStatus {
     OPPRETTET,
     KJØRER,
     FULLFØRT,
-    FEILET
+    FEILET,
+    STOPPET
 }
 
 enum class TypeKjøring {
@@ -64,6 +65,14 @@ class Uttrekk private constructor(
         }
         status = UttrekkStatus.FEILET
         this.feilmelding = feilmelding
+        fullførtTidspunkt = LocalDateTime.now()
+    }
+
+    fun markerSomStoppet() {
+        if (status != UttrekkStatus.KJØRER) {
+            throw IllegalStateException("Kan kun stoppe uttrekk som er i status KJØRER")
+        }
+        status = UttrekkStatus.STOPPET
         fullførtTidspunkt = LocalDateTime.now()
     }
 

@@ -68,4 +68,13 @@ class UttrekkTjeneste(
         uttrekkRepository.oppdater(uttrekk)
         return uttrekk
     }
+
+    fun stoppUttrekk(id: Long): Uttrekk {
+        val uttrekk = uttrekkRepository.hent(id)
+            ?: throw IllegalArgumentException("Uttrekk med id $id finnes ikke")
+
+        uttrekk.markerSomStoppet()
+        uttrekkRepository.oppdater(uttrekk)
+        return uttrekk
+    }
 }
