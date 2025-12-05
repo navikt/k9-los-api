@@ -17,7 +17,6 @@ fun Route.UttrekkApi() {
     val uttrekkTjeneste by inject<UttrekkTjeneste>()
     val uttrekkRepository by inject<UttrekkRepository>()
     val uttrekkCsvGenerator by inject<UttrekkCsvGenerator>()
-    val uttrekkCsvStreamingGenerator by inject<UttrekkCsvStreamingGenerator>()
 
     get({
         response {
@@ -148,11 +147,8 @@ fun Route.UttrekkApi() {
             if (pepClient.harBasisTilgang()) {
                 val id = call.parameters["id"]!!.toLong()
                 val uttrekk = uttrekkTjeneste.hent(id)
+                // TODO: sjekk at uttrekk tilhører innlogget bruker
 
-                if (uttrekk == null) {
-                    call.respond(HttpStatusCode.NotFound)
-                    return@withRequestContext
-                }
 
                 val resultat = uttrekkRepository.hentResultat(id)
                 if (resultat == null) {
@@ -168,8 +164,8 @@ fun Route.UttrekkApi() {
                     ).toString()
                 )
 
-                call.respondOutputStream(ContentType.parse("text/csv"), HttpStatusCode.OK) {
-                    uttrekkCsvStreamingGenerator.genererCsv(resultat, this)
+                call.respondText(ContentType.parse("text/csv"), HttpStatusCode.OK) {
+                    uttrekkCsvGenerator.genererCsv(resultat)
                 }
             } else {
                 call.respond(HttpStatusCode.Forbidden)

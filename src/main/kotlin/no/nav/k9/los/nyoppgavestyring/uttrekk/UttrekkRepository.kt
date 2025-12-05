@@ -15,7 +15,7 @@ class UttrekkRepository(val dataSource: DataSource) {
             it.run(
                 queryOf(
                     """
-                SELECT id, opprettet_tidspunkt, status, lagret_sok, kjoreplan, type_kjoring,
+                SELECT id, opprettet_tidspunkt, status, lagret_sok, type_kjoring,
                        feilmelding, startet_tidspunkt, fullfort_tidspunkt, antall
                 FROM uttrekk
                 WHERE id = :id
@@ -48,14 +48,13 @@ class UttrekkRepository(val dataSource: DataSource) {
             tx.updateAndReturnGeneratedKey(
                 queryOf(
                     """
-                    INSERT INTO uttrekk (opprettet_tidspunkt, status, lagret_sok, kjoreplan, type_kjoring)
-                    VALUES (:opprettetTidspunkt, :status, :lagretSok, :kjoreplan, :typeKjoring)
+                    INSERT INTO uttrekk (opprettet_tidspunkt, status, lagret_sok, type_kjoring)
+                    VALUES (:opprettetTidspunkt, :status, :lagretSok, :typeKjoring)
                     """.trimIndent(),
                     mapOf(
                         "opprettetTidspunkt" to uttrekk.opprettetTidspunkt,
                         "status" to uttrekk.status.name,
                         "lagretSok" to uttrekk.lagretSøkId,
-                        "kjoreplan" to uttrekk.kjøreplan,
                         "typeKjoring" to uttrekk.typeKjøring.name
                     )
                 )
@@ -116,7 +115,7 @@ class UttrekkRepository(val dataSource: DataSource) {
             session.run(
                 queryOf(
                     """
-                SELECT id, opprettet_tidspunkt, status, lagret_sok, kjoreplan, type_kjoring,
+                SELECT id, opprettet_tidspunkt, status, lagret_sok, type_kjoring,
                        feilmelding, startet_tidspunkt, fullfort_tidspunkt, antall
                 FROM uttrekk
                 ORDER BY opprettet_tidspunkt DESC
@@ -133,7 +132,7 @@ class UttrekkRepository(val dataSource: DataSource) {
             session.run(
                 queryOf(
                     """
-                SELECT id, opprettet_tidspunkt, status, lagret_sok, kjoreplan, type_kjoring,
+                SELECT id, opprettet_tidspunkt, status, lagret_sok, type_kjoring,
                        feilmelding, startet_tidspunkt, fullfort_tidspunkt, antall
                 FROM uttrekk
                 WHERE lagret_sok = :lagretSokId
@@ -153,7 +152,6 @@ private fun Row.toUttrekk(): Uttrekk {
         opprettetTidspunkt = localDateTime("opprettet_tidspunkt"),
         status = UttrekkStatus.valueOf(string("status")),
         lagretSokId = long("lagret_sok"),
-        kjoreplan = stringOrNull("kjoreplan"),
         typeKjoring = TypeKjøring.valueOf(string("type_kjoring")),
         feilmelding = stringOrNull("feilmelding"),
         startetTidspunkt = localDateTimeOrNull("startet_tidspunkt"),

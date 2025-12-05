@@ -19,7 +19,6 @@ class Uttrekk private constructor(
     val opprettetTidspunkt: LocalDateTime,
     status: UttrekkStatus,
     val lagretSøkId: Long,
-    val kjøreplan: String?,
     val typeKjøring: TypeKjøring,
     feilmelding: String?,
     startetTidspunkt: LocalDateTime?,
@@ -65,13 +64,12 @@ class Uttrekk private constructor(
     }
 
     companion object {
-        fun opprettUttrekk(lagretSokId: Long, kjoreplan: String?, typeKjoring: TypeKjøring = TypeKjøring.OPPGAVER): Uttrekk {
+        fun opprettUttrekk(lagretSokId: Long, typeKjoring: TypeKjøring = TypeKjøring.OPPGAVER): Uttrekk {
             return Uttrekk(
                 id = null,
                 opprettetTidspunkt = LocalDateTime.now(),
                 status = UttrekkStatus.OPPRETTET,
                 lagretSøkId = lagretSokId,
-                kjøreplan = kjoreplan,
                 typeKjøring = typeKjoring,
                 feilmelding = null,
                 startetTidspunkt = null,
@@ -85,15 +83,16 @@ class Uttrekk private constructor(
             opprettetTidspunkt: LocalDateTime,
             status: UttrekkStatus,
             lagretSokId: Long,
-            kjoreplan: String?,
             typeKjoring: TypeKjøring,
             feilmelding: String?,
             startetTidspunkt: LocalDateTime?,
             fullførtTidspunkt: LocalDateTime?,
             antall: Int?
         ): Uttrekk {
-            return Uttrekk(id, opprettetTidspunkt, status, lagretSokId, kjoreplan, typeKjoring,
-                feilmelding, startetTidspunkt, fullførtTidspunkt, antall)
+            return Uttrekk(
+                id, opprettetTidspunkt, status, lagretSokId, typeKjoring, feilmelding,
+                startetTidspunkt, fullførtTidspunkt, antall
+            )
         }
     }
 }

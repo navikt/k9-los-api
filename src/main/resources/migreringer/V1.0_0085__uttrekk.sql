@@ -3,7 +3,6 @@ CREATE TABLE uttrekk (
     opprettet_tidspunkt TIMESTAMP NOT NULL DEFAULT NOW(),
     status TEXT NOT NULL,
     lagret_sok INT REFERENCES lagret_sok(id),
-    kjoreplan TEXT,
     resultat JSONB,
     feilmelding TEXT,
     type_kjoring TEXT,

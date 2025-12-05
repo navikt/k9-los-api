@@ -59,7 +59,6 @@ class UttrekkJobbTest : AbstractK9LosIntegrationTest() {
         // Opprett uttrekk med TypeKjøring.ANTALL
         val uttrekk = Uttrekk.opprettUttrekk(
             lagretSokId = lagretSøkId,
-            kjoreplan = null,
             typeKjoring = TypeKjøring.ANTALL
         )
         val uttrekkId = uttrekkRepository.opprett(uttrekk)
@@ -81,7 +80,6 @@ class UttrekkJobbTest : AbstractK9LosIntegrationTest() {
         // Opprett uttrekk med TypeKjøring.OPPGAVER
         val uttrekk = Uttrekk.opprettUttrekk(
             lagretSokId = lagretSøkId,
-            kjoreplan = null,
             typeKjoring = TypeKjøring.OPPGAVER
         )
         val uttrekkId = uttrekkRepository.opprett(uttrekk)
@@ -95,7 +93,7 @@ class UttrekkJobbTest : AbstractK9LosIntegrationTest() {
         val resultat = uttrekkRepository.hentResultat(uttrekkId)
         assertThat(resultat).isNotNull()
         // Resultat skal være JSON array (selv om det er tomt)
-        assertThat(resultat!!).startsWith("[")
+        assertThat(resultat.toString()).startsWith("[")
         assertThat(fullførtUttrekk.feilmelding).isNull()
         // AntallRader skal være satt for OPPGAVER
         assertThat(fullførtUttrekk.antall).isNotNull()

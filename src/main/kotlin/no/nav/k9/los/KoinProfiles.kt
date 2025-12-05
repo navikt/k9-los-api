@@ -99,7 +99,10 @@ import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
 import no.nav.k9.los.nyoppgavestyring.sisteoppgaver.SisteOppgaverRepository
 import no.nav.k9.los.nyoppgavestyring.sisteoppgaver.SisteOppgaverTjeneste
 import no.nav.k9.los.nyoppgavestyring.søkeboks.SøkeboksTjeneste
-import no.nav.k9.los.nyoppgavestyring.uttrekk.*
+import no.nav.k9.los.nyoppgavestyring.uttrekk.UttrekkCsvGenerator
+import no.nav.k9.los.nyoppgavestyring.uttrekk.UttrekkJobb
+import no.nav.k9.los.nyoppgavestyring.uttrekk.UttrekkRepository
+import no.nav.k9.los.nyoppgavestyring.uttrekk.UttrekkTjeneste
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepositoryTxWrapper
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.NøkkeltallRepositoryV3
@@ -771,10 +774,6 @@ fun common(app: Application, config: Configuration) = module {
 
     single<UttrekkCsvGenerator> {
         UttrekkCsvGenerator()
-    }
-
-    single<UttrekkCsvStreamingGenerator> {
-        UttrekkCsvStreamingGenerator()
     }
 }
 

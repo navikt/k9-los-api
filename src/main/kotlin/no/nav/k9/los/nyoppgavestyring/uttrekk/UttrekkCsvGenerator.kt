@@ -21,28 +21,20 @@ class UttrekkCsvGenerator {
             return ""
         }
 
-        val sb = StringBuilder()
+        return buildString {
+            // Kode fra første rad som kolonnenavn
+            // Bruke feltdefinisjon for å hente visningsnavn er en mulig forbedring
+            val headers = oppgaverader.first().map { it.kode }
+            append(headers.joinToString(","))
+            append("\n")
 
-        // Header - bruk kode fra første rad for å lage kolonnenavn
-        val headers = oppgaverader.first().map { it.kode }
-        sb.append(headers.joinToString(";"))
-        sb.append("\n")
-
-        // Data rows
-        for (rad in oppgaverader) {
-            val values = rad.map { feltverdi ->
-                val verdi = feltverdi.verdi?.toString() ?: ""
-                // Escape verdier som inneholder semikolon, newline eller anførselstegn
-                if (verdi.contains(";") || verdi.contains("\n") || verdi.contains("\"")) {
-                    "\"${verdi.replace("\"", "\"\"")}\""
-                } else {
-                    verdi
+            for (rad in oppgaverader) {
+                val values = rad.map { feltverdi ->
+                    feltverdi.verdi?.toString() ?: ""
                 }
+                append(values.joinToString(","))
+                append("\n")
             }
-            sb.append(values.joinToString(";"))
-            sb.append("\n")
         }
-
-        return sb.toString()
     }
 }

@@ -55,7 +55,6 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
     fun `skal opprette og hente uttrekk`() {
         val uttrekk = Uttrekk.opprettUttrekk(
             lagretSokId = lagretSøkId,
-            kjoreplan = "0 0 8 * * ?"
         )
 
         val id = uttrekkRepository.opprett(uttrekk)
@@ -64,7 +63,6 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
         assertThat(hentetUttrekk).isNotNull()
         assertThat(hentetUttrekk!!.id).isEqualTo(id)
         assertThat(hentetUttrekk.lagretSøkId).isEqualTo(lagretSøkId)
-        assertThat(hentetUttrekk.kjøreplan).isEqualTo("0 0 8 * * ?")
         assertThat(hentetUttrekk.status).isEqualTo(UttrekkStatus.OPPRETTET)
         assertThat(uttrekkRepository.hentResultat(id)).isNull()
         assertThat(hentetUttrekk.antall).isNull()
@@ -80,7 +78,6 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
     fun `skal oppdatere eksisterende uttrekk`() {
         val uttrekk = Uttrekk.opprettUttrekk(
             lagretSokId = lagretSøkId,
-            kjoreplan = null
         )
 
         val id = uttrekkRepository.opprett(uttrekk)
@@ -109,7 +106,6 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
             opprettetTidspunkt = java.time.LocalDateTime.now(),
             status = UttrekkStatus.KJØRER,
             lagretSokId = lagretSøkId,
-            kjoreplan = null,
             typeKjoring = TypeKjøring.OPPGAVER,
             feilmelding = null,
             startetTidspunkt = java.time.LocalDateTime.now(),
@@ -128,7 +124,6 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
     fun `skal slette uttrekk`() {
         val uttrekk = Uttrekk.opprettUttrekk(
             lagretSokId = lagretSøkId,
-            kjoreplan = null
         )
 
         val id = uttrekkRepository.opprett(uttrekk)
@@ -142,8 +137,8 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
 
     @Test
     fun `skal hente alle uttrekk`() {
-        val uttrekk1 = Uttrekk.opprettUttrekk(lagretSokId = lagretSøkId, kjoreplan = null)
-        val uttrekk2 = Uttrekk.opprettUttrekk(lagretSokId = lagretSøkId, kjoreplan = "0 0 8 * * ?")
+        val uttrekk1 = Uttrekk.opprettUttrekk(lagretSokId = lagretSøkId)
+        val uttrekk2 = Uttrekk.opprettUttrekk(lagretSokId = lagretSøkId)
 
         uttrekkRepository.opprett(uttrekk1)
         uttrekkRepository.opprett(uttrekk2)
@@ -165,9 +160,9 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
         )
         val annetLagretSøkId = lagretSøkRepository.opprett(annetLagretSøk)
 
-        val uttrekk1 = Uttrekk.opprettUttrekk(lagretSokId = lagretSøkId, kjoreplan = null)
-        val uttrekk2 = Uttrekk.opprettUttrekk(lagretSokId = lagretSøkId, kjoreplan = "0 0 8 * * ?")
-        val uttrekk3 = Uttrekk.opprettUttrekk(lagretSokId = annetLagretSøkId, kjoreplan = null)
+        val uttrekk1 = Uttrekk.opprettUttrekk(lagretSokId = lagretSøkId)
+        val uttrekk2 = Uttrekk.opprettUttrekk(lagretSokId = lagretSøkId)
+        val uttrekk3 = Uttrekk.opprettUttrekk(lagretSokId = annetLagretSøkId)
 
         uttrekkRepository.opprett(uttrekk1)
         uttrekkRepository.opprett(uttrekk2)
@@ -182,7 +177,6 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
     fun `skal opprette uttrekk med TypeKjøring ANTALL`() {
         val uttrekk = Uttrekk.opprettUttrekk(
             lagretSokId = lagretSøkId,
-            kjoreplan = null,
             typeKjoring = TypeKjøring.ANTALL
         )
 
@@ -197,7 +191,6 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
     fun `skal opprette uttrekk med standardverdi TypeKjøring OPPGAVER`() {
         val uttrekk = Uttrekk.opprettUttrekk(
             lagretSokId = lagretSøkId,
-            kjoreplan = null
         )
 
         val id = uttrekkRepository.opprett(uttrekk)
@@ -211,7 +204,6 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
     fun `skal sette feilmelding når uttrekk feiler`() {
         val uttrekk = Uttrekk.opprettUttrekk(
             lagretSokId = lagretSøkId,
-            kjoreplan = null
         )
 
         val id = uttrekkRepository.opprett(uttrekk)
