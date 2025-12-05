@@ -9,10 +9,17 @@ import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
 import no.nav.k9.los.nyoppgavestyring.OppgaveTestDataBuilder
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.K9Oppgavetypenavn
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.K9SakEventDtoBuilder
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.TestSaksbehandler
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventNøkkel
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.HistorikkvaskBestilling
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventHandler
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.HistorikkvaskTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.beriker.K9SakSystemKlientInterfaceKludge
+import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveDto
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdiDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
@@ -81,28 +88,17 @@ class HistorikkvaskFerdigstiltTest : AbstractK9LosIntegrationTest() {
         
         // Oppdater oppgaven for å fjerne ferdigstiltEnhet og ferdigstiltTidspunkt feltene
         transactionalManager.transaction { tx ->
-            val oppgavetype = oppgavetypeRepository.hentOppgavetype("K9", "k9sak", tx)
-            val aktivOppgave = oppgaveV3Tjeneste.hentAktivOppgave(eksternId.toString(), oppgavetype.eksternId, oppgavetype.område.eksternId, tx)
+            val aktivOppgave = oppgaveV3Tjeneste.hentAktivOppgave(eksternId.toString(), K9Oppgavetypenavn.SAK.kode, "K9", tx)
             
             // Fjern feltene for å simulere en gammel oppgave som mangler disse feltene
             val felterUtenFerdigstilt = aktivOppgave.felter.filter { 
                 it.oppgavefelt.feltDefinisjon.eksternId != "ferdigstiltEnhet" && 
                 it.oppgavefelt.feltDefinisjon.eksternId != "ferdigstiltTidspunkt" 
-            }
+            }.map { OppgaveFeltverdiDto(it.oppgavefelt.feltDefinisjon.eksternId, it.verdi) }
             
-            val oppdatertOppgave = OppgaveV3(
-                eksternId = aktivOppgave.eksternId,
-                eksternVersjon = aktivOppgave.eksternVersjon,
-                oppgavetype = oppgavetype,
-                status = aktivOppgave.status,
-                kildeområde = aktivOppgave.kildeområde,
-                endretTidspunkt = aktivOppgave.endretTidspunkt,
-                reservasjonsnøkkel = aktivOppgave.reservasjonsnøkkel,
-                felter = felterUtenFerdigstilt,
-                aktiv = aktivOppgave.aktiv,
-            )
-            
-            oppgaveV3Tjeneste.oppdaterEksisterendeOppgaveversjon(oppdatertOppgave, 1, tx)
+            val oppdatertOppgave = OppgaveDto(aktivOppgave).copy(feltverdier = felterUtenFerdigstilt)
+
+            oppgaveV3Tjeneste.vaskEksisterendeOppgaveversjon(oppdatertOppgave, 1, tx)
         }
         
         // Verifiser at feltene ikke er satt før historikkvask
@@ -117,11 +113,20 @@ class HistorikkvaskFerdigstiltTest : AbstractK9LosIntegrationTest() {
         assertTrue(ferdigstiltTidspunktFørVask == null, "ferdigstiltTidspunkt skal ikke være satt før historikkvask")
         
         // Utfør historikkvask
-        val historikkvaskTjeneste = K9SakTilLosHistorikkvaskTjeneste(
-            get(), oppgaveV3Tjeneste, get(), get(), get(), k9SakBerikerKlient
+        val historikkvaskTjeneste = HistorikkvaskTjeneste(
+            eventRepository = get(),
+            oppgaveV3Tjeneste = get(),
+            eventTilOppgaveMapper = get(),
+            transactionalManager = get()
         )
         
-        historikkvaskTjeneste.vaskOppgaveForBehandlingUUID(eksternId)
+        historikkvaskTjeneste.vaskBestilling(
+            HistorikkvaskBestilling(
+                eventlagerNøkkel = null,
+                eksternId = eksternId.toString(),
+                fagsystem = Fagsystem.K9SAK
+            )
+        )
         
         // Verifiser at feltene er satt etter historikkvask
         val oppgaveEtterVask = oppgaveRepositoryTxWrapper.hentOppgave("K9", eksternId.toString())

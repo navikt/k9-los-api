@@ -147,43 +147,6 @@ class OppgaveV3Repository(
         område: Område,
         oppgavetype: Oppgavetype,
         eksternId: String,
-        eksternVersjon: String,
-        tx: TransactionalSession
-    ): OppgaveV3? {
-        val internVersjonForEksternversjon = tx.run(
-            queryOf(
-                """
-                    select o.versjon
-                    from oppgave_v3 o
-                        inner join oppgavetype ot on o.oppgavetype_id = ot.id
-                        inner join omrade omr on ot.omrade_id = omr.id
-                    where omr.ekstern_id = :omrade_ekstern_id
-                    and ot.ekstern_id = :oppgavetype_ekstern_id
-                    and o.ekstern_id = :oppgave_ekstern_id
-                    and o.ekstern_versjon = :oppgave_ekstern_versjon
-                """.trimIndent(),
-                mapOf(
-                    "omrade_ekstern_id" to område.eksternId,
-                    "oppgavetype_ekstern_id" to oppgavetype.eksternId,
-                    "oppgave_ekstern_id" to eksternId,
-                    "oppgave_ekstern_versjon" to eksternVersjon
-                )
-            ).map { row ->
-                row.int("versjon")
-            }.asSingle
-        )
-
-        if (internVersjonForEksternversjon == null) {
-            return null
-        }
-
-        return hentOppgaveversjon(område, oppgavetype, eksternId, internVersjonForEksternversjon!! - 1, tx)
-    }
-
-    fun hentOppgaveversjonenFør(
-        område: Område,
-        oppgavetype: Oppgavetype,
-        eksternId: String,
         internVersjon: Int,
         tx: TransactionalSession
     ): OppgaveV3? {

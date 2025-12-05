@@ -12,7 +12,7 @@ import java.util.*
 
 typealias PunsjId = UUID
 
-data class PunsjEventDto(
+data class K9PunsjEventDto(
     val eksternId: PunsjId,
     val journalpostId: JournalpostId,
     val eventTid: LocalDateTime,
@@ -40,11 +40,11 @@ data class PunsjEventDto(
         """.trimIndent()
 
     companion object {
-        fun fraEventLagret(eventLagret: EventLagret): PunsjEventDto {
+        fun fraEventLagret(eventLagret: EventLagret): K9PunsjEventDto {
             if (eventLagret.fagsystem != Fagsystem.PUNSJ) {
                 throw IllegalStateException()
             }
-            return LosObjectMapper.instance.readValue<PunsjEventDto>(eventLagret.eventJson)
+            return LosObjectMapper.instance.readValue<K9PunsjEventDto>(eventLagret.eventJson)
         }
     }
 }

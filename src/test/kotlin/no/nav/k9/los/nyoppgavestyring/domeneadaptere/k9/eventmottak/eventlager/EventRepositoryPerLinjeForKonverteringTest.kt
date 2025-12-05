@@ -3,10 +3,9 @@ package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager
 import assertk.assertThat
 import assertk.assertions.isEmpty
 import assertk.assertions.isEqualTo
-import io.kotest.core.spec.style.AnnotationSpec
 import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.PunsjEventDto
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventDto
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.PunsjId
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
@@ -35,7 +34,7 @@ class EventRepositoryPerLinjeForKonverteringTest() : AbstractK9LosIntegrationTes
 
         val eksternId = PunsjId.fromString(UUID.randomUUID().toString())
 
-        val event = PunsjEventDto(
+        val event = K9PunsjEventDto(
             eksternId = eksternId,
             journalpostId = JournalpostId(1L),
             eventTid = LocalDateTime.now().minusHours(1),
@@ -55,14 +54,14 @@ class EventRepositoryPerLinjeForKonverteringTest() : AbstractK9LosIntegrationTes
             eventRepository.lagre(Fagsystem.PUNSJ, eventstring, tx)!!
         }
 
-        assertThat(PunsjEventDto.fraEventLagret(eventLagret).status).isEqualTo(Oppgavestatus.AAPEN)
+        assertThat(K9PunsjEventDto.fraEventLagret(eventLagret).status).isEqualTo(Oppgavestatus.AAPEN)
 
         var alleEventer = transactionalManager.transaction { tx ->
             eventRepository.hentAlleEventerMedLås(Fagsystem.PUNSJ, eksternId.toString(), tx)
         }
         assertThat(alleEventer.size).isEqualTo(1)
 
-        val event2 = PunsjEventDto(
+        val event2 = K9PunsjEventDto(
             eksternId = eksternId,
             journalpostId = JournalpostId(1L),
             aktørId = AktørId(2L),
@@ -81,7 +80,7 @@ class EventRepositoryPerLinjeForKonverteringTest() : AbstractK9LosIntegrationTes
         val eventLagret2 = transactionalManager.transaction { tx ->
             eventRepository.lagre(Fagsystem.PUNSJ, eventstring2, tx)!!
         }
-        assertThat(PunsjEventDto.fraEventLagret(eventLagret2).status).isEqualTo(Oppgavestatus.VENTER)
+        assertThat(K9PunsjEventDto.fraEventLagret(eventLagret2).status).isEqualTo(Oppgavestatus.VENTER)
 
         alleEventer = transactionalManager.transaction { tx ->
             eventRepository.hentAlleEventerMedLås(Fagsystem.PUNSJ, eksternId.toString(), tx)
@@ -98,7 +97,7 @@ class EventRepositoryPerLinjeForKonverteringTest() : AbstractK9LosIntegrationTes
             eventRepository.hentAlleDirtyEventerNummerertMedLås(Fagsystem.PUNSJ, eksternId.toString(), tx)
         }
         assertThat(alleDirtyEventerNummerert.size).isEqualTo(1)
-        assertThat(PunsjEventDto.fraEventLagret(alleDirtyEventerNummerert[0].second).status).isEqualTo(Oppgavestatus.VENTER)
+        assertThat(K9PunsjEventDto.fraEventLagret(alleDirtyEventerNummerert[0].second).status).isEqualTo(Oppgavestatus.VENTER)
 
         val førsteLagredeEvent = transactionalManager.transaction { tx ->
             eventRepository.hent(
@@ -108,7 +107,7 @@ class EventRepositoryPerLinjeForKonverteringTest() : AbstractK9LosIntegrationTes
                 tx
             )
         }
-        assertThat(PunsjEventDto.fraEventLagret(førsteLagredeEvent).status).isEqualTo(Oppgavestatus.AAPEN)
+        assertThat(K9PunsjEventDto.fraEventLagret(førsteLagredeEvent).status).isEqualTo(Oppgavestatus.AAPEN)
     }
 
     @Test
@@ -118,7 +117,7 @@ class EventRepositoryPerLinjeForKonverteringTest() : AbstractK9LosIntegrationTes
 
         val eksternId = PunsjId.fromString(UUID.randomUUID().toString())
 
-        val event = PunsjEventDto(
+        val event = K9PunsjEventDto(
             eksternId = eksternId,
             journalpostId = JournalpostId(1L),
             eventTid = LocalDateTime.now().minusHours(1),
@@ -155,7 +154,7 @@ class EventRepositoryPerLinjeForKonverteringTest() : AbstractK9LosIntegrationTes
 
         val eksternId = PunsjId.fromString(UUID.randomUUID().toString())
 
-        val event = PunsjEventDto(
+        val event = K9PunsjEventDto(
             eksternId = PunsjId.fromString(UUID.randomUUID().toString()),
             journalpostId = JournalpostId(1L),
             eventTid = LocalDateTime.now().minusHours(1),
@@ -175,7 +174,7 @@ class EventRepositoryPerLinjeForKonverteringTest() : AbstractK9LosIntegrationTes
             eventRepository.lagre(Fagsystem.PUNSJ, eventString, tx)!!
         }
 
-        val event2 = PunsjEventDto(
+        val event2 = K9PunsjEventDto(
             eksternId = eksternId,
             journalpostId = JournalpostId(1L),
             aktørId = AktørId(2L),
@@ -208,7 +207,7 @@ class EventRepositoryPerLinjeForKonverteringTest() : AbstractK9LosIntegrationTes
             )
                 .sortedBy { LocalDateTime.parse(it.eksternVersjon) }[0]
         }
-        assertThat(PunsjEventDto.fraEventLagret(uvasketEventLagret).status).isEqualTo(Oppgavestatus.VENTER)
+        assertThat(K9PunsjEventDto.fraEventLagret(uvasketEventLagret).status).isEqualTo(Oppgavestatus.VENTER)
 
         eventRepository.settHistorikkvaskFerdig(Fagsystem.PUNSJ, uvasketEventLagret.eksternId)
 

@@ -3,7 +3,7 @@ package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.punsjti
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.shouldBe
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.PunsjEventDto
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.sak.typer.JournalpostId
 import java.time.LocalDateTime
@@ -49,8 +49,8 @@ class UtledOppgavestatusTest : FreeSpec( {
 })
 
 object Testdata {
-    fun testevent(status: Oppgavestatus?, sendtInn: Boolean?, apStatus: MutableMap<String, String>) : PunsjEventDto {
-        return PunsjEventDto(
+    fun testevent(status: Oppgavestatus?, sendtInn: Boolean?, apStatus: MutableMap<String, String>) : K9PunsjEventDto {
+        return K9PunsjEventDto(
             eksternId = UUID.randomUUID(),
             journalpostId = JournalpostId(123L),
             eventTid = LocalDateTime.now(),

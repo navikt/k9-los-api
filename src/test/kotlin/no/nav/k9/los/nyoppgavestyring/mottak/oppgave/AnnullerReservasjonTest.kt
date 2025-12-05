@@ -37,11 +37,11 @@ class AnnullerReservasjonTest: AbstractK9LosIntegrationTest() {
     @Test
     fun `hvis alle oppgaver på reservasjonsnøkkel er lukket skal reservasjon annulleres -- kun en oppgave`() {
         transactionalManager.transaction { tx ->
-            oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(oppgavemodellBuilder.lagOppgaveDto(status = Oppgavestatus.AAPEN.toString()), tx)
+            oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(NyOppgaveversjon(oppgavemodellBuilder.lagOppgaveDto(status = Oppgavestatus.AAPEN.toString())), tx)
         }
         verify(exactly = 0) { reservasjonV3Tjenestemock.annullerReservasjonHvisFinnes(any(), any(), any()) }
         transactionalManager.transaction { tx ->
-            oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(oppgavemodellBuilder.lagOppgaveDto(status = Oppgavestatus.LUKKET.toString()), tx)
+            oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(NyOppgaveversjon(oppgavemodellBuilder.lagOppgaveDto(status = Oppgavestatus.LUKKET.toString())), tx)
         }
         verify(exactly = 1) { reservasjonV3Tjenestemock.annullerReservasjonHvisFinnes(any(), any(), any()) }
     }
@@ -49,33 +49,33 @@ class AnnullerReservasjonTest: AbstractK9LosIntegrationTest() {
     @Test
     fun `hvis alle oppgaver på reservasjonsnøkkel er lukket skal reservasjon annulleres -- to oppgaver`() {
         transactionalManager.transaction { tx ->
-            oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(oppgavemodellBuilder.lagOppgaveDto(
+            oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(NyOppgaveversjon(oppgavemodellBuilder.lagOppgaveDto(
                 id = "test1",
                 status = Oppgavestatus.AAPEN.toString(),
                 reservasjonsnøkkel = "felles"
-            ), tx)
+            )), tx)
         }
         transactionalManager.transaction { tx ->
-            oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(oppgavemodellBuilder.lagOppgaveDto(
+            oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(NyOppgaveversjon(oppgavemodellBuilder.lagOppgaveDto(
                 id = "test2",
                 status = Oppgavestatus.AAPEN.toString(),
                 reservasjonsnøkkel = "felles"
-            ), tx)
+            )), tx)
         }
         transactionalManager.transaction { tx ->
-            oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(oppgavemodellBuilder.lagOppgaveDto(
+            oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(NyOppgaveversjon(oppgavemodellBuilder.lagOppgaveDto(
                 id = "test2",
                 status = Oppgavestatus.LUKKET.toString(),
                 reservasjonsnøkkel = "felles"
-            ), tx)
+            )), tx)
         }
         verify(exactly = 0) { reservasjonV3Tjenestemock.annullerReservasjonHvisFinnes(any(), any(), any()) }
         transactionalManager.transaction { tx ->
-            oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(oppgavemodellBuilder.lagOppgaveDto(
+            oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(NyOppgaveversjon(oppgavemodellBuilder.lagOppgaveDto(
                 id = "test1",
                 status = Oppgavestatus.LUKKET.toString(),
                 reservasjonsnøkkel = "felles"
-            ), tx)
+            )), tx)
         }
         verify(exactly = 1) { reservasjonV3Tjenestemock.annullerReservasjonHvisFinnes(any(), any(), any()) }
     }

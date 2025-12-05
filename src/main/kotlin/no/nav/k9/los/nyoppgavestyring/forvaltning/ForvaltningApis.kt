@@ -7,14 +7,7 @@ import io.ktor.server.routing.*
 import kotliquery.queryOf
 import no.nav.k9.kodeverk.behandling.FagsakYtelseType
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.AvstemmingsTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.klage.K9KlageEventRepository
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventRepository
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventRepository
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.K9TilbakeEventRepository
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetillos.K9KlageTilLosHistorikkvaskTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.punsjtillos.K9PunsjTilLosHistorikkvaskTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.K9SakTilLosHistorikkvaskTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.tilbaketillos.K9TilbakeTilLosHistorikkvaskTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventRepository
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.RequestContextService
@@ -39,18 +32,10 @@ import kotlin.getValue
 
 
 fun Route.forvaltningApis() {
-    val k9sakEventRepository by inject<K9SakEventRepository>()
-    val k9tilbakeEventRepository by inject<K9TilbakeEventRepository>()
-    val k9klageEventRepository by inject<K9KlageEventRepository>()
-    val k9PunsjEventK9Repository by inject<K9PunsjEventRepository>()
     val oppgaveRepositoryTxWrapper by inject<OppgaveRepositoryTxWrapper>()
     val oppgaveTypeRepository by inject<OppgavetypeRepository>()
     val oppgaveKoTjeneste by inject<OppgaveKoTjeneste>()
     val oppgaveQueryService by inject<OppgaveQueryService>()
-    val k9SakTilLosHistorikkvaskTjeneste by inject<K9SakTilLosHistorikkvaskTjeneste>()
-    val k9TilbakeTilLosHistorikkvaskTjeneste by inject<K9TilbakeTilLosHistorikkvaskTjeneste>()
-    val k9KlageTilLosHistorikkvaskTjeneste by inject<K9KlageTilLosHistorikkvaskTjeneste>()
-    val k9PunsjTilLosHistorikkvaskTjeneste by inject<K9PunsjTilLosHistorikkvaskTjeneste>()
     val reservasjonV3Repository by inject<ReservasjonV3Repository>()
     val objectMapper = LosObjectMapper.prettyInstance
     val transactionalManager by inject<TransactionalManager>()
@@ -198,69 +183,6 @@ fun Route.forvaltningApis() {
         }
     }
 
-    get("/eventer/{system}/{eksternId}", {
-        tags("Forvaltning")
-        description = "Hent ut eventhistorikk for en oppgave"
-        request {
-            pathParameter<String>("system") {
-                description = "Kildesystem som har levert eventene"
-                example("k9sak") {
-                    value = "K9SAK"
-                    description = "Oppgaver fra k9sak"
-                }
-                example("k9klage") {
-                    value = "K9KLAGE"
-                    description = "Oppgaver fra k9klage"
-                }
-            }
-            pathParameter<String>("eksternId") {
-                description = "Oppgavens eksterne Id, definert av innleverende fagsystem"
-            }
-        }
-    }) {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.kanLeggeUtDriftsmelding()) {
-                val fagsystem = Fagsystem.fraKode(call.parameters["system"]!!)
-                val eksternId = call.parameters["eksternId"]
-                when (fagsystem) {
-                    Fagsystem.K9SAK -> {
-                        val k9SakModell = k9sakEventRepository.hent(UUID.fromString(eksternId))
-                        if (k9SakModell.eventer.isEmpty()) {
-                            call.respond(HttpStatusCode.NotFound)
-                        } else {
-                            val eventerIkkeSensitive =
-                                k9SakModell.eventer.map { event -> K9SakEventIkkeSensitiv(event) }
-                            call.respond(objectMapper.writeValueAsString(eventerIkkeSensitive))
-                        }
-                    }
-
-                    Fagsystem.K9TILBAKE -> {
-                        val k9TilbakeModell = k9tilbakeEventRepository.hent(UUID.fromString(eksternId))
-                        val eventerIkkeSensitive =
-                            k9TilbakeModell.eventer.map { event -> K9TilbakeEventIkkeSensitiv(event) }
-                        call.respond(objectMapper.writeValueAsString(eventerIkkeSensitive))
-                    }
-
-                    Fagsystem.K9KLAGE -> {
-                        val k9KlageModell = k9klageEventRepository.hent(UUID.fromString(eksternId))
-                        val eventerIkkeSensitive =
-                            k9KlageModell.eventer.map { event -> K9KlageEventIkkeSensitiv(event) }
-                        call.respond(objectMapper.writeValueAsString(eventerIkkeSensitive))
-                    }
-
-                    Fagsystem.PUNSJ -> {
-                        val k9PunsjModell = k9PunsjEventK9Repository.hent(UUID.fromString(eksternId))
-                        val eventerIkkeSensitive =
-                            k9PunsjModell.eventer.map { event -> K9PunsjEventIkkeSensitiv(event) }
-                        call.respond(objectMapper.writeValueAsString(eventerIkkeSensitive))
-                    }
-                }
-            } else {
-                call.respond(HttpStatusCode.Forbidden)
-            }
-        }
-    }
-
     get("/oppgaveV3/{omrade}/{oppgavetype}/{oppgaveEksternId}/aktiv", {
         tags("Forvaltning")
         description = "Hent ut nåtilstand for en oppgave"
@@ -350,166 +272,6 @@ fun Route.forvaltningApis() {
                 } else {
                     val tidsserieIkkeSensitiv = oppgaveTidsserie.map { oppgave -> OppgaveIkkeSensitiv(oppgave) }
                     call.respond(objectMapper.writeValueAsString(tidsserieIkkeSensitiv))
-                }
-            } else {
-                call.respond(HttpStatusCode.Forbidden)
-            }
-        }
-    }
-
-    get("/oppgaveV3/{omrade}/{oppgavetype}/{oppgaveEksternId}/historikkvask", {
-        tags("Forvaltning")
-        description =
-            "Kjøre historikkvask for enkeltsak, for å vaske eksisterende oppgavehistorikk mot korresponderende eventer"
-        request {
-            pathParameter<String>("omrade") {
-                description = "Området oppgavetypen er definert i. Pr i dag er kun K9 implementert"
-                example("K9") {
-                    value = "K9"
-                    description = "Oppgaver definert innenfor K9"
-                }
-            }
-            pathParameter<String>("oppgavetype") {
-                description = "Navnet på oppgavetypen."
-                example("k9sak") {
-                    value = "k9sak"
-                    description = "Oppgaver som kommer fra k9sak"
-                }
-            }
-            pathParameter<String>("oppgaveEksternId") {
-                description = "Oppgavens eksterne Id, definert av innleverende fagsystem"
-            }
-        }
-    }) {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.kanLeggeUtDriftsmelding()) {
-                val område = call.parameters["omrade"]!!
-                val oppgavetype = call.parameters["oppgavetype"]!!
-                val oppgaveEksternId = call.parameters["oppgaveEksternId"]!!
-
-                when (område) {
-                    "K9" -> {
-                        when (oppgavetype) {
-                            "k9sak" -> {
-                                k9SakTilLosHistorikkvaskTjeneste.vaskOppgaveForBehandlingUUID(
-                                    UUID.fromString(
-                                        oppgaveEksternId
-                                    )
-                                )
-                                call.respond(HttpStatusCode.NoContent)
-                            }
-
-                            "k9tilbake" -> {
-                                k9KlageTilLosHistorikkvaskTjeneste.vaskOppgaveForBehandlingUUID(
-                                    UUID.fromString(
-                                        oppgaveEksternId
-                                    )
-                                )
-                                call.respond(HttpStatusCode.NoContent)
-                            }
-
-                            "k9klage" -> {
-                                k9TilbakeTilLosHistorikkvaskTjeneste.vaskOppgaveForBehandlingUUID(
-                                    UUID.fromString(
-                                        oppgaveEksternId
-                                    )
-                                )
-                                call.respond(HttpStatusCode.NoContent)
-                            }
-
-                            "k9punsj" -> {
-                                k9PunsjTilLosHistorikkvaskTjeneste.vaskOppgaveForBehandlingUUID(
-                                    UUID.fromString(
-                                        oppgaveEksternId
-                                    )
-                                )
-                                call.respond(HttpStatusCode.NoContent)
-                            }
-
-                            else -> call.respond(
-                                HttpStatusCode.NotImplemented,
-                                "Støtter ikke historikkvask på oppgavetype: $oppgavetype for område: $område"
-                            )
-                        }
-                    }
-
-                    else -> call.respond(HttpStatusCode.NotImplemented, "Støtter ikke historikkvask på område: $område")
-                }
-            } else {
-                call.respond(HttpStatusCode.Forbidden)
-            }
-        }
-    }
-
-    get("/oppgaveV3/{omrade}/{oppgavetype}/{oppgaveEksternId}/settdirty", {
-        tags("Forvaltning")
-        description =
-            "Sett dirtyflagg på eventhistorikk for å trigge innlesning av eventer som mangler i oppgavehistorikken"
-        request {
-            pathParameter<String>("omrade") {
-                description = "Området oppgavetypen er definert i. Pr i dag er kun K9 implementert"
-                example("K9") {
-                    value = "K9"
-                    description = "Oppgaver definert innenfor K9"
-                }
-            }
-            pathParameter<String>("oppgavetype") {
-                description = "Navnet på oppgavetypen."
-                example("k9sak") {
-                    value = "k9sak"
-                    description = "Oppgaver som kommer fra k9sak"
-                }
-            }
-            pathParameter<String>("oppgaveEksternId") {
-                description = "Oppgavens eksterne Id, definert av innleverende fagsystem"
-            }
-        }
-    }) {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.kanLeggeUtDriftsmelding()) {
-                val område = call.parameters["omrade"]!!
-                val oppgavetype = call.parameters["oppgavetype"]!!
-                val oppgaveEksternId = call.parameters["oppgaveEksternId"]!!
-
-                when (område) {
-                    "K9" -> {
-                        when (oppgavetype) {
-                            "k9sak" -> {
-                                transactionalManager.transaction { tx ->
-                                    k9sakEventRepository.settDirty(UUID.fromString(oppgaveEksternId), tx)
-                                }
-                                call.respond(HttpStatusCode.NoContent)
-                            }
-
-                            "k9klage" -> {
-                                transactionalManager.transaction { tx ->
-                                    k9klageEventRepository.settDirty(UUID.fromString(oppgaveEksternId), tx)
-                                }
-                                call.respond(HttpStatusCode.NoContent)
-                            }
-
-                            "k9tilbake" -> {
-                                transactionalManager.transaction { tx ->
-                                    k9tilbakeEventRepository.settDirty(UUID.fromString(oppgaveEksternId), tx)
-                                }
-                                call.respond(HttpStatusCode.NoContent)
-                            }
-
-                            "k9punsj" -> {
-                                transactionalManager.transaction { tx ->
-                                    k9PunsjEventK9Repository.settDirty(UUID.fromString(oppgaveEksternId), tx)
-                                }
-                                call.respond(HttpStatusCode.NoContent)
-                            }
-
-                            else -> call.respond(
-                                HttpStatusCode.NotImplemented,
-                                "Oppgavetype $oppgavetype for område: $område ikke implementert"
-                            )
-                        }
-                    }
-
-                    else -> call.respond(HttpStatusCode.NotImplemented, "Område: $område ikke implementert")
                 }
             } else {
                 call.respond(HttpStatusCode.Forbidden)

@@ -62,8 +62,8 @@ data class PunsjEventDtoBuilder(
     }
 
 
-    fun build(): PunsjEventDto {
-        return PunsjEventDto(
+    fun build(): K9PunsjEventDto {
+        return K9PunsjEventDto(
             eksternId = eksternId,
             journalpostId = JournalpostId(journalpostId),
             eventTid = eventTid ?: LocalDateTime.now().plusSeconds(teller++),

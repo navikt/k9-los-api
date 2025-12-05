@@ -10,4 +10,5 @@ data class EventLagret(
     val eksternVersjon: String,
     val eventJson: String,
     val opprettet: LocalDateTime,
+    val dirty: Boolean,
 )
