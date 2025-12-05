@@ -1,5 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.uttrekk
 
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
 import java.time.LocalDateTime
 
 enum class UttrekkStatus {
@@ -18,8 +19,10 @@ class Uttrekk private constructor(
     val id: Long?,
     val opprettetTidspunkt: LocalDateTime,
     status: UttrekkStatus,
-    val lagretSøkId: Long,
+    val query: OppgaveQuery,
     val typeKjøring: TypeKjøring,
+    val lagetAv: Long,
+    val timeout: Int,
     feilmelding: String?,
     startetTidspunkt: LocalDateTime?,
     fullførtTidspunkt: LocalDateTime?,
@@ -64,13 +67,20 @@ class Uttrekk private constructor(
     }
 
     companion object {
-        fun opprettUttrekk(lagretSokId: Long, typeKjoring: TypeKjøring = TypeKjøring.OPPGAVER): Uttrekk {
+        fun opprettUttrekk(
+            query: OppgaveQuery,
+            typeKjoring: TypeKjøring,
+            lagetAv: Long,
+            timeout: Int
+        ): Uttrekk {
             return Uttrekk(
                 id = null,
                 opprettetTidspunkt = LocalDateTime.now(),
                 status = UttrekkStatus.OPPRETTET,
-                lagretSøkId = lagretSokId,
+                query = query,
                 typeKjøring = typeKjoring,
+                lagetAv = lagetAv,
+                timeout = timeout,
                 feilmelding = null,
                 startetTidspunkt = null,
                 fullførtTidspunkt = null,
@@ -82,15 +92,17 @@ class Uttrekk private constructor(
             id: Long,
             opprettetTidspunkt: LocalDateTime,
             status: UttrekkStatus,
-            lagretSokId: Long,
+            query: OppgaveQuery,
             typeKjoring: TypeKjøring,
+            lagetAv: Long,
+            timeout: Int,
             feilmelding: String?,
             startetTidspunkt: LocalDateTime?,
             fullførtTidspunkt: LocalDateTime?,
             antall: Int?
         ): Uttrekk {
             return Uttrekk(
-                id, opprettetTidspunkt, status, lagretSokId, typeKjoring, feilmelding,
+                id, opprettetTidspunkt, status, query, typeKjoring, lagetAv, timeout, feilmelding,
                 startetTidspunkt, fullførtTidspunkt, antall
             )
         }

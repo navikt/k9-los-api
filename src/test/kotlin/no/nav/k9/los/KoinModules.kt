@@ -658,7 +658,6 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
         UttrekkJobb(
             oppgaveQueryService = get(),
             uttrekkTjeneste = get(),
-            lagretSøkTjeneste = get()
         )
     }
 

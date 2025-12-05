@@ -5,6 +5,8 @@ import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
 import javax.sql.DataSource
 
 class UttrekkRepository(val dataSource: DataSource) {
@@ -15,7 +17,7 @@ class UttrekkRepository(val dataSource: DataSource) {
             it.run(
                 queryOf(
                     """
-                SELECT id, opprettet_tidspunkt, status, lagret_sok, type_kjoring,
+                SELECT id, opprettet_tidspunkt, status, query, type_kjoring, laget_av, timeout,
                        feilmelding, startet_tidspunkt, fullfort_tidspunkt, antall
                 FROM uttrekk
                 WHERE id = :id
@@ -48,14 +50,16 @@ class UttrekkRepository(val dataSource: DataSource) {
             tx.updateAndReturnGeneratedKey(
                 queryOf(
                     """
-                    INSERT INTO uttrekk (opprettet_tidspunkt, status, lagret_sok, type_kjoring)
-                    VALUES (:opprettetTidspunkt, :status, :lagretSok, :typeKjoring)
+                    INSERT INTO uttrekk (opprettet_tidspunkt, status, query, type_kjoring, laget_av, timeout)
+                    VALUES (:opprettetTidspunkt, :status, :query::jsonb, :typeKjoring, :lagetAv, :timeout)
                     """.trimIndent(),
                     mapOf(
                         "opprettetTidspunkt" to uttrekk.opprettetTidspunkt,
                         "status" to uttrekk.status.name,
-                        "lagretSok" to uttrekk.lagretSøkId,
-                        "typeKjoring" to uttrekk.typeKjøring.name
+                        "query" to LosObjectMapper.instance.writeValueAsString(uttrekk.query),
+                        "typeKjoring" to uttrekk.typeKjøring.name,
+                        "lagetAv" to uttrekk.lagetAv,
+                        "timeout" to uttrekk.timeout
                     )
                 )
             )
@@ -115,7 +119,7 @@ class UttrekkRepository(val dataSource: DataSource) {
             session.run(
                 queryOf(
                     """
-                SELECT id, opprettet_tidspunkt, status, lagret_sok, type_kjoring,
+                SELECT id, opprettet_tidspunkt, status, query, type_kjoring, laget_av, timeout,
                        feilmelding, startet_tidspunkt, fullfort_tidspunkt, antall
                 FROM uttrekk
                 ORDER BY opprettet_tidspunkt DESC
@@ -127,17 +131,17 @@ class UttrekkRepository(val dataSource: DataSource) {
         }
     }
 
-    fun hentForLagretSok(lagretSokId: Long): List<Uttrekk> {
+    fun hentForSaksbehandler(saksbehandlerId: Long): List<Uttrekk> {
         return using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(
                     """
-                SELECT id, opprettet_tidspunkt, status, lagret_sok, type_kjoring,
+                SELECT id, opprettet_tidspunkt, status, query, type_kjoring, laget_av, timeout,
                        feilmelding, startet_tidspunkt, fullfort_tidspunkt, antall
                 FROM uttrekk
-                WHERE lagret_sok = :lagretSokId
+                WHERE laget_av = :lagetAv
                 ORDER BY opprettet_tidspunkt DESC
-            """.trimIndent(), mapOf("lagretSokId" to lagretSokId)
+            """.trimIndent(), mapOf("lagetAv" to saksbehandlerId)
                 ).map {
                     it.toUttrekk()
                 }.asList
@@ -151,8 +155,10 @@ private fun Row.toUttrekk(): Uttrekk {
         id = long("id"),
         opprettetTidspunkt = localDateTime("opprettet_tidspunkt"),
         status = UttrekkStatus.valueOf(string("status")),
-        lagretSokId = long("lagret_sok"),
+        query = LosObjectMapper.instance.readValue(string("query"), OppgaveQuery::class.java),
         typeKjoring = TypeKjøring.valueOf(string("type_kjoring")),
+        lagetAv = long("laget_av"),
+        timeout = int("timeout"),
         feilmelding = stringOrNull("feilmelding"),
         startetTidspunkt = localDateTimeOrNull("startet_tidspunkt"),
         fullførtTidspunkt = localDateTimeOrNull("fullfort_tidspunkt"),

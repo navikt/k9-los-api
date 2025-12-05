@@ -9,6 +9,8 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.RequestContextService
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.idToken
+import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
 import org.koin.ktor.ext.inject
 
 fun Route.UttrekkApi() {
@@ -17,6 +19,7 @@ fun Route.UttrekkApi() {
     val uttrekkTjeneste by inject<UttrekkTjeneste>()
     val uttrekkRepository by inject<UttrekkRepository>()
     val uttrekkCsvGenerator by inject<UttrekkCsvGenerator>()
+    val saksbehandlerRepository by inject<SaksbehandlerRepository>()
 
     get({
         response {
@@ -25,8 +28,15 @@ fun Route.UttrekkApi() {
     }) {
         requestContextService.withRequestContext(call) {
             if (pepClient.harBasisTilgang()) {
-                val uttrekk = uttrekkTjeneste.hentAlle()
-                call.respond(uttrekk)
+                val innloggetSaksbehandler = coroutineContext.idToken().getNavIdent().let {
+                    saksbehandlerRepository.finnSaksbehandlerMedIdent(it)
+                }
+                if (innloggetSaksbehandler == null) {
+                    call.respond(HttpStatusCode.Forbidden, "Innlogget bruker er ikke i saksbehandler-tabellen.")
+                } else {
+                    val uttrekk = uttrekkTjeneste.hentForSaksbehandler(innloggetSaksbehandler.id!!)
+                    call.respond(uttrekk)
+                }
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
@@ -69,12 +79,19 @@ fun Route.UttrekkApi() {
     }) {
         requestContextService.withRequestContext(call) {
             if (pepClient.harBasisTilgang()) {
-                try {
-                    val request = call.receive<OpprettUttrekk>()
-                    val uttrekkId = uttrekkTjeneste.opprett(request)
-                    call.respond(HttpStatusCode.Created, uttrekkId)
-                } catch (e: IllegalArgumentException) {
-                    call.respond(HttpStatusCode.BadRequest, e.message ?: "Ugyldig forespørsel")
+                val innloggetSaksbehandler = coroutineContext.idToken().getNavIdent().let {
+                    saksbehandlerRepository.finnSaksbehandlerMedIdent(it)
+                }
+                if (innloggetSaksbehandler == null) {
+                    call.respond(HttpStatusCode.Forbidden, "Innlogget bruker er ikke i saksbehandler-tabellen.")
+                } else {
+                    try {
+                        val request = call.receive<OpprettUttrekk>()
+                        val uttrekkId = uttrekkTjeneste.opprett(request, innloggetSaksbehandler.id!!)
+                        call.respond(HttpStatusCode.Created, uttrekkId)
+                    } catch (e: IllegalArgumentException) {
+                        call.respond(HttpStatusCode.BadRequest, e.message ?: "Ugyldig forespørsel")
+                    }
                 }
             } else {
                 call.respond(HttpStatusCode.Forbidden)
@@ -111,27 +128,6 @@ fun Route.UttrekkApi() {
         }
     }
 
-    get("lagret-sok/{lagretSokId}", {
-        request {
-            pathParameter<Long>("lagretSokId") {
-                required = true
-            }
-        }
-        response {
-            HttpStatusCode.OK to { body<List<Uttrekk>>() }
-        }
-    }) {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.harBasisTilgang()) {
-                val lagretSokId = call.parameters["lagretSokId"]!!.toLong()
-                val uttrekk = uttrekkTjeneste.hentForLagretSok(lagretSokId)
-                call.respond(uttrekk)
-            } else {
-                call.respond(HttpStatusCode.Forbidden)
-            }
-        }
-    }
-
     get("{id}/csv", {
         request {
             pathParameter<Long>("id") {
@@ -147,8 +143,11 @@ fun Route.UttrekkApi() {
             if (pepClient.harBasisTilgang()) {
                 val id = call.parameters["id"]!!.toLong()
                 val uttrekk = uttrekkTjeneste.hent(id)
-                // TODO: sjekk at uttrekk tilhører innlogget bruker
 
+                if (uttrekk == null) {
+                    call.respond(HttpStatusCode.NotFound, "Uttrekk finnes ikke")
+                    return@withRequestContext
+                }
 
                 val resultat = uttrekkRepository.hentResultat(id)
                 if (resultat == null) {

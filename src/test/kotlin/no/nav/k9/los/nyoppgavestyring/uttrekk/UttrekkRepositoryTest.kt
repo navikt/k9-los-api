@@ -10,6 +10,7 @@ import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.nyoppgavestyring.lagretsok.LagretSøk
 import no.nav.k9.los.nyoppgavestyring.lagretsok.LagretSøkRepository
 import no.nav.k9.los.nyoppgavestyring.lagretsok.OpprettLagretSøk
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
 import org.junit.jupiter.api.BeforeEach
@@ -22,7 +23,8 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
     private lateinit var uttrekkRepository: UttrekkRepository
     private lateinit var lagretSøkRepository: LagretSøkRepository
     private lateinit var saksbehandlerRepository: SaksbehandlerRepository
-    private var lagretSøkId: Long = 0L
+    private var saksbehandlerId: Long = 0L
+    private lateinit var testQuery: OppgaveQuery
 
     @BeforeEach
     fun setup() {
@@ -42,19 +44,24 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
                 )
             )
             val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedEpost("test@nav.no")!!
+            saksbehandlerId = saksbehandler.id!!
             val lagretSøk = LagretSøk.opprettSøk(
                 OpprettLagretSøk(tittel = "Test søk"),
                 saksbehandler,
                 false
             )
-            lagretSøkId = lagretSøkRepository.opprett(lagretSøk)
+            lagretSøkRepository.opprett(lagretSøk)
+            testQuery = lagretSøk.query
         }
     }
 
     @Test
     fun `skal opprette og hente uttrekk`() {
         val uttrekk = Uttrekk.opprettUttrekk(
-            lagretSokId = lagretSøkId,
+            query = testQuery,
+            typeKjoring = TypeKjøring.OPPGAVER,
+            lagetAv = saksbehandlerId,
+            timeout = 30
         )
 
         val id = uttrekkRepository.opprett(uttrekk)
@@ -62,7 +69,8 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
         val hentetUttrekk = uttrekkRepository.hent(id)
         assertThat(hentetUttrekk).isNotNull()
         assertThat(hentetUttrekk!!.id).isEqualTo(id)
-        assertThat(hentetUttrekk.lagretSøkId).isEqualTo(lagretSøkId)
+        assertThat(hentetUttrekk.lagetAv).isEqualTo(saksbehandlerId)
+        assertThat(hentetUttrekk.timeout).isEqualTo(30)
         assertThat(hentetUttrekk.status).isEqualTo(UttrekkStatus.OPPRETTET)
         assertThat(uttrekkRepository.hentResultat(id)).isNull()
         assertThat(hentetUttrekk.antall).isNull()
@@ -77,7 +85,10 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
     @Test
     fun `skal oppdatere eksisterende uttrekk`() {
         val uttrekk = Uttrekk.opprettUttrekk(
-            lagretSokId = lagretSøkId,
+            query = testQuery,
+            typeKjoring = TypeKjøring.OPPGAVER,
+            lagetAv = saksbehandlerId,
+            timeout = 30
         )
 
         val id = uttrekkRepository.opprett(uttrekk)
@@ -105,8 +116,10 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
             id = 999L,
             opprettetTidspunkt = java.time.LocalDateTime.now(),
             status = UttrekkStatus.KJØRER,
-            lagretSokId = lagretSøkId,
+            query = testQuery,
             typeKjoring = TypeKjøring.OPPGAVER,
+            lagetAv = saksbehandlerId,
+            timeout = 30,
             feilmelding = null,
             startetTidspunkt = java.time.LocalDateTime.now(),
             fullførtTidspunkt = null,
@@ -123,7 +136,10 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
     @Test
     fun `skal slette uttrekk`() {
         val uttrekk = Uttrekk.opprettUttrekk(
-            lagretSokId = lagretSøkId,
+            query = testQuery,
+            typeKjoring = TypeKjøring.OPPGAVER,
+            lagetAv = saksbehandlerId,
+            timeout = 30
         )
 
         val id = uttrekkRepository.opprett(uttrekk)
@@ -137,8 +153,18 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
 
     @Test
     fun `skal hente alle uttrekk`() {
-        val uttrekk1 = Uttrekk.opprettUttrekk(lagretSokId = lagretSøkId)
-        val uttrekk2 = Uttrekk.opprettUttrekk(lagretSokId = lagretSøkId)
+        val uttrekk1 = Uttrekk.opprettUttrekk(
+            query = testQuery,
+            typeKjoring = TypeKjøring.OPPGAVER,
+            lagetAv = saksbehandlerId,
+            timeout = 30
+        )
+        val uttrekk2 = Uttrekk.opprettUttrekk(
+            query = testQuery,
+            typeKjoring = TypeKjøring.OPPGAVER,
+            lagetAv = saksbehandlerId,
+            timeout = 30
+        )
 
         uttrekkRepository.opprett(uttrekk1)
         uttrekkRepository.opprett(uttrekk2)
@@ -148,36 +174,57 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
     }
 
     @Test
-    fun `skal hente uttrekk for spesifikt lagret søk`() {
-        // Opprett et ekstra lagret søk for å teste filtreringen
-        val saksbehandler = runBlocking {
-            saksbehandlerRepository.finnSaksbehandlerMedEpost("test@nav.no")!!
+    fun `skal hente uttrekk for saksbehandler`() {
+        // Opprett en annen saksbehandler for å teste filtreringen
+        val annenSaksbehandlerId = runBlocking {
+            saksbehandlerRepository.addSaksbehandler(
+                Saksbehandler(
+                    id = null,
+                    brukerIdent = "test2",
+                    navn = "Test Testersen 2",
+                    epost = "test2@nav.no",
+                    reservasjoner = mutableSetOf(),
+                    enhet = null,
+                )
+            )
+            saksbehandlerRepository.finnSaksbehandlerMedEpost("test2@nav.no")!!.id!!
         }
-        val annetLagretSøk = LagretSøk.opprettSøk(
-            OpprettLagretSøk(tittel = "Annet søk"),
-            saksbehandler,
-            false
-        )
-        val annetLagretSøkId = lagretSøkRepository.opprett(annetLagretSøk)
 
-        val uttrekk1 = Uttrekk.opprettUttrekk(lagretSokId = lagretSøkId)
-        val uttrekk2 = Uttrekk.opprettUttrekk(lagretSokId = lagretSøkId)
-        val uttrekk3 = Uttrekk.opprettUttrekk(lagretSokId = annetLagretSøkId)
+        val uttrekk1 = Uttrekk.opprettUttrekk(
+            query = testQuery,
+            typeKjoring = TypeKjøring.OPPGAVER,
+            lagetAv = saksbehandlerId,
+            timeout = 30
+        )
+        val uttrekk2 = Uttrekk.opprettUttrekk(
+            query = testQuery,
+            typeKjoring = TypeKjøring.OPPGAVER,
+            lagetAv = saksbehandlerId,
+            timeout = 30
+        )
+        val uttrekk3 = Uttrekk.opprettUttrekk(
+            query = testQuery,
+            typeKjoring = TypeKjøring.OPPGAVER,
+            lagetAv = annenSaksbehandlerId,
+            timeout = 30
+        )
 
         uttrekkRepository.opprett(uttrekk1)
         uttrekkRepository.opprett(uttrekk2)
         uttrekkRepository.opprett(uttrekk3)
 
-        val uttrekkForLagretSok = uttrekkRepository.hentForLagretSok(lagretSøkId)
-        assertThat(uttrekkForLagretSok).hasSize(2)
-        assertThat(uttrekkForLagretSok.all { it.lagretSøkId == lagretSøkId }).isEqualTo(true)
+        val uttrekkForSaksbehandler = uttrekkRepository.hentForSaksbehandler(saksbehandlerId)
+        assertThat(uttrekkForSaksbehandler).hasSize(2)
+        assertThat(uttrekkForSaksbehandler.all { it.lagetAv == saksbehandlerId }).isEqualTo(true)
     }
 
     @Test
     fun `skal opprette uttrekk med TypeKjøring ANTALL`() {
         val uttrekk = Uttrekk.opprettUttrekk(
-            lagretSokId = lagretSøkId,
-            typeKjoring = TypeKjøring.ANTALL
+            query = testQuery,
+            typeKjoring = TypeKjøring.ANTALL,
+            lagetAv = saksbehandlerId,
+            timeout = 30
         )
 
         val id = uttrekkRepository.opprett(uttrekk)
@@ -188,9 +235,12 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
     }
 
     @Test
-    fun `skal opprette uttrekk med standardverdi TypeKjøring OPPGAVER`() {
+    fun `skal opprette uttrekk med TypeKjøring OPPGAVER`() {
         val uttrekk = Uttrekk.opprettUttrekk(
-            lagretSokId = lagretSøkId,
+            query = testQuery,
+            typeKjoring = TypeKjøring.OPPGAVER,
+            lagetAv = saksbehandlerId,
+            timeout = 30
         )
 
         val id = uttrekkRepository.opprett(uttrekk)
@@ -203,7 +253,10 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
     @Test
     fun `skal sette feilmelding når uttrekk feiler`() {
         val uttrekk = Uttrekk.opprettUttrekk(
-            lagretSokId = lagretSøkId,
+            query = testQuery,
+            typeKjoring = TypeKjøring.OPPGAVER,
+            lagetAv = saksbehandlerId,
+            timeout = 30
         )
 
         val id = uttrekkRepository.opprett(uttrekk)

@@ -766,9 +766,8 @@ fun common(app: Application, config: Configuration) = module {
 
     single<UttrekkJobb> {
         UttrekkJobb(
-            uttrekkTjeneste = get(),
             oppgaveQueryService = get(),
-            lagretSøkTjeneste = get(),
+            uttrekkTjeneste = get(),
         )
     }
 

@@ -6,13 +6,15 @@ class UttrekkTjeneste(
     private val uttrekkRepository: UttrekkRepository,
     private val lagretSøkRepository: LagretSøkRepository
 ) {
-    fun opprett(opprettUttrekk: OpprettUttrekk): Long {
-        lagretSøkRepository.hent(opprettUttrekk.lagretSokId)
+    fun opprett(opprettUttrekk: OpprettUttrekk, saksbehandlerId: Long): Long {
+        val lagretSøk = lagretSøkRepository.hent(opprettUttrekk.lagretSokId)
             ?: throw IllegalArgumentException("Lagret søk med id ${opprettUttrekk.lagretSokId} finnes ikke")
 
         val uttrekk = Uttrekk.opprettUttrekk(
-            lagretSokId = opprettUttrekk.lagretSokId,
-            typeKjoring = opprettUttrekk.typeKjoring
+            query = lagretSøk.query,
+            typeKjoring = opprettUttrekk.typeKjoring,
+            lagetAv = saksbehandlerId,
+            timeout = opprettUttrekk.timeout
         )
         return uttrekkRepository.opprett(uttrekk)
     }
@@ -25,8 +27,8 @@ class UttrekkTjeneste(
         return uttrekkRepository.hentAlle()
     }
 
-    fun hentForLagretSok(lagretSokId: Long): List<Uttrekk> {
-        return uttrekkRepository.hentForLagretSok(lagretSokId)
+    fun hentForSaksbehandler(saksbehandlerId: Long): List<Uttrekk> {
+        return uttrekkRepository.hentForSaksbehandler(saksbehandlerId)
     }
 
     fun slett(id: Long) {

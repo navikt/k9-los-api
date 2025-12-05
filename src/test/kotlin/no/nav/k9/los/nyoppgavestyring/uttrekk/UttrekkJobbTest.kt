@@ -10,6 +10,7 @@ import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.nyoppgavestyring.lagretsok.LagretSøk
 import no.nav.k9.los.nyoppgavestyring.lagretsok.LagretSøkRepository
 import no.nav.k9.los.nyoppgavestyring.lagretsok.OpprettLagretSøk
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
 import org.junit.jupiter.api.BeforeEach
@@ -23,7 +24,8 @@ class UttrekkJobbTest : AbstractK9LosIntegrationTest() {
     private lateinit var uttrekkRepository: UttrekkRepository
     private lateinit var lagretSøkRepository: LagretSøkRepository
     private lateinit var saksbehandlerRepository: SaksbehandlerRepository
-    private var lagretSøkId: Long = 0L
+    private var saksbehandlerId: Long = 0L
+    private lateinit var testQuery: OppgaveQuery
 
     @BeforeEach
     fun setup() {
@@ -45,12 +47,14 @@ class UttrekkJobbTest : AbstractK9LosIntegrationTest() {
                 )
             )
             val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedEpost("test@nav.no")!!
+            saksbehandlerId = saksbehandler.id!!
             val lagretSøk = LagretSøk.opprettSøk(
                 OpprettLagretSøk(tittel = "Test søk"),
                 saksbehandler,
                 false
             )
-            lagretSøkId = lagretSøkRepository.opprett(lagretSøk)
+            lagretSøkRepository.opprett(lagretSøk)
+            testQuery = lagretSøk.query
         }
     }
 
@@ -58,8 +62,10 @@ class UttrekkJobbTest : AbstractK9LosIntegrationTest() {
     fun `skal kjøre uttrekk med TypeKjøring ANTALL og returnere antall som string`() {
         // Opprett uttrekk med TypeKjøring.ANTALL
         val uttrekk = Uttrekk.opprettUttrekk(
-            lagretSokId = lagretSøkId,
-            typeKjoring = TypeKjøring.ANTALL
+            query = testQuery,
+            typeKjoring = TypeKjøring.ANTALL,
+            lagetAv = saksbehandlerId,
+            timeout = 30
         )
         val uttrekkId = uttrekkRepository.opprett(uttrekk)
 
@@ -79,8 +85,10 @@ class UttrekkJobbTest : AbstractK9LosIntegrationTest() {
     fun `skal kjøre uttrekk med TypeKjøring OPPGAVER og returnere JSON med oppgaver`() {
         // Opprett uttrekk med TypeKjøring.OPPGAVER
         val uttrekk = Uttrekk.opprettUttrekk(
-            lagretSokId = lagretSøkId,
-            typeKjoring = TypeKjøring.OPPGAVER
+            query = testQuery,
+            typeKjoring = TypeKjøring.OPPGAVER,
+            lagetAv = saksbehandlerId,
+            timeout = 30
         )
         val uttrekkId = uttrekkRepository.opprett(uttrekk)
 
