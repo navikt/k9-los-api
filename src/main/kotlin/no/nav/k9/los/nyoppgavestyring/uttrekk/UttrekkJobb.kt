@@ -10,7 +10,7 @@ import kotlin.time.measureTime
 class UttrekkJobb(
     val oppgaveQueryService: OppgaveQueryService,
     val uttrekkTjeneste: UttrekkTjeneste,
-    val lagretSøkTjeneste: LagretSøkTjeneste
+    val lagretSøkTjeneste: LagretSøkTjeneste,
 ) {
     private var antallKjøringerUtenTreff = 0
     private val log = LoggerFactory.getLogger(UttrekkJobb::class.java)
@@ -33,7 +33,7 @@ class UttrekkJobb(
                 }
             }
         } catch (e: Exception) {
-            uttrekkTjeneste.feilUttrekk(uttrekkId, e.message ?: "Ukjent feil under uttrekk")
+            uttrekkTjeneste.feilUttrekk(uttrekkId, e.message)
         }
     }
 

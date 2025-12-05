@@ -112,35 +112,6 @@ fun Route.UttrekkApi() {
         }
     }
 
-    post("{id}/stopp", {
-        request {
-            pathParameter<Long>("id") {
-                required = true
-            }
-        }
-        response {
-            HttpStatusCode.OK to { body<Uttrekk>() }
-            HttpStatusCode.NotFound to { }
-            HttpStatusCode.BadRequest to { }
-        }
-    }) {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.harBasisTilgang()) {
-                try {
-                    val id = call.parameters["id"]!!.toLong()
-                    val uttrekk = uttrekkTjeneste.stoppUttrekk(id)
-                    call.respond(HttpStatusCode.OK, uttrekk)
-                } catch (e: IllegalArgumentException) {
-                    call.respond(HttpStatusCode.NotFound, e.message ?: "Uttrekk finnes ikke")
-                } catch (e: IllegalStateException) {
-                    call.respond(HttpStatusCode.BadRequest, e.message ?: "Kan ikke stoppe uttrekk")
-                }
-            } else {
-                call.respond(HttpStatusCode.Forbidden)
-            }
-        }
-    }
-
     get("lagret-sok/{lagretSokId}", {
         request {
             pathParameter<Long>("lagretSokId") {

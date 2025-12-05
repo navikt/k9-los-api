@@ -60,20 +60,11 @@ class UttrekkTjeneste(
         return uttrekk
     }
 
-    fun feilUttrekk(id: Long, feilmelding: String): Uttrekk {
+    fun feilUttrekk(id: Long, feilmelding: String?): Uttrekk {
         val uttrekk = uttrekkRepository.hent(id)
             ?: throw IllegalArgumentException("Uttrekk med id $id finnes ikke")
 
         uttrekk.markerSomFeilet(feilmelding)
-        uttrekkRepository.oppdater(uttrekk)
-        return uttrekk
-    }
-
-    fun stoppUttrekk(id: Long): Uttrekk {
-        val uttrekk = uttrekkRepository.hent(id)
-            ?: throw IllegalArgumentException("Uttrekk med id $id finnes ikke")
-
-        uttrekk.markerSomStoppet()
         uttrekkRepository.oppdater(uttrekk)
         return uttrekk
     }

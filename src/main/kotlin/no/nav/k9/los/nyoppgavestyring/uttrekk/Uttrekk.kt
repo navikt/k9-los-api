@@ -7,7 +7,6 @@ enum class UttrekkStatus {
     KJØRER,
     FULLFØRT,
     FEILET,
-    STOPPET
 }
 
 enum class TypeKjøring {
@@ -43,36 +42,25 @@ class Uttrekk private constructor(
         private set
 
     fun markerSomKjører() {
-        if (status != UttrekkStatus.OPPRETTET) {
-            throw IllegalStateException("Kan kun starte uttrekk som er i status OPPRETTET")
-        }
+        require(status == UttrekkStatus.OPPRETTET) { "Kan kun starte uttrekk som er i status OPPRETTET" }
+
         status = UttrekkStatus.KJØRER
         startetTidspunkt = LocalDateTime.now()
     }
 
     fun markerSomFullført(antall: Int) {
-        if (status != UttrekkStatus.KJØRER) {
-            throw IllegalStateException("Kan kun fullføre uttrekk som er i status KJØRER")
-        }
+        require(status == UttrekkStatus.KJØRER) { "Kan kun fullføre uttrekk som er i status KJØRER" }
+
         status = UttrekkStatus.FULLFØRT
         this.antall = antall
         fullførtTidspunkt = LocalDateTime.now()
     }
 
-    fun markerSomFeilet(feilmelding: String) {
-        if (status != UttrekkStatus.KJØRER) {
-            throw IllegalStateException("Kan kun feile uttrekk som er i status KJØRER")
-        }
+    fun markerSomFeilet(feilmelding: String?) {
+        require(status == UttrekkStatus.KJØRER) { "Kan kun feile uttrekk som er i status KJØRER" }
+
         status = UttrekkStatus.FEILET
         this.feilmelding = feilmelding
-        fullførtTidspunkt = LocalDateTime.now()
-    }
-
-    fun markerSomStoppet() {
-        if (status != UttrekkStatus.KJØRER) {
-            throw IllegalStateException("Kan kun stoppe uttrekk som er i status KJØRER")
-        }
-        status = UttrekkStatus.STOPPET
         fullførtTidspunkt = LocalDateTime.now()
     }
 
