@@ -526,10 +526,10 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
             PlanlagtJobb.Periodisk(navn = "RyddOppUttrekkJobb",
                 prioritet = lavPrioritet,
                 tidsvindu = heleTiden,
-                startForsinkelse = 5.seconds,
-                intervall = 10.seconds
+                startForsinkelse = 0.seconds,
+                intervall = 10.minutes
             ) {
-                //uttrekkJobb.ryddOppUttrekk()
+                uttrekkJobb.ryddOppUttrekk()
             }
         )
 

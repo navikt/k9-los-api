@@ -47,8 +47,13 @@ class OppgaveQueryService {
     private fun settStatementTimeout(tx: TransactionalSession, timeoutSekunder: Int?) {
         if (timeoutSekunder != null && timeoutSekunder > 0) {
             val timeoutMs = timeoutSekunder * 1000
+            log.info("Setter statement_timeout til $timeoutMs ms ($timeoutSekunder sekunder)")
             tx.run(queryOf("SET LOCAL statement_timeout = $timeoutMs").asExecute)
         }
+    }
+
+    companion object {
+        private val log = org.slf4j.LoggerFactory.getLogger(OppgaveQueryService::class.java)
     }
 
     @WithSpan
@@ -121,9 +126,25 @@ class OppgaveQueryService {
         return using(sessionOf(datasource)) {
             it.transaction { tx ->
                 settStatementTimeout(tx, oppgaveQuery.queryTimeout)
-                runBlocking { query(tx, oppgaveQuery) }
+                runBlocking { queryMedDeadline(tx, oppgaveQuery) }
             }
         }
+    }
+
+    private suspend fun queryMedDeadline(tx: TransactionalSession, request: QueryRequest): List<Oppgaverad> {
+        val deadline = request.queryTimeout?.let {
+            LocalDateTime.now().plusSeconds(it.toLong())
+        }
+        val now = LocalDateTime.now()
+        val oppgaveIder = oppgaveQueryRepository.query(tx, request, now)
+
+        val oppgaverader = mapOppgaver(tx, request, oppgaveIder, now, deadline)
+
+        if (request.oppgaveQuery.select.isEmpty()) {
+            return listOf(listOf(Oppgavefeltverdi(null, "Antall", oppgaverader.size)))
+        }
+
+        return oppgaverader
     }
 
     @WithSpan
@@ -172,11 +193,20 @@ class OppgaveQueryService {
     }
 
     @WithSpan
-    private suspend fun mapOppgaver(tx: TransactionalSession, request: QueryRequest, oppgaveIder: List<OppgaveId>, now: LocalDateTime): List<Oppgaverad> {
+    private suspend fun mapOppgaver(
+        tx: TransactionalSession,
+        request: QueryRequest,
+        oppgaveIder: List<OppgaveId>,
+        now: LocalDateTime,
+        deadline: LocalDateTime? = null
+    ): List<Oppgaverad> {
         val oppgaverader = mutableListOf<Oppgaverad>()
         val limit = request.avgrensning?.limit ?: -1
         var antall = 0
         for (oppgaveId in oppgaveIder) {
+            if (deadline != null && deadline.isAfter(now)) {
+                throw QueryTimeoutException("Query timeout overskredet etter $antall oppgaver")
+            }
             val oppgaverad = mapOppgave(tx, request.oppgaveQuery, oppgaveId, now)
             if (oppgaverad != null) {
                 oppgaverader.add(oppgaverad)
@@ -188,6 +218,8 @@ class OppgaveQueryService {
         }
         return oppgaverader
     }
+
+    class QueryTimeoutException(message: String) : RuntimeException(message)
 
     @WithSpan
     private suspend fun mapOppgave(tx: TransactionalSession, oppgaveQuery: OppgaveQuery, oppgaveId: OppgaveId, now: LocalDateTime): Oppgaverad? {

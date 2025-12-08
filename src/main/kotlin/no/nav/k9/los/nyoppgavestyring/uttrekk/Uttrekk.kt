@@ -79,6 +79,8 @@ class Uttrekk private constructor(
             lagetAv: Long,
             timeout: Int
         ): Uttrekk {
+            require(timeout > 0) { "Timeout må være en positiv verdi" }
+
             return Uttrekk(
                 id = null,
                 opprettetTidspunkt = LocalDateTime.now(),

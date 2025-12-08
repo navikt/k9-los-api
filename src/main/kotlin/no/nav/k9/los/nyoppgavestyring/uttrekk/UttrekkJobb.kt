@@ -58,7 +58,6 @@ class UttrekkJobb(
     }
 
     fun ryddOppUttrekk() {
-        log.info("Sjekker om det finnes uttrekk som har kjørt for lenge uten å fullføre")
         val uttrekkListe = uttrekkTjeneste.hentAlle()
             .filter { it.skalRyddesOpp() }
         if (uttrekkListe.isEmpty()) {

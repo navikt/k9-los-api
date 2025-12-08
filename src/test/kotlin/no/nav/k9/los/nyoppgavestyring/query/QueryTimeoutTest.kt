@@ -96,4 +96,66 @@ class QueryTimeoutTest : AbstractPostgresTest() {
         // Verifiser at feilmeldingen inneholder informasjon om timeout
         assertThat(exception.message.orEmpty()).contains("statement timeout")
     }
+
+    @Test
+    fun `statement_timeout gjelder for alle etterfølgende statements i transaksjonen`() {
+        // Verifiser at timeout gjelder for statements som kommer ETTER SET LOCAL
+        val exception = assertThrows<PSQLException> {
+            using(sessionOf(dataSource)) { session ->
+                session.transaction { tx ->
+                    // Først kjør noen raske statements
+                    tx.run(queryOf("SELECT 1").asExecute)
+                    tx.run(queryOf("SELECT 2").asExecute)
+
+                    // Så sett timeout
+                    tx.run(queryOf("SET LOCAL statement_timeout = 100").asExecute)
+
+                    // Kjør en rask statement (burde fungere)
+                    tx.run(queryOf("SELECT 3").asExecute)
+
+                    // Kjør en treg statement (burde time out)
+                    tx.run(queryOf("SELECT pg_sleep(1)").asExecute)
+                }
+            }
+        }
+
+        assertThat(exception.message.orEmpty()).contains("statement timeout")
+    }
+
+    @Test
+    fun `timeout gjelder kumulativt for flere statements`() {
+        // Verifiser at timeout IKKE er kumulativt - hver statement har sin egen timeout
+        // Så 3 statements på 50ms hver med 100ms timeout burde fungere
+        using(sessionOf(dataSource)) { session ->
+            session.transaction { tx ->
+                tx.run(queryOf("SET LOCAL statement_timeout = 100").asExecute)
+                tx.run(queryOf("SELECT pg_sleep(0.05)").asExecute) // 50ms
+                tx.run(queryOf("SELECT pg_sleep(0.05)").asExecute) // 50ms
+                tx.run(queryOf("SELECT pg_sleep(0.05)").asExecute) // 50ms
+            }
+        }
+        // Hvis vi kommer hit, fungerer det som forventet
+    }
+
+    @Test
+    fun `deadline-sjekk mellom operasjoner gir total timeout`() {
+        // Demonstrerer at man kan sjekke en deadline mellom operasjoner
+        // for å få total timeout over flere statements
+        val deadline = System.currentTimeMillis() + 100 // 100ms deadline
+
+        assertThrows<IllegalStateException> {
+            using(sessionOf(dataSource)) { session ->
+                session.transaction { tx ->
+                    tx.run(queryOf("SELECT pg_sleep(0.05)").asExecute) // 50ms
+                    check(System.currentTimeMillis() < deadline) { "Timeout overskredet" }
+
+                    tx.run(queryOf("SELECT pg_sleep(0.05)").asExecute) // 50ms
+                    check(System.currentTimeMillis() < deadline) { "Timeout overskredet" }
+
+                    tx.run(queryOf("SELECT pg_sleep(0.05)").asExecute) // 50ms - dette vil overskride deadline
+                    check(System.currentTimeMillis() < deadline) { "Timeout overskredet" }
+                }
+            }
+        }
+    }
 }
