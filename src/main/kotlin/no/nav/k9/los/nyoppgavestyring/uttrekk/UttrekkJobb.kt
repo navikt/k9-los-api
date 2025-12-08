@@ -19,12 +19,16 @@ class UttrekkJobb(
 
             when (uttrekk.typeKjøring) {
                 TypeKjøring.ANTALL -> {
-                    val antall = oppgaveQueryService.queryForAntall(QueryRequest(uttrekk.query))
+                    val antall = oppgaveQueryService.queryForAntall(
+                        QueryRequest(uttrekk.query, queryTimeout = uttrekk.timeout)
+                    )
                     uttrekkTjeneste.fullførUttrekk(uttrekkId, antall.toInt())
                 }
 
                 TypeKjøring.OPPGAVER -> {
-                    val oppgaver = oppgaveQueryService.query(QueryRequest(uttrekk.query))
+                    val oppgaver = oppgaveQueryService.query(
+                        QueryRequest(uttrekk.query, queryTimeout = uttrekk.timeout)
+                    )
                     val resultatJson = LosObjectMapper.instance.writeValueAsString(oppgaver)
                     uttrekkTjeneste.fullførUttrekk(uttrekkId, oppgaver.size, resultatJson)
                 }

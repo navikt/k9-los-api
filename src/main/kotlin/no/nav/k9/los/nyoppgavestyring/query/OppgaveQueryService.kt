@@ -35,7 +35,9 @@ class OppgaveQueryService {
 
     @WithSpan
     fun queryForOppgave(oppgaveQuery: QueryRequest): List<Oppgave> {
-        return using(sessionOf(datasource)) {
+        val session = oppgaveQuery.queryTimeout?.let { sessionOf(datasource, queryTimeout = it) }
+            ?: sessionOf(datasource)
+        return using(session) {
             it.transaction { tx -> queryForOppgave(tx, oppgaveQuery) }
         }
     }
@@ -63,7 +65,9 @@ class OppgaveQueryService {
 
     @WithSpan
     fun queryForAntall(request: QueryRequest, now : LocalDateTime = LocalDateTime.now()): Long {
-        return using(sessionOf(datasource)) {
+        val session = request.queryTimeout?.let { sessionOf(datasource, queryTimeout = it) }
+            ?: sessionOf(datasource)
+        return using(session) {
             it.transaction { tx -> oppgaveQueryRepository.queryForAntall(tx, request, now) }
         }
     }
@@ -104,14 +108,16 @@ class OppgaveQueryService {
 
     @WithSpan
     fun query(oppgaveQuery: QueryRequest): List<Oppgaverad> {
-        return using(sessionOf(datasource)) {
+        return using(sessionOf(datasource, queryTimeout = oppgaveQuery.queryTimeout)) {
             it.transaction { tx -> runBlocking { query(tx, oppgaveQuery) } }
         }
     }
 
     @WithSpan
     fun query(oppgaveQuery: QueryRequest, idToken: IIdToken): List<Oppgaverad> {
-        return using(sessionOf(datasource)) {
+        val session = oppgaveQuery.queryTimeout?.let { sessionOf(datasource, queryTimeout = it) }
+            ?: sessionOf(datasource)
+        return using(session) {
             it.transaction { tx -> query(tx, oppgaveQuery, idToken) }
         }
     }
