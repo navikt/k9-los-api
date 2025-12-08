@@ -29,6 +29,15 @@ oppgavedata via REST, men dette er p.t. sovende funksjonalitet.
   - Dersom det er behov for opprydning eller andre korreksjoner, kan meldingen få eventhendelsestypen satt til VASKEEVENT. Når en slik melding prosesseres vil den overskrive verdier på foregående versjon av oppgaven.
     - Vaskeeventer brukes feks til opprydning når vi finner diff ved avstemming, eller hvis vi vil henlegge behandlinger som har blit feilopprettet.
 
+# Interne arbeidsprosesser
+- Kafkalyttere (domeneadaptere.k9.eventmottak) mottar hendelser fra fagsystemene og lagrer dem i en eventjournal, og kaller deretter korresponderende oppgaveadapter.
+- Oppgavevaktmester (definert i K9Los.kt, under planlagte jobber er en prosess som leter etter meldinger som har feilet ved innlasting i oppgavemodellen, og prøver å laste dem inn på nytt.
+- Historikkvaskvaktmester (definert i K9Los.kt, under planlagte jobber) er en prosess som leter etter historikkvaskbestillinger og prosesserer disse.
+  - En historikkvask er en rekjøring av tidligere innlastede meldinger for en gitt ekstern ID, for å rette opp feil.
+  - En historikkvask vil rekjøre mappinglogikk og overskrive oppgaveverdier, og kan dermed bruke korrigert kode til å utlede nye verdier og overskrive disse.
+  - Dersom oppgaveadapter oppdager at meldinger har blitt sendt inn fra fagsystem i feil rekkefølge, vil også en historikkvask bestilles for å rydde opp.
+- Oppgavestatistikksender (definert i K9Los.kt, under planlagte jobber) er en prosess som periodisk ser etter usendte oppgavedata for å sende statistikk til datavarehus.
+
 # Pakkestruktur, viktige pakker
 - Los etterstreber at all logikk som er spesifikk for K9 ligger i pakken domeneadaptere.k9. Herunder ligger:
   - Avstemming - Tjenester som sjekker beholdningen av åpne oppgaver opp mot tilsvarende unit of work (som regel en behandling) i korresponderende fagsystem.
