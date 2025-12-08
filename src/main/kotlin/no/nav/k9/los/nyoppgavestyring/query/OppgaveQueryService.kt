@@ -3,6 +3,7 @@ package no.nav.k9.los.nyoppgavestyring.query
 import io.opentelemetry.instrumentation.annotations.WithSpan
 import kotlinx.coroutines.runBlocking
 import kotliquery.TransactionalSession
+import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.Action
@@ -35,10 +36,18 @@ class OppgaveQueryService {
 
     @WithSpan
     fun queryForOppgave(oppgaveQuery: QueryRequest): List<Oppgave> {
-        val session = oppgaveQuery.queryTimeout?.let { sessionOf(datasource, queryTimeout = it) }
-            ?: sessionOf(datasource)
-        return using(session) {
-            it.transaction { tx -> queryForOppgave(tx, oppgaveQuery) }
+        return using(sessionOf(datasource)) {
+            it.transaction { tx ->
+                settStatementTimeout(tx, oppgaveQuery.queryTimeout)
+                queryForOppgave(tx, oppgaveQuery)
+            }
+        }
+    }
+
+    private fun settStatementTimeout(tx: TransactionalSession, timeoutSekunder: Int?) {
+        if (timeoutSekunder != null && timeoutSekunder > 0) {
+            val timeoutMs = timeoutSekunder * 1000
+            tx.run(queryOf("SET LOCAL statement_timeout = $timeoutMs").asExecute)
         }
     }
 
@@ -65,10 +74,11 @@ class OppgaveQueryService {
 
     @WithSpan
     fun queryForAntall(request: QueryRequest, now : LocalDateTime = LocalDateTime.now()): Long {
-        val session = request.queryTimeout?.let { sessionOf(datasource, queryTimeout = it) }
-            ?: sessionOf(datasource)
-        return using(session) {
-            it.transaction { tx -> oppgaveQueryRepository.queryForAntall(tx, request, now) }
+        return using(sessionOf(datasource)) {
+            it.transaction { tx ->
+                settStatementTimeout(tx, request.queryTimeout)
+                oppgaveQueryRepository.queryForAntall(tx, request, now)
+            }
         }
     }
 
@@ -108,17 +118,21 @@ class OppgaveQueryService {
 
     @WithSpan
     fun query(oppgaveQuery: QueryRequest): List<Oppgaverad> {
-        return using(sessionOf(datasource, queryTimeout = oppgaveQuery.queryTimeout)) {
-            it.transaction { tx -> runBlocking { query(tx, oppgaveQuery) } }
+        return using(sessionOf(datasource)) {
+            it.transaction { tx ->
+                settStatementTimeout(tx, oppgaveQuery.queryTimeout)
+                runBlocking { query(tx, oppgaveQuery) }
+            }
         }
     }
 
     @WithSpan
     fun query(oppgaveQuery: QueryRequest, idToken: IIdToken): List<Oppgaverad> {
-        val session = oppgaveQuery.queryTimeout?.let { sessionOf(datasource, queryTimeout = it) }
-            ?: sessionOf(datasource)
-        return using(session) {
-            it.transaction { tx -> query(tx, oppgaveQuery, idToken) }
+        return using(sessionOf(datasource)) {
+            it.transaction { tx ->
+                settStatementTimeout(tx, oppgaveQuery.queryTimeout)
+                query(tx, oppgaveQuery, idToken)
+            }
         }
     }
 

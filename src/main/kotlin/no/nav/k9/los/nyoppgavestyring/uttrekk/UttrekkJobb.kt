@@ -57,4 +57,18 @@ class UttrekkJobb(
         log.info("Ferdig med kjøring av ${uttrekkListe.size} uttrekk på $tidsbruk")
     }
 
+    fun ryddOppUttrekk() {
+        log.info("Sjekker om det finnes uttrekk som har kjørt for lenge uten å fullføre")
+        val uttrekkListe = uttrekkTjeneste.hentAlle()
+            .filter { it.skalRyddesOpp() }
+        if (uttrekkListe.isEmpty()) {
+            log.info("Ingen uttrekk funnet som trenger opprydding")
+            return
+        }
+        uttrekkListe.forEach {
+            log.info("Markerer uttrekk med id ${it.id} som feilet på grunn av timeout")
+            uttrekkTjeneste.feilUttrekk(it.id!!, "Uttrekk feilet på grunn av timeout")
+        }
+    }
+
 }

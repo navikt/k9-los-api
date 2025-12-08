@@ -523,7 +523,18 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
         )
 
         add(
-            PlanlagtJobb.Periodisk(navn = "UttrekkJobb",
+            PlanlagtJobb.Periodisk(navn = "RyddOppUttrekkJobb",
+                prioritet = lavPrioritet,
+                tidsvindu = heleTiden,
+                startForsinkelse = 5.seconds,
+                intervall = 10.seconds
+            ) {
+                //uttrekkJobb.ryddOppUttrekk()
+            }
+        )
+
+        add(
+            PlanlagtJobb.Periodisk(navn = "KjørUttrekkJobb",
                 prioritet = lavPrioritet,
                 tidsvindu = heleTiden,
                 startForsinkelse = 10.seconds,
@@ -532,6 +543,7 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
                 uttrekkJobb.kjørAlleUttrekkSomIkkeHarKjørt()
             }
         )
+
     }
 
     val jobbplanlegger = Jobbplanlegger(

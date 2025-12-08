@@ -66,6 +66,12 @@ class Uttrekk private constructor(
         fullførtTidspunkt = LocalDateTime.now()
     }
 
+    fun skalRyddesOpp(): Boolean {
+        // Legger på et ekstra sekund for å la vanlig timeout gå ut
+        return status == UttrekkStatus.KJØRER &&
+            startetTidspunkt!!.plusSeconds(1L + timeout) < LocalDateTime.now()
+    }
+
     companion object {
         fun opprettUttrekk(
             query: OppgaveQuery,
