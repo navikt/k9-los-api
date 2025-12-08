@@ -56,46 +56,52 @@ class EventTilOppgaveAdapter(
         var forrigeOppgaveversjon: OppgaveV3? = null
 
         transactionalManager.transaction { tx ->
-            val eventerForEksternId = eventRepository.hentAlleDirtyEventerNummerertMedLås(eventnøkkel.fagsystem, eventnøkkel.eksternId, tx).sortedBy { LocalDateTime.parse(it.second.eksternVersjon) }
+            val eventerForEksternId =
+                eventRepository.hentAlleDirtyEventerNummerertMedLås(eventnøkkel.fagsystem, eventnøkkel.eksternId, tx)
+                    .sortedBy { LocalDateTime.parse(it.second.eksternVersjon) }
 
-            sjekkMeldingIFeilRekkefølgeOgBestillVask(eventnøkkel, eventerForEksternId, tx)
+            if (!eventerForEksternId.isEmpty()) {
+                sjekkMeldingIFeilRekkefølgeOgBestillVask(eventnøkkel, eventerForEksternId, tx)
 
-            eventRepository.hentAlleEventerMedLås(eventnøkkel.fagsystem, eventnøkkel.eksternId, tx)
+                eventRepository.hentAlleEventerMedLås(eventnøkkel.fagsystem, eventnøkkel.eksternId, tx)
 
-            forrigeOppgaveversjon =
-                if (eventerForEksternId.first().first > 0) {
-                    oppgaveV3Tjeneste.hentOppgaveversjon(
-                        "K9",
-                        K9Oppgavetypenavn.fraFagsystem(eventnøkkel.fagsystem).kode,
-                        eventnøkkel.eksternId,
-                        eventerForEksternId.first().first - 1,
-                        tx
-                    )
-                } else {
-                    null
+                forrigeOppgaveversjon =
+                    if (eventerForEksternId.first().first > 0) {
+                        oppgaveV3Tjeneste.hentOppgaveversjon(
+                            "K9",
+                            K9Oppgavetypenavn.fraFagsystem(eventnøkkel.fagsystem).kode,
+                            eventnøkkel.eksternId,
+                            eventerForEksternId.first().first - 1,
+                            tx
+                        )
+                    } else {
+                        null
+                    }
+
+                for ((eventnummer, eventLagret) in eventerForEksternId) {
+                    val nyOppgaveversjon =
+                        eventTilOppgaveMapper.mapOppgave(eventLagret, forrigeOppgaveversjon, eventnummer)
+                    val oppgave = oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(nyOppgaveversjon, tx)
+
+                    if (oppgave != null) {
+                        oppgaveOppdatertHandler.håndterOppgaveOppdatert(eventLagret, oppgave, tx)
+
+                        eventTeller++
+                        forrigeOppgaveversjon = oppgave
+                    } else { // hvis oppgave == null ble ikke oppgaven oppdatert selv om eventet var dirty. Vi henter ut oppgaveversjonen vi forsøkte å oppdatere som kontekst for neste event
+                        forrigeOppgaveversjon = oppgaveV3Tjeneste.hentOppgaveversjon(
+                            "K9",
+                            K9Oppgavetypenavn.fraFagsystem(eventnøkkel.fagsystem).kode,
+                            eventnøkkel.eksternId,
+                            eventnummer,
+                            tx
+                        )
+                    }
+                    eventRepository.fjernDirty(eventLagret, tx)
                 }
-
-            for ((nummer, eventLagret) in eventerForEksternId) {
-                val oppgaveDto = eventTilOppgaveMapper.mapOppgave(eventLagret, forrigeOppgaveversjon)
-                val oppgave = oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(oppgaveDto, tx)
-
-                if (oppgave != null) {
-                    oppgaveOppdatertHandler.håndterOppgaveOppdatert(eventLagret, oppgave, tx)
-
-                    eventTeller++
-                    forrigeOppgaveversjon = oppgave
-                } else { // hvis oppgave == null ble ikke oppgaven oppdatert selv om eventet var dirty. Vi henter ut oppgaveversjonen vi forsøkte å oppdatere som kontekst for neste event
-                    forrigeOppgaveversjon = oppgaveV3Tjeneste.hentOppgaveversjon(
-                        "K9",
-                        K9Oppgavetypenavn.fraFagsystem(eventnøkkel.fagsystem).kode,
-                        eventnøkkel.eksternId,
-                        nummer,
-                        tx
-                    )
-                }
-                eventRepository.fjernDirty(eventLagret, tx)
             }
         }
+
         return eventTeller
     }
 

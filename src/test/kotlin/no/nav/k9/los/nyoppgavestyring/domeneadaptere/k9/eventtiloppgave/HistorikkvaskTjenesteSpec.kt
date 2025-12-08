@@ -1,9 +1,7 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave
 
-import io.github.smiley4.ktoropenapi.config.descriptors.empty
 import io.kotest.core.spec.IsolationMode
 import io.kotest.core.spec.style.FreeSpec
-import io.kotest.engine.runBlocking
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.equals.shouldBeEqual
 import io.kotest.matchers.equals.shouldNotBeEqual
@@ -13,7 +11,7 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.K9Oppgavetypenavn
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventNøkkel
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventRepository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.HistorikkvaskBestilling
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.PunsjEventDto
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventDto
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
@@ -138,8 +136,8 @@ class HistorikkvaskTjenesteSpec: FreeSpec(), KoinTest {
 
     fun punsjEvent(eksternId: UUID = UUID.randomUUID(),
                    eksternVersjon: LocalDateTime = LocalDateTime.now().minusHours(1))
-            : PunsjEventDto {
-        return PunsjEventDto(
+            : K9PunsjEventDto {
+        return K9PunsjEventDto(
             eksternId = eksternId,
             journalpostId = JournalpostId(1L),
             eventTid = eksternVersjon,

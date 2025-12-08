@@ -118,6 +118,14 @@ class EventRepository(
         return hent(eventNøkkel.fagsystem, eventNøkkel.eksternId, eksternVersjon, tx)
     }
 
+    fun hentAlleEventer(fagsystem: Fagsystem, eksternId: String): List<EventLagret> {
+        return using(sessionOf(dataSource)) { session ->
+            session.transaction { tx ->
+                hentAlleEventer(fagsystem, eksternId, tx)
+            }
+        }
+    }
+
     fun hentAlleEventer(fagsystem: Fagsystem, eksternId: String, tx: TransactionalSession): List<EventLagret> {
         val eventId = hentOgLåsEventnøkkel(fagsystem, eksternId, tx)
         val eventer = tx.run(
@@ -239,7 +247,8 @@ class EventRepository(
             eksternVersjon = row.string("ekstern_versjon"),
             eventJson = row.string("data"),
             opprettet = row.localDateTime("opprettet"),
-            fagsystem = Fagsystem.fraKode(row.string("fagsystem"))
+            fagsystem = Fagsystem.fraKode(row.string("fagsystem")),
+            dirty = row.boolean("dirty")
         )
     }
 
@@ -250,7 +259,8 @@ class EventRepository(
             eksternVersjon = row.string("ekstern_versjon"),
             eventJson = row.string("data"),
             opprettet = row.localDateTime("opprettet"),
-            fagsystem = fagsystem
+            fagsystem = fagsystem,
+            dirty = row.boolean("dirty")
         )
     }
 

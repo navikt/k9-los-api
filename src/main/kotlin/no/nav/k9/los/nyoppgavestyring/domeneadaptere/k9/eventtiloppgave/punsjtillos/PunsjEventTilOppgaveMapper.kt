@@ -5,36 +5,40 @@ import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventLagret
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
 import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.PunsjEventDto
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventDto
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.NyOppgaveVersjonInnsending
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.NyOppgaveversjon
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdiDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 
 class PunsjEventTilOppgaveMapper {
-    fun lagOppgaveDto(eventLagret: EventLagret, forrigeOppgave: OppgaveV3?): OppgaveDto {
+    fun lagOppgaveDto(eventLagret: EventLagret, forrigeOppgave: OppgaveV3?): NyOppgaveVersjonInnsending {
         if (eventLagret.fagsystem != Fagsystem.PUNSJ) {
             throw IllegalStateException()
         }
-        val event = LosObjectMapper.instance.readValue<PunsjEventDto>(eventLagret.eventJson)
+        val event = LosObjectMapper.instance.readValue<K9PunsjEventDto>(eventLagret.eventJson)
 
-        return OppgaveDto(
-            eksternId = event.eksternId.toString(),
-            eksternVersjon = event.eventTid.toString(),
-            område = "K9",
-            kildeområde = "K9",
-            type = "k9punsj",
-            status = utledOppgavestatus(event).kode,
-            endretTidspunkt = event.eventTid,
-            reservasjonsnøkkel = utledReservasjonsnøkkel(event),
-            feltverdier = lagFeltverdier(event, forrigeOppgave)
+        return NyOppgaveversjon(
+            dto = OppgaveDto(
+                eksternId = event.eksternId.toString(),
+                eksternVersjon = event.eventTid.toString(),
+                område = "K9",
+                kildeområde = "K9",
+                type = "k9punsj",
+                status = utledOppgavestatus(event).kode,
+                endretTidspunkt = event.eventTid,
+                reservasjonsnøkkel = utledReservasjonsnøkkel(event),
+                feltverdier = lagFeltverdier(event, forrigeOppgave)
+            )
         )
     }
 
     companion object {
-        fun lagOppgaveDto(event: PunsjEventDto, forrigeOppgave: OppgaveV3?): OppgaveDto {
+        fun lagOppgaveDto(event: K9PunsjEventDto, forrigeOppgave: OppgaveV3?): OppgaveDto {
             return OppgaveDto(
                 eksternId = event.eksternId.toString(),
                 eksternVersjon = event.eventTid.toString(),
@@ -48,7 +52,7 @@ class PunsjEventTilOppgaveMapper {
             )
         }
 
-        fun utledOppgavestatus(event: PunsjEventDto): Oppgavestatus {
+        fun utledOppgavestatus(event: K9PunsjEventDto): Oppgavestatus {
             return if (event.sendtInn == true || event.status == Oppgavestatus.LUKKET || event.aksjonspunktKoderMedStatusListe.isEmpty()) {
                 Oppgavestatus.LUKKET
             } else if (oppgaveSkalHaVentestatus(event)) {
@@ -58,18 +62,18 @@ class PunsjEventTilOppgaveMapper {
             }
         }
 
-        fun utledReservasjonsnøkkel(event: PunsjEventDto): String {
+        fun utledReservasjonsnøkkel(event: K9PunsjEventDto): String {
             return "K9_p_${event.eksternId}"
         }
 
 
-        private fun oppgaveSkalHaVentestatus(event: PunsjEventDto): Boolean {
+        private fun oppgaveSkalHaVentestatus(event: K9PunsjEventDto): Boolean {
             return event.aksjonspunktKoderMedStatusListe.filter { entry -> entry.value == AksjonspunktStatus.OPPRETTET.kode }
                 .containsKey("MER_INFORMASJON")
         }
 
         private fun lagFeltverdier(
-            event: PunsjEventDto,
+            event: K9PunsjEventDto,
             forrigeOppgave: OppgaveV3?
         ): List<OppgaveFeltverdiDto> {
             val journalførtTidspunkt = forrigeOppgave?.hentVerdi("journalfortTidspunkt") ?: event.journalførtTidspunkt?.toString()
