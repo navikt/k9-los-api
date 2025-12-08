@@ -26,7 +26,7 @@ class OppgaveV3Tjeneste(
             is VaskOppgaveversjon -> {
                 val eksisterer = oppgaveV3Repository.hentOppgaveIdStatusOgHøyesteInternversjon(tx, innsending.dto.eksternId, innsending.dto.type, innsending.dto.område).first != null
                 if (eksisterer) {
-                    return vaskEksisterendeOppgaveversjon(innsending.dto, innsending.eventNummer.toInt(), tx)
+                    return vaskEksisterendeOppgaveversjon(innsending.dto, innsending.eventNummer, tx)
                 } else {
                     return lagreNyOppgaveversjon(innsending.dto, tx)
                 }

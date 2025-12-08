@@ -121,7 +121,7 @@ class RedusertOppgaveTestmodellBuilder(
                         OppgavefeltDto(
                             id = "akkumulertVentetidSaksbehandler",
                             visPåOppgave = false,
-                            påkrevd = true,
+                            påkrevd = false,
                             feltutleder = "no.nav.k9.los.nyoppgavestyring.feltutlederforlagring.AkkumulertVentetidSaksbehandler",
                         ),
                         OppgavefeltDto(
@@ -157,6 +157,10 @@ class RedusertOppgaveTestmodellBuilder(
                 OppgaveFeltverdiDto(
                     nøkkel = "aktorId",
                     verdi = "SKAL IKKE LOGGES"
+                ),
+                OppgaveFeltverdiDto(
+                    nøkkel = "avventerSaksbehandler",
+                    verdi = "true"
                 )
             )
         )
