@@ -47,13 +47,8 @@ class OppgaveQueryService {
     private fun settStatementTimeout(tx: TransactionalSession, timeoutSekunder: Int?) {
         if (timeoutSekunder != null && timeoutSekunder > 0) {
             val timeoutMs = timeoutSekunder * 1000
-            log.info("Setter statement_timeout til $timeoutMs ms ($timeoutSekunder sekunder)")
             tx.run(queryOf("SET LOCAL statement_timeout = $timeoutMs").asExecute)
         }
-    }
-
-    companion object {
-        private val log = org.slf4j.LoggerFactory.getLogger(OppgaveQueryService::class.java)
     }
 
     @WithSpan
@@ -204,7 +199,7 @@ class OppgaveQueryService {
         val limit = request.avgrensning?.limit ?: -1
         var antall = 0
         for (oppgaveId in oppgaveIder) {
-            if (deadline != null && deadline.isAfter(now)) {
+            if (deadline != null && LocalDateTime.now().isAfter(deadline)) {
                 throw QueryTimeoutException("Query timeout overskredet etter $antall oppgaver")
             }
             val oppgaverad = mapOppgave(tx, request.oppgaveQuery, oppgaveId, now)
