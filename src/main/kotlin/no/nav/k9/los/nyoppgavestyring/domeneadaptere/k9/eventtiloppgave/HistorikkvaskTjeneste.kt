@@ -28,16 +28,14 @@ class HistorikkvaskTjeneste(
 
         var vasketeller = 0L
         val tidsbruk = measureTime {
-            while (true) {
-                val historikkvaskbestillinger =
-                    eventRepository.hentAlleHistorikkvaskbestillinger(antall = 2000)
-                if (historikkvaskbestillinger.isEmpty()) break
+            val historikkvaskbestillinger =
+                eventRepository.hentAlleHistorikkvaskbestillinger(antall = 2000)
+            if (historikkvaskbestillinger.isEmpty()) return@measureTime
 
-                log.info("Starter vaskeiterasjon på ${historikkvaskbestillinger.size} oppgaver")
-                vaskBestillinger(historikkvaskbestillinger, dispatcher)
-                vasketeller += historikkvaskbestillinger.size
-                log.info("Vasket iterasjon med ${historikkvaskbestillinger.size} oppgaver. Har vasket totalt $vasketeller oppgaver")
-            }
+            log.info("Starter vaskeiterasjon på ${historikkvaskbestillinger.size} oppgaver")
+            vaskBestillinger(historikkvaskbestillinger, dispatcher)
+            vasketeller += historikkvaskbestillinger.size
+            log.info("Vasket iterasjon med ${historikkvaskbestillinger.size} oppgaver. Har vasket totalt $vasketeller oppgaver")
         }
 
         log.info("Historikkvask ferdig på ${tidsbruk}. Vasket totalt $vasketeller oppgaver")
@@ -90,7 +88,7 @@ class HistorikkvaskTjeneste(
                         is VaskOppgaveversjon -> {
                             val dto = oppgaveversjon.dto
                             forrigeOppgave =
-                                oppgaveV3Tjeneste.vaskEksisterendeOppgaveversjon(dto, eventNrForBehandling-1, tx)
+                                oppgaveV3Tjeneste.vaskEksisterendeOppgaveversjon(dto, eventNrForBehandling - 1, tx)
                         }
                     }
                 }
