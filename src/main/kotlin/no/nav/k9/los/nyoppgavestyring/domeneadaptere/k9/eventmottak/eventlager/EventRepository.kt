@@ -288,6 +288,7 @@ class EventRepository(
                             select id
                             from event_nokkel
                             where fagsystem = :fagsystem
+                            on conflict do nothing
                         """.trimMargin(),
                         mapOf(
                             "fagsystem" to fagsystem.kode,
@@ -314,6 +315,7 @@ class EventRepository(
                             from event_nokkel
                             where fagsystem = :fagsystem
                             and ekstern_id = :ekstern_id
+                            on conflict do nothing
                         """.trimMargin(),
                 mapOf(
                     "fagsystem" to fagsystem.kode,
