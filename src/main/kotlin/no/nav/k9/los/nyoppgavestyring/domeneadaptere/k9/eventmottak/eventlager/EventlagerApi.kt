@@ -7,7 +7,7 @@ import io.ktor.http.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.klage.K9KlageEventDto
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.PunsjEventDto
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventDto
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventDto
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.K9TilbakeEventDto
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.EventTilOppgaveAdapter
@@ -26,8 +26,6 @@ import kotlin.concurrent.thread
 
 internal fun Route.EventlagerApi() {
     val requestContextService by inject<RequestContextService>()
-    val eventlagerKonverteringsjobb by inject<EventlagerKonverteringsjobb>()
-    val eventlagerKonverteringsservice by inject<EventlagerKonverteringsservice>()
     val eventRepository by inject<EventRepository>()
     val oppgaveAdapter by inject<EventTilOppgaveAdapter>()
     val transactionalManager by inject<TransactionalManager>()
@@ -73,7 +71,7 @@ internal fun Route.EventlagerApi() {
                         eventliste.map { event -> K9KlageEventIkkeSensitiv(event) }
                     }
                     Fagsystem.PUNSJ -> {
-                        val eventliste = eventStrenger.map { LosObjectMapper.instance.readValue<PunsjEventDto>(it) }.toList()
+                        val eventliste = eventStrenger.map { LosObjectMapper.instance.readValue<K9PunsjEventDto>(it) }.toList()
                         eventliste.map { event -> K9PunsjEventIkkeSensitiv(event) }
                     }
                 }
@@ -82,13 +80,6 @@ internal fun Route.EventlagerApi() {
                 call.respond(HttpStatusCode.Forbidden)
             }
         }
-    }
-
-    put("/startEventlagerKonvertering", {
-        tags("Forvaltning")
-    }) {
-        eventlagerKonverteringsjobb.kjørEventlagerKonvertering()
-        call.respond(HttpStatusCode.NoContent)
     }
 
     put("/spillAvDirtyEventer", {
@@ -103,31 +94,6 @@ internal fun Route.EventlagerApi() {
                 oppgaveAdapter.spillAvBehandlingProsessEventer()
             }
 
-            call.respond(HttpStatusCode.NoContent)
-        }
-    }
-
-    put("konverterEnkeltoppgave", {
-        tags("Forvaltning")
-        request {
-            queryParameter<Fagsystem>("fagsystem") {
-                description = "Fagsystemet man vil ha eventkonvertering for"
-                required = true
-                example("oneOf") {
-                    value = Fagsystem.K9SAK
-                }
-            }
-            queryParameter<String>("eksternId") {
-                description = "Ekstern ID for oppgaven"
-            }
-        }
-    }) {
-        requestContextService.withRequestContext(call) {
-            val fagsystem = Fagsystem.fraKode(call.parameters["fagsystem"]!!)
-            val eksternId = call.parameters["eksternId"]!!
-            transactionalManager.transaction { tx ->
-                eventlagerKonverteringsservice.konverterOppgave(eksternId, fagsystem, tx, false)
-            }
             call.respond(HttpStatusCode.NoContent)
         }
     }

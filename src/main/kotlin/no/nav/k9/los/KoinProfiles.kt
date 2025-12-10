@@ -15,39 +15,25 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.AvstemmingsTj
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.saksbehandling.systemklient.LocalAvstemmingsklient
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.saksbehandling.systemklient.RestAvstemmingsklient
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventRepository
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventlagerKonverteringsjobb
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventlagerKonverteringsservice
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.kafka.AsynkronProsesseringV1Service
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.klage.K9KlageEventHandler
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.klage.K9KlageEventRepository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventHandler
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventRepository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventHandler
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventRepository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.K9TilbakeEventHandler
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.K9TilbakeEventRepository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.EventTilOppgaveAdapter
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.EventTilOppgaveMapper
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.HistorikkvaskTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.OppgaveOppdatertHandler
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetillos.K9KlageTilLosAdapterTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetillos.K9KlageTilLosHistorikkvaskTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetillos.KlageEventTilOppgaveMapper
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetillos.beriker.K9KlageBerikerInterfaceKludge
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetillos.beriker.K9KlageBerikerKlientLocal
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetillos.beriker.K9KlageBerikerSystemKlient
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.punsjtillos.K9PunsjTilLosAdapterTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.punsjtillos.K9PunsjTilLosHistorikkvaskTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.punsjtillos.PunsjEventTilOppgaveMapper
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.*
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.SakEventTilOppgaveMapper
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.beriker.K9SakSystemKlient
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.beriker.K9SakSystemKlientInterfaceKludge
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.beriker.K9SakSystemKlientLocal
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.tilbaketillos.K9TilbakeTilLosAdapterTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.tilbaketillos.K9TilbakeTilLosHistorikkvaskTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.tilbaketillos.TilbakeEventTilOppgaveMapper
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.tilbaketillos.k9TilbakeEksternId
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.modia.SakOgBehandlingProducer
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.refreshk9sakoppgaver.RefreshK9v3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.refreshk9sakoppgaver.restklient.IK9SakService
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.refreshk9sakoppgaver.restklient.K9SakBehandlingOppfrisketRepository
@@ -144,12 +130,6 @@ fun common(app: Application, config: Configuration) = module {
     single(named("statistikkRefreshChannel")) {
         Channel<Boolean>(Channel.CONFLATED)
     }
-    single(named("historikkvaskChannelK9Sak")) {
-        Channel<k9SakEksternId>(Channel.UNLIMITED)
-    }
-    single(named("historikkvaskChannelK9Tilbake")) {
-        Channel<k9TilbakeEksternId>(Channel.UNLIMITED)
-    }
 
     single { OppgaveRepository(get()) }
 
@@ -181,22 +161,6 @@ fun common(app: Application, config: Configuration) = module {
     }
 
     single {
-        K9SakEventRepository(get())
-    }
-
-    single {
-        K9KlageEventRepository(get())
-    }
-
-    single {
-        K9PunsjEventRepository(get())
-    }
-
-    single {
-        K9TilbakeEventRepository(get())
-    }
-
-    single {
         NøkkeltallRepositoryV3(get())
     }
 
@@ -209,13 +173,6 @@ fun common(app: Application, config: Configuration) = module {
     }
 
     single {
-        SakOgBehandlingProducer(
-            kafkaConfig = config.getProfileAwareKafkaAivenConfig(),
-            config = config
-        )
-    }
-
-    single {
         AccessTokenClientResolver(
             clients = config.clients()
         )
@@ -223,61 +180,33 @@ fun common(app: Application, config: Configuration) = module {
 
     single {
         K9SakEventHandler(
-            k9SakEventRepository = get(),
-            sakOgBehandlingProducer = get(),
-            k9SakTilLosAdapterTjeneste = get(),
             transactionalManager = get(),
-            eventlagerKonverteringsservice = get(),
+            eventTilOppgaveAdapter = get(),
             eventRepository = get(),
         )
     }
 
     single {
         K9KlageEventHandler(
-            behandlingProsessEventKlageRepository = get(),
             transactionalManager = get(),
-            eventlagerKonverteringsservice = get(),
+            eventRepository = get(),
             oppgaveAdapter = get(),
         )
     }
 
     single {
         K9TilbakeEventHandler(
-            behandlingProsessEventTilbakeRepository = get(),
-            sakOgBehandlingProducer = get(),
             transactionalManager = get(),
-            eventlagerKonverteringsservice = get(),
+            eventRepository = get(),
             oppgaveAdapter = get(),
         )
     }
 
     single {
         K9PunsjEventHandler(
-            punsjEventK9Repository = get(),
             transactionalManager = get(),
-            eventlagerKonverteringsservice = get(),
             oppgaveAdapter = get(),
-        )
-    }
-
-    single {
-        EventlagerKonverteringsservice(
-            nyttEventrepository = get(),
-            punsjEventRepository = get(),
-            klageEventRepository = get(),
-            tilbakeEventRepository = get(),
-            sakEventRepository = get()
-        )
-    }
-
-    single {
-        EventlagerKonverteringsjobb(
-            transactionalManager = get(),
-            punsjEventRepository = get(),
-            klageEventRepository = get(),
-            tilbakeEventRepository = get(),
-            sakEventRepository = get(),
-            eventlagerKonverteringsservice = get()
+            eventRepository = get(),
         )
     }
 
@@ -472,43 +401,6 @@ fun common(app: Application, config: Configuration) = module {
     }
 
     single {
-        K9PunsjTilLosAdapterTjeneste(
-            k9PunsjEventRepository = get(),
-            oppgaveV3Tjeneste = get(),
-            reservasjonV3Tjeneste = get(),
-            transactionalManager = get(),
-            pepCacheService = get(),
-            køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
-        )
-    }
-
-    single {
-        K9SakTilLosAdapterTjeneste(
-            k9SakEventRepository = get(),
-            oppgaveV3Tjeneste = get(),
-            transactionalManager = get(),
-            k9SakBerikerKlient = get(),
-            pepCacheService = get(),
-            oppgaveRepository = get(),
-            reservasjonV3Tjeneste = get(),
-            historikkvaskChannel = get(named("historikkvaskChannelK9Sak")),
-            køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
-        )
-    }
-    single {
-        K9TilbakeTilLosAdapterTjeneste(
-            behandlingProsessEventTilbakeRepository = get(),
-            oppgaveV3Tjeneste = get(),
-            transactionalManager = get(),
-            pepCacheService = get(),
-            oppgaveRepository = get(),
-            reservasjonV3Tjeneste = get(),
-            historikkvaskChannel = get(named("historikkvaskChannelK9Tilbake")),
-            køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
-        )
-    }
-
-    single {
         OppgaveQueryRepository(
             datasource = get(),
             feltdefinisjonRepository = get()
@@ -540,27 +432,6 @@ fun common(app: Application, config: Configuration) = module {
     }
 
     single {
-        K9KlageTilLosAdapterTjeneste(
-            k9KlageEventRepository = get(),
-            oppgaveV3Tjeneste = get(),
-            transactionalManager = get(),
-            k9klageBeriker = get(),
-            køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
-        )
-    }
-
-    single {
-        K9SakTilLosHistorikkvaskTjeneste(
-            behandlingProsessEventK9Repository = get(),
-            oppgaveV3Tjeneste = get(),
-            config = get(),
-            transactionalManager = get(),
-            k9SakTilLosAdapterTjeneste = get(),
-            k9SakBerikerKlient = get(),
-        )
-    }
-
-    single {
         HistorikkvaskTjeneste(
             eventRepository = get(),
             oppgaveV3Tjeneste = get(),
@@ -570,48 +441,7 @@ fun common(app: Application, config: Configuration) = module {
     }
 
     single {
-        K9PunsjTilLosHistorikkvaskTjeneste(
-            k9PunsjEventRepository = get(),
-            oppgaveV3Tjeneste = get(),
-            config = get(),
-            transactionalManager = get(),
-        )
-    }
-
-    single {
-        K9KlageTilLosHistorikkvaskTjeneste(
-            behandlingProsessEventKlageRepository = get(),
-            områdeRepository = get(),
-            feltdefinisjonTjeneste = get(),
-            oppgavetypeTjeneste = get(),
-            oppgaveV3Tjeneste = get(),
-            config = get(),
-            transactionalManager = get(),
-            k9klageBeriker = get(),
-        )
-    }
-
-    single {
-        K9TilbakeTilLosHistorikkvaskTjeneste(
-            behandlingProsessEventTilbakeRepository = get(),
-            oppgaveV3Tjeneste = get(),
-            config = get(),
-            transactionalManager = get(),
-        )
-    }
-
-    single {
         Aktivvask(dataSource = get())
-    }
-
-    single {
-        K9SakTilLosLukkeFeiloppgaverTjeneste(
-            behandlingProsessEventK9Repository = get(),
-            oppgaveV3Tjeneste = get(),
-            config = get(),
-            transactionalManager = get(),
-            k9SakBerikerKlient = get(),
-        )
     }
 
     single {

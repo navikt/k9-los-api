@@ -1,10 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager
 
-import kotliquery.Row
-import kotliquery.TransactionalSession
-import kotliquery.queryOf
-import kotliquery.sessionOf
-import kotliquery.using
+import kotliquery.*
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
 import org.jetbrains.annotations.VisibleForTesting
@@ -122,6 +118,14 @@ class EventRepository(
         return hent(eventNøkkel.fagsystem, eventNøkkel.eksternId, eksternVersjon, tx)
     }
 
+    fun hentAlleEventer(fagsystem: Fagsystem, eksternId: String): List<EventLagret> {
+        return using(sessionOf(dataSource)) { session ->
+            session.transaction { tx ->
+                hentAlleEventer(fagsystem, eksternId, tx)
+            }
+        }
+    }
+
     fun hentAlleEventer(fagsystem: Fagsystem, eksternId: String, tx: TransactionalSession): List<EventLagret> {
         val eventId = hentOgLåsEventnøkkel(fagsystem, eksternId, tx)
         val eventer = tx.run(
@@ -194,8 +198,7 @@ class EventRepository(
                     from event e
                         join event_nokkel en on e.event_nokkel_id = en.id
                     where e.dirty = true
-                    and en.fagsystem in ('${Fagsystem.K9TILBAKE.kode}', '${Fagsystem.PUNSJ.kode}', '${Fagsystem.K9KLAGE.kode}')
-                """.trimIndent() //TODO: Midlertidig filter på punsj for pilottest
+                """.trimIndent()
                 ).map { row ->
                     EventNøkkel(
                         nøkkelId = row.long("id"),
@@ -244,7 +247,8 @@ class EventRepository(
             eksternVersjon = row.string("ekstern_versjon"),
             eventJson = row.string("data"),
             opprettet = row.localDateTime("opprettet"),
-            fagsystem = Fagsystem.fraKode(row.string("fagsystem"))
+            fagsystem = Fagsystem.fraKode(row.string("fagsystem")),
+            dirty = row.boolean("dirty")
         )
     }
 
@@ -255,7 +259,8 @@ class EventRepository(
             eksternVersjon = row.string("ekstern_versjon"),
             eventJson = row.string("data"),
             opprettet = row.localDateTime("opprettet"),
-            fagsystem = fagsystem
+            fagsystem = fagsystem,
+            dirty = row.boolean("dirty")
         )
     }
 
@@ -283,6 +288,7 @@ class EventRepository(
                             select id
                             from event_nokkel
                             where fagsystem = :fagsystem
+                            on conflict do nothing
                         """.trimMargin(),
                         mapOf(
                             "fagsystem" to fagsystem.kode,
@@ -309,6 +315,7 @@ class EventRepository(
                             from event_nokkel
                             where fagsystem = :fagsystem
                             and ekstern_id = :ekstern_id
+                            on conflict do nothing
                         """.trimMargin(),
                 mapOf(
                     "fagsystem" to fagsystem.kode,
@@ -363,9 +370,8 @@ class EventRepository(
                             select en.*
                             from event_historikkvask_bestilt hb
                                 join event_nokkel en on hb.event_nokkel_id = en.id
-                                where en.fagsystem in ('${Fagsystem.K9TILBAKE.kode}', '${Fagsystem.PUNSJ.kode}', '${Fagsystem.K9KLAGE.kode}')
                             LIMIT :antall
-                        """.trimIndent(), //TODO: Midlertidig filter på tilbakekrav for pilottest
+                        """.trimIndent(),
                         mapOf("antall" to antall)
                     ).map { row ->
                         HistorikkvaskBestilling(

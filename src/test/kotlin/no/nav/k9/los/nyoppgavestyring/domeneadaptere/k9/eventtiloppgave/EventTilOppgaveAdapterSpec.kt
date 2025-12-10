@@ -9,7 +9,7 @@ import io.mockk.verify
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.K9Oppgavetypenavn
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventNøkkel
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventRepository
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.PunsjEventDto
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventDto
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
@@ -240,8 +240,8 @@ class EventTilOppgaveAdapterSpec : KoinTest, FreeSpec() {
 
     fun punsjEvent(eksternId: UUID = UUID.randomUUID(),
                    eksternVersjon: LocalDateTime = LocalDateTime.now().minusHours(1))
-            : PunsjEventDto {
-        return PunsjEventDto(
+            : K9PunsjEventDto {
+        return K9PunsjEventDto(
             eksternId = eksternId,
             journalpostId = JournalpostId(1L),
             eventTid = eksternVersjon,
