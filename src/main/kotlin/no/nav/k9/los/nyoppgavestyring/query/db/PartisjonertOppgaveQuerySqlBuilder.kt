@@ -149,13 +149,9 @@ class PartisjonertOppgaveQuerySqlBuilder(
     }
 
     override fun medPaging(limit: Long, offset: Long) {
-        if (limit < 0) {
-            return
-        } else if (limit > 0 && offset < 0) {
-            pagingClause = "LIMIT $limit"
-        } else if (limit > 0) {
-            pagingClause = "LIMIT $limit OFFSET $offset"
-        }
+        val limitClause = if (limit > 0) "LIMIT $limit" else ""
+        val offsetClause = if (offset > 0) "OFFSET $offset" else ""
+        pagingClause = listOf(limitClause, offsetClause).joinToString(" ")
     }
 
     override fun medFeltverdi(
