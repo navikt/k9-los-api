@@ -17,7 +17,7 @@ class UttrekkRepository(val dataSource: DataSource) {
             it.run(
                 queryOf(
                     """
-                SELECT id, opprettet_tidspunkt, status, query, type_kjoring, laget_av, timeout,
+                SELECT id, opprettet_tidspunkt, status, tittel, query, type_kjoring, laget_av, timeout,
                        avgrensning_limit, avgrensning_offset,
                        feilmelding, startet_tidspunkt, fullfort_tidspunkt, antall
                 FROM uttrekk
@@ -51,12 +51,13 @@ class UttrekkRepository(val dataSource: DataSource) {
             tx.updateAndReturnGeneratedKey(
                 queryOf(
                     """
-                    INSERT INTO uttrekk (opprettet_tidspunkt, status, query, type_kjoring, laget_av, timeout, avgrensning_limit, avgrensning_offset)
-                    VALUES (:opprettetTidspunkt, :status, :query::jsonb, :typeKjoring, :lagetAv, :timeout, :limit, :offset)
+                    INSERT INTO uttrekk (opprettet_tidspunkt, status, tittel, query, type_kjoring, laget_av, timeout, avgrensning_limit, avgrensning_offset)
+                    VALUES (:opprettetTidspunkt, :status, :tittel, :query::jsonb, :typeKjoring, :lagetAv, :timeout, :limit, :offset)
                     """.trimIndent(),
                     mapOf(
                         "opprettetTidspunkt" to uttrekk.opprettetTidspunkt,
                         "status" to uttrekk.status.name,
+                        "tittel" to uttrekk.tittel,
                         "query" to LosObjectMapper.instance.writeValueAsString(uttrekk.query),
                         "typeKjoring" to uttrekk.typeKjøring.name,
                         "lagetAv" to uttrekk.lagetAv,
@@ -74,13 +75,13 @@ class UttrekkRepository(val dataSource: DataSource) {
             val sql = if (resultat != null) {
                 """
                 UPDATE uttrekk
-                SET status = :status, resultat = :resultat::jsonb, feilmelding = :feilmelding, startet_tidspunkt = :startetTidspunkt, fullfort_tidspunkt = :fullfortTidspunkt, antall = :antall
+                SET status = :status, tittel = :tittel, resultat = :resultat::jsonb, feilmelding = :feilmelding, startet_tidspunkt = :startetTidspunkt, fullfort_tidspunkt = :fullfortTidspunkt, antall = :antall
                 WHERE id = :id
                 """.trimIndent()
             } else {
                 """
                 UPDATE uttrekk
-                SET status = :status, feilmelding = :feilmelding, startet_tidspunkt = :startetTidspunkt, fullfort_tidspunkt = :fullfortTidspunkt, antall = :antall
+                SET status = :status, tittel = :tittel, feilmelding = :feilmelding, startet_tidspunkt = :startetTidspunkt, fullfort_tidspunkt = :fullfortTidspunkt, antall = :antall
                 WHERE id = :id
                 """.trimIndent()
             }
@@ -88,6 +89,7 @@ class UttrekkRepository(val dataSource: DataSource) {
             val params = mutableMapOf(
                 "id" to uttrekk.id,
                 "status" to uttrekk.status.name,
+                "tittel" to uttrekk.tittel,
                 "feilmelding" to uttrekk.feilmelding,
                 "startetTidspunkt" to uttrekk.startetTidspunkt,
                 "fullfortTidspunkt" to uttrekk.fullførtTidspunkt,
@@ -122,7 +124,7 @@ class UttrekkRepository(val dataSource: DataSource) {
             session.run(
                 queryOf(
                     """
-                SELECT id, opprettet_tidspunkt, status, query, type_kjoring, laget_av, timeout,
+                SELECT id, opprettet_tidspunkt, status, tittel, query, type_kjoring, laget_av, timeout,
                        avgrensning_limit, avgrensning_offset,
                        feilmelding, startet_tidspunkt, fullfort_tidspunkt, antall
                 FROM uttrekk
@@ -140,7 +142,7 @@ class UttrekkRepository(val dataSource: DataSource) {
             session.run(
                 queryOf(
                     """
-                SELECT id, opprettet_tidspunkt, status, query, type_kjoring, laget_av, timeout,
+                SELECT id, opprettet_tidspunkt, status, tittel, query, type_kjoring, laget_av, timeout,
                        avgrensning_limit, avgrensning_offset,
                        feilmelding, startet_tidspunkt, fullfort_tidspunkt, antall
                 FROM uttrekk
@@ -160,6 +162,7 @@ private fun Row.toUttrekk(): Uttrekk {
         id = long("id"),
         opprettetTidspunkt = localDateTime("opprettet_tidspunkt"),
         status = UttrekkStatus.valueOf(string("status")),
+        tittel = string("tittel"),
         query = LosObjectMapper.instance.readValue(string("query"), OppgaveQuery::class.java),
         typeKjoring = TypeKjøring.valueOf(string("type_kjoring")),
         lagetAv = long("laget_av"),

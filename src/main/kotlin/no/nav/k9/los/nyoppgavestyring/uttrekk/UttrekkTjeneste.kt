@@ -11,7 +11,7 @@ class UttrekkTjeneste(
             ?: throw IllegalArgumentException("Lagret søk med id ${opprettUttrekk.lagretSokId} finnes ikke")
 
         val uttrekk = Uttrekk.opprettUttrekk(
-            query = lagretSøk.query,
+            lagretSøk = lagretSøk,
             typeKjoring = opprettUttrekk.typeKjoring,
             lagetAv = saksbehandlerId,
             timeout = opprettUttrekk.timeout,
@@ -68,6 +68,15 @@ class UttrekkTjeneste(
             ?: throw IllegalArgumentException("Uttrekk med id $id finnes ikke")
 
         uttrekk.markerSomFeilet(feilmelding)
+        uttrekkRepository.oppdater(uttrekk)
+        return uttrekk
+    }
+
+    fun endreTittel(id: Long, tittel: String): Uttrekk {
+        val uttrekk = uttrekkRepository.hent(id)
+            ?: throw IllegalArgumentException("Uttrekk med id $id finnes ikke")
+
+        uttrekk.endreTittel(tittel)
         uttrekkRepository.oppdater(uttrekk)
         return uttrekk
     }

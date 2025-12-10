@@ -26,6 +26,7 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
     private lateinit var saksbehandlerRepository: SaksbehandlerRepository
     private var saksbehandlerId: Long = 0L
     private lateinit var testQuery: OppgaveQuery
+    private lateinit var testLagretSøk: LagretSøk
 
     @BeforeEach
     fun setup() {
@@ -53,13 +54,14 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
             )
             lagretSøkRepository.opprett(lagretSøk)
             testQuery = lagretSøk.query
+            testLagretSøk = lagretSøk
         }
     }
 
     @Test
     fun `skal opprette og hente uttrekk`() {
         val uttrekk = Uttrekk.opprettUttrekk(
-            query = testQuery,
+            lagretSøk = testLagretSøk,
             typeKjoring = TypeKjøring.OPPGAVER,
             lagetAv = saksbehandlerId,
             timeout = 30
@@ -86,7 +88,7 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
     @Test
     fun `skal oppdatere eksisterende uttrekk`() {
         val uttrekk = Uttrekk.opprettUttrekk(
-            query = testQuery,
+            lagretSøk = testLagretSøk,
             typeKjoring = TypeKjøring.OPPGAVER,
             lagetAv = saksbehandlerId,
             timeout = 30
@@ -117,6 +119,7 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
             id = 999L,
             opprettetTidspunkt = LocalDateTime.now(),
             status = UttrekkStatus.KJØRER,
+            tittel = "Test uttrekk",
             query = testQuery,
             typeKjoring = TypeKjøring.OPPGAVER,
             lagetAv = saksbehandlerId,
@@ -139,7 +142,7 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
     @Test
     fun `skal slette uttrekk`() {
         val uttrekk = Uttrekk.opprettUttrekk(
-            query = testQuery,
+            lagretSøk = testLagretSøk,
             typeKjoring = TypeKjøring.OPPGAVER,
             lagetAv = saksbehandlerId,
             timeout = 30
@@ -157,13 +160,13 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
     @Test
     fun `skal hente alle uttrekk`() {
         val uttrekk1 = Uttrekk.opprettUttrekk(
-            query = testQuery,
+            lagretSøk = testLagretSøk,
             typeKjoring = TypeKjøring.OPPGAVER,
             lagetAv = saksbehandlerId,
             timeout = 30
         )
         val uttrekk2 = Uttrekk.opprettUttrekk(
-            query = testQuery,
+            lagretSøk = testLagretSøk,
             typeKjoring = TypeKjøring.OPPGAVER,
             lagetAv = saksbehandlerId,
             timeout = 30
@@ -194,19 +197,19 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
         }
 
         val uttrekk1 = Uttrekk.opprettUttrekk(
-            query = testQuery,
+            lagretSøk = testLagretSøk,
             typeKjoring = TypeKjøring.OPPGAVER,
             lagetAv = saksbehandlerId,
             timeout = 30
         )
         val uttrekk2 = Uttrekk.opprettUttrekk(
-            query = testQuery,
+            lagretSøk = testLagretSøk,
             typeKjoring = TypeKjøring.OPPGAVER,
             lagetAv = saksbehandlerId,
             timeout = 30
         )
         val uttrekk3 = Uttrekk.opprettUttrekk(
-            query = testQuery,
+            lagretSøk = testLagretSøk,
             typeKjoring = TypeKjøring.OPPGAVER,
             lagetAv = annenSaksbehandlerId,
             timeout = 30
@@ -224,7 +227,7 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
     @Test
     fun `skal opprette uttrekk med TypeKjøring ANTALL`() {
         val uttrekk = Uttrekk.opprettUttrekk(
-            query = testQuery,
+            lagretSøk = testLagretSøk,
             typeKjoring = TypeKjøring.ANTALL,
             lagetAv = saksbehandlerId,
             timeout = 30
@@ -240,7 +243,7 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
     @Test
     fun `skal opprette uttrekk med TypeKjøring OPPGAVER`() {
         val uttrekk = Uttrekk.opprettUttrekk(
-            query = testQuery,
+            lagretSøk = testLagretSøk,
             typeKjoring = TypeKjøring.OPPGAVER,
             lagetAv = saksbehandlerId,
             timeout = 30
@@ -256,7 +259,7 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
     @Test
     fun `skal sette feilmelding når uttrekk feiler`() {
         val uttrekk = Uttrekk.opprettUttrekk(
-            query = testQuery,
+            lagretSøk = testLagretSøk,
             typeKjoring = TypeKjøring.OPPGAVER,
             lagetAv = saksbehandlerId,
             timeout = 30

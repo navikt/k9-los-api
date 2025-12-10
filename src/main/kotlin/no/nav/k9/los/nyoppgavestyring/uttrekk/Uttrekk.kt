@@ -1,5 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.uttrekk
 
+import no.nav.k9.los.nyoppgavestyring.lagretsok.LagretSøk
 import no.nav.k9.los.nyoppgavestyring.query.Avgrensning
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
 import java.time.LocalDateTime
@@ -20,6 +21,7 @@ class Uttrekk private constructor(
     val id: Long?,
     val opprettetTidspunkt: LocalDateTime,
     status: UttrekkStatus,
+    tittel: String,
     val query: OppgaveQuery,
     val typeKjøring: TypeKjøring,
     val lagetAv: Long,
@@ -32,6 +34,9 @@ class Uttrekk private constructor(
     antall: Int?
 ) {
     var status: UttrekkStatus = status
+        private set
+
+    var tittel: String = tittel
         private set
 
     var feilmelding: String? = feilmelding
@@ -82,9 +87,13 @@ class Uttrekk private constructor(
                 startetTidspunkt!!.plusSeconds(1L + timeout) < LocalDateTime.now()
     }
 
+    fun endreTittel(nyTittel: String) {
+        tittel = nyTittel
+    }
+
     companion object {
         fun opprettUttrekk(
-            query: OppgaveQuery,
+            lagretSøk: LagretSøk,
             typeKjoring: TypeKjøring,
             lagetAv: Long,
             timeout: Int,
@@ -97,7 +106,8 @@ class Uttrekk private constructor(
                 id = null,
                 opprettetTidspunkt = LocalDateTime.now(),
                 status = UttrekkStatus.OPPRETTET,
-                query = query,
+                tittel = "Uttrekk av ${lagretSøk.tittel}",
+                query = lagretSøk.query,
                 typeKjøring = typeKjoring,
                 lagetAv = lagetAv,
                 timeout = timeout,
@@ -114,6 +124,7 @@ class Uttrekk private constructor(
             id: Long,
             opprettetTidspunkt: LocalDateTime,
             status: UttrekkStatus,
+            tittel: String,
             query: OppgaveQuery,
             typeKjoring: TypeKjøring,
             lagetAv: Long,
@@ -126,7 +137,7 @@ class Uttrekk private constructor(
             antall: Int?
         ): Uttrekk {
             return Uttrekk(
-                id, opprettetTidspunkt, status, query, typeKjoring, lagetAv, timeout, limit, offset,
+                id, opprettetTidspunkt, status, tittel, query, typeKjoring, lagetAv, timeout, limit, offset,
                 feilmelding, startetTidspunkt, fullførtTidspunkt, antall
             )
         }

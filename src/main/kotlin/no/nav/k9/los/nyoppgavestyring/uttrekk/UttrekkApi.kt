@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference
 import io.github.smiley4.ktoropenapi.delete
 import io.github.smiley4.ktoropenapi.get
 import io.github.smiley4.ktoropenapi.post
+import io.github.smiley4.ktoropenapi.put
 import io.ktor.http.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
@@ -95,6 +96,30 @@ fun Route.UttrekkApi() {
                     } catch (e: IllegalArgumentException) {
                         call.respond(HttpStatusCode.BadRequest, e.message ?: "Ugyldig forespørsel")
                     }
+                }
+            } else {
+                call.respond(HttpStatusCode.Forbidden)
+            }
+        }
+    }
+
+    put("/{id}/tittel", {
+        request {
+            body<EndreTittel>()
+        }
+        response {
+            HttpStatusCode.OK to { }
+        }
+    }) {
+        requestContextService.withRequestContext(call) {
+            if (pepClient.harBasisTilgang()) {
+                val id = call.parameters["id"]!!.toLong()
+                val (tittel) = call.receive<EndreTittel>()
+                try {
+                    uttrekkTjeneste.endreTittel(id, tittel)
+                    call.respond(HttpStatusCode.OK)
+                } catch (e: IllegalArgumentException) {
+                    call.respond(HttpStatusCode.NotFound, e.message ?: "Uttrekk finnes ikke")
                 }
             } else {
                 call.respond(HttpStatusCode.Forbidden)
@@ -222,12 +247,14 @@ fun Route.UttrekkApi() {
                     .drop(offset)
                     .let { if (limit != null) it.take(limit) else it }
 
-                call.respond(UttrekkResultatRespons(
-                    rader = paginertRader,
-                    totaltAntall = alleRader.size,
-                    offset = offset,
-                    limit = limit
-                ))
+                call.respond(
+                    UttrekkResultatRespons(
+                        rader = paginertRader,
+                        totaltAntall = alleRader.size,
+                        offset = offset,
+                        limit = limit
+                    )
+                )
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }

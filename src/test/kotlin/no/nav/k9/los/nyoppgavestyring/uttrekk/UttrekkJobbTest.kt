@@ -26,6 +26,7 @@ class UttrekkJobbTest : AbstractK9LosIntegrationTest() {
     private lateinit var saksbehandlerRepository: SaksbehandlerRepository
     private var saksbehandlerId: Long = 0L
     private lateinit var testQuery: OppgaveQuery
+    private lateinit var testLagretSøk: LagretSøk
 
     @BeforeEach
     fun setup() {
@@ -55,6 +56,7 @@ class UttrekkJobbTest : AbstractK9LosIntegrationTest() {
             )
             lagretSøkRepository.opprett(lagretSøk)
             testQuery = lagretSøk.query
+            testLagretSøk = lagretSøk
         }
     }
 
@@ -62,7 +64,7 @@ class UttrekkJobbTest : AbstractK9LosIntegrationTest() {
     fun `skal kjøre uttrekk med TypeKjøring ANTALL og returnere antall som string`() {
         // Opprett uttrekk med TypeKjøring.ANTALL
         val uttrekk = Uttrekk.opprettUttrekk(
-            query = testQuery,
+            lagretSøk = testLagretSøk,
             typeKjoring = TypeKjøring.ANTALL,
             lagetAv = saksbehandlerId,
             timeout = 30
@@ -85,7 +87,7 @@ class UttrekkJobbTest : AbstractK9LosIntegrationTest() {
     fun `skal kjøre uttrekk med TypeKjøring OPPGAVER og returnere JSON med oppgaver`() {
         // Opprett uttrekk med TypeKjøring.OPPGAVER
         val uttrekk = Uttrekk.opprettUttrekk(
-            query = testQuery,
+            lagretSøk = testLagretSøk,
             typeKjoring = TypeKjøring.OPPGAVER,
             lagetAv = saksbehandlerId,
             timeout = 30
