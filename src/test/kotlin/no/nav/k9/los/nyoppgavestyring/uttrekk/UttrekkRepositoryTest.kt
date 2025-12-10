@@ -17,6 +17,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.koin.test.get
+import java.time.LocalDateTime
 
 class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
 
@@ -114,16 +115,18 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
     fun `skal kaste exception ved oppdatering av ikke-eksisterende uttrekk`() {
         val uttrekk = Uttrekk.fraEksisterende(
             id = 999L,
-            opprettetTidspunkt = java.time.LocalDateTime.now(),
+            opprettetTidspunkt = LocalDateTime.now(),
             status = UttrekkStatus.KJØRER,
             query = testQuery,
             typeKjoring = TypeKjøring.OPPGAVER,
             lagetAv = saksbehandlerId,
             timeout = 30,
             feilmelding = null,
-            startetTidspunkt = java.time.LocalDateTime.now(),
+            startetTidspunkt = LocalDateTime.now(),
             fullførtTidspunkt = null,
-            antall = null
+            antall = null,
+            limit = null,
+            offset = null
         )
 
         val exception = assertThrows<IllegalStateException> {

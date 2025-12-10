@@ -27,7 +27,7 @@ class UttrekkJobb(
 
                 TypeKjøring.OPPGAVER -> {
                     val oppgaver = oppgaveQueryService.query(
-                        QueryRequest(uttrekk.query, queryTimeout = uttrekk.timeout)
+                        QueryRequest(uttrekk.query, queryTimeout = uttrekk.timeout, avgrensning = uttrekk.avgrensning)
                     )
                     val resultatJson = LosObjectMapper.instance.writeValueAsString(oppgaver)
                     uttrekkTjeneste.fullførUttrekk(uttrekkId, oppgaver.size, resultatJson)

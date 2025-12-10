@@ -18,6 +18,7 @@ class UttrekkRepository(val dataSource: DataSource) {
                 queryOf(
                     """
                 SELECT id, opprettet_tidspunkt, status, query, type_kjoring, laget_av, timeout,
+                       avgrensning_limit, avgrensning_offset,
                        feilmelding, startet_tidspunkt, fullfort_tidspunkt, antall
                 FROM uttrekk
                 WHERE id = :id
@@ -50,8 +51,8 @@ class UttrekkRepository(val dataSource: DataSource) {
             tx.updateAndReturnGeneratedKey(
                 queryOf(
                     """
-                    INSERT INTO uttrekk (opprettet_tidspunkt, status, query, type_kjoring, laget_av, timeout)
-                    VALUES (:opprettetTidspunkt, :status, :query::jsonb, :typeKjoring, :lagetAv, :timeout)
+                    INSERT INTO uttrekk (opprettet_tidspunkt, status, query, type_kjoring, laget_av, timeout, avgrensning_limit, avgrensning_offset)
+                    VALUES (:opprettetTidspunkt, :status, :query::jsonb, :typeKjoring, :lagetAv, :timeout, :limit, :offset)
                     """.trimIndent(),
                     mapOf(
                         "opprettetTidspunkt" to uttrekk.opprettetTidspunkt,
@@ -59,7 +60,9 @@ class UttrekkRepository(val dataSource: DataSource) {
                         "query" to LosObjectMapper.instance.writeValueAsString(uttrekk.query),
                         "typeKjoring" to uttrekk.typeKjøring.name,
                         "lagetAv" to uttrekk.lagetAv,
-                        "timeout" to uttrekk.timeout
+                        "timeout" to uttrekk.timeout,
+                        "limit" to uttrekk.limit,
+                        "offset" to uttrekk.offset
                     )
                 )
             )
@@ -120,6 +123,7 @@ class UttrekkRepository(val dataSource: DataSource) {
                 queryOf(
                     """
                 SELECT id, opprettet_tidspunkt, status, query, type_kjoring, laget_av, timeout,
+                       avgrensning_limit, avgrensning_offset,
                        feilmelding, startet_tidspunkt, fullfort_tidspunkt, antall
                 FROM uttrekk
                 ORDER BY opprettet_tidspunkt DESC
@@ -137,6 +141,7 @@ class UttrekkRepository(val dataSource: DataSource) {
                 queryOf(
                     """
                 SELECT id, opprettet_tidspunkt, status, query, type_kjoring, laget_av, timeout,
+                       avgrensning_limit, avgrensning_offset,
                        feilmelding, startet_tidspunkt, fullfort_tidspunkt, antall
                 FROM uttrekk
                 WHERE laget_av = :lagetAv
@@ -159,6 +164,8 @@ private fun Row.toUttrekk(): Uttrekk {
         typeKjoring = TypeKjøring.valueOf(string("type_kjoring")),
         lagetAv = long("laget_av"),
         timeout = int("timeout"),
+        limit = intOrNull("avgrensning_limit"),
+        offset = intOrNull("avgrensning_offset"),
         feilmelding = stringOrNull("feilmelding"),
         startetTidspunkt = localDateTimeOrNull("startet_tidspunkt"),
         fullførtTidspunkt = localDateTimeOrNull("fullfort_tidspunkt"),

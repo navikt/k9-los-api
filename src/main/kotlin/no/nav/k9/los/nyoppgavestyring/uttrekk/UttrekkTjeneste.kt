@@ -14,7 +14,9 @@ class UttrekkTjeneste(
             query = lagretSøk.query,
             typeKjoring = opprettUttrekk.typeKjoring,
             lagetAv = saksbehandlerId,
-            timeout = opprettUttrekk.timeout
+            timeout = opprettUttrekk.timeout,
+            limit = opprettUttrekk.limit,
+            offset = opprettUttrekk.offset
         )
         return uttrekkRepository.opprett(uttrekk)
     }

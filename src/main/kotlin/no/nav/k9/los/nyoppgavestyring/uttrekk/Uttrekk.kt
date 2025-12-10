@@ -1,5 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.uttrekk
 
+import no.nav.k9.los.nyoppgavestyring.query.Avgrensning
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
 import java.time.LocalDateTime
 
@@ -23,6 +24,8 @@ class Uttrekk private constructor(
     val typeKjøring: TypeKjøring,
     val lagetAv: Long,
     val timeout: Int,
+    val limit: Int?,
+    val offset: Int?,
     feilmelding: String?,
     startetTidspunkt: LocalDateTime?,
     fullførtTidspunkt: LocalDateTime?,
@@ -42,6 +45,13 @@ class Uttrekk private constructor(
 
     var antall: Int? = antall
         private set
+
+    val avgrensning: Avgrensning?
+        get() = if (limit != null || offset != null)
+            Avgrensning(limit = limit?.toLong() ?: -1, offset = offset?.toLong() ?: -1)
+        else
+            null
+
 
     fun markerSomKjører() {
         require(status == UttrekkStatus.OPPRETTET) { "Kan kun starte uttrekk som er i status OPPRETTET" }
@@ -69,7 +79,7 @@ class Uttrekk private constructor(
     fun skalRyddesOpp(): Boolean {
         // Legger på et ekstra sekund for å la vanlig timeout gå ut
         return status == UttrekkStatus.KJØRER &&
-            startetTidspunkt!!.plusSeconds(1L + timeout) < LocalDateTime.now()
+                startetTidspunkt!!.plusSeconds(1L + timeout) < LocalDateTime.now()
     }
 
     companion object {
@@ -77,7 +87,9 @@ class Uttrekk private constructor(
             query: OppgaveQuery,
             typeKjoring: TypeKjøring,
             lagetAv: Long,
-            timeout: Int
+            timeout: Int,
+            limit: Int? = null,
+            offset: Int? = null
         ): Uttrekk {
             require(timeout > 0) { "Timeout må være en positiv verdi" }
 
@@ -89,6 +101,8 @@ class Uttrekk private constructor(
                 typeKjøring = typeKjoring,
                 lagetAv = lagetAv,
                 timeout = timeout,
+                limit = limit,
+                offset = offset,
                 feilmelding = null,
                 startetTidspunkt = null,
                 fullførtTidspunkt = null,
@@ -104,14 +118,16 @@ class Uttrekk private constructor(
             typeKjoring: TypeKjøring,
             lagetAv: Long,
             timeout: Int,
+            limit: Int?,
+            offset: Int?,
             feilmelding: String?,
             startetTidspunkt: LocalDateTime?,
             fullførtTidspunkt: LocalDateTime?,
             antall: Int?
         ): Uttrekk {
             return Uttrekk(
-                id, opprettetTidspunkt, status, query, typeKjoring, lagetAv, timeout, feilmelding,
-                startetTidspunkt, fullførtTidspunkt, antall
+                id, opprettetTidspunkt, status, query, typeKjoring, lagetAv, timeout, limit, offset,
+                feilmelding, startetTidspunkt, fullførtTidspunkt, antall
             )
         }
     }

@@ -6,6 +6,8 @@ CREATE TABLE uttrekk (
     type_kjoring TEXT NOT NULL,
     laget_av BIGINT NOT NULL REFERENCES SAKSBEHANDLER(id),
     timeout INT NOT NULL,
+    avgrensning_limit INT,
+    avgrensning_offset INT,
     resultat JSONB,
     feilmelding TEXT,
     startet_tidspunkt TIMESTAMP,
