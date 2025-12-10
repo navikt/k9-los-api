@@ -10,6 +10,7 @@ import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.OpentelemetrySpanUtil
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
 import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
+import org.jetbrains.annotations.VisibleForTesting
 import org.slf4j.LoggerFactory
 
 
@@ -24,30 +25,34 @@ class K9PunsjEventHandler (
         private val typer = BehandlingType.values().filter { it.kodeverk == "PUNSJ_INNSENDING_TYPE" }
     }
 
-    @WithSpan
+    @VisibleForTesting
     fun prosesser(event: K9PunsjEventDto) {
-        EventHandlerMetrics.time("k9punsj", "gjennomført") {
-            log.info(event.safePrint())
+        prosesser(
+            eksternId = event.eksternId.toString(),
+            eksternVersjon = event.eventTid.toString(),
+            event = LosObjectMapper.instance.writeValueAsString(event)
+        )
+    }
 
+    @WithSpan
+    fun prosesser(eksternId: String, eksternVersjon: String, event: String) {
+        EventHandlerMetrics.time("k9punsj", "gjennomført") {
             transactionalManager.transaction { tx ->
                 val lås =
-                    eventRepository.upsertOgLåsEventnøkkel(Fagsystem.PUNSJ, event.eksternId.toString(), tx)
-
-                log.info(event.safePrint())
-                eventRepository.lagre(Fagsystem.PUNSJ, LosObjectMapper.instance.writeValueAsString(event), tx)
+                    eventRepository.upsertOgLåsEventnøkkel(Fagsystem.PUNSJ, eksternId, tx)
+                eventRepository.lagre(Fagsystem.PUNSJ, eksternId, eksternVersjon, event, tx)
             }
 
             OpentelemetrySpanUtil.span("punsjTilLosAdapterTjeneste.oppdaterOppgaveForEksternId") {
                 try {
                     oppgaveAdapter.oppdaterOppgaveForEksternId(
                         EventNøkkel(
-                            null,
                             Fagsystem.PUNSJ,
-                            event.eksternId.toString()
+                            eksternId
                         )
                     )
                 } catch (e: Exception) {
-                    log.error("Oppatering av k9-punsj-oppgave feilet for ${event.eksternId}. Oppgaven er ikke oppdatert, men blir plukket av vaktmester", e)
+                    log.error("Oppatering av k9-punsj-oppgave feilet for ${eksternId}. Oppgaven er ikke oppdatert, men blir plukket av vaktmester", e)
                 }
             }
         }

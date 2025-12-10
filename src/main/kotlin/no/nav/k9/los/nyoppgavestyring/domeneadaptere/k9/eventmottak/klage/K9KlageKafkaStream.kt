@@ -8,9 +8,11 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.Aksjonspunkt
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.Topic
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.kafka.IKafkaConfig
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakKafkaStream
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.OpentelemetrySpanUtil
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.TransientFeilHåndterer
 import org.apache.kafka.clients.consumer.OffsetResetStrategy
+import org.apache.kafka.common.serialization.Serdes
 import org.apache.kafka.streams.StreamsBuilder
 import org.apache.kafka.streams.Topology
 import org.apache.kafka.streams.kstream.Consumed
@@ -52,12 +54,16 @@ internal class K9KlageKafkaStream constructor(
             builder
                 .stream(
                     fromTopic.name,
-                    Consumed.with(fromTopic.keySerde, fromTopic.valueSerde)
-                ).peek { _, e -> log.info("--> Behandlingsprosesshendelse fra k9klage: ${e.tryggToString() }") }
-                .foreach { _, entry ->
-                    if (entry != null) {
-                        OpentelemetrySpanUtil.span(NAME, mapOf("saksnummer" to entry.saksnummer)) {
-                            TransientFeilHåndterer().utfør(NAME) { k9KlageEventHandler.prosesser(entry) }
+                    Consumed.with(fromTopic.keySerde, Serdes.String())
+                ).foreach { _, event ->
+                    if (event != null) {
+                        val tree = LosObjectMapper.instance.readTree(event)
+                        val eksternId = tree.findValue("eksternId").asText()
+                        val eksternVersjon = tree.findValue("eventTid").asText()
+                        val saksnummer = tree.findValue("saksnummer").asText()
+
+                        OpentelemetrySpanUtil.span(NAME, mapOf("saksnummer" to saksnummer)) {
+                            TransientFeilHåndterer().utfør(NAME) { k9KlageEventHandler.prosesser(eksternId, eksternVersjon, event) }
                         }
                     }
                 }

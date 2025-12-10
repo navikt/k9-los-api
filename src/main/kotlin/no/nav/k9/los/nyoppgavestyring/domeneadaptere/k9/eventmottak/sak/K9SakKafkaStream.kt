@@ -7,9 +7,11 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.kafka.Manage
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.kafka.ManagedStreamReady
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.AksjonspunktLaget
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.Topic
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.OpentelemetrySpanUtil
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.TransientFeilHåndterer
 import org.apache.kafka.clients.consumer.OffsetResetStrategy
+import org.apache.kafka.common.serialization.Serdes
 import org.apache.kafka.streams.StreamsBuilder
 import org.apache.kafka.streams.Topology
 import org.apache.kafka.streams.kstream.Consumed
@@ -54,19 +56,27 @@ internal class K9SakKafkaStream constructor(
             builder
                 .stream(
                     fromTopic.name,
-                    Consumed.with(fromTopic.keySerde, fromTopic.valueSerde)
-                ).peek { _, e -> log.info("--> Behandlingsprosesshendelse fra k9sak: ${e.tryggToString() }") }
-                .foreach { _, entry ->
-                    if (entry != null) {
-                        OpentelemetrySpanUtil.span(NAME, mapOf("saksnummer" to entry.saksnummer)) {
+                    Consumed.with(fromTopic.keySerde, Serdes.String())
+                ).foreach { _, event ->
+                    if (event != null) {
+                        val tree = LosObjectMapper.instance.readTree(event)
+                        val eksternId = tree.findValue("eksternId").asText()
+                        val eksternVersjon = tree.findValue("eventTid").asText()
+                        val saksnummer = tree.findValue("saksnummer").asText()
+
+                        log.info("Mottar Behandlingsprosesshendelse fra k9sak for ${saksnummer}-${eksternId}")
+
+                        OpentelemetrySpanUtil.span(NAME, mapOf("saksnummer" to saksnummer)) {
                             val tid = measureTimeMillis {
-                                TransientFeilHåndterer(warningEtter = 5.toDuration(DurationUnit.SECONDS)).utfør(NAME) {k9sakEventHandler.prosesser(entry) }
+                                TransientFeilHåndterer(warningEtter = 5.toDuration(DurationUnit.SECONDS)).utfør(NAME) {
+                                    k9sakEventHandler.prosesser(eksternId, eksternVersjon, event)
+                                }
                             }
                             if (tid > 5000) {
                                 // Logger som warning ved over 5sekunder fordi det kan oppleves som at oppgaver blir liggende igjen på benken
-                                log.warn("Prosessering av Behandlingsprosesshendelse fra k9sak for ${entry.saksnummer}-${entry.eksternId} tok $tid")
+                                log.warn("Prosessering av Behandlingsprosesshendelse fra k9sak for ${saksnummer}-${eksternId} tok $tid")
                             } else {
-                                log.info("Prosessering av Behandlingsprosesshendelse fra k9sak for ${entry.saksnummer}-${entry.eksternId} tok $tid")
+                                log.info("Prosessering av Behandlingsprosesshendelse fra k9sak for ${saksnummer}-${eksternId} tok $tid")
                             }
                         }
                     }
