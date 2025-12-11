@@ -1,1 +1,0 @@
-drop table behandling, behandling_data, merknad, nye_og_ferdigstilte, ferdigstilte_behandlinger, oppgave, oppgaveko, oppgave_v2, reservasjon, siste_behandlinger;

@@ -1,0 +1,20 @@
+drop table
+    behandling,
+    behandling_data,
+    merknad,
+    nye_og_ferdigstilte,
+    ferdigstilte_behandlinger,
+    oppgave,
+    oppgaveko,
+    oppgave_v2,
+    reservasjon,
+    siste_behandlinger,
+    behandling_prosess_events_k9,
+    behandling_prosess_events_k9_historikkvask_ferdig,
+    behandling_prosess_events_k9_punsj,
+    behandling_prosess_events_k9_punsj_historikkvask_ferdig,
+    behandling_prosess_events_klage,
+    behandling_prosess_events_klage_historikkvask_ferdig,
+    behandling_prosess_events_tilbake,
+    behandling_prosess_events_tilbake_historikkvask_ferdig
+;
