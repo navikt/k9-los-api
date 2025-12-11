@@ -35,7 +35,13 @@ class EventTilOppgaveAdapter(
         var behandlingTeller: Long = 0
         var eventTeller: Long = 0
         eventnøkler.forEach { nøkkel ->
-            eventTeller = oppdaterOppgaveForEksternId(nøkkel, eventTeller)
+            eventTeller =
+                try {
+                    oppdaterOppgaveForEksternId(nøkkel, eventTeller)
+                } catch (e: Exception) {
+                    log.error("Oppgavevaktmester: Feil ved oppdatering av oppgave for fagsystem: ${nøkkel.fagsystem}, eksternId: ${nøkkel.eksternId}", e)
+                    eventTeller
+                }
             behandlingTeller++
             loggFremgangForHver100(behandlingTeller, "Forsert $behandlingTeller behandlinger")
         }
