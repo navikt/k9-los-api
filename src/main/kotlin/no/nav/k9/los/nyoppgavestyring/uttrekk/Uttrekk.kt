@@ -106,7 +106,7 @@ class Uttrekk private constructor(
                 id = null,
                 opprettetTidspunkt = LocalDateTime.now(),
                 status = UttrekkStatus.OPPRETTET,
-                tittel = "Uttrekk av ${lagretSøk.tittel}",
+                tittel = lagretSøk.tittel,
                 query = lagretSøk.query,
                 typeKjøring = typeKjoring,
                 lagetAv = lagetAv,
