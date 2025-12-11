@@ -50,7 +50,16 @@ class HistorikkvaskTjeneste(
         val scope = CoroutineScope(dispatcher)
 
         val jobber = vaskebestillinger.map { historikkvaskBestilling ->
-            scope.async { runBlocking { vaskBestilling(historikkvaskBestilling) } }
+            scope.async {
+                runBlocking {
+                    try {
+                        vaskBestilling(historikkvaskBestilling)
+                    } catch (e: Exception) {
+                        log.error("HistorikkvaskVaktmester: Feil ved historikkvask for ${historikkvaskBestilling.eksternId} for fagsystem: ${historikkvaskBestilling.fagsystem}", e)
+                        0
+                    }
+                }
+            }
         }.toList()
 
         val eventTeller = runBlocking {
@@ -90,7 +99,7 @@ class HistorikkvaskTjeneste(
                         is VaskOppgaveversjon -> {
                             val dto = oppgaveversjon.dto
                             forrigeOppgave =
-                                oppgaveV3Tjeneste.vaskEksisterendeOppgaveversjon(dto, eventNrForBehandling-1, tx)
+                                oppgaveV3Tjeneste.vaskEksisterendeOppgaveversjon(dto, eventNrForBehandling - 1, tx)
                         }
                     }
                 }
