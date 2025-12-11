@@ -58,9 +58,9 @@ internal class K9KlageKafkaStream constructor(
                 ).foreach { _, event ->
                     if (event != null) {
                         val tree = LosObjectMapper.instance.readTree(event)
-                        val eksternId = tree.findValue("eksternId").asText()
-                        val eksternVersjon = tree.findValue("eventTid").asText()
-                        val saksnummer = tree.findValue("saksnummer").asText()
+                        val eksternId = tree.get("eksternId").asText()
+                        val eksternVersjon = tree.get("eventTid").asText()
+                        val saksnummer = tree.get("saksnummer").asText()
 
                         OpentelemetrySpanUtil.span(NAME, mapOf("saksnummer" to saksnummer)) {
                             TransientFeilHåndterer().utfør(NAME) { k9KlageEventHandler.prosesser(eksternId, eksternVersjon, event) }

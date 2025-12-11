@@ -58,9 +58,9 @@ internal class K9PunsjKafkaStream constructor(
                 .foreach { _, entry ->
                     if (entry != null) {
                         val tree = LosObjectMapper.instance.readTree(entry)
-                        val eksternId = tree.findValue("eksternId").asText()
-                        val eksternVersjon = tree.findValue("eventTid").asText()
-                        val journalpostId = tree.findValue("journalpostId").asText()
+                        val eksternId = tree.get("eksternId").asText()
+                        val eksternVersjon = tree.get("eventTid").asText()
+                        val journalpostId = tree.get("journalpostId").asText()
 
                         OpentelemetrySpanUtil.span(NAME, mapOf("journalpostId" to journalpostId)) {
                             val spørring = System.currentTimeMillis()

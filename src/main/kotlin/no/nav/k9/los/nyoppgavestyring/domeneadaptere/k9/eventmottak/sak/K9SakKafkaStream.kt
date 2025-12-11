@@ -60,9 +60,9 @@ internal class K9SakKafkaStream constructor(
                 ).foreach { _, event ->
                     if (event != null) {
                         val tree = LosObjectMapper.instance.readTree(event)
-                        val eksternId = tree.findValue("eksternId").asText()
-                        val eksternVersjon = tree.findValue("eventTid").asText()
-                        val saksnummer = tree.findValue("saksnummer").asText()
+                        val eksternId = tree.get("eksternId").asText()
+                        val eksternVersjon = tree.get("eventTid").asText()
+                        val saksnummer = tree.get("saksnummer").asText()
 
                         log.info("Mottar Behandlingsprosesshendelse fra k9sak for ${saksnummer}-${eksternId}")
 
