@@ -5,14 +5,15 @@ val hikariVersion = "6.2.1"
 val flywayVersion = "11.1.1"
 val vaultJdbcVersion = "1.3.10"
 val koinVersion = "4.1.0"
+val kotestVersion = "6.0.3"
 val kotliqueryVersion = "1.9.1"
 val k9SakVersion = "5.4.22"
 val k9KlageVersion = "0.4.7"
 val jacksonVersion = "2.17.2"
 val commonsTextVersion = "1.13.0"
 
-val dusseldorfKtorVersion = "7.0.1"
-val ktorVersion = "3.2.1"
+val dusseldorfKtorVersion = "7.0.6"
+val ktorVersion = "3.3.2"
 val kafkaVersion = "3.9.0"
 
 val navTilgangskontroll = "3.2024.01.24_10.14-f70bae69bd65"
@@ -82,6 +83,7 @@ dependencies {
 
     // Div
     implementation(enforcedPlatform("com.fasterxml.jackson:jackson-bom:$jacksonVersion"))
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
     implementation("org.apache.commons:commons-text:$commonsTextVersion")
     implementation("com.papertrailapp:logback-syslog4j:1.0.0")
     implementation("io.github.smiley4:ktor-openapi:5.0.2")
@@ -95,6 +97,7 @@ dependencies {
     // Test
     testImplementation("org.junit.jupiter:junit-jupiter-api:$jupiterVersion")
     testImplementation("org.junit.jupiter:junit-jupiter-engine:$jupiterVersion")
+    testImplementation("io.kotest:kotest-runner-junit5:6.0.0.M4")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
     testImplementation("com.willowtreeapps.assertk:assertk-jvm:$assertkVersion")
@@ -106,7 +109,9 @@ dependencies {
     }
     testImplementation("org.testcontainers:postgresql:$testContainers")
     testImplementation("io.insert-koin:koin-test-junit5:$koinVersion")
-    testImplementation("io.kotest:kotest-runner-junit5:6.0.0.M4")
+    testImplementation("io.kotest:kotest-runner-junit5:$kotestVersion")
+    testImplementation("io.kotest:kotest-assertions-core:$kotestVersion")
+    testImplementation("io.kotest:kotest-extensions-koin:$kotestVersion")
 }
 
 repositories {

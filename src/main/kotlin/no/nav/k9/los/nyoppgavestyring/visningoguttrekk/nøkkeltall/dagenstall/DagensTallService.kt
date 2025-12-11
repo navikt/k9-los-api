@@ -74,7 +74,7 @@ class DagensTallService(
 
         val ferdigstiltDato = { dato: LocalDate ->
             FeltverdiOppgavefilter(
-                "K9",
+                null,
                 "ferdigstiltDato",
                 EksternFeltverdiOperator.GREATER_THAN_OR_EQUALS,
                 listOf(dato.toString())
@@ -178,21 +178,20 @@ class DagensTallService(
         }
     }
 
-    private fun antall(vararg filtere: FeltverdiOppgavefilter?): Long {
-        return queryService.queryForAntall(
-            QueryRequest(
-                oppgaveQuery = OppgaveQuery(
-                    filtere = filtere.toList().filterNotNull()
-                ),
-            )
+    private fun antall(visningnavn: String, vararg filtere: FeltverdiOppgavefilter?): DagensTallLinjeDto {
+        val oppgaveQuery = OppgaveQuery(
+            filtere = filtere.toList().filterNotNull()
         )
+        return DagensTallLinjeDto(visningnavn, queryService.queryForAntall(
+            QueryRequest(
+                oppgaveQuery = oppgaveQuery,
+            )
+        ), oppgaveQuery)
     }
 
     private fun hentFraDatabase(): DagensTallResponse {
         val iDag = LocalDate.now()
-        val enUkeSiden = iDag.minusWeeks(1)
-        val toUkerSiden = iDag.minusWeeks(2)
-        val fireUkerSiden = iDag.minusWeeks(4)
+        val syvDagerSiden = iDag.minusWeeks(1)
 
         val tall = DagensTallHovedgruppe.entries.flatMap { hovedgruppe ->
             val ytelse = when (hovedgruppe) {
@@ -215,29 +214,27 @@ class DagensTallService(
                     DagensTallUndergruppe.UNNTAKSBEHANDLING -> unntaksbehandling
                 }
 
+                fun dagenstallKort(dato: LocalDate) =
+                    Pair(
+                        DagensTallKortDto(
+                            hovedtall = antall("Inngang", mottattDato(dato), ytelse, behandlingstype),
+                            linjer = emptyList()
+                        ),
+                        DagensTallKortDto(
+                            hovedtall = antall("Ferdigstilt", lukket, ferdigstiltDato(dato), ytelse, behandlingstype),
+                            linjer = listOf(
+                                antall("manuelt", lukket, ferdigstiltDato(dato), ytelse, behandlingstype, ikkeHelautomatisk),
+                                antall("automatisk", lukket, ferdigstiltDato(dato), ytelse, behandlingstype, helautomatisk)
+                            )
+                        )
+                    )
+
                 DagensTallDto(
                     hovedgruppe = hovedgruppe,
                     undergruppe = undergruppe,
 
-                    nyeIDag = antall(åpenVenterUavklart, mottattDato(iDag), ytelse, behandlingstype)
-                            + antall(lukket, ferdigstiltDato(iDag), mottattDato(iDag), ytelse, behandlingstype),
-                    ferdigstilteIDag = antall(lukket, ferdigstiltDato(iDag), ytelse, behandlingstype, ikkeHelautomatisk),
-                    ferdigstilteHelautomatiskIDag = antall(lukket, ferdigstiltDato(iDag), ytelse, behandlingstype, helautomatisk),
-
-                    nyeSiste7Dager = antall(åpenVenterUavklart, mottattDato(enUkeSiden), ytelse, behandlingstype)
-                                   + antall(lukket, ferdigstiltDato(enUkeSiden), mottattDato(enUkeSiden), ytelse, behandlingstype),
-                    ferdigstilteSiste7Dager = antall(lukket, ferdigstiltDato(enUkeSiden), ytelse, behandlingstype, ikkeHelautomatisk),
-                    ferdigstilteHelautomatiskSiste7Dager = antall(lukket, ferdigstiltDato(enUkeSiden), ytelse, behandlingstype, helautomatisk),
-
-                    nyeSiste2Uker = antall(åpenVenterUavklart, mottattDato(toUkerSiden), ytelse, behandlingstype)
-                                   + antall(lukket, ferdigstiltDato(toUkerSiden), mottattDato(toUkerSiden), ytelse, behandlingstype),
-                    ferdigstilteSiste2Uker = antall(lukket, ferdigstiltDato(toUkerSiden), ytelse, behandlingstype, ikkeHelautomatisk),
-                    ferdigstilteHelautomatiskSiste2Uker = antall(lukket, ferdigstiltDato(toUkerSiden), ytelse, behandlingstype, helautomatisk),
-
-                    nyeSiste4Uker = antall(åpenVenterUavklart, mottattDato(fireUkerSiden), ytelse, behandlingstype)
-                                    + antall(lukket, ferdigstiltDato(fireUkerSiden), mottattDato(fireUkerSiden), ytelse, behandlingstype),
-                    ferdigstilteSiste4Uker = antall(lukket, ferdigstiltDato(fireUkerSiden), ytelse, behandlingstype, ikkeHelautomatisk),
-                    ferdigstilteHelautomatiskSiste4Uker = antall(lukket, ferdigstiltDato(fireUkerSiden), ytelse, behandlingstype, ikkeHelautomatisk),
+                    idag = dagenstallKort(iDag),
+                    siste7Dager = dagenstallKort(syvDagerSiden)
                 )
             }
         }

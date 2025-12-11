@@ -1,7 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.saksbehandleradmin
 
 import io.ktor.http.*
-import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
@@ -9,7 +8,6 @@ import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.RequestContextService
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonApisTjeneste
 import org.koin.ktor.ext.inject
-import kotlin.getValue
 
 internal fun Route.SaksbehandlerAdminApis() {
     val requestContextService by inject<RequestContextService>()

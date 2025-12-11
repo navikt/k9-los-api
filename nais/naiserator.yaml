@@ -125,8 +125,6 @@ spec:
       value: {{app_sif_abac_pdp_url}}
 
       # Kafka
-    - name: BOOTSTRAP_SERVERS
-      value: {{bootstrap_servers}}
     - name: KAFKA_AKSJONSPUNKTHENDELSE_TOPIC
       value: k9saksbehandling.k9sak-aksjonspunkthendelse
     - name: KAFKA_KLAGE_TIL_LOS_TOPIC

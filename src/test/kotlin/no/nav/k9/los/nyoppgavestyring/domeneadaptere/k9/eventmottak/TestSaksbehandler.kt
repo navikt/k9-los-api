@@ -23,7 +23,7 @@ class TestSaksbehandler: KoinTest {
             navn = "Sara Saksbehandler",
             epost = "sara.saksbehandler@nav.no",
             reservasjoner = mutableSetOf(),
-            enhet = "NAV DRIFT"
+            enhet = "2830 NAV DRIFT"
         )
 
         val BIRGER_BESLUTTER = Saksbehandler(
@@ -32,7 +32,7 @@ class TestSaksbehandler: KoinTest {
             navn = "Birger Beslutter",
             epost = "birger.beslutter@nav.no",
             reservasjoner = mutableSetOf(),
-            enhet = "NAV DRIFT"
+            enhet = "2830 NAV DRIFT"
         )
 
         val KJERSTI_SKJERMET = Saksbehandler(

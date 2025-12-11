@@ -83,6 +83,7 @@ data class K9TilbakeEventDto(
             .trimMargin()
     }
 
+    companion object
 
 
 }

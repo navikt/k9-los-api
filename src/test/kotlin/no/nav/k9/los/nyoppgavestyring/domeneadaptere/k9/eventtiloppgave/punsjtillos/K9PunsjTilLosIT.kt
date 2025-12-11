@@ -5,12 +5,15 @@ import assertk.assertions.isNull
 import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.OppgaveTestDataBuilder
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.PunsjEventDtoBuilder
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.PunsjEventDtoBuilder
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.TestSaksbehandler
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventNøkkel
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventHandler
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.PunsjEventDto
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventDto
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.EventTilOppgaveAdapter
 import no.nav.k9.los.nyoppgavestyring.ko.OppgaveKoTjeneste
 import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
+import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.AktivOppgaveRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.query.db.EksternOppgaveId
@@ -32,6 +35,7 @@ class K9PunsjTilLosIT : AbstractK9LosIntegrationTest() {
     lateinit var reservasjonApisTjeneste: ReservasjonApisTjeneste
     lateinit var transactionalManager: TransactionalManager
     lateinit var aktivOppgaveRepository: AktivOppgaveRepository
+    lateinit var eventTilOppgaveAdapter: EventTilOppgaveAdapter
 
     @BeforeEach
     fun setup() {
@@ -40,6 +44,7 @@ class K9PunsjTilLosIT : AbstractK9LosIntegrationTest() {
         reservasjonApisTjeneste = get<ReservasjonApisTjeneste>()
         transactionalManager = get<TransactionalManager>()
         aktivOppgaveRepository = get<AktivOppgaveRepository>()
+        eventTilOppgaveAdapter = get<EventTilOppgaveAdapter>()
 
         TestSaksbehandler().init()
         OppgaveTestDataBuilder()
@@ -54,12 +59,12 @@ class K9PunsjTilLosIT : AbstractK9LosIntegrationTest() {
     }
 
     @Test
-    fun `Skal ta i mott eventer og lukke oppgave når siste event er LUKKET`() {
+    fun `Skal ta imot eventer og lukke oppgave når siste event er LUKKET`() {
         var nå = LocalDateTime.now()
         var punsjId = UUID.randomUUID()
         var søkerAktørId = AktørId(2000000000000)
         var pleietrengendeAktørId = AktørId(2000000000001)
-        val event1 = PunsjEventDto(
+        val event1 = K9PunsjEventDto(
             type = "PAPIRSØKNAD",
             status = Oppgavestatus.AAPEN,
             ytelse = "PSB",
@@ -69,7 +74,7 @@ class K9PunsjTilLosIT : AbstractK9LosIntegrationTest() {
             journalpostId = JournalpostId(1),
             aksjonspunktKoderMedStatusListe = mutableMapOf("PUNSJ" to "OPPR"),
         )
-        val event2 = PunsjEventDto(
+        val event2 = K9PunsjEventDto(
             type = "PAPIRSØKNAD",
             status = Oppgavestatus.AAPEN,
             ytelse = "PSB",
@@ -82,7 +87,7 @@ class K9PunsjTilLosIT : AbstractK9LosIntegrationTest() {
             aksjonspunktKoderMedStatusListe = mutableMapOf("PUNSJ" to "OPPR"),
         )
 
-        val event3 = PunsjEventDto(
+        val event3 = K9PunsjEventDto(
             type = "PAPIRSØKNAD",
             status = Oppgavestatus.LUKKET,
             ytelse = null,
@@ -97,6 +102,8 @@ class K9PunsjTilLosIT : AbstractK9LosIntegrationTest() {
         eventHandler.prosesser(event1)
         eventHandler.prosesser(event2)
         eventHandler.prosesser(event3)
+
+        eventTilOppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(Fagsystem.PUNSJ, punsjId.toString()))
 
         val aktivOppgave = transactionalManager.transaction { tx -> aktivOppgaveRepository.hentOppgaveForEksternId(tx, EksternOppgaveId("K9", punsjId.toString())) }
         assertThat(aktivOppgave).isNull() //når oppgaven lukkes fjernes den også fra aktiv-tabellene

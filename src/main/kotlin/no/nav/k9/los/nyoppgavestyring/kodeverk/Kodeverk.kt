@@ -241,12 +241,29 @@ enum class BehandlingStatus(override val kode: String, override val navn: String
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)
 enum class Venteårsak(override val kode: String, override val navn: String) : Kodeverdi {
     AVV_DOK("AVV_DOK", "Avventer dokumentasjon"),
+    OVERSENDT_KABAL("OVERSENDT_KABAL", "Venter på at behandling utføres av Klage- og ankeenheten"),
     VENT_MANGL_FUNKSJ_SAKSBEHANDLER("VENT_MANGL_FUNKSJ_SAKSBEHANDLER", "Manglende funksjonalitet i løsningen"),
     VENTER_SVAR_INTERNT("VENTER_SVAR_INTERNT", "Meldt i Porten eller Teams"),
     AUTOMATISK_SATT_PA_VENT("AUTOMATISK", "Automatisk satt på vent"),
     UKJENT("UKJENT", "Mangler venteårsak");
 
     override val kodeverk = "VENTEÅRSAK_TYPE"
+}
+
+
+
+enum class BehandlendeEnhet(override val kode: String, override val navn: String, override val kodeverk: String): Kodeverdi {
+    STYRINGSENHET("4400", "NAV ARBEID OG YTELSER STYRINGSENHET", "BEHANDLENDE_ENHET"),
+    KRISTIANIA("4403", "NAV ARBEID OG YTELSER KRISTIANIA", "BEHANDLENDE_ENHET"),
+    SØRLANDET("4410", "NAV ARBEID OG YTELSER SØRLANDET", "BEHANDLENDE_ENHET"),
+    YTELSESAVDELINGEN("2830", "YTELSESAVDELINGEN", "BEHANDLENDE_ENHET"),
+    UKJENT("UKJENT", "Ukjent", "BEHANDLENDE_ENHET");
+
+    companion object {
+        fun fraKode(o: Any): BehandlendeEnhet {
+            return entries.find { it.kode == o } ?: UKJENT
+        }
+    }
 }
 
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)

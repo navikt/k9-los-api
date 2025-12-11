@@ -6,12 +6,9 @@ import no.nav.k9.kodeverk.behandling.BehandlingResultatType
 import no.nav.k9.kodeverk.behandling.BehandlingStegType
 import no.nav.k9.kodeverk.behandling.BehandlingÅrsakType
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
-import no.nav.k9.kodeverk.behandling.aksjonspunkt.Venteårsak
 import no.nav.k9.kodeverk.produksjonsstyring.UtvidetSøknadÅrsak
 import no.nav.k9.los.Configuration
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetillos.EventTilDtoMapper
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.K9SakTilLosAdapterTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.tilbaketillos.K9TilbakeTilLosAdapterTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetillos.KlageEventTilOppgaveMapper
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.nyoppgavestyring.kodeverk.*
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonTjeneste
@@ -53,7 +50,7 @@ class OmrådeSetup(
     private fun oppdaterFeltdefinisjoner() {
         val objectMapper = jacksonObjectMapper()
         val feltdefinisjonerDto = objectMapper.readValue(
-            K9SakTilLosAdapterTjeneste::class.java.getResource("/adapterdefinisjoner/k9-feltdefinisjoner-v2.json")!!
+            OmrådeSetup::class.java.getResource("/adapterdefinisjoner/k9-feltdefinisjoner-v2.json")!!
                 .readText(),
             FeltdefinisjonerDto::class.java
         )
@@ -64,7 +61,7 @@ class OmrådeSetup(
     @WithSpan
     private fun ajourholdOppgavetype(oppgavedefinisjon: String, frontendUrl: String) {
         val oppgavetyperDto = LosObjectMapper.instance.readValue(
-            K9TilbakeTilLosAdapterTjeneste::class.java.getResource(oppgavedefinisjon)!!
+            OmrådeSetup::class.java.getResource(oppgavedefinisjon)!!
                 .readText(),
             OppgavetyperDto::class.java
         )
@@ -94,6 +91,18 @@ class OmrådeSetup(
         kodeverkBehandlingssteg()
         kodeverkSøknadsårsak()
         kodeverkBehandlingsårsak()
+        kodeverkBehandlendeEnhet()
+    }
+
+    private fun kodeverkBehandlendeEnhet() {
+        val kodeverkDto = KodeverkDto(
+            område = område,
+            eksternId = "behandlendeEnhet",
+            beskrivelse = null,
+            uttømmende = false,
+            verdier = BehandlendeEnhet.entries.lagDto(beskrivelse = null)
+        )
+        feltdefinisjonTjeneste.oppdater(kodeverkDto)
     }
 
     private fun kodeverkAksjonspunkt() {
@@ -121,8 +130,8 @@ class OmrådeSetup(
             .filterNot { it == no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon.UNDEFINED }
             .map { apDefinisjon ->
                 KodeverkVerdiDto(
-                    verdi = EventTilDtoMapper.KLAGE_PREFIX + apDefinisjon.kode,
-                    visningsnavn = EventTilDtoMapper.KLAGE_PREFIX_VISNING + apDefinisjon.navn,
+                    verdi = KlageEventTilOppgaveMapper.KLAGE_PREFIX + apDefinisjon.kode,
+                    visningsnavn = KlageEventTilOppgaveMapper.KLAGE_PREFIX_VISNING + apDefinisjon.navn,
                     beskrivelse = null,
                 )
             }
@@ -188,7 +197,7 @@ class OmrådeSetup(
             eksternId = "Venteårsak",
             beskrivelse = null,
             uttømmende = true,
-            verdier = Venteårsak.entries.lagK9Dto(beskrivelse = null)
+            verdier = no.nav.k9.kodeverk.behandling.aksjonspunkt.Venteårsak.entries.lagK9Dto(beskrivelse = null) + no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.Venteårsak.entries.lageK9KlageDto(beskrivelse = null, prefiks = false),
         )
         feltdefinisjonTjeneste.oppdater(kodeverkDto)
     }
@@ -211,6 +220,7 @@ class OmrådeSetup(
         )
         val k9klageKodeverk = no.nav.k9.klage.kodeverk.behandling.BehandlingÅrsakType.entries.lageK9KlageDto(
             beskrivelse = null,
+            prefiks = true,
             KodeverkSynlighetRegler::behandlingsårsak
         )
         val koder = k9sakKodeverk + k9klageKodeverk
@@ -269,14 +279,15 @@ class OmrådeSetup(
 
     fun <T : no.nav.k9.klage.kodeverk.api.Kodeverdi> Collection<T>.lageK9KlageDto(
         beskrivelse: String?,
+        prefiks: Boolean,
         synlighet: (T) -> KodeverkSynlighet = { KodeverkSynlighet.SYNLIG_FAVORITT }
     ): List<KodeverkVerdiDto> {
         return associateWith { synlighet(it) }
             .filter { (_, synlighet) -> synlighet != KodeverkSynlighet.SKJULT }
             .map { (kodeverdi, synlighet) ->
                 KodeverkVerdiDto(
-                    verdi = EventTilDtoMapper.KLAGE_PREFIX + kodeverdi.kode,
-                    visningsnavn = EventTilDtoMapper.KLAGE_PREFIX_VISNING + kodeverdi.navn,
+                    verdi = (if (prefiks) KlageEventTilOppgaveMapper.KLAGE_PREFIX else "") + kodeverdi.kode,
+                    visningsnavn = KlageEventTilOppgaveMapper.KLAGE_PREFIX_VISNING + kodeverdi.navn,
                     beskrivelse = beskrivelse,
                     favoritt = synlighet == KodeverkSynlighet.SYNLIG_FAVORITT
                 )
@@ -324,7 +335,6 @@ object KodeverkSynlighetRegler {
             FagsakYtelseType.FRISINN,
             FagsakYtelseType.UNGDOMSYTELSE -> KodeverkSynlighet.SKJULT
 
-            FagsakYtelseType.OLP,
             FagsakYtelseType.UKJENT,
             FagsakYtelseType.OMSORGSDAGER -> KodeverkSynlighet.SYNLIG
 

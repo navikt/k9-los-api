@@ -1,7 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.mottak.oppgave
 
 import io.ktor.http.*
-import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
@@ -23,7 +22,7 @@ internal fun Route.OppgaveV3Api() {
                 val oppgaveDto = call.receive<OppgaveDto>()
 
                 transactionalManager.transaction { tx ->
-                    oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(oppgaveDto, tx)
+                    oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(NyOppgaveversjon(oppgaveDto), tx)
                 }
 
                 call.respond("OK")
@@ -33,13 +32,14 @@ internal fun Route.OppgaveV3Api() {
         }
     }
 
-    get("/{område}/{eksternId}/{eksternVersjon}") {
+    get("/{område}/{oppgavetype}/{eksternId}/{eksternVersjon}") {
         if (config.nyOppgavestyringRestAktivert()) {
             requestContextService.withRequestContext(call) {
                 call.respond(
                     transactionalManager.transaction { tx ->
                         oppgaveV3Tjeneste.hentOppgaveversjon(
                             område = call.parameters["område"]!!,
+                            oppgavetype = call.parameters["oppgavetype"]!!,
                             eksternId = call.parameters["eksternId"]!!,
                             eksternVersjon = call.parameters["eksternVersjon"]!!,
                             tx = tx
