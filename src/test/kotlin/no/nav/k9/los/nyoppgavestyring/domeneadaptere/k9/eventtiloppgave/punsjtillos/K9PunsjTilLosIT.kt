@@ -103,7 +103,7 @@ class K9PunsjTilLosIT : AbstractK9LosIntegrationTest() {
         eventHandler.prosesser(event2)
         eventHandler.prosesser(event3)
 
-        eventTilOppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(null, Fagsystem.PUNSJ, punsjId.toString()))
+        eventTilOppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(Fagsystem.PUNSJ, punsjId.toString()))
 
         val aktivOppgave = transactionalManager.transaction { tx -> aktivOppgaveRepository.hentOppgaveForEksternId(tx, EksternOppgaveId("K9", punsjId.toString())) }
         assertThat(aktivOppgave).isNull() //når oppgaven lukkes fjernes den også fra aktiv-tabellene

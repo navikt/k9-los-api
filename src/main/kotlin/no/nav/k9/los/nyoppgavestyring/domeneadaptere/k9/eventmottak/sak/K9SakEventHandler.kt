@@ -9,6 +9,7 @@ import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.OpentelemetrySpanUtil
 import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
+import org.jetbrains.annotations.VisibleForTesting
 import org.slf4j.LoggerFactory
 
 
@@ -19,29 +20,41 @@ class K9SakEventHandler(
 ) {
     private val log = LoggerFactory.getLogger(K9SakEventHandler::class.java)
 
+    @VisibleForTesting
+    fun prosesser(
+        event: K9SakEventDto
+    ) {
+        prosesser(
+            eksternId = event.eksternId.toString(),
+            eksternVersjon = event.eventTid.toString(),
+            event = LosObjectMapper.instance.writeValueAsString(event)
+        )
+    }
+
     @WithSpan
     fun prosesser(
-        eventInn: K9SakEventDto
+        eksternId: String,
+        eksternVersjon: String,
+        event: String
     ) {
         val t0 = System.nanoTime()
 
         transactionalManager.transaction { tx ->
-            eventRepository.upsertOgLåsEventnøkkel(Fagsystem.K9SAK, eventInn.eksternId.toString(), tx)
-            eventRepository.lagre(Fagsystem.K9SAK, LosObjectMapper.instance.writeValueAsString(eventInn), tx)
+            eventRepository.upsertOgLåsEventnøkkel(Fagsystem.K9SAK, eksternId, tx)
+            eventRepository.lagre(Fagsystem.K9SAK, eksternId, eksternVersjon, event, tx)
         }
 
         OpentelemetrySpanUtil.span("k9SakTilLosAdapterTjeneste.oppdaterOppgaveForBehandlingUuid") {
             try {
                 eventTilOppgaveAdapter.oppdaterOppgaveForEksternId(
                     EventNøkkel(
-                        null,
                         Fagsystem.K9SAK,
-                        eventInn.eksternId.toString()
+                        eksternId
                     )
                 )
             } catch (e: Exception) {
                 log.error(
-                    "Oppatering av k9-sak-oppgave feilet for ${eventInn.eksternId}. Oppgaven er ikke oppdatert, men blir plukket av vaktmester",
+                    "Oppatering av k9-sak-oppgave feilet for ${eksternId}. Oppgaven er ikke oppdatert, men blir plukket av vaktmester",
                     e
                 )
             }
