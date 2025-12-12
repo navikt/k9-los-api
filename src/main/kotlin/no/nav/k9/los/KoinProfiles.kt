@@ -265,10 +265,6 @@ fun common(app: Application, config: Configuration) = module {
     }
 
     single {
-        HentKodeverkTjeneste()
-    }
-
-    single {
         HealthService(
             healthChecks = get<AsynkronProsesseringV1Service>().isHealtyChecks()
         )

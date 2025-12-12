@@ -6,6 +6,7 @@ import no.nav.k9.kodeverk.behandling.BehandlingResultatType
 import no.nav.k9.kodeverk.behandling.BehandlingStegType
 import no.nav.k9.kodeverk.behandling.BehandlingÅrsakType
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
+import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktType
 import no.nav.k9.kodeverk.produksjonsstyring.UtvidetSøknadÅrsak
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetillos.KlageEventTilOppgaveMapper
@@ -111,8 +112,7 @@ class OmrådeSetup(
             eksternId = "Aksjonspunkt",
             beskrivelse = null,
             uttømmende = false,
-            verdier = aksjonspunktVerdierK9Sak().plus(aksjonspunktVerdierK9Klage()),
-            gruppering =
+            verdier = aksjonspunktVerdierK9Sak().plus(aksjonspunktVerdierK9Klage())
         )
         feltdefinisjonTjeneste.oppdater(kodeverkDto)
     }
@@ -123,6 +123,11 @@ class OmrådeSetup(
                 verdi = apDefinisjon.kode,
                 visningsnavn = apDefinisjon.navn,
                 beskrivelse = null,
+                gruppering = when {
+                    apDefinisjon.aksjonspunktType == AksjonspunktType.AUTOPUNKT -> "AUTOPUNKT"
+                    apDefinisjon.aksjonspunktType == AksjonspunktType.MANUELL -> apDefinisjon.behandlingSteg.navn
+                    else -> "UDEFINERT"
+                }
             )
         }
 
@@ -134,6 +139,11 @@ class OmrådeSetup(
                     verdi = KlageEventTilOppgaveMapper.KLAGE_PREFIX + apDefinisjon.kode,
                     visningsnavn = KlageEventTilOppgaveMapper.KLAGE_PREFIX_VISNING + apDefinisjon.navn,
                     beskrivelse = null,
+                    gruppering = when {
+                        apDefinisjon.aksjonspunktType == no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktType.AUTOPUNKT -> "AUTOPUNKT"
+                        apDefinisjon.aksjonspunktType == no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktType.MANUELL -> apDefinisjon.behandlingSteg.navn
+                        else -> "UDEFINERT"
+                    }
                 )
             }
 
