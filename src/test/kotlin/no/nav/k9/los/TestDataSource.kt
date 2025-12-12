@@ -57,23 +57,9 @@ abstract class AbstractPostgresTest {
         dataSource.connection.use {
             it.createStatement().execute("""
             truncate 
-                behandling_prosess_events_k9,
-                behandling_prosess_events_k9_historikkvask_ferdig,                
-                behandling_prosess_events_klage_historikkvask_ferdig,
-                behandling_prosess_events_k9_punsj_historikkvask_ferdig,
-                behandling_prosess_events_k9_punsj,
-                behandling_prosess_events_k9_punsj_historikkvask_ferdig,
-                behandling_prosess_events_tilbake,
-                behandling_prosess_events_tilbake_historikkvask_ferdig,
                 driftsmeldinger,
-                ferdigstilte_behandlinger,
-                nye_og_ferdigstilte,
-                oppgave,
                 oppgavefelt_verdi,
-                oppgaveko,
-                reservasjon,
                 saksbehandler,
-                siste_behandlinger,
                 siste_oppgaver,
                 OPPGAVEKO_SAKSBEHANDLER,
                 OPPGAVEKO_V3,
