@@ -3,5 +3,5 @@ drop table
     behandling_data,
     oppgave,
     oppgave_v2,
-    reservasjon,
+    reservasjon
 ;

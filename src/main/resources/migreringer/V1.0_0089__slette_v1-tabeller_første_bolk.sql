@@ -3,5 +3,5 @@ drop table
     nye_og_ferdigstilte,
     ferdigstilte_behandlinger,
     oppgaveko,
-    siste_behandlinger,
+    siste_behandlinger
 ;
