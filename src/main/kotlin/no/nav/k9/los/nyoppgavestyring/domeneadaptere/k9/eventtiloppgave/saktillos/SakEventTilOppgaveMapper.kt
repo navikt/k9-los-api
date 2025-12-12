@@ -7,24 +7,22 @@ import no.nav.k9.kodeverk.behandling.BehandlingÅrsakType
 import no.nav.k9.kodeverk.behandling.FagsakYtelseType
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.*
 import no.nav.k9.kodeverk.produksjonsstyring.BehandlingMerknadType
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.EventHendelse
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventLagret
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventDto
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.beriker.K9SakBerikerInterfaceKludge
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.beriker.K9SakSystemKlientInterfaceKludge
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveDto
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdiDto
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.*
 import no.nav.k9.sak.kontrakt.aksjonspunkt.AksjonspunktTilstandDto
 import no.nav.k9.sak.kontrakt.produksjonsstyring.los.BehandlingMedFagsakDto
 import org.jetbrains.annotations.VisibleForTesting
 import java.time.temporal.ChronoUnit
 
 class SakEventTilOppgaveMapper(
-    private val k9SakBerikerKlient: K9SakBerikerInterfaceKludge,
+    private val k9SakBerikerKlient: K9SakSystemKlientInterfaceKludge,
 ) {
-    fun lagOppgaveDto(eventLagret: EventLagret, forrigeOppgave: OppgaveV3?): OppgaveDto {
+    fun lagOppgaveDto(eventLagret: EventLagret, forrigeOppgave: OppgaveV3?, eventnummer: Int): NyOppgaveVersjonInnsending {
         if (eventLagret.fagsystem != Fagsystem.K9SAK) {
             throw IllegalArgumentException("Fagsystem er ikke SAK")
         }
@@ -42,7 +40,16 @@ class SakEventTilOppgaveMapper(
         )
 
         val nyeBehandlingsopplysningerFraK9Sak = k9SakBerikerKlient.hentBehandling(event.eksternId!!) //TODO: Denne kalles mer enn nødvendig. Cache?
-        return ryddOppObsoleteOgResultatfeilFra2020(event, oppgaveDto, nyeBehandlingsopplysningerFraK9Sak)
+        oppgaveDto = ryddOppObsoleteOgResultatfeilFra2020(event, oppgaveDto, nyeBehandlingsopplysningerFraK9Sak)
+        
+        if (event.eventHendelse == EventHendelse.VASKEEVENT) {
+            return VaskOppgaveversjon(
+                dto = oppgaveDto,
+                eventNummer = eventnummer
+            )
+        } else {
+            return NyOppgaveversjon(oppgaveDto)
+        }
     }
 
     internal fun ryddOppObsoleteOgResultatfeilFra2020(

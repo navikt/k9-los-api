@@ -7,9 +7,12 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.kafka.Manage
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.kafka.ManagedStreamReady
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.AksjonspunktLagetTilbake
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.Topic
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakKafkaStream
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.OpentelemetrySpanUtil
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.TransientFeilHåndterer
 import org.apache.kafka.clients.consumer.OffsetResetStrategy
+import org.apache.kafka.common.serialization.Serdes
 import org.apache.kafka.streams.StreamsBuilder
 import org.apache.kafka.streams.Topology
 import org.apache.kafka.streams.kstream.Consumed
@@ -50,14 +53,20 @@ internal class K9TilbakeKafkaStream constructor(
             builder
                 .stream(
                     fromTopic.name,
-                    Consumed.with(fromTopic.keySerde, fromTopic.valueSerde)
+                    Consumed.with(fromTopic.keySerde, Serdes.String())
                  )
-                .peek { _, e -> log.info("--> Behandlingsprosesshendelse fra k9tilbake: ${e.saksnummer} ${e.eksternId}") }
-                .foreach { _, entry ->
-                    if (entry != null) {
-                        OpentelemetrySpanUtil.span(NAME, mapOf("saksnummer" to entry.saksnummer)) {
-                            log.info("Prosesserer entry fra tilbakekreving ${entry.tryggPrint()}")
-                            TransientFeilHåndterer().utfør(NAME) { k9TilbakeEventHandler.prosesser(entry) }
+                .foreach { _, event ->
+                    if (event != null) {
+                        val tree = LosObjectMapper.instance.readTree(event)
+                        val eksternId = tree.get("eksternId").asText()
+                        val eksternVersjon = tree.get("eventTid").asText()
+                        val saksnummer = tree.get("saksnummer").asText()
+
+                        OpentelemetrySpanUtil.span(NAME, mapOf("saksnummer" to saksnummer)) {
+                            log.info("Mottar Behandlingsprosesshendelse fra k9tilbake for ${saksnummer}-${eksternId}")
+                            TransientFeilHåndterer().utfør(NAME) {
+                                k9TilbakeEventHandler.prosesser(eksternId, eksternVersjon, event)
+                            }
                         }
                     }
                 }

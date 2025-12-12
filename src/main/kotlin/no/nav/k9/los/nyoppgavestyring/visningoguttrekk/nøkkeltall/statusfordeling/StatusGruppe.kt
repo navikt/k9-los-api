@@ -6,6 +6,5 @@ enum class StatusGruppe(val tekst: String) {
     REVURDERING("Revurderinger"),
     FEILUTBETALING("Feilutbetalinger"),
     KLAGE("Klager"),
-    UNNTAKSBEHANDLING("Unntaksbehandlinger"),
     PUNSJ("Punsj-oppgaver"),
 }

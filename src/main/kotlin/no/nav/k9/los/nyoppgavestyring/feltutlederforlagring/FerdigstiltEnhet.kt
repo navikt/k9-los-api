@@ -1,6 +1,5 @@
 package no.nav.k9.los.nyoppgavestyring.feltutlederforlagring
 
-import io.ktor.util.toUpperCasePreservingASCIIRules
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdi
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
@@ -26,7 +25,8 @@ class FerdigstiltEnhet(val saksbehandlerRepository: SaksbehandlerRepository) : F
     private fun hentEnhetFraCache(saksbehandler: String?) =
         saksbehandler?.let {
             saksbehandlerCache.hent(it) {
-                saksbehandlerRepository.finnSaksbehandlerMedIdentEkskluderKode6(it)?.enhet?.uppercase()
+                val saksbehandlerEnhet = saksbehandlerRepository.finnSaksbehandlerMedIdentEkskluderKode6(it)?.enhet?.uppercase()
+                saksbehandlerEnhet?.let { Regex("^\\d{4}").find(it)?.value }
             }
         }
 }

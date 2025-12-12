@@ -1,6 +1,7 @@
 package no.nav.k9.los.tjenester.mock
 
 import kotlinx.coroutines.runBlocking
+import no.nav.k9.klage.kontrakt.behandling.oppgavetillos.Aksjonspunkttilstand
 import no.nav.k9.kodeverk.behandling.BehandlingResultatType
 import no.nav.k9.kodeverk.behandling.BehandlingStegType
 import no.nav.k9.kodeverk.behandling.BehandlingÅrsakType
@@ -9,23 +10,23 @@ import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.Venteårsak
 import no.nav.k9.kodeverk.uttak.SøknadÅrsak
 import no.nav.k9.los.KoinProfile
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.AksjonspunktDefinisjonK9Tilbake
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.K9TilbakeEventHandler
-import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.Saksbehandler
-import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventDto
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.K9TilbakeEventDto
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.EventHendelse
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.klage.K9KlageEventDto
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.klage.K9KlageEventHandler
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventHandler
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.PunsjEventDto
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventDto
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventDto
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventHandler
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.AksjonspunktDefinisjonK9Tilbake
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.K9TilbakeEventDto
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.K9TilbakeEventHandler
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingStatus
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
 import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
 import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
+import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.Saksbehandler
+import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
 import no.nav.k9.sak.kontrakt.aksjonspunkt.AksjonspunktTilstandDto
 import no.nav.k9.sak.typer.AktørId
 import no.nav.k9.sak.typer.JournalpostId
@@ -44,7 +45,7 @@ val saksbehandlere = listOf(
         navn = "Saksbehandler Sara",
         epost = "saksbehandler@nav.no",
         reservasjoner = mutableSetOf(),
-        enhet = "NAV DRIFT"
+        enhet = "2830 NAV DRIFT"
     ),
     Saksbehandler(
         id = null,
@@ -52,7 +53,7 @@ val saksbehandlere = listOf(
         navn = "Lars Pokèmonsen",
         epost = "lars.monsen@nav.no",
         reservasjoner = mutableSetOf(),
-        enhet = "NAV DRIFT"
+        enhet = "2830 NAV DRIFT"
     ),
     Saksbehandler(
         id = null,
@@ -60,7 +61,7 @@ val saksbehandlere = listOf(
         navn = "Lord Edgar Hansen",
         epost = "the.lord@nav.no",
         reservasjoner = mutableSetOf(),
-        enhet = "NAV DRIFT"
+        enhet = "2830 NAV DRIFT"
     )
 )
 
@@ -203,7 +204,14 @@ object localSetup : KoinComponent {
                     fagsakPeriode = null,
                     pleietrengendeAktørId = null,
                     relatertPartAktørId = null,
-                    aksjonspunkttilstander = emptyList(),
+                    aksjonspunkttilstander = listOf(Aksjonspunkttilstand(
+                        "7100",
+                        no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus.OPPRETTET,
+                        no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.Venteårsak.OVERSENDT_KABAL,
+                        LocalDateTime.now(),
+                        LocalDateTime.now(),
+                        LocalDateTime.now()
+                    )),
                     vedtaksdato = null,
                     behandlingsårsaker = null,
                 )
@@ -248,7 +256,7 @@ object localSetup : KoinComponent {
         if (profile == KoinProfile.LOCAL) {
             for (i in 0..<antall) {
                 punsjEventHandler.prosesser(
-                    PunsjEventDto(
+                    K9PunsjEventDto(
                         eksternId = UUID.randomUUID(),
                         journalpostId = JournalpostId(Random.nextLong(100000000, 999999999).toString()),
                         eventTid = LocalDateTime.now(),

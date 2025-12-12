@@ -32,7 +32,7 @@ class OppgaveV3Test : AbstractK9LosIntegrationTest() {
         val innkommendeOppgaveMedUkjentOmråde = oppgavemodellBuilder.lagOppgaveDto().copy(område = "ukjent-område")
         val exception = assertThrows<IllegalArgumentException> {
             transactionalManager.transaction { tx ->
-                oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(innkommendeOppgaveMedUkjentOmråde, tx)
+                oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(NyOppgaveversjon(innkommendeOppgaveMedUkjentOmråde), tx)
             }
         }
         assertEquals("Området finnes ikke: ukjent-område", exception.message!!)
@@ -48,7 +48,7 @@ class OppgaveV3Test : AbstractK9LosIntegrationTest() {
         val exception =
             assertThrows<IllegalArgumentException> {
                 transactionalManager.transaction { tx ->
-                    oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(oppgaveDtoMedUkjentFeltVerdi, tx)
+                    oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(NyOppgaveversjon(oppgaveDtoMedUkjentFeltVerdi), tx)
                 }
             }
 
@@ -66,7 +66,7 @@ class OppgaveV3Test : AbstractK9LosIntegrationTest() {
         val exception =
             assertThrows<IllegalArgumentException> {
                 transactionalManager.transaction { tx ->
-                    oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(oppgaveSomManglerObligatoriskFelt, tx)
+                    oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(NyOppgaveversjon(oppgaveSomManglerObligatoriskFelt), tx)
                 }
             }
 

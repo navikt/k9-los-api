@@ -8,7 +8,6 @@ import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.RequestContextService
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonApisTjeneste
 import org.koin.ktor.ext.inject
-import kotlin.getValue
 
 internal fun Route.SaksbehandlerAdminApis() {
     val requestContextService by inject<RequestContextService>()

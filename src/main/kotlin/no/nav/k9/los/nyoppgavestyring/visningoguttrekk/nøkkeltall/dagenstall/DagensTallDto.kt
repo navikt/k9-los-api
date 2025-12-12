@@ -1,26 +1,25 @@
 package no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.dagenstall
 
+import com.fasterxml.jackson.annotation.JsonFormat
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
+
 data class DagensTallDto(
     val hovedgruppe: DagensTallHovedgruppe,
     val undergruppe: DagensTallUndergruppe,
 
-    // 1 dag
-    val nyeIDag: Long,
-    val ferdigstilteIDag: Long,
-    val ferdigstilteHelautomatiskIDag: Long,
+    @JsonFormat(shape = JsonFormat.Shape.ARRAY)
+    val idag: Pair<DagensTallKortDto, DagensTallKortDto>,
+    @JsonFormat(shape = JsonFormat.Shape.ARRAY)
+    val siste7Dager: Pair<DagensTallKortDto, DagensTallKortDto>
+)
 
-    // 1 uke
-    val nyeSiste7Dager: Long,
-    val ferdigstilteSiste7Dager: Long,
-    val ferdigstilteHelautomatiskSiste7Dager: Long,
+data class DagensTallKortDto(
+    val hovedtall: DagensTallLinjeDto,
+    val linjer: List<DagensTallLinjeDto>,
+)
 
-    // 2 uker
-    val nyeSiste2Uker: Long,
-    val ferdigstilteSiste2Uker: Long,
-    val ferdigstilteHelautomatiskSiste2Uker: Long,
-
-    // 4 uker
-    val nyeSiste4Uker: Long,
-    val ferdigstilteSiste4Uker: Long,
-    val ferdigstilteHelautomatiskSiste4Uker: Long,
+data class DagensTallLinjeDto(
+    val visningsnavn: String,
+    val verdi: Long,
+    val kildespørring: OppgaveQuery,
 )
