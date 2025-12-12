@@ -119,21 +119,6 @@ class HistorikkvaskTjenesteSpec: FreeSpec(), KoinTest {
         }
     }
 
-    fun endreOppgaveverdier(eksternId: String) {
-        transactionalManager.transaction { tx ->
-            tx.run(
-                queryOf(
-                    """
-                        delete
-                        from oppgavefelt_verdi
-                        where oppgave_id = (select id from oppgave_v3 where ekstern_id = :ekstern_id)
-                    """.trimIndent(),
-                    mapOf("ekstern_id" to eksternId)
-                ).asUpdate
-            )
-        }
-    }
-
     fun punsjEvent(eksternId: UUID = UUID.randomUUID(),
                    eksternVersjon: LocalDateTime = LocalDateTime.now().minusHours(1))
             : K9PunsjEventDto {
