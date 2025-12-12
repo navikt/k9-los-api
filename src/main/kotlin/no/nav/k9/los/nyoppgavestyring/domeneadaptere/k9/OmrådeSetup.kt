@@ -111,7 +111,8 @@ class OmrådeSetup(
             eksternId = "Aksjonspunkt",
             beskrivelse = null,
             uttømmende = false,
-            verdier = aksjonspunktVerdierK9Sak().plus(aksjonspunktVerdierK9Klage())
+            verdier = aksjonspunktVerdierK9Sak().plus(aksjonspunktVerdierK9Klage()),
+            gruppering =
         )
         feltdefinisjonTjeneste.oppdater(kodeverkDto)
     }

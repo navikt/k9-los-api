@@ -8,36 +8,6 @@ import com.fasterxml.jackson.databind.node.TextNode
 
 
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)
-enum class AndreKriterierType(override val kode: String, override val navn: String) : Kodeverdi {
-    FRA_PUNSJ("FRA_PUNSJ", "Fra Punsj"),
-    TIL_BESLUTTER("TIL_BESLUTTER", "Til beslutter"),
-    AVKLAR_MEDLEMSKAP("AVKLAR_MEDLEMSKAP", "Avklar medlemskap"),
-    AVKLAR_INNTEKTSMELDING_BEREGNING("AVKLAR_INNTEKTSMELDING_BEREGNING", "Avklar inntektsmeldng"),
-    VENTER_PÅ_KOMPLETT_SØKNAD("VENTER_PÅ_KOMPLETT_SØKNAD", "Venter på komplett søknad"),
-    ENDELIG_BEH_AV_INNTEKTSMELDING("ENDELIG_BEH_AV_INNTEKTSMELDING", "Endelig beh av inntektsmelding"),
-    VENTER_PÅ_ANNEN_PARTS_SAK("VENTER_PÅ_ANNEN_PARTS_SAK", "Venter på annen parts sak"),
-    FORLENGELSER_FRA_INFOTRYGD("FORLENGELSER_FRA_INFOTRYGD", "Forlengelser fra infotrygd"),
-    FORLENGELSER_FRA_INFOTRYGD_AKSJONSPUNKT(
-        "FORLENGELSER_FRA_INFOTRYGD_AKSJONSPUNKT",
-        "Forlengelser fra infotrygd aksjonspunkt"
-    ),
-    AARSKVANTUM("AARSKVANTUM", "Årskvantum"),
-    IKKE_JOURNALFØRT("IKKE_JOURNALFØRT", "Ikke journalført")
-    ;
-
-    override val kodeverk = "ANDRE_KRITERIER_TYPE"
-
-    companion object {
-        @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
-        @JvmStatic
-        fun fraKode(o: Any): AndreKriterierType {
-            val kode = TempAvledeKode.getVerdi(o)
-            return values().find { it.kode == kode } ?: throw IllegalStateException("Kjenner ikke igjen koden=$kode")
-        }
-    }
-}
-
-@JsonFormat(shape = JsonFormat.Shape.OBJECT)
 enum class KøKriterierFeltType(@JsonValue val kode: String) {
     BELØP("BELOP"), KODEVERK("KODEVERK"), FLAGG("FLAGG")
 }
@@ -62,26 +32,6 @@ enum class FagsakYtelseType constructor(override val kode: String, override val 
         @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
         @JvmStatic
         fun fraKode(o: Any): FagsakYtelseType {
-            val kode = TempAvledeKode.getVerdi(o)
-            return values().find { it.kode == kode } ?: throw IllegalStateException("Kjenner ikke igjen koden=$kode")
-        }
-    }
-}
-
-
-@JsonFormat(shape = JsonFormat.Shape.OBJECT)
-enum class FagsakStatus(override val kode: String, override val navn: String) : Kodeverdi {
-    OPPRETTET("OPPR", "Opprettet"),
-    UNDER_BEHANDLING("UBEH", "Under behandling"),
-    LØPENDE("LOP", "Løpende"),
-    AVSLUTTET("AVSLU", "Avsluttet");
-
-    override val kodeverk = "FAGSAK_STATUS"
-
-    companion object {
-        @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
-        @JvmStatic
-        fun fraKode(o: Any): FagsakStatus {
             val kode = TempAvledeKode.getVerdi(o)
             return values().find { it.kode == kode } ?: throw IllegalStateException("Kjenner ikke igjen koden=$kode")
         }
@@ -132,88 +82,6 @@ enum class BehandlingType(override val kode: String, override val navn: String, 
 }
 
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)
-enum class OppgaveKode(override val kode: String, override val navn: String, val gruppering: String) : Kodeverdi {
-    // Innledene behandling
-    MEDLEMSKAP("5053", "Medlemskap", OppgaveKodeGruppe.INNLEDENDE_BEHANDLING.navn),
-    SØKNADSFRIST("5077", "Søknadsfrist", OppgaveKodeGruppe.INNLEDENDE_BEHANDLING.navn),
-    OPPTJENING("5089", "Opptjening", OppgaveKodeGruppe.INNLEDENDE_BEHANDLING.navn),
-    SYKDOM("9001", "Sykdom", OppgaveKodeGruppe.INNLEDENDE_BEHANDLING.navn),
-    OMSORGEN_FOR("9020", "Omsorgen for", OppgaveKodeGruppe.INNLEDENDE_BEHANDLING.navn),
-    AVKLAR_VERGE("5030", "Avklar verge", OppgaveKodeGruppe.INNLEDENDE_BEHANDLING.navn),
-    UTENLANDSINNTEKT("5068", "Automatisk markering av utenlandssak", OppgaveKodeGruppe.INNLEDENDE_BEHANDLING.navn),
-
-    // Om barnet
-    NATTEVÅK("9200", "Nattevåk", OppgaveKodeGruppe.OM_BARNET.navn),
-    BEREDSKAP("9201", "Beredskap", OppgaveKodeGruppe.OM_BARNET.navn),
-    BARNS_DØD("9202", "Barns død", OppgaveKodeGruppe.OM_BARNET.navn),
-
-    // Mangler inntektsmelding
-    AVKLAR_MANGLENDE_IM("9069", "Avklar manglende IM", OppgaveKodeGruppe.MANGLER_INNTEKTSMELDING.navn),
-    ENDELIG_AVKLARING_MANGLER_IM(
-        "9071",
-        "Endelig avklaring mangler IM",
-        OppgaveKodeGruppe.MANGLER_INNTEKTSMELDING.navn
-    ),
-    MANGLER_ARBEIDSTID("9203", "Mangler arbeidstid", OppgaveKodeGruppe.MANGLER_INNTEKTSMELDING.navn),
-
-    // Beregning
-    FASTSETT_BEREGNINGSGRUNNLAG("5038", "Fastsett beregningsgrunnlag", OppgaveKodeGruppe.BEREGNING.navn),
-    NY_ENDRET_SN_VARIG_ENDRING("5039", "Ny/endret SN (varig endring)", OppgaveKodeGruppe.BEREGNING.navn),
-    NY_ENDRET_SN_NY_I_ARB_LIVET("5049", "Ny/endret SN (ny i arb.livet)", OppgaveKodeGruppe.BEREGNING.navn),
-    FORDEL_BEREGNINGSGRUNNLAG("5046", "Fordel beregningsgrunnlag", OppgaveKodeGruppe.BEREGNING.navn),
-    TIDSBEGRENSET_ARBEIDSFORHOLD("5047", "Tidsbegrenset arbeidsforhold", OppgaveKodeGruppe.BEREGNING.navn),
-    AKTIVITETER("5052", "Aktiviteter", OppgaveKodeGruppe.BEREGNING.navn),
-    BEREGNINGSFAKTA("5058", "Beregningsfakta", OppgaveKodeGruppe.BEREGNING.navn),
-    FEILUTBETALING("5084", "Feilutbetaling", OppgaveKodeGruppe.BEREGNING.navn),
-    OVERSTYRING_BEREGNINGSAKTIVITET("6014", "Overstyring beregningsaktivitet", OppgaveKodeGruppe.BEREGNING.navn),
-    OVERSTYRING_BEREGNINGSGRUNNLAG("6015", "Overstyring beregningsgrunnlag", OppgaveKodeGruppe.BEREGNING.navn),
-
-    // Flyttesaker
-    MANUELL_BEREGNING("9005", "Manuell beregning", OppgaveKodeGruppe.FLYTTESAKER.navn),
-    INFOTRYGDSØKNAD("9007", "Infotrygsøknad", OppgaveKodeGruppe.FLYTTESAKER.navn),
-    INFOTRYGDSØKNAD_TO_PERSONER("9008", "Infotrygdsøknad 2 personer", OppgaveKodeGruppe.FLYTTESAKER.navn),
-
-    // Fatte vedtak
-    FORESLÅ_VEDTAK("5015", "Foreslå vedtak", OppgaveKodeGruppe.FATTE_VEDTAK.navn),
-    FORESLÅ_VEDTAK_MANUELT("5028", "Foreslå vedtak manuelt", OppgaveKodeGruppe.FATTE_VEDTAK.navn),
-    VURDERE_ANNEN_YTELSE_FØR_VEDTAK_KODE("5033", "Sjekk VKY", OppgaveKodeGruppe.FATTE_VEDTAK.navn),
-    VURDER_DOKUMENT("5034", "Vurder dokument", OppgaveKodeGruppe.FATTE_VEDTAK.navn),
-
-    // Uttak
-    VURDER_DATO_NY_REGEL_UTTAK("9291", "Ny inntekt", OppgaveKodeGruppe.UTTAK.navn),
-    VURDER_OVERLAPPENDE_SØSKENSAK("9292", "Vurder overlappende søskensaker", OppgaveKodeGruppe.UTTAK.navn),
-    VURDER_NYOPPSTARTET("9016", "Vurder nyoppstartet", OppgaveKodeGruppe.UTTAK.navn),
-
-    // Uspesifisert
-    KONTROLL_MANUELL_REVURDERING("5056", "Kontroll manuell revurdering", OppgaveKodeGruppe.USPESIFISERT.navn),
-    VURDER_REFUSJON_BERGRUNN_KODE("5059", "Mangler navn", OppgaveKodeGruppe.USPESIFISERT.navn);
-
-    override val kodeverk = "OPPGAVE_KODE"
-
-    companion object {
-        @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
-        @JvmStatic
-        fun fraKode(o: Any): OppgaveKode {
-            val kode = TempAvledeKode.getVerdi(o)
-            return entries.find { it.kode == kode }
-                ?: throw IllegalStateException("Kjenner ikke igjen koden=$kode")
-        }
-    }
-}
-
-enum class OppgaveKodeGruppe(val navn: String) {
-    INNLEDENDE_BEHANDLING("Innledende behandling"),
-    OM_BARNET("Om barnet"),
-    MANGLER_INNTEKTSMELDING("Mangler inntektsmelding"),
-    BEREGNING("Beregning"),
-    FLYTTESAKER("Flyttesaker"),
-    FATTE_VEDTAK("Fatte vedtak"),
-    USPESIFISERT("Uspesifisert"),
-    UTTAK("Uttak")
-    ;
-}
-
-@JsonFormat(shape = JsonFormat.Shape.OBJECT)
 enum class BehandlingStatus(override val kode: String, override val navn: String) : Kodeverdi {
     AVSLUTTET("AVSLU", "Avsluttet"),
     FATTER_VEDTAK("FVED", "Fatter vedtak"),
@@ -237,20 +105,6 @@ enum class BehandlingStatus(override val kode: String, override val navn: String
         }
     }
 }
-
-@JsonFormat(shape = JsonFormat.Shape.OBJECT)
-enum class Venteårsak(override val kode: String, override val navn: String) : Kodeverdi {
-    AVV_DOK("AVV_DOK", "Avventer dokumentasjon"),
-    OVERSENDT_KABAL("OVERSENDT_KABAL", "Venter på at behandling utføres av Klage- og ankeenheten"),
-    VENT_MANGL_FUNKSJ_SAKSBEHANDLER("VENT_MANGL_FUNKSJ_SAKSBEHANDLER", "Manglende funksjonalitet i løsningen"),
-    VENTER_SVAR_INTERNT("VENTER_SVAR_INTERNT", "Meldt i Porten eller Teams"),
-    AUTOMATISK_SATT_PA_VENT("AUTOMATISK", "Automatisk satt på vent"),
-    UKJENT("UKJENT", "Mangler venteårsak");
-
-    override val kodeverk = "VENTEÅRSAK_TYPE"
-}
-
-
 
 enum class BehandlendeEnhet(override val kode: String, override val navn: String, override val kodeverk: String): Kodeverdi {
     STYRINGSENHET("4400", "NAV ARBEID OG YTELSER STYRINGSENHET", "BEHANDLENDE_ENHET"),
