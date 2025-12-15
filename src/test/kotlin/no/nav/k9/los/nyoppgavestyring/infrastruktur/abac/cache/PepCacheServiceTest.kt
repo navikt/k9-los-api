@@ -150,7 +150,7 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
         val eksternId = UUID.randomUUID().toString()
         gjørAktørOrdinær(aktørId)
         k9punsjEventHandler.prosesser(lagPunsjBehandlingprosessEventMedStatus(eksternId, aktørId))
-        oppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(null, Fagsystem.PUNSJ, eksternId))
+        oppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(Fagsystem.PUNSJ, eksternId))
 
         val pepCache = pepRepository.hent("K9", eksternId)!!
         assertThat(pepCache.kode6).isFalse()
@@ -169,7 +169,7 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
         val eksternId = UUID.randomUUID().toString()
         gjørAktørKode6(aktørId)
         k9punsjEventHandler.prosesser(lagPunsjBehandlingprosessEventMedStatus(eksternId, aktørId))
-        oppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(null, Fagsystem.PUNSJ, eksternId))
+        oppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(Fagsystem.PUNSJ, eksternId))
 
         val pepCache = pepRepository.hent("K9", eksternId)!!
         assertThat(pepCache.kode6).isTrue()
@@ -188,7 +188,7 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
         val eksternId = UUID.randomUUID().toString()
         gjørAktørKode7(aktørId)
         k9punsjEventHandler.prosesser(lagPunsjBehandlingprosessEventMedStatus(eksternId, aktørId))
-        oppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(null, Fagsystem.PUNSJ, eksternId))
+        oppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(Fagsystem.PUNSJ, eksternId))
 
         val pepCache = pepRepository.hent("K9", eksternId)!!
         assertThat(pepCache.kode6).isFalse()
@@ -206,7 +206,7 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
         val eksternId = UUID.randomUUID().toString()
         gjørSakKode6(saksnummer)
         k9sakEventHandler.prosesser(lagBehandlingprosessEventMedStatus(eksternId, saksnummer))
-        oppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(null, Fagsystem.PUNSJ, eksternId))
+        oppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(Fagsystem.PUNSJ, eksternId))
 
         val pepCache = pepRepository.hent("K9", eksternId)!!
         assertThat(pepCache.kode6).isTrue()

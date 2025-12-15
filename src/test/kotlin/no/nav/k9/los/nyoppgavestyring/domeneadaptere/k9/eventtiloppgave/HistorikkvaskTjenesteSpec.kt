@@ -38,13 +38,13 @@ class HistorikkvaskTjenesteSpec: FreeSpec(), KoinTest {
             val eksternId = UUID.randomUUID()
             val event = punsjEvent(eksternId, LocalDateTime.now().minusHours(2))
             val eventLagret = transactionalManager.transaction { tx ->
-                eventRepository.lagre(Fagsystem.PUNSJ, LosObjectMapper.instance.writeValueAsString(event), tx)
+                eventRepository.lagre(Fagsystem.PUNSJ, event, tx)
             }
-            oppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(null, Fagsystem.PUNSJ, eksternId.toString()))
+            oppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(Fagsystem.PUNSJ, eksternId.toString()))
             "med feil i oppgavefeltverdier" - {
                 val eventKorrigert = LosObjectMapper.instance.writeValueAsString(event.copy(ytelse = "ytelsekorrigert"))
                 transactionalManager.transaction { tx ->
-                    eventRepository.endreEvent(EventNøkkel(eventLagret!!.nøkkelId, Fagsystem.PUNSJ, eksternId.toString()), eventKorrigert, tx)
+                    eventRepository.endreEvent(eventLagret!!.nøkkelId, EventNøkkel(Fagsystem.PUNSJ, eksternId.toString()), eventKorrigert, tx)
                 }
                 "skal få korrigerte verdier av historikkvasker" {
                     val oppgaveUvasket = transactionalManager.transaction { tx ->
@@ -71,15 +71,15 @@ class HistorikkvaskTjenesteSpec: FreeSpec(), KoinTest {
             val event3 = punsjEvent(eksternId, LocalDateTime.now())
             "hvor event nr 1 og 3 er innlest først" - {
                 transactionalManager.transaction { tx ->
-                    eventRepository.lagre(Fagsystem.PUNSJ, LosObjectMapper.instance.writeValueAsString(event), tx)
-                    eventRepository.lagre(Fagsystem.PUNSJ, LosObjectMapper.instance.writeValueAsString(event3), tx)
+                    eventRepository.lagre(Fagsystem.PUNSJ, event, tx)
+                    eventRepository.lagre(Fagsystem.PUNSJ, event3, tx)
                 }
-                oppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(null, Fagsystem.PUNSJ, eksternId.toString()))
+                oppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(Fagsystem.PUNSJ, eksternId.toString()))
                 "og event nr 2 er innlest etterpå" - {
                     transactionalManager.transaction { tx ->
-                        eventRepository.lagre(Fagsystem.PUNSJ, LosObjectMapper.instance.writeValueAsString(event2), tx)
+                        eventRepository.lagre(Fagsystem.PUNSJ, event2, tx)
                     }
-                    oppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(null, Fagsystem.PUNSJ, eksternId.toString()))
+                    oppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(Fagsystem.PUNSJ, eksternId.toString()))
                     "skal kunne korrigeres med historikkvask" {
                         eventRepository.hentAntallHistorikkvaskbestillinger() shouldBe 1
 

@@ -7,9 +7,11 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.kafka.Manage
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.AksjonspunktPunsjLaget
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.Topic
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.kafka.IKafkaConfig
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.OpentelemetrySpanUtil
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.TransientFeilHåndterer
 import org.apache.kafka.clients.consumer.OffsetResetStrategy
+import org.apache.kafka.common.serialization.Serdes
 import org.apache.kafka.streams.StreamsBuilder
 import org.apache.kafka.streams.Topology
 import org.apache.kafka.streams.kstream.Consumed
@@ -51,15 +53,22 @@ internal class K9PunsjKafkaStream constructor(
             builder
                 .stream(
                     fromTopic.name,
-                    Consumed.with(fromTopic.keySerde, fromTopic.valueSerde)
+                    Consumed.with(fromTopic.keySerde, Serdes.String())
                 )
                 .foreach { _, entry ->
                     if (entry != null) {
-                        OpentelemetrySpanUtil.span(NAME, mapOf("journalpostId" to entry.journalpostId.verdi)) {
+                        val tree = LosObjectMapper.instance.readTree(entry)
+                        val eksternId = tree.get("eksternId").asText()
+                        val eksternVersjon = tree.get("eventTid").asText()
+                        val journalpostId = tree.get("journalpostId").asText()
+
+                        OpentelemetrySpanUtil.span(NAME, mapOf("journalpostId" to journalpostId)) {
                             val spørring = System.currentTimeMillis()
-                            logger.info("--> Mottatt hendelse fra punsj: ${entry.eksternId} - ${entry.journalpostId}")
-                            TransientFeilHåndterer().utfør(NAME) { K9punsjEventHandler.prosesser(entry) }
-                            logger.info("Ferdig prosessert hendelse fra punsj etter ${System.currentTimeMillis() - spørring}ms: ${entry.eksternId} - ${entry.journalpostId}.")
+                            logger.info("--> Mottatt hendelse fra punsj: ${eksternId} - ${journalpostId}")
+                            TransientFeilHåndterer().utfør(NAME) {
+                                K9punsjEventHandler.prosesser(eksternId, eksternVersjon, entry)
+                            }
+                            logger.info("Ferdig prosessert hendelse fra punsj etter ${System.currentTimeMillis() - spørring}ms: ${eksternId} - ${journalpostId}.")
                         }
                     }
                 }
