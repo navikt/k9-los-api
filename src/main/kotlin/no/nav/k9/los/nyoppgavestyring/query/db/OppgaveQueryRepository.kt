@@ -16,6 +16,7 @@ import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
 import no.nav.k9.los.nyoppgavestyring.query.dto.felter.Oppgavefelt
 import no.nav.k9.los.nyoppgavestyring.query.dto.felter.Oppgavefelter
 import no.nav.k9.los.nyoppgavestyring.query.dto.felter.Verdiforklaring
+import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.OppgaveResultat
 import no.nav.k9.los.nyoppgavestyring.query.mapping.OppgaveQueryToSqlMapper
 import no.nav.k9.los.nyoppgavestyring.query.mapping.transientfeltutleder.GyldigeTransientFeltutleder
 import org.slf4j.Logger
@@ -252,6 +253,35 @@ class OppgaveQueryRepository(
                 oppgaveQuery.getQuery(),
                 oppgaveQuery.getParams()
             ).map(oppgaveQuery::mapRowTilEksternId).asList
+        )
+    }
+
+    /**
+     * Utfører en spørring som returnerer OppgaveResultat med ekstern ID og de angitte select-feltene.
+     * Denne metoden gjør én enkelt databasespørring som inkluderer feltverdiene direkte i resultatet,
+     * i motsetning til andre metoder som gjør N+1 spørringer.
+     *
+     * @param tx transaksjonssesjonen
+     * @param request spørringsforespørselen med filtre og select-felter
+     * @param now tidspunktet spørringen utføres
+     * @return liste av OppgaveResultat med ekstern ID og feltverdier
+     */
+    @WithSpan
+    fun queryForOppgaveResultat(
+        tx: TransactionalSession,
+        request: QueryRequest,
+        now: LocalDateTime
+    ): List<OppgaveResultat> {
+        val felter = hentAlleFelterMedMer(tx, medKodeverk = false)
+            .associateBy { felt -> OmrådeOgKode(felt.oppgavefelt.område, felt.oppgavefelt.kode) }
+
+        val oppgaveQuery = OppgaveQueryToSqlMapper.toSqlOppgaveQueryMedSelectFelter(request, felter, now)
+
+        return tx.run(
+            queryOf(
+                oppgaveQuery.getQuery(),
+                oppgaveQuery.getParams()
+            ).map(oppgaveQuery::mapRowTilOppgaveResultat).asList
         )
     }
 }

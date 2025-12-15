@@ -9,8 +9,11 @@ import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Datatype
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveId
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.PartisjonertOppgaveId
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelSelectFelt
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.Oppgavefilter
+import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.Oppgavefeltverdi
+import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.OppgaveResultat
 import no.nav.k9.los.nyoppgavestyring.query.mapping.*
 import no.nav.k9.los.nyoppgavestyring.spi.felter.OrderByInput
 import no.nav.k9.los.nyoppgavestyring.spi.felter.SqlMedParams
@@ -126,15 +129,6 @@ class PartisjonertOppgaveQuerySqlBuilder(
 
     override fun getQuery(): String {
         return "$selectClause $fromClause $whereClause $orderByClause $pagingClause"
-    }
-
-    override fun getParams(): Map<String, Any?> {
-        return buildMap {
-            putAll(queryParams)
-            putAll(orderByParams)
-            putAll(oppgavestatusParams)
-            putAll(ferdigstiltDatoParams)
-        }
     }
 
     override fun medAntallSomResultat() {
@@ -399,5 +393,89 @@ class PartisjonertOppgaveQuerySqlBuilder(
             Datatype.INTEGER -> "ov.verdi_bigint"
             else -> "ov.verdi"
         }
+    }
+
+    // Select-felt støtte for effektive spørringer som returnerer OppgaveResultat
+    private var selectFelter: List<EnkelSelectFelt> = emptyList()
+    private val selectFeltParams: MutableMap<String, Any?> = mutableMapOf()
+
+    override fun medSelectFelter(selectFelter: List<EnkelSelectFelt>) {
+        this.selectFelter = selectFelter
+
+        // Bygg ut SELECT-klausulen med subqueries for hvert felt
+        val selectDeler = mutableListOf<String>()
+        selectDeler.add("o.id")
+        selectDeler.add("o.oppgave_ekstern_id")
+
+        selectFelter.forEachIndexed { index, felt ->
+            val alias = "felt_$index"
+
+            if (felt.område != null) {
+                // Felt fra oppgavefelt_verdi_part tabellen
+                val verdifelt = verdifelt(felt.område, felt.kode)
+                selectDeler.add("""
+                    (SELECT $verdifelt
+                     FROM oppgavefelt_verdi_part ov
+                     WHERE ov.oppgave_id = o.id
+                       AND ov.oppgavestatus IN ($oppgavestatusPlaceholder) ${ferdigstiltDatoBetingelse("ov")}
+                       AND ov.feltdefinisjon_ekstern_id = :selectFeltkode$index
+                     LIMIT 1) AS $alias
+                """.trimIndent())
+                selectFeltParams["selectFeltkode$index"] = felt.kode
+            } else {
+                // Spesielle felt uten område - hentes direkte fra oppgavetabellen
+                val kolonne = when (felt.kode) {
+                    "oppgavestatus" -> "o.oppgavestatus"
+                    "oppgavetype" -> "o.oppgavetype_ekstern_id"
+                    else -> {
+                        log.warn("Ukjent select-felt uten område: ${felt.kode}")
+                        "NULL"
+                    }
+                }
+                selectDeler.add("$kolonne AS $alias")
+            }
+        }
+
+        selectClause = "SELECT " + selectDeler.joinToString(", ")
+    }
+
+    override fun getParams(): Map<String, Any?> {
+        return buildMap {
+            putAll(queryParams)
+            putAll(orderByParams)
+            putAll(oppgavestatusParams)
+            putAll(ferdigstiltDatoParams)
+            putAll(selectFeltParams)
+        }
+    }
+
+    override fun mapRowTilOppgaveResultat(row: Row): OppgaveResultat {
+        val eksternId = EksternOppgaveId("K9", row.string("oppgave_ekstern_id"))
+
+        val feltverdier = selectFelter.mapIndexed { index, felt ->
+            val alias = "felt_$index"
+            val verdi: Any? = try {
+                if (felt.område != null) {
+                    val datatype = oppgavefelterKodeOgType[OmrådeOgKode(felt.område, felt.kode)]
+                    when (datatype) {
+                        Datatype.INTEGER -> row.longOrNull(alias)
+                        else -> row.stringOrNull(alias)
+                    }
+                } else {
+                    row.stringOrNull(alias)
+                }
+            } catch (e: Exception) {
+                log.warn("Kunne ikke lese felt $alias: ${e.message}")
+                null
+            }
+
+            Oppgavefeltverdi(
+                område = felt.område,
+                kode = felt.kode,
+                verdi = verdi
+            )
+        }
+
+        return OppgaveResultat(id = eksternId, felter = feltverdier)
     }
 }

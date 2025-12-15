@@ -10,7 +10,9 @@ import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Datatype.INTEGER
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.AktivOppgaveId
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveId
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelSelectFelt
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.Oppgavefilter
+import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.OppgaveResultat
 import no.nav.k9.los.nyoppgavestyring.query.mapping.*
 import no.nav.k9.los.nyoppgavestyring.spi.felter.OrderByInput
 import no.nav.k9.los.nyoppgavestyring.spi.felter.SqlMedParams
@@ -359,5 +361,15 @@ class AktivOppgaveQuerySqlBuilder(
         val limitClause = if (limit > 0) "LIMIT $limit" else ""
         val offsetClause = if (offset > 0) "OFFSET $offset" else ""
         this.paging = listOf(limitClause, offsetClause).joinToString(" ")
+    }
+
+    override fun medSelectFelter(selectFelter: List<EnkelSelectFelt>) {
+        // Ikke implementert for aktive oppgaver ennå
+        throw UnsupportedOperationException("medSelectFelter er ikke implementert for AktivOppgaveQuerySqlBuilder")
+    }
+
+    override fun mapRowTilOppgaveResultat(row: Row): OppgaveResultat {
+        // Ikke implementert for aktive oppgaver ennå
+        throw UnsupportedOperationException("mapRowTilOppgaveResultat er ikke implementert for AktivOppgaveQuerySqlBuilder")
     }
 }

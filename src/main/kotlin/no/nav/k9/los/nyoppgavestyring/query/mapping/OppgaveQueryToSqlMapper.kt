@@ -72,6 +72,32 @@ object OppgaveQueryToSqlMapper {
         return queryBuilder
     }
 
+    /**
+     * Bygger SQL-spørring som returnerer oppgaver med de angitte select-feltene direkte.
+     * Denne varianten gjør én enkelt databasespørring som inkluderer feltverdiene i resultatet.
+     */
+    fun toSqlOppgaveQueryMedSelectFelter(
+        request: QueryRequest,
+        felter: Map<OmrådeOgKode, OppgavefeltMedMer>,
+        now: LocalDateTime
+    ): OppgaveQuerySqlBuilder {
+        val query = utledSqlBuilder(felter, request, now)
+        val combineOperator = CombineOperator.AND
+
+        // Konfigurer select-felter fra spørringen
+        val enkelSelectFelter = request.oppgaveQuery.select.filterIsInstance<EnkelSelectFelt>()
+        query.medSelectFelter(enkelSelectFelter)
+
+        håndterFiltere(query, felter, query.filterRens(felter, request.oppgaveQuery.filtere), combineOperator)
+        håndterOrder(query, request.oppgaveQuery.order)
+        if (request.fjernReserverte) {
+            query.utenReservasjoner()
+        }
+        request.avgrensning?.let { query.medPaging(it.limit, it.offset) }
+
+        return query
+    }
+
     fun traverserFiltereOgFinnOppgavestatus(queryRequest: QueryRequest): List<Oppgavestatus> {
         val statuser = mutableSetOf<Oppgavestatus>()
         rekursivtSøk(

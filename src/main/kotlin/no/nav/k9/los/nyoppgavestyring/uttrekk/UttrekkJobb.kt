@@ -26,7 +26,7 @@ class UttrekkJobb(
                 }
 
                 TypeKjøring.OPPGAVER -> {
-                    val oppgaver = oppgaveQueryService.query(
+                    val oppgaver = oppgaveQueryService.queryForOppgaveResultat(
                         QueryRequest(uttrekk.query, queryTimeout = uttrekk.timeout, avgrensning = uttrekk.avgrensning)
                     )
                     val resultatJson = LosObjectMapper.instance.writeValueAsString(oppgaver)

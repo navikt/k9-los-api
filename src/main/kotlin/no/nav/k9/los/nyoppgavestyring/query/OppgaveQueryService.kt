@@ -19,6 +19,7 @@ import no.nav.k9.los.nyoppgavestyring.query.dto.felter.Oppgavefelter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelSelectFelt
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
 import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.Oppgavefeltverdi
+import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.OppgaveResultat
 import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.Oppgaverad
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
@@ -86,6 +87,40 @@ class OppgaveQueryService {
     fun queryForOppgaveEksternId(oppgaveQuery: QueryRequest): List<EksternOppgaveId> {
         val now = LocalDateTime.now()
         return oppgaveQueryRepository.queryForEksternId(oppgaveQuery, now)
+    }
+
+    /**
+     * Utfører en effektiv spørring som returnerer OppgaveResultat med ekstern ID og de angitte select-feltene.
+     *
+     * Denne metoden gjør én enkelt databasespørring som inkluderer feltverdiene direkte i resultatet,
+     * i motsetning til [query] som gjør N+1 spørringer (én for å finne IDer, og én per oppgave for å hente feltverdier).
+     *
+     * Denne metoden gjør ikke pepClient-kall per oppgave, og er dermed raskere for brukstilfeller
+     * der tilgangskontroll ikke er nødvendig (f.eks. uttrekk for rapportering).
+     *
+     * @param request spørringsforespørselen med filtre og select-felter
+     * @return liste av OppgaveResultat med ekstern ID og feltverdier
+     */
+    @WithSpan
+    fun queryForOppgaveResultat(request: QueryRequest): List<OppgaveResultat> {
+        return using(sessionOf(datasource)) {
+            it.transaction { tx ->
+                settStatementTimeout(tx, request.queryTimeout)
+                queryForOppgaveResultat(tx, request)
+            }
+        }
+    }
+
+    /**
+     * Utfører en effektiv spørring som returnerer OppgaveResultat med ekstern ID og de angitte select-feltene.
+     * Transaksjonell variant som tar inn en eksisterende transaksjonssesjon.
+     *
+     * @see queryForOppgaveResultat
+     */
+    @WithSpan
+    fun queryForOppgaveResultat(tx: TransactionalSession, request: QueryRequest): List<OppgaveResultat> {
+        val now = LocalDateTime.now()
+        return oppgaveQueryRepository.queryForOppgaveResultat(tx, request, now)
     }
 
     @WithSpan
