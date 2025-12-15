@@ -28,14 +28,16 @@ class HistorikkvaskTjeneste(
 
         var vasketeller = 0L
         val tidsbruk = measureTime {
-            val historikkvaskbestillinger =
-                eventRepository.hentAlleHistorikkvaskbestillinger(antall = 2000)
-            if (historikkvaskbestillinger.isEmpty()) return@measureTime
+            while (true) {
+                val historikkvaskbestillinger =
+                    eventRepository.hentAlleHistorikkvaskbestillinger(antall = 2000)
+                if (historikkvaskbestillinger.isEmpty()) break
 
-            log.info("Starter vaskeiterasjon på ${historikkvaskbestillinger.size} oppgaver")
-            vaskBestillinger(historikkvaskbestillinger, dispatcher)
-            vasketeller += historikkvaskbestillinger.size
-            log.info("Vasket iterasjon med ${historikkvaskbestillinger.size} oppgaver. Har vasket totalt $vasketeller oppgaver")
+                log.info("Starter vaskeiterasjon på ${historikkvaskbestillinger.size} oppgaver")
+                vaskBestillinger(historikkvaskbestillinger, dispatcher)
+                vasketeller += historikkvaskbestillinger.size
+                log.info("Vasket iterasjon med ${historikkvaskbestillinger.size} oppgaver. Har vasket totalt $vasketeller oppgaver")
+            }
         }
 
         log.info("Historikkvask ferdig på ${tidsbruk}. Vasket totalt $vasketeller oppgaver")
