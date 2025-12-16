@@ -24,11 +24,11 @@ object OppgaveQueryToSqlMapper {
             spørringstrategiFilter == Spørringstrategi.AKTIV ->
                 AktivOppgaveQuerySqlBuilder(felter, oppgavestatusFilter, now)
 
-            // Case 2: Dersom det spørres etter lukkede oppgaver
-            oppgavestatusFilter.contains(Oppgavestatus.LUKKET) ->
+            // Case 2: Dersom det spørres etter lukkede oppgaver eller det selekteres felter
+            oppgavestatusFilter.contains(Oppgavestatus.LUKKET) || request.oppgaveQuery.select.isNotEmpty() ->
                 PartisjonertOppgaveQuerySqlBuilder(felter, oppgavestatusFilter, now, ferdigstiltDatofilter)
 
-            // Case 3: Default (kun åpne/ventende oppgaver)
+            // Case 3: Kun ikke-lukkede oppgaver
             else -> AktivOppgaveQuerySqlBuilder(felter, oppgavestatusFilter, now)
         }
     }
@@ -72,10 +72,6 @@ object OppgaveQueryToSqlMapper {
         return queryBuilder
     }
 
-    /**
-     * Bygger SQL-spørring som returnerer oppgaver med de angitte select-feltene direkte.
-     * Denne varianten gjør én enkelt databasespørring som inkluderer feltverdiene i resultatet.
-     */
     fun toSqlOppgaveQueryMedSelectFelter(
         request: QueryRequest,
         felter: Map<OmrådeOgKode, OppgavefeltMedMer>,
@@ -84,7 +80,6 @@ object OppgaveQueryToSqlMapper {
         val query = utledSqlBuilder(felter, request, now)
         val combineOperator = CombineOperator.AND
 
-        // Konfigurer select-felter fra spørringen
         val enkelSelectFelter = request.oppgaveQuery.select.filterIsInstance<EnkelSelectFelt>()
         query.medSelectFelter(enkelSelectFelter)
 

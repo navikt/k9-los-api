@@ -1,9 +1,10 @@
 package no.nav.k9.los.nyoppgavestyring.uttrekk
 
-import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.Oppgavefeltverdi
+import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.OppgaveResultat
 
 data class UttrekkResultatRespons(
-    val rader: List<List<Oppgavefeltverdi>>,
+    val kolonner: List<String>,
+    val rader: List<OppgaveResultat>,
     val totaltAntall: Int,
     val offset: Int,
     val limit: Int?

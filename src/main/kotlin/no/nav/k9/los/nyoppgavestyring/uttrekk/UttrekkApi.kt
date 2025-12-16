@@ -13,7 +13,8 @@ import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.RequestContextService
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.idToken
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
-import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.Oppgavefeltverdi
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelSelectFelt
+import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.OppgaveResultat
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
 import org.koin.ktor.ext.inject
 
@@ -207,11 +208,9 @@ fun Route.UttrekkApi() {
             }
             queryParameter<Int>("offset") {
                 required = false
-                description = "Antall rader som skal hoppes over (default: 0)"
             }
             queryParameter<Int>("limit") {
                 required = false
-                description = "Maks antall rader som skal returneres (default: alle)"
             }
         }
         response {
@@ -240,7 +239,7 @@ fun Route.UttrekkApi() {
 
                 val alleRader = LosObjectMapper.instance.readValue(
                     resultatJson,
-                    object : TypeReference<List<List<Oppgavefeltverdi>>>() {}
+                    object : TypeReference<List<OppgaveResultat>>() {}
                 )
 
                 val paginertRader = alleRader
@@ -249,6 +248,7 @@ fun Route.UttrekkApi() {
 
                 call.respond(
                     UttrekkResultatRespons(
+                        kolonner = uttrekk.query.select.filterIsInstance<EnkelSelectFelt>().map { it.kode }, // TODO: bruke visningsnavn fra feltdefinisjon
                         rader = paginertRader,
                         totaltAntall = alleRader.size,
                         offset = offset,

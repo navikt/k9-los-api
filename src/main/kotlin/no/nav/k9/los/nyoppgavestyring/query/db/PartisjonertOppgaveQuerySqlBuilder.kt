@@ -12,8 +12,8 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.PartisjonertOppgaveId
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelSelectFelt
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.Oppgavefilter
-import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.Oppgavefeltverdi
 import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.OppgaveResultat
+import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.Oppgavefeltverdi
 import no.nav.k9.los.nyoppgavestyring.query.mapping.*
 import no.nav.k9.los.nyoppgavestyring.spi.felter.OrderByInput
 import no.nav.k9.los.nyoppgavestyring.spi.felter.SqlMedParams
@@ -454,20 +454,7 @@ class PartisjonertOppgaveQuerySqlBuilder(
 
         val feltverdier = selectFelter.mapIndexed { index, felt ->
             val alias = "felt_$index"
-            val verdi: Any? = try {
-                if (felt.område != null) {
-                    val datatype = oppgavefelterKodeOgType[OmrådeOgKode(felt.område, felt.kode)]
-                    when (datatype) {
-                        Datatype.INTEGER -> row.longOrNull(alias)
-                        else -> row.stringOrNull(alias)
-                    }
-                } else {
-                    row.stringOrNull(alias)
-                }
-            } catch (e: Exception) {
-                log.warn("Kunne ikke lese felt $alias: ${e.message}")
-                null
-            }
+            val verdi = row.stringOrNull(alias)
 
             Oppgavefeltverdi(
                 område = felt.område,

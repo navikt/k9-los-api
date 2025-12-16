@@ -256,16 +256,6 @@ class OppgaveQueryRepository(
         )
     }
 
-    /**
-     * Utfører en spørring som returnerer OppgaveResultat med ekstern ID og de angitte select-feltene.
-     * Denne metoden gjør én enkelt databasespørring som inkluderer feltverdiene direkte i resultatet,
-     * i motsetning til andre metoder som gjør N+1 spørringer.
-     *
-     * @param tx transaksjonssesjonen
-     * @param request spørringsforespørselen med filtre og select-felter
-     * @param now tidspunktet spørringen utføres
-     * @return liste av OppgaveResultat med ekstern ID og feltverdier
-     */
     @WithSpan
     fun queryForOppgaveResultat(
         tx: TransactionalSession,
