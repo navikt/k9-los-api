@@ -35,7 +35,7 @@ internal fun Route.EventlagerApi() {
         tags("Forvaltning")
         description = "Hent ut eventhistorikk for en oppgave, nytt eventlager"
         request {
-            queryParameter<Fagsystem>("fagsystem") {
+            pathParameter<Fagsystem>("fagsystem") {
                 description = "Fagsystemet man vil ha eventkonvertering for"
                 required = true
                 example("oneOf") {
