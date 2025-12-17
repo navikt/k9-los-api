@@ -14,7 +14,6 @@ class UttrekkTjeneste(
             lagretSøk = lagretSøk,
             typeKjoring = opprettUttrekk.typeKjoring,
             lagetAv = saksbehandlerId,
-            timeout = opprettUttrekk.timeout,
             limit = opprettUttrekk.limit,
             offset = opprettUttrekk.offset
         )

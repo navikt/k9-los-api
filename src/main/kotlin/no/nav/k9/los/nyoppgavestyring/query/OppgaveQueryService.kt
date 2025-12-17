@@ -3,13 +3,11 @@ package no.nav.k9.los.nyoppgavestyring.query
 import io.opentelemetry.instrumentation.annotations.WithSpan
 import kotlinx.coroutines.runBlocking
 import kotliquery.TransactionalSession
-import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.Action
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.Auditlogging
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.idtoken.IIdToken
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.CoroutineRequestContext
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.*
@@ -38,17 +36,7 @@ class OppgaveQueryService {
     @WithSpan
     fun queryForOppgave(oppgaveQuery: QueryRequest): List<Oppgave> {
         return using(sessionOf(datasource)) {
-            it.transaction { tx ->
-                settStatementTimeout(tx, oppgaveQuery.queryTimeout)
-                queryForOppgave(tx, oppgaveQuery)
-            }
-        }
-    }
-
-    private fun settStatementTimeout(tx: TransactionalSession, timeoutSekunder: Int?) {
-        if (timeoutSekunder != null && timeoutSekunder > 0) {
-            val timeoutMs = timeoutSekunder * 1000
-            tx.run(queryOf("SET LOCAL statement_timeout = $timeoutMs").asExecute)
+            it.transaction { tx -> queryForOppgave(tx, oppgaveQuery) }
         }
     }
 
@@ -76,10 +64,7 @@ class OppgaveQueryService {
     @WithSpan
     fun queryForAntall(request: QueryRequest, now : LocalDateTime = LocalDateTime.now()): Long {
         return using(sessionOf(datasource)) {
-            it.transaction { tx ->
-                settStatementTimeout(tx, request.queryTimeout)
-                oppgaveQueryRepository.queryForAntall(tx, request, now)
-            }
+            it.transaction { tx -> oppgaveQueryRepository.queryForAntall(tx, request, now) }
         }
     }
 
@@ -93,7 +78,6 @@ class OppgaveQueryService {
     fun queryForOppgaveResultat(request: QueryRequest): List<OppgaveResultat> {
         return using(sessionOf(datasource)) {
             it.transaction { tx ->
-                settStatementTimeout(tx, request.queryTimeout)
                 queryForOppgaveResultat(tx, request)
             }
         }
@@ -106,15 +90,15 @@ class OppgaveQueryService {
     }
 
     @WithSpan
-    suspend fun queryToFile(oppgaveQuery: QueryRequest): String {
-        return TransactionalManager(datasource).transactionSuspend { tx ->
-            queryToFile(tx, oppgaveQuery)
+    fun queryToFile(oppgaveQuery: QueryRequest, idToken: IIdToken): String {
+        return using(sessionOf(datasource)) {
+            it.transaction { tx -> queryToFile(tx, oppgaveQuery, idToken) }
         }
     }
 
     @WithSpan
-    suspend fun queryToFile(tx: TransactionalSession, oppgaveQuery: QueryRequest): String {
-        val oppgaver = query(tx, oppgaveQuery)
+    fun queryToFile(tx: TransactionalSession, oppgaveQuery: QueryRequest, idToken: IIdToken): String {
+        val oppgaver = query(tx, oppgaveQuery, idToken)
         if (oppgaver.isEmpty()) {
             return ""
         }
@@ -134,53 +118,10 @@ class OppgaveQueryService {
     }
 
     @WithSpan
-    fun query(oppgaveQuery: QueryRequest): List<Oppgaverad> {
-        return using(sessionOf(datasource)) {
-            it.transaction { tx ->
-                settStatementTimeout(tx, oppgaveQuery.queryTimeout)
-                runBlocking { queryMedDeadline(tx, oppgaveQuery) }
-            }
-        }
-    }
-
-    private suspend fun queryMedDeadline(tx: TransactionalSession, request: QueryRequest): List<Oppgaverad> {
-        val deadline = request.queryTimeout?.let {
-            LocalDateTime.now().plusSeconds(it.toLong())
-        }
-        val now = LocalDateTime.now()
-        val oppgaveIder = oppgaveQueryRepository.query(tx, request, now)
-
-        val oppgaverader = mapOppgaver(tx, request, oppgaveIder, now, deadline)
-
-        if (request.oppgaveQuery.select.isEmpty()) {
-            return listOf(listOf(Oppgavefeltverdi(null, "Antall", oppgaverader.size)))
-        }
-
-        return oppgaverader
-    }
-
-    @WithSpan
     fun query(oppgaveQuery: QueryRequest, idToken: IIdToken): List<Oppgaverad> {
         return using(sessionOf(datasource)) {
-            it.transaction { tx ->
-                settStatementTimeout(tx, oppgaveQuery.queryTimeout)
-                query(tx, oppgaveQuery, idToken)
-            }
+            it.transaction { tx -> query(tx, oppgaveQuery, idToken) }
         }
-    }
-
-    @WithSpan
-    suspend fun query(tx: TransactionalSession, request: QueryRequest): List<Oppgaverad> {
-        val now = LocalDateTime.now()
-        val oppgaveIder = oppgaveQueryRepository.query(tx, request, now)
-
-        val oppgaverader = mapOppgaver(tx, request, oppgaveIder, now)
-
-        if (request.oppgaveQuery.select.isEmpty()) {
-            return listOf(listOf(Oppgavefeltverdi(null, "Antall", oppgaverader.size)))
-        }
-
-        return oppgaverader
     }
 
     @WithSpan
@@ -205,20 +146,11 @@ class OppgaveQueryService {
     }
 
     @WithSpan
-    private suspend fun mapOppgaver(
-        tx: TransactionalSession,
-        request: QueryRequest,
-        oppgaveIder: List<OppgaveId>,
-        now: LocalDateTime,
-        deadline: LocalDateTime? = null
-    ): List<Oppgaverad> {
+    private suspend fun mapOppgaver(tx: TransactionalSession, request: QueryRequest, oppgaveIder: List<OppgaveId>, now: LocalDateTime): List<Oppgaverad> {
         val oppgaverader = mutableListOf<Oppgaverad>()
         val limit = request.avgrensning?.limit ?: -1
         var antall = 0
         for (oppgaveId in oppgaveIder) {
-            if (deadline != null && LocalDateTime.now().isAfter(deadline)) {
-                throw QueryTimeoutException("Query timeout overskredet etter $antall oppgaver")
-            }
             val oppgaverad = mapOppgave(tx, request.oppgaveQuery, oppgaveId, now)
             if (oppgaverad != null) {
                 oppgaverader.add(oppgaverad)
@@ -230,8 +162,6 @@ class OppgaveQueryService {
         }
         return oppgaverader
     }
-
-    class QueryTimeoutException(message: String) : RuntimeException(message)
 
     @WithSpan
     private suspend fun mapOppgave(tx: TransactionalSession, oppgaveQuery: OppgaveQuery, oppgaveId: OppgaveId, now: LocalDateTime): Oppgaverad? {

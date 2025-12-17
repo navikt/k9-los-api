@@ -64,7 +64,6 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
             lagretSøk = testLagretSøk,
             typeKjoring = TypeKjøring.OPPGAVER,
             lagetAv = saksbehandlerId,
-            timeout = 30
         )
 
         val id = uttrekkRepository.opprett(uttrekk)
@@ -73,7 +72,6 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
         assertThat(hentetUttrekk).isNotNull()
         assertThat(hentetUttrekk!!.id).isEqualTo(id)
         assertThat(hentetUttrekk.lagetAv).isEqualTo(saksbehandlerId)
-        assertThat(hentetUttrekk.timeout).isEqualTo(30)
         assertThat(hentetUttrekk.status).isEqualTo(UttrekkStatus.OPPRETTET)
         assertThat(uttrekkRepository.hentResultat(id)).isNull()
         assertThat(hentetUttrekk.antall).isNull()
@@ -91,7 +89,6 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
             lagretSøk = testLagretSøk,
             typeKjoring = TypeKjøring.OPPGAVER,
             lagetAv = saksbehandlerId,
-            timeout = 30
         )
 
         val id = uttrekkRepository.opprett(uttrekk)
@@ -123,7 +120,6 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
             query = testQuery,
             typeKjoring = TypeKjøring.OPPGAVER,
             lagetAv = saksbehandlerId,
-            timeout = 30,
             feilmelding = null,
             startetTidspunkt = LocalDateTime.now(),
             fullførtTidspunkt = null,
@@ -145,7 +141,6 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
             lagretSøk = testLagretSøk,
             typeKjoring = TypeKjøring.OPPGAVER,
             lagetAv = saksbehandlerId,
-            timeout = 30
         )
 
         val id = uttrekkRepository.opprett(uttrekk)
@@ -163,13 +158,11 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
             lagretSøk = testLagretSøk,
             typeKjoring = TypeKjøring.OPPGAVER,
             lagetAv = saksbehandlerId,
-            timeout = 30
         )
         val uttrekk2 = Uttrekk.opprettUttrekk(
             lagretSøk = testLagretSøk,
             typeKjoring = TypeKjøring.OPPGAVER,
             lagetAv = saksbehandlerId,
-            timeout = 30
         )
 
         uttrekkRepository.opprett(uttrekk1)
@@ -200,19 +193,16 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
             lagretSøk = testLagretSøk,
             typeKjoring = TypeKjøring.OPPGAVER,
             lagetAv = saksbehandlerId,
-            timeout = 30
         )
         val uttrekk2 = Uttrekk.opprettUttrekk(
             lagretSøk = testLagretSøk,
             typeKjoring = TypeKjøring.OPPGAVER,
             lagetAv = saksbehandlerId,
-            timeout = 30
         )
         val uttrekk3 = Uttrekk.opprettUttrekk(
             lagretSøk = testLagretSøk,
             typeKjoring = TypeKjøring.OPPGAVER,
             lagetAv = annenSaksbehandlerId,
-            timeout = 30
         )
 
         uttrekkRepository.opprett(uttrekk1)
@@ -230,7 +220,6 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
             lagretSøk = testLagretSøk,
             typeKjoring = TypeKjøring.ANTALL,
             lagetAv = saksbehandlerId,
-            timeout = 30
         )
 
         val id = uttrekkRepository.opprett(uttrekk)
@@ -246,7 +235,6 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
             lagretSøk = testLagretSøk,
             typeKjoring = TypeKjøring.OPPGAVER,
             lagetAv = saksbehandlerId,
-            timeout = 30
         )
 
         val id = uttrekkRepository.opprett(uttrekk)
@@ -262,7 +250,6 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
             lagretSøk = testLagretSøk,
             typeKjoring = TypeKjøring.OPPGAVER,
             lagetAv = saksbehandlerId,
-            timeout = 30
         )
 
         val id = uttrekkRepository.opprett(uttrekk)

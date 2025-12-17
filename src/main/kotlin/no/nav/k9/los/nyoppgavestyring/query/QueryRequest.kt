@@ -6,7 +6,6 @@ data class QueryRequest(
     val oppgaveQuery: OppgaveQuery,
     val fjernReserverte: Boolean = false,
     val avgrensning: Avgrensning? = null,
-    val queryTimeout: Int? = null,
 )
 
 data class Avgrensning (

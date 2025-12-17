@@ -67,7 +67,6 @@ class UttrekkJobbTest : AbstractK9LosIntegrationTest() {
             lagretSøk = testLagretSøk,
             typeKjoring = TypeKjøring.ANTALL,
             lagetAv = saksbehandlerId,
-            timeout = 30
         )
         val uttrekkId = uttrekkRepository.opprett(uttrekk)
 
@@ -90,7 +89,6 @@ class UttrekkJobbTest : AbstractK9LosIntegrationTest() {
             lagretSøk = testLagretSøk,
             typeKjoring = TypeKjøring.OPPGAVER,
             lagetAv = saksbehandlerId,
-            timeout = 30
         )
         val uttrekkId = uttrekkRepository.opprett(uttrekk)
 

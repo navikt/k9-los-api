@@ -16,19 +16,16 @@ class UttrekkJobb(
     fun kjørUttrekk(uttrekkId: Long) {
         try {
             val uttrekk = uttrekkTjeneste.startUttrekk(uttrekkId)
+            val queryRequest = QueryRequest(uttrekk.query, avgrensning = uttrekk.avgrensning)
 
             when (uttrekk.typeKjøring) {
                 TypeKjøring.ANTALL -> {
-                    val antall = oppgaveQueryService.queryForAntall(
-                        QueryRequest(uttrekk.query, queryTimeout = uttrekk.timeout)
-                    )
+                    val antall = oppgaveQueryService.queryForAntall(queryRequest)
                     uttrekkTjeneste.fullførUttrekk(uttrekkId, antall.toInt())
                 }
 
                 TypeKjøring.OPPGAVER -> {
-                    val oppgaver = oppgaveQueryService.queryForOppgaveResultat(
-                        QueryRequest(uttrekk.query, queryTimeout = uttrekk.timeout, avgrensning = uttrekk.avgrensning)
-                    )
+                    val oppgaver = oppgaveQueryService.queryForOppgaveResultat(queryRequest)
                     val resultatJson = LosObjectMapper.instance.writeValueAsString(oppgaver)
                     uttrekkTjeneste.fullførUttrekk(uttrekkId, oppgaver.size, resultatJson)
                 }

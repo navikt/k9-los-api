@@ -25,7 +25,6 @@ class Uttrekk private constructor(
     val query: OppgaveQuery,
     val typeKjøring: TypeKjøring,
     val lagetAv: Long,
-    val timeout: Int,
     val limit: Int?,
     val offset: Int?,
     feilmelding: String?,
@@ -82,9 +81,8 @@ class Uttrekk private constructor(
     }
 
     fun skalRyddesOpp(): Boolean {
-        // Legger på et ekstra sekund for å la vanlig timeout gå ut
         return status == UttrekkStatus.KJØRER &&
-                startetTidspunkt!!.plusSeconds(1L + timeout) < LocalDateTime.now()
+                startetTidspunkt!!.plusMinutes(30) < LocalDateTime.now()
     }
 
     fun endreTittel(nyTittel: String) {
@@ -96,12 +94,9 @@ class Uttrekk private constructor(
             lagretSøk: LagretSøk,
             typeKjoring: TypeKjøring,
             lagetAv: Long,
-            timeout: Int,
             limit: Int? = null,
             offset: Int? = null
         ): Uttrekk {
-            require(timeout > 0) { "Timeout må være en positiv verdi" }
-
             return Uttrekk(
                 id = null,
                 opprettetTidspunkt = LocalDateTime.now(),
@@ -110,7 +105,6 @@ class Uttrekk private constructor(
                 query = lagretSøk.query,
                 typeKjøring = typeKjoring,
                 lagetAv = lagetAv,
-                timeout = timeout,
                 limit = limit,
                 offset = offset,
                 feilmelding = null,
@@ -128,7 +122,6 @@ class Uttrekk private constructor(
             query: OppgaveQuery,
             typeKjoring: TypeKjøring,
             lagetAv: Long,
-            timeout: Int,
             limit: Int?,
             offset: Int?,
             feilmelding: String?,
@@ -137,7 +130,7 @@ class Uttrekk private constructor(
             antall: Int?
         ): Uttrekk {
             return Uttrekk(
-                id, opprettetTidspunkt, status, tittel, query, typeKjoring, lagetAv, timeout, limit, offset,
+                id, opprettetTidspunkt, status, tittel, query, typeKjoring, lagetAv, limit, offset,
                 feilmelding, startetTidspunkt, fullførtTidspunkt, antall
             )
         }
