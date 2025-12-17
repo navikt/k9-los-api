@@ -31,7 +31,7 @@ internal fun Route.EventlagerApi() {
     val transactionalManager by inject<TransactionalManager>()
     val pepClient by inject<IPepClient>()
 
-    get("/eventer/{system}/{eksternId}", {
+    get("/eventer/{fagsystem}/{eksternId}", {
         tags("Forvaltning")
         description = "Hent ut eventhistorikk for en oppgave, nytt eventlager"
         request {
@@ -49,7 +49,7 @@ internal fun Route.EventlagerApi() {
     }) {
         requestContextService.withRequestContext(call) {
             if (pepClient.kanLeggeUtDriftsmelding()) {
-                val fagsystem = Fagsystem.fraKode(call.parameters["system"]!!)
+                val fagsystem = Fagsystem.fraKode(call.parameters["fagsystem"]!!)
                 val eksternId = call.parameters["eksternId"]!!
 
                 val eventStrenger =
