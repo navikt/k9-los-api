@@ -17,8 +17,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.koin.test.get
 import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
-import java.util.UUID
+import java.util.*
 
 class EventRepositoryPerLinjeForKonverteringTest() : AbstractK9LosIntegrationTest() {
 
@@ -103,7 +102,7 @@ class EventRepositoryPerLinjeForKonverteringTest() : AbstractK9LosIntegrationTes
             eventRepository.hent(
                 Fagsystem.PUNSJ,
                 eksternId.toString(),
-                event.eventTid.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
+                event.eventTid.toString(),
                 tx
             )
         }
