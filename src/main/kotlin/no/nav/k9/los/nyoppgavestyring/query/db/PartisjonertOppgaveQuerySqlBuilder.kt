@@ -15,10 +15,7 @@ import no.nav.k9.los.nyoppgavestyring.query.dto.query.Oppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.OppgaveResultat
 import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.Oppgavefeltverdi
 import no.nav.k9.los.nyoppgavestyring.query.mapping.*
-import no.nav.k9.los.nyoppgavestyring.spi.felter.OrderByInput
-import no.nav.k9.los.nyoppgavestyring.spi.felter.SqlMedParams
-import no.nav.k9.los.nyoppgavestyring.spi.felter.TransientFeltutleder
-import no.nav.k9.los.nyoppgavestyring.spi.felter.WhereInput
+import no.nav.k9.los.nyoppgavestyring.spi.felter.*
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -411,19 +408,33 @@ class PartisjonertOppgaveQuerySqlBuilder(
             val alias = "felt_$index"
 
             if (felt.område != null) {
-                // Felt fra oppgavefelt_verdi_part tabellen
-                val verdifelt = verdifelt(felt.område, felt.kode)
-                selectDeler.add("""
-                    (SELECT $verdifelt
-                     FROM oppgavefelt_verdi_part ov
-                     WHERE ov.oppgave_id = o.id
-                       AND ov.oppgavestatus IN ($oppgavestatusPlaceholder) ${ferdigstiltDatoBetingelse("ov")}
-                       AND ov.feltdefinisjon_ekstern_id = :selectFeltkode$index
-                     LIMIT 1) AS $alias
-                """.trimIndent())
-                selectFeltParams["selectFeltkode$index"] = felt.kode
+                val transientFeltutleder = hentTransientFeltutleder(felt.område, felt.kode)
+                if (transientFeltutleder != null) {
+                    val sqlMedParams = sikreUnikeParams(
+                        transientFeltutleder.select(
+                            SelectInput(
+                                Spørringstrategi.PARTISJONERT,
+                                now,
+                                felt.område,
+                                felt.kode
+                            )
+                        )
+                    )
+                    selectDeler.add("${sqlMedParams.query} AS $alias")
+                    selectFeltParams.putAll(sqlMedParams.queryParams)
+                } else {
+                    val verdifelt = verdifelt(felt.område, felt.kode)
+                    selectDeler.add("""
+                        (SELECT $verdifelt
+                         FROM oppgavefelt_verdi_part ov
+                         WHERE ov.oppgave_id = o.id
+                           AND ov.oppgavestatus IN ($oppgavestatusPlaceholder) ${ferdigstiltDatoBetingelse("ov")}
+                           AND ov.feltdefinisjon_ekstern_id = :selectFeltkode$index
+                         LIMIT 1) AS $alias
+                    """.trimIndent())
+                    selectFeltParams["selectFeltkode$index"] = felt.kode
+                }
             } else {
-                // Spesielle felt uten område - hentes direkte fra oppgavetabellen
                 val kolonne = when (felt.kode) {
                     "oppgavestatus" -> "o.oppgavestatus"
                     "oppgavetype" -> "o.oppgavetype_ekstern_id"
