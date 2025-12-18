@@ -1,113 +1,57 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.klage
 
 import io.opentelemetry.instrumentation.annotations.WithSpan
-import no.nav.k9.klage.kodeverk.behandling.oppgavetillos.EventHendelse
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.EventHandlerMetrics
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventNøkkel
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventlagerKonverteringsservice
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventRepository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.EventTilOppgaveAdapter
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.OpentelemetrySpanUtil
 import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
+import org.jetbrains.annotations.VisibleForTesting
 import org.slf4j.LoggerFactory
 
 
 class K9KlageEventHandler (
-    private val behandlingProsessEventKlageRepository: K9KlageEventRepository,
     private val transactionalManager: TransactionalManager,
-    private val eventlagerKonverteringsservice: EventlagerKonverteringsservice,
     private val oppgaveAdapter: EventTilOppgaveAdapter,
+    private val eventRepository: EventRepository,
 ) {
     private val log = LoggerFactory.getLogger(K9KlageEventHandler::class.java)
 
+    @VisibleForTesting
+    fun prosesser(
+        event: K9KlageEventDto
+    ) {
+        prosesser(
+            eksternId = event.eksternId.toString(),
+            eksternVersjon = event.eventTid.toString(),
+            event = LosObjectMapper.instance.writeValueAsString(event)
+        )
+    }
+
     @WithSpan
     fun prosesser(
-        eventInn: K9KlageEventDto
+        eksternId: String,
+        eksternVersjon: String,
+        event: String
     ) {
         val t0 = System.nanoTime()
-        val event = håndterVaskeevent(eventInn)
-        if (event == null) {
-            EventHandlerMetrics.observe("k9klage", "vaskeevent", t0)
-            return
-        }
 
         transactionalManager.transaction { tx ->
-            val lås = behandlingProsessEventKlageRepository.hentMedLås(tx, event.eksternId)
-
-            val modell = behandlingProsessEventKlageRepository.lagre(event.eksternId, tx) { k9KlageModell ->
-                if (k9KlageModell == null) {
-                    return@lagre K9KlageModell(mutableListOf(event))
-                }
-                if (k9KlageModell.eventer.contains(event)) {
-                    log.info("""Skipping eventen har kommet tidligere ${event.eventTid}""")
-                    return@lagre k9KlageModell
-                }
-                k9KlageModell.eventer.add(event)
-                k9KlageModell
-            }
-
-            eventlagerKonverteringsservice.konverterEvent(event, tx)
-
-            modell
+            eventRepository.upsertOgLåsEventnøkkel(Fagsystem.K9KLAGE, eksternId, tx)
+            eventRepository.lagre(Fagsystem.K9KLAGE, eksternId, eksternVersjon, event, tx)
         }
+
         OpentelemetrySpanUtil.span("k9KlageTilLosAdapterTjeneste.oppdaterOppgaveForBehandlingUuid") {
             try {
-                oppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(null, Fagsystem.K9KLAGE, event.eksternId.toString()))
+                oppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(Fagsystem.K9KLAGE, eksternId))
             } catch (e: Exception) {
-                log.error("Oppatering av k9-klage-oppgave feilet for ${event.eksternId}. Oppgaven er ikke oppdatert, men blir plukket av vaktmester", e)
+                log.error("Oppatering av k9-klage-oppgave feilet for ${eksternId}. Oppgaven er ikke oppdatert, men blir plukket av vaktmester", e)
             }
         }
 
         EventHandlerMetrics.observe("k9klage", "gjennomført", t0)
-    }
-
-    fun håndterVaskeevent(event: K9KlageEventDto): K9KlageEventDto? {
-        if (event.eventHendelse != EventHendelse.VASKEEVENT) {
-            return event
-        }
-
-        // Gjøres utenfor transaksjon fordi den ikke muterer data.
-        // Det er ikke mulig å unngå lagring selv om eventet skal ignoreres hvis den skulle ha vært i samme transaksjon (pga on conflict(id) update.. ) i lagre-metoden
-        val eksisterendeEventModell = behandlingProsessEventKlageRepository.hent(event.eksternId!!)
-//        if (eksisterendeEventModell.eventer.any { tidligereEvent -> tidligereEvent.behandlingStatus == BehandlingStatus.AVSLUTTET.kode }) {
-//            return null
-//        }
-
-        if (eksisterendeEventModell.eventer.isEmpty()) {
-            log.info("Vaskeeventfiltrering gjelder behandling som ikke tidligere finnes i los ${event.eksternId}")
-            return event
-        }
-
-        log.info("Vaskeeventfiltrering ${event.behandlingStatus} - ${event.eventTid} - ${event.eksternId}")
-        return eksisterendeEventModell.eventer.last().eventTid
-            .takeIf { sisteEventTid -> sisteEventTid.isAfter(event.eventTid) }
-            ?.let { sisteEventTid -> K9KlageEventDto(
-                eksternId = event.eksternId,
-                påklagdBehandlingId = event.påklagdBehandlingId,
-                påklagdBehandlingType = event.påklagdBehandlingType,
-                fagsystem = event.fagsystem,
-                saksnummer = event.saksnummer,
-                aktørId = event.aktørId,
-                eventTid = sisteEventTid.plusNanos(100_1000),
-                behandlingstidFrist = event.behandlingstidFrist,
-                eventHendelse = event.eventHendelse,
-                behandlingStatus = event.behandlingStatus,
-                behandlingSteg = event.behandlingSteg,
-                behandlendeEnhet = event.behandlendeEnhet,
-                ytelseTypeKode = event.ytelseTypeKode,
-                resultatType = event.resultatType,
-                behandlingTypeKode = event.behandlingTypeKode,
-                opprettetBehandling = event.opprettetBehandling,
-                ansvarligSaksbehandler = event.ansvarligSaksbehandler,
-                fagsakPeriode = event.fagsakPeriode,
-                pleietrengendeAktørId = event.pleietrengendeAktørId,
-                relatertPartAktørId = event.relatertPartAktørId,
-                ansvarligBeslutter = event.ansvarligBeslutter,
-                aksjonspunkttilstander = event.aksjonspunkttilstander,
-                vedtaksdato = event.vedtaksdato,
-                behandlingsårsaker = event.behandlingsårsaker,
-                utenlandstilsnitt = event.utenlandstilsnitt
-                )
-            } ?: event
     }
 }

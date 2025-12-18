@@ -1,7 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager
 
 import kotliquery.*
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
 import org.jetbrains.annotations.VisibleForTesting
 import java.time.LocalDateTime
@@ -70,10 +69,7 @@ class EventRepository(
         )!!
     }
 
-    fun lagre(fagsystem: Fagsystem, event: String, tx: TransactionalSession): EventLagret? {
-        val tree = LosObjectMapper.instance.readTree(event)
-        val eksternId = tree.findValue("eksternId").asText()
-        val eksternVersjon = tree.findValue("eventTid").asText()
+    fun lagre(fagsystem: Fagsystem, eksternId: String, eksternVersjon: String, event: String, tx: TransactionalSession): EventLagret? {
         val eventnøkkelId = upsertOgLåsEventnøkkel(fagsystem, eksternId, tx)
 
         tx.run(
@@ -98,24 +94,12 @@ class EventRepository(
         return hent(fagsystem, eksternId, eksternVersjon, tx)
     }
 
-    fun endreEvent(eventNøkkel: EventNøkkel, event: String, tx: TransactionalSession): EventLagret? {
-        val tree = LosObjectMapper.instance.readTree(event)
-        val eksternVersjon = tree.findValue("eventTid").asText()
-
-        tx.run(
-            queryOf(
-                """
-                        update event set "data" = :data :: jsonb
-                        where event_nokkel_id = :event_nokkel_id 
-                     """,
-                mapOf(
-                    "event_nokkel_id" to eventNøkkel.nøkkelId,
-                    "data" to event
-                )
-            ).asUpdate
-        )
-
-        return hent(eventNøkkel.fagsystem, eventNøkkel.eksternId, eksternVersjon, tx)
+    fun hentAlleEventer(fagsystem: Fagsystem, eksternId: String): List<EventLagret> {
+        return using(sessionOf(dataSource)) { session ->
+            session.transaction { tx ->
+                hentAlleEventer(fagsystem, eksternId, tx)
+            }
+        }
     }
 
     fun hentAlleEventer(fagsystem: Fagsystem, eksternId: String, tx: TransactionalSession): List<EventLagret> {
@@ -193,7 +177,6 @@ class EventRepository(
                 """.trimIndent()
                 ).map { row ->
                     EventNøkkel(
-                        nøkkelId = row.long("id"),
                         eksternId = row.string("ekstern_id"),
                         fagsystem = Fagsystem.fraKode(row.string("fagsystem"))
                     )
@@ -239,7 +222,8 @@ class EventRepository(
             eksternVersjon = row.string("ekstern_versjon"),
             eventJson = row.string("data"),
             opprettet = row.localDateTime("opprettet"),
-            fagsystem = Fagsystem.fraKode(row.string("fagsystem"))
+            fagsystem = Fagsystem.fraKode(row.string("fagsystem")),
+            dirty = row.boolean("dirty")
         )
     }
 
@@ -250,7 +234,8 @@ class EventRepository(
             eksternVersjon = row.string("ekstern_versjon"),
             eventJson = row.string("data"),
             opprettet = row.localDateTime("opprettet"),
-            fagsystem = fagsystem
+            fagsystem = fagsystem,
+            dirty = row.boolean("dirty")
         )
     }
 
@@ -278,6 +263,7 @@ class EventRepository(
                             select id
                             from event_nokkel
                             where fagsystem = :fagsystem
+                            on conflict do nothing
                         """.trimMargin(),
                         mapOf(
                             "fagsystem" to fagsystem.kode,
@@ -304,6 +290,7 @@ class EventRepository(
                             from event_nokkel
                             where fagsystem = :fagsystem
                             and ekstern_id = :ekstern_id
+                            on conflict do nothing
                         """.trimMargin(),
                 mapOf(
                     "fagsystem" to fagsystem.kode,
