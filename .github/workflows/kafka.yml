@@ -12,9 +12,7 @@ jobs:
     if: startsWith(github.ref, 'refs/heads/master')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/checkout@v4
       - uses: nais/deploy/actions/deploy@v2
         env:
           APIKEY: ${{ secrets.DEPLOY_KEY }}
@@ -51,9 +49,7 @@ jobs:
     if: startsWith(github.ref, 'refs/heads/master')  # If the branch is master
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/checkout@v4
       - uses: nais/deploy/actions/deploy@v2
         env:
           APIKEY: ${{ secrets.DEPLOY_KEY }}
