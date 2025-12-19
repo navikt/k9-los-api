@@ -139,7 +139,6 @@ data class Configuration(private val config: ApplicationConfig) {
             trustStore = Pair(trustStorePath, credStorePassword),
             keyStore = Pair(keyStorePath, credStorePassword),
             credStorePassword = credStorePassword,
-            exactlyOnce = false,
             defaultOffsetResetStrategy = defaultOffsetResetStrategy,
             unreadyAfterStreamStoppedIn = unreadyAfterStreamStoppedIn()
         )
