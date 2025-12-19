@@ -11,35 +11,33 @@ jobs:
     name: Deploy to Aiven Dev
     if: startsWith(github.ref, 'refs/heads/master')
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: nais/deploy/actions/deploy@v2
         env:
-          APIKEY: ${{ secrets.DEPLOY_KEY }}
           CLUSTER: dev-gcp
           VAR: kafka-pool=nav-dev
           RESOURCE: nais/kafka/produksjonsstyring-k9sak.yml
       - uses: nais/deploy/actions/deploy@v2
         env:
-          APIKEY: ${{ secrets.DEPLOY_KEY }}
           CLUSTER: dev-gcp
           VAR: kafka-pool=nav-dev
           RESOURCE: nais/kafka/produksjonsstyring-k9punsj.yml
       - uses: nais/deploy/actions/deploy@v2
         env:
-          APIKEY: ${{ secrets.DEPLOY_KEY }}
           CLUSTER: dev-gcp
           VAR: kafka-pool=nav-dev
           RESOURCE: nais/kafka/aapen-k9statistikk-behandling-v2.yml
       - uses: nais/deploy/actions/deploy@v2
         env:
-          APIKEY: ${{ secrets.DEPLOY_KEY }}
           CLUSTER: dev-gcp
           VAR: kafka-pool=nav-dev
           RESOURCE: nais/kafka/aapen-k9statistikk-sak-v2.yml
       - uses: nais/deploy/actions/deploy@v2
         env:
-          APIKEY: ${{ secrets.DEPLOY_KEY }}
           CLUSTER: dev-gcp
           VAR: kafka-pool=nav-dev
           RESOURCE: nais/kafka/oppgavemeldinger-klage-til-los.yml
@@ -48,35 +46,33 @@ jobs:
     name: Deploy to Aiven Prod
     if: startsWith(github.ref, 'refs/heads/master')  # If the branch is master
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: nais/deploy/actions/deploy@v2
         env:
-          APIKEY: ${{ secrets.DEPLOY_KEY }}
           CLUSTER: prod-gcp
           VAR: kafka-pool=nav-prod
           RESOURCE: nais/kafka/produksjonsstyring-k9sak.yml
       - uses: nais/deploy/actions/deploy@v2
         env:
-          APIKEY: ${{ secrets.DEPLOY_KEY }}
           CLUSTER: prod-gcp
           VAR: kafka-pool=nav-prod
           RESOURCE: nais/kafka/produksjonsstyring-k9punsj.yml
       - uses: nais/deploy/actions/deploy@v2
         env:
-          APIKEY: ${{ secrets.DEPLOY_KEY }}
           CLUSTER: prod-gcp
           VAR: kafka-pool=nav-prod
           RESOURCE: nais/kafka/oppgavemeldinger-klage-til-los.yml
       - uses: nais/deploy/actions/deploy@v2
         env:
-          APIKEY: ${{ secrets.DEPLOY_KEY }}
           CLUSTER: prod-gcp
           VAR: kafka-pool=nav-prod
           RESOURCE: nais/kafka/aapen-k9statistikk-behandling-v2.yml
       - uses: nais/deploy/actions/deploy@v2
         env:
-          APIKEY: ${{ secrets.DEPLOY_KEY }}
           CLUSTER: prod-gcp
           VAR: kafka-pool=nav-prod
           RESOURCE: nais/kafka/aapen-k9statistikk-sak-v2.yml
