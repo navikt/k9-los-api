@@ -13,6 +13,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+        with:
+          persist-credentials: 'true'
       - uses: nais/deploy/actions/deploy@v2
         env:
           APIKEY: ${{ secrets.DEPLOY_KEY }}
@@ -50,6 +52,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+        with:
+          persist-credentials: 'true'
       - uses: nais/deploy/actions/deploy@v2
         env:
           APIKEY: ${{ secrets.DEPLOY_KEY }}
