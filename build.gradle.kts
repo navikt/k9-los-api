@@ -5,7 +5,7 @@ val hikariVersion = "6.2.1"
 val flywayVersion = "11.1.1"
 val vaultJdbcVersion = "1.3.10"
 val koinVersion = "4.1.1"
-val kotestVersion = "6.0.3"
+val kotestVersion = "6.0.7"
 val kotliqueryVersion = "1.9.1"
 val k9SakVersion = "6.0.4"
 val k9KlageVersion = "0.4.9"
@@ -19,14 +19,14 @@ val kafkaVersion = "3.9.0"
 val navTilgangskontroll = "3.2024.01.24_10.14-f70bae69bd65"
 
 // Test Dependencies
-val testContainers = "1.20.4"
+val testContainers = "1.21.4"
 val jsonassertVersion = "1.5.3"
-val jupiterVersion = "5.11.4"
+val jupiterVersion = "6.0.1"
 val assertkVersion = "0.28.1"
-val mockkVersion = "1.13.16"
+val mockkVersion = "1.14.7"
 
 plugins {
-    id("org.jetbrains.kotlin.jvm") version "2.2.0"
+    id("org.jetbrains.kotlin.jvm") version "2.3.0"
     id("com.github.johnrengelman.shadow") version "8.1.1"
 }
 
@@ -86,8 +86,8 @@ dependencies {
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
     implementation("org.apache.commons:commons-text:$commonsTextVersion")
     implementation("com.papertrailapp:logback-syslog4j:1.0.0")
-    implementation("io.github.smiley4:ktor-openapi:5.0.2")
-    implementation("io.github.smiley4:ktor-swagger-ui:5.0.2")
+    implementation("io.github.smiley4:ktor-openapi:5.4.0")
+    implementation("io.github.smiley4:ktor-swagger-ui:5.4.0")
 
 
     // DI
@@ -97,7 +97,7 @@ dependencies {
     // Test
     testImplementation("org.junit.jupiter:junit-jupiter-api:$jupiterVersion")
     testImplementation("org.junit.jupiter:junit-jupiter-engine:$jupiterVersion")
-    testImplementation("io.kotest:kotest-runner-junit5:6.0.0.M4")
+    testImplementation("io.kotest:kotest-runner-junit5:6.0.7")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
     testImplementation("com.willowtreeapps.assertk:assertk-jvm:$assertkVersion")
