@@ -123,9 +123,9 @@ class OmrådeSetup(
                 verdi = apDefinisjon.kode,
                 visningsnavn = apDefinisjon.navn,
                 beskrivelse = null,
-                gruppering = when {
-                    apDefinisjon.aksjonspunktType == AksjonspunktType.AUTOPUNKT -> "AUTOPUNKT"
-                    apDefinisjon.aksjonspunktType == AksjonspunktType.MANUELL -> apDefinisjon.behandlingSteg.navn
+                gruppering = when (apDefinisjon.aksjonspunktType) {
+                    AksjonspunktType.AUTOPUNKT -> "AUTOPUNKT"
+                    AksjonspunktType.MANUELL -> apDefinisjon.behandlingSteg.navn
                     else -> "UDEFINERT"
                 }
             )

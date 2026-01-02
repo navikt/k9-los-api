@@ -4,5 +4,4 @@ class Verdiforklaring(
     val verdi: String,
     val visningsnavn: String,
     val sekundærvalg: Boolean
-) {
-}
+)
