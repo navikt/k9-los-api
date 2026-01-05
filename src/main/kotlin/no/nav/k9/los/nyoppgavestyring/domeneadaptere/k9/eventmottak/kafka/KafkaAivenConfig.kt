@@ -23,7 +23,6 @@ class KafkaAivenConfig(
     trustStore: Pair<String, String>,
     keyStore: Pair<String, String>,
     credStorePassword: String,
-    exactlyOnce: Boolean,
     override val unreadyAfterStreamStoppedIn: Duration,
     private val defaultOffsetResetStrategy: OffsetResetStrategy,
 ): IKafkaConfig {
@@ -44,7 +43,7 @@ class KafkaAivenConfig(
 
     private val streams = properties.apply {
         put(DEFAULT_DESERIALIZATION_EXCEPTION_HANDLER_CLASS_CONFIG, LogAndFailExceptionHandler::class.java)
-        medProcessingGuarantee(exactlyOnce)
+        medProcessingGuarantee()
     }
 
     override fun stream(name: String, offsetResetStrategy: OffsetResetStrategy?): Properties = streams.apply {
@@ -53,15 +52,9 @@ class KafkaAivenConfig(
     }
 }
 
-private fun Properties.medProcessingGuarantee(exactlyOnce: Boolean) {
-    if (exactlyOnce) {
-        logger.info("$PROCESSING_GUARANTEE_CONFIG=$EXACTLY_ONCE")
-        put(PROCESSING_GUARANTEE_CONFIG, EXACTLY_ONCE)
-        put(REPLICATION_FACTOR_CONFIG, "3")
-    } else {
+private fun Properties.medProcessingGuarantee() {
         logger.info("$PROCESSING_GUARANTEE_CONFIG=$AT_LEAST_ONCE")
         put(PROCESSING_GUARANTEE_CONFIG, AT_LEAST_ONCE)
-    }
 }
 
 private fun Properties.medTrustStore(trustStore: Pair<String, String>) {

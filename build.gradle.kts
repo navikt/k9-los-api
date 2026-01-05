@@ -4,16 +4,16 @@ val mainClass = "no.nav.k9.los.K9LosKt"
 val hikariVersion = "6.2.1"
 val flywayVersion = "11.1.1"
 val vaultJdbcVersion = "1.3.10"
-val koinVersion = "4.1.0"
+val koinVersion = "4.1.1"
 val kotestVersion = "6.0.3"
 val kotliqueryVersion = "1.9.1"
-val k9SakVersion = "5.4.22"
-val k9KlageVersion = "0.4.7"
+val k9SakVersion = "6.0.4"
+val k9KlageVersion = "0.4.9"
 val jacksonVersion = "2.17.2"
 val commonsTextVersion = "1.13.0"
 
 val dusseldorfKtorVersion = "7.0.6"
-val ktorVersion = "3.3.2"
+val ktorVersion = "3.3.3"
 val kafkaVersion = "3.9.0"
 
 val navTilgangskontroll = "3.2024.01.24_10.14-f70bae69bd65"
@@ -67,7 +67,7 @@ dependencies {
     }
 
     // Tilgangskontroll
-    implementation("no.nav.sif.abac:kontrakt:1.4.0")
+    implementation("no.nav.sif.abac:kontrakt:1.6.0")
 
     // Kontrakter
     implementation("no.nav.k9.sak:kontrakt:$k9SakVersion")

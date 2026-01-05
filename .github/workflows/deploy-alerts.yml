@@ -11,19 +11,20 @@ jobs:
   deploy-to-dev-and-prod:
     name: Deploy to ${{ matrix.cluster }}
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
     strategy:
       matrix:
         cluster: [dev-fss, prod-fss]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: nais/deploy/actions/deploy@v2
         env:
-          APIKEY: ${{ secrets.DEPLOY_KEY }}
           CLUSTER: ${{ matrix.cluster }}
           RESOURCE: nais/alerts/alert-manager.yml
           VAR: cluster=${{ matrix.cluster }},slack_channel=${{ matrix.cluster == 'prod-fss' && '#k9-los-alerts' || '#k9-los-alerts-dev' }}
       - uses: nais/deploy/actions/deploy@v2
         env:
-          APIKEY: ${{ secrets.DEPLOY_KEY }}
           CLUSTER: ${{ matrix.cluster }}
           RESOURCE: nais/alerts/alerts.yml
