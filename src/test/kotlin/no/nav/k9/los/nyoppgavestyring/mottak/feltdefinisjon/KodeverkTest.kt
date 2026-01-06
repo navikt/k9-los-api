@@ -93,18 +93,18 @@ class KodeverkTest : AbstractK9LosIntegrationTest() {
             uttømmende = false,
             verdier = listOf(
                 Kodeverkverdi(
-                    id = null,
                     verdi = "verdi1",
                     visningsnavn = "navn1",
                     beskrivelse = "beskrivelse1",
-                    favoritt = false
+                    favoritt = false,
+                    gruppering = "gruppering1"
                 ),
                 Kodeverkverdi(
-                    id = null,
                     verdi = "verdi2",
                     visningsnavn = "navn2",
                     beskrivelse = "beskrivelse2",
-                    favoritt = false
+                    favoritt = false,
+                    gruppering = "gruppering2"
                 )
             )
         )

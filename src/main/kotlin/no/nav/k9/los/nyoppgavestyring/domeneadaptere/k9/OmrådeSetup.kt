@@ -139,9 +139,9 @@ class OmrådeSetup(
                     verdi = KlageEventTilOppgaveMapper.KLAGE_PREFIX + apDefinisjon.kode,
                     visningsnavn = KlageEventTilOppgaveMapper.KLAGE_PREFIX_VISNING + apDefinisjon.navn,
                     beskrivelse = null,
-                    gruppering = when {
-                        apDefinisjon.aksjonspunktType == no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktType.AUTOPUNKT -> "AUTOPUNKT"
-                        apDefinisjon.aksjonspunktType == no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktType.MANUELL -> apDefinisjon.behandlingSteg.navn
+                    gruppering = when (apDefinisjon.aksjonspunktType) {
+                        no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktType.AUTOPUNKT -> "AUTOPUNKT"
+                        no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktType.MANUELL -> apDefinisjon.behandlingSteg.navn
                         else -> "UDEFINERT"
                     }
                 )

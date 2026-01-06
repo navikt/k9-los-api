@@ -128,7 +128,8 @@ class OppgaveQueryRepository(
                                 Verdiforklaring(
                                     verdi = kodeverkverdi.verdi,
                                     visningsnavn = kodeverkverdi.visningsnavn,
-                                    sekundærvalg = !kodeverkverdi.favoritt
+                                    sekundærvalg = !kodeverkverdi.favoritt,
+                                    gruppering = kodeverkverdi.gruppering
                                 )
                             }
                         }
@@ -158,7 +159,8 @@ class OppgaveQueryRepository(
                     Verdiforklaring(
                         verdi = oppgavestatus.kode,
                         visningsnavn = oppgavestatus.visningsnavn,
-                        sekundærvalg = false
+                        sekundærvalg = false,
+                        gruppering = null
                     )
                 }
             ),
@@ -182,7 +184,8 @@ class OppgaveQueryRepository(
                     Verdiforklaring(
                         verdi = it.kode,
                         visningsnavn = it.beskrivelse,
-                        sekundærvalg = false
+                        sekundærvalg = false,
+                        gruppering = null
                     )
                 }
             ),
@@ -197,7 +200,8 @@ class OppgaveQueryRepository(
                     Verdiforklaring(
                         verdi = it.kode,
                         visningsnavn = it.beskrivelse,
-                        sekundærvalg = false
+                        sekundærvalg = false,
+                        gruppering = null
                     )
                 }
             ),
@@ -212,7 +216,8 @@ class OppgaveQueryRepository(
                     Verdiforklaring(
                         verdi = it.kode,
                         visningsnavn = it.beskrivelse,
-                        sekundærvalg = false
+                        sekundærvalg = false,
+                        gruppering = null
                     )
                 }
             ),
@@ -222,12 +227,18 @@ class OppgaveQueryRepository(
                     Verdiforklaring(
                         verdi = it,
                         visningsnavn = it,
-                        sekundærvalg = false
+                        sekundærvalg = false,
+                        gruppering = null
                     )
                 }
             ),
             Oppgavefelt(null, "oppgaveområde", "Oppgaveområde", "String", false, false, emptyList()),
-            Oppgavefelt(null, "spørringstrategi", "Spørringstrategi", "String", false, true, Spørringstrategi.entries.map { Verdiforklaring(it.name, it.navn, false) }),
+            Oppgavefelt(null, "spørringstrategi", "Spørringstrategi", "String", false, true, Spørringstrategi.entries.map { Verdiforklaring(
+                it.name,
+                it.navn,
+                false,
+                null
+            ) }),
             Oppgavefelt(null, "ferdigstiltDato", "Ferdigstilt dato", "Timestamp", true, false, emptyList()),
         ).map { OppgavefeltMedMer(it, null) }
 
