@@ -6,7 +6,6 @@ import no.nav.k9.kodeverk.behandling.BehandlingResultatType
 import no.nav.k9.kodeverk.behandling.BehandlingStegType
 import no.nav.k9.kodeverk.behandling.BehandlingÅrsakType
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
-import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktType
 import no.nav.k9.kodeverk.produksjonsstyring.UtvidetSøknadÅrsak
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetillos.KlageEventTilOppgaveMapper
@@ -118,32 +117,44 @@ class OmrådeSetup(
     }
 
     private fun aksjonspunktVerdierK9Sak() =
-        AksjonspunktDefinisjon.entries.filterNot { it == AksjonspunktDefinisjon.UNDEFINED }.map { apDefinisjon ->
-            KodeverkVerdiDto(
-                verdi = apDefinisjon.kode,
-                visningsnavn = apDefinisjon.navn,
-                beskrivelse = null,
-                gruppering = when (apDefinisjon.aksjonspunktType) {
-                    AksjonspunktType.AUTOPUNKT -> "AUTOPUNKT"
-                    AksjonspunktType.MANUELL -> apDefinisjon.behandlingSteg.navn
-                    else -> "UDEFINERT"
-                }
-            )
+        AksjonspunktDefinisjon.entries
+            .filterNot { it == AksjonspunktDefinisjon.UNDEFINED }
+            .filterNot { it.erAutopunkt() }
+            .map { apDefinisjon ->
+                KodeverkVerdiDto(
+                    verdi = apDefinisjon.kode,
+                    visningsnavn = apDefinisjon.kode + " - " + apDefinisjon.navn,
+                    beskrivelse = null,
+                    gruppering = gruppering(apDefinisjon.kode)
+                )
+            }
+
+    // TODO: Denne gruppering-funksjonen er midlertidig for å iverta dagens gruppering.
+    //  Den bør erstattes med en løsning som bruker enten skjermlenkeType eller behandlingSteg.
+    private fun gruppering(kode: String): String {
+        return when (kode) {
+            "5053", "5077", "5089", "9001", "9020", "5030", "5068" -> "Innledende behandling"
+            "9200", "9201", "9202" -> "Om barnet"
+            "9069", "9071", "9203" -> "Mangler inntektsmelding"
+            "5038", "5039", "5049", "5046", "5047", "5052", "5058", "5084", "6014", "6015" -> "Beregning"
+            "9005", "9007", "9008" -> "Flyttesaker"
+            "5015", "5028", "5033", "5034" -> "Fatte vedtak"
+            "9291", "9292", "9016" -> "Uttak"
+            "5056", "5059" -> "Uspesifisert"
+            else -> "Uspesifisert"
         }
+    }
 
     private fun aksjonspunktVerdierK9Klage() =
         no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon.entries
             .filterNot { it == no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon.UNDEFINED }
+            .filterNot { it.erAutopunkt() }
             .map { apDefinisjon ->
                 KodeverkVerdiDto(
                     verdi = KlageEventTilOppgaveMapper.KLAGE_PREFIX + apDefinisjon.kode,
-                    visningsnavn = KlageEventTilOppgaveMapper.KLAGE_PREFIX_VISNING + apDefinisjon.navn,
+                    visningsnavn = apDefinisjon.kode + " - " + KlageEventTilOppgaveMapper.KLAGE_PREFIX_VISNING + apDefinisjon.navn,
                     beskrivelse = null,
-                    gruppering = when (apDefinisjon.aksjonspunktType) {
-                        no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktType.AUTOPUNKT -> "AUTOPUNKT"
-                        no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktType.MANUELL -> apDefinisjon.behandlingSteg.navn
-                        else -> "UDEFINERT"
-                    }
+                    gruppering = gruppering(apDefinisjon.kode)
                 )
             }
 
@@ -208,7 +219,10 @@ class OmrådeSetup(
             eksternId = "Venteårsak",
             beskrivelse = null,
             uttømmende = true,
-            verdier = no.nav.k9.kodeverk.behandling.aksjonspunkt.Venteårsak.entries.lagK9Dto(beskrivelse = null) + no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.Venteårsak.entries.lageK9KlageDto(beskrivelse = null, prefiks = false),
+            verdier = no.nav.k9.kodeverk.behandling.aksjonspunkt.Venteårsak.entries.lagK9Dto(beskrivelse = null) + no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.Venteårsak.entries.lageK9KlageDto(
+                beskrivelse = null,
+                prefiks = false
+            ),
         )
         feltdefinisjonTjeneste.oppdater(kodeverkDto)
     }
