@@ -20,7 +20,9 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetyperDto
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktKodeDefinisjon as K9KlageAksjonspunktKode
 import no.nav.k9.kodeverk.api.Kodeverdi as KodeverdiK9Sak
+import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktKodeDefinisjon as K9SakAksjonspunktKode
 
 class OmrådeSetup(
     private val områdeRepository: OmrådeRepository,
@@ -133,14 +135,52 @@ class OmrådeSetup(
     //  Den bør erstattes med en løsning som bruker enten skjermlenkeType eller behandlingSteg.
     private fun gruppering(kode: String): String {
         return when (kode) {
-            "5053", "5077", "5089", "9001", "9020", "5030", "5068" -> "Innledende behandling"
-            "9200", "9201", "9202" -> "Om barnet"
-            "9069", "9071", "9203" -> "Mangler inntektsmelding"
-            "5038", "5039", "5049", "5046", "5047", "5052", "5058", "5084", "6014", "6015" -> "Beregning"
-            "9005", "9007", "9008" -> "Flyttesaker"
-            "5015", "5028", "5033", "5034" -> "Fatte vedtak"
-            "9291", "9292", "9016" -> "Uttak"
-            "5056", "5059" -> "Uspesifisert"
+            K9SakAksjonspunktKode.AVKLAR_FORTSATT_MEDLEMSKAP_KODE,
+            K9SakAksjonspunktKode.KONTROLLER_OPPLYSNINGER_OM_SØKNADSFRIST_KODE,
+            K9SakAksjonspunktKode.VURDER_OPPTJENINGSVILKÅRET_KODE,
+            K9SakAksjonspunktKode.KONTROLLER_LEGEERKLÆRING_KODE,
+            K9SakAksjonspunktKode.AVKLAR_OMSORGEN_FOR_KODE_V2,
+            K9SakAksjonspunktKode.AVKLAR_VERGE_KODE,
+            K9SakAksjonspunktKode.AUTOMATISK_MARKERING_AV_UTENLANDSSAK_KODE -> "Innledende behandling"
+
+            K9SakAksjonspunktKode.VURDER_NATTEVÅK,
+            K9SakAksjonspunktKode.VURDER_BEREDSKAP,
+            K9SakAksjonspunktKode.VURDER_RETT_ETTER_PLEIETRENGENDES_DØD -> "Om barnet"
+
+            K9SakAksjonspunktKode.AVKLAR_KOMPLETT_NOK_FOR_BEREGNING_KODE,
+            K9SakAksjonspunktKode.ENDELING_AVKLAR_KOMPLETT_NOK_FOR_BEREGNING_KODE,
+            K9SakAksjonspunktKode.MANGLER_AKTIVITETER -> "Mangler inntektsmelding"
+
+            K9SakAksjonspunktKode.FASTSETT_BEREGNINGSGRUNNLAG_ARBEIDSTAKER_FRILANS_KODE,
+            K9SakAksjonspunktKode.VURDER_VARIG_ENDRET_ELLER_NYOPPSTARTET_NÆRING_SELVSTENDIG_NÆRINGSDRIVENDE_KODE,
+            K9SakAksjonspunktKode.FASTSETT_BEREGNINGSGRUNNLAG_FOR_SN_NY_I_ARBEIDSLIVET_KODE,
+            K9SakAksjonspunktKode.FORDEL_BEREGNINGSGRUNNLAG_KODE,
+            K9SakAksjonspunktKode.FASTSETT_BEREGNINGSGRUNNLAG_TIDSBEGRENSET_ARBEIDSFORHOLD_KODE,
+            K9SakAksjonspunktKode.AVKLAR_AKTIVITETER_KODE,
+            K9SakAksjonspunktKode.VURDER_FAKTA_FOR_ATFL_SN_KODE,
+            K9SakAksjonspunktKode.VURDER_FEILUTBETALING_KODE,
+            K9SakAksjonspunktKode.OVERSTYRING_AV_BEREGNINGSAKTIVITETER_KODE,
+            K9SakAksjonspunktKode.OVERSTYRING_AV_BEREGNINGSGRUNNLAG_KODE -> "Beregning"
+
+            K9SakAksjonspunktKode.OVERSTYR_BEREGNING_INPUT,
+            K9SakAksjonspunktKode.TRENGER_SØKNAD_FOR_INFOTRYGD_PERIODE,
+            K9SakAksjonspunktKode.TRENGER_SØKNAD_FOR_INFOTRYGD_PERIODE_ANNEN_PART -> "Flyttesaker"
+
+            K9SakAksjonspunktKode.FORESLÅ_VEDTAK_KODE,
+            K9SakAksjonspunktKode.FORESLÅ_VEDTAK_MANUELT_KODE,
+            K9SakAksjonspunktKode.VURDERE_ANNEN_YTELSE_FØR_VEDTAK_KODE,
+            K9SakAksjonspunktKode.VURDERE_DOKUMENT_FØR_VEDTAK_KODE,
+            K9KlageAksjonspunktKode.FORESLÅ_VEDTAK_KODE,
+            K9KlageAksjonspunktKode.VURDERE_ANNEN_YTELSE_FØR_VEDTAK_KODE,
+            K9KlageAksjonspunktKode.VURDERE_DOKUMENT_FØR_VEDTAK_KODE -> "Fatte vedtak"
+
+            K9SakAksjonspunktKode.VURDER_DATO_NY_REGEL_UTTAK,
+            K9SakAksjonspunktKode.VURDER_OVERLAPPENDE_SØSKENSAK_KODE,
+            K9SakAksjonspunktKode.VURDER_NYOPPSTARTET -> "Uttak"
+
+            K9SakAksjonspunktKode.KONTROLL_AV_MANUELT_OPPRETTET_REVURDERINGSBEHANDLING_KODE,
+            K9SakAksjonspunktKode.VURDER_REFUSJON_BERGRUNN_KODE -> "Uspesifisert"
+
             else -> "Uspesifisert"
         }
     }
