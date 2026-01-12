@@ -20,9 +20,8 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetyperDto
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktKodeDefinisjon as K9KlageAksjonspunktKode
+import no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon as KlageAksjonspunktDefinisjon
 import no.nav.k9.kodeverk.api.Kodeverdi as KodeverdiK9Sak
-import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktKodeDefinisjon as K9SakAksjonspunktKode
 
 class OmrådeSetup(
     private val områdeRepository: OmrådeRepository,
@@ -127,74 +126,80 @@ class OmrådeSetup(
                     verdi = apDefinisjon.kode,
                     visningsnavn = apDefinisjon.kode + " - " + apDefinisjon.navn,
                     beskrivelse = null,
-                    gruppering = gruppering(apDefinisjon.kode)
+                    gruppering = grupperingK9Sak(apDefinisjon)
                 )
             }
 
     // TODO: Denne gruppering-funksjonen er midlertidig for å iverta dagens gruppering.
     //  Den bør erstattes med en løsning som bruker enten skjermlenkeType eller behandlingSteg.
-    private fun gruppering(kode: String): String {
-        return when (kode) {
-            K9SakAksjonspunktKode.AVKLAR_FORTSATT_MEDLEMSKAP_KODE,
-            K9SakAksjonspunktKode.KONTROLLER_OPPLYSNINGER_OM_SØKNADSFRIST_KODE,
-            K9SakAksjonspunktKode.VURDER_OPPTJENINGSVILKÅRET_KODE,
-            K9SakAksjonspunktKode.KONTROLLER_LEGEERKLÆRING_KODE,
-            K9SakAksjonspunktKode.AVKLAR_OMSORGEN_FOR_KODE_V2,
-            K9SakAksjonspunktKode.AVKLAR_VERGE_KODE,
-            K9SakAksjonspunktKode.AUTOMATISK_MARKERING_AV_UTENLANDSSAK_KODE -> "Innledende behandling"
+    private fun grupperingK9Sak(ap: AksjonspunktDefinisjon): String {
+        return when (ap) {
+            AksjonspunktDefinisjon.AVKLAR_FORTSATT_MEDLEMSKAP,
+            AksjonspunktDefinisjon.KONTROLLER_OPPLYSNINGER_OM_SØKNADSFRIST,
+            AksjonspunktDefinisjon.VURDER_OPPTJENINGSVILKÅRET,
+            AksjonspunktDefinisjon.KONTROLLER_LEGEERKLÆRING,
+            AksjonspunktDefinisjon.VURDER_OMSORGEN_FOR_V2,
+            AksjonspunktDefinisjon.AVKLAR_VERGE,
+            AksjonspunktDefinisjon.AUTOMATISK_MARKERING_AV_UTENLANDSSAK -> "Innledende behandling"
 
-            K9SakAksjonspunktKode.VURDER_NATTEVÅK,
-            K9SakAksjonspunktKode.VURDER_BEREDSKAP,
-            K9SakAksjonspunktKode.VURDER_RETT_ETTER_PLEIETRENGENDES_DØD -> "Om barnet"
+            AksjonspunktDefinisjon.VURDER_NATTEVÅK,
+            AksjonspunktDefinisjon.VURDER_BEREDSKAP,
+            AksjonspunktDefinisjon.VURDER_RETT_ETTER_PLEIETRENGENDES_DØD -> "Om barnet"
 
-            K9SakAksjonspunktKode.AVKLAR_KOMPLETT_NOK_FOR_BEREGNING_KODE,
-            K9SakAksjonspunktKode.ENDELING_AVKLAR_KOMPLETT_NOK_FOR_BEREGNING_KODE,
-            K9SakAksjonspunktKode.MANGLER_AKTIVITETER -> "Mangler inntektsmelding"
+            AksjonspunktDefinisjon.AVKLAR_KOMPLETT_NOK_FOR_BEREGNING,
+            AksjonspunktDefinisjon.ENDELIG_AVKLAR_KOMPLETT_NOK_FOR_BEREGNING,
+            AksjonspunktDefinisjon.MANGLER_AKTIVITETER -> "Mangler inntektsmelding"
 
-            K9SakAksjonspunktKode.FASTSETT_BEREGNINGSGRUNNLAG_ARBEIDSTAKER_FRILANS_KODE,
-            K9SakAksjonspunktKode.VURDER_VARIG_ENDRET_ELLER_NYOPPSTARTET_NÆRING_SELVSTENDIG_NÆRINGSDRIVENDE_KODE,
-            K9SakAksjonspunktKode.FASTSETT_BEREGNINGSGRUNNLAG_FOR_SN_NY_I_ARBEIDSLIVET_KODE,
-            K9SakAksjonspunktKode.FORDEL_BEREGNINGSGRUNNLAG_KODE,
-            K9SakAksjonspunktKode.FASTSETT_BEREGNINGSGRUNNLAG_TIDSBEGRENSET_ARBEIDSFORHOLD_KODE,
-            K9SakAksjonspunktKode.AVKLAR_AKTIVITETER_KODE,
-            K9SakAksjonspunktKode.VURDER_FAKTA_FOR_ATFL_SN_KODE,
-            K9SakAksjonspunktKode.VURDER_FEILUTBETALING_KODE,
-            K9SakAksjonspunktKode.OVERSTYRING_AV_BEREGNINGSAKTIVITETER_KODE,
-            K9SakAksjonspunktKode.OVERSTYRING_AV_BEREGNINGSGRUNNLAG_KODE -> "Beregning"
+            AksjonspunktDefinisjon.FASTSETT_BEREGNINGSGRUNNLAG_ARBEIDSTAKER_FRILANS,
+            AksjonspunktDefinisjon.VURDER_VARIG_ENDRET_ELLER_NYOPPSTARTET_NÆRING_SELVSTENDIG_NÆRINGSDRIVENDE,
+            AksjonspunktDefinisjon.FASTSETT_BEREGNINGSGRUNNLAG_FOR_SN_NY_I_ARBEIDSLIVET,
+            AksjonspunktDefinisjon.FORDEL_BEREGNINGSGRUNNLAG,
+            AksjonspunktDefinisjon.FASTSETT_BEREGNINGSGRUNNLAG_TIDSBEGRENSET_ARBEIDSFORHOLD,
+            AksjonspunktDefinisjon.AVKLAR_AKTIVITETER,
+            AksjonspunktDefinisjon.VURDER_FAKTA_FOR_ATFL_SN,
+            AksjonspunktDefinisjon.VURDER_FEILUTBETALING,
+            AksjonspunktDefinisjon.OVERSTYRING_AV_BEREGNINGSAKTIVITETER,
+            AksjonspunktDefinisjon.OVERSTYRING_AV_BEREGNINGSGRUNNLAG -> "Beregning"
 
-            K9SakAksjonspunktKode.OVERSTYR_BEREGNING_INPUT,
-            K9SakAksjonspunktKode.TRENGER_SØKNAD_FOR_INFOTRYGD_PERIODE,
-            K9SakAksjonspunktKode.TRENGER_SØKNAD_FOR_INFOTRYGD_PERIODE_ANNEN_PART -> "Flyttesaker"
+            AksjonspunktDefinisjon.OVERSTYR_BEREGNING_INPUT,
+            AksjonspunktDefinisjon.TRENGER_SØKNAD_FOR_INFOTRYGD_PERIODE,
+            AksjonspunktDefinisjon.TRENGER_SØKNAD_FOR_INFOTRYGD_PERIODE_ANNEN_PART -> "Flyttesaker"
 
-            K9SakAksjonspunktKode.FORESLÅ_VEDTAK_KODE,
-            K9SakAksjonspunktKode.FORESLÅ_VEDTAK_MANUELT_KODE,
-            K9SakAksjonspunktKode.VURDERE_ANNEN_YTELSE_FØR_VEDTAK_KODE,
-            K9SakAksjonspunktKode.VURDERE_DOKUMENT_FØR_VEDTAK_KODE,
-            K9KlageAksjonspunktKode.FORESLÅ_VEDTAK_KODE,
-            K9KlageAksjonspunktKode.VURDERE_ANNEN_YTELSE_FØR_VEDTAK_KODE,
-            K9KlageAksjonspunktKode.VURDERE_DOKUMENT_FØR_VEDTAK_KODE -> "Fatte vedtak"
+            AksjonspunktDefinisjon.FORESLÅ_VEDTAK,
+            AksjonspunktDefinisjon.FORESLÅ_VEDTAK_MANUELT,
+            AksjonspunktDefinisjon.VURDERE_ANNEN_YTELSE_FØR_VEDTAK,
+            AksjonspunktDefinisjon.VURDERE_DOKUMENT_FØR_VEDTAK -> "Fatte vedtak"
 
-            K9SakAksjonspunktKode.VURDER_DATO_NY_REGEL_UTTAK,
-            K9SakAksjonspunktKode.VURDER_OVERLAPPENDE_SØSKENSAK_KODE,
-            K9SakAksjonspunktKode.VURDER_NYOPPSTARTET -> "Uttak"
+            AksjonspunktDefinisjon.VURDER_DATO_NY_REGEL_UTTAK,
+            AksjonspunktDefinisjon.VURDER_OVERLAPPENDE_SØSKENSAKER,
+            AksjonspunktDefinisjon.VURDER_NYOPPSTARTET -> "Uttak"
 
-            K9SakAksjonspunktKode.KONTROLL_AV_MANUELT_OPPRETTET_REVURDERINGSBEHANDLING_KODE,
-            K9SakAksjonspunktKode.VURDER_REFUSJON_BERGRUNN_KODE -> "Uspesifisert"
+            AksjonspunktDefinisjon.KONTROLL_AV_MANUELT_OPPRETTET_REVURDERINGSBEHANDLING,
+            AksjonspunktDefinisjon.VURDER_REFUSJON_BERGRUNN -> "Uspesifisert"
+
+            else -> "Uspesifisert"
+        }
+    }
+
+    private fun grupperingK9Klage(ap: KlageAksjonspunktDefinisjon): String {
+        return when (ap) {
+            KlageAksjonspunktDefinisjon.FORESLÅ_VEDTAK,
+            KlageAksjonspunktDefinisjon.VURDERE_DOKUMENT_FØR_VEDTAK -> "Fatte vedtak"
 
             else -> "Uspesifisert"
         }
     }
 
     private fun aksjonspunktVerdierK9Klage() =
-        no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon.entries
-            .filterNot { it == no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon.UNDEFINED }
+        KlageAksjonspunktDefinisjon.entries
+            .filterNot { it == KlageAksjonspunktDefinisjon.UNDEFINED }
             .filterNot { it.erAutopunkt() }
             .map { apDefinisjon ->
                 KodeverkVerdiDto(
                     verdi = KlageEventTilOppgaveMapper.KLAGE_PREFIX + apDefinisjon.kode,
                     visningsnavn = apDefinisjon.kode + " - " + KlageEventTilOppgaveMapper.KLAGE_PREFIX_VISNING + apDefinisjon.navn,
                     beskrivelse = null,
-                    gruppering = gruppering(apDefinisjon.kode)
+                    gruppering = grupperingK9Klage(apDefinisjon)
                 )
             }
 
