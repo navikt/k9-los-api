@@ -61,7 +61,6 @@ import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.RequestContextService
 import no.nav.k9.los.nyoppgavestyring.ko.KøpåvirkendeHendelse
 import no.nav.k9.los.nyoppgavestyring.ko.OppgaveKoTjeneste
 import no.nav.k9.los.nyoppgavestyring.ko.db.OppgaveKoRepository
-import no.nav.k9.los.nyoppgavestyring.kodeverk.HentKodeverkTjeneste
 import no.nav.k9.los.nyoppgavestyring.lagretsok.LagretSøkRepository
 import no.nav.k9.los.nyoppgavestyring.lagretsok.LagretSøkTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonRepository
@@ -263,10 +262,6 @@ fun common(app: Application, config: Configuration) = module {
 
     single {
         DriftsmeldingTjeneste(driftsmeldingRepository = get())
-    }
-
-    single {
-        HentKodeverkTjeneste()
     }
 
     single {
