@@ -120,19 +120,22 @@ class OmrådeSetup(
     private fun aksjonspunktVerdierK9Sak() =
         AksjonspunktDefinisjon.entries
             .filterNot { it == AksjonspunktDefinisjon.UNDEFINED }
-            .filterNot { it.erAutopunkt() }
             .map { apDefinisjon ->
+                val (gruppering, favoritt) = grupperingK9Sak(apDefinisjon)
                 KodeverkVerdiDto(
                     verdi = apDefinisjon.kode,
                     visningsnavn = apDefinisjon.kode + " - " + apDefinisjon.navn,
                     beskrivelse = null,
-                    gruppering = grupperingK9Sak(apDefinisjon)
+                    gruppering = gruppering,
+                    favoritt = favoritt
                 )
             }
 
     // TODO: Denne gruppering-funksjonen er midlertidig for å iverta dagens gruppering.
     //  Den bør erstattes med en løsning som bruker enten skjermlenkeType eller behandlingSteg.
-    private fun grupperingK9Sak(ap: AksjonspunktDefinisjon): String {
+    private fun grupperingK9Sak(ap: AksjonspunktDefinisjon): Pair<String, Boolean> {
+        if (ap.erAutopunkt()) return "Autopunkt k9-sak" to false
+
         return when (ap) {
             AksjonspunktDefinisjon.AVKLAR_FORTSATT_MEDLEMSKAP,
             AksjonspunktDefinisjon.KONTROLLER_OPPLYSNINGER_OM_SØKNADSFRIST,
@@ -140,15 +143,15 @@ class OmrådeSetup(
             AksjonspunktDefinisjon.KONTROLLER_LEGEERKLÆRING,
             AksjonspunktDefinisjon.VURDER_OMSORGEN_FOR_V2,
             AksjonspunktDefinisjon.AVKLAR_VERGE,
-            AksjonspunktDefinisjon.AUTOMATISK_MARKERING_AV_UTENLANDSSAK -> "Innledende behandling"
+            AksjonspunktDefinisjon.AUTOMATISK_MARKERING_AV_UTENLANDSSAK -> "Innledende behandling" to true
 
             AksjonspunktDefinisjon.VURDER_NATTEVÅK,
             AksjonspunktDefinisjon.VURDER_BEREDSKAP,
-            AksjonspunktDefinisjon.VURDER_RETT_ETTER_PLEIETRENGENDES_DØD -> "Om barnet"
+            AksjonspunktDefinisjon.VURDER_RETT_ETTER_PLEIETRENGENDES_DØD -> "Om barnet" to true
 
             AksjonspunktDefinisjon.AVKLAR_KOMPLETT_NOK_FOR_BEREGNING,
             AksjonspunktDefinisjon.ENDELIG_AVKLAR_KOMPLETT_NOK_FOR_BEREGNING,
-            AksjonspunktDefinisjon.MANGLER_AKTIVITETER -> "Mangler inntektsmelding"
+            AksjonspunktDefinisjon.MANGLER_AKTIVITETER -> "Mangler inntektsmelding" to true
 
             AksjonspunktDefinisjon.FASTSETT_BEREGNINGSGRUNNLAG_ARBEIDSTAKER_FRILANS,
             AksjonspunktDefinisjon.VURDER_VARIG_ENDRET_ELLER_NYOPPSTARTET_NÆRING_SELVSTENDIG_NÆRINGSDRIVENDE,
@@ -159,47 +162,50 @@ class OmrådeSetup(
             AksjonspunktDefinisjon.VURDER_FAKTA_FOR_ATFL_SN,
             AksjonspunktDefinisjon.VURDER_FEILUTBETALING,
             AksjonspunktDefinisjon.OVERSTYRING_AV_BEREGNINGSAKTIVITETER,
-            AksjonspunktDefinisjon.OVERSTYRING_AV_BEREGNINGSGRUNNLAG -> "Beregning"
+            AksjonspunktDefinisjon.OVERSTYRING_AV_BEREGNINGSGRUNNLAG -> "Beregning" to true
 
             AksjonspunktDefinisjon.OVERSTYR_BEREGNING_INPUT,
             AksjonspunktDefinisjon.TRENGER_SØKNAD_FOR_INFOTRYGD_PERIODE,
-            AksjonspunktDefinisjon.TRENGER_SØKNAD_FOR_INFOTRYGD_PERIODE_ANNEN_PART -> "Flyttesaker"
+            AksjonspunktDefinisjon.TRENGER_SØKNAD_FOR_INFOTRYGD_PERIODE_ANNEN_PART -> "Flyttesaker" to true
 
             AksjonspunktDefinisjon.FORESLÅ_VEDTAK,
             AksjonspunktDefinisjon.FORESLÅ_VEDTAK_MANUELT,
             AksjonspunktDefinisjon.VURDERE_ANNEN_YTELSE_FØR_VEDTAK,
-            AksjonspunktDefinisjon.VURDERE_DOKUMENT_FØR_VEDTAK -> "Fatte vedtak"
+            AksjonspunktDefinisjon.VURDERE_DOKUMENT_FØR_VEDTAK -> "Fatte vedtak" to true
 
             AksjonspunktDefinisjon.VURDER_DATO_NY_REGEL_UTTAK,
             AksjonspunktDefinisjon.VURDER_OVERLAPPENDE_SØSKENSAKER,
-            AksjonspunktDefinisjon.VURDER_NYOPPSTARTET -> "Uttak"
+            AksjonspunktDefinisjon.VURDER_NYOPPSTARTET -> "Uttak" to true
 
             AksjonspunktDefinisjon.KONTROLL_AV_MANUELT_OPPRETTET_REVURDERINGSBEHANDLING,
-            AksjonspunktDefinisjon.VURDER_REFUSJON_BERGRUNN -> "Uspesifisert"
+            AksjonspunktDefinisjon.VURDER_REFUSJON_BERGRUNN -> "Uspesifisert" to true
 
-            else -> "Uspesifisert"
+            else -> "Øvrige aksjonspunkter k9-sak" to false
         }
     }
 
-    private fun grupperingK9Klage(ap: KlageAksjonspunktDefinisjon): String {
+    private fun grupperingK9Klage(ap: KlageAksjonspunktDefinisjon): Pair<String, Boolean> {
+        if (ap.erAutopunkt()) return "Autopunkt k9-klage" to false
+
         return when (ap) {
             KlageAksjonspunktDefinisjon.FORESLÅ_VEDTAK,
-            KlageAksjonspunktDefinisjon.VURDERE_DOKUMENT_FØR_VEDTAK -> "Fatte vedtak"
+            KlageAksjonspunktDefinisjon.VURDERE_DOKUMENT_FØR_VEDTAK -> "Fatte vedtak" to true
 
-            else -> "Uspesifisert"
+            else -> "Øvrige aksjonspunkter k9-klage" to false
         }
     }
 
     private fun aksjonspunktVerdierK9Klage() =
         KlageAksjonspunktDefinisjon.entries
             .filterNot { it == KlageAksjonspunktDefinisjon.UNDEFINED }
-            .filterNot { it.erAutopunkt() }
             .map { apDefinisjon ->
+                val (gruppering, favoritt) = grupperingK9Klage(apDefinisjon)
                 KodeverkVerdiDto(
                     verdi = KlageEventTilOppgaveMapper.KLAGE_PREFIX + apDefinisjon.kode,
                     visningsnavn = apDefinisjon.kode + " - " + KlageEventTilOppgaveMapper.KLAGE_PREFIX_VISNING + apDefinisjon.navn,
                     beskrivelse = null,
-                    gruppering = grupperingK9Klage(apDefinisjon)
+                    gruppering = gruppering,
+                    favoritt = favoritt
                 )
             }
 
