@@ -56,7 +56,6 @@ import no.nav.k9.los.nyoppgavestyring.infrastruktur.jobbplanlegger.Tidsvindu
 import no.nav.k9.los.nyoppgavestyring.innloggetbruker.InnloggetBrukerApi
 import no.nav.k9.los.nyoppgavestyring.ko.KøpåvirkendeHendelse
 import no.nav.k9.los.nyoppgavestyring.ko.OppgaveKoApis
-import no.nav.k9.los.nyoppgavestyring.kodeverk.KodeverkApis
 import no.nav.k9.los.nyoppgavestyring.lagretsok.LagretSøkApi
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonApi
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Api
@@ -241,8 +240,6 @@ private fun Route.api() {
         }
 
         InnloggetBrukerApi()
-
-        route("kodeverk") { KodeverkApis() }
 
         route("ny-oppgavestyring") {
             route("ko") { OppgaveKoApis() }

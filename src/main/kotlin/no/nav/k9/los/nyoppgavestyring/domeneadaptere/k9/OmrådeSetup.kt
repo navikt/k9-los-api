@@ -20,6 +20,7 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetyperDto
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon as KlageAksjonspunktDefinisjon
 import no.nav.k9.kodeverk.api.Kodeverdi as KodeverdiK9Sak
 
 class OmrådeSetup(
@@ -117,22 +118,94 @@ class OmrådeSetup(
     }
 
     private fun aksjonspunktVerdierK9Sak() =
-        AksjonspunktDefinisjon.entries.filterNot { it == AksjonspunktDefinisjon.UNDEFINED }.map { apDefinisjon ->
-            KodeverkVerdiDto(
-                verdi = apDefinisjon.kode,
-                visningsnavn = apDefinisjon.navn,
-                beskrivelse = null,
-            )
+        AksjonspunktDefinisjon.entries
+            .filterNot { it == AksjonspunktDefinisjon.UNDEFINED }
+            .map { apDefinisjon ->
+                val (gruppering, favoritt) = grupperingK9Sak(apDefinisjon)
+                KodeverkVerdiDto(
+                    verdi = apDefinisjon.kode,
+                    visningsnavn = apDefinisjon.kode + " - " + apDefinisjon.navn,
+                    beskrivelse = null,
+                    gruppering = gruppering,
+                    favoritt = favoritt
+                )
+            }
+
+    // TODO: Denne gruppering-funksjonen er midlertidig for å iverta dagens gruppering.
+    //  Den bør erstattes med en løsning som bruker enten skjermlenkeType eller behandlingSteg.
+    private fun grupperingK9Sak(ap: AksjonspunktDefinisjon): Pair<String, Boolean> {
+        if (ap.erAutopunkt()) return "Autopunkt k9-sak" to false
+
+        return when (ap) {
+            AksjonspunktDefinisjon.AVKLAR_FORTSATT_MEDLEMSKAP,
+            AksjonspunktDefinisjon.KONTROLLER_OPPLYSNINGER_OM_SØKNADSFRIST,
+            AksjonspunktDefinisjon.VURDER_OPPTJENINGSVILKÅRET,
+            AksjonspunktDefinisjon.KONTROLLER_LEGEERKLÆRING,
+            AksjonspunktDefinisjon.VURDER_OMSORGEN_FOR_V2,
+            AksjonspunktDefinisjon.AVKLAR_VERGE,
+            AksjonspunktDefinisjon.AUTOMATISK_MARKERING_AV_UTENLANDSSAK -> "Innledende behandling" to true
+
+            AksjonspunktDefinisjon.VURDER_NATTEVÅK,
+            AksjonspunktDefinisjon.VURDER_BEREDSKAP,
+            AksjonspunktDefinisjon.VURDER_RETT_ETTER_PLEIETRENGENDES_DØD -> "Om barnet" to true
+
+            AksjonspunktDefinisjon.AVKLAR_KOMPLETT_NOK_FOR_BEREGNING,
+            AksjonspunktDefinisjon.ENDELIG_AVKLAR_KOMPLETT_NOK_FOR_BEREGNING,
+            AksjonspunktDefinisjon.MANGLER_AKTIVITETER -> "Mangler inntektsmelding" to true
+
+            AksjonspunktDefinisjon.FASTSETT_BEREGNINGSGRUNNLAG_ARBEIDSTAKER_FRILANS,
+            AksjonspunktDefinisjon.VURDER_VARIG_ENDRET_ELLER_NYOPPSTARTET_NÆRING_SELVSTENDIG_NÆRINGSDRIVENDE,
+            AksjonspunktDefinisjon.FASTSETT_BEREGNINGSGRUNNLAG_FOR_SN_NY_I_ARBEIDSLIVET,
+            AksjonspunktDefinisjon.FORDEL_BEREGNINGSGRUNNLAG,
+            AksjonspunktDefinisjon.FASTSETT_BEREGNINGSGRUNNLAG_TIDSBEGRENSET_ARBEIDSFORHOLD,
+            AksjonspunktDefinisjon.AVKLAR_AKTIVITETER,
+            AksjonspunktDefinisjon.VURDER_FAKTA_FOR_ATFL_SN,
+            AksjonspunktDefinisjon.VURDER_FEILUTBETALING,
+            AksjonspunktDefinisjon.OVERSTYRING_AV_BEREGNINGSAKTIVITETER,
+            AksjonspunktDefinisjon.OVERSTYRING_AV_BEREGNINGSGRUNNLAG -> "Beregning" to true
+
+            AksjonspunktDefinisjon.OVERSTYR_BEREGNING_INPUT,
+            AksjonspunktDefinisjon.TRENGER_SØKNAD_FOR_INFOTRYGD_PERIODE,
+            AksjonspunktDefinisjon.TRENGER_SØKNAD_FOR_INFOTRYGD_PERIODE_ANNEN_PART -> "Flyttesaker" to true
+
+            AksjonspunktDefinisjon.FORESLÅ_VEDTAK,
+            AksjonspunktDefinisjon.FORESLÅ_VEDTAK_MANUELT,
+            AksjonspunktDefinisjon.VURDERE_ANNEN_YTELSE_FØR_VEDTAK,
+            AksjonspunktDefinisjon.VURDERE_DOKUMENT_FØR_VEDTAK -> "Fatte vedtak" to true
+
+            AksjonspunktDefinisjon.VURDER_DATO_NY_REGEL_UTTAK,
+            AksjonspunktDefinisjon.VURDER_OVERLAPPENDE_SØSKENSAKER,
+            AksjonspunktDefinisjon.VURDER_NYOPPSTARTET -> "Uttak" to true
+
+            AksjonspunktDefinisjon.KONTROLL_AV_MANUELT_OPPRETTET_REVURDERINGSBEHANDLING,
+            AksjonspunktDefinisjon.VURDER_REFUSJON_BERGRUNN -> "Uspesifisert" to true
+
+            else -> "Øvrige aksjonspunkter k9-sak" to false
         }
+    }
+
+    private fun grupperingK9Klage(ap: KlageAksjonspunktDefinisjon): Pair<String, Boolean> {
+        if (ap.erAutopunkt()) return "Autopunkt k9-klage" to false
+
+        return when (ap) {
+            KlageAksjonspunktDefinisjon.FORESLÅ_VEDTAK,
+            KlageAksjonspunktDefinisjon.VURDERE_DOKUMENT_FØR_VEDTAK -> "Fatte vedtak" to true
+
+            else -> "Øvrige aksjonspunkter k9-klage" to false
+        }
+    }
 
     private fun aksjonspunktVerdierK9Klage() =
-        no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon.entries
-            .filterNot { it == no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon.UNDEFINED }
+        KlageAksjonspunktDefinisjon.entries
+            .filterNot { it == KlageAksjonspunktDefinisjon.UNDEFINED }
             .map { apDefinisjon ->
+                val (gruppering, favoritt) = grupperingK9Klage(apDefinisjon)
                 KodeverkVerdiDto(
                     verdi = KlageEventTilOppgaveMapper.KLAGE_PREFIX + apDefinisjon.kode,
-                    visningsnavn = KlageEventTilOppgaveMapper.KLAGE_PREFIX_VISNING + apDefinisjon.navn,
+                    visningsnavn = apDefinisjon.kode + " - " + KlageEventTilOppgaveMapper.KLAGE_PREFIX_VISNING + apDefinisjon.navn,
                     beskrivelse = null,
+                    gruppering = gruppering,
+                    favoritt = favoritt
                 )
             }
 
@@ -197,7 +270,10 @@ class OmrådeSetup(
             eksternId = "Venteårsak",
             beskrivelse = null,
             uttømmende = true,
-            verdier = no.nav.k9.kodeverk.behandling.aksjonspunkt.Venteårsak.entries.lagK9Dto(beskrivelse = null) + no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.Venteårsak.entries.lageK9KlageDto(beskrivelse = null, prefiks = false),
+            verdier = no.nav.k9.kodeverk.behandling.aksjonspunkt.Venteårsak.entries.lagK9Dto(beskrivelse = null) + no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.Venteårsak.entries.lageK9KlageDto(
+                beskrivelse = null,
+                prefiks = false
+            ),
         )
         feltdefinisjonTjeneste.oppdater(kodeverkDto)
     }

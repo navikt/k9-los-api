@@ -5,4 +5,5 @@ data class KodeverkVerdiDto(
     val visningsnavn: String,
     val favoritt: Boolean = false,
     val beskrivelse: String? = null,
+    val gruppering: String? = null,
 )

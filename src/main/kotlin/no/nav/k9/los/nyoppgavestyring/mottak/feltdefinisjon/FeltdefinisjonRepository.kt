@@ -185,15 +185,16 @@ class FeltdefinisjonRepository(val områdeRepository: OmrådeRepository) {
             )
         )
         tx.batchPreparedNamedStatement("""
-            insert into kodeverk_verdi(kodeverk_id, verdi, visningsnavn, beskrivelse, favoritt)
-            VALUES (:kodeverkId, :verdi, :visningsnavn, :beskrivelse, :favoritt)
-            on conflict(kodeverk_id, verdi) do update set visningsnavn = :visningsnavn, beskrivelse = :beskrivelse, favoritt = :favoritt
+            insert into kodeverk_verdi(kodeverk_id, verdi, visningsnavn, gruppering, beskrivelse, favoritt)
+            VALUES (:kodeverkId, :verdi, :visningsnavn, :gruppering, :beskrivelse, :favoritt)
+            on conflict(kodeverk_id, verdi) do update set visningsnavn = :visningsnavn, gruppering = :gruppering, beskrivelse = :beskrivelse, favoritt = :favoritt
         """.trimIndent(),
             kodeverk.verdier.map { verdi ->
                 mapOf(
                     "kodeverkId" to kodeverkId,
                     "verdi" to verdi.verdi,
                     "visningsnavn" to verdi.visningsnavn,
+                    "gruppering" to verdi.gruppering,
                     "beskrivelse" to verdi.beskrivelse,
                     "favoritt" to verdi.favoritt
                 )
@@ -252,7 +253,8 @@ class FeltdefinisjonRepository(val områdeRepository: OmrådeRepository) {
                 verdi = kodeverkverdiRow.string("verdi"),
                 visningsnavn = kodeverkverdiRow.string("visningsnavn"),
                 beskrivelse = kodeverkverdiRow.stringOrNull("beskrivelse"),
-                favoritt = kodeverkverdiRow.boolean("favoritt")
+                favoritt = kodeverkverdiRow.boolean("favoritt"),
+                gruppering = kodeverkverdiRow.stringOrNull("gruppering")
             )
         }.asList
     )
