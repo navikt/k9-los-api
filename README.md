@@ -64,28 +64,11 @@ mvn --version
 
 ### GitHub Packages Autentisering
 
-Siden prosjektet bruker private NAV-pakker fra GitHub Packages, må du sette opp autentisering:
-
-1. Opprett en GitHub Personal Access Token (PAT) med `read:packages` scope <a href="https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token">her</a>
-
-2. Sett miljøvariabel:
-```bash
-export GITHUB_TOKEN="<DIN GIT PAT>"
-```
-
-3. Kopier Maven settings template:
-```bash
-cp settings.xml.template ~/.m2/settings.xml
-```
-
-Se [MAVEN_MIGRATION.md](MAVEN_MIGRATION.md) for mer detaljert informasjon.
+Siden prosjektet bruker private NAV-pakker fra GitHub Packages, må du sette opp autentisering. Se https://github.com/navikt/k9-verdikjede/tree/master/docs/utvikleroppsett
 
 ## Bygge prosjektet
 
 ```bash
-# Bygg hele prosjektet (uten tester - anbefalt for utvikling)
-mvn clean package -DskipTests
-
 # Bygg med tester (krever Docker)
 mvn clean package
 
