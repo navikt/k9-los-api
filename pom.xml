@@ -1,0 +1,533 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>no.nav.k9</groupId>
+    <artifactId>k9-los-api</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <packaging>jar</packaging>
+
+    <name>k9-los-api</name>
+    <description>k9los - produksjonsstyring for k9</description>
+
+    <properties>
+        <!-- Build Properties -->
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <java.version>21</java.version>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
+        <kotlin.version>2.2.0</kotlin.version>
+        <kotlin.compiler.jvmTarget>21</kotlin.compiler.jvmTarget>
+
+        <!-- Main Class -->
+        <main.class>no.nav.k9.los.K9LosKt</main.class>
+
+        <!-- Dependency Versions -->
+        <hikari.version>6.2.1</hikari.version>
+        <flyway.version>11.1.1</flyway.version>
+        <vault-jdbc.version>1.3.10</vault-jdbc.version>
+        <koin.version>4.1.1</koin.version>
+        <kotest.version>6.0.3</kotest.version>
+        <kotliquery.version>1.9.1</kotliquery.version>
+        <k9-sak.version>6.0.6</k9-sak.version>
+        <k9-klage.version>0.4.9</k9-klage.version>
+        <jackson.version>2.17.2</jackson.version>
+        <commons-text.version>1.13.0</commons-text.version>
+        <dusseldorf-ktor.version>7.0.6</dusseldorf-ktor.version>
+        <ktor.version>3.3.3</ktor.version>
+        <kafka.version>3.9.0</kafka.version>
+        <nav-tilgangskontroll.version>3.2024.01.24_10.14-f70bae69bd65</nav-tilgangskontroll.version>
+        <opentelemetry.version>1.46.0</opentelemetry.version>
+        <opentelemetry-instrumentation.version>2.11.0</opentelemetry-instrumentation.version>
+
+        <!-- Test Dependency Versions -->
+        <testcontainers.version>1.20.4</testcontainers.version>
+        <jsonassert.version>1.5.3</jsonassert.version>
+        <jupiter.version>5.11.4</jupiter.version>
+        <assertk.version>0.28.1</assertk.version>
+        <mockk.version>1.13.16</mockk.version>
+    </properties>
+
+    <repositories>
+        <repository>
+            <id>github-navikt</id>
+            <name>GitHub Packages - navikt</name>
+            <url>https://maven.pkg.github.com/navikt/dusseldorf-ktor</url>
+        </repository>
+        <repository>
+            <id>central</id>
+            <name>Maven Central</name>
+            <url>https://repo.maven.apache.org/maven2</url>
+        </repository>
+    </repositories>
+
+    <dependencyManagement>
+        <dependencies>
+            <!-- Jackson BOM for version management -->
+            <dependency>
+                <groupId>com.fasterxml.jackson</groupId>
+                <artifactId>jackson-bom</artifactId>
+                <version>${jackson.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <dependencies>
+        <!-- Kotlin Standard Library -->
+        <dependency>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-stdlib</artifactId>
+            <version>${kotlin.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jetbrains</groupId>
+            <artifactId>annotations</artifactId>
+            <version>23.0.0</version>
+        </dependency>
+
+        <!-- Server - Dusseldorf Ktor -->
+        <dependency>
+            <groupId>no.nav.helse</groupId>
+            <artifactId>dusseldorf-ktor-core</artifactId>
+            <version>${dusseldorf-ktor.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>no.nav.helse</groupId>
+            <artifactId>dusseldorf-ktor-jackson</artifactId>
+            <version>${dusseldorf-ktor.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>no.nav.helse</groupId>
+            <artifactId>dusseldorf-ktor-metrics</artifactId>
+            <version>${dusseldorf-ktor.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>no.nav.helse</groupId>
+            <artifactId>dusseldorf-ktor-health</artifactId>
+            <version>${dusseldorf-ktor.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>no.nav.helse</groupId>
+            <artifactId>dusseldorf-ktor-auth</artifactId>
+            <version>${dusseldorf-ktor.version}</version>
+        </dependency>
+
+        <!-- Database -->
+        <dependency>
+            <groupId>com.zaxxer</groupId>
+            <artifactId>HikariCP</artifactId>
+            <version>${hikari.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-database-postgresql</artifactId>
+            <version>${flyway.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>no.nav</groupId>
+            <artifactId>vault-jdbc</artifactId>
+            <version>${vault-jdbc.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.seratch</groupId>
+            <artifactId>kotliquery</artifactId>
+            <version>${kotliquery.version}</version>
+        </dependency>
+
+        <!-- Ktor -->
+        <dependency>
+            <groupId>io.ktor</groupId>
+            <artifactId>ktor-server-status-pages-jvm</artifactId>
+            <version>${ktor.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.ktor</groupId>
+            <artifactId>ktor-server-cors-jvm</artifactId>
+            <version>${ktor.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.ktor</groupId>
+            <artifactId>ktor-server-call-logging-jvm</artifactId>
+            <version>${ktor.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.ktor</groupId>
+            <artifactId>ktor-server-html-builder-jvm</artifactId>
+            <version>${ktor.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.ktor</groupId>
+            <artifactId>ktor-client-auth-jvm</artifactId>
+            <version>${ktor.version}</version>
+        </dependency>
+
+        <!-- Client -->
+        <dependency>
+            <groupId>io.ktor</groupId>
+            <artifactId>ktor-client-core-jvm</artifactId>
+            <version>${ktor.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.ktor</groupId>
+            <artifactId>ktor-client-java-jvm</artifactId>
+            <version>${ktor.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>no.nav.helse</groupId>
+            <artifactId>dusseldorf-oauth2-client</artifactId>
+            <version>${dusseldorf-ktor.version}</version>
+        </dependency>
+
+        <!-- Kafka -->
+        <dependency>
+            <groupId>org.apache.kafka</groupId>
+            <artifactId>kafka-streams</artifactId>
+            <version>${kafka.version}</version>
+            <exclusions>
+                <!-- Exclude RocksDB: not used in LOS, no file storage available, large binary size -->
+                <exclusion>
+                    <groupId>org.rocksdb</groupId>
+                    <artifactId>rocksdbjni</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <!-- Tilgangskontroll -->
+        <dependency>
+            <groupId>no.nav.sif.abac</groupId>
+            <artifactId>kontrakt</artifactId>
+            <version>1.6.0</version>
+        </dependency>
+
+        <!-- Kontrakter -->
+        <dependency>
+            <groupId>no.nav.k9.sak</groupId>
+            <artifactId>kontrakt</artifactId>
+            <version>${k9-sak.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>no.nav.k9.sak</groupId>
+            <artifactId>kodeverk</artifactId>
+            <version>${k9-sak.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>no.nav.k9.klage</groupId>
+            <artifactId>kontrakt</artifactId>
+            <version>${k9-klage.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>no.nav.k9.klage</groupId>
+            <artifactId>kodeverk</artifactId>
+            <version>${k9-klage.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>no.nav.k9.statistikk</groupId>
+            <artifactId>kontrakter</artifactId>
+            <version>2.0_20220411110858_dc06dd1</version>
+        </dependency>
+
+        <!-- OpenTelemetry -->
+        <dependency>
+            <groupId>io.opentelemetry</groupId>
+            <artifactId>opentelemetry-api</artifactId>
+            <version>${opentelemetry.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.opentelemetry</groupId>
+            <artifactId>opentelemetry-extension-kotlin</artifactId>
+            <version>${opentelemetry.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.opentelemetry.instrumentation</groupId>
+            <artifactId>opentelemetry-instrumentation-annotations</artifactId>
+            <version>${opentelemetry-instrumentation.version}</version>
+        </dependency>
+
+        <!-- Jackson -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.module</groupId>
+            <artifactId>jackson-module-kotlin</artifactId>
+        </dependency>
+
+        <!-- Div -->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-text</artifactId>
+            <version>${commons-text.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.papertrailapp</groupId>
+            <artifactId>logback-syslog4j</artifactId>
+            <version>1.0.0</version>
+        </dependency>
+        <dependency>
+            <groupId>io.github.smiley4</groupId>
+            <artifactId>ktor-openapi</artifactId>
+            <version>5.0.2</version>
+        </dependency>
+        <dependency>
+            <groupId>io.github.smiley4</groupId>
+            <artifactId>ktor-swagger-ui</artifactId>
+            <version>5.0.2</version>
+        </dependency>
+
+        <!-- DI - Koin -->
+        <dependency>
+            <groupId>io.insert-koin</groupId>
+            <artifactId>koin-core-jvm</artifactId>
+            <version>${koin.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.insert-koin</groupId>
+            <artifactId>koin-ktor-jvm</artifactId>
+            <version>${koin.version}</version>
+        </dependency>
+
+        <!-- Test Dependencies -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <version>${jupiter.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
+            <version>${jupiter.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.kotest</groupId>
+            <artifactId>kotest-runner-junit5-jvm</artifactId>
+            <version>${kotest.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.platform</groupId>
+            <artifactId>junit-platform-launcher</artifactId>
+            <version>1.11.4</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.willowtreeapps.assertk</groupId>
+            <artifactId>assertk-jvm</artifactId>
+            <version>${assertk.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>no.nav.helse</groupId>
+            <artifactId>dusseldorf-test-support</artifactId>
+            <version>${dusseldorf-ktor.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.mockk</groupId>
+            <artifactId>mockk-jvm</artifactId>
+            <version>${mockk.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.ktor</groupId>
+            <artifactId>ktor-server-test-host-jvm</artifactId>
+            <version>${ktor.version}</version>
+            <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.eclipse.jetty</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>${testcontainers.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.insert-koin</groupId>
+            <artifactId>koin-test-junit5</artifactId>
+            <version>${koin.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.kotest</groupId>
+            <artifactId>kotest-assertions-core-jvm</artifactId>
+            <version>${kotest.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.kotest</groupId>
+            <artifactId>kotest-extensions-koin-jvm</artifactId>
+            <version>${kotest.version}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <sourceDirectory>src/main/kotlin</sourceDirectory>
+        <testSourceDirectory>src/test/kotlin</testSourceDirectory>
+
+        <plugins>
+            <!-- Kotlin Maven Plugin -->
+            <plugin>
+                <groupId>org.jetbrains.kotlin</groupId>
+                <artifactId>kotlin-maven-plugin</artifactId>
+                <version>${kotlin.version}</version>
+                <executions>
+                    <execution>
+                        <id>compile</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>compile</goal>
+                        </goals>
+                        <configuration>
+                            <sourceDirs>
+                                <sourceDir>src/main/kotlin</sourceDir>
+                                <sourceDir>src/main/java</sourceDir>
+                            </sourceDirs>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>test-compile</id>
+                        <phase>test-compile</phase>
+                        <goals>
+                            <goal>test-compile</goal>
+                        </goals>
+                        <configuration>
+                            <sourceDirs>
+                                <sourceDir>src/test/kotlin</sourceDir>
+                                <sourceDir>src/test/java</sourceDir>
+                            </sourceDirs>
+                        </configuration>
+                    </execution>
+                </executions>
+                <configuration>
+                    <jvmTarget>${kotlin.compiler.jvmTarget}</jvmTarget>
+                </configuration>
+            </plugin>
+
+            <!-- Maven Compiler Plugin (for any Java sources) -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.13.0</version>
+                <configuration>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
+                </configuration>
+            </plugin>
+
+            <!-- Maven JAR Plugin - Creates app.jar with proper manifest -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.3.0</version>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <mainClass>${main.class}</mainClass>
+                            <addClasspath>true</addClasspath>
+                            <classpathPrefix>lib/</classpathPrefix>
+                        </manifest>
+                    </archive>
+                    <finalName>app</finalName>
+                </configuration>
+            </plugin>
+
+            <!-- Maven Dependency Plugin - Copies all dependencies to target/lib/ -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>3.6.1</version>
+                <executions>
+                    <execution>
+                        <id>copy-dependencies</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/lib</outputDirectory>
+                            <includeScope>runtime</includeScope>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Maven Surefire Plugin - Run tests -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.2.5</version>
+                <configuration>
+                    <includes>
+                        <include>**/*Test.java</include>
+                        <include>**/*Test.kt</include>
+                        <include>**/*Spec.kt</include>
+                    </includes>
+                    <!-- Show test results -->
+                    <printSummary>true</printSummary>
+                    <useFile>false</useFile>
+                    <reportFormat>plain</reportFormat>
+                    <consoleOutputReporter>
+                        <disable>false</disable>
+                    </consoleOutputReporter>
+                    <!-- System properties for TestContainers -->
+                    <systemPropertyVariables>
+                        <testcontainers.reuse.enable>false</testcontainers.reuse.enable>
+                    </systemPropertyVariables>
+                    <!-- Increase timeout for container startup -->
+                    <forkedProcessTimeoutInSeconds>600</forkedProcessTimeoutInSeconds>
+                </configuration>
+            </plugin>
+
+            <!-- Maven Resources Plugin -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>3.3.1</version>
+                <configuration>
+                    <encoding>UTF-8</encoding>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+    <profiles>
+        <!-- Profile for skipping integration tests that require Docker/TestContainers -->
+        <profile>
+            <id>skip-integration-tests</id>
+            <properties>
+                <skipITs>true</skipITs>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <excludes>
+                                <exclude>**/*Spec.kt</exclude>
+                                <exclude>**/*IntegrationTest.kt</exclude>
+                            </excludes>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <!-- Profile for running all tests including integration tests -->
+        <profile>
+            <id>all-tests</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+        </profile>
+    </profiles>
+</project>
+

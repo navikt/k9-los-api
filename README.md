@@ -54,19 +54,66 @@ oppgavedata via REST, men dette er p.t. sovende funksjonalitet.
 
 # Bygge og kjøre lokalt
 
+## Forutsetninger
+
+### Maven
+Prosjektet bruker Maven som byggesystem. Sjekk at Maven er installert:
+```bash
+mvn --version
+```
+
+### GitHub Packages Autentisering
+
+Siden prosjektet bruker private NAV-pakker fra GitHub Packages, må du sette opp autentisering:
+
+1. Opprett en GitHub Personal Access Token (PAT) med `read:packages` scope <a href="https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token">her</a>
+
+2. Sett miljøvariabel:
+```bash
+export GITHUB_TOKEN="<DIN GIT PAT>"
+```
+
+3. Kopier Maven settings template:
+```bash
+cp settings.xml.template ~/.m2/settings.xml
+```
+
+Se [MAVEN_MIGRATION.md](MAVEN_MIGRATION.md) for mer detaljert informasjon.
+
+## Bygge prosjektet
+
+```bash
+# Bygg hele prosjektet (uten tester - anbefalt for utvikling)
+mvn clean package -DskipTests
+
+# Bygg med tester (krever Docker)
+mvn clean package
+
+# Kun kjøre tester (krever Docker)
+mvn test
+```
+
+**📝 Note om tester**: Prosjektet bruker TestContainers som krever Docker. Hvis du ikke har Docker installert/kjørende, bruk `-DskipTests` flagget. Se [TESTING_GUIDE.md](TESTING_GUIDE.md) og [QUICKSTART.md](QUICKSTART.md) for mer informasjon.
+
+Etter bygging finner du:
+- `target/app.jar` - Applikasjonen (3 MB)
+- `target/lib/` - Alle avhengigheter som separate JAR-filer (196 stk)
+
+## Kjøre lokalt
+
 1. Start k9-verdikjede. Er avhengig av vtp, postgresql og azure-mock.
 
-2. Trenger `gpr.user` & `gpr.key` i gradle.properties for å laste ned dependencies.
-
-**I MacOS: ~/.gradle/gradle.properties**
+2. Start klassen `no.nav.k9.los.K9LosDev` med vm-options:
 ```
-gpr.user=<Ditt brukernavn på github>
-gpr.key=<DIN GIT PAT>
+-Djavax.net.ssl.trustStore=/Users/.../.modig/trustStore.jks 
+-Djavax.net.ssl.keyStore=/Users/.../.modig/keyStore.jks 
+-Djavax.net.ssl.trustStorePassword=changeit 
+-Djavax.net.ssl.keyStorePassword=devillokeystore1234
 ```
-Skape en PAT <a href="https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token">her</a> med read packages scope. 
 
-3. Start klassen `no.nav.k9.los.K9LosDev` med vm-options
-
-`-Djavax.net.ssl.trustStore=/Users/.../.modig/trustStore.jks -Djavax.net.ssl.keyStore=/Users/.../.modig/keyStore.jks -Djavax.net.ssl.trustStorePassword=changeit -Djavax.net.ssl.keyStorePassword=devillokeystore1234`
+Eller kjør direkte med JAR:
+```bash
+java -jar target/app.jar
+```
 
 ![logo](Los.png)
