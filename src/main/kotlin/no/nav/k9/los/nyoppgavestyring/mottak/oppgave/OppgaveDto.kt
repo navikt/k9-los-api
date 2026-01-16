@@ -2,13 +2,18 @@ package no.nav.k9.los.nyoppgavestyring.mottak.oppgave
 
 import java.time.LocalDateTime
 
-sealed class NyOppgaveVersjonInnsending
+sealed class NyOppgaveVersjonInnsending(
+    open val dto: OppgaveDto
+)
 
-data class NyOppgaveversjon(val dto: OppgaveDto): NyOppgaveVersjonInnsending()
+data class NyOppgaveversjon(
+    override val dto: OppgaveDto
+): NyOppgaveVersjonInnsending(dto)
+
 data class VaskOppgaveversjon(
-    val dto: OppgaveDto,
+    override val dto: OppgaveDto,
     val eventNummer: Int
-    ): NyOppgaveVersjonInnsending()
+): NyOppgaveVersjonInnsending(dto)
 
 data class OppgaveDto(
     val eksternId: String,

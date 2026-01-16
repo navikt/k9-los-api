@@ -3,14 +3,16 @@ package no.nav.k9.los.nyoppgavestyring.mottak.oppgave
 import kotliquery.TransactionalSession
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveNøkkelDto
 import org.jetbrains.annotations.VisibleForTesting
+import org.slf4j.LoggerFactory
 
 class OppgaveV3Tjeneste(
     private val oppgaveV3Repository: OppgaveV3Repository,
-    private val partisjonertOppgaveRepository: PartisjonertOppgaveRepository,
     private val oppgavetypeRepository: OppgavetypeRepository,
     private val områdeRepository: OmrådeRepository
 ) {
+
 
     fun sjekkDuplikatOgProsesser(innsending: NyOppgaveVersjonInnsending, tx: TransactionalSession): OppgaveV3? {
         when (innsending) {
@@ -109,13 +111,12 @@ class OppgaveV3Tjeneste(
         )
     }
 
-    fun ajourholdOppgave(innkommendeOppgave: OppgaveV3, internVersjon: Int, tx: TransactionalSession) {
-        AktivOppgaveRepository.ajourholdAktivOppgave(innkommendeOppgave, internVersjon, tx)
-        partisjonertOppgaveRepository.ajourhold(innkommendeOppgave, tx)
+    fun slettAktivOppgave(innkommendeOppgave: OppgaveV3, tx: TransactionalSession) {
+        AktivOppgaveRepository.slettAktivOppgave(tx, innkommendeOppgave)
     }
 
-    fun slettAktivOppgave(innkommendeOppgave: OppgaveV3, tx: TransactionalSession){
-        AktivOppgaveRepository.slettAktivOppgave(tx, innkommendeOppgave)
+    fun slettOppgave(oppgavenøkkel: OppgaveNøkkelDto, tx: TransactionalSession) {
+        oppgaveV3Repository.slettOppgave(oppgavenøkkel, tx)
     }
 
     fun vaskEksisterendeOppgaveversjon(oppgaveDto: OppgaveDto, eventNr: Int, tx: TransactionalSession) : OppgaveV3 {
@@ -128,7 +129,7 @@ class OppgaveV3Tjeneste(
         val område = områdeRepository.hentOmråde(oppgaveDto.område, tx)
 
         val forrigeOppgaveversjon = if (eventNr > 0) {
-            oppgaveV3Repository.hentOppgaveversjonenFør(område, oppgavetype, oppgaveDto.eksternId, eventNr, tx)
+            oppgaveV3Repository.hentOppgaveversjon(område, oppgavetype, oppgaveDto.eksternId, eventNr, tx)
         } else {
             null
         }

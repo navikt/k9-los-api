@@ -34,8 +34,7 @@ class EventTilDtoMapperTest: AbstractK9LosIntegrationTest() {
         val k9SakEvent = K9SakEventDtoBuilder().foreslåVedtak().build().copy(eventHendelse = EventHendelse.VASKEEVENT)
         val sakEventTilOppgaveMapper: SakEventTilOppgaveMapper = get()
         val innsending = sakEventTilOppgaveMapper.lagOppgaveDto(
-            EventLagret(
-                fagsystem = k9SakEvent.fagsystem,
+            EventLagret.K9Sak(
                 eksternId = k9SakEvent.eksternId.toString(),
                 eventJson = LosObjectMapper.instance.writeValueAsString(k9SakEvent),
                 dirty = true,
@@ -52,8 +51,7 @@ class EventTilDtoMapperTest: AbstractK9LosIntegrationTest() {
         val k9SakEvent = K9SakEventDtoBuilder().foreslåVedtak().build()
         val sakEventTilOppgaveMapper: SakEventTilOppgaveMapper = get()
         val innsending = sakEventTilOppgaveMapper.lagOppgaveDto(
-            EventLagret(
-                fagsystem = k9SakEvent.fagsystem,
+            EventLagret.K9Sak(
                 eksternId = k9SakEvent.eksternId.toString(),
                 eventJson = LosObjectMapper.instance.writeValueAsString(k9SakEvent),
                 dirty = true,

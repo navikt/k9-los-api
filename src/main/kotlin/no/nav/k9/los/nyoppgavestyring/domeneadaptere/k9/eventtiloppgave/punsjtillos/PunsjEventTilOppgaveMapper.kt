@@ -16,7 +16,7 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 
 class PunsjEventTilOppgaveMapper {
-    fun lagOppgaveDto(eventLagret: EventLagret, forrigeOppgave: OppgaveV3?): NyOppgaveVersjonInnsending {
+    fun lagOppgaveDto(eventLagret: EventLagret.K9Punsj, forrigeOppgave: OppgaveV3?): NyOppgaveVersjonInnsending {
         if (eventLagret.fagsystem != Fagsystem.PUNSJ) {
             throw IllegalStateException()
         }
@@ -31,7 +31,7 @@ class PunsjEventTilOppgaveMapper {
                 type = "k9punsj",
                 status = utledOppgavestatus(event).kode,
                 endretTidspunkt = event.eventTid,
-                reservasjonsnøkkel = utledReservasjonsnøkkel(event),
+                reservasjonsnøkkel = utledReservasjonsnøkkel(eventLagret),
                 feltverdier = lagFeltverdier(event, forrigeOppgave)
             )
         )
@@ -62,8 +62,12 @@ class PunsjEventTilOppgaveMapper {
             }
         }
 
-        fun utledReservasjonsnøkkel(event: K9PunsjEventDto): String {
-            return "K9_p_${event.eksternId}"
+        fun utledReservasjonsnøkkel(eventLagret: EventLagret.K9Punsj): String {
+            return utledReservasjonsnøkkel(eventLagret.eventDto)
+        }
+
+        fun utledReservasjonsnøkkel(eventDto: K9PunsjEventDto): String {
+            return "K9_p_${eventDto.eksternId}"
         }
 
 
