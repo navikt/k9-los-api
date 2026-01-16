@@ -1,32 +1,32 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 val mainClass = "no.nav.k9.los.K9LosKt"
-val hikariVersion = "6.2.1"
-val flywayVersion = "11.1.1"
+val hikariVersion = "7.0.2"
+val flywayVersion = "11.20.1"
 val vaultJdbcVersion = "1.3.10"
 val koinVersion = "4.1.1"
-val kotestVersion = "6.0.3"
+val kotestVersion = "6.0.7"
 val kotliqueryVersion = "1.9.1"
 val k9SakVersion = "6.0.6"
 val k9KlageVersion = "0.4.9"
-val jacksonVersion = "2.17.2"
-val commonsTextVersion = "1.13.0"
+val jacksonVersion = "2.20.1"
+val commonsTextVersion = "1.15.0"
 
 val dusseldorfKtorVersion = "7.0.6"
 val ktorVersion = "3.3.3"
-val kafkaVersion = "3.9.0"
+val kafkaVersion = "4.1.1"
 
 val navTilgangskontroll = "3.2024.01.24_10.14-f70bae69bd65"
 
 // Test Dependencies
-val testContainers = "1.20.4"
+val testContainers = "1.21.4"
 val jsonassertVersion = "1.5.3"
-val jupiterVersion = "5.11.4"
+val jupiterVersion = "6.0.2"
 val assertkVersion = "0.28.1"
-val mockkVersion = "1.13.16"
+val mockkVersion = "1.14.7"
 
 plugins {
-    id("org.jetbrains.kotlin.jvm") version "2.2.0"
+    id("org.jetbrains.kotlin.jvm") version "2.3.0"
     id("com.github.johnrengelman.shadow") version "8.1.1"
 }
 
@@ -77,17 +77,17 @@ dependencies {
     implementation("no.nav.k9.statistikk:kontrakter:2.0_20220411110858_dc06dd1")
 
     // opentelemetry
-    implementation("io.opentelemetry:opentelemetry-api:1.46.0")
-    implementation("io.opentelemetry:opentelemetry-extension-kotlin:1.46.0")
-    implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.11.0")
+    implementation("io.opentelemetry:opentelemetry-api:1.57.0")
+    implementation("io.opentelemetry:opentelemetry-extension-kotlin:1.57.0")
+    implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.23.0")
 
     // Div
     implementation(enforcedPlatform("com.fasterxml.jackson:jackson-bom:$jacksonVersion"))
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
     implementation("org.apache.commons:commons-text:$commonsTextVersion")
     implementation("com.papertrailapp:logback-syslog4j:1.0.0")
-    implementation("io.github.smiley4:ktor-openapi:5.0.2")
-    implementation("io.github.smiley4:ktor-swagger-ui:5.0.2")
+    implementation("io.github.smiley4:ktor-openapi:5.4.0")
+    implementation("io.github.smiley4:ktor-swagger-ui:5.4.0")
 
 
     // DI
@@ -97,7 +97,7 @@ dependencies {
     // Test
     testImplementation("org.junit.jupiter:junit-jupiter-api:$jupiterVersion")
     testImplementation("org.junit.jupiter:junit-jupiter-engine:$jupiterVersion")
-    testImplementation("io.kotest:kotest-runner-junit5:6.0.0.M4")
+    testImplementation("io.kotest:kotest-runner-junit5:6.0.7")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
     testImplementation("com.willowtreeapps.assertk:assertk-jvm:$assertkVersion")
