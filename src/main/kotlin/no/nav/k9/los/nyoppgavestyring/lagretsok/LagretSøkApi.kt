@@ -12,6 +12,7 @@ import io.ktor.server.routing.get
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.RequestContextService
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.idToken
+import no.nav.k9.los.nyoppgavestyring.query.lagBeskrivelse
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
 import org.koin.ktor.ext.inject
 
@@ -156,6 +157,35 @@ fun Route.LagretSøkApi() {
             if (pepClient.harBasisTilgang()) {
                 val lagretSøkId = call.parameters["id"]!!
                 call.respond(lagretSøkTjeneste.hentAntall(lagretSøkId.toLong()))
+            } else {
+                call.respond(HttpStatusCode.Forbidden)
+            }
+        }
+    }
+
+    get("{id}/querybeskrivelse", {
+        request {
+            pathParameter<Long>("id") {
+                required = true
+            }
+        }
+        response {
+            HttpStatusCode.OK to { body<String>() }
+            HttpStatusCode.NotFound to { }
+        }
+    }) {
+        requestContextService.withRequestContext(call) {
+            if (pepClient.harBasisTilgang()) {
+                val id = call.parameters["id"]!!.toLong()
+                val lagretSøk = lagretSøkRepository.hent(id)
+
+                if (lagretSøk == null) {
+                    call.respond(HttpStatusCode.NotFound, "Lagret søk finnes ikke")
+                    return@withRequestContext
+                }
+
+                val beskrivelse = lagBeskrivelse(lagretSøk.query)
+                call.respond(beskrivelse)
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
