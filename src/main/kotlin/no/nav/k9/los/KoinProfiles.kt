@@ -24,6 +24,7 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.EventTil
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.EventTilOppgaveMapper
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.HistorikkvaskTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.OppgaveOppdatertHandler
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.VaskeeventSerieutleder
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetillos.KlageEventTilOppgaveMapper
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetillos.beriker.K9KlageBerikerInterfaceKludge
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetillos.beriker.K9KlageBerikerKlientLocal
@@ -348,7 +349,15 @@ fun common(app: Application, config: Configuration) = module {
             oppgaveV3Tjeneste = get(),
             transactionalManager = get(),
             eventTilOppgaveMapper = get(),
-            oppgaveOppdatertHandler = get()
+            oppgaveOppdatertHandler = get(),
+            vaskeeventSerieutleder = get(),
+        )
+    }
+
+    single {
+        VaskeeventSerieutleder(
+            sakEventTilOppgaveMapper = get(),
+            klageEventTilOppgaveMapper = get(),
         )
     }
 

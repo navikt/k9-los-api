@@ -15,7 +15,7 @@ class PartisjonertOppgaveRepository(val oppgavetypeRepository: OppgavetypeReposi
     fun ajourhold(oppgave: OppgaveV3, tx: TransactionalSession) {
         val partisjonertOppgaveId = hentPartisjonertOppgaveId(oppgave, tx)
             ?: opprettPartisjonertOppgaveId(oppgave, tx)
-        val partisjonertOppgave = hentOppgave(partisjonertOppgaveId, tx)
+        val partisjonertOppgave = hentOppgave(partisjonertOppgaveId, oppgave.oppgavetype, tx)
         if (partisjonertOppgave == null) {
             nyOppgave(partisjonertOppgaveId, oppgave, tx)
         } else {
@@ -88,6 +88,7 @@ class PartisjonertOppgaveRepository(val oppgavetypeRepository: OppgavetypeReposi
 
     private fun hentOppgave(
         oppgaveId: PartisjonertOppgaveId,
+        oppgavetype: Oppgavetype,
         tx: TransactionalSession
     ): OppgaveV3? {
         return tx.run(
@@ -99,7 +100,6 @@ class PartisjonertOppgaveRepository(val oppgavetypeRepository: OppgavetypeReposi
                     "oppgave_id" to oppgaveId.id,
                 )
             ).map { row ->
-                val oppgavetype = oppgavetypeRepository.hentOppgavetype("K9", row.string("oppgavetype_ekstern_id"), tx)
                 OppgaveV3(
                     id = oppgaveId,
                     eksternId = row.string("oppgave_ekstern_id"),
@@ -110,7 +110,7 @@ class PartisjonertOppgaveRepository(val oppgavetypeRepository: OppgavetypeReposi
                     reservasjonsnøkkel = row.string("reservasjonsnokkel"),
                     felter = hentFeltverdier(oppgaveId, oppgavetype, tx),
                     aktiv = true,
-                    kildeområde = "K9"
+                    kildeområde = oppgavetype.område.eksternId,
                 )
             }.asSingle
         )

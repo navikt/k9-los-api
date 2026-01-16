@@ -17,20 +17,14 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.klage.K9Klag
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetillos.beriker.K9KlageBerikerInterfaceKludge
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.NyOppgaveVersjonInnsending
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.NyOppgaveversjon
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveDto
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdiDto
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.VaskOppgaveversjon
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.*
 import org.jetbrains.annotations.VisibleForTesting
 
 class KlageEventTilOppgaveMapper(
     private val k9klageBeriker: K9KlageBerikerInterfaceKludge,
 ) {
     internal fun lagOppgaveDto(
-        eventLagret: EventLagret,
+        eventLagret: EventLagret.K9Klage,
         forrigeOppgave: OppgaveV3?,
         eventnummer: Int,
     ): NyOppgaveVersjonInnsending {
@@ -74,6 +68,10 @@ class KlageEventTilOppgaveMapper(
                 dto = oppgaveDto
             )
         }
+    }
+
+    fun erVaskeevent(eventLagret: EventLagret.K9Klage): Boolean {
+        return eventLagret.eventDto.eventHendelse == EventHendelse.VASKEEVENT
     }
 
     companion object {
@@ -128,6 +126,10 @@ class KlageEventTilOppgaveMapper(
                     }
                 }
             }
+        }
+
+        fun utledReservasjonsnøkkel(eventLagret: EventLagret.K9Klage, erTilBeslutter: Boolean): String {
+            return utledReservasjonsnøkkel(eventLagret.eventDto, erTilBeslutter)
         }
 
         fun utledReservasjonsnøkkel(event: K9KlageEventDto, erTilBeslutter: Boolean): String {

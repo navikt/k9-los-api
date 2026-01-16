@@ -6,22 +6,32 @@ import io.kotest.matchers.shouldBe
 import io.mockk.clearAllMocks
 import io.mockk.spyk
 import io.mockk.verify
-import kotliquery.TransactionalSession
+import no.nav.k9.kodeverk.behandling.BehandlingStegType
+import no.nav.k9.kodeverk.behandling.FagsakYtelseType
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.K9Oppgavetypenavn
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventLagret
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.EventHendelse
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventNøkkel
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventRepository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventDto
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventDto
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
+import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingStatus
+import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
 import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
+import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
+import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
+import no.nav.k9.los.nyoppgavestyring.query.mapping.EksternFeltverdiOperator
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepositoryTxWrapper
 import no.nav.k9.sak.typer.AktørId
 import no.nav.k9.sak.typer.JournalpostId
 import org.koin.core.qualifier.named
 import org.koin.test.KoinTest
 import org.koin.test.get
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
 
@@ -31,6 +41,8 @@ class EventTilOppgaveAdapterSpec : KoinTest, FreeSpec() {
     private lateinit var eventRepository: EventRepository
     private lateinit var oppgaveOppdatertHandler: OppgaveOppdatertHandler
     private lateinit var oppgaveAdapter: EventTilOppgaveAdapter
+    private lateinit var oppgaveRepositoryTxWrapper: OppgaveRepositoryTxWrapper
+    private lateinit var oppgaveQueryService: OppgaveQueryService
 
     val oppgaveV3Tjeneste = get<OppgaveV3Tjeneste>()
 
@@ -52,8 +64,12 @@ class EventTilOppgaveAdapterSpec : KoinTest, FreeSpec() {
             oppgaveV3Tjeneste = get(),
             transactionalManager = get(),
             eventTilOppgaveMapper = get(),
-            oppgaveOppdatertHandler = oppgaveOppdatertHandler
+            oppgaveOppdatertHandler = oppgaveOppdatertHandler,
+            vaskeeventSerieutleder = get()
         )
+
+        oppgaveRepositoryTxWrapper = get()
+        oppgaveQueryService = get()
 
         clearAllMocks()
     }
@@ -212,10 +228,135 @@ class EventTilOppgaveAdapterSpec : KoinTest, FreeSpec() {
                 }
             }
         }
+        "Vaskeeventer" - {
+            val eksternId = UUID.randomUUID()
+            "Sendt inn som første event for en eksternId" - {
+                val event = k9SakEvent(eksternId, LocalDateTime.now().minusHours(1), EventHendelse.VASKEEVENT, 0)
+                transactionalManager.transaction { tx ->
+                    eventRepository.lagre(Fagsystem.K9SAK, event, tx)
+                }
+                "skal opprette oppgaven i henhhold til innsendt event" {
+                    oppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(Fagsystem.K9SAK, eksternId.toString()))
+                    transactionalManager.transaction { tx ->
+                        oppgaveV3Tjeneste.hentHøyesteInternVersjon(eksternId.toString(), K9Oppgavetypenavn.SAK.kode, "K9", tx) shouldBe 0
+                    }
+                }
+            }
+            "Sendt inn etter en ordinær oppdatering" - {
+                val ordinærevent =k9SakEvent(eksternId, LocalDateTime.now().minusHours(1), EventHendelse.BEHANDLINGSKONTROLL_EVENT)
+                val vaskeevent = k9SakEvent(eksternId, LocalDateTime.now().minusHours(0), EventHendelse.VASKEEVENT, 99)
+                transactionalManager.transaction { tx ->
+                    eventRepository.lagre(Fagsystem.K9SAK, ordinærevent, tx)
+                    eventRepository.lagre(Fagsystem.K9SAK, vaskeevent, tx)
+                }
+                "Skal overskrive den ordinære oppdateringen" {
+                    oppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(Fagsystem.K9SAK, eksternId.toString()))
+                    transactionalManager.transaction { tx ->
+                        oppgaveV3Tjeneste.hentHøyesteInternVersjon(eksternId.toString(), K9Oppgavetypenavn.SAK.kode, "K9", tx) shouldBe 0
+                        oppgaveV3Tjeneste.hentAktivOppgave(eksternId.toString(), K9Oppgavetypenavn.SAK.kode, "K9", tx).hentVerdi("saksnummer") shouldBe "99"
+                    }
+                }
+            }
+            "Sendt inn etter to ordinære oppdateringer, hvor den første har vært lagret tidligere" - {
+                val ordinærevent1 = k9SakEvent(eksternId, LocalDateTime.now().minusHours(2), EventHendelse.BEHANDLINGSKONTROLL_EVENT)
+                val ordinærevent2 = k9SakEvent(eksternId, LocalDateTime.now().minusHours(1), EventHendelse.BEHANDLINGSKONTROLL_EVENT)
+                val vaskeevent = k9SakEvent(eksternId, LocalDateTime.now().minusHours(0), EventHendelse.VASKEEVENT, 99)
+                transactionalManager.transaction { tx ->
+                    eventRepository.lagre(Fagsystem.K9SAK, ordinærevent1, tx)
+                }
+                oppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(Fagsystem.K9SAK, eksternId.toString()))
+                transactionalManager.transaction { tx ->
+                    eventRepository.lagre(Fagsystem.K9SAK, ordinærevent2, tx)
+                    eventRepository.lagre(Fagsystem.K9SAK, vaskeevent, tx)
+                }
+                "Skal overskrive den siste ordinære oppdateringen" {
+                    oppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(Fagsystem.K9SAK, eksternId.toString()))
+                    transactionalManager.transaction { tx ->
+                        oppgaveV3Tjeneste.hentHøyesteInternVersjon(eksternId.toString(), K9Oppgavetypenavn.SAK.kode, "K9", tx) shouldBe 1
+                        oppgaveV3Tjeneste.hentAktivOppgave(eksternId.toString(), K9Oppgavetypenavn.SAK.kode, "K9", tx).hentVerdi("saksnummer") shouldBe "99"
+                    }
+                }
+            }
+            "Sendt inn mellom to ordinære oppdateringer" - {
+                val ordinærevent1 = k9SakEvent(eksternId, LocalDateTime.now().minusHours(2), EventHendelse.BEHANDLINGSKONTROLL_EVENT)
+                val vaskeevent = k9SakEvent(eksternId, LocalDateTime.now().minusHours(1), EventHendelse.VASKEEVENT, 99)
+                val ordinærevent2 = k9SakEvent(eksternId, LocalDateTime.now().minusHours(0), EventHendelse.BEHANDLINGSKONTROLL_EVENT)
+                transactionalManager.transaction { tx ->
+                    eventRepository.lagre(Fagsystem.K9SAK, ordinærevent1, tx)
+                    eventRepository.lagre(Fagsystem.K9SAK, vaskeevent, tx)
+                    eventRepository.lagre(Fagsystem.K9SAK, ordinærevent2, tx)
+                }
+                "Skal overskrive den første ordinære oppdateringen" {
+                    oppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(Fagsystem.K9SAK, eksternId.toString()))
+                    transactionalManager.transaction { tx ->
+                        oppgaveV3Tjeneste.hentHøyesteInternVersjon(eksternId.toString(), K9Oppgavetypenavn.SAK.kode, "K9", tx) shouldBe 1
+                        oppgaveV3Tjeneste.hentAktivOppgave(eksternId.toString(), K9Oppgavetypenavn.SAK.kode, "K9", tx).hentVerdi("saksnummer") shouldBe "624QM"
+                        oppgaveV3Tjeneste.hentOppgaveversjon("K9", K9Oppgavetypenavn.SAK.kode, eksternId.toString(), 0, tx)!!.hentVerdi("saksnummer") shouldBe "99"
+                    }
+                }
+            }
+            "sendt i to forskjellige hendelser etter en ordinær oppdatering" - {
+                val ordinærevent1 = k9SakEvent(eksternId, LocalDateTime.now().minusHours(2), EventHendelse.BEHANDLINGSKONTROLL_EVENT)
+                val vaskeevent1 = k9SakEvent(eksternId, LocalDateTime.now().minusHours(1), EventHendelse.VASKEEVENT, 75)
+                val vaskeevent2 = k9SakEvent(eksternId, LocalDateTime.now().minusHours(0), EventHendelse.VASKEEVENT, 76)
+                transactionalManager.transaction { tx ->
+                    eventRepository.lagre(Fagsystem.K9SAK, ordinærevent1, tx)
+                    eventRepository.lagre(Fagsystem.K9SAK, vaskeevent1, tx)
+                }
+                oppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(Fagsystem.K9SAK, eksternId.toString()))
+                transactionalManager.transaction { tx ->
+                    eventRepository.lagre(Fagsystem.K9SAK, vaskeevent2, tx)
+                }
+                "Skal overskrive den ordinære oppdateringen begge ganger" {
+                    oppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(Fagsystem.K9SAK, eksternId.toString()))
+                    transactionalManager.transaction { tx ->
+                        oppgaveV3Tjeneste.hentHøyesteInternVersjon(eksternId.toString(), K9Oppgavetypenavn.SAK.kode, "K9", tx) shouldBe 0
+                        oppgaveV3Tjeneste.hentAktivOppgave(eksternId.toString(), K9Oppgavetypenavn.SAK.kode, "K9", tx).hentVerdi("saksnummer") shouldBe "76"
+                        oppgaveQueryService.queryForAntall(QueryRequest( //for å sjekke innhold i oppgave_v3_aktiv
+                            OppgaveQuery(
+                                listOf(
+                                    FeltverdiOppgavefilter(
+                                        "K9",
+                                        "saksnummer",
+                                        EksternFeltverdiOperator.EQUALS,
+                                        listOf("76")
+                                    )
+                                )
+                            )
+                        )) shouldBe 1
+                    }
+                }
+            }
+        }
+
+    }
+
+    private fun k9SakEvent(eksternId: UUID = UUID.randomUUID(), eventTid: LocalDateTime = LocalDateTime.now(), eventHendelse: EventHendelse, saksnummerSomTeller: Int? = null,) : K9SakEventDto {
+        return K9SakEventDto(
+            eksternId = eksternId,
+            fagsystem = Fagsystem.K9SAK,
+            saksnummer = saksnummerSomTeller?.let { saksnummerSomTeller.toString() } ?: "624QM",
+            aktørId = "1442456610368",
+            vedtaksdato = null,
+            behandlingId = 1050437,
+            behandlingstidFrist = LocalDate.now().plusDays(1),
+            eventTid = eventTid,
+            eventHendelse = eventHendelse,
+            behandlingStatus = BehandlingStatus.UTREDES.kode,
+            behandlingSteg = BehandlingStegType.INNHENT_REGISTEROPP.kode,
+            ytelseTypeKode = FagsakYtelseType.PLEIEPENGER_SYKT_BARN.toString(),
+            behandlingTypeKode = BehandlingType.FORSTEGANGSSOKNAD.kode,
+            opprettetBehandling = LocalDateTime.now(),
+            eldsteDatoMedEndringFraSøker = LocalDateTime.now(),
+            aksjonspunktKoderMedStatusListe = emptyMap<String, String>().toMutableMap(),
+            aksjonspunktTilstander = emptyList(),
+            merknader = emptyList()
+        )
     }
 
     fun punsjEvent(eksternId: UUID = UUID.randomUUID(),
-                   eksternVersjon: LocalDateTime = LocalDateTime.now().minusHours(1))
+                   eksternVersjon: LocalDateTime = LocalDateTime.now().minusHours(1),
+                   tellerForYtelse: Int? = null)
             : K9PunsjEventDto {
         return K9PunsjEventDto(
             eksternId = eksternId,
@@ -226,7 +367,7 @@ class EventTilOppgaveAdapterSpec : KoinTest, FreeSpec() {
             aksjonspunktKoderMedStatusListe = mutableMapOf(),
             pleietrengendeAktørId = "pleietrengendeAktørId",
             type = "type",
-            ytelse = "ytelse",
+            ytelse = tellerForYtelse?.let { tellerForYtelse.toString() } ?: "ytelse",
             sendtInn = false,
             ferdigstiltAv = "saksbehandler",
             journalførtTidspunkt = LocalDateTime.now().minusDays(1),
