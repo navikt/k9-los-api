@@ -125,7 +125,8 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
             fullførtTidspunkt = null,
             antall = null,
             limit = null,
-            offset = null
+            offset = null,
+            lagretSøkId = null
         )
 
         val exception = assertThrows<IllegalStateException> {

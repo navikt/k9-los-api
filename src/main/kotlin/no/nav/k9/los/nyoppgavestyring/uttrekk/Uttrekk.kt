@@ -26,6 +26,7 @@ class Uttrekk private constructor(
     val query: OppgaveQuery,
     val typeKjøring: TypeKjøring,
     val lagetAv: Long,
+    val lagretSøkId: Long?,
     val limit: Int?,
     val offset: Int?,
     feilmelding: String?,
@@ -97,6 +98,7 @@ class Uttrekk private constructor(
             lagretSøk: LagretSøk,
             typeKjoring: TypeKjøring,
             lagetAv: Long,
+            tittel: String = "",
             limit: Int? = null,
             offset: Int? = null
         ): Uttrekk {
@@ -104,10 +106,11 @@ class Uttrekk private constructor(
                 id = null,
                 opprettetTidspunkt = LocalDateTime.now(),
                 status = UttrekkStatus.OPPRETTET,
-                tittel = lagretSøk.tittel.takeIf { it.isNotEmpty() } ?: lagBeskrivelse(lagretSøk.query),
+                tittel = tittel,
                 query = lagretSøk.query,
                 typeKjøring = typeKjoring,
                 lagetAv = lagetAv,
+                lagretSøkId = lagretSøk.id,
                 limit = limit,
                 offset = offset,
                 feilmelding = null,
@@ -125,6 +128,7 @@ class Uttrekk private constructor(
             query: OppgaveQuery,
             typeKjoring: TypeKjøring,
             lagetAv: Long,
+            lagretSøkId: Long?,
             limit: Int?,
             offset: Int?,
             feilmelding: String?,
@@ -133,7 +137,7 @@ class Uttrekk private constructor(
             antall: Int?
         ): Uttrekk {
             return Uttrekk(
-                id, opprettetTidspunkt, status, tittel, query, typeKjoring, lagetAv, limit, offset,
+                id, opprettetTidspunkt, status, tittel, query, typeKjoring, lagetAv, lagretSøkId, limit, offset,
                 feilmelding, startetTidspunkt, fullførtTidspunkt, antall
             )
         }

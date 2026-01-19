@@ -17,7 +17,7 @@ class UttrekkRepository(val dataSource: DataSource) {
             it.run(
                 queryOf(
                     """
-                SELECT id, opprettet_tidspunkt, status, tittel, query, type_kjoring, laget_av, 
+                SELECT id, opprettet_tidspunkt, status, tittel, query, type_kjoring, laget_av, lagret_sok_id,
                        avgrensning_limit, avgrensning_offset, feilmelding, startet_tidspunkt, fullfort_tidspunkt, antall
                 FROM uttrekk
                 WHERE id = :id
@@ -50,8 +50,8 @@ class UttrekkRepository(val dataSource: DataSource) {
             tx.updateAndReturnGeneratedKey(
                 queryOf(
                     """
-                    INSERT INTO uttrekk (opprettet_tidspunkt, status, tittel, query, type_kjoring, laget_av, avgrensning_limit, avgrensning_offset)
-                    VALUES (:opprettetTidspunkt, :status, :tittel, :query::jsonb, :typeKjoring, :lagetAv, :limit, :offset)
+                    INSERT INTO uttrekk (opprettet_tidspunkt, status, tittel, query, type_kjoring, laget_av, lagret_sok_id, avgrensning_limit, avgrensning_offset)
+                    VALUES (:opprettetTidspunkt, :status, :tittel, :query::jsonb, :typeKjoring, :lagetAv, :lagretSokId, :limit, :offset)
                     """.trimIndent(),
                     mapOf(
                         "opprettetTidspunkt" to uttrekk.opprettetTidspunkt,
@@ -60,6 +60,7 @@ class UttrekkRepository(val dataSource: DataSource) {
                         "query" to LosObjectMapper.instance.writeValueAsString(uttrekk.query),
                         "typeKjoring" to uttrekk.typeKjøring.name,
                         "lagetAv" to uttrekk.lagetAv,
+                        "lagretSokId" to uttrekk.lagretSøkId,
                         "limit" to uttrekk.limit,
                         "offset" to uttrekk.offset
                     )
@@ -122,7 +123,7 @@ class UttrekkRepository(val dataSource: DataSource) {
             session.run(
                 queryOf(
                     """
-                SELECT id, opprettet_tidspunkt, status, tittel, query, type_kjoring, laget_av,
+                SELECT id, opprettet_tidspunkt, status, tittel, query, type_kjoring, laget_av, lagret_sok_id,
                        avgrensning_limit, avgrensning_offset,
                        feilmelding, startet_tidspunkt, fullfort_tidspunkt, antall
                 FROM uttrekk
@@ -140,7 +141,7 @@ class UttrekkRepository(val dataSource: DataSource) {
             session.run(
                 queryOf(
                     """
-                SELECT id, opprettet_tidspunkt, status, tittel, query, type_kjoring, laget_av,
+                SELECT id, opprettet_tidspunkt, status, tittel, query, type_kjoring, laget_av, lagret_sok_id,
                        avgrensning_limit, avgrensning_offset,
                        feilmelding, startet_tidspunkt, fullfort_tidspunkt, antall
                 FROM uttrekk
@@ -164,6 +165,7 @@ private fun Row.toUttrekk(): Uttrekk {
         query = LosObjectMapper.instance.readValue(string("query"), OppgaveQuery::class.java),
         typeKjoring = TypeKjøring.valueOf(string("type_kjoring")),
         lagetAv = long("laget_av"),
+        lagretSøkId = longOrNull("lagret_sok_id"),
         limit = intOrNull("avgrensning_limit"),
         offset = intOrNull("avgrensning_offset"),
         feilmelding = stringOrNull("feilmelding"),
