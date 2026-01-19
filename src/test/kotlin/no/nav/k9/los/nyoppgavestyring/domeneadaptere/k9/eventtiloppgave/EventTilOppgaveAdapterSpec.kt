@@ -65,7 +65,8 @@ class EventTilOppgaveAdapterSpec : KoinTest, FreeSpec() {
             transactionalManager = get(),
             eventTilOppgaveMapper = get(),
             oppgaveOppdatertHandler = oppgaveOppdatertHandler,
-            vaskeeventSerieutleder = get()
+            vaskeeventSerieutleder = get(),
+            ajourholdTjeneste = get(),
         )
 
         oppgaveRepositoryTxWrapper = get()

@@ -272,7 +272,7 @@ class EventRepository(
                                         and ekstern_id = :ekstern_id)
             """.trimMargin(),
                 mapOf(
-                    "fagsystem" to eventnøkkel.fagsystem,
+                    "fagsystem" to eventnøkkel.fagsystem.kode,
                     "ekstern_id" to eventnøkkel.eksternId,
                 )
             ).asUpdate

@@ -57,7 +57,7 @@ class StatistikkRepository(
                     join omrade o ON ot.omrade_id = o.id 
                     WHERE ov3.ekstern_id = :id 
                       AND ot.ekstern_id = :type 
-                      AND o.omrade_id = :omrade
+                      AND o.ekstern_id = :omrade
                 )
             """.trimIndent()
                 , mapOf(

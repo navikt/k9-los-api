@@ -16,7 +16,11 @@ class VaskeeventSerieutleder(
                     if (sakEventTilOppgaveMapper.erVaskeevent(lagret as EventLagret.K9Sak)) {
                         antallVask++
                     }
-                    Pair(index-antallVask, lagret)
+                    if (index-antallVask < 0) {
+                        Pair(0, lagret)
+                    } else {
+                        Pair(index - antallVask, lagret)
+                    }
                 }.filter { it.second.dirty }
             }
             is EventLagret.K9Klage -> {
@@ -25,7 +29,11 @@ class VaskeeventSerieutleder(
                     if (klageEventTilOppgaveMapper.erVaskeevent(lagret as EventLagret.K9Klage)) {
                         antallVask++
                     }
-                    Pair(index-antallVask, lagret)
+                    if (index-antallVask < 0) {
+                        Pair(0, lagret)
+                    } else {
+                        Pair(index - antallVask, lagret)
+                    }
                 }.filter { it.second.dirty }
             }
             else -> eventer.mapIndexed { index, lagret -> Pair(index, lagret) }.filter { it.second.dirty }
