@@ -13,6 +13,7 @@ fun lagBeskrivelse(query: OppgaveQuery): String = buildList {
     lagOppgavestatusBeskrivelse(query.filtere, this)
     lagYtelsestypeBeskrivelse(query.filtere, this)
     lagOppgavetypeBeskrivelse(query.filtere, this)
+    lagLøsbartAksjonspunktBeskrivelse(query.filtere, this)
     lagLiggerHosBeslutterBeskrivelse(query.filtere, this)
     lagBehandlingTypeBeskrivelse(query.filtere, this)
     lagAntallAndreKriterier(query.filtere, this)
@@ -42,13 +43,24 @@ private fun lagYtelsestypeBeskrivelse(filtere: List<Oppgavefilter>, beskrivelser
     val (ytelseVerdier, nektelse) = finnVerdierForFelt(filtere, "ytelsestype")
     if (ytelseVerdier.isEmpty()) return
 
-    val ytelseNavn = ytelseVerdier.mapNotNull { kode ->
-        runCatching { FagsakYtelseType.fraKode(kode) }.getOrNull()?.navn
+    val (omsorgsdagerYtelser, andreYtelser) = ytelseVerdier.map { kode ->
+        FagsakYtelseType.fraKode(kode)
+    }.partition {
+        when (it) {
+            FagsakYtelseType.OMSORGSPENGER_KS -> true
+            FagsakYtelseType.OMSORGSPENGER_MA -> true
+            FagsakYtelseType.OMSORGSPENGER_AO -> true
+            FagsakYtelseType.OMSORGSDAGER -> true
+            else -> false
+        }
     }
 
-    if (ytelseNavn.isEmpty()) return
+    val omsorgspengerTekst = omsorgsdagerYtelser.takeIf { it.isNotEmpty() }?.joinToString(prefix = "Omsorgsdager (", separator = "/", postfix = ")") { it.navn.substringAfter(": ") }
+    val andreYtelseTekst = andreYtelser.takeIf { it.isNotEmpty() }?.joinToString("/") { it.navn }
 
-    beskrivelser.add(ytelseNavn.joinToString("/").hensyntaNektelse(nektelse))
+    beskrivelser.add(
+        listOfNotNull(andreYtelseTekst, omsorgspengerTekst).joinToString("/").hensyntaNektelse(nektelse)
+    )
 }
 
 private fun lagOppgavetypeBeskrivelse(filtere: List<Oppgavefilter>, beskrivelser: MutableList<String>) {
@@ -56,6 +68,20 @@ private fun lagOppgavetypeBeskrivelse(filtere: List<Oppgavefilter>, beskrivelser
     if (oppgavetypeVerdier.isEmpty()) return
 
     beskrivelser.add(oppgavetypeVerdier.joinToString("/").hensyntaNektelse(nektelse, titleCase = false))
+}
+
+private fun lagLøsbartAksjonspunktBeskrivelse(filtere: List<Oppgavefilter>, beskrivelser: MutableList<String>) {
+    val (verdier, nektelse) = finnVerdierForFelt(filtere, "løsbartAksjonspunkt")
+
+    when {
+        verdier.isEmpty() -> return
+        verdier.size == 1 -> beskrivelser.add(
+            "Løsbart aksjonspunkt".hensyntaNektelse(nektelse)
+        )
+        else -> beskrivelser.add(
+            "${verdier.size} løsbare aksjonspunkt".hensyntaNektelse(nektelse)
+        )
+    }
 }
 
 private fun lagLiggerHosBeslutterBeskrivelse(filtere: List<Oppgavefilter>, beskrivelser: MutableList<String>) {
@@ -88,6 +114,7 @@ private fun lagBehandlingTypeBeskrivelse(filtere: List<Oppgavefilter>, beskrivel
 
 private fun lagAntallAndreKriterier(filtere: List<Oppgavefilter>, beskrivelser: MutableList<String>) {
     val kjenteFelter = setOf(
+        "løsbartAksjonspunkt",
         "personbeskyttelse",
         "oppgavestatus",
         "ytelsestype",
