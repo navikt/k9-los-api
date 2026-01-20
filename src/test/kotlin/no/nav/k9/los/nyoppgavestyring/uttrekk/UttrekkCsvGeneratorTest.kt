@@ -11,30 +11,36 @@ class UttrekkCsvGeneratorTest {
     fun `skal generere CSV med flere kolonner`() {
         val resultatJson = """
             [
-              [
-                {
-                  "kode": "saksnummer",
-                  "verdi": "1270379",
-                  "område": "K9"
-                },
-                {
-                  "kode": "behandlingstype",
-                  "verdi": "Pleiepenger",
-                  "område": "K9"
-                }
-              ],
-              [
-                {
-                  "kode": "saksnummer",
-                  "verdi": "1336828",
-                  "område": "K9"
-                },
-                {
-                  "kode": "behandlingstype",
-                  "verdi": "Omsorgspenger",
-                  "område": "K9"
-                }
-              ]
+              {
+                "id": {"område": "K9", "eksternId": "1"},
+                "felter": [
+                  {
+                    "kode": "saksnummer",
+                    "verdi": "1270379",
+                    "område": "K9"
+                  },
+                  {
+                    "kode": "behandlingstype",
+                    "verdi": "Pleiepenger",
+                    "område": "K9"
+                  }
+                ]
+              },
+              {
+                "id": {"område": "K9", "eksternId": "2"},
+                "felter": [
+                  {
+                    "kode": "saksnummer",
+                    "verdi": "1336828",
+                    "område": "K9"
+                  },
+                  {
+                    "kode": "behandlingstype",
+                    "verdi": "Omsorgspenger",
+                    "område": "K9"
+                  }
+                ]
+              }
             ]
         """.trimIndent()
 
@@ -50,18 +56,21 @@ class UttrekkCsvGeneratorTest {
     fun `skal håndtere null verdier`() {
         val resultatJson = """
             [
-              [
-                {
-                  "kode": "saksnummer",
-                  "verdi": "123456",
-                  "område": "K9"
-                },
-                {
-                  "kode": "enhet",
-                  "verdi": null,
-                  "område": "K9"
-                }
-              ]
+              {
+                "id": {"område": "K9", "eksternId": "1"},
+                "felter": [
+                  {
+                    "kode": "saksnummer",
+                    "verdi": "123456",
+                    "område": "K9"
+                  },
+                  {
+                    "kode": "enhet",
+                    "verdi": null,
+                    "område": "K9"
+                  }
+                ]
+              }
             ]
         """.trimIndent()
 
