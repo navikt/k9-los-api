@@ -83,6 +83,7 @@ class OppgaveTestDataBuilder(
     fun lagre(oppgave: OppgaveV3) {
         return transactionManager.transaction { tx ->
             oppgaverepo.nyOppgaveversjon(oppgave, tx)
+            aktivOgPartisjonertOppgaveAjourholdTjeneste.ajourholdOppgave(oppgave, 0, tx)
             oppgave
         }
     }
