@@ -118,6 +118,23 @@ class UttrekkRepository(val dataSource: DataSource) {
         }
     }
 
+    fun slettForLagretSøk(lagretSøkId: Long): Int {
+        return transactionalManager.transaction {
+            it.run(
+                queryOf(
+                    """
+                DELETE FROM uttrekk
+                WHERE lagret_sok_id = :lagretSokId
+                AND status != :statusKjorer
+            """.trimIndent(), mapOf(
+                        "lagretSokId" to lagretSøkId,
+                        "statusKjorer" to UttrekkStatus.KJØRER.name
+                    )
+                ).asUpdate
+            )
+        }
+    }
+
     fun hentAlle(): List<Uttrekk> {
         return using(sessionOf(dataSource)) { session ->
             session.run(

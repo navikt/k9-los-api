@@ -45,6 +45,10 @@ class UttrekkTjeneste(
         uttrekkRepository.slett(id)
     }
 
+    fun slettForLagretSøk(lagretSøkId: Long): Int {
+        return uttrekkRepository.slettForLagretSøk(lagretSøkId)
+    }
+
     fun startUttrekk(id: Long): Uttrekk {
         val uttrekk = uttrekkRepository.hent(id)
             ?: throw IllegalArgumentException("Uttrekk med id $id finnes ikke")

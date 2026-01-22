@@ -157,6 +157,27 @@ fun Route.UttrekkApi() {
         }
     }
 
+    delete("lagret-sok/{lagretSokId}", {
+        request {
+            pathParameter<Long>("lagretSokId") {
+                required = true
+            }
+        }
+        response {
+            HttpStatusCode.OK to { body<Int>() }
+        }
+    }) {
+        requestContextService.withRequestContext(call) {
+            if (pepClient.harBasisTilgang()) {
+                val lagretSokId = call.parameters["lagretSokId"]!!.toLong()
+                val antallSlettet = uttrekkTjeneste.slettForLagretSøk(lagretSokId)
+                call.respond(HttpStatusCode.OK, antallSlettet)
+            } else {
+                call.respond(HttpStatusCode.Forbidden)
+            }
+        }
+    }
+
     get("{id}/csv", {
         request {
             pathParameter<Long>("id") {
