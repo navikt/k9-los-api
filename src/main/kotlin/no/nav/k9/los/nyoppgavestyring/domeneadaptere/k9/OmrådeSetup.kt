@@ -409,10 +409,10 @@ object KodeverkSynlighetRegler {
     fun ytelseType(ytelseType: FagsakYtelseType): KodeverkSynlighet {
         return when (ytelseType) {
             FagsakYtelseType.FRISINN,
-            FagsakYtelseType.UNGDOMSYTELSE -> KodeverkSynlighet.SKJULT
+            FagsakYtelseType.UNGDOMSYTELSE,
+            FagsakYtelseType.OMSORGSDAGER -> KodeverkSynlighet.SKJULT
 
-            FagsakYtelseType.UKJENT,
-            FagsakYtelseType.OMSORGSDAGER -> KodeverkSynlighet.SYNLIG
+            FagsakYtelseType.UKJENT -> KodeverkSynlighet.SYNLIG
 
             else -> KodeverkSynlighet.SYNLIG_FAVORITT
         }

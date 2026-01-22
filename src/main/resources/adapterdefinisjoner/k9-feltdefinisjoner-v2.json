@@ -124,7 +124,7 @@
       "listetype": false,
       "tolkesSom": "Timestamp",
       "visTilBruker": true,
-      "kokriterie": true
+      "kokriterie": false
     },
     {
       "id": "behandlingTypekode",
@@ -535,7 +535,7 @@
     },
     {
       "id": "førsteFeilutbetalingDato",
-      "visningsnavn": "Føste dato som har feilutbetaling",
+      "visningsnavn": "Første dato som har feilutbetaling",
       "listetype": false,
       "tolkesSom": "Timestamp",
       "visTilBruker": true,
@@ -543,7 +543,7 @@
     },
     {
       "id": "feilutbetaltBeløp",
-      "visningsnavn": "Feilutbetalt beløp",
+      "visningsnavn": "Feilutbetalt beløp (kun tilbakekreving)",
       "listetype": false,
       "tolkesSom": "Integer",
       "visTilBruker": true,
@@ -563,7 +563,7 @@
       "listetype": false,
       "tolkesSom": "String",
       "visTilBruker": true,
-      "kokriterie": true,
+      "kokriterie": false,
       "kodeverkreferanse": {
         "område": "K9",
         "eksternId": "behandlendeEnhet"
