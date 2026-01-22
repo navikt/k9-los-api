@@ -5,7 +5,6 @@ import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveNøkkelDto
 import org.jetbrains.annotations.VisibleForTesting
-import org.slf4j.LoggerFactory
 
 class OppgaveV3Tjeneste(
     private val oppgaveV3Repository: OppgaveV3Repository,
@@ -156,10 +155,8 @@ class OppgaveV3Tjeneste(
         )
 
         oppgaveV3Repository.lagreFeltverdierForDatavask(
-            eksternId = innkommendeOppgave.eksternId,
+            oppgave = innkommendeOppgave,
             internVersjon = eventNr,
-            oppgaveFeltverdier = innkommendeOppgave.felter,
-            oppgavestatus = innkommendeOppgave.status,
             tx = tx
         )
 

@@ -256,8 +256,8 @@ class OppgaveV3Repository(
             tx.updateAndReturnGeneratedKey(
                 queryOf(
                     """
-                    insert into oppgave_v3(ekstern_id, ekstern_versjon, oppgavetype_id, status, versjon, aktiv, kildeomrade, endret_tidspunkt, reservasjonsnokkel)
-                    values(:eksternId, :eksternVersjon, :oppgavetypeId, :status, :versjon, :aktiv, :kildeomrade, :endretTidspunkt, :reservasjonsnokkel)
+                    insert into oppgave_v3(ekstern_id, ekstern_versjon, oppgavetype_id, status, versjon, aktiv, kildeomrade, endret_tidspunkt, reservasjonsnokkel, oppgavetype_ekstern_id, omrade_ekstern_id)
+                    values(:eksternId, :eksternVersjon, :oppgavetypeId, :status, :versjon, :aktiv, :kildeomrade, :endretTidspunkt, :reservasjonsnokkel, :oppgavetype_ekstern_id, :omrade_ekstern_id)
                 """.trimIndent(),
                     mapOf(
                         "eksternId" to oppgave.eksternId,
@@ -269,6 +269,8 @@ class OppgaveV3Repository(
                         "aktiv" to true,
                         "kildeomrade" to oppgave.kildeområde,
                         "reservasjonsnokkel" to oppgave.reservasjonsnøkkel,
+                        "oppgavetype_ekstern_id" to oppgave.oppgavetype.eksternId,
+                        "omrade_ekstern_id" to oppgave.oppgavetype.område.eksternId
                     )
                 )
             )!!
@@ -307,8 +309,8 @@ class OppgaveV3Repository(
     ) {
         tx.batchPreparedNamedStatement(
             """
-            insert into oppgavefelt_verdi(oppgave_id, oppgavefelt_id, verdi, verdi_bigint, oppgavestatus)
-                    VALUES (:oppgaveId, :oppgavefeltId, :verdi, :verdi_bigint, :oppgavestatus)
+            insert into oppgavefelt_verdi(oppgave_id, oppgavefelt_id, verdi, verdi_bigint, oppgavestatus, oppgavetype_ekstern_id, omrade_ekstern_id, feltdefinisjon_ekstern_id)
+                    VALUES (:oppgaveId, :oppgavefeltId, :verdi, :verdi_bigint, :oppgavestatus, :oppgavetype_ekstern_id, :omrade_ekstern_id, :feltdefinisjon_ekstern_id)
         """.trimIndent(),
             oppgave.felter.map { feltverdi ->
                 mapOf(
@@ -316,22 +318,23 @@ class OppgaveV3Repository(
                     "oppgavefeltId" to feltverdi.oppgavefelt.id,
                     "verdi" to feltverdi.verdi,
                     "verdi_bigint" to feltverdi.verdiBigInt,
-                    "oppgavestatus" to oppgave.status.kode
+                    "oppgavestatus" to oppgave.status.kode,
+                    "oppgavetype_ekstern_id" to oppgave.oppgavetype.eksternId,
+                    "omrade_ekstern_id" to oppgave.oppgavetype.område.eksternId,
+                    "feltdefinisjon_ekstern_id" to feltverdi.oppgavefelt.feltDefinisjon.eksternId
                 )
             }
         )
     }
 
-    fun lagreFeltverdierForDatavask(
-        eksternId: String,
+    fun lagreFeltverdierForDatavask( //TODO Rydde her, så man kan hente ekstern_ider fra oppgaven, etter historikkvask
+        oppgave: OppgaveV3,
         internVersjon: Int,
-        oppgavestatus: Oppgavestatus,
-        oppgaveFeltverdier: List<OppgaveFeltverdi>,
         tx: TransactionalSession
     ) {
         tx.batchPreparedNamedStatement(
             """
-            INSERT INTO oppgavefelt_verdi(oppgave_id, oppgavefelt_id, verdi, verdi_bigint, oppgavestatus)
+            INSERT INTO oppgavefelt_verdi(oppgave_id, oppgavefelt_id, verdi, verdi_bigint, oppgavestatus, oppgavetype_ekstern_id, omrade_ekstern_id, feltdefinisjon_ekstern_id)
             VALUES (
                 (
                     SELECT id 
@@ -342,17 +345,23 @@ class OppgaveV3Repository(
                 :oppgavefelt_id,
                 :verdi,
                 :verdi_bigint,
-                :oppgavestatus
+                :oppgavestatus,
+                :oppgavetype_ekstern_id,
+                :omrade_ekstern_id,
+                :feltdefinisjon_ekstern_id
             )
         """.trimIndent(),
-            oppgaveFeltverdier.map { feltverdi ->
+            oppgave.felter.map { feltverdi ->
                 mapOf(
-                    "ekstern_id" to eksternId,
+                    "ekstern_id" to oppgave.eksternId,
                     "intern_versjon" to internVersjon,
                     "oppgavefelt_id" to feltverdi.oppgavefelt.id,
                     "verdi" to feltverdi.verdi,
                     "verdi_bigint" to feltverdi.verdiBigInt,
-                    "oppgavestatus" to oppgavestatus.kode
+                    "oppgavestatus" to oppgave.status.kode,
+                    "oppgavetype_ekstern_id" to oppgave.oppgavetype.eksternId,
+                    "omrade_ekstern_id" to oppgave.oppgavetype.område.eksternId,
+                    "feltdefinisjon_ekstern_id" to feltverdi.oppgavefelt.feltDefinisjon.eksternId,
                 )
             }
         )
