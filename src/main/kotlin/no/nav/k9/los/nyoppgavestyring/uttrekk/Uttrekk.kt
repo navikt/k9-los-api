@@ -3,7 +3,6 @@ package no.nav.k9.los.nyoppgavestyring.uttrekk
 import no.nav.k9.los.nyoppgavestyring.lagretsok.LagretSøk
 import no.nav.k9.los.nyoppgavestyring.query.Avgrensning
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
-import no.nav.k9.los.nyoppgavestyring.query.lagBeskrivelse
 import java.time.LocalDateTime
 
 enum class UttrekkStatus {
@@ -57,9 +56,6 @@ class Uttrekk private constructor(
             Avgrensning(limit = limit?.toLong() ?: -1, offset = offset?.toLong() ?: -1)
         else
             null
-
-    val queryBeskrivelse: String
-        get() = lagBeskrivelse(query)
 
     fun markerSomKjører() {
         require(status == UttrekkStatus.OPPRETTET) { "Kan kun starte uttrekk som er i status OPPRETTET" }

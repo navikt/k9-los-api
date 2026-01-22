@@ -5,7 +5,6 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelOrderFelt
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
-import no.nav.k9.los.nyoppgavestyring.query.lagBeskrivelse
 import no.nav.k9.los.nyoppgavestyring.query.mapping.EksternFeltverdiOperator
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.Saksbehandler
 import java.time.LocalDateTime
@@ -33,9 +32,6 @@ class LagretSøk private constructor(
 
     var sistEndret: LocalDateTime = sistEndret
         private set
-
-    val queryBeskrivelse: String
-        get() = lagBeskrivelse(query)
 
     fun endre(endreLagretSøk: EndreLagretSøk, saksbehandler: Saksbehandler) {
         if (saksbehandler.id != lagetAv) {
