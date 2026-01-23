@@ -5,6 +5,7 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Datatype
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.Område
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.AktivOgPartisjonertOppgaveAjourholdTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdi
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Repository
@@ -28,6 +29,7 @@ class OppgaveTestDataBuilder(
     val transactionManager = get<TransactionalManager>()
     val oppgavetypeRepo = get<OppgavetypeRepository>()
     val oppgaverepo = get<OppgaveV3Repository>()
+    val aktivOgPartisjonertOppgaveAjourholdTjeneste = get<AktivOgPartisjonertOppgaveAjourholdTjeneste>()
 
     var eksternVersjonTeller = 1000000
 
@@ -59,6 +61,7 @@ class OppgaveTestDataBuilder(
         return transactionManager.transaction { tx ->
             val oppgave = lag(status, endretTidspunkt = endretTidspunkt)
             oppgaverepo.nyOppgaveversjon(oppgave, tx)
+            aktivOgPartisjonertOppgaveAjourholdTjeneste.ajourholdOppgave(oppgave, 0, tx)
             oppgave
         }
     }
@@ -80,6 +83,7 @@ class OppgaveTestDataBuilder(
     fun lagre(oppgave: OppgaveV3) {
         return transactionManager.transaction { tx ->
             oppgaverepo.nyOppgaveversjon(oppgave, tx)
+            aktivOgPartisjonertOppgaveAjourholdTjeneste.ajourholdOppgave(oppgave, 0, tx)
             oppgave
         }
     }
