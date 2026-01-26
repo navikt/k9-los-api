@@ -6,6 +6,7 @@ import no.nav.k9.kodeverk.behandling.BehandlingResultatType
 import no.nav.k9.kodeverk.behandling.BehandlingStegType
 import no.nav.k9.kodeverk.behandling.BehandlingÅrsakType
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
+import no.nav.k9.kodeverk.behandling.aksjonspunkt.Venteårsak
 import no.nav.k9.kodeverk.produksjonsstyring.UtvidetSøknadÅrsak
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetillos.KlageEventTilOppgaveMapper
@@ -256,12 +257,57 @@ class OmrådeSetup(
     private fun kodeverkBehandlingtype() {
         val kodeverkDto = KodeverkDto(
             område = område,
-            eksternId = "Behandlingtype",
+            eksternId = "Behandlingstype",
             beskrivelse = null,
             uttømmende = true,
-            verdier = BehandlingType.entries.lagDto(beskrivelse = null, KodeverkSynlighetRegler::behandlingType)
+            verdier = BehandlingType.entries
+                .map { behandlingType ->
+                    val (gruppering, favoritt) = grupperingBehandlingtype(behandlingType)
+                    KodeverkVerdiDto(
+                        verdi = behandlingType.kode,
+                        visningsnavn = behandlingType.navn,
+                        favoritt = favoritt,
+                        beskrivelse = null,
+                        gruppering = gruppering
+                    )
+                }
         )
+
         feltdefinisjonTjeneste.oppdater(kodeverkDto)
+    }
+
+    private fun grupperingBehandlingtype(behandlingType: BehandlingType): Pair<String, Boolean> {
+        return when (behandlingType) {
+            BehandlingType.FORSTEGANGSSOKNAD,
+            BehandlingType.REVURDERING -> "Ordinærbehandling" to true
+
+            BehandlingType.KLAGE,
+            BehandlingType.ANKE -> "Klage" to true
+
+            BehandlingType.TILBAKE,
+            BehandlingType.REVURDERING_TILBAKEKREVING -> "Tilbakekreving" to true
+
+            BehandlingType.INNSYN,
+            BehandlingType.UNNTAKSBEHANDLING -> "Unntak" to true
+
+            BehandlingType.PAPIRSØKNAD,
+            BehandlingType.DIGITAL_SØKNAD,
+            BehandlingType.PAPIRETTERSENDELSE,
+            BehandlingType.PAPIRINNTEKTSOPPLYSNINGER,
+            BehandlingType.DIGITAL_ETTERSENDELSE,
+            BehandlingType.INNLOGGET_CHAT,
+            BehandlingType.SKRIV_TIL_OSS_SPØRMSÅL,
+            BehandlingType.SKRIV_TIL_OSS_SVAR,
+            BehandlingType.SAMTALEREFERAT,
+            BehandlingType.KOPI,
+            BehandlingType.INNTEKTSMELDING_UTGÅTT,
+            BehandlingType.UTEN_FNR_DNR,
+            BehandlingType.PUNSJOPPGAVE_IKKE_LENGER_NØDVENDIG,
+            BehandlingType.JOURNALPOSTNOTAT,
+            BehandlingType.UKJENT -> "Punsj" to true
+
+            else -> "Øvrige behandlingstyper" to false
+        }
     }
 
     private fun kodeverkVenteårsak() {
@@ -270,7 +316,7 @@ class OmrådeSetup(
             eksternId = "Venteårsak",
             beskrivelse = null,
             uttømmende = true,
-            verdier = no.nav.k9.kodeverk.behandling.aksjonspunkt.Venteårsak.entries.lagK9Dto(beskrivelse = null) + no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.Venteårsak.entries.lageK9KlageDto(
+            verdier = Venteårsak.entries.lagK9Dto(beskrivelse = null) + no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.Venteårsak.entries.lageK9KlageDto(
                 beskrivelse = null,
                 prefiks = false
             ),
@@ -290,7 +336,7 @@ class OmrådeSetup(
     }
 
     private fun kodeverkBehandlingsårsak() {
-        val k9sakKodeverk = no.nav.k9.kodeverk.behandling.BehandlingÅrsakType.entries.lagK9Dto(
+        val k9sakKodeverk = BehandlingÅrsakType.entries.lagK9Dto(
             beskrivelse = null,
             KodeverkSynlighetRegler::behandlingsårsak
         )
@@ -307,6 +353,8 @@ class OmrådeSetup(
             uttømmende = true,
             verdier = koder
         )
+
+
         feltdefinisjonTjeneste.oppdater(kodeverkDto)
     }
 

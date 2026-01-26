@@ -9,6 +9,7 @@ class Feltdefinisjon(
     val eksternId: String,
     val område: Område,
     val visningsnavn: String,
+    val beskrivelse: String?,
     val listetype: Boolean,
     val tolkesSom: String,
     val visTilBruker: Boolean,
@@ -25,6 +26,7 @@ class Feltdefinisjon(
         if (eksternId != other.eksternId) return false
         if (område != other.område) return false
         if (visningsnavn != other.visningsnavn) return false
+        if (beskrivelse != other.beskrivelse) return false
         if (listetype != other.listetype) return false
         if (tolkesSom != other.tolkesSom) return false
         if (visTilBruker != other.visTilBruker) return false
@@ -39,6 +41,7 @@ class Feltdefinisjon(
         var result = eksternId.hashCode()
         result = 31 * result + område.hashCode()
         result = 31 * result + visningsnavn.hashCode()
+        result = 31 * result + (beskrivelse?.hashCode() ?: 0)
         result = 31 * result + listetype.hashCode()
         result = 31 * result + tolkesSom.hashCode()
         result = 31 * result + visTilBruker.hashCode()

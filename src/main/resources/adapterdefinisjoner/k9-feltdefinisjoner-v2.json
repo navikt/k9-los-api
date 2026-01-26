@@ -128,7 +128,7 @@
     },
     {
       "id": "behandlingTypekode",
-      "visningsnavn": "Behandlingstype nivå 2",
+      "visningsnavn": "Behandlingstype",
       "listetype": false,
       "tolkesSom": "String",
       "visTilBruker": true,
@@ -209,6 +209,7 @@
     {
       "id": "aksjonspunkt",
       "visningsnavn": "Løsbare, fremtidige og tidligere aksjonspunkt",
+      "beskrivelse": "Løsbare- (se aksjonspunkt som kan løses), fremtidige- (se Løsbare og fremtidige aksjonspunkt) og løste aksjonspunkt",
       "listetype": true,
       "tolkesSom": "String",
       "visTilBruker": true,
@@ -221,6 +222,7 @@
     {
       "id": "aktivtAksjonspunkt",
       "visningsnavn": "Løsbare og fremtidige aksjonspunkt",
+      "beskrivelse": "Løsbare aksjonspunkt og åpne aksjonspunkter som kan løses først når behandlingen når riktig steg (se aksjonspunkt som kan løses)",
       "listetype": true,
       "tolkesSom": "String",
       "visTilBruker": true,
@@ -233,6 +235,7 @@
     {
       "id": "løsbartAksjonspunkt",
       "visningsnavn": "Aksjonspunkt som kan løses",
+      "beskrivelse": "Åpne aksjonspunkt som er løsbart akkurat nå, fordi de hører til steget behandlingen står i",
       "listetype": false,
       "tolkesSom": "String",
       "visTilBruker": true,
