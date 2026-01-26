@@ -321,7 +321,7 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
                 historikkvaskTjeneste.kjørHistorikkvask()
             }
         )
-
+/* //TODO: Midlertidig avskrudd ifbm vask og resending av fullt datasett til DVH
         add(
             PlanlagtJobb.Periodisk(
                 navn = "Oppgavestatistikksender",
@@ -333,7 +333,7 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
                 oppgavestatistikkTjeneste.spillAvUsendtStatistikk()
             }
         )
-
+*/
         // Sjeldnere oppdatering utenfor arbeidstiden
         add(
             PlanlagtJobb.Periodisk(
