@@ -22,7 +22,7 @@ import java.time.temporal.ChronoUnit
 class SakEventTilOppgaveMapper(
     private val k9SakBerikerKlient: K9SakSystemKlientInterfaceKludge,
 ) {
-    fun lagOppgaveDto(eventLagret: EventLagret, forrigeOppgave: OppgaveV3?, eventnummer: Int): NyOppgaveVersjonInnsending {
+    fun lagOppgaveDto(eventLagret: EventLagret.K9Sak, forrigeOppgave: OppgaveV3?, eventnummer: Int): NyOppgaveVersjonInnsending {
         if (eventLagret.fagsystem != Fagsystem.K9SAK) {
             throw IllegalArgumentException("Fagsystem er ikke SAK")
         }
@@ -50,6 +50,10 @@ class SakEventTilOppgaveMapper(
         } else {
             return NyOppgaveversjon(oppgaveDto)
         }
+    }
+
+    fun erVaskeevent(eventLagret: EventLagret.K9Sak): Boolean {
+        return eventLagret.eventDto.eventHendelse == EventHendelse.VASKEEVENT
     }
 
     internal fun ryddOppObsoleteOgResultatfeilFra2020(
@@ -144,14 +148,18 @@ class SakEventTilOppgaveMapper(
             }
         }
 
-        fun utledReservasjonsnøkkel(event: K9SakEventDto, erTilBeslutter: Boolean): String {
-            return when (FagsakYtelseType.fraKode(event.ytelseTypeKode)) {
+        fun utledReservasjonsnøkkel(eventLagret: EventLagret.K9Sak, erTilBeslutter: Boolean): String {
+            return utledReservasjonsnøkkel(eventLagret.eventDto, erTilBeslutter)
+        }
+
+        fun utledReservasjonsnøkkel(eventDto: K9SakEventDto, erTilBeslutter: Boolean): String {
+            return when (FagsakYtelseType.fraKode(eventDto.ytelseTypeKode)) {
                 FagsakYtelseType.PLEIEPENGER_SYKT_BARN,
                 FagsakYtelseType.PLEIEPENGER_NÆRSTÅENDE,
                 FagsakYtelseType.OMSORGSPENGER_KS,
                 FagsakYtelseType.OMSORGSPENGER_AO,
-                FagsakYtelseType.OPPLÆRINGSPENGER -> lagNøkkelPleietrengendeAktør(event, erTilBeslutter)
-                else -> lagNøkkelAktør(event, erTilBeslutter)
+                FagsakYtelseType.OPPLÆRINGSPENGER -> lagNøkkelPleietrengendeAktør(eventDto, erTilBeslutter)
+                else -> lagNøkkelAktør(eventDto, erTilBeslutter)
             }
         }
 

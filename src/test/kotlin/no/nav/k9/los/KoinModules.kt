@@ -18,6 +18,7 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.EventTil
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.EventTilOppgaveMapper
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.HistorikkvaskTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.OppgaveOppdatertHandler
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.VaskeeventSerieutleder
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetillos.KlageEventTilOppgaveMapper
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetillos.beriker.K9KlageBerikerInterfaceKludge
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetillos.beriker.K9KlageBerikerKlientLocal
@@ -50,6 +51,7 @@ import no.nav.k9.los.nyoppgavestyring.lagretsok.LagretSøkTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.AktivOgPartisjonertOppgaveAjourholdTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.AktivOppgaveRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Repository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
@@ -268,7 +270,6 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     single {
         OppgaveV3Tjeneste(
             oppgaveV3Repository = get(),
-            partisjonertOppgaveRepository = get(),
             oppgavetypeRepository = get(),
             områdeRepository = get(),
         )
@@ -295,7 +296,22 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             oppgaveV3Tjeneste = get(),
             transactionalManager = get(),
             eventTilOppgaveMapper = get(),
-            oppgaveOppdatertHandler = get()
+            oppgaveOppdatertHandler = get(),
+            vaskeeventSerieutleder = get(),
+            ajourholdTjeneste = get(),
+        )
+    }
+
+    single {
+        AktivOgPartisjonertOppgaveAjourholdTjeneste(
+            partisjonertOppgaveRepository = get(),
+        )
+    }
+
+    single {
+        VaskeeventSerieutleder(
+            sakEventTilOppgaveMapper = get(),
+            klageEventTilOppgaveMapper = get()
         )
     }
 
@@ -303,7 +319,8 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
         HistorikkvaskTjeneste(
             eventRepository = get(),
             oppgaveV3Tjeneste = get(),
-            eventTilOppgaveMapper = get(),
+            statistikkRepository = get(),
+            eventTilOppgaveAdapter = get(),
             transactionalManager = get()
         )
     }

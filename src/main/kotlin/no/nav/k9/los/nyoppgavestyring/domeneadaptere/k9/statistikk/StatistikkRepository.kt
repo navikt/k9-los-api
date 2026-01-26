@@ -1,8 +1,10 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk
 
 import kotliquery.*
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveNøkkelDto
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgavefelt
 import java.time.LocalDateTime
 import javax.sql.DataSource
@@ -42,6 +44,28 @@ class StatistikkRepository(
                 ).asUpdate
             )
         }
+    }
+
+    fun fjernSendtMarkering(oppgave: OppgaveNøkkelDto, tx: TransactionalSession) {
+        tx.run(
+            queryOf("""
+                delete from oppgave_v3_sendt_dvh ov3sd 
+                where ov3sd.id IN (
+                    SELECT ov3.id 
+                    FROM oppgave_v3 ov3 
+                    join oppgavetype ot ON ov3.oppgavetype_id = ot.id 
+                    join omrade o ON ot.omrade_id = o.id 
+                    WHERE ov3.ekstern_id = :id 
+                      AND ot.ekstern_id = :type 
+                      AND o.ekstern_id = :omrade
+                )
+            """.trimIndent()
+                , mapOf(
+                    "id" to oppgave.oppgaveEksternId,
+                    "type" to oppgave.oppgaveTypeEksternId,
+                    "omrade" to oppgave.områdeEksternId)
+            ).asUpdate
+        )
     }
 
     fun fjernSendtMarkering(oppgavetype: String? = null) {

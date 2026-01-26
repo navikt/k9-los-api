@@ -17,14 +17,14 @@ import java.time.temporal.ChronoUnit
 
 class TilbakeEventTilOppgaveMapper {
     fun lagOppgaveDto(
-        eventLagret: EventLagret,
+        eventLagret: EventLagret.K9Tilbake,
         forrigeOppgave: OppgaveV3?,
         eventnummer: Int
     ): NyOppgaveVersjonInnsending {
         if (eventLagret.fagsystem != Fagsystem.K9TILBAKE) {
             throw IllegalArgumentException("Fagsystem er ikke TILBAKE")
         }
-        val event = LosObjectMapper.instance.readValue<K9TilbakeEventDto>(eventLagret.eventJson)
+        val event = eventLagret.eventDto
         val oppgaveDto = OppgaveDto(
             eksternId = event.eksternId.toString(),
             eksternVersjon = event.eventTid.toString(),
@@ -60,6 +60,10 @@ class TilbakeEventTilOppgaveMapper {
                 reservasjonsnøkkel = utledReservasjonsnøkkel(event, erTilBeslutter(event)),
                 feltverdier = lagFeltverdier(event, forrigeOppgave)
             )
+
+        fun utledReservasjonsnøkkel(eventLagret: EventLagret.K9Tilbake, erTilBeslutter: Boolean): String {
+            return utledReservasjonsnøkkel(eventLagret.eventDto, erTilBeslutter)
+        }
 
         fun utledReservasjonsnøkkel(event: K9TilbakeEventDto, erTilBeslutter: Boolean): String {
             return lagNøkkelAktør(event, erTilBeslutter)

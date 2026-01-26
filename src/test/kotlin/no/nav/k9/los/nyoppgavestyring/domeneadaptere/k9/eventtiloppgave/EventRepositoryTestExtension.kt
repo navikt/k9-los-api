@@ -6,10 +6,15 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.E
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventNøkkel
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventRepository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventDto
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventDto
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
 
 fun EventRepository.lagre(fagsystem: Fagsystem, event: K9PunsjEventDto, tx: TransactionalSession): EventLagret? {
+    return this.lagre(fagsystem, event.eksternId.toString(), event.eventTid.toString(), LosObjectMapper.instance.writeValueAsString(event), tx)
+}
+
+fun EventRepository.lagre(fagsystem: Fagsystem, event: K9SakEventDto, tx: TransactionalSession): EventLagret? {
     return this.lagre(fagsystem, event.eksternId.toString(), event.eventTid.toString(), LosObjectMapper.instance.writeValueAsString(event), tx)
 }
 
