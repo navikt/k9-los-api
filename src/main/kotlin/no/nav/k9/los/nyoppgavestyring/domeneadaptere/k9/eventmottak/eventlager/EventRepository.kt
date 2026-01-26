@@ -10,6 +10,7 @@ import javax.sql.DataSource
 class EventRepository(
     private val dataSource: DataSource,
 ) {
+    private val log = org.slf4j.LoggerFactory.getLogger(EventRepository::class.java)
 
     fun upsertOgLåsEventnøkkel(fagsystem: Fagsystem, eksternId: String, tx: TransactionalSession): Long {
         val id = tx.run(
@@ -280,6 +281,7 @@ class EventRepository(
     }
 
     fun bestillHistorikkvask(fagsystem: Fagsystem) {
+        log.info("Bestiller historikkvask for alle i fagsystem ${fagsystem.kode}")
         using(sessionOf(dataSource)) {
             it.transaction { tx ->
                 tx.run(
