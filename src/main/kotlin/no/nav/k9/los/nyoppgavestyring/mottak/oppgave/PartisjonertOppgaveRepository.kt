@@ -1,11 +1,15 @@
 package no.nav.k9.los.nyoppgavestyring.mottak.oppgave
 
 import io.opentelemetry.instrumentation.annotations.WithSpan
+import kotliquery.Row
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.Oppgavetype
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgavefelt
 import org.slf4j.LoggerFactory
+import java.time.LocalDateTime
 
 class PartisjonertOppgaveRepository(val oppgavetypeRepository: OppgavetypeRepository) {
 
@@ -243,5 +247,69 @@ class PartisjonertOppgaveRepository(val oppgavetypeRepository: OppgavetypeReposi
                 Pair(row.string("oppgave_ekstern_id"), row.string("oppgavetype_ekstern_id"))
             }.asSingle
         ) ?: throw IllegalStateException("Fant ikke oppgave med id $oppgaveId")
+    }
+
+    fun hentOppgaveForId(id: PartisjonertOppgaveId, tx: TransactionalSession, now: LocalDateTime = LocalDateTime.now()): Oppgave {
+        val oppgave = tx.run(
+                queryOf(
+                    """
+                select * 
+                from oppgave_v3_part ov
+                where ov.id = :id
+            """.trimIndent(),
+                    mapOf("id" to id.id)
+                ).map { row ->
+                    mapOppgave(row, now, tx)
+                }.asSingle
+            ) ?: throw IllegalStateException("Fant ikke oppgave med id $id")
+
+            return oppgave
+        }
+
+    private fun mapOppgave(
+        row: Row,
+        now: LocalDateTime,
+        tx: TransactionalSession
+    ): Oppgave {
+        val oppgaveTypeId = row.string("oppgavetype_ekstern_id")
+        val oppgavetype = oppgavetypeRepository.hentOppgavetype("K9", oppgaveTypeId, tx)
+        val oppgavefelter = hentOppgavefelter(tx, row.long("id"), oppgavetype)
+        return Oppgave(
+            eksternId = row.string("oppgave_ekstern_id"),
+            eksternVersjon = row.string("oppgave_ekstern_versjon"),
+            oppgavetype = oppgavetype,
+            status = row.string("oppgavestatus"),
+            endretTidspunkt = row.localDateTime("endret_tidspunkt"),
+            kildeområde = "K9",
+            felter = oppgavefelter,
+            reservasjonsnøkkel = row.string("reservasjonsnokkel"),
+            versjon = 0
+        ).fyllDefaultverdier().utledTransienteFelter(now)
+    }
+
+    private fun hentOppgavefelter(tx: TransactionalSession, oppgaveId: Long, oppgavetype: Oppgavetype): List<Oppgavefelt> {
+        return tx.run(
+            queryOf(
+                """
+                select ov.feltdefinisjon_ekstern_id as ekstern_id, fd.liste_type, f.pakrevd, ov.verdi, ov.verdi_bigint
+                from oppgavefelt_verdi_part ov
+                inner join feltdefinisjon fd on ov.feltdefinisjon_ekstern_id = fd.ekstern_id
+                inner join oppgavefelt f on fd.id = f.feltdefinisjon_id
+                where ov.oppgave_id = :oppgaveId
+                  and f.oppgavetype_id = :oppgavetypeId
+                order by ov.feltdefinisjon_ekstern_id
+                """.trimIndent(),
+                mapOf("oppgaveId" to oppgaveId, "oppgavetypeId" to oppgavetype.id)
+            ).map { row ->
+                Oppgavefelt(
+                    eksternId = row.string("ekstern_id"),
+                    område = "K9",
+                    listetype = row.boolean("liste_type"),
+                    påkrevd = row.boolean("pakrevd"),
+                    verdi = row.string("verdi"),
+                    verdiBigInt = row.longOrNull("verdi_bigint"),
+                )
+            }.asList
+        )
     }
 }
