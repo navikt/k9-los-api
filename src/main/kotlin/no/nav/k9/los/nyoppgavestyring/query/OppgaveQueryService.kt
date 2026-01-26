@@ -45,15 +45,7 @@ class OppgaveQueryService {
             when (oppgaveId) {
                 is AktivOppgaveId -> aktivOppgaveRepository.hentOppgaveForId(tx, oppgaveId, now)
                 is OppgaveV3Id -> oppgaveRepository.hentOppgaveForId(tx, oppgaveId, now)
-                is PartisjonertOppgaveId ->
-                    partisjonertOppgaveRepository.hentOppgaveEksternIdOgOppgavetype(oppgaveId, tx)
-                        .let { (oppgaveEksternId, oppgavetypeEksternId) ->
-                            oppgaveRepository.hentOppgaveForEksternIdOgOppgavetype(
-                                tx,
-                                oppgaveEksternId,
-                                oppgavetypeEksternId
-                            )
-                        }
+                is PartisjonertOppgaveId -> partisjonertOppgaveRepository.hentOppgaveForId(oppgaveId, tx)
             }
         }
     }
