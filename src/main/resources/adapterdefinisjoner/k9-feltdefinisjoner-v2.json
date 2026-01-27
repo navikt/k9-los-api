@@ -128,7 +128,7 @@
     },
     {
       "id": "behandlingTypekode",
-      "visningsnavn": "Behandlingstype",
+      "visningsnavn": "Behandlingstype nivå 2",
       "listetype": false,
       "tolkesSom": "String",
       "visTilBruker": true,
