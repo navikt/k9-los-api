@@ -187,7 +187,7 @@ class OppgaveQueryRepository(
                     )
                 }
             ),
-            Oppgavefelt(null, "oppgavetype", "Behandlingstype nivå 1", "String", false, false,
+            Oppgavefelt(null, "oppgavetype", "Behandlingstype nivå 1", "String", true, false,
                 oppgavetypeNavn.map {
                     Verdiforklaring(
                         verdi = it,
