@@ -563,7 +563,7 @@
       "listetype": false,
       "tolkesSom": "String",
       "visTilBruker": true,
-      "kokriterie": true,
+      "kokriterie": false,
       "kodeverkreferanse": {
         "område": "K9",
         "eksternId": "behandlendeEnhet"
