@@ -128,7 +128,7 @@
     },
     {
       "id": "behandlingTypekode",
-      "visningsnavn": "Behandlingstype nivå 2",
+      "visningsnavn": "Behandlingstype",
       "listetype": false,
       "tolkesSom": "String",
       "visTilBruker": true,
@@ -563,7 +563,7 @@
       "listetype": false,
       "tolkesSom": "String",
       "visTilBruker": true,
-      "kokriterie": true,
+      "kokriterie": false,
       "kodeverkreferanse": {
         "område": "K9",
         "eksternId": "behandlendeEnhet"
