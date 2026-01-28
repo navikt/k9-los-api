@@ -21,7 +21,7 @@ registries:
     username: x-access-token
     password: ${{secrets.READER_TOKEN}}
 updates:
-  - package-ecosystem: gradle
+  - package-ecosystem: maven
     directory: "/"
     schedule:
       interval: daily
@@ -47,7 +47,7 @@ updates:
       koin:
         patterns:
           - "io.insert-koin*"
-      gradle:
+      maven:
         patterns:
           - "*"
         exclude-patterns:
