@@ -1,2 +1,1 @@
-alter table feltdefinisjon
-    add column beskrivelse type varchar(200);
+alter table feltdefinisjon add column beskrivelse varchar(200);
