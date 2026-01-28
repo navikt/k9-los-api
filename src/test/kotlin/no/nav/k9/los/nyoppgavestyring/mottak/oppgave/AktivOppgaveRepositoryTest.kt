@@ -123,6 +123,7 @@ class AktivOppgaveRepositoryTest {
             eksternId = eksternId,
             område = mockOmråde(),
             visningsnavn = "",
+            beskrivelse = null,
             listetype = listetype,
             tolkesSom = "",
             visTilBruker = false,

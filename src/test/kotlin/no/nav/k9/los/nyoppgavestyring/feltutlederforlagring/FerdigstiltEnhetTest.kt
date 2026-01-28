@@ -130,6 +130,7 @@ internal class FerdigstiltEnhetTest {
                 eksternId = "test"
             ),
             visningsnavn = "Test",
+            beskrivelse = null,
             listetype = false,
             tolkesSom = "string",
             visTilBruker = true,

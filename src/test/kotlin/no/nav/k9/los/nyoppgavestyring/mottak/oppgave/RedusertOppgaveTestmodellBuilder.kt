@@ -42,6 +42,7 @@ class RedusertOppgaveTestmodellBuilder(
                 FeltdefinisjonDto(
                     id = "aksjonspunkt",
                     visningsnavn = "Test",
+                    beskrivelse = null,
                     listetype = true,
                     tolkesSom = "String",
                     true,
@@ -52,6 +53,7 @@ class RedusertOppgaveTestmodellBuilder(
                 FeltdefinisjonDto(
                     id = "opprettet",
                     visningsnavn = "Test",
+                    beskrivelse = null,
                     listetype = false,
                     tolkesSom = "Date",
                     true,
@@ -62,6 +64,7 @@ class RedusertOppgaveTestmodellBuilder(
                 FeltdefinisjonDto(
                     id = "aktorId",
                     visningsnavn = "Test",
+                    beskrivelse = null,
                     listetype = false,
                     tolkesSom = "String",
                     true,
@@ -73,6 +76,7 @@ class RedusertOppgaveTestmodellBuilder(
                 FeltdefinisjonDto(
                     id = "akkumulertVentetidSaksbehandler",
                     visningsnavn = "Test",
+                    beskrivelse = null,
                     listetype = false,
                     tolkesSom = "Duration",
                     false,
@@ -83,6 +87,7 @@ class RedusertOppgaveTestmodellBuilder(
                 FeltdefinisjonDto(
                     id = "avventerSaksbehandler",
                     visningsnavn = "Test",
+                    beskrivelse = null,
                     listetype = false,
                     tolkesSom = "boolean",
                     false,

@@ -15,6 +15,7 @@ class Feltdefinisjoner(
                 eksternId = feltdefinisjonDto.id,
                 område = område,
                 visningsnavn = feltdefinisjonDto.visningsnavn,
+                beskrivelse = feltdefinisjonDto.beskrivelse,
                 listetype = feltdefinisjonDto.listetype,
                 tolkesSom = feltdefinisjonDto.tolkesSom,
                 visTilBruker = feltdefinisjonDto.visTilBruker,
