@@ -222,7 +222,7 @@
     {
       "id": "aktivtAksjonspunkt",
       "visningsnavn": "Løsbare og fremtidige aksjonspunkt",
-      "beskrivelse": "Løsbare aksjonspunkt og åpne aksjonspunkter som kan løses først når behandlingen når riktig steg (se aksjonspunkt som kan løses)",
+      "beskrivelse": "Løsbare aksjonspunkt (se aksjonspunkt som kan løses) og åpne aksjonspunkter som kan løses først når behandlingen når riktig steg",
       "listetype": true,
       "tolkesSom": "String",
       "visTilBruker": true,

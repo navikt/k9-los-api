@@ -281,14 +281,10 @@ class OmrådeSetup(
             BehandlingType.FORSTEGANGSSOKNAD,
             BehandlingType.REVURDERING -> "Ordinærbehandling" to true
 
-            BehandlingType.KLAGE,
-            BehandlingType.ANKE -> "Klage" to true
+            BehandlingType.KLAGE -> "Klage" to true
 
             BehandlingType.TILBAKE,
             BehandlingType.REVURDERING_TILBAKEKREVING -> "Tilbakekreving" to true
-
-            BehandlingType.INNSYN,
-            BehandlingType.UNNTAKSBEHANDLING -> "Unntak" to true
 
             BehandlingType.PAPIRSØKNAD,
             BehandlingType.DIGITAL_SØKNAD,
@@ -336,46 +332,57 @@ class OmrådeSetup(
     }
 
     private fun kodeverkBehandlingsårsak() {
-        val k9sakKodeverk = BehandlingÅrsakType.entries
-            .map { behandlingÅrsakType ->
-                val (gruppering, synlighet) = grupperingBehandlingsårsakK9Sak(behandlingÅrsakType)
-            }
-
-        val k9klageKodeverk = no.nav.k9.klage.kodeverk.behandling.BehandlingÅrsakType.entries
-            .map { behandlingÅrsakType ->
-                val (gruppering, synlighet) = grupperingBehandlingsårsakK9Klage(behandlingÅrsakType)
-            }
-
-        val koder = k9sakKodeverk + k9klageKodeverk
-        val kodeverkDto = KodeverkDto(
+        val kodeverk = KodeverkDto(
             område = område,
             eksternId = "behandlingsårsak",
             beskrivelse = null,
             uttømmende = true,
-            verdier = koder
+            verdier = BehandlingÅrsakType.entries
+                .map { behandlingÅrsakType ->
+                    val (gruppering, synlighet) = grupperingBehandlingsårsakK9Sak(behandlingÅrsakType)
+                    KodeverkVerdiDto(
+                        verdi = behandlingÅrsakType.kode,
+                        visningsnavn = behandlingÅrsakType.navn,
+                        favoritt = synlighet == KodeverkSynlighet.SYNLIG_FAVORITT,
+                        beskrivelse = null,
+                        gruppering = gruppering
+                    )
+                }
+                    +
+                    no.nav.k9.klage.kodeverk.behandling.BehandlingÅrsakType.entries
+                        .map { behandlingÅrsakType ->
+                            val (gruppering, synlighet) = grupperingBehandlingsårsakK9Klage(behandlingÅrsakType)
+                            KodeverkVerdiDto(
+                                verdi = behandlingÅrsakType.kode,
+                                visningsnavn = behandlingÅrsakType.navn,
+                                favoritt = synlighet == KodeverkSynlighet.SYNLIG_FAVORITT,
+                                beskrivelse = null,
+                                gruppering = gruppering
+                            )
+                        }
         )
 
-
-        feltdefinisjonTjeneste.oppdater(kodeverkDto)
+        feltdefinisjonTjeneste.oppdater(kodeverk)
     }
 
     private fun grupperingBehandlingsårsakK9Klage(behandlingÅrsakType: no.nav.k9.klage.kodeverk.behandling.BehandlingÅrsakType): Pair<String, KodeverkSynlighet> {
         return when (behandlingÅrsakType) {
-            no.nav.k9.klage.kodeverk.behandling.BehandlingÅrsakType.RE_FEIL_I_LOVANDVENDELSE -> TODO()
-            no.nav.k9.klage.kodeverk.behandling.BehandlingÅrsakType.RE_FEIL_REGELVERKSFORSTÅELSE -> TODO()
-            no.nav.k9.klage.kodeverk.behandling.BehandlingÅrsakType.RE_FEIL_ELLER_ENDRET_FAKTA -> TODO()
-            no.nav.k9.klage.kodeverk.behandling.BehandlingÅrsakType.RE_FEIL_PROSESSUELL -> TODO()
-            no.nav.k9.klage.kodeverk.behandling.BehandlingÅrsakType.KØET_BEHANDLING -> TODO()
-            no.nav.k9.klage.kodeverk.behandling.BehandlingÅrsakType.RE_ANNET -> TODO()
-            no.nav.k9.klage.kodeverk.behandling.BehandlingÅrsakType.RE_KLAGE_UTEN_END_INNTEKT -> TODO()
-            no.nav.k9.klage.kodeverk.behandling.BehandlingÅrsakType.RE_KLAGE_MED_END_INNTEKT -> TODO()
-            no.nav.k9.klage.kodeverk.behandling.BehandlingÅrsakType.RE_OPPLYSNINGER_OM_SØKERS_REL -> TODO()
-            no.nav.k9.klage.kodeverk.behandling.BehandlingÅrsakType.ETTER_KLAGE -> TODO()
-            no.nav.k9.klage.kodeverk.behandling.BehandlingÅrsakType.RE_REGISTEROPPLYSNING -> TODO()
-            no.nav.k9.klage.kodeverk.behandling.BehandlingÅrsakType.RE_OPPLYSNINGER_OM_YTELSER -> TODO()
-            no.nav.k9.klage.kodeverk.behandling.BehandlingÅrsakType.RE_TILSTØTENDE_YTELSE_INNVILGET -> TODO()
-            no.nav.k9.klage.kodeverk.behandling.BehandlingÅrsakType.RE_TILSTØTENDE_YTELSE_OPPHØRT -> TODO()
-            no.nav.k9.klage.kodeverk.behandling.BehandlingÅrsakType.UDEFINERT -> TODO()
+            no.nav.k9.klage.kodeverk.behandling.BehandlingÅrsakType.RE_FEIL_I_LOVANDVENDELSE,
+            no.nav.k9.klage.kodeverk.behandling.BehandlingÅrsakType.RE_FEIL_REGELVERKSFORSTÅELSE,
+            no.nav.k9.klage.kodeverk.behandling.BehandlingÅrsakType.RE_FEIL_ELLER_ENDRET_FAKTA,
+            no.nav.k9.klage.kodeverk.behandling.BehandlingÅrsakType.RE_FEIL_PROSESSUELL,
+            no.nav.k9.klage.kodeverk.behandling.BehandlingÅrsakType.KØET_BEHANDLING,
+            no.nav.k9.klage.kodeverk.behandling.BehandlingÅrsakType.RE_ANNET,
+            no.nav.k9.klage.kodeverk.behandling.BehandlingÅrsakType.RE_KLAGE_UTEN_END_INNTEKT,
+            no.nav.k9.klage.kodeverk.behandling.BehandlingÅrsakType.RE_KLAGE_MED_END_INNTEKT,
+            no.nav.k9.klage.kodeverk.behandling.BehandlingÅrsakType.RE_OPPLYSNINGER_OM_SØKERS_REL,
+            no.nav.k9.klage.kodeverk.behandling.BehandlingÅrsakType.ETTER_KLAGE,
+            no.nav.k9.klage.kodeverk.behandling.BehandlingÅrsakType.RE_REGISTEROPPLYSNING,
+            no.nav.k9.klage.kodeverk.behandling.BehandlingÅrsakType.RE_OPPLYSNINGER_OM_YTELSER,
+            no.nav.k9.klage.kodeverk.behandling.BehandlingÅrsakType.RE_TILSTØTENDE_YTELSE_INNVILGET,
+            no.nav.k9.klage.kodeverk.behandling.BehandlingÅrsakType.RE_TILSTØTENDE_YTELSE_OPPHØRT -> "Fra K9-klage" to KodeverkSynlighet.SYNLIG
+
+            no.nav.k9.klage.kodeverk.behandling.BehandlingÅrsakType.UDEFINERT -> "Udefinert" to KodeverkSynlighet.SKJULT
         }
     }
 
@@ -410,12 +417,12 @@ class OmrådeSetup(
             BehandlingÅrsakType.RE_KLAGE_NATTEVÅKBEREDSKAP,
             BehandlingÅrsakType.ETTER_KLAGE -> "Klage" to KodeverkSynlighet.SYNLIG_FAVORITT
 
-
+            BehandlingÅrsakType.RE_HENDELSE_DØD_FORELDER,
+            BehandlingÅrsakType.RE_HENDELSE_DØD_BARN -> "Dødsfall" to KodeverkSynlighet.SYNLIG_FAVORITT
 
             BehandlingÅrsakType.RE_MANGLER_FØDSEL,
             BehandlingÅrsakType.RE_MANGLER_FØDSEL_I_PERIODE,
             BehandlingÅrsakType.RE_AVVIK_ANTALL_BARN,
-
             BehandlingÅrsakType.RE_ENDRING_FRA_BRUKER,
             BehandlingÅrsakType.RE_FRAVÆRSKORRIGERING_FRA_SAKSBEHANDLER,
             BehandlingÅrsakType.RE_ENDRET_INNTEKTSMELDING,
@@ -425,11 +432,7 @@ class OmrådeSetup(
             BehandlingÅrsakType.RE_ENDRET_FORDELING,
             BehandlingÅrsakType.INFOBREV_BEHANDLING,
             BehandlingÅrsakType.INFOBREV_OPPHOLD,
-
             BehandlingÅrsakType.RE_HENDELSE_FØDSEL,
-            BehandlingÅrsakType.RE_HENDELSE_DØD_FORELDER,
-            BehandlingÅrsakType.RE_HENDELSE_DØD_BARN,
-            BehandlingÅrsakType.RE_HENDELSE_DØDFØDSEL,
             BehandlingÅrsakType.RE_REGISTEROPPLYSNING,
             BehandlingÅrsakType.RE_OPPLYSNINGER_OM_YTELSER,
             BehandlingÅrsakType.RE_TILSTØTENDE_YTELSE_INNVILGET,
@@ -529,22 +532,6 @@ object KodeverkSynlighetRegler {
         }
     }
 
-    fun behandlingsårsak(søknadÅrsak: BehandlingÅrsakType): KodeverkSynlighet {
-        return when (søknadÅrsak) {
-            BehandlingÅrsakType.RE_HENDELSE_DØD_BARN,
-            BehandlingÅrsakType.RE_HENDELSE_DØD_FORELDER -> KodeverkSynlighet.SYNLIG_FAVORITT
-
-            BehandlingÅrsakType.UDEFINERT -> KodeverkSynlighet.SKJULT
-            else -> KodeverkSynlighet.SYNLIG
-        }
-    }
-
-    fun behandlingsårsak(søknadÅrsak: no.nav.k9.klage.kodeverk.behandling.BehandlingÅrsakType): KodeverkSynlighet {
-        return when (søknadÅrsak) {
-            no.nav.k9.klage.kodeverk.behandling.BehandlingÅrsakType.UDEFINERT -> KodeverkSynlighet.SKJULT
-            else -> KodeverkSynlighet.SYNLIG
-        }
-    }
 
     fun ytelseType(ytelseType: FagsakYtelseType): KodeverkSynlighet {
         return when (ytelseType) {
