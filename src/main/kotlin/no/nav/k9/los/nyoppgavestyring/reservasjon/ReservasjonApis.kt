@@ -18,7 +18,6 @@ private val log: Logger = LoggerFactory.getLogger("nav.OppgaveApis")
 
 //TODO generell sikring kode6 - se etter feil
 //TODO fjern reservasjonsid fra objekter til frontend
-//TODO Auditlogging
 
 internal fun Route.ReservasjonApis() {
     val requestContextService by inject<RequestContextService>()

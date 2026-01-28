@@ -48,8 +48,6 @@ import no.nav.k9.los.nyoppgavestyring.forvaltning.ForvaltningRepository
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.*
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.cache.PepCacheRepository
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.cache.PepCacheService
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.audit.Auditlogger
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.audit.K9Auditlogger
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.azuregraph.AzureGraphService
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.azuregraph.AzureGraphServiceLocal
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.azuregraph.IAzureGraphService
@@ -647,7 +645,7 @@ fun naisCommonConfig(config: Configuration) = module {
     }
 
     single<IPepClient> {
-        PepClient(azureGraphService = get(), k9Auditlogger = K9Auditlogger(Auditlogger(config)), get())
+        PepClient(azureGraphService = get(), get())
     }
 }
 

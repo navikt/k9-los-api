@@ -3,8 +3,6 @@ package no.nav.k9.los.nyoppgavestyring.sisteoppgaver
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.extension.kotlin.asContextElement
 import kotlinx.coroutines.*
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.Action
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.Auditlogging
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.azuregraph.IAzureGraphService
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
@@ -53,9 +51,7 @@ class SisteOppgaverTjeneste(
                             try {
                                 val harTilgang = pepClient.harTilgangTilOppgaveV3(
                                     oppgave,
-                                    Action.read,
-                                    Auditlogging.IKKE_LOGG,
-                                    grupperForSaksbehandler
+                                    grupperForSaksbehandler = grupperForSaksbehandler
                                 )
                                 val personPdl = oppgave.hentVerdi("aktorId")?.let {
                                     pdlService.person(it)

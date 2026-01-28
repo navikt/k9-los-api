@@ -13,7 +13,6 @@ import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.nyoppgavestyring.FeltType
 import no.nav.k9.los.nyoppgavestyring.OppgaveTestDataBuilder
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.Action
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.Auditlogging
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.azuregraph.IAzureGraphService
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
@@ -95,7 +94,7 @@ class SisteOppgaverTjenesteTest : AbstractK9LosIntegrationTest() {
         coEvery { pdlService.person(aktorId1) } returns PersonPdlResponse(false, mockPerson)
 
         coEvery {
-            pepClient.harTilgangTilOppgaveV3(any(), eq(Action.read), eq(Auditlogging.IKKE_LOGG), any())
+            pepClient.harTilgangTilOppgaveV3(any(), eq(Action.read), any())
         } returns true
 
         // Lagre oppgaven som siste besøkt
@@ -132,7 +131,7 @@ class SisteOppgaverTjenesteTest : AbstractK9LosIntegrationTest() {
         
         // Bruker har tilgang til oppgave1 men ikke oppgave2
         coEvery {
-            pepClient.harTilgangTilOppgaveV3(any(), eq(Action.read), eq(Auditlogging.IKKE_LOGG), any())
+            pepClient.harTilgangTilOppgaveV3(any(), eq(Action.read), any())
         } answers {
             val oppgave = firstArg<Oppgave>()
             oppgave.eksternId == oppgave1.eksternId
