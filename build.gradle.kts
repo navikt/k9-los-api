@@ -7,7 +7,7 @@ val vaultJdbcVersion = "1.3.10"
 val koinVersion = "4.1.1"
 val kotestVersion = "6.0.3"
 val kotliqueryVersion = "1.9.1"
-val k9SakVersion = "6.0.6"
+val k9SakVersion = "6.0.8"
 val k9KlageVersion = "0.4.9"
 val jacksonVersion = "2.17.2"
 val commonsTextVersion = "1.13.0"
@@ -67,7 +67,7 @@ dependencies {
     }
 
     // Tilgangskontroll
-    implementation("no.nav.sif.abac:kontrakt:1.6.0")
+    implementation("no.nav.sif.abac:kontrakt:1.7.0")
 
     // Kontrakter
     implementation("no.nav.k9.sak:kontrakt:$k9SakVersion")
