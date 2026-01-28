@@ -196,7 +196,9 @@ class EventRepositoryPerLinjeForKonverteringTest() : AbstractK9LosIntegrationTes
         var vaskeBestillinger = eventRepository.hentAlleHistorikkvaskbestillinger()
         assertThat(vaskeBestillinger.size).isEqualTo(2)
 
-        eventRepository.settHistorikkvaskFerdig(Fagsystem.PUNSJ, eventLagret.eksternId)
+        transactionalManager.transaction { tx ->
+            eventRepository.settHistorikkvaskFerdig(Fagsystem.PUNSJ, eventLagret.eksternId, tx)
+        }
         vaskeBestillinger = eventRepository.hentAlleHistorikkvaskbestillinger()
         assertThat(vaskeBestillinger.size).isEqualTo(1)
         val uvasketEventLagret = transactionalManager.transaction { tx ->
@@ -208,7 +210,9 @@ class EventRepositoryPerLinjeForKonverteringTest() : AbstractK9LosIntegrationTes
         }
         assertThat(K9PunsjEventDto.fraEventLagret(uvasketEventLagret).status).isEqualTo(Oppgavestatus.VENTER)
 
-        eventRepository.settHistorikkvaskFerdig(Fagsystem.PUNSJ, uvasketEventLagret.eksternId)
+        transactionalManager.transaction { tx ->
+            eventRepository.settHistorikkvaskFerdig(Fagsystem.PUNSJ, uvasketEventLagret.eksternId, tx)
+        }
 
         vaskeBestillinger = eventRepository.hentAlleHistorikkvaskbestillinger()
         assertThat(vaskeBestillinger).isEmpty()

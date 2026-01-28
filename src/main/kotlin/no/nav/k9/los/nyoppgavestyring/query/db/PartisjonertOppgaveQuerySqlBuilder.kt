@@ -2,8 +2,6 @@ package no.nav.k9.los.nyoppgavestyring.query.db
 
 import kotliquery.Row
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.util.InClauseHjelper
-import no.nav.k9.los.nyoppgavestyring.kodeverk.BeskyttelseType
-import no.nav.k9.los.nyoppgavestyring.kodeverk.EgenAnsatt
 import no.nav.k9.los.nyoppgavestyring.kodeverk.PersonBeskyttelseType
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Datatype
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveId
@@ -232,22 +230,6 @@ class PartisjonertOppgaveQuerySqlBuilder(
                     PersonBeskyttelseType.KODE7_ELLER_EGEN_ANSATT.kode -> "(opc.kode6 IS NOT TRUE AND (opc.kode7 IS NOT FALSE OR opc.egen_ansatt IS NOT FALSE))"
                     PersonBeskyttelseType.UGRADERT.kode -> "(opc.kode6 IS NOT TRUE AND opc.kode7 IS NOT TRUE AND opc.egen_ansatt IS NOT TRUE)"
                     else -> throw IllegalStateException("Ukjent verdi for personbeskyttelse: ${feltverdier.first()}")
-                }
-            }
-
-            // Deprecated felter - vil bli fjernet
-            "beskyttelse" -> {
-                whereClause += " ${combineOperator.sql} " + when (feltverdier.first()) {
-                    BeskyttelseType.KODE7.kode -> "opc.kode7 IS NOT FALSE"
-                    else -> "opc.kode6 IS NOT TRUE AND opc.kode7 IS NOT TRUE"
-                }
-            }
-
-            "egenAnsatt" -> {
-                whereClause += " ${combineOperator.sql} " + when (feltverdier.first()) {
-                    EgenAnsatt.JA.kode -> "opc.egen_ansatt IS NOT FALSE"
-                    EgenAnsatt.NEI.kode -> "opc.egen_ansatt IS NOT TRUE"
-                    else -> throw IllegalStateException("Ukjent verdi for egenAnsatt: ${feltverdier.first()}")
                 }
             }
 

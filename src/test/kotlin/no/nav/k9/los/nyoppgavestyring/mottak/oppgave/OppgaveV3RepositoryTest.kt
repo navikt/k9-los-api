@@ -200,7 +200,7 @@ class OppgaveV3RepositoryTest : AbstractK9LosIntegrationTest() {
 
         val vasketOppgave = transactionalManager.transaction { tx ->
             oppgaveV3Repository.slettFeltverdier(oppgave1.eksternId, 0, tx)
-            oppgaveV3Repository.lagreFeltverdierForDatavask(oppgave1.eksternId, 0, oppgave1.status, oppgave1.felter, tx)
+            oppgaveV3Repository.lagreFeltverdierForDatavask(oppgave1, 0, tx)
             oppgaveV3Repository.hentAktivOppgave(oppgave1.eksternId, oppgave1.oppgavetype, tx)
         }!!
 

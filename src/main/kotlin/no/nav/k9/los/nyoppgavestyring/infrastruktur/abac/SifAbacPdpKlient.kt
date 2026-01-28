@@ -74,11 +74,6 @@ class SifAbacPdpKlient(
         val antallForsøk = 3
         val systemToken = cachedAccessTokenClient.getAccessToken(scopes)
 
-        if (environment == KoinProfile.PREPROD) {
-            val tokenUtenSigatur = systemToken.token.substringBeforeLast(".")
-            log.info("Kaller med token $tokenUtenSigatur")
-        }
-
         val completeUrl = "${url}/api/diskresjonskoder/k9/sak"
         val body = LosObjectMapper.instance.writeValueAsString(saksnummerDto)
         val response = Retry.retry(

@@ -76,7 +76,7 @@ data class K9SakEventDto(
      * Map av aksjonspunktkode og statuskode.
      */
     @Deprecated("bruk aksjonspunktTilstander")
-    val aksjonspunktKoderMedStatusListe: MutableMap<String, String>,
+    val aksjonspunktKoderMedStatusListe: MutableMap<String, String>? = null,
 
     val href: String? = null,
     val førsteFeilutbetaling: String? = null,
