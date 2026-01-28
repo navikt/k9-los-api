@@ -17,6 +17,7 @@ class GyldigeTransientFeltutleder {
             K9SakVentetPåSøkerUtleder::class.java.canonicalName to K9SakVentetPåSøkerUtleder(),
             K9SakVentetPåTekniskFeilUtleder::class.java.canonicalName to K9SakVentetPåTekniskFeilUtleder(),
             K9SakTidSidenMottattDatoUtleder::class.java.canonicalName to K9SakTidSidenMottattDatoUtleder(),
+            K9TilbakeTidSidenFørsteFeilutbetalingDatoUtleder::class.java.canonicalName to K9TilbakeTidSidenFørsteFeilutbetalingDatoUtleder(),
         )
 
         fun hentFeltutleder(utleder: String): TransientFeltutleder {
