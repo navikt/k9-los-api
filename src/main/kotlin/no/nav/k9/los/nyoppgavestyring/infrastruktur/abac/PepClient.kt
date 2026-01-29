@@ -1,10 +1,10 @@
 package no.nav.k9.los.nyoppgavestyring.infrastruktur.abac
 
 import kotlinx.coroutines.runBlocking
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.audit.K9Auditlogger
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.azuregraph.IAzureGraphService
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.idToken
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.Saksbehandler
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import no.nav.sif.abac.kontrakt.abac.Diskresjonskode
 import no.nav.sif.abac.kontrakt.abac.dto.SaksnummerDto
 import no.nav.sif.abac.kontrakt.person.AktørId
@@ -15,7 +15,6 @@ import kotlin.coroutines.coroutineContext
 
 class PepClient(
     private val azureGraphService: IAzureGraphService,
-    private val k9Auditlogger: K9Auditlogger,
     private val sifAbacPdpKlient: ISifAbacPdpKlient
 ) : IPepClient {
     private val log: Logger = LoggerFactory.getLogger(PepClient::class.java)
@@ -82,9 +81,8 @@ class PepClient(
     }
 
     override suspend fun harTilgangTilOppgaveV3(
-        oppgave: no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave,
+        oppgave: Oppgave,
         action: Action,
-        auditlogging: Auditlogging,
         grupperForSaksbehandler: Set<UUID>?
     ): Boolean {
         return harTilgang(
@@ -94,16 +92,14 @@ class PepClient(
             saksnummer = oppgave.hentVerdi("saksnummer"),
             aktørIdSøker = oppgave.hentVerdi("aktorId"),
             aktørIdPleietrengende = oppgave.hentVerdi("pleietrengendeAktorId"),
-            auditlogging = auditlogging,
             grupperForSaksbehandler = grupperForSaksbehandler
         )
     }
 
     override fun harTilgangTilOppgaveV3(
-        oppgave: no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave,
+        oppgave: Oppgave,
         saksbehandler: Saksbehandler,
-        action: Action,
-        auditlogging: Auditlogging
+        action: Action
     ): Boolean {
         return runBlocking {
             harTilgang(
@@ -113,7 +109,6 @@ class PepClient(
                 saksnummer = oppgave.hentVerdi("saksnummer"),
                 aktørIdSøker = oppgave.hentVerdi("aktorId"),
                 aktørIdPleietrengende = oppgave.hentVerdi("pleietrengendeAktorId"),
-                auditlogging = auditlogging
             )
         }
     }
@@ -125,7 +120,6 @@ class PepClient(
         saksnummer: String?,
         aktørIdSøker: String?,
         aktørIdPleietrengende: String?,
-        auditlogging: Auditlogging,
         grupperForSaksbehandler: Set<UUID>? = null
     ): Boolean {
         return when (oppgavetype) {
@@ -138,10 +132,6 @@ class PepClient(
                     saksbehandlersIdent = identTilInnloggetBruker,
                     saksbehandlersGrupper = saksbehandlersGrupper
                 )
-
-                k9Auditlogger.betingetLogging(tilgang, auditlogging) {
-                    loggTilgangK9Sak(saksnummer, aktørIdSøker!!, identTilInnloggetBruker, action, tilgang)
-                }
 
                 tilgang
             }
@@ -158,12 +148,6 @@ class PepClient(
                 ) else {
                     log.warn("Ingen aktørIder funnet for punsj-oppgave. Gir som fallback tilgang til oppgaven, for å unngå at den havner utenfor alle køer.")
                     true
-                }
-
-                berørteAktørId.firstOrNull()?.let { aktørId ->
-                    k9Auditlogger.betingetLogging(tilgang, auditlogging) {
-                        loggTilgangK9Punsj(aktørId, identTilInnloggetBruker, action, tilgang)
-                    }
                 }
 
                 tilgang

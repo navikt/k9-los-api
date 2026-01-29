@@ -143,9 +143,6 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
         config
     }
     every { config.koinProfile() } returns KoinProfile.LOCAL
-    every { config.auditEnabled() } returns false
-    every { config.auditVendor() } returns "k9"
-    every { config.auditProduct() } returns "k9-los-api"
     every { config.k9FrontendUrl() } returns "http://localhost:9000"
     every { config.k9PunsjFrontendUrl() } returns "http://localhost:8080"
     every { config.nyOppgavestyringAktivert() } returns true

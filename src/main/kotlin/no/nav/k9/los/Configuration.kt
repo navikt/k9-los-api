@@ -157,18 +157,6 @@ data class Configuration(private val config: ApplicationConfig) {
         return "k9-los"
     }
 
-    fun auditEnabled(): Boolean {
-        return config.getRequiredString("nav.audit.enabled", secret = false).toBoolean()
-    }
-
-    fun auditVendor(): String {
-        return config.getRequiredString("nav.audit.vendor", secret = false)
-    }
-
-    fun auditProduct(): String {
-        return config.getRequiredString("nav.audit.product", secret = false)
-    }
-
     var koinProfile = KoinProfile.LOCAL
 
     init {

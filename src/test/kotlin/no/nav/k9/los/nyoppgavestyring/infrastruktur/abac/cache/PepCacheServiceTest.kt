@@ -23,7 +23,6 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEve
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventHandler
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.EventTilOppgaveAdapter
 import no.nav.k9.los.nyoppgavestyring.felter
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.Action
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.jobbplanlegger.Jobbplanlegger
@@ -75,7 +74,7 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
     fun setup() {
         runBlocking {
             // Gir tilgang til kode6 for å isolere testing av cache-oppdatering
-            coEvery { pepClient.harTilgangTilOppgaveV3(any(), any(), any()) } returns true
+            coEvery { pepClient.harTilgangTilOppgaveV3(any(), any()) } returns true
         }
 
         val områdeSetup = get<OmrådeSetup>()
@@ -275,9 +274,9 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
 
         assertThat(hentOppgaverMedSikkerhetsklassifisering(oppgaveQueryService, eksternId, PersonBeskyttelseType.UGRADERT)).isNotEmpty()
         assertThat(hentOppgaverMedSikkerhetsklassifisering(oppgaveQueryService, eksternId, PersonBeskyttelseType.UTEN_KODE6)).isNotEmpty()
-        verify(exactly = 2) { runBlocking { pepClient.harTilgangTilOppgaveV3(any(), Action.read, any()) } } //oppgaven hentet ut 2 ganger fra kø, gir to kall til pep klient
+        verify(exactly = 2) { runBlocking { pepClient.harTilgangTilOppgaveV3(any()) } } //oppgaven hentet ut 2 ganger fra kø, gir to kall til pep klient
         assertThat(hentOppgaverMedSikkerhetsklassifisering(oppgaveQueryService, eksternId, PersonBeskyttelseType.KODE6)).isEmpty()
-        verify(exactly = 2) { runBlocking { pepClient.harTilgangTilOppgaveV3(any(), Action.read, any()) } } //oppgaven var ikke i køa, så gjør ikke ekstra kall til pep-klent
+        verify(exactly = 2) { runBlocking { pepClient.harTilgangTilOppgaveV3(any()) } } //oppgaven var ikke i køa, så gjør ikke ekstra kall til pep-klent
 
         gjørSakKode6(saksnummer)
         ventPåAntallForsøk(10, "Pepcache") { pepRepository.hent("K9", eksternId)?.kode6 == true }
@@ -288,7 +287,7 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
         assertThat(hentOppgaverMedSikkerhetsklassifisering(oppgaveQueryService, eksternId, PersonBeskyttelseType.KODE6)).isNotEmpty()
 
         jobbplanlegger.stopp()
-        verify(exactly = 3) { runBlocking { pepClient.harTilgangTilOppgaveV3(any(), any(), any()) } } //oppgaven var bare i kode6-køa, så ble ett ekstra kall til pep-klent
+        verify(exactly = 3) { runBlocking { pepClient.harTilgangTilOppgaveV3(any(), any()) } } //oppgaven var bare i kode6-køa, så ble ett ekstra kall til pep-klent
     }
 
     private fun loggAlleOppgaverMedFelterOgCache() {
