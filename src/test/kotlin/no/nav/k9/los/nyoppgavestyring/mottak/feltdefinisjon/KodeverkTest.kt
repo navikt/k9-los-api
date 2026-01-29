@@ -74,6 +74,7 @@ class KodeverkTest : AbstractK9LosIntegrationTest() {
              id = null,
              eksternId = testFeltdefinissjonEksternId,
              visningsnavn = "Test",
+             beskrivelse = null,
              område = område,
              listetype = false,
              tolkesSom = "String",

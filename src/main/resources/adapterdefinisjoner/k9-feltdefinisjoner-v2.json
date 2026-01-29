@@ -107,7 +107,7 @@
       "listetype": false,
       "tolkesSom": "Timestamp",
       "visTilBruker": true,
-      "kokriterie": true
+      "kokriterie": false
     },
     {
       "id": "tidSidenMottattDato",
@@ -115,7 +115,7 @@
       "listetype": false,
       "tolkesSom": "Duration",
       "visTilBruker": true,
-      "kokriterie": false,
+      "kokriterie": true,
       "transientFeltutleder": "no.nav.k9.los.nyoppgavestyring.query.mapping.transientfeltutleder.K9SakTidSidenMottattDatoUtleder"
     },
     {
@@ -124,11 +124,11 @@
       "listetype": false,
       "tolkesSom": "Timestamp",
       "visTilBruker": true,
-      "kokriterie": true
+      "kokriterie": false
     },
     {
       "id": "behandlingTypekode",
-      "visningsnavn": "Behandlingstype nivå 2",
+      "visningsnavn": "Behandlingstype",
       "listetype": false,
       "tolkesSom": "String",
       "visTilBruker": true,
@@ -209,6 +209,7 @@
     {
       "id": "aksjonspunkt",
       "visningsnavn": "Løsbare, fremtidige og tidligere aksjonspunkt",
+      "beskrivelse": "Løsbare- (se aksjonspunkt som kan løses), fremtidige- (se Løsbare og fremtidige aksjonspunkt) og løste aksjonspunkt",
       "listetype": true,
       "tolkesSom": "String",
       "visTilBruker": true,
@@ -221,6 +222,7 @@
     {
       "id": "aktivtAksjonspunkt",
       "visningsnavn": "Løsbare og fremtidige aksjonspunkt",
+      "beskrivelse": "Løsbare aksjonspunkt (se aksjonspunkt som kan løses) og åpne aksjonspunkter som kan løses først når behandlingen når riktig steg",
       "listetype": true,
       "tolkesSom": "String",
       "visTilBruker": true,
@@ -233,6 +235,7 @@
     {
       "id": "løsbartAksjonspunkt",
       "visningsnavn": "Aksjonspunkt som kan løses",
+      "beskrivelse": "Åpne aksjonspunkt som er løsbart akkurat nå, fordi de hører til steget behandlingen står i",
       "listetype": false,
       "tolkesSom": "String",
       "visTilBruker": true,
@@ -535,15 +538,15 @@
     },
     {
       "id": "førsteFeilutbetalingDato",
-      "visningsnavn": "Føste dato som har feilutbetaling",
+      "visningsnavn": "Første dato som har feilutbetaling",
       "listetype": false,
       "tolkesSom": "Timestamp",
       "visTilBruker": true,
-      "kokriterie": true
+      "kokriterie": false
     },
     {
       "id": "feilutbetaltBeløp",
-      "visningsnavn": "Feilutbetalt beløp",
+      "visningsnavn": "Feilutbetalt beløp (kun tilbakekreving)",
       "listetype": false,
       "tolkesSom": "Integer",
       "visTilBruker": true,

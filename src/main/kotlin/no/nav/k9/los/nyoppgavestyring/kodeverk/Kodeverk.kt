@@ -49,6 +49,7 @@ enum class BehandlingType(override val kode: String, override val navn: String, 
     ANKE("BT-008", "Anke", "ae0046"),
     REVURDERING_TILBAKEKREVING("BT-009", "Tilbakekreving revurdering", "BT-009"),
     UNNTAKSBEHANDLING("BT-010", "Unntaksbehandling", "N/A"),
+    SØKNAD_OM_NYE_PERIODER("BT-011", "Søknad om nye perioder", "N/A"),
 
     //gjelder punsj
     PAPIRSØKNAD("PAPIRSØKNAD", "Papirsøknad", "PUNSJ_INNSENDING_TYPE"),
