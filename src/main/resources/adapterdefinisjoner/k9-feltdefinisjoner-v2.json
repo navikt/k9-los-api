@@ -115,7 +115,7 @@
       "listetype": false,
       "tolkesSom": "Duration",
       "visTilBruker": true,
-      "kokriterie": false,
+      "kokriterie": true,
       "transientFeltutleder": "no.nav.k9.los.nyoppgavestyring.query.mapping.transientfeltutleder.K9SakTidSidenMottattDatoUtleder"
     },
     {
@@ -542,16 +542,7 @@
       "listetype": false,
       "tolkesSom": "Timestamp",
       "visTilBruker": true,
-      "kokriterie": true
-    },
-    {
-      "id": "tidSidenFørsteFeilutbetalingDato",
-      "visningsnavn": "Tid siden første dato som har feilutbetaling",
-      "listetype": false,
-      "tolkesSom": "Duration",
-      "visTilBruker": true,
-      "kokriterie": false,
-      "transientFeltutleder": "no.nav.k9.los.nyoppgavestyring.query.mapping.transientfeltutleder.K9TilbakeTidSidenFørsteFeilutbetalingDatoUtleder"
+      "kokriterie": false
     },
     {
       "id": "feilutbetaltBeløp",

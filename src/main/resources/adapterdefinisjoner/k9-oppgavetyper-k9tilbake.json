@@ -32,11 +32,6 @@
           "påkrevd": false
         },
         {
-          "id": "tidSidenFørsteFeilutbetalingDato",
-          "visPåOppgave": true,
-          "påkrevd": false
-        },
-        {
           "id": "feilutbetaltBeløp",
           "visPåOppgave": true,
           "påkrevd": false
