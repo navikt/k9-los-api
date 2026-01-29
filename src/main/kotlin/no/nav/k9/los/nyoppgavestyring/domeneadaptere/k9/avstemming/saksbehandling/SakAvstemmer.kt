@@ -4,11 +4,12 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.Avstemmingsra
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.Behandlingstilstand
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.Oppgavetilstand
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingStatus
+import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 
 object SakAvstemmer {
-    fun regnUtDiff(k9SakRapport: List<Behandlingstilstand>, åpneLosOppgaver: List<Oppgave>): Avstemmingsrapport {
+    fun regnUtDiff(fagsystem: Fagsystem, k9SakRapport: List<Behandlingstilstand>, åpneLosOppgaver: List<Oppgave>): Avstemmingsrapport {
         val forekomsterMedUliktInnhold = mutableSetOf<Pair<Behandlingstilstand, Oppgavetilstand>>()
         val forekomsterSomGranskesManuelt = mutableSetOf<Pair<Behandlingstilstand, Oppgavetilstand>>()
         val åpneForekomsterIFagsystemSomManglerILos = mutableSetOf<Behandlingstilstand>()
@@ -36,7 +37,7 @@ object SakAvstemmer {
         }
 
         return Avstemmingsrapport(
-            "K9Sak",
+            fagsystem.kode,
             åpneForekomsterIFagsystemSomManglerILos.size,
             åpneForekomsterILosSomManglerIFagsystem.size,
             forekomsterMedUliktInnhold.size,
