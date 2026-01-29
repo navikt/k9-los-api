@@ -48,7 +48,7 @@ class AvstemmingsTjeneste(
                     åpneOppgaver = åpneOppgaverDeferred.await()
                     åpneBehandlinger = åpneBehandlingerDeferred.await()
                 }
-                SakAvstemmer.regnUtDiff(åpneBehandlinger, åpneOppgaver)
+                SakAvstemmer.regnUtDiff(Fagsystem.K9SAK, åpneBehandlinger, åpneOppgaver)
             }
             Fagsystem.K9KLAGE -> {
                 log.info("Henter åpne behandlinger fra K9Klage")
@@ -72,7 +72,7 @@ class AvstemmingsTjeneste(
                     )
                 )
                 val åpneOppgaver = oppgaveQueryService.queryForOppgave(QueryRequest(query))
-                SakAvstemmer.regnUtDiff(åpneBehandlinger, åpneOppgaver)
+                SakAvstemmer.regnUtDiff(Fagsystem.K9KLAGE, åpneBehandlinger, åpneOppgaver)
             }
             Fagsystem.K9TILBAKE -> throw UnsupportedOperationException()
             Fagsystem.PUNSJ -> throw UnsupportedOperationException()

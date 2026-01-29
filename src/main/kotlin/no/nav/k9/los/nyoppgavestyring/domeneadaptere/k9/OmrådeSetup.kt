@@ -352,7 +352,7 @@ class OmrådeSetup(
     private fun kodeverkBehandlingtype() {
         val kodeverkDto = KodeverkDto(
             område = område,
-            eksternId = "Behandlingstype",
+            eksternId = "Behandlingtype",
             beskrivelse = null,
             uttømmende = true,
             verdier = BehandlingType.entries
