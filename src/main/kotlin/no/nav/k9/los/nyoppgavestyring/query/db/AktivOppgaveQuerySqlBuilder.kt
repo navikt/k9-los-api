@@ -2,8 +2,6 @@ package no.nav.k9.los.nyoppgavestyring.query.db
 
 import kotliquery.Row
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.util.InClauseHjelper
-import no.nav.k9.los.nyoppgavestyring.kodeverk.BeskyttelseType
-import no.nav.k9.los.nyoppgavestyring.kodeverk.EgenAnsatt
 import no.nav.k9.los.nyoppgavestyring.kodeverk.PersonBeskyttelseType
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Datatype
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Datatype.INTEGER
@@ -132,38 +130,9 @@ class AktivOppgaveQuerySqlBuilder(
 
         val index = queryParams.size + orderByParams.size
         when (feltkode) {
-            "kildeområde" -> {
-                query += "${combineOperator.sql} o.kildeomrade ${operator.sql} (:kildeomrade$index) "
-                queryParams["kildeomrade$index"] = feltverdi
-            }
-
             "oppgavetype" -> {
                 query += "${combineOperator.sql} ot.ekstern_id ${operator.sql} (:oppgavetype$index) "
                 queryParams["oppgavetype$index"] = feltverdi
-            }
-
-            "oppgaveområde" -> {
-                query += "${combineOperator.sql} oppgave_omrade.ekstern_id ${operator.sql} (:oppgave_omrade$index) "
-                queryParams["oppgave_omrade$index"] = feltverdi
-            }
-
-            //deprecated - for removal - bruk "personbeskyttelse" istedet
-            "beskyttelse" -> {
-                when (feltverdi) {
-                    BeskyttelseType.KODE7.kode -> query += "${combineOperator.sql} opc.kode7 is not false "
-                    else -> {
-                        query += "${combineOperator.sql} opc.kode6 is not true AND opc.kode7 is not true "
-                    }
-                }
-            }
-
-            //deprecated - for removal - bruk "personbeskyttelse" istedet
-            "egenAnsatt" -> {
-                query += when (feltverdi) {
-                    EgenAnsatt.JA.kode -> "${combineOperator.sql} opc.egen_ansatt is not false "
-                    EgenAnsatt.NEI.kode -> "${combineOperator.sql} opc.egen_ansatt is not true "
-                    else -> throw IllegalStateException("Ukjent feltkode: $feltkode")
-                }
             }
 
             "personbeskyttelse" -> {

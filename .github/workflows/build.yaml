@@ -1,0 +1,63 @@
+name: "Bygg og deploy"
+on:
+  push:
+    paths-ignore:
+      - '**.md'
+      - '**.MD'
+      - '.gitignore'
+      - 'LICENSE'
+      - 'CODEOWNERS'
+  workflow_dispatch:
+
+jobs:
+
+  build-app:
+    name: Build and test (including docker image)
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+    #TODO kan fjerne testcontainers og bruke maven-build-app-db til å sette opp database for tester her
+    uses: navikt/sif-gha-workflows/.github/workflows/maven-build-app.yml@main
+    with:
+      runs-on: ${{ case(github.ref_name == github.event.repository.default_branch, 'ubuntu-latest-8-cores', 'ubuntu-latest-4-cores') }}
+      java-version: 21
+      build-image: ${{ github.ref_name == github.event.repository.default_branch}}
+      push-image: ${{ github.ref_name == github.event.repository.default_branch}}
+      #bruk upload-image om skal trigge k9-verdikjede
+      #upload-image: ${{ github.ref_name != github.event.repository.default_branch }}
+      t-2c: "-T1C"
+    secrets: inherit
+
+  deploy-dev:
+    name: Deploy dev
+    permissions:
+      id-token: write
+      contents: write
+    if: ${{ github.ref_name == github.event.repository.default_branch}}
+    needs: [ build-app ]
+    uses: navikt/sif-gha-workflows/.github/workflows/maven-deploy.yml@main
+    with:
+      gar: true
+      image: ${{ needs.build-app.outputs.build-version }}
+      cluster: dev-fss
+      naiserator_file: nais/naiserator.yml
+      input_vars_file: nais/dev-fss.json
+    secrets: inherit
+
+  deploy-prod:
+    name: Deploy prod
+    permissions:
+      id-token: write
+      contents: write
+    if: ${{ github.ref_name == github.event.repository.default_branch}}
+    needs: [ build-app ]
+    uses: navikt/sif-gha-workflows/.github/workflows/maven-deploy.yml@main
+    with:
+      gar: true
+      image: ${{ needs.build-app.outputs.build-version }}
+      cluster: prod-fss
+      naiserator_file: nais/naiserator.yml
+      input_vars_file: nais/prod-fss.json
+    secrets: inherit
+

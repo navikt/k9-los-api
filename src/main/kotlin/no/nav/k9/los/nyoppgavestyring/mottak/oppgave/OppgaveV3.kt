@@ -12,6 +12,7 @@ class OppgaveV3(
     val oppgavetype: Oppgavetype,
     val status: Oppgavestatus,
     val endretTidspunkt: LocalDateTime,
+    @Deprecated("kildeområde skal vekk. Bruk oppgavetype.område i stedet")
     val kildeområde: String,
     val reservasjonsnøkkel: String,
     val aktiv: Boolean,

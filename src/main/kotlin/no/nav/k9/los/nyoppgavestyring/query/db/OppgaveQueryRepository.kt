@@ -5,8 +5,6 @@ import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
-import no.nav.k9.los.nyoppgavestyring.kodeverk.BeskyttelseType
-import no.nav.k9.los.nyoppgavestyring.kodeverk.EgenAnsatt
 import no.nav.k9.los.nyoppgavestyring.kodeverk.PersonBeskyttelseType
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Kodeverkreferanse
@@ -190,40 +188,7 @@ class OppgaveQueryRepository(
                     )
                 }
             ),
-            Oppgavefelt(
-                område = null,
-                kode = "beskyttelse",
-                visningsnavn = "Beskyttelse",
-                tolkes_som = "String",
-                kokriterie = false,
-                verdiforklaringerErUttømmende = true,
-                BeskyttelseType.entries.map {
-                    Verdiforklaring(
-                        verdi = it.kode,
-                        visningsnavn = it.beskrivelse,
-                        sekundærvalg = false,
-                        gruppering = null
-                    )
-                }
-            ),
-            Oppgavefelt(
-                område = null,
-                kode = "egenAnsatt",
-                visningsnavn = "Egen ansatt",
-                tolkes_som = "String",
-                kokriterie = false,
-                verdiforklaringerErUttømmende = true,
-                EgenAnsatt.entries.map {
-                    Verdiforklaring(
-                        verdi = it.kode,
-                        visningsnavn = it.beskrivelse,
-                        sekundærvalg = false,
-                        gruppering = null
-                    )
-                }
-            ),
-            Oppgavefelt(null, "kildeområde", "Kildeområde", "String", false, false, emptyList()),
-            Oppgavefelt(null, "oppgavetype", "Behandlingstype nivå 1", "String", true, false,
+            Oppgavefelt(null, "oppgavetype", "Oppgavetype", "String", true, false,
                 oppgavetypeNavn.map {
                     Verdiforklaring(
                         verdi = it,
@@ -233,14 +198,13 @@ class OppgaveQueryRepository(
                     )
                 }
             ),
-            Oppgavefelt(null, "oppgaveområde", "Oppgaveområde", "String", false, false, emptyList()),
             Oppgavefelt(null, "spørringstrategi", "Spørringstrategi", "String", false, true, Spørringstrategi.entries.map { Verdiforklaring(
                 it.name,
                 it.navn,
                 false,
                 null
             ) }),
-            Oppgavefelt(null, "ferdigstiltDato", "Ferdigstilt dato", "Timestamp", true, false, emptyList()),
+            Oppgavefelt(null, "ferdigstiltDato", "Ferdigstilt dato", "Timestamp", false, false, emptyList()),
         ).map { OppgavefeltMedMer(it, null) }
 
         return (felterFraDatabase + standardfelter).sortedBy { it.oppgavefelt.visningsnavn }

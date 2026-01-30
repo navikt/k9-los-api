@@ -5,8 +5,6 @@ import kotlinx.coroutines.runBlocking
 import kotliquery.TransactionalSession
 import kotliquery.sessionOf
 import kotliquery.using
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.Action
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.Auditlogging
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.idtoken.IIdToken
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.CoroutineRequestContext
@@ -170,7 +168,7 @@ class OppgaveQueryService {
                 }
         }
 
-        if (!pepClient.harTilgangTilOppgaveV3(oppgave = oppgave, action = Action.read, auditlogging = Auditlogging.LOGG_VED_PERMIT)) {
+        if (!pepClient.harTilgangTilOppgaveV3(oppgave = oppgave)) {
             return null
         }
 

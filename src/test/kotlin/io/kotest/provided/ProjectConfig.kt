@@ -7,6 +7,7 @@ import io.kotest.core.extensions.Extension
 import io.kotest.core.listeners.TestListener
 import io.kotest.core.test.TestCase
 import io.kotest.engine.test.TestResult
+import no.nav.k9.los.TØM_DATA_SQL
 import no.nav.k9.los.buildAndTestConfig
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.runMigration
@@ -70,33 +71,7 @@ object DbCleanupListener : TestListener {
 fun cleanupTables(dataSource: DataSource) {
     dataSource.connection.use { conn ->
         conn.createStatement().use { stmt ->
-            stmt.execute("""
-            truncate 
-                driftsmeldinger,
-                oppgavefelt_verdi,
-                saksbehandler,
-                siste_oppgaver,
-                OPPGAVEKO_SAKSBEHANDLER,
-                OPPGAVEKO_V3,
-                RESERVASJON_V3,
-                RESERVASJON_V3_ENDRING,
-                OPPGAVE_V3,
-                OPPGAVE_PEP_CACHE,
-                oppgavefelt_verdi_part,
-                oppgavefelt_verdi,
-                oppgavefelt_verdi_aktiv,
-                oppgave_v3_part,
-                oppgave_id_part,
-                oppgave_v3,
-                oppgave_v3_aktiv,
-                uttrekk,
-                lagret_sok,
-                event,
-                event_historikkvask_bestilt,
-                oppgave_v3_sendt_dvh;
-                
-            ALTER SEQUENCE saksbehandler_id_seq restart
-        """)
+            stmt.execute(TØM_DATA_SQL)
         }
     }
 }

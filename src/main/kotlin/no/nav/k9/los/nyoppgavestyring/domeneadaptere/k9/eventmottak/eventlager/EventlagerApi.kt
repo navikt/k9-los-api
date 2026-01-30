@@ -99,14 +99,15 @@ internal fun Route.EventlagerApi() {
         }
     }
 
-    put("bestillHistorikkvaskForFagsystem", {
+    put("/{fagsystem}/bestillHistorikkvask", {
         tags("Forvaltning")
         request {
-            queryParameter<Fagsystem>("fagsystem") {
-                description = "Fagsystemet man vil ha historikkvask for"
+            pathParameter<String>("fagsystem") {
+                description = "Fagsystemet man vil ha eventkonvertering for"
                 required = true
-                example("oneOf") {
-                    value = Fagsystem.K9SAK
+                example("K9SAK") {
+                    value = "K9SAK"
+                    description = "K9 Sak"
                 }
             }
         }

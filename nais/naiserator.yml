@@ -148,14 +148,6 @@ spec:
     - name: "OTEL_RESOURCE_ATTRIBUTES"
       value: "service.name=k9-los-api,service.namespace=k9saksbehandling,deployment.environment={{deployment_environment}},nais.backend=elastic-apm;grafana-lgtm"
 
-      # Audit logging
-    - name: AUDITLOGGER_ENABLED
-      value: "true"
-    - name: AUDITLOGGER_VENDOR
-      value: "k9"
-    - name: AUDITLOGGER_PRODUCT
-      value: "k9-los-api"
-
     # Gruppenavn for roller fra Active Directory
     # 0000-GA-k9-beslutter
     - name: BRUKER_GRUPPE_ID_BESLUTTER

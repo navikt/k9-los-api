@@ -8,6 +8,7 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.E
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventNøkkel
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventRepository
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.AktivOgPartisjonertOppgaveAjourholdTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
 import org.slf4j.Logger
@@ -20,6 +21,8 @@ class EventTilOppgaveAdapter(
     private val transactionalManager: TransactionalManager,
     private val eventTilOppgaveMapper: EventTilOppgaveMapper,
     private val oppgaveOppdatertHandler: OppgaveOppdatertHandler,
+    private val vaskeeventSerieutleder: VaskeeventSerieutleder,
+    private val ajourholdTjeneste: AktivOgPartisjonertOppgaveAjourholdTjeneste,
 ) {
     private val log: Logger = LoggerFactory.getLogger(EventTilOppgaveAdapter::class.java)
     private val TRÅDNAVN = "event-til-oppgave"
@@ -56,59 +59,65 @@ class EventTilOppgaveAdapter(
     }
 
     @WithSpan
-    fun oppdaterOppgaveForEksternId(@SpanAttribute eventnøkkel: EventNøkkel, eventTellerInn: Long = 0): Long {
-        log.info("Nytt felles oppgaveadapter, oppdaterer oppgave for fagsystem: ${eventnøkkel.fagsystem}, eksternId: ${eventnøkkel.eksternId}")
-        var eventTeller = eventTellerInn
+    fun oppdaterOppgaveForEksternId(@SpanAttribute eventnøkkel: EventNøkkel, statistikktellerInn: Long = 0): Long {
+        return transactionalManager.transaction { tx ->
+            oppdaterOppgaveForEksternId(eventnøkkel, tx, statistikktellerInn,)
+        }
+    }
+
+    fun oppdaterOppgaveForEksternId(
+        eventnøkkel: EventNøkkel,
+        tx: TransactionalSession,
+        statistikktellerInn: Long = 0
+    ): Long {
+        log.info("Nytt felles oppgaveadapter, oppdaterer oppgave for fagsystem: ${`eventnøkkel`.fagsystem}, eksternId: ${`eventnøkkel`.eksternId}")
+        var statistikkteller = statistikktellerInn
         var forrigeOppgaveversjon: OppgaveV3? = null
+        //låse alle eventer for denne eksternIden mens vi prosesserer dem
+        val eventer = eventRepository.hentAlleEventerMedLås(`eventnøkkel`.fagsystem, `eventnøkkel`.eksternId, tx)
+        val eventerMedNummerering = vaskeeventSerieutleder.korrigerEventnummerForVaskeeventer(eventer)
 
-        transactionalManager.transaction { tx ->
-            val eventerForEksternId =
-                eventRepository.hentAlleDirtyEventerNummerertMedLås(eventnøkkel.fagsystem, eventnøkkel.eksternId, tx)
-                    .sortedBy { LocalDateTime.parse(it.second.eksternVersjon) }
+        if (!eventerMedNummerering.isEmpty()) {
+            sjekkMeldingIFeilRekkefølgeOgBestillVask(`eventnøkkel`, eventerMedNummerering, tx)
 
-            if (!eventerForEksternId.isEmpty()) {
-                sjekkMeldingIFeilRekkefølgeOgBestillVask(eventnøkkel, eventerForEksternId, tx)
-
-                eventRepository.hentAlleEventerMedLås(eventnøkkel.fagsystem, eventnøkkel.eksternId, tx)
-
-                forrigeOppgaveversjon =
-                    if (eventerForEksternId.first().first > 0) {
-                        oppgaveV3Tjeneste.hentOppgaveversjon(
-                            "K9",
-                            K9Oppgavetypenavn.fraFagsystem(eventnøkkel.fagsystem).kode,
-                            eventnøkkel.eksternId,
-                            eventerForEksternId.first().first - 1,
-                            tx
-                        )
-                    } else {
-                        null
-                    }
-
-                for ((eventnummer, eventLagret) in eventerForEksternId) {
-                    val nyOppgaveversjon =
-                        eventTilOppgaveMapper.mapOppgave(eventLagret, forrigeOppgaveversjon, eventnummer)
-                    val oppgave = oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(nyOppgaveversjon, tx)
-
-                    if (oppgave != null) {
-                        oppgaveOppdatertHandler.håndterOppgaveOppdatert(eventLagret, oppgave, tx)
-
-                        eventTeller++
-                        forrigeOppgaveversjon = oppgave
-                    } else { // hvis oppgave == null ble ikke oppgaven oppdatert selv om eventet var dirty. Vi henter ut oppgaveversjonen vi forsøkte å oppdatere som kontekst for neste event
-                        forrigeOppgaveversjon = oppgaveV3Tjeneste.hentOppgaveversjon(
-                            "K9",
-                            K9Oppgavetypenavn.fraFagsystem(eventnøkkel.fagsystem).kode,
-                            eventnøkkel.eksternId,
-                            eventnummer,
-                            tx
-                        )
-                    }
-                    eventRepository.fjernDirty(eventLagret, tx)
+            forrigeOppgaveversjon =
+                if (eventerMedNummerering.first().first > 0) { //Firsty dirty melding er ikke første for oppgaven
+                    oppgaveV3Tjeneste.hentOppgaveversjon(
+                        "K9",
+                        K9Oppgavetypenavn.fraFagsystem(`eventnøkkel`.fagsystem).kode,
+                        `eventnøkkel`.eksternId,
+                        eventerMedNummerering.first().first - 1,
+                        tx
+                    )
+                } else {
+                    null
                 }
+
+            for ((eventnummer, eventLagret) in eventerMedNummerering) {
+                val nyOppgaveversjon =
+                    eventTilOppgaveMapper.mapOppgave(eventLagret, forrigeOppgaveversjon, eventnummer)
+                val oppgave = oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(nyOppgaveversjon, tx)
+
+                if (oppgave != null) {
+                    oppgaveOppdatertHandler.håndterOppgaveOppdatert(eventLagret, oppgave, tx)
+
+                    statistikkteller++
+                    forrigeOppgaveversjon = oppgave
+                } else { // hvis oppgave == null ble ikke oppgaven oppdatert selv om eventet var dirty. Vi henter ut oppgaveversjonen vi forsøkte å oppdatere som kontekst for neste event
+                    forrigeOppgaveversjon = oppgaveV3Tjeneste.hentOppgaveversjon(
+                        "K9",
+                        K9Oppgavetypenavn.fraFagsystem(`eventnøkkel`.fagsystem).kode,
+                        `eventnøkkel`.eksternId,
+                        eventnummer,
+                        tx
+                    )
+                }
+                eventRepository.fjernDirty(eventLagret, tx)
             }
+            ajourholdTjeneste.ajourholdOppgave(forrigeOppgaveversjon!!, eventerMedNummerering.last().first, tx)
         }
 
-        return eventTeller
+        return statistikkteller
     }
 
     private fun sjekkMeldingIFeilRekkefølgeOgBestillVask(eventnøkkel: EventNøkkel, eventerForEksternId: List<Pair<Int, EventLagret>>, tx: TransactionalSession)  {

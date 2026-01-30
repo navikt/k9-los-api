@@ -1,13 +1,17 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave
 
 import kotlinx.coroutines.*
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.K9Oppgavetypenavn
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventNøkkel
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventRepository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.HistorikkvaskBestilling
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.StatistikkRepository
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.NyOppgaveversjon
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.VaskOppgaveversjon
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveNøkkelDto
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import kotlin.time.measureTime
@@ -15,8 +19,9 @@ import kotlin.time.measureTime
 class HistorikkvaskTjeneste(
     private val eventRepository: EventRepository,
     private val oppgaveV3Tjeneste: OppgaveV3Tjeneste,
-    private val eventTilOppgaveMapper: EventTilOppgaveMapper,
+    private val statistikkRepository: StatistikkRepository,
     private val transactionalManager: TransactionalManager,
+    private val eventTilOppgaveAdapter: EventTilOppgaveAdapter,
 ) {
     private val log: Logger = LoggerFactory.getLogger(HistorikkvaskTjeneste::class.java)
 
@@ -70,11 +75,7 @@ class HistorikkvaskTjeneste(
     }
 
     fun vaskBestilling(historikkvaskBestilling: HistorikkvaskBestilling): Int {
-        var forrigeOppgave: OppgaveV3? = null
-        var oppgaveV3: OppgaveV3? = null
-
         var eventNrForBehandling = 0
-
         transactionalManager.transaction { tx ->
             val eventer =
                 eventRepository.hentAlleEventerMedLås(
@@ -85,31 +86,22 @@ class HistorikkvaskTjeneste(
             if (eventer.any { it.dirty }) {
                 log.info("Avbryter historikkvask for ${historikkvaskBestilling.eksternId} for fagsystem: ${historikkvaskBestilling.fagsystem}. Historikkvasken har funnet eventer som ennå ikke er lastet inn med normalflyt. Dirty eventer skal håndteres av vanlig adaptertjeneste.")
             } else {
-                for (event in eventer) {
-                    val oppgaveversjon = eventTilOppgaveMapper.mapOppgave(event, forrigeOppgave, eventNrForBehandling)
+                val oppgavenøkkel = OppgaveNøkkelDto(
+                    historikkvaskBestilling.eksternId,
+                    K9Oppgavetypenavn.fraFagsystem(historikkvaskBestilling.fagsystem).kode,
+                    "K9"
+                )
 
-                    when (oppgaveversjon) {
-                        is NyOppgaveversjon -> {
-                            val dto = oppgaveversjon.dto
-                            forrigeOppgave =
-                                oppgaveV3Tjeneste.vaskEksisterendeOppgaveversjon(dto, eventNrForBehandling, tx)
-                            eventNrForBehandling++
-                        }
+                statistikkRepository.fjernSendtMarkering(oppgavenøkkel, tx)
+                oppgaveV3Tjeneste.slettOppgave(oppgavenøkkel, tx)
+                val eventNøkkel = EventNøkkel(historikkvaskBestilling.fagsystem, historikkvaskBestilling.eksternId)
+                eventRepository.settDirty(eventNøkkel, tx)
+                eventNrForBehandling = eventTilOppgaveAdapter.oppdaterOppgaveForEksternId(eventNøkkel, tx).toInt()
 
-                        is VaskOppgaveversjon -> {
-                            val dto = oppgaveversjon.dto
-                            forrigeOppgave =
-                                oppgaveV3Tjeneste.vaskEksisterendeOppgaveversjon(dto, eventNrForBehandling - 1, tx)
-                        }
-                    }
-                }
-
-                oppgaveV3?.let {
-                    oppgaveV3Tjeneste.ajourholdOppgave(oppgaveV3, eventNrForBehandling, tx)
-                }
                 eventRepository.settHistorikkvaskFerdig(
                     historikkvaskBestilling.fagsystem,
-                    historikkvaskBestilling.eksternId
+                    historikkvaskBestilling.eksternId,
+                    tx
                 )
 
             }

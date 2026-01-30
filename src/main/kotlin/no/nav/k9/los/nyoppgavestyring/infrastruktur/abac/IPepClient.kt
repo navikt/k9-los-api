@@ -35,20 +35,12 @@ interface IPepClient {
     suspend fun harTilgangTilOppgaveV3(
         oppgave: no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave,
         action: Action = Action.read,
-        auditlogging: Auditlogging = Auditlogging.IKKE_LOGG,
         grupperForSaksbehandler: Set<UUID>? = null
     ) : Boolean
 
     fun harTilgangTilOppgaveV3(
         oppgave: no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave,
         saksbehandler: Saksbehandler,
-        action: Action,
-        auditlogging: Auditlogging
+        action: Action
     ) : Boolean
-}
-
-enum class Auditlogging {
-    IKKE_LOGG,
-    ALLTID_LOGG,
-    LOGG_VED_PERMIT
 }

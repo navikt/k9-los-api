@@ -5,6 +5,7 @@ import io.kotest.matchers.shouldBe
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.Behandlingstilstand
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingStatus
 import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
+import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.Område
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.Oppgavetype
@@ -21,7 +22,7 @@ class AvstemmerSpec : FreeSpec({
         "og korresponderende åpen oppgave" - {
             val oppgaver = listOf(Testdata.testOppgave(behandlingUuid))
             "skal gi ingen diff" {
-                val rapport = SakAvstemmer.regnUtDiff(behandlinger, oppgaver)
+                val rapport = SakAvstemmer.regnUtDiff(Fagsystem.K9SAK, behandlinger, oppgaver)
                 rapport.forekomsterILosSomManglerIFagsystem shouldBe emptyList()
                 rapport.forekomsterIFagsystemSomManglerILos shouldBe emptyList()
             }
@@ -33,7 +34,7 @@ class AvstemmerSpec : FreeSpec({
         "og korresponderende oppgave med annen status" - {
             val oppgaver = listOf(Testdata.testOppgave(behandlingUuid, status = Oppgavestatus.AAPEN))
             "skal gi diff på ulikt innhold i oppgaven" {
-                val rapport = SakAvstemmer.regnUtDiff(behandlinger, oppgaver)
+                val rapport = SakAvstemmer.regnUtDiff(Fagsystem.K9SAK, behandlinger, oppgaver)
                 rapport.forekomsterILosSomManglerIFagsystem shouldBe emptyList()
                 rapport.forekomsterIFagsystemSomManglerILos shouldBe emptyList()
                 rapport.forekomsterMedUliktInnhold.size shouldBe 1
@@ -49,7 +50,7 @@ class AvstemmerSpec : FreeSpec({
             "og korresponderende oppgave på vent" - {
                 val oppgaver = listOf(Testdata.testOppgave(behandlingUuid, status = Oppgavestatus.VENTER))
                 "skal gi ingen diff" {
-                    val rapport = SakAvstemmer.regnUtDiff(behandlinger, oppgaver)
+                    val rapport = SakAvstemmer.regnUtDiff(Fagsystem.K9SAK, behandlinger, oppgaver)
                     rapport.forekomsterILosSomManglerIFagsystem shouldBe emptyList()
                     rapport.forekomsterIFagsystemSomManglerILos shouldBe emptyList()
                     rapport.forekomsterMedUliktInnhold  shouldBe emptyList()
@@ -59,7 +60,7 @@ class AvstemmerSpec : FreeSpec({
             "og korresponderende oppgave annen status enn på vent" - {
                 val oppgaver = listOf(Testdata.testOppgave(behandlingUuid, status = Oppgavestatus.AAPEN))
                 "skal gi diff på ulikt innhold i oppgaven" {
-                    val rapport = SakAvstemmer.regnUtDiff(behandlinger, oppgaver)
+                    val rapport = SakAvstemmer.regnUtDiff(Fagsystem.K9SAK, behandlinger, oppgaver)
                     rapport.forekomsterMedUliktInnhold.size shouldBe 1
                 }
             }
@@ -76,7 +77,7 @@ class AvstemmerSpec : FreeSpec({
             "og korresponderende åpen oppgave" - {
                 val oppgaver = listOf(Testdata.testOppgave(behandlingUuid, status = Oppgavestatus.AAPEN))
                 "skal gi ingen diff" {
-                    val rapport = SakAvstemmer.regnUtDiff(behandlingerUtenVenteFrist, oppgaver)
+                    val rapport = SakAvstemmer.regnUtDiff(Fagsystem.K9SAK, behandlingerUtenVenteFrist, oppgaver)
                     rapport.forekomsterILosSomManglerIFagsystem shouldBe emptyList()
                     rapport.forekomsterIFagsystemSomManglerILos shouldBe emptyList()
                     rapport.forekomsterMedUliktInnhold  shouldBe emptyList()
@@ -86,7 +87,7 @@ class AvstemmerSpec : FreeSpec({
             "og korresponderende oppgave med annen status" - {
                 val oppgaver = listOf(Testdata.testOppgave(behandlingUuid, status = Oppgavestatus.VENTER))
                 "skal gi diff på ulikt innhold i oppgaven" {
-                    val rapport = SakAvstemmer.regnUtDiff(behandlingerUtenVenteFrist, oppgaver)
+                    val rapport = SakAvstemmer.regnUtDiff(Fagsystem.K9SAK, behandlingerUtenVenteFrist, oppgaver)
                     rapport.forekomsterILosSomManglerIFagsystem shouldBe emptyList()
                     rapport.forekomsterIFagsystemSomManglerILos shouldBe emptyList()
                     rapport.forekomsterMedUliktInnhold.size shouldBe 1

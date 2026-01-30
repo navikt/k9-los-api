@@ -1,6 +1,7 @@
 package no.nav.k9.los.nyoppgavestyring.infrastruktur.abac
 
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.Saksbehandler
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import no.nav.sif.abac.kontrakt.abac.Diskresjonskode
 import java.util.*
 
@@ -54,19 +55,17 @@ class PepClientLocal : IPepClient {
     }
 
     override suspend fun harTilgangTilOppgaveV3(
-        oppgave: no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave,
+        oppgave: Oppgave,
         action: Action,
-        auditlogging: Auditlogging,
         grupperForSaksbehandler: Set<UUID>?
     ): Boolean {
         return true
     }
 
     override fun harTilgangTilOppgaveV3(
-        oppgave: no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave,
+        oppgave: Oppgave,
         saksbehandler: Saksbehandler,
-        action: Action,
-        auditlogging: Auditlogging
+        action: Action
     ): Boolean {
         return true
     }

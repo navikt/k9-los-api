@@ -46,7 +46,7 @@ class K9SakEventHandler(
 
         OpentelemetrySpanUtil.span("k9SakTilLosAdapterTjeneste.oppdaterOppgaveForBehandlingUuid") {
             try {
-                eventTilOppgaveAdapter.oppdaterOppgaveForEksternId(
+                eventTilOppgaveAdapter.oppdaterOppgaveForEksternId( //TODO: kalle via channel, for å få ned kafka topic lag?
                     EventNøkkel(
                         Fagsystem.K9SAK,
                         eksternId
