@@ -1,8 +1,6 @@
 name: "Bygg og deploy"
 on:
   push:
-    branches:
-      - master
     paths-ignore:
       - '**.md'
       - '**.MD'
@@ -17,14 +15,14 @@ jobs:
     name: Build and test (including docker image)
     permissions:
       contents: read
-      packages: write
-      id-token: write
+      packages: ${{ (github.ref_name == github.event.repository.default_branch && 'write' || 'read') }}
+      id-token: ${{ (github.ref_name == github.event.repository.default_branch && 'write' || 'read') }}
     #TODO kan fjerne testcontainers og bruke maven-build-app-db til å sette opp database for tester her
     uses: navikt/sif-gha-workflows/.github/workflows/maven-build-app.yml@main
     with:
       runs-on: ${{ (github.ref_name == github.event.repository.default_branch && 'ubuntu-latest-8-cores' || 'ubuntu-latest-4-cores') }}
       java-version: 21
-      build-image: true
+      build-image: ${{ github.ref_name == github.event.repository.default_branch}}
       push-image: ${{ github.ref_name == github.event.repository.default_branch}}
       #bruk upload-image om skal trigge k9-verdikjede
       #upload-image: ${{ github.ref_name != github.event.repository.default_branch }}
