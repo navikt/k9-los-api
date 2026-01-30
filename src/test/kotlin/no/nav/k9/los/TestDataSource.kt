@@ -83,7 +83,8 @@ abstract class AbstractPostgresTest {
                 feltdefinisjon,
                 lagret_sok,
                 event,
-                event_historikkvask_bestilt;
+                event_historikkvask_bestilt,
+                event_nokkel;
                 
             ALTER SEQUENCE saksbehandler_id_seq restart
         """)
