@@ -34,28 +34,7 @@ class TestDataSource {
 // Hack needed because testcontainers use of generics confuses Kotlin
 class KPostgreSQLContainer(imageName: String) : PostgreSQLContainer<KPostgreSQLContainer>(imageName)
 
-abstract class AbstractPostgresTest {
-    companion object {
-        private val postgresContainer = KPostgreSQLContainer("postgres:16-alpine")
-            .withDatabaseName("my-db")
-            .withUsername("foo")
-            .withPassword("secret")
-            .withReuse(true)
-            .also { it.start()  }
-
-        @JvmStatic
-        protected val dataSource = TestDataSource().dataSource(postgresContainer)
-
-        init {
-            runMigration(dataSource)
-        }
-
-    }
-
-    @AfterEach
-    fun tømDB() {
-        dataSource.connection.use {
-            it.createStatement().execute("""
+const val TØM_DATA_SQL = """
             truncate 
                 driftsmeldinger,
                 oppgavefelt_verdi,
@@ -83,10 +62,34 @@ abstract class AbstractPostgresTest {
                 feltdefinisjon,
                 lagret_sok,
                 event,
-                event_historikkvask_bestilt;
+                event_historikkvask_bestilt,
+                event_nokkel;
                 
             ALTER SEQUENCE saksbehandler_id_seq restart
-        """)
+        """
+
+abstract class AbstractPostgresTest {
+    companion object {
+        private val postgresContainer = KPostgreSQLContainer("postgres:16-alpine")
+            .withDatabaseName("my-db")
+            .withUsername("foo")
+            .withPassword("secret")
+            .withReuse(true)
+            .also { it.start()  }
+
+        @JvmStatic
+        protected val dataSource = TestDataSource().dataSource(postgresContainer)
+
+        init {
+            runMigration(dataSource)
+        }
+
+    }
+
+    @AfterEach
+    fun tømDB() {
+        dataSource.connection.use {
+            it.createStatement().execute(TØM_DATA_SQL)
         }
 
     }
