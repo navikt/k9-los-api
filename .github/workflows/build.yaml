@@ -15,8 +15,8 @@ jobs:
     name: Build and test (including docker image)
     permissions:
       contents: read
-      packages: ${{ (github.ref_name == github.event.repository.default_branch && 'write' || 'read') }}
-      id-token: ${{ (github.ref_name == github.event.repository.default_branch && 'write' || 'read') }}
+      packages: ${{ case(github.ref_name == github.event.repository.default_branch, 'write', 'read') }}
+      id-token: ${{ case(github.ref_name == github.event.repository.default_branch, 'write', 'read') }}
     #TODO kan fjerne testcontainers og bruke maven-build-app-db til å sette opp database for tester her
     uses: navikt/sif-gha-workflows/.github/workflows/maven-build-app.yml@main
     with:
