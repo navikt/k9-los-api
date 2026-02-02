@@ -135,9 +135,21 @@
             <version>${flyway.version}</version>
         </dependency>
         <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>42.7.9</version>
+        </dependency>
+        <dependency>
             <groupId>no.nav</groupId>
             <artifactId>vault-jdbc</artifactId>
             <version>${vault-jdbc.version}</version>
+            <exclusions>
+                <exclusion>
+                    <!-- Ekskluderes her fordi 42.5.0 inneholder kritisk sårbarhet -->
+                    <groupId>org.postgresql</groupId>
+                    <artifactId>postgresql</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>com.github.seratch</groupId>
