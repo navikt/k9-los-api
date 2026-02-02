@@ -8,8 +8,8 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.runBlocking
 import kotliquery.TransactionalSession
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
@@ -64,14 +64,14 @@ class PepCacheService(
     private suspend fun lagPepCacheFra(oppgave: Oppgave): PepCache {
         val pep = PepCache(
             eksternId = oppgave.eksternId,
-            kildeområde = oppgave.kildeområde,
+            kildeområde = "K9",
             kode6 = false,
             kode7 = false,
             egenAnsatt = false,
             oppdatert = LocalDateTime.now()
         )
 
-        val saksnummer = oppgave.hentVerdi(oppgave.kildeområde, "saksnummer")
+        val saksnummer = oppgave.hentVerdi("saksnummer")
         return if (saksnummer != null) {
             pep.oppdater(saksnummer)
         } else {
@@ -119,9 +119,9 @@ class PepCacheService(
 
     private fun hentAktører(oppgave: Oppgave): List<AktørId> {
         return listOfNotNull(
-            oppgave.hentVerdi(oppgave.kildeområde, "aktorId"),
-            oppgave.hentVerdi(oppgave.kildeområde, "pleietrengendeAktorId"),
-            oppgave.hentVerdi(oppgave.kildeområde, "relatertPartAktorid")
+            oppgave.hentVerdi("aktorId"),
+            oppgave.hentVerdi("pleietrengendeAktorId"),
+            oppgave.hentVerdi("relatertPartAktorid")
         ).map { AktørId(it) }
     }
 

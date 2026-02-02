@@ -111,7 +111,6 @@ class OppgaveV3RepositoryTest : AbstractK9LosIntegrationTest() {
         }
 
         assertThat(oppgaveFraUttrekk.hentVerdi(FeltType.BEHANDLINGUUID.eksternId)).isEqualTo(oppgave1.hentVerdi(FeltType.BEHANDLINGUUID.eksternId))
-        assertThat(oppgaveFraUttrekk.versjon).isEqualTo(1)
         assertThat(oppgaveFraUttrekk.eksternVersjon).isEqualTo(oppgave2.eksternVersjon)
 
         assertThat(lagretOppgave1.aktiv).isFalse()
@@ -137,7 +136,6 @@ class OppgaveV3RepositoryTest : AbstractK9LosIntegrationTest() {
         }
 
         assertThat(oppgaveFraUttrekk.hentVerdi(FeltType.BEHANDLINGUUID.eksternId)).isEqualTo(oppgave1.hentVerdi(FeltType.BEHANDLINGUUID.eksternId))
-        assertThat(oppgaveFraUttrekk.versjon).isEqualTo(2)
         assertThat(oppgaveFraUttrekk.eksternVersjon).isEqualTo(oppgave3.eksternVersjon)
     }
 

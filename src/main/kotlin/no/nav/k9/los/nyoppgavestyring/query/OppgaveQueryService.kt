@@ -45,15 +45,7 @@ class OppgaveQueryService {
             when (oppgaveId) {
                 is AktivOppgaveId -> aktivOppgaveRepository.hentOppgaveForId(tx, oppgaveId, now)
                 is OppgaveV3Id -> oppgaveRepository.hentOppgaveForId(tx, oppgaveId, now)
-                is PartisjonertOppgaveId ->
-                    partisjonertOppgaveRepository.hentOppgaveEksternIdOgOppgavetype(oppgaveId, tx)
-                        .let { (oppgaveEksternId, oppgavetypeEksternId) ->
-                            oppgaveRepository.hentOppgaveForEksternIdOgOppgavetype(
-                                tx,
-                                oppgaveEksternId,
-                                oppgavetypeEksternId
-                            )
-                        }
+                is PartisjonertOppgaveId -> partisjonertOppgaveRepository.hentOppgaveForId(oppgaveId, tx)
             }
         }
     }
@@ -177,9 +169,7 @@ class OppgaveQueryService {
         if (it is EnkelSelectFelt) {
             val verdi = when (it.kode) {
                 "oppgavestatus" -> oppgave.status
-                "kildeområde" -> oppgave.kildeområde
                 "oppgavetype" -> oppgave.oppgavetype.eksternId
-                "oppgaveområde" -> oppgave.oppgavetype.område.eksternId
                 else -> oppgave.hentVerdiEllerListe(requireNotNull(it.område), it.kode)
             }
             Oppgavefeltverdi(
