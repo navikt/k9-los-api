@@ -280,10 +280,8 @@ class PartisjonertOppgaveRepository(val oppgavetypeRepository: OppgavetypeReposi
             oppgavetype = oppgavetype,
             status = row.string("oppgavestatus"),
             endretTidspunkt = row.localDateTime("endret_tidspunkt"),
-            kildeområde = "K9",
             felter = oppgavefelter,
             reservasjonsnøkkel = row.string("reservasjonsnokkel"),
-            versjon = 0
         ).fyllDefaultverdier().utledTransienteFelter(now)
     }
 

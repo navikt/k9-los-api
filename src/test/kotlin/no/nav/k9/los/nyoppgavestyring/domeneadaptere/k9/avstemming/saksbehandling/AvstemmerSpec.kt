@@ -133,7 +133,6 @@ object Testdata {
             ),
             status = status.toString(),
             endretTidspunkt = LocalDateTime.now(),
-            kildeområde = "K9",
             felter = listOf(
                 Oppgavefelt(
                     område = "K9",
@@ -152,7 +151,6 @@ object Testdata {
                     verdiBigInt = null,
                 )
             ),
-            versjon = 0
         )
     }
 }

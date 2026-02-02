@@ -12,8 +12,6 @@ data class OppgaveIkkeSensitiv(
     val områdeEksternId: String,
     val status: String, //TODO: definere typer/enum
     val endretTidspunkt: LocalDateTime,
-    val kildeområde: String,
-    val versjon: Int,
     val felter: List<Oppgavefelt>
 ) {
     constructor(oppgave: Oppgave) : this(
@@ -23,8 +21,6 @@ data class OppgaveIkkeSensitiv(
         områdeEksternId = oppgave.oppgavetype.område.eksternId,
         status = oppgave.status,
         endretTidspunkt = oppgave.endretTidspunkt,
-        kildeområde = oppgave.kildeområde,
-        versjon = oppgave.versjon,
         felter = oppgave.felter.filterNot { it.eksternId.lowercase().contains("aktor") }
     )
 }
