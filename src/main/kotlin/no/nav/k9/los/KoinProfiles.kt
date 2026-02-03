@@ -12,8 +12,10 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.adhocjobber.aktivvask.Ak
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.adhocjobber.reservasjonkonvertering.ReservasjonKonverteringJobb
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.adhocjobber.reservasjonkonvertering.ReservasjonOversetter
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.AvstemmingsTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.saksbehandling.systemklient.LocalAvstemmingsklient
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.saksbehandling.systemklient.RestAvstemmingsklient
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.punsj.systemklient.LocalPunsjAvstemmingsklient
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.punsj.systemklient.RestPunsjAvstemmingsklient
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.saksbehandling.systemklient.LocalSakAvstemmingsklient
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.saksbehandling.systemklient.RestSakAvstemmingsklient
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventRepository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.kafka.AsynkronProsesseringV1Service
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.klage.K9KlageEventHandler
@@ -615,8 +617,9 @@ fun localDevConfig() = module {
     single<AvstemmingsTjeneste> {
         AvstemmingsTjeneste(
             oppgaveQueryService = get(),
-            k9SakAvstemmingsklient = LocalAvstemmingsklient(),
-            k9KlageAvstemmingsklient = LocalAvstemmingsklient(),
+            k9SakAvstemmingsklient = LocalSakAvstemmingsklient(),
+            k9KlageAvstemmingsklient = LocalSakAvstemmingsklient(),
+            k9PunsjAvstemmingsklient = LocalPunsjAvstemmingsklient()
         )
     }
 }
@@ -703,18 +706,25 @@ fun preprodConfig(config: Configuration) = module {
     single<AvstemmingsTjeneste> {
         AvstemmingsTjeneste(
             oppgaveQueryService = get(),
-            k9SakAvstemmingsklient = RestAvstemmingsklient(
+            k9SakAvstemmingsklient = RestSakAvstemmingsklient(
                 url = config.k9Url(),
                 navn = "k9sak",
                 accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
                 scope = "api://dev-fss.k9saksbehandling.k9-sak/.default",
                 httpClient = get(),
             ),
-            k9KlageAvstemmingsklient = RestAvstemmingsklient(
+            k9KlageAvstemmingsklient = RestSakAvstemmingsklient(
                 url = config.k9KlageUrl(),
                 navn = "k9klage",
                 accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
                 scope = "api://dev-fss.k9saksbehandling.k9-klage/.default",
+                httpClient = get(),
+            ),
+            k9PunsjAvstemmingsklient = RestPunsjAvstemmingsklient(
+                url = config.k9PunsjUrl(),
+                navn = "k9punsj",
+                accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
+                scope = "api://dev-fss.k9saksbehandling.k9-punsj/.default",
                 httpClient = get(),
             )
         )
@@ -774,18 +784,25 @@ fun prodConfig(config: Configuration) = module {
     single<AvstemmingsTjeneste> {
         AvstemmingsTjeneste(
             oppgaveQueryService = get(),
-            k9SakAvstemmingsklient = RestAvstemmingsklient(
+            k9SakAvstemmingsklient = RestSakAvstemmingsklient(
                 url = config.k9Url(),
                 navn = "k9sak",
                 accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
                 scope = "api://prod-fss.k9saksbehandling.k9-sak/.default",
                 httpClient = get(),
             ),
-            k9KlageAvstemmingsklient = RestAvstemmingsklient(
+            k9KlageAvstemmingsklient = RestSakAvstemmingsklient(
                 url = config.k9KlageUrl(),
                 navn = "k9klage",
                 accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
                 scope = "api://prod-fss.k9saksbehandling.k9-klage/.default",
+                httpClient = get(),
+            ),
+            k9PunsjAvstemmingsklient = RestPunsjAvstemmingsklient(
+                url = config.k9PunsjUrl(),
+                navn = "k9punsj",
+                accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
+                scope = "api://dev-fss.k9saksbehandling.k9-punsj/.default",
                 httpClient = get(),
             )
         )

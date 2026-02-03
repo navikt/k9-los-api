@@ -1,7 +1,7 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.saksbehandling
 
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.Avstemmingsrapport
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.Behandlingstilstand
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.saksbehandling.Behandlingstilstand
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.Oppgavetilstand
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingStatus
 import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
@@ -9,7 +9,7 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 
 object SakAvstemmer {
-    fun regnUtDiff(fagsystem: Fagsystem, k9SakRapport: List<Behandlingstilstand>, åpneLosOppgaver: List<Oppgave>): Avstemmingsrapport {
+    fun regnUtDiff(fagsystem: Fagsystem, k9SakRapport: List<Behandlingstilstand>, åpneLosOppgaver: List<Oppgave>): Avstemmingsrapport.BehandlingRapport {
         val forekomsterMedUliktInnhold = mutableSetOf<Pair<Behandlingstilstand, Oppgavetilstand>>()
         val forekomsterSomGranskesManuelt = mutableSetOf<Pair<Behandlingstilstand, Oppgavetilstand>>()
         val åpneForekomsterIFagsystemSomManglerILos = mutableSetOf<Behandlingstilstand>()
@@ -36,7 +36,7 @@ object SakAvstemmer {
             }
         }
 
-        return Avstemmingsrapport(
+        return Avstemmingsrapport.BehandlingRapport(
             fagsystem.kode,
             åpneForekomsterIFagsystemSomManglerILos.size,
             åpneForekomsterILosSomManglerIFagsystem.size,

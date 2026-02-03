@@ -2,8 +2,11 @@ package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming
 
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.punsj.PunsjAvstemmer
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.punsj.systemklient.PunsjAvstemmingsklient
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.saksbehandling.Behandlingstilstand
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.saksbehandling.SakAvstemmer
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.saksbehandling.systemklient.Avstemmingsklient
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.saksbehandling.systemklient.SakAvstemmingsklient
 import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
@@ -15,8 +18,9 @@ import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 
 class AvstemmingsTjeneste(
     private val oppgaveQueryService: OppgaveQueryService,
-    private val k9SakAvstemmingsklient: Avstemmingsklient,
-    private val k9KlageAvstemmingsklient: Avstemmingsklient,
+    private val k9SakAvstemmingsklient: SakAvstemmingsklient,
+    private val k9KlageAvstemmingsklient: SakAvstemmingsklient,
+    private val k9PunsjAvstemmingsklient: PunsjAvstemmingsklient,
 ) {
     private val log = org.slf4j.LoggerFactory.getLogger(AvstemmingsTjeneste::class.java)
 
@@ -75,7 +79,31 @@ class AvstemmingsTjeneste(
                 SakAvstemmer.regnUtDiff(Fagsystem.K9KLAGE, åpneBehandlinger, åpneOppgaver)
             }
             Fagsystem.K9TILBAKE -> throw UnsupportedOperationException()
-            Fagsystem.PUNSJ -> throw UnsupportedOperationException()
+            Fagsystem.PUNSJ -> {
+                log.info("Henter åpne behandlinger fra K9Punsj")
+                val uferdigeJournalposter = k9PunsjAvstemmingsklient.hentUferdigeJournalposter()
+                log.info("Mottatt åpne behandlinger fra K9Punsj")
+
+                val query = OppgaveQuery(
+                    filtere = listOf(
+                        FeltverdiOppgavefilter(
+                            null,
+                            "oppgavetype",
+                            operator = EksternFeltverdiOperator.EQUALS,
+                            verdi = listOf("k9punsj"),
+                        ),
+                        FeltverdiOppgavefilter(
+                            null,
+                            "oppgavestatus",
+                            operator = EksternFeltverdiOperator.IN,
+                            verdi = listOf(Oppgavestatus.AAPEN, Oppgavestatus.VENTER, Oppgavestatus.UAVKLART),
+                        )
+                    )
+                )
+                val åpnePunsjOppgaver = oppgaveQueryService.queryForOppgave(QueryRequest(query))
+
+                PunsjAvstemmer.regnUtDiff(uferdigeJournalposter, åpnePunsjOppgaver)
+            }
         }
     }
 }

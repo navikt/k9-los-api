@@ -1,4 +1,4 @@
-package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.saksbehandling.systemklient
+package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.punsj.systemklient
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import io.ktor.client.*
@@ -9,7 +9,7 @@ import kotlinx.coroutines.runBlocking
 import no.nav.helse.dusseldorf.ktor.core.Retry
 import no.nav.helse.dusseldorf.oauth2.client.AccessTokenClient
 import no.nav.helse.dusseldorf.oauth2.client.CachedAccessTokenClient
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.Behandlingstilstand
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.punsj.Journalposttilstand
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.TransientException
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.NavHeaders
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
@@ -18,25 +18,25 @@ import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.util.*
 
-class RestAvstemmingsklient(
+class RestPunsjAvstemmingsklient(
     private val url: String,
     private val navn: String,
     accessTokenClient: AccessTokenClient,
     scope: String,
     private val httpClient: HttpClient,
-) : Avstemmingsklient {
+) : PunsjAvstemmingsklient {
     val log: Logger = LoggerFactory.getLogger("${navn}Avstemmingsklient")
 
     private val scopes = setOf(scope)
     private val cachedAccessTokenClient = CachedAccessTokenClient(accessTokenClient)
 
-    override fun hentÅpneBehandlinger(): List<Behandlingstilstand> {
+    override fun hentUferdigeJournalposter(): List<Journalposttilstand> {
         return runBlocking {
             hent()
         }
     }
 
-    private suspend fun hent(): List<Behandlingstilstand> {
+    private suspend fun hent(): List<Journalposttilstand> {
         val response = Retry.retry(
             tries = 3,
             operation = "hentAvstemming",
@@ -44,7 +44,7 @@ class RestAvstemmingsklient(
             factor = 2.0,
             logger = log
         ) {
-            httpClient.get("${url}/los/avstemming/behandlingstilstand-alle-ikke-avsluttede") {
+            httpClient.get("${url}/journalpost/losavstemming") {
                 header(
                     //OBS! Dette kalles bare med system token, og skal ikke brukes ved saksbehandler token
                     HttpHeaders.Authorization, cachedAccessTokenClient.getAccessToken(scopes).asAuthoriationHeader()
