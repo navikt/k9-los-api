@@ -459,7 +459,8 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
         AvstemmingsTjeneste(
             oppgaveQueryService = get(),
             k9SakAvstemmingsklient = get(),
-            k9KlageAvstemmingsklient = get()
+            k9KlageAvstemmingsklient = get(),
+            k9PunsjAvstemmingsklient = get(),
         )
     }
 

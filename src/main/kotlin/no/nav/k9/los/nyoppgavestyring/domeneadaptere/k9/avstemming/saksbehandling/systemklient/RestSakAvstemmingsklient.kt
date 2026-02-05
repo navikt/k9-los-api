@@ -9,7 +9,7 @@ import kotlinx.coroutines.runBlocking
 import no.nav.helse.dusseldorf.ktor.core.Retry
 import no.nav.helse.dusseldorf.oauth2.client.AccessTokenClient
 import no.nav.helse.dusseldorf.oauth2.client.CachedAccessTokenClient
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.Behandlingstilstand
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.saksbehandling.Behandlingstilstand
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.TransientException
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.NavHeaders
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
@@ -18,13 +18,13 @@ import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.util.*
 
-class RestAvstemmingsklient(
+class RestSakAvstemmingsklient(
     private val url: String,
     private val navn: String,
     accessTokenClient: AccessTokenClient,
     scope: String,
     private val httpClient: HttpClient,
-) : Avstemmingsklient {
+) : SakAvstemmingsklient {
     val log: Logger = LoggerFactory.getLogger("${navn}Avstemmingsklient")
 
     private val scopes = setOf(scope)

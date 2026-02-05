@@ -21,6 +21,7 @@
   "pdl_url": "https://pdl-api.intern.dev.nav.no/graphql",
   "app_k9sak_url": "https://k9-sak.nais.preprod.local/k9/sak/api",
   "app_k9klage_url": "https://k9-klage.dev.intern.nav.no/k9/klage/api",
+  "app_k9punsj_url": "https://k9-punsj.intern.dev.nav.no/api",
   "app_k9sak_frontend_url": "https://k9.dev.intern.nav.no/k9/web",
   "app_k9punsj_frontend_url": "https://k9-punsj-frontend.intern.dev.nav.no",
   "app_sif_abac_pdp_url": "https://sif-abac-pdp.intern.dev.nav.no/sif/sif-abac-pdp",

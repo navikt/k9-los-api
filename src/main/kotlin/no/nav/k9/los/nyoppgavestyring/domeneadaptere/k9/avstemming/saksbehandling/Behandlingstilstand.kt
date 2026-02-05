@@ -1,4 +1,4 @@
-package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming
+package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.saksbehandling
 
 import com.fasterxml.jackson.annotation.JsonAlias
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingStatus
