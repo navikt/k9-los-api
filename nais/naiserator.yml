@@ -117,6 +117,8 @@ spec:
       value: {{app_k9sak_url}}
     - name: APP_K9KLAGE_URL
       value: {{app_k9klage_url}}
+    - name: APP_K9PUNSJ_URL
+      value: {{app_k9punsj_url}}
     - name: APP_K9SAK_FRONTEND_URL
       value: {{app_k9sak_frontend_url}}
     - name: APP_K9PUNSJ_FRONTEND_URL
