@@ -86,6 +86,8 @@ spec:
       rules:
         - application: k9-klage
           namespace: k9saksbehandling
+        - application: k9-punsj
+          namespace: k9saksbehandling
     inbound:
       rules:
         - application: k9-los-web
