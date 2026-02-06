@@ -724,7 +724,7 @@ fun preprodConfig(config: Configuration) = module {
                 url = config.k9PunsjUrl(),
                 navn = "k9punsj",
                 accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
-                scope = "api://dev-fss.k9saksbehandling.k9-punsj/.default",
+                scope = "api://dev-gcp.k9saksbehandling.k9-punsj/.default",
                 httpClient = get(),
             )
         )
@@ -802,7 +802,7 @@ fun prodConfig(config: Configuration) = module {
                 url = config.k9PunsjUrl(),
                 navn = "k9punsj",
                 accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
-                scope = "api://dev-fss.k9saksbehandling.k9-punsj/.default",
+                scope = "api://prod-fss.k9saksbehandling.k9-punsj/.default",
                 httpClient = get(),
             )
         )

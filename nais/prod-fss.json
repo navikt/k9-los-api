@@ -14,6 +14,7 @@
   "group_id_drift": "1509dc91-a955-4e72-b64c-2f049e37c0c6",
   "group_id_oppgavestyrer": "f3743660-4c76-4845-885f-f38ad478645f",
   "cluster_name": "prod-gcp",
+  "cluster_name_punsj": "prod-fss",
   "ingress_url": "https://k9-los-api.prod-fss-pub.nais.io",
   "oppgave_base_uri": "https://oppgave.intern.nav.no",
   "db_url": "jdbc:postgresql://a01dbvl041.adeo.no:5432/k9-los",
