@@ -14,6 +14,7 @@
   "group_id_drift": "0bc9661c-975c-4adb-86d1-a97172490662",
   "group_id_oppgavestyrer": "dfcd9962-1b94-4b6f-bdac-09dcca355be7",
   "cluster_name": "dev-gcp",
+  "cluster_name_punsj": "dev-gcp",
   "ingress_url": "https://k9-los-api.dev-fss-pub.nais.io",
   "oppgave_base_uri": "https://oppgave.intern.dev.nav.no",
   "db_url": "jdbc:postgresql://b27dbvl028.preprod.local:5432/k9-los",
