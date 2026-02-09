@@ -1,7 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk
 
 import kotliquery.*
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveNøkkelDto
@@ -87,7 +86,7 @@ class StatistikkRepository(
         }
     }
 
-    fun hentOppgaveForId(tx: TransactionalSession, id: Long, now: LocalDateTime = LocalDateTime.now()): Oppgave {
+    fun hentOppgaveForId(tx: TransactionalSession, id: Long, now: LocalDateTime = LocalDateTime.now()): Pair<Oppgave, Int> {
         val oppgave = tx.run(
             queryOf(
                 """
@@ -108,7 +107,7 @@ class StatistikkRepository(
         row: Row,
         now: LocalDateTime,
         tx: TransactionalSession
-    ): Oppgave {
+    ): Pair<Oppgave, Int> {
         val kildeområde = row.string("kildeomrade")
         val oppgaveTypeId = row.long("oppgavetype_id")
         val oppgavetype = oppgavetypeRepository.hentOppgavetype(kildeområde, oppgaveTypeId, tx)
@@ -119,11 +118,9 @@ class StatistikkRepository(
             oppgavetype = oppgavetype,
             status = row.string("status"),
             endretTidspunkt = row.localDateTime("endret_tidspunkt"),
-            kildeområde = row.string("kildeomrade"),
             felter = oppgavefelter,
             reservasjonsnøkkel = row.string("reservasjonsnokkel"),
-            versjon = row.int("versjon")
-        ).fyllDefaultverdier().utledTransienteFelter(now)
+        ).fyllDefaultverdier().utledTransienteFelter(now) to row.int("versjon")
     }
 
     private fun hentOppgavefelter(tx: TransactionalSession, oppgaveId: Long): List<Oppgavefelt> {

@@ -271,8 +271,8 @@ class PartisjonertOppgaveRepository(val oppgavetypeRepository: OppgavetypeReposi
         now: LocalDateTime,
         tx: TransactionalSession
     ): Oppgave {
-        val oppgaveTypeId = row.string("oppgavetype_ekstern_id")
-        val oppgavetype = oppgavetypeRepository.hentOppgavetype("K9", oppgaveTypeId, tx)
+        val oppgavetypeEksternId = row.string("oppgavetype_ekstern_id")
+        val oppgavetype = oppgavetypeRepository.hentOppgavetype("K9", oppgavetypeEksternId, tx)
         val oppgavefelter = hentOppgavefelter(tx, row.long("id"), oppgavetype)
         return Oppgave(
             eksternId = row.string("oppgave_ekstern_id"),
@@ -280,10 +280,8 @@ class PartisjonertOppgaveRepository(val oppgavetypeRepository: OppgavetypeReposi
             oppgavetype = oppgavetype,
             status = row.string("oppgavestatus"),
             endretTidspunkt = row.localDateTime("endret_tidspunkt"),
-            kildeområde = "K9",
             felter = oppgavefelter,
             reservasjonsnøkkel = row.string("reservasjonsnokkel"),
-            versjon = 0
         ).fyllDefaultverdier().utledTransienteFelter(now)
     }
 
@@ -294,9 +292,8 @@ class PartisjonertOppgaveRepository(val oppgavetypeRepository: OppgavetypeReposi
                 select ov.feltdefinisjon_ekstern_id as ekstern_id, fd.liste_type, f.pakrevd, ov.verdi, ov.verdi_bigint
                 from oppgavefelt_verdi_part ov
                 inner join feltdefinisjon fd on ov.feltdefinisjon_ekstern_id = fd.ekstern_id
-                inner join oppgavefelt f on fd.id = f.feltdefinisjon_id
+                inner join oppgavefelt f on fd.id = f.feltdefinisjon_id and f.oppgavetype_id = :oppgavetypeId
                 where ov.oppgave_id = :oppgaveId
-                  and f.oppgavetype_id = :oppgavetypeId
                 order by ov.feltdefinisjon_ekstern_id
                 """.trimIndent(),
                 mapOf("oppgaveId" to oppgaveId, "oppgavetypeId" to oppgavetype.id)

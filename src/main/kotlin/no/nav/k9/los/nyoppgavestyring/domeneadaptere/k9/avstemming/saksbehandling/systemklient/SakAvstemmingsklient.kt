@@ -1,7 +1,7 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.saksbehandling.systemklient
 
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.Behandlingstilstand
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.saksbehandling.Behandlingstilstand
 
-interface Avstemmingsklient {
+interface SakAvstemmingsklient {
     fun hentÅpneBehandlinger(): List<Behandlingstilstand>
 }

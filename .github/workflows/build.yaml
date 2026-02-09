@@ -21,7 +21,7 @@ jobs:
     uses: navikt/sif-gha-workflows/.github/workflows/maven-build-app.yml@main
     with:
       runs-on: ${{ case(github.ref_name == github.event.repository.default_branch, 'ubuntu-latest-8-cores', 'ubuntu-latest-4-cores') }}
-      java-version: 21
+      java-version: 25
       build-image: ${{ github.ref_name == github.event.repository.default_branch}}
       push-image: ${{ github.ref_name == github.event.repository.default_branch}}
       #bruk upload-image om skal trigge k9-verdikjede

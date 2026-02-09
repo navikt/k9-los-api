@@ -12,9 +12,7 @@ data class Oppgave(
     val oppgavetype: Oppgavetype,
     val status: String, //TODO: definere typer/enum
     val endretTidspunkt: LocalDateTime,
-    val kildeområde: String,
     val felter: List<Oppgavefelt>,
-    val versjon: Int,
 ) {
     fun getOppgaveBehandlingsurl(): String? {
         var oppgavebehandlingsUrlTemplate: String = oppgavetype.oppgavebehandlingsUrlTemplate ?: return null
@@ -138,7 +136,7 @@ data class Oppgave(
                 if (felter.find { it.eksternId == påkrevdFelt.feltDefinisjon.eksternId && !påkrevdFelt.feltDefinisjon.listetype } == null) {
                     Oppgavefelt(
                         eksternId = påkrevdFelt.feltDefinisjon.eksternId,
-                        område = kildeområde,
+                        område = "K9",
                         listetype = false, //listetyper er aldri påkrevd
                         påkrevd = true,
                         verdi = påkrevdFelt.defaultverdi.toString(),

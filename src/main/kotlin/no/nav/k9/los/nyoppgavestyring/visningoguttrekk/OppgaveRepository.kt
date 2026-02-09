@@ -119,10 +119,8 @@ class OppgaveRepository(
             oppgavetype = oppgavetype,
             status = row.string("status"),
             endretTidspunkt = row.localDateTime("endret_tidspunkt"),
-            kildeområde = row.string("kildeomrade"),
             felter = oppgavefelter,
             reservasjonsnøkkel = row.string("reservasjonsnokkel"),
-            versjon = row.int("versjon")
         ).fyllDefaultverdier().utledTransienteFelter(now)
     }
 

@@ -11,7 +11,6 @@ data class OppgaveDto(
     val status: String,
     val endretTidspunkt: LocalDateTime,
     val felter: List<Oppgavefelt>,
-    val versjon: Int,
 ) {
     constructor(oppgave: Oppgave) : this(
         eksternId = oppgave.eksternId,
@@ -20,6 +19,5 @@ data class OppgaveDto(
         status = oppgave.status,
         endretTidspunkt = oppgave.endretTidspunkt,
         felter = oppgave.felter,
-        versjon = oppgave.versjon
     )
 }

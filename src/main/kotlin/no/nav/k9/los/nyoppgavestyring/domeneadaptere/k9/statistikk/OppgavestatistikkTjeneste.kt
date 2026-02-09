@@ -4,15 +4,9 @@ import io.opentelemetry.instrumentation.annotations.SpanAttribute
 import io.opentelemetry.instrumentation.annotations.WithSpan
 import kotlinx.coroutines.runBlocking
 import kotliquery.TransactionalSession
-import no.nav.k9.los.Configuration
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import org.slf4j.LoggerFactory
-import java.time.LocalDateTime
-import java.util.concurrent.TimeUnit
-import kotlin.concurrent.thread
-import kotlin.concurrent.timer
 
 class OppgavestatistikkTjeneste(
     private val statistikkPublisher: StatistikkPublisher,
@@ -81,12 +75,12 @@ class OppgavestatistikkTjeneste(
     }
 
     private fun byggOppgavestatistikk(oppgaveId: Long, tx: TransactionalSession): Pair<Sak, List<Behandling>> {
-        val oppgave = statistikkRepository.hentOppgaveForId(tx, oppgaveId)
+        val (oppgave, versjon) = statistikkRepository.hentOppgaveForId(tx, oppgaveId)
 
         return when (oppgave.oppgavetype.eksternId) {
             "k9sak" -> Pair(
                     K9SakOppgaveTilDVHMapper().lagSak(oppgave),
-                    K9SakOppgaveTilDVHMapper().lagBehandlinger(oppgave)
+                    K9SakOppgaveTilDVHMapper().lagBehandlinger(oppgave, versjon)
                 )
             "k9klage" -> Pair(
                     K9KlageOppgaveTilDVHMapper().lagSak(oppgave),

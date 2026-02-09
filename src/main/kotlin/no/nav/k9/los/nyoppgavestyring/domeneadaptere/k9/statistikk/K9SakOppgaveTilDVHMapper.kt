@@ -16,11 +16,11 @@ class K9SakOppgaveTilDVHMapper {
         val zoneId = ZoneId.of("Europe/Oslo")
     }
 
-    fun lagBehandlinger(oppgave: Oppgave): List<Behandling> {
+    fun lagBehandlinger(oppgave: Oppgave, versjon: Int): List<Behandling> {
         val behandlingstatus = BehandlingStatus.fraKode(oppgave.hentVerdi("behandlingsstatus"))
         val behandlinger = mutableListOf<Behandling>()
         if (behandlingstatus == BehandlingStatus.AVSLUTTET) {
-            if (oppgave.versjon == 0) {
+            if (versjon == 0) {
                 val mottattDato = LocalDateTime.parse(oppgave.hentVerdi("mottattDato")).toLocalDate()
                 behandlinger.add(lagBehandling(
                     oppgave,
