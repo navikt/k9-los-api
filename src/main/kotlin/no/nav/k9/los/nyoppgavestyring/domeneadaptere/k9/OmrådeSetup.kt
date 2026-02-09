@@ -492,6 +492,8 @@ class OmrådeSetup(
             )
 
             Ventekategori.AVVENTER_SAKSBEHANDLER -> Triple("Avventer saksbehandler", KodeverkSynlighet.UNDER_STREKEN, 7)
+
+            else -> Triple("Uspesifisert", KodeverkSynlighet.UNDER_STREKEN, 8)
         }
     }
 
