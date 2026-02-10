@@ -14,102 +14,6 @@ class SaksbehandlerRepository(
     private val dataSource: DataSource,
     private val pepClient: IPepClient
 ) {
-    private val log: Logger = LoggerFactory.getLogger(SaksbehandlerRepository::class.java)
-    private suspend fun lagreMedId(
-        id: String,
-        f: (Saksbehandler?) -> Saksbehandler
-    ) {
-        val skjermet = pepClient.harTilgangTilKode6()
-        using(sessionOf(dataSource)) {
-            it.transaction { tx ->
-                val run = tx.run(
-                    queryOf(
-                        "select data from saksbehandler where saksbehandlerid = :saksbehandlerid and skjermet = :skjermet for update",
-                        mapOf("saksbehandlerid" to id, "skjermet" to skjermet)
-                    )
-                        .map { row ->
-                            row.stringOrNull("data")
-                        }.asSingle
-                )
-                val forrige: Saksbehandler?
-                val saksbehandler = if (!run.isNullOrEmpty()) {
-                    forrige = LosObjectMapper.instance.readValue(run, Saksbehandler::class.java)
-                    f(forrige)
-                } else {
-                    f(null)
-                }
-
-                val json = LosObjectMapper.instance.writeValueAsString(saksbehandler)
-                tx.run(
-                    queryOf(
-                        """
-                        insert into saksbehandler as k (saksbehandlerid,navn, epost, data, skjermet)
-                        values (:saksbehandlerid,:navn,:epost, :data :: jsonb, :skjermet)
-                        on conflict (epost) do update
-                        set data = :data :: jsonb, 
-                            saksbehandlerid = :saksbehandlerid,
-                            navn = :navn,
-                            skjermet = :skjermet
-                     """,
-                        mapOf(
-                            "saksbehandlerid" to id,
-                            "epost" to saksbehandler.epost,
-                            "navn" to saksbehandler.navn,
-                            "data" to json,
-                            "skjermet" to skjermet
-                        )
-                    ).asUpdate
-                )
-            }
-        }
-    }
-
-    private fun lagreMedIdInkluderKode6(
-        id: String,
-        f: (Saksbehandler?) -> Saksbehandler
-    ) {
-        using(sessionOf(dataSource)) {
-            it.transaction { tx ->
-                val run = tx.run(
-                    queryOf(
-                        "select data from saksbehandler where saksbehandlerid = :saksbehandlerid for update",
-                        mapOf("saksbehandlerid" to id)
-                    )
-                        .map { row ->
-                            row.stringOrNull("data")
-                        }.asSingle
-                )
-                val forrige: Saksbehandler?
-                val saksbehandler = if (!run.isNullOrEmpty()) {
-                    forrige = LosObjectMapper.instance.readValue(run, Saksbehandler::class.java)
-                    f(forrige)
-                } else {
-                    f(null)
-                }
-
-                val json = LosObjectMapper.instance.writeValueAsString(saksbehandler)
-                tx.run(
-                    queryOf(
-                        """
-                        insert into saksbehandler as k (saksbehandlerid,navn, epost, data, skjermet)
-                        values (:saksbehandlerid,:navn,:epost, :data :: jsonb, :skjermet)
-                        on conflict (epost) do update
-                        set data = :data :: jsonb, 
-                            saksbehandlerid = :saksbehandlerid,
-                            navn = :navn
-                     """,
-                        mapOf(
-                            "saksbehandlerid" to id,
-                            "epost" to saksbehandler.epost,
-                            "navn" to saksbehandler.navn,
-                            "data" to json
-                        )
-                    ).asUpdate
-                )
-            }
-        }
-    }
-
     suspend fun addSaksbehandler(saksbehandler: Saksbehandler) {
         lagreMedEpost(saksbehandler.epost) {
             if (it == null) {
@@ -175,63 +79,6 @@ class SaksbehandlerRepository(
         }
     }
 
-
-    suspend fun leggTilReservasjon(saksbehandlerid: String?, reservasjon: UUID) {
-        if (saksbehandlerid == null) {
-            return
-        }
-        lagreMedId(saksbehandlerid) { saksbehandler ->
-            saksbehandler!!.reservasjoner.add(reservasjon)
-            loggLeggTilReservasjon(saksbehandlerid, listOf(reservasjon))
-            saksbehandler
-        }
-    }
-
-    suspend fun leggTilFlereReservasjoner(saksbehandlerid: String?, reservasjon: List<UUID>) {
-        if (saksbehandlerid == null) {
-            return
-        }
-        lagreMedId(saksbehandlerid) { saksbehandler ->
-            saksbehandler!!.reservasjoner.addAll(reservasjon)
-            loggLeggTilReservasjon(saksbehandlerid, reservasjon)
-            saksbehandler
-        }
-    }
-
-    fun fjernReservasjon(id: String?, reservasjon: UUID) {
-        if (id == null) {
-            return
-        }
-        if (finnSaksbehandlerMedIdentInkluderKode6(id) != null) {
-            lagreMedIdInkluderKode6(id) { saksbehandler ->
-                val fjernet = saksbehandler!!.reservasjoner.remove(reservasjon)
-                loggFjernet(fjernet, id, reservasjon)
-                saksbehandler
-            }
-        }
-    }
-
-    fun fjernReservasjonInkluderKode6(id: String?, reservasjon: UUID) {
-        if (id == null) {
-            return
-        }
-        if (finnSaksbehandlerMedIdentInkluderKode6(id) != null) {
-            lagreMedIdInkluderKode6(id) { saksbehandler ->
-                val fjernet = saksbehandler!!.reservasjoner.remove(reservasjon)
-                loggFjernet(fjernet, id, reservasjon)
-                saksbehandler
-            }
-        }
-    }
-
-    private fun loggLeggTilReservasjon(id: String, reservasjon: List<UUID>) {
-        log.info("RESERVASJONDEBUG: Lagt til $id oppgave(r)=$reservasjon i saksbehandlertabell")
-    }
-
-    private fun loggFjernet(fjernet: Boolean, id: String, reservasjon: UUID) {
-        if (fjernet) log.info("RESERVASJONDEBUG: Fjernet $id oppgave=${reservasjon} fra saksbehandlertabell")
-    }
-
     fun finnSaksbehandlerMedId(id: Long): Saksbehandler? {
         return using(sessionOf(dataSource)) {
             it.run(
@@ -263,25 +110,6 @@ class SaksbehandlerRepository(
         return saksbehandler
     }
 
-    fun finnSaksbehandlerIdForIdent(ident: String): Long? {
-        return using(sessionOf(dataSource)) { session ->
-            session.transaction { tx ->
-                finnSaksbehandlerIdForIdent(ident, tx)
-            }
-        }
-    }
-
-    fun finnSaksbehandlerIdForIdent(ident: String, tx: TransactionalSession): Long? {
-        return tx.run(
-            queryOf(
-                "select * from saksbehandler where lower(saksbehandlerid) = lower(:ident)",
-                mapOf("ident" to ident)
-            ).map { row ->
-                row.longOrNull("id")
-            }.asSingle
-        )
-    }
-
     suspend fun finnSaksbehandlerMedIdent(ident: String): Saksbehandler? {
         val skjermet = pepClient.harTilgangTilKode6()
 
@@ -300,21 +128,6 @@ class SaksbehandlerRepository(
 
         }
 
-        return saksbehandler
-    }
-
-    fun finnSaksbehandlerMedIdentInkluderKode6(ident: String): Saksbehandler? {
-        val saksbehandler = using(sessionOf(dataSource)) {
-            it.run(
-                queryOf(
-                    "select * from saksbehandler where lower(saksbehandlerid) = lower(:ident)",
-                    mapOf("ident" to ident)
-                )
-                    .map { row ->
-                        mapSaksbehandler(row)
-                    }.asSingle
-            )
-        }
         return saksbehandler
     }
 
@@ -438,36 +251,6 @@ class SaksbehandlerRepository(
             }
         }
         return alleSaksbehandlere[i]
-    }
-
-    fun hentAlleSaksbehandlereEkskluderKode6(): List<Saksbehandler> {
-        val identer = using(sessionOf(dataSource)) {
-            it.run(
-                queryOf(
-                    "select * from saksbehandler where skjermet = false",
-                    mapOf()
-                )
-                    .map { row ->
-                        mapSaksbehandler(row)
-                    }.asList
-            )
-        }
-        return identer
-    }
-
-    fun hentAlleSaksbehandlereInkluderKode6(): List<Saksbehandler> {
-        val identer = using(sessionOf(dataSource)) {
-            it.run(
-                queryOf(
-                    "select * from saksbehandler",
-                    mapOf()
-                )
-                    .map { row ->
-                        mapSaksbehandler(row)
-                    }.asList
-            )
-        }
-        return identer
     }
 
     private fun mapSaksbehandler(row: Row): Saksbehandler {
