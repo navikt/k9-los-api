@@ -40,7 +40,7 @@ class SaksbehandlerAdminTjeneste(
         val skjermet = pepClient.harTilgangTilKode6()
 
         val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedEpost(epost)
-        val lagredeSøk = lagretSøkTjeneste.hentAlle(saksbehandler.brukerIdent!!)
+        val lagredeSøk = lagretSøkTjeneste.hentAlle(saksbehandler!!.brukerIdent!!)
         lagredeSøk.forEach {
             lagretSøkTjeneste.slett(saksbehandler.brukerIdent!!, it.id!!)
         }
