@@ -3,12 +3,14 @@ package no.nav.k9.los.nyoppgavestyring.saksbehandleradmin
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.ko.db.OppgaveKoRepository
+import no.nav.k9.los.nyoppgavestyring.lagretsok.LagretSøkTjeneste
 
 class SaksbehandlerAdminTjeneste(
     private val pepClient: IPepClient,
     private val transactionalManager: TransactionalManager,
     private val saksbehandlerRepository: SaksbehandlerRepository,
     private val oppgaveKøV3Repository: OppgaveKoRepository,
+    private val lagretSøkTjeneste: LagretSøkTjeneste
 ) {
 
     // TODO: slett når frontend har begynt å bruke nytt endepunkt
@@ -36,6 +38,12 @@ class SaksbehandlerAdminTjeneste(
         epost: String,
     ) {
         val skjermet = pepClient.harTilgangTilKode6()
+
+        val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedEpost(epost)
+        val lagredeSøk = lagretSøkTjeneste.hentAlle(saksbehandler.brukerIdent!!)
+        lagredeSøk.forEach {
+            lagretSøkTjeneste.slett(saksbehandler.brukerIdent!!, it.id!!)
+        }
 
         transactionalManager.transaction { tx ->
             // V3-modellen: Sletter køer saksbehandler er med i
