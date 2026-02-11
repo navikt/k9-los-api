@@ -18,6 +18,7 @@ class SaksbehandlerRepositoryTest : AbstractK9LosIntegrationTest() {
     fun `slette saksbehandler`() {
         val saksbehandlerRepository = get<SaksbehandlerRepository>()
         val ident = "Z123456"
+        val ident2 = "Z234567"
 
         runBlocking {
             saksbehandlerRepository.addSaksbehandler(
@@ -31,11 +32,27 @@ class SaksbehandlerRepositoryTest : AbstractK9LosIntegrationTest() {
             )
         }
 
-        val saksbehandler = runBlocking {
-            saksbehandlerRepository.finnSaksbehandlerMedIdent(ident)
+        runBlocking {
+            saksbehandlerRepository.addSaksbehandler(
+                Saksbehandler(
+                    null,
+                    ident2,
+                    ident2,
+                    ident2 + "@nav.no",
+                    enhet = "1234"
+                )
+            )
         }
 
-        assertThat(saksbehandler!!.brukerIdent, equalTo(ident))
+        val saksbehandler = runBlocking {
+            saksbehandlerRepository.finnSaksbehandlerMedIdent(ident)
+        }!!
+
+        val saksbehandler2 = runBlocking {
+            saksbehandlerRepository.finnSaksbehandlerMedIdent(ident)
+        }!!
+
+        assertThat(saksbehandler.brukerIdent, equalTo(ident))
 
         val builder = OppgaveTestDataBuilder()
         builder.lagOgLagre(Oppgavestatus.AAPEN)
@@ -46,6 +63,8 @@ class SaksbehandlerRepositoryTest : AbstractK9LosIntegrationTest() {
         val reservasjon = reservasjonV3Tjeneste.taReservasjon("test", saksbehandler.id!!, saksbehandler.id!!, "test", LocalDateTime.now(), LocalDateTime.now().plusDays(1))
 
         reservasjonV3Tjeneste.forlengReservasjon("test", LocalDateTime.now().plusDays(2), saksbehandler.id!!, "test")
+
+        reservasjonV3Tjeneste.overførReservasjon("test", LocalDateTime.now().plusDays(1), saksbehandler2.id!!, saksbehandler2.id!!, "kommentar")
 
         val transactionalManager = get<TransactionalManager>()
         transactionalManager.transaction { tx ->

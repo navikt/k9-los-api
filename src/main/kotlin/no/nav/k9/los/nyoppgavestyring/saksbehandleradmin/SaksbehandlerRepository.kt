@@ -2,12 +2,14 @@ package no.nav.k9.los.nyoppgavestyring.saksbehandleradmin
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import kotliquery.*
+import kotliquery.queryOf
+import kotliquery.sessionOf
+import kotliquery.using
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
 import org.apache.commons.text.similarity.LevenshteinDistance
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
-import java.util.*
+import java.util.Locale
+import java.util.Locale.getDefault
 import javax.sql.DataSource
 
 class SaksbehandlerRepository(
@@ -15,32 +17,13 @@ class SaksbehandlerRepository(
     private val pepClient: IPepClient
 ) {
     suspend fun addSaksbehandler(saksbehandler: Saksbehandler) {
-        lagreMedEpost(saksbehandler.epost) {
-            if (it == null) {
-                saksbehandler
-            } else {
-                it.id = saksbehandler.id
-                it.brukerIdent = saksbehandler.brukerIdent
-                it.epost = saksbehandler.epost.lowercase(Locale.getDefault())
-                it.navn = saksbehandler.navn
-                it.enhet = saksbehandler.enhet
-                it
-            }
-        }
-    }
-
-    private suspend fun lagreMedEpost(
-        epost: String,
-        f: (Saksbehandler?) -> Saksbehandler
-    ) {
         val erSkjermet = pepClient.harTilgangTilKode6()
-
         using(sessionOf(dataSource)) {
             it.transaction { tx ->
                 val run = tx.run(
                     queryOf(
                         "select data from saksbehandler where lower(epost) = lower(:epost) and skjermet = :skjermet for update",
-                        mapOf("epost" to epost, "skjermet" to erSkjermet)
+                        mapOf("epost" to saksbehandler.epost, "skjermet" to erSkjermet)
                     )
                         .map { row ->
                             row.stringOrNull("data")
@@ -49,9 +32,18 @@ class SaksbehandlerRepository(
                 val forrige: Saksbehandler?
                 val saksbehandler = if (!run.isNullOrEmpty()) {
                     forrige = LosObjectMapper.instance.readValue(run, Saksbehandler::class.java)
-                    f(forrige)
+                    if (forrige == null) {
+                        saksbehandler
+                    } else {
+                        forrige.id = saksbehandler.id
+                        forrige.brukerIdent = saksbehandler.brukerIdent
+                        forrige.epost = saksbehandler.epost.lowercase(getDefault())
+                        forrige.navn = saksbehandler.navn
+                        forrige.enhet = saksbehandler.enhet
+                        forrige
+                    }
                 } else {
-                    f(null)
+                    saksbehandler
                 }
 
                 val json = LosObjectMapper.instance.writeValueAsString(saksbehandler)
@@ -68,7 +60,7 @@ class SaksbehandlerRepository(
                      """,
                         mapOf(
                             "saksbehandlerid" to saksbehandler.brukerIdent,
-                            "epost" to saksbehandler.epost.lowercase(Locale.getDefault()),
+                            "epost" to saksbehandler.epost.lowercase(getDefault()),
                             "navn" to saksbehandler.navn,
                             "data" to json,
                             "skjermet" to erSkjermet
@@ -158,7 +150,9 @@ class SaksbehandlerRepository(
             }.asSingle
         )
 
-        if (saksbehandlerId == null) { throw IllegalStateException("Fant ikke saksbehandler med epost $epost") }
+        if (saksbehandlerId == null) {
+            throw IllegalStateException("Fant ikke saksbehandler med epost $epost")
+        }
 
         //Sletting av reservasjoner ligger her og ikke i reservasjonV3Repository, siden dette ikke er en del av "vanlig"
         //saksgang. Tanken var egentlig at reservasjoner og reservasjon_v3_endring ikke skulle slettes.
@@ -170,6 +164,31 @@ class SaksbehandlerRepository(
                 mapOf("saksbehandlerId" to saksbehandlerId)
             ).asUpdate
         )
+
+        tx.run(
+            queryOf(
+                """
+                    delete from reservasjon_v3_endring re
+                     using reservasjon_v3 r 
+                     where r.id = re.annullert_reservasjon_id
+                       and r.reservertav = :saksbehandlerId
+                """.trimIndent(),
+                mapOf("saksbehandlerId" to saksbehandlerId)
+            ).asUpdate
+        )
+
+        tx.run(
+            queryOf(
+                """
+                    delete from reservasjon_v3_endring re
+                     using reservasjon_v3 r 
+                     where r.id = re.ny_reservasjon_id
+                       and r.reservertav = :saksbehandlerId
+                """.trimIndent(),
+                mapOf("saksbehandlerId" to saksbehandlerId)
+            ).asUpdate
+        )
+
 
         tx.run(
             queryOf(
