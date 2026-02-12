@@ -9,6 +9,11 @@ class LagretSøkTjeneste(
     private val lagretSøkRepository: LagretSøkRepository,
     private val oppgaveQueryService: OppgaveQueryService,
 ) {
+    fun hent(lagretSøkId: Long): LagretSøk {
+        return lagretSøkRepository.hent(lagretSøkId)
+            ?: throw IllegalStateException("Lagret søk med id $lagretSøkId finnes ikke")
+    }
+
     suspend fun hentAlle(navIdent: String): List<LagretSøk> {
         val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedIdent(navIdent)
             ?: return emptyList()

@@ -57,11 +57,22 @@ fun Route.LagretSøkApi() {
         requestContextService.withRequestContext(call) {
             if (pepClient.harBasisTilgang()) {
                 val id = call.parameters["id"]!!.toLong()
-                val lagretSøk = lagretSøkRepository.hent(id)
-                if (lagretSøk != null) {
-                    call.respond(lagretSøk)
+                val innloggetSaksbehandler = coroutineContext.idToken().getNavIdent().let {
+                    saksbehandlerRepository.finnSaksbehandlerMedIdent(it)
+                }
+                if (innloggetSaksbehandler == null) {
+                    call.respond(HttpStatusCode.Forbidden, "Innlogget bruker er ikke i saksbehandler-tabellen.")
                 } else {
-                    call.respond(HttpStatusCode.NotFound)
+                    val lagretSøk = lagretSøkRepository.hent(id)
+                    if (lagretSøk != null) {
+                        if (lagretSøk.lagetAv != innloggetSaksbehandler.id) {
+                            call.respond(HttpStatusCode.Forbidden)
+                        } else {
+                            call.respond(lagretSøk)
+                        }
+                    } else {
+                        call.respond(HttpStatusCode.NotFound)
+                    }
                 }
             } else {
                 call.respond(HttpStatusCode.Forbidden)
@@ -100,9 +111,16 @@ fun Route.LagretSøkApi() {
     }) {
         requestContextService.withRequestContext(call) {
             if (pepClient.harBasisTilgang()) {
-                val endreLagretSøk = call.receive<EndreLagretSøk>()
-                val lagretSøk = lagretSøkTjeneste.endre(coroutineContext.idToken().getNavIdent(), endreLagretSøk)
-                call.respond(HttpStatusCode.OK, lagretSøk)
+                val innloggetSaksbehandler = coroutineContext.idToken().getNavIdent().let {
+                    saksbehandlerRepository.finnSaksbehandlerMedIdent(it)
+                }
+                if (innloggetSaksbehandler == null) {
+                    call.respond(HttpStatusCode.Forbidden, "Innlogget bruker er ikke i saksbehandler-tabellen.")
+                } else {
+                    val endreLagretSøk = call.receive<EndreLagretSøk>()
+                    val lagretSøk = lagretSøkTjeneste.endre(coroutineContext.idToken().getNavIdent(), endreLagretSøk)
+                    call.respond(HttpStatusCode.OK, lagretSøk)
+                }
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
@@ -119,10 +137,17 @@ fun Route.LagretSøkApi() {
     }) {
         requestContextService.withRequestContext(call) {
             if (pepClient.harBasisTilgang()) {
-                val kopiRequest = call.receive<OpprettLagretSøk>()
-                val lagretSøkId = call.parameters["id"]!!.toLong()
-                val nyttLagretSøk = lagretSøkTjeneste.kopier(coroutineContext.idToken().getNavIdent(), lagretSøkId, kopiRequest)
-                call.respond(HttpStatusCode.OK, nyttLagretSøk)
+                val innloggetSaksbehandler = coroutineContext.idToken().getNavIdent().let {
+                    saksbehandlerRepository.finnSaksbehandlerMedIdent(it)
+                }
+                if (innloggetSaksbehandler == null) {
+                    call.respond(HttpStatusCode.Forbidden, "Innlogget bruker er ikke i saksbehandler-tabellen.")
+                } else {
+                    val kopiRequest = call.receive<OpprettLagretSøk>()
+                    val lagretSøkId = call.parameters["id"]!!.toLong()
+                    val nyttLagretSøk = lagretSøkTjeneste.kopier(coroutineContext.idToken().getNavIdent(), lagretSøkId, kopiRequest)
+                    call.respond(HttpStatusCode.OK, nyttLagretSøk)
+                }
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
@@ -141,10 +166,16 @@ fun Route.LagretSøkApi() {
     }) {
         requestContextService.withRequestContext(call) {
             if (pepClient.harBasisTilgang()) {
-                val lagretSøkId = call.parameters["id"]!!.toLong()
-                val navIdent = coroutineContext.idToken().getNavIdent()
-                lagretSøkTjeneste.slett(navIdent, lagretSøkId)
-                call.respond(HttpStatusCode.OK)
+                val innloggetSaksbehandler = coroutineContext.idToken().getNavIdent().let {
+                    saksbehandlerRepository.finnSaksbehandlerMedIdent(it)
+                }
+                if (innloggetSaksbehandler == null) {
+                    call.respond(HttpStatusCode.Forbidden, "Innlogget bruker er ikke i saksbehandler-tabellen.")
+                } else {
+                    val lagretSøkId = call.parameters["id"]!!.toLong()
+                    lagretSøkTjeneste.slett(coroutineContext.idToken().getNavIdent(), lagretSøkId)
+                    call.respond(HttpStatusCode.OK)
+                }
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
@@ -155,7 +186,21 @@ fun Route.LagretSøkApi() {
         requestContextService.withRequestContext(call) {
             if (pepClient.harBasisTilgang()) {
                 val lagretSøkId = call.parameters["id"]!!
-                call.respond(lagretSøkTjeneste.hentAntall(lagretSøkId.toLong()))
+                val innloggetSaksbehandler = coroutineContext.idToken().getNavIdent().let {
+                    saksbehandlerRepository.finnSaksbehandlerMedIdent(it)
+                }
+                if (innloggetSaksbehandler == null) {
+                    call.respond(HttpStatusCode.Forbidden, "Innlogget bruker er ikke i saksbehandler-tabellen.")
+                } else {
+                    val lagretSøk = lagretSøkRepository.hent(lagretSøkId.toLong())
+                    if (lagretSøk == null) {
+                        call.respond(HttpStatusCode.NotFound)
+                    } else if (lagretSøk.lagetAv != innloggetSaksbehandler.id) {
+                        call.respond(HttpStatusCode.Forbidden)
+                    } else {
+                        call.respond(lagretSøkTjeneste.hentAntall(lagretSøkId.toLong()))
+                    }
+                }
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }

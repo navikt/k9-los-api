@@ -24,11 +24,11 @@ object OppgaveQueryToSqlMapper {
             spørringstrategiFilter == Spørringstrategi.AKTIV ->
                 AktivOppgaveQuerySqlBuilder(felter, oppgavestatusFilter, now)
 
-            // Case 2: Dersom det spørres etter lukkede oppgaver
-            oppgavestatusFilter.contains(Oppgavestatus.LUKKET) ->
+            // Case 2: Dersom det spørres etter lukkede oppgaver eller det selekteres felter
+            oppgavestatusFilter.contains(Oppgavestatus.LUKKET) || request.oppgaveQuery.select.isNotEmpty() ->
                 PartisjonertOppgaveQuerySqlBuilder(felter, oppgavestatusFilter, now, ferdigstiltDatofilter)
 
-            // Case 3: Default (kun åpne/ventende oppgaver)
+            // Case 3: Kun ikke-lukkede oppgaver
             else -> AktivOppgaveQuerySqlBuilder(felter, oppgavestatusFilter, now)
         }
     }
@@ -70,6 +70,27 @@ object OppgaveQueryToSqlMapper {
         request.avgrensning?.let { queryBuilder.medPaging(it.limit, it.offset) }
         queryBuilder.medAntallSomResultat()
         return queryBuilder
+    }
+
+    fun toSqlOppgaveQueryMedSelectFelter(
+        request: QueryRequest,
+        felter: Map<OmrådeOgKode, OppgavefeltMedMer>,
+        now: LocalDateTime
+    ): OppgaveQuerySqlBuilder {
+        val query = utledSqlBuilder(felter, request, now)
+        val combineOperator = CombineOperator.AND
+
+        val enkelSelectFelter = request.oppgaveQuery.select.filterIsInstance<EnkelSelectFelt>()
+        query.medSelectFelter(enkelSelectFelter)
+
+        håndterFiltere(query, felter, query.filterRens(felter, request.oppgaveQuery.filtere), combineOperator)
+        håndterOrder(query, request.oppgaveQuery.order)
+        if (request.fjernReserverte) {
+            query.utenReservasjoner()
+        }
+        request.avgrensning?.let { query.medPaging(it.limit, it.offset) }
+
+        return query
     }
 
     fun traverserFiltereOgFinnOppgavestatus(queryRequest: QueryRequest): List<Oppgavestatus> {

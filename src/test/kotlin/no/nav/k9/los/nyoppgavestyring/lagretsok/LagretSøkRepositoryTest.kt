@@ -126,7 +126,7 @@ class LagretSøkRepositoryTest : AbstractK9LosIntegrationTest() {
 
         val alleSøk = lagretSøkRepository.hentAlle(saksbehandler)
         assertThat(alleSøk).hasSize(2)
-        assertThat(alleSøk.map { it.tittel }).isEqualTo(listOf("Søk 1", "Søk 2"))
+        assertThat(alleSøk.map { it.tittel }).isEqualTo(listOf("Søk 2", "Søk 1"))
     }
 
     @Test
