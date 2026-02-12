@@ -4,13 +4,15 @@ import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.ko.db.OppgaveKoRepository
 import no.nav.k9.los.nyoppgavestyring.lagretsok.LagretSøkTjeneste
+import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
 
 class SaksbehandlerAdminTjeneste(
     private val pepClient: IPepClient,
     private val transactionalManager: TransactionalManager,
     private val saksbehandlerRepository: SaksbehandlerRepository,
     private val oppgaveKøV3Repository: OppgaveKoRepository,
-    private val lagretSøkTjeneste: LagretSøkTjeneste
+    private val lagretSøkTjeneste: LagretSøkTjeneste,
+    private val reservasjonV3Tjeneste: ReservasjonV3Tjeneste
 ) {
 
     // TODO: slett når frontend har begynt å bruke nytt endepunkt
@@ -69,7 +71,9 @@ class SaksbehandlerAdminTjeneste(
                 navn = it.navn,
                 epost = it.epost,
                 enhet = it.enhet,
-                oppgavekoer = emptyList())
+                oppgavekoer = emptyList(),
+                antallAktiveReservasjoner = reservasjonV3Tjeneste.hentReservasjonerForSaksbehandler(it.id!!).size
+            )
         }.sortedBy { it.navn }
     }
 }
