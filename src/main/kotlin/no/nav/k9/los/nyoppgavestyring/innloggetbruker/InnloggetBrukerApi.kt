@@ -1,16 +1,15 @@
 package no.nav.k9.los.nyoppgavestyring.innloggetbruker
 
-import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.KoinProfile
-import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.Saksbehandler
-import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.azuregraph.IAzureGraphService
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.idtoken.idToken
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.RequestContextService
+import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.Saksbehandler
+import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
 import org.koin.ktor.ext.inject
 
 internal fun Route.InnloggetBrukerApi() {
@@ -26,7 +25,7 @@ internal fun Route.InnloggetBrukerApi() {
                 val token = call.idToken()
                 val saksbehandlerIdent = azureGraphService.hentIdentTilInnloggetBruker()
                 val finnesISaksbehandlerTabell =
-                    saksbehandlerRepository.finnSaksbehandlerMedEpost(token.getUsername()) != null
+                    saksbehandlerRepository.finnSaksbehandlerMedIdent(token.getNavIdent()) != null
                 val innloggetBrukerDto = InnloggetBrukerDto(
                     token.getUsername(),
                     token.getName(),

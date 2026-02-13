@@ -43,7 +43,7 @@ internal fun Route.SaksbehandlerAdminApis() {
         requestContextService.withRequestContext(call) {
             if (pepClient.erOppgaveStyrer()) {
                 val epost = call.receive<EpostDto>()
-                call.respond(saksbehandlerAdminTjeneste.leggTilSaksbehandler(epost.epost))
+                call.respond(saksbehandlerAdminTjeneste.leggTilSaksbehandlerForEpost(epost.epost))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }

@@ -94,6 +94,7 @@ class OppgaveKoRepository(
             beskrivelse = string("beskrivelse"),
             oppgaveQuery = objectMapper.readValue(string("query"), OppgaveQuery::class.java),
             frittValgAvOppgave = boolean("fritt_valg_av_oppgave"),
+            saksbehandlerIds = if (medSaksbehandlere) hentKoSaksbehandlerIds(tx, long("id")) else emptyList(),
             saksbehandlere = if (medSaksbehandlere) hentKoSaksbehandlere(tx, long("id")) else emptyList(),
             endretTidspunkt = localDateTimeOrNull("endret_tidspunkt"),
             skjermet = boolean("skjermet")
@@ -231,6 +232,17 @@ class OppgaveKoRepository(
                     "oppgavekoV3Id" to oppgavekoV3Id
                 )
             ).map { row -> row.string("saksbehandler_epost") }.asList
+        )
+    }
+
+    private fun hentKoSaksbehandlerIds(tx: TransactionalSession, oppgavekoV3Id: Long): List<Long> {
+        return tx.run(
+            queryOf(
+                "SELECT saksbehandler_id FROM OPPGAVEKO_SAKSBEHANDLER WHERE oppgaveko_v3_id = :oppgavekoV3Id",
+                mapOf(
+                    "oppgavekoV3Id" to oppgavekoV3Id
+                )
+            ).map { row -> row.long("saksbehandler_id") }.asList
         )
     }
 

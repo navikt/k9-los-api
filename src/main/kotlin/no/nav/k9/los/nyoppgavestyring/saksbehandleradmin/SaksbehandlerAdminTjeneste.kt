@@ -25,7 +25,16 @@ class SaksbehandlerAdminTjeneste(
         return saksbehandler
     }
 
-    suspend fun leggTilSaksbehandler(epost: String) {
+    suspend fun leggTilSaksbehandlerForNavIdent(ident: String) {
+        if (saksbehandlerRepository.finnSaksbehandlerMedIdent(ident) != null) {
+            throw IllegalStateException("Saksbehandler finnes fra før")
+        }
+        // lagrer med tomme verdier, disse blir populert etter at saksbehandleren har logget seg inn
+        val saksbehandler = Saksbehandler(null, ident, null, null, mutableSetOf(), null)
+        saksbehandlerRepository.addSaksbehandler(saksbehandler)
+    }
+
+    suspend fun leggTilSaksbehandlerForEpost(epost: String) {
         if (saksbehandlerRepository.finnSaksbehandlerMedEpost(epost) != null) {
             throw IllegalStateException("Saksbehandler finnes fra før")
         }
