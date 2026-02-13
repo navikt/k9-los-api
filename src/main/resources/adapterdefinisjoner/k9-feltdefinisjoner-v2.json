@@ -6,7 +6,7 @@
       "visningsnavn": "Behandling",
       "listetype": false,
       "tolkesSom": "String",
-      "visTilBruker": true,
+      "visTilBruker": false,
       "kokriterie": false
     },
     {
@@ -14,7 +14,7 @@
       "visningsnavn": "Påklaget behandling",
       "listetype": false,
       "tolkesSom": "String",
-      "visTilBruker": true,
+      "visTilBruker": false,
       "kokriterie": false
     },
     {
