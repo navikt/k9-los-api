@@ -6,6 +6,7 @@ import no.nav.k9.kodeverk.behandling.BehandlingResultatType
 import no.nav.k9.kodeverk.behandling.BehandlingStegType
 import no.nav.k9.kodeverk.behandling.BehandlingÅrsakType
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
+import no.nav.k9.kodeverk.behandling.aksjonspunkt.Ventekategori
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.Venteårsak
 import no.nav.k9.kodeverk.produksjonsstyring.UtvidetSøknadÅrsak
 import no.nav.k9.los.Configuration
@@ -123,57 +124,35 @@ class OmrådeSetup(
         return AksjonspunktDefinisjon.entries
             .filterNot { it == AksjonspunktDefinisjon.UNDEFINED }
             .map { apDefinisjon ->
-                val (gruppering, synlighet) = aksjonspunktGrupperingForStegtype(apDefinisjon)
+                val (gruppering, synlighet, rekkefølge) = aksjonspunktGrupperingForStegtype(apDefinisjon)
                 KodeverkVerdiDto(
                     verdi = apDefinisjon.kode,
                     visningsnavn = apDefinisjon.kode + " - " + apDefinisjon.navn,
                     beskrivelse = null,
                     gruppering = gruppering,
-                    favoritt = synlighet == KodeverkSynlighet.SYNLIG_FAVORITT
+                    favoritt = synlighet == KodeverkSynlighet.OVER_STREKEN,
+                    synlighet = synlighet,
+                    rekkefølge = rekkefølge,
                 )
             }
     }
 
-    private fun aksjonspunktGrupperingForStegtype(ap: KlageAksjonspunktDefinisjon): Pair<String, KodeverkSynlighet> {
+    private fun aksjonspunktGrupperingForStegtype(ap: AksjonspunktDefinisjon): Triple<String, KodeverkSynlighet, Int> {
         return when (ap.behandlingSteg) {
-            no.nav.k9.klage.kodeverk.behandling.BehandlingStegType.VURDER_FORMKRAV_KLAGE_FØRSTEINSTANS,
-            no.nav.k9.klage.kodeverk.behandling.BehandlingStegType.VURDER_KLAGE_FØRSTEINSTANS -> "Førsteinstans klage" to KodeverkSynlighet.SYNLIG_FAVORITT
-
-            no.nav.k9.klage.kodeverk.behandling.BehandlingStegType.VURDER_FORMKRAV_KLAGE_ANDREINSTANS,
-            no.nav.k9.klage.kodeverk.behandling.BehandlingStegType.VURDER_KLAGE_ANDREINSTANS,
-            no.nav.k9.klage.kodeverk.behandling.BehandlingStegType.OVERFØRT_NK -> "Klageinstans" to KodeverkSynlighet.SYNLIG_FAVORITT
-
-            no.nav.k9.klage.kodeverk.behandling.BehandlingStegType.FORESLÅ_VEDTAK,
-            no.nav.k9.klage.kodeverk.behandling.BehandlingStegType.FATTE_VEDTAK,
-            no.nav.k9.klage.kodeverk.behandling.BehandlingStegType.IVERKSETT_VEDTAK -> "Vedtak" to KodeverkSynlighet.SYNLIG_FAVORITT
-
-            no.nav.k9.klage.kodeverk.behandling.BehandlingStegType.KONTROLLER_FAKTA -> "Kompletthet" to KodeverkSynlighet.SYNLIG_FAVORITT
-        }
-    }
-
-    private fun aksjonspunktGrupperingForStegtype(ap: AksjonspunktDefinisjon): Pair<String, KodeverkSynlighet> {
-        return when (ap.behandlingSteg) {
-            BehandlingStegType.BEREGN_YTELSE,
-            BehandlingStegType.PRECONDITION_BEREGNING,
-            BehandlingStegType.FASTSETT_OPPTJENINGSPERIODE,
-            BehandlingStegType.FASTSETT_SKJÆRINGSTIDSPUNKT_BEREGNING,
-            BehandlingStegType.VURDER_VILKAR_BERGRUNN,
-            BehandlingStegType.VURDER_REF_BERGRUNN,
-            BehandlingStegType.FORDEL_BEREGNINGSGRUNNLAG,
-            BehandlingStegType.FORESLÅ_BEREGNINGSGRUNNLAG,
-            BehandlingStegType.FORESLÅ_BEHANDLINGSRESULTAT,
-            BehandlingStegType.FORTSETT_FORESLÅ_BEREGNINGSGRUNNLAG,
-            BehandlingStegType.VURDER_TILKOMMET_INNTEKT,
-            BehandlingStegType.FASTSETT_BEREGNINGSGRUNNLAG -> "Beregning" to KodeverkSynlighet.SYNLIG_FAVORITT
-
-            BehandlingStegType.VURDER_MANUELT_BREV,
-            BehandlingStegType.FORESLÅ_VEDTAK,
-            BehandlingStegType.IVERKSETT_VEDTAK,
-            BehandlingStegType.FATTE_VEDTAK -> "Vedtak" to KodeverkSynlighet.SYNLIG_FAVORITT
-
-            BehandlingStegType.SIMULER_OPPDRAG,
-            BehandlingStegType.VURDER_TILBAKETREKK,
-            BehandlingStegType.HINDRE_TILBAKETREKK -> "Tilkjent Ytelse/Simulering" to KodeverkSynlighet.SYNLIG_FAVORITT
+            BehandlingStegType.KONTROLLER_FAKTA,
+            BehandlingStegType.VURDER_KOMPLETTHET_BEREGNING,
+            BehandlingStegType.INNHENT_INNTEKTSMELDING,
+            BehandlingStegType.KONTROLLER_FAKTA_BEREGNING,
+            BehandlingStegType.KONTROLLER_FAKTA_UTTAK,
+            BehandlingStegType.KONTROLLER_LØPENDE_MEDLEMSKAP,
+            BehandlingStegType.KONTROLLERER_SØKERS_OPPLYSNINGSPLIKT,
+            BehandlingStegType.VURDER_KOMPLETTHET,
+            BehandlingStegType.POSTCONDITION_KOMPLETTHET,
+            BehandlingStegType.KONTROLLER_FAKTA_ARBEIDSFORHOLD -> Triple(
+                "Kompletthet",
+                KodeverkSynlighet.OVER_STREKEN,
+                1
+            )
 
             BehandlingStegType.INIT_PERIODER,
             BehandlingStegType.INIT_VILKÅR,
@@ -191,45 +170,114 @@ class OmrådeSetup(
             BehandlingStegType.VURDER_OPPTJENING_FAKTA,
             BehandlingStegType.VURDER_OPPTJENINGSVILKÅR,
             BehandlingStegType.VURDER_UTLAND,
-            BehandlingStegType.VURDER_SØKNADSFRIST -> "Inngangsvilkår" to KodeverkSynlighet.SYNLIG_FAVORITT
-
-            BehandlingStegType.KONTROLLER_FAKTA,
-            BehandlingStegType.VURDER_KOMPLETTHET_BEREGNING,
-            BehandlingStegType.INNHENT_INNTEKTSMELDING,
-            BehandlingStegType.KONTROLLER_FAKTA_BEREGNING,
-            BehandlingStegType.KONTROLLER_FAKTA_UTTAK,
-            BehandlingStegType.KONTROLLER_LØPENDE_MEDLEMSKAP,
-            BehandlingStegType.KONTROLLERER_SØKERS_OPPLYSNINGSPLIKT,
-            BehandlingStegType.VURDER_KOMPLETTHET,
-            BehandlingStegType.POSTCONDITION_KOMPLETTHET,
-            BehandlingStegType.KONTROLLER_FAKTA_ARBEIDSFORHOLD -> "Kompletthet" to KodeverkSynlighet.SYNLIG_FAVORITT
+            BehandlingStegType.VURDER_SØKNADSFRIST -> Triple("Inngangsvilkår", KodeverkSynlighet.OVER_STREKEN, 2)
 
             BehandlingStegType.VURDER_UTTAK,
             BehandlingStegType.VURDER_UTTAK_V2,
             BehandlingStegType.BEKREFT_UTTAK,
-            BehandlingStegType.VURDER_STARTDATO_UTTAKSREGLER -> "Uttak" to KodeverkSynlighet.SYNLIG_FAVORITT
+            BehandlingStegType.VURDER_STARTDATO_UTTAKSREGLER -> Triple("Uttak", KodeverkSynlighet.OVER_STREKEN, 3)
+
+            BehandlingStegType.BEREGN_YTELSE,
+            BehandlingStegType.PRECONDITION_BEREGNING,
+            BehandlingStegType.FASTSETT_OPPTJENINGSPERIODE,
+            BehandlingStegType.FASTSETT_SKJÆRINGSTIDSPUNKT_BEREGNING,
+            BehandlingStegType.VURDER_VILKAR_BERGRUNN,
+            BehandlingStegType.VURDER_REF_BERGRUNN,
+            BehandlingStegType.FORDEL_BEREGNINGSGRUNNLAG,
+            BehandlingStegType.FORESLÅ_BEREGNINGSGRUNNLAG,
+            BehandlingStegType.FORESLÅ_BEHANDLINGSRESULTAT,
+            BehandlingStegType.FORTSETT_FORESLÅ_BEREGNINGSGRUNNLAG,
+            BehandlingStegType.VURDER_TILKOMMET_INNTEKT,
+            BehandlingStegType.FASTSETT_BEREGNINGSGRUNNLAG -> Triple("Beregning", KodeverkSynlighet.OVER_STREKEN, 4)
+
+            BehandlingStegType.SIMULER_OPPDRAG,
+            BehandlingStegType.VURDER_TILBAKETREKK,
+            BehandlingStegType.HINDRE_TILBAKETREKK -> Triple(
+                "Tilkjent Ytelse/Simulering",
+                KodeverkSynlighet.OVER_STREKEN,
+                5
+            )
+
+            BehandlingStegType.VURDER_MANUELT_BREV,
+            BehandlingStegType.FORESLÅ_VEDTAK,
+            BehandlingStegType.IVERKSETT_VEDTAK,
+            BehandlingStegType.FATTE_VEDTAK -> Triple("Vedtak", KodeverkSynlighet.OVER_STREKEN, 6)
 
             BehandlingStegType.OVERGANG_FRA_INFOTRYGD,
-            BehandlingStegType.VURDER_MEDISINSKE_VILKÅR -> "Pleiepenger" to KodeverkSynlighet.SYNLIG_FAVORITT
-
-            BehandlingStegType.VURDER_OPPLÆRING_VILKÅR,
-            BehandlingStegType.VURDER_INSTITUSJON_VILKÅR -> "Opplæringspenger" to KodeverkSynlighet.SYNLIG_FAVORITT
+            BehandlingStegType.VURDER_MEDISINSKE_VILKÅR -> Triple("Pleiepenger", KodeverkSynlighet.OVER_STREKEN, 7)
 
             BehandlingStegType.MANUELL_VILKÅRSVURDERING,
-            BehandlingStegType.MANUELL_TILKJENNING_YTELSE -> "Omsorgspenger" to KodeverkSynlighet.SYNLIG_FAVORITT
+            BehandlingStegType.MANUELL_TILKJENNING_YTELSE -> Triple("Omsorgspenger", KodeverkSynlighet.OVER_STREKEN, 8)
+
+            BehandlingStegType.VURDER_OPPLÆRING_VILKÅR,
+            BehandlingStegType.VURDER_INSTITUSJON_VILKÅR -> Triple(
+                "Opplæringspenger",
+                KodeverkSynlighet.OVER_STREKEN,
+                9
+            )
 
             BehandlingStegType.VARIANT_FILTER,
             BehandlingStegType.POST_VURDER_MEDISINSKVILKÅR,
-            BehandlingStegType.VURDER_INNSYN -> "Øvrige aksjonspunkter" to KodeverkSynlighet.SYNLIG
+            BehandlingStegType.VURDER_INNSYN -> Triple("Øvrige aksjonspunkter", KodeverkSynlighet.UNDER_STREKEN, 10)
 
             BehandlingStegType.VURDER_FARESIGNALER,
-            BehandlingStegType.START_STEG -> "Start" to KodeverkSynlighet.SKJULT
+            BehandlingStegType.START_STEG -> Triple("Start", KodeverkSynlighet.SKJULT, 99)
+        }
+    }
+
+    private fun aksjonspunktVerdierK9Klage() =
+        KlageAksjonspunktDefinisjon.entries
+            .filterNot { it == KlageAksjonspunktDefinisjon.UNDEFINED }
+            .map { apDefinisjon ->
+                val (gruppering, synlighet, rekkefølge) = aksjonspunktGrupperingForStegtype(apDefinisjon)
+                KodeverkVerdiDto(
+                    verdi = KlageEventTilOppgaveMapper.KLAGE_PREFIX + apDefinisjon.kode,
+                    visningsnavn = apDefinisjon.kode + " - " + KlageEventTilOppgaveMapper.KLAGE_PREFIX_VISNING + apDefinisjon.navn,
+                    beskrivelse = null,
+                    gruppering = gruppering,
+                    favoritt = synlighet == KodeverkSynlighet.OVER_STREKEN,
+                    synlighet = synlighet,
+                    rekkefølge = rekkefølge
+                )
+            }
+
+    private fun aksjonspunktGrupperingForStegtype(ap: KlageAksjonspunktDefinisjon): Triple<String, KodeverkSynlighet, Int> {
+        return when (ap.behandlingSteg) {
+            no.nav.k9.klage.kodeverk.behandling.BehandlingStegType.VURDER_FORMKRAV_KLAGE_FØRSTEINSTANS,
+            no.nav.k9.klage.kodeverk.behandling.BehandlingStegType.VURDER_KLAGE_FØRSTEINSTANS -> Triple(
+                "Førsteinstans klage",
+                KodeverkSynlighet.OVER_STREKEN,
+                10
+            )
+
+            no.nav.k9.klage.kodeverk.behandling.BehandlingStegType.VURDER_FORMKRAV_KLAGE_ANDREINSTANS,
+            no.nav.k9.klage.kodeverk.behandling.BehandlingStegType.VURDER_KLAGE_ANDREINSTANS,
+            no.nav.k9.klage.kodeverk.behandling.BehandlingStegType.OVERFØRT_NK -> Triple(
+                "Klageinstans",
+                KodeverkSynlighet.OVER_STREKEN,
+                11
+            )
+
+            no.nav.k9.klage.kodeverk.behandling.BehandlingStegType.FORESLÅ_VEDTAK,
+            no.nav.k9.klage.kodeverk.behandling.BehandlingStegType.FATTE_VEDTAK,
+            no.nav.k9.klage.kodeverk.behandling.BehandlingStegType.IVERKSETT_VEDTAK -> Triple(
+                "Vedtak",
+                KodeverkSynlighet.OVER_STREKEN,
+                6
+            )
+
+            no.nav.k9.klage.kodeverk.behandling.BehandlingStegType.KONTROLLER_FAKTA -> Triple(
+                "Kompletthet",
+                KodeverkSynlighet.OVER_STREKEN,
+                1
+            )
         }
     }
 
     // TODO: Denne gruppering-funksjonen er midlertidig for å iverta dagens gruppering.
     //  Den bør erstattes med en løsning som bruker enten skjermlenkeType eller behandlingSteg.
-    private fun grupperingK9Sak(ap: AksjonspunktDefinisjon): Pair<String, Boolean> {
+    // midlertidig kommentert ut, siden vi prototyper annen løsning
+    private fun grupperingK9SakAPGammel(ap: AksjonspunktDefinisjon): Pair<String, Boolean> {
         if (ap.erAutopunkt()) return "Autopunkt k9-sak" to false
 
         return when (ap) {
@@ -280,7 +328,8 @@ class OmrådeSetup(
         }
     }
 
-    private fun grupperingK9Klage(ap: KlageAksjonspunktDefinisjon): Pair<String, Boolean> {
+    // midlertidig kommentert ut, siden vi prototyper annen løsning
+    private fun grupperingK9KlageAPGammel(ap: KlageAksjonspunktDefinisjon): Pair<String, Boolean> {
         if (ap.erAutopunkt()) return "Autopunkt k9-klage" to false
 
         return when (ap) {
@@ -290,20 +339,6 @@ class OmrådeSetup(
             else -> "Øvrige aksjonspunkter k9-klage" to false
         }
     }
-
-    private fun aksjonspunktVerdierK9Klage() =
-        KlageAksjonspunktDefinisjon.entries
-            .filterNot { it == KlageAksjonspunktDefinisjon.UNDEFINED }
-            .map { apDefinisjon ->
-                val (gruppering, synlighet) = aksjonspunktGrupperingForStegtype(apDefinisjon)
-                KodeverkVerdiDto(
-                    verdi = KlageEventTilOppgaveMapper.KLAGE_PREFIX + apDefinisjon.kode,
-                    visningsnavn = apDefinisjon.kode + " - " + KlageEventTilOppgaveMapper.KLAGE_PREFIX_VISNING + apDefinisjon.navn,
-                    beskrivelse = null,
-                    gruppering = gruppering,
-                    favoritt = synlighet == KodeverkSynlighet.SYNLIG_FAVORITT
-                )
-            }
 
     private fun kodeverkFagsystem() {
         val kodeverkDto = KodeverkDto(
@@ -357,13 +392,15 @@ class OmrådeSetup(
             uttømmende = true,
             verdier = BehandlingType.entries
                 .map { behandlingType ->
-                    val (gruppering, favoritt) = grupperingBehandlingtype(behandlingType)
+                    val (gruppering, synlighet, rekkefølge) = grupperingBehandlingtype(behandlingType)
                     KodeverkVerdiDto(
                         verdi = behandlingType.kode,
                         visningsnavn = behandlingType.navn,
-                        favoritt = favoritt,
+                        favoritt = synlighet == KodeverkSynlighet.OVER_STREKEN,
                         beskrivelse = null,
-                        gruppering = gruppering
+                        gruppering = gruppering,
+                        synlighet = synlighet,
+                        rekkefølge = rekkefølge
                     )
                 }
         )
@@ -371,15 +408,10 @@ class OmrådeSetup(
         feltdefinisjonTjeneste.oppdater(kodeverkDto)
     }
 
-    private fun grupperingBehandlingtype(behandlingType: BehandlingType): Pair<String, Boolean> {
+    private fun grupperingBehandlingtype(behandlingType: BehandlingType): Triple<String, KodeverkSynlighet, Int> {
         return when (behandlingType) {
             BehandlingType.FORSTEGANGSSOKNAD,
-            BehandlingType.REVURDERING -> "Ordinærbehandling" to true
-
-            BehandlingType.KLAGE -> "Klage" to true
-
-            BehandlingType.TILBAKE,
-            BehandlingType.REVURDERING_TILBAKEKREVING -> "Tilbakekreving" to true
+            BehandlingType.REVURDERING -> Triple("Ordinærbehandling", KodeverkSynlighet.OVER_STREKEN, 1)
 
             BehandlingType.PAPIRSØKNAD,
             BehandlingType.DIGITAL_SØKNAD,
@@ -395,9 +427,14 @@ class OmrådeSetup(
             BehandlingType.UTEN_FNR_DNR,
             BehandlingType.PUNSJOPPGAVE_IKKE_LENGER_NØDVENDIG,
             BehandlingType.JOURNALPOSTNOTAT,
-            BehandlingType.UKJENT -> "Punsj" to true
+            BehandlingType.UKJENT -> Triple("Punsj", KodeverkSynlighet.OVER_STREKEN, 2)
 
-            else -> "Øvrige behandlingstyper" to false
+            BehandlingType.KLAGE -> Triple("Klage", KodeverkSynlighet.OVER_STREKEN, 3)
+
+            BehandlingType.TILBAKE,
+            BehandlingType.REVURDERING_TILBAKEKREVING -> Triple("Tilbakekreving", KodeverkSynlighet.OVER_STREKEN, 4)
+
+            else -> Triple("Øvrige behandlingstyper", KodeverkSynlighet.UNDER_STREKEN, 5)
         }
     }
 
@@ -407,12 +444,65 @@ class OmrådeSetup(
             eksternId = "Venteårsak",
             beskrivelse = null,
             uttømmende = true,
-            verdier = Venteårsak.entries.lagK9Dto(beskrivelse = null) + no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.Venteårsak.entries.lageK9KlageDto(
-                beskrivelse = null,
-                prefiks = false
-            ),
+            verdier = Venteårsak
+                .entries
+                .filterNot { venteårsak -> venteårsak.kode.startsWith("FRISINN") }
+                .map { venteårsak ->
+                    val (gruppering, synlighet, rekkefølge) = grupperingVenteårsak(venteårsak)
+                    KodeverkVerdiDto(
+                        verdi = venteårsak.kode,
+                        visningsnavn = venteårsak.navn,
+                        beskrivelse = null,
+                        gruppering = gruppering,
+                        favoritt = synlighet == KodeverkSynlighet.OVER_STREKEN,
+                        synlighet = synlighet,
+                        rekkefølge = rekkefølge
+                    )
+                }.plus(
+                    no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.Venteårsak
+                        .entries
+                        .map { venteårsak ->
+                            val (gruppering, synlighet, rekkefølge) = grupperingVenteårsakKlage(venteårsak)
+                            KodeverkVerdiDto(
+                                verdi = KlageEventTilOppgaveMapper.KLAGE_PREFIX + venteårsak.kode,
+                                visningsnavn = KlageEventTilOppgaveMapper.KLAGE_PREFIX_VISNING + venteårsak.navn,
+                                beskrivelse = null,
+                                gruppering = gruppering,
+                                favoritt = synlighet == KodeverkSynlighet.OVER_STREKEN,
+                                synlighet = synlighet,
+                                rekkefølge = rekkefølge
+                            )
+                        }
+                )
         )
+
         feltdefinisjonTjeneste.oppdater(kodeverkDto)
+    }
+
+    private fun grupperingVenteårsak(venteårsak: Venteårsak): Triple<String, KodeverkSynlighet, Int> {
+        return when (venteårsak.ventekategori) {
+            Ventekategori.AVVENTER_SØKER -> Triple("Avventer søker", KodeverkSynlighet.OVER_STREKEN, 1)
+            Ventekategori.AVVENTER_ARBEIDSGIVER -> Triple("Avventer arbeidsgiver", KodeverkSynlighet.OVER_STREKEN, 2)
+            Ventekategori.AVVENTER_TEKNISK_FEIL -> Triple("Avventer teknisk feil", KodeverkSynlighet.OVER_STREKEN, 3)
+            Ventekategori.AVVENTER_ANNET -> Triple("Avventer annet", KodeverkSynlighet.OVER_STREKEN, 4)
+            Ventekategori.AVVENTER_ANNET_IKKE_SAKSBEHANDLINGSTID -> Triple(
+                "Avventer annet (ikke saksbehandlingstid)",
+                KodeverkSynlighet.OVER_STREKEN,
+                5
+            )
+
+            Ventekategori.AVVENTER_SAKSBEHANDLER -> Triple("Avventer saksbehandler", KodeverkSynlighet.UNDER_STREKEN, 7)
+
+            else -> Triple("Uspesifisert", KodeverkSynlighet.UNDER_STREKEN, 8)
+        }
+    }
+
+    private fun grupperingVenteårsakKlage(venteårsak: no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.Venteårsak): Triple<String, KodeverkSynlighet, Int> {
+        return Triple(
+            "Klage",
+            KodeverkSynlighet.OVER_STREKEN,
+            6
+        ) //TODO: Placeholder før eventuelt mer interessant logikk
     }
 
     private fun kodeverkSøknadsårsak() {
@@ -432,35 +522,45 @@ class OmrådeSetup(
             eksternId = "behandlingsårsak",
             beskrivelse = null,
             uttømmende = true,
-            verdier = BehandlingÅrsakType.entries
-                .map { behandlingÅrsakType ->
-                    val (gruppering, synlighet) = grupperingBehandlingsårsakK9Sak(behandlingÅrsakType)
-                    KodeverkVerdiDto(
-                        verdi = behandlingÅrsakType.kode,
-                        visningsnavn = behandlingÅrsakType.navn,
-                        favoritt = synlighet == KodeverkSynlighet.SYNLIG_FAVORITT,
-                        beskrivelse = null,
-                        gruppering = gruppering
+            verdier =
+                BehandlingÅrsakType
+                    .entries
+                    .map { behandlingÅrsakType ->
+                        val (gruppering, synlighet, rekkefølge) = grupperingBehandlingsårsakK9Sak(behandlingÅrsakType)
+                        KodeverkVerdiDto(
+                            verdi = behandlingÅrsakType.kode,
+                            visningsnavn = behandlingÅrsakType.navn,
+                            favoritt = synlighet == KodeverkSynlighet.OVER_STREKEN,
+                            beskrivelse = null,
+                            gruppering = gruppering,
+                            synlighet = synlighet,
+                            rekkefølge = rekkefølge
+                        )
+                    }
+                    .plus(
+                        no.nav.k9.klage.kodeverk.behandling.BehandlingÅrsakType
+                            .entries
+                            .map { behandlingÅrsakType ->
+                                val (gruppering, synlighet, rekkefølge) = grupperingBehandlingsårsakK9Klage(
+                                    behandlingÅrsakType
+                                )
+                                KodeverkVerdiDto(
+                                    verdi = behandlingÅrsakType.kode,
+                                    visningsnavn = behandlingÅrsakType.navn,
+                                    favoritt = synlighet == KodeverkSynlighet.OVER_STREKEN,
+                                    beskrivelse = null,
+                                    gruppering = gruppering,
+                                    synlighet = synlighet,
+                                    rekkefølge = rekkefølge,
+                                )
+                            }
                     )
-                }
-                    +
-                    no.nav.k9.klage.kodeverk.behandling.BehandlingÅrsakType.entries
-                        .map { behandlingÅrsakType ->
-                            val (gruppering, synlighet) = grupperingBehandlingsårsakK9Klage(behandlingÅrsakType)
-                            KodeverkVerdiDto(
-                                verdi = behandlingÅrsakType.kode,
-                                visningsnavn = behandlingÅrsakType.navn,
-                                favoritt = synlighet == KodeverkSynlighet.SYNLIG_FAVORITT,
-                                beskrivelse = null,
-                                gruppering = gruppering
-                            )
-                        }
         )
 
         feltdefinisjonTjeneste.oppdater(kodeverk)
     }
 
-    private fun grupperingBehandlingsårsakK9Klage(behandlingÅrsakType: no.nav.k9.klage.kodeverk.behandling.BehandlingÅrsakType): Pair<String, KodeverkSynlighet> {
+    private fun grupperingBehandlingsårsakK9Klage(behandlingÅrsakType: no.nav.k9.klage.kodeverk.behandling.BehandlingÅrsakType): Triple<String, KodeverkSynlighet, Int> {
         return when (behandlingÅrsakType) {
             no.nav.k9.klage.kodeverk.behandling.BehandlingÅrsakType.RE_FEIL_I_LOVANDVENDELSE,
             no.nav.k9.klage.kodeverk.behandling.BehandlingÅrsakType.RE_FEIL_REGELVERKSFORSTÅELSE,
@@ -475,24 +575,22 @@ class OmrådeSetup(
             no.nav.k9.klage.kodeverk.behandling.BehandlingÅrsakType.RE_REGISTEROPPLYSNING,
             no.nav.k9.klage.kodeverk.behandling.BehandlingÅrsakType.RE_OPPLYSNINGER_OM_YTELSER,
             no.nav.k9.klage.kodeverk.behandling.BehandlingÅrsakType.RE_TILSTØTENDE_YTELSE_INNVILGET,
-            no.nav.k9.klage.kodeverk.behandling.BehandlingÅrsakType.RE_TILSTØTENDE_YTELSE_OPPHØRT -> "Fra K9-klage" to KodeverkSynlighet.SYNLIG
+            no.nav.k9.klage.kodeverk.behandling.BehandlingÅrsakType.RE_TILSTØTENDE_YTELSE_OPPHØRT -> Triple(
+                "Fra K9-klage",
+                KodeverkSynlighet.UNDER_STREKEN,
+                5
+            )
 
-            no.nav.k9.klage.kodeverk.behandling.BehandlingÅrsakType.UDEFINERT -> "Udefinert" to KodeverkSynlighet.SKJULT
+            no.nav.k9.klage.kodeverk.behandling.BehandlingÅrsakType.UDEFINERT -> Triple(
+                "Udefinert",
+                KodeverkSynlighet.SKJULT,
+                6
+            )
         }
     }
 
-    private fun grupperingBehandlingsårsakK9Sak(behandlingÅrsakType: BehandlingÅrsakType): Pair<String, KodeverkSynlighet> {
+    private fun grupperingBehandlingsårsakK9Sak(behandlingÅrsakType: BehandlingÅrsakType): Triple<String, KodeverkSynlighet, Int> {
         return when (behandlingÅrsakType) {
-            BehandlingÅrsakType.UDEFINERT -> "Udefinert" to KodeverkSynlighet.SKJULT
-
-            BehandlingÅrsakType.RE_ETABLERT_TILSYN_ENDRING_FRA_ANNEN_OMSORGSPERSON,
-            BehandlingÅrsakType.RE_NATTEVÅKBEREDSKAP_ENDRING_FRA_ANNEN_OMSORGSPERSON,
-            BehandlingÅrsakType.RE_SYKDOM_ENDRING_FRA_ANNEN_OMSORGSPERSON,
-            BehandlingÅrsakType.RE_NATTEVÅKBEREDSKAP_ETABLERT_TILSYN_ENDRING_FRA_ANNEN_OMSORGSPERSON,
-            BehandlingÅrsakType.RE_SYKDOM_ETABLERT_TILSYN_ENDRING_FRA_ANNEN_OMSORGSPERSON,
-            BehandlingÅrsakType.RE_SYKDOM_NATTEVÅK_ENDRING_FRA_ANNEN_OMSORGSPERSON,
-            BehandlingÅrsakType.RE_SYKDOM_ETABLERT_TILSYN_NATTVÅK_ENDRING_FRA_ANNEN_OMSORGSPERSON -> "Annen omsorgsperson" to KodeverkSynlighet.SYNLIG_FAVORITT
-
             BehandlingÅrsakType.RE_OPPLYSNINGER_OM_MEDLEMSKAP,
             BehandlingÅrsakType.RE_OPPLYSNINGER_OM_OPPTJENING,
             BehandlingÅrsakType.RE_OPPLYSNINGER_OM_FORDELING,
@@ -500,7 +598,26 @@ class OmrådeSetup(
             BehandlingÅrsakType.RE_OPPLYSNINGER_OM_DØD,
             BehandlingÅrsakType.RE_OPPLYSNINGER_OM_SØKERS_REL,
             BehandlingÅrsakType.RE_OPPLYSNINGER_OM_SØKNAD_FRIST,
-            BehandlingÅrsakType.RE_OPPLYSNINGER_OM_BEREGNINGSGRUNNLAG -> "Nye opplysninger" to KodeverkSynlighet.SYNLIG_FAVORITT
+            BehandlingÅrsakType.RE_OPPLYSNINGER_OM_BEREGNINGSGRUNNLAG -> Triple(
+                "Nye opplysninger",
+                KodeverkSynlighet.OVER_STREKEN,
+                1
+            )
+
+            BehandlingÅrsakType.RE_ETABLERT_TILSYN_ENDRING_FRA_ANNEN_OMSORGSPERSON,
+            BehandlingÅrsakType.RE_NATTEVÅKBEREDSKAP_ENDRING_FRA_ANNEN_OMSORGSPERSON,
+            BehandlingÅrsakType.RE_SYKDOM_ENDRING_FRA_ANNEN_OMSORGSPERSON,
+            BehandlingÅrsakType.RE_NATTEVÅKBEREDSKAP_ETABLERT_TILSYN_ENDRING_FRA_ANNEN_OMSORGSPERSON,
+            BehandlingÅrsakType.RE_SYKDOM_ETABLERT_TILSYN_ENDRING_FRA_ANNEN_OMSORGSPERSON,
+            BehandlingÅrsakType.RE_SYKDOM_NATTEVÅK_ENDRING_FRA_ANNEN_OMSORGSPERSON,
+            BehandlingÅrsakType.RE_SYKDOM_ETABLERT_TILSYN_NATTVÅK_ENDRING_FRA_ANNEN_OMSORGSPERSON -> Triple(
+                "Annen omsorgsperson",
+                KodeverkSynlighet.OVER_STREKEN,
+                2
+            )
+
+            BehandlingÅrsakType.RE_HENDELSE_DØD_FORELDER,
+            BehandlingÅrsakType.RE_HENDELSE_DØD_BARN -> Triple("Dødsfall", KodeverkSynlighet.OVER_STREKEN, 3)
 
             BehandlingÅrsakType.RE_FEIL_I_LOVANDVENDELSE,
             BehandlingÅrsakType.RE_FEIL_REGELVERKSFORSTÅELSE,
@@ -510,10 +627,9 @@ class OmrådeSetup(
             BehandlingÅrsakType.RE_KLAGE_MED_END_INNTEKT,
             BehandlingÅrsakType.RE_KLAGE_NY_INNH_LIGNET_INNTEKT,
             BehandlingÅrsakType.RE_KLAGE_NATTEVÅKBEREDSKAP,
-            BehandlingÅrsakType.ETTER_KLAGE -> "Klage" to KodeverkSynlighet.SYNLIG_FAVORITT
+            BehandlingÅrsakType.ETTER_KLAGE -> Triple("Klage", KodeverkSynlighet.OVER_STREKEN, 4)
 
-            BehandlingÅrsakType.RE_HENDELSE_DØD_FORELDER,
-            BehandlingÅrsakType.RE_HENDELSE_DØD_BARN -> "Dødsfall" to KodeverkSynlighet.SYNLIG_FAVORITT
+            BehandlingÅrsakType.UDEFINERT -> Triple("Udefinert", KodeverkSynlighet.SKJULT, 99)
 
             BehandlingÅrsakType.RE_MANGLER_FØDSEL,
             BehandlingÅrsakType.RE_MANGLER_FØDSEL_I_PERIODE,
@@ -540,9 +656,13 @@ class OmrådeSetup(
             BehandlingÅrsakType.RE_GJENOPPTAR_UTSATT_BEHANDLING,
             BehandlingÅrsakType.RE_FERIEPENGER_ENDRING_FRA_ANNEN_SAK,
             BehandlingÅrsakType.UNNT_GENERELL,
-            BehandlingÅrsakType.REVURDERER_BERØRT_PERIODE -> "Øvrige årsaker" to KodeverkSynlighet.SYNLIG
+            BehandlingÅrsakType.REVURDERER_BERØRT_PERIODE -> Triple(
+                "Øvrige årsaker",
+                KodeverkSynlighet.UNDER_STREKEN,
+                6
+            )
 
-            else -> "Øvrige årsaker" to KodeverkSynlighet.SYNLIG
+            else -> Triple("Øvrige årsaker", KodeverkSynlighet.UNDER_STREKEN, 6)
         }
 
 
@@ -561,7 +681,7 @@ class OmrådeSetup(
 
     fun <T : Kodeverdi> Collection<T>.lagDto(
         beskrivelse: String?,
-        synlighet: (T) -> KodeverkSynlighet = { KodeverkSynlighet.SYNLIG_FAVORITT }
+        synlighet: (T) -> KodeverkSynlighet = { KodeverkSynlighet.OVER_STREKEN }
     ): List<KodeverkVerdiDto> {
         return associateWith { synlighet(it) }
             .filter { (_, synlighet) -> synlighet != KodeverkSynlighet.SKJULT }
@@ -570,14 +690,15 @@ class OmrådeSetup(
                     verdi = kodeverdi.kode,
                     visningsnavn = kodeverdi.navn,
                     beskrivelse = beskrivelse,
-                    favoritt = synlighet == KodeverkSynlighet.SYNLIG_FAVORITT
+                    favoritt = synlighet == KodeverkSynlighet.OVER_STREKEN,
+                    synlighet = synlighet
                 )
             }.sortedBy { it.visningsnavn }
     }
 
     fun <T : KodeverdiK9Sak> Collection<T>.lagK9Dto(
         beskrivelse: String?,
-        synlighet: (T) -> KodeverkSynlighet = { KodeverkSynlighet.SYNLIG_FAVORITT }
+        synlighet: (T) -> KodeverkSynlighet = { KodeverkSynlighet.OVER_STREKEN }
     ): List<KodeverkVerdiDto> {
         return associateWith { synlighet(it) }
             .filter { (_, synlighet) -> synlighet != KodeverkSynlighet.SKJULT }
@@ -586,7 +707,8 @@ class OmrådeSetup(
                     verdi = kodeverdi.kode,
                     visningsnavn = kodeverdi.navn,
                     beskrivelse = beskrivelse,
-                    favoritt = synlighet == KodeverkSynlighet.SYNLIG_FAVORITT
+                    favoritt = synlighet == KodeverkSynlighet.OVER_STREKEN,
+                    synlighet = synlighet
                 )
             }.sortedBy { it.visningsnavn }
     }
@@ -594,7 +716,7 @@ class OmrådeSetup(
     fun <T : no.nav.k9.klage.kodeverk.api.Kodeverdi> Collection<T>.lageK9KlageDto(
         beskrivelse: String?,
         prefiks: Boolean,
-        synlighet: (T) -> KodeverkSynlighet = { KodeverkSynlighet.SYNLIG_FAVORITT }
+        synlighet: (T) -> KodeverkSynlighet = { KodeverkSynlighet.OVER_STREKEN }
     ): List<KodeverkVerdiDto> {
         return associateWith { synlighet(it) }
             .filter { (_, synlighet) -> synlighet != KodeverkSynlighet.SKJULT }
@@ -603,7 +725,8 @@ class OmrådeSetup(
                     verdi = (if (prefiks) KlageEventTilOppgaveMapper.KLAGE_PREFIX else "") + kodeverdi.kode,
                     visningsnavn = KlageEventTilOppgaveMapper.KLAGE_PREFIX_VISNING + kodeverdi.navn,
                     beskrivelse = beskrivelse,
-                    favoritt = synlighet == KodeverkSynlighet.SYNLIG_FAVORITT
+                    favoritt = synlighet == KodeverkSynlighet.OVER_STREKEN,
+                    synlighet = synlighet
                 )
             }.sortedBy { it.visningsnavn }
     }
@@ -615,15 +738,15 @@ object KodeverkSynlighetRegler {
             BehandlingType.ANKE -> KodeverkSynlighet.SKJULT
             BehandlingType.FORSTEGANGSSOKNAD,
             BehandlingType.REVURDERING,
-            BehandlingType.REVURDERING_TILBAKEKREVING -> KodeverkSynlighet.SYNLIG_FAVORITT
+            BehandlingType.REVURDERING_TILBAKEKREVING -> KodeverkSynlighet.OVER_STREKEN
 
-            else -> KodeverkSynlighet.SYNLIG
+            else -> KodeverkSynlighet.UNDER_STREKEN
         }
     }
 
     fun søknadÅrsak(søknadÅrsak: UtvidetSøknadÅrsak): KodeverkSynlighet {
         return when (søknadÅrsak) {
-            else -> KodeverkSynlighet.SYNLIG_FAVORITT
+            else -> KodeverkSynlighet.OVER_STREKEN
         }
     }
 
@@ -634,15 +757,15 @@ object KodeverkSynlighetRegler {
             FagsakYtelseType.UNGDOMSYTELSE,
             FagsakYtelseType.OMSORGSDAGER -> KodeverkSynlighet.SKJULT
 
-            FagsakYtelseType.UKJENT -> KodeverkSynlighet.SYNLIG
+            FagsakYtelseType.UKJENT -> KodeverkSynlighet.UNDER_STREKEN
 
-            else -> KodeverkSynlighet.SYNLIG_FAVORITT
+            else -> KodeverkSynlighet.OVER_STREKEN
         }
     }
 }
 
 enum class KodeverkSynlighet {
     SKJULT,
-    SYNLIG,
-    SYNLIG_FAVORITT;
+    UNDER_STREKEN,
+    OVER_STREKEN;
 }
