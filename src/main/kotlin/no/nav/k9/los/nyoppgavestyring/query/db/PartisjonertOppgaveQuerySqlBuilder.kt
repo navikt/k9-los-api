@@ -243,6 +243,7 @@ class PartisjonertOppgaveQuerySqlBuilder(
             when (feltkode) {
                 "oppgavestatus" -> "o.oppgavestatus $retning"
                 "oppgavetype" -> "o.oppgavetype_ekstern_id $retning"
+                "ferdigstiltDato" -> "o.ferdigstilt_dato $retning"
                 else -> throw IllegalStateException("Ukjent feltkode for sortering: $feltkode")
             }
         )
@@ -420,6 +421,7 @@ class PartisjonertOppgaveQuerySqlBuilder(
                 val kolonne = when (felt.kode) {
                     "oppgavestatus" -> "o.oppgavestatus"
                     "oppgavetype" -> "o.oppgavetype_ekstern_id"
+                    "ferdigstiltDato" -> "o.ferdigstilt_dato"
                     else -> {
                         log.warn("Ukjent select-felt uten område: ${felt.kode}")
                         "NULL"
