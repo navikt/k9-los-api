@@ -3,6 +3,7 @@ package no.nav.k9.los.nyoppgavestyring.query.db
 import no.nav.k9.los.nyoppgavestyring.kodeverk.PersonBeskyttelseType
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.query.dto.felter.Oppgavefelt
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelSelectFelt
 import no.nav.k9.los.nyoppgavestyring.query.mapping.CombineOperator
 import no.nav.k9.los.nyoppgavestyring.query.mapping.FeltverdiOperator
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -162,5 +163,40 @@ class PartisjonertOppgaveQuerySqlBuilderTest {
         val sql = builder.getQuery()
         
         assertTrue(sql.contains("SELECT COUNT(*) as antall"), "SQL burde telle rader")
+    }
+
+    @Test
+    fun `medSelectFelter inkluderer ferdigstiltDato`() {
+        val builder = PartisjonertOppgaveQuerySqlBuilder(
+            felter = mockFelter,
+            oppgavestatusFilter = listOf(Oppgavestatus.LUKKET),
+            now = LocalDateTime.now(),
+            ferdigstiltDatoFilter = null
+        )
+
+        builder.medSelectFelter(listOf(
+            EnkelSelectFelt(område = null, kode = "ferdigstiltDato")
+        ))
+
+        val sql = builder.getQuery()
+
+        assertTrue(sql.contains("o.ferdigstilt_dato"), "SQL burde inneholde o.ferdigstilt_dato som select-felt")
+    }
+
+    @Test
+    fun `medEnkelOrder håndterer ferdigstiltDato`() {
+        val builder = PartisjonertOppgaveQuerySqlBuilder(
+            felter = mockFelter,
+            oppgavestatusFilter = listOf(Oppgavestatus.LUKKET),
+            now = LocalDateTime.now(),
+            ferdigstiltDatoFilter = null
+        )
+
+        builder.medEnkelOrder(null, "ferdigstiltDato", false)
+
+        val sql = builder.getQuery()
+
+        assertTrue(sql.contains("o.ferdigstilt_dato"), "SQL burde inneholde o.ferdigstilt_dato i ORDER BY")
+        assertTrue(sql.contains("DESC"), "SQL burde inneholde synkende sortering")
     }
 }
