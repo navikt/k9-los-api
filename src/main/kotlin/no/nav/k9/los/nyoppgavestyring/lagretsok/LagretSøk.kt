@@ -2,6 +2,7 @@ package no.nav.k9.los.nyoppgavestyring.lagretsok
 
 import no.nav.k9.los.nyoppgavestyring.kodeverk.PersonBeskyttelseType
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelOrderFelt
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
 import no.nav.k9.los.nyoppgavestyring.query.mapping.EksternFeltverdiOperator
@@ -55,17 +56,17 @@ class LagretSøk private constructor(
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is LagretSøk) return false
-        
+
         // Hvis begge har id, sammenlign på id
         if (id != null && other.id != null) {
             return id == other.id
         }
-        
+
         // Hvis en har id og den andre ikke, er de ikke like
         if (id != null || other.id != null) {
             return false
         }
-        
+
         // Hvis ingen har id, bruk object identity
         return false
     }
@@ -100,20 +101,23 @@ class LagretSøk private constructor(
                 tittel = opprettLagretSøk.tittel,
                 beskrivelse = "",
                 sistEndret = LocalDateTime.now(),
-                query = OppgaveQuery(filtere = listOf(
-                    FeltverdiOppgavefilter(
-                        område = null,
-                        kode = "oppgavestatus",
-                        operator = EksternFeltverdiOperator.IN,
-                        verdi = Oppgavestatus.entries.map { it.kode }
+                query = OppgaveQuery(
+                    filtere = listOf(
+                        FeltverdiOppgavefilter(
+                            område = null,
+                            kode = "oppgavestatus",
+                            operator = EksternFeltverdiOperator.IN,
+                            verdi = Oppgavestatus.entries.map { it.kode }
+                        ),
+                        FeltverdiOppgavefilter(
+                            område = null,
+                            kode = "personbeskyttelse",
+                            operator = EksternFeltverdiOperator.IN,
+                            verdi = listOf(if (kode6) PersonBeskyttelseType.KODE6.kode else PersonBeskyttelseType.UGRADERT.kode)
+                        )
                     ),
-                    FeltverdiOppgavefilter(
-                        område = null,
-                        kode = "personbeskyttelse",
-                        operator = EksternFeltverdiOperator.IN,
-                        verdi = listOf(if (kode6) PersonBeskyttelseType.KODE6.kode else PersonBeskyttelseType.UGRADERT.kode)
-                    )
-                )),
+                    order = listOf(EnkelOrderFelt("K9", "mottattDato", true))
+                ),
             )
         }
 

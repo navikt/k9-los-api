@@ -4,13 +4,15 @@ import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.ko.db.OppgaveKoRepository
 import no.nav.k9.los.nyoppgavestyring.lagretsok.LagretSøkTjeneste
+import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
 
 class SaksbehandlerAdminTjeneste(
     private val pepClient: IPepClient,
     private val transactionalManager: TransactionalManager,
     private val saksbehandlerRepository: SaksbehandlerRepository,
     private val oppgaveKøV3Repository: OppgaveKoRepository,
-    private val lagretSøkTjeneste: LagretSøkTjeneste
+    private val lagretSøkTjeneste: LagretSøkTjeneste,
+    private val reservasjonV3Tjeneste: ReservasjonV3Tjeneste
 ) {
 
     // TODO: slett når frontend har begynt å bruke nytt endepunkt
@@ -70,15 +72,18 @@ class SaksbehandlerAdminTjeneste(
     }
 
     suspend fun hentSaksbehandlere(): List<SaksbehandlerDto> {
-        val saksbehandlere = saksbehandlerRepository.hentAlleSaksbehandlere()
-        return saksbehandlere.map {
-            SaksbehandlerDto(
-                id = it.id,
-                brukerIdent = it.brukerIdent,
-                navn = it.navn,
-                epost = it.epost,
-                enhet = it.enhet,
-                oppgavekoer = emptyList())
-        }.sortedBy { it.navn }
+        return transactionalManager.transactionSuspend { tx ->
+            val saksbehandlere = saksbehandlerRepository.hentAlleSaksbehandlere(tx)
+            saksbehandlere.map {
+                SaksbehandlerDto(
+                    id = it.id,
+                    brukerIdent = it.brukerIdent,
+                    navn = it.navn,
+                    epost = it.epost,
+                    enhet = it.enhet,
+                    antallAktiveReservasjoner = reservasjonV3Tjeneste.tellReservasjonerForSaksbehandler(it.id!!, tx)
+                )
+            }.sortedBy { it.navn }
+        }
     }
 }

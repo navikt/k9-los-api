@@ -6,6 +6,7 @@ import kotliquery.TransactionalSession
 import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.idtoken.IIdToken
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.CoroutineRequestContext
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.*
 import no.nav.k9.los.nyoppgavestyring.query.db.EksternOppgaveId
@@ -13,11 +14,11 @@ import no.nav.k9.los.nyoppgavestyring.query.db.OppgaveQueryRepository
 import no.nav.k9.los.nyoppgavestyring.query.dto.felter.Oppgavefelter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelSelectFelt
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
+import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.OppgaveResultat
 import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.Oppgavefeltverdi
 import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.Oppgaverad
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.idtoken.IIdToken
 import org.koin.java.KoinJavaComponent.inject
 import java.time.LocalDateTime
 import javax.sql.DataSource
@@ -62,6 +63,22 @@ class OppgaveQueryService {
         val now = LocalDateTime.now()
         return oppgaveQueryRepository.queryForEksternId(oppgaveQuery, now)
     }
+
+    @WithSpan
+    fun queryForOppgaveResultat(request: QueryRequest): List<OppgaveResultat> {
+        return using(sessionOf(datasource)) {
+            it.transaction { tx ->
+                queryForOppgaveResultat(tx, request)
+            }
+        }
+    }
+
+    @WithSpan
+    fun queryForOppgaveResultat(tx: TransactionalSession, request: QueryRequest): List<OppgaveResultat> {
+        val now = LocalDateTime.now()
+        return oppgaveQueryRepository.queryForOppgaveResultat(tx, request, now)
+    }
+
     @WithSpan
     fun queryToFile(oppgaveQuery: QueryRequest, idToken: IIdToken): String {
         return using(sessionOf(datasource)) {

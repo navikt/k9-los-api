@@ -67,6 +67,8 @@ import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonApis
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerAdminApis
 import no.nav.k9.los.nyoppgavestyring.sisteoppgaver.SisteOppgaverApi
 import no.nav.k9.los.nyoppgavestyring.søkeboks.SøkeboksApi
+import no.nav.k9.los.nyoppgavestyring.uttrekk.UttrekkApi
+import no.nav.k9.los.nyoppgavestyring.uttrekk.UttrekkJobb
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.NøkkeltallV3Apis
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.dagenstall.DagensTallService
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.ferdigstilteperenhet.FerdigstiltePerEnhetService
@@ -262,6 +264,7 @@ private fun Route.api() {
             route("siste-oppgaver") { SisteOppgaverApi() }
             route("nye-og-ferdigstilte") { NyeOgFerdigstilteApi() }
             route("lagret-sok") { LagretSøkApi() }
+            route("uttrekk") { UttrekkApi() }
         }
     }
 }
@@ -277,6 +280,7 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
     val dagensTallService = koin.get<DagensTallService>()
     val perEnhetService = koin.get<FerdigstiltePerEnhetService>()
     val nyeOgFerdigstilteService = koin.get<NyeOgFerdigstilteService>()
+    val uttrekkJobb = koin.get<UttrekkJobb>()
 
     val høyPrioritet = 0
     val mediumPrioritet = 5
@@ -424,6 +428,28 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
                 minutter = listOf(0, 10, 20, 30, 40, 50),
             ) {
                 nyeOgFerdigstilteService.oppdaterCache(this)
+            }
+        )
+
+        add(
+            PlanlagtJobb.Periodisk(navn = "RyddOppUttrekkJobb",
+                prioritet = lavPrioritet,
+                tidsvindu = heleTiden,
+                startForsinkelse = 0.seconds,
+                intervall = 10.minutes
+            ) {
+                uttrekkJobb.ryddOppUttrekk()
+            }
+        )
+
+        add(
+            PlanlagtJobb.Periodisk(navn = "KjørUttrekkJobb",
+                prioritet = lavPrioritet,
+                tidsvindu = heleTiden,
+                startForsinkelse = 10.seconds,
+                intervall = 10.seconds
+            ) {
+                uttrekkJobb.kjørAlleUttrekkSomIkkeHarKjørt()
             }
         )
 

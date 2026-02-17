@@ -14,6 +14,7 @@ import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
 import no.nav.k9.los.nyoppgavestyring.query.dto.felter.Oppgavefelt
 import no.nav.k9.los.nyoppgavestyring.query.dto.felter.Oppgavefelter
 import no.nav.k9.los.nyoppgavestyring.query.dto.felter.Verdiforklaring
+import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.OppgaveResultat
 import no.nav.k9.los.nyoppgavestyring.query.mapping.OppgaveQueryToSqlMapper
 import no.nav.k9.los.nyoppgavestyring.query.mapping.transientfeltutleder.GyldigeTransientFeltutleder
 import org.slf4j.Logger
@@ -227,6 +228,25 @@ class OppgaveQueryRepository(
                 oppgaveQuery.getQuery(),
                 oppgaveQuery.getParams()
             ).map(oppgaveQuery::mapRowTilEksternId).asList
+        )
+    }
+
+    @WithSpan
+    fun queryForOppgaveResultat(
+        tx: TransactionalSession,
+        request: QueryRequest,
+        now: LocalDateTime
+    ): List<OppgaveResultat> {
+        val felter = hentAlleFelterMedMer(tx, medKodeverk = false)
+            .associateBy { felt -> OmrådeOgKode(felt.oppgavefelt.område, felt.oppgavefelt.kode) }
+
+        val oppgaveQuery = OppgaveQueryToSqlMapper.toSqlOppgaveQueryMedSelectFelter(request, felter, now)
+
+        return tx.run(
+            queryOf(
+                oppgaveQuery.getQuery(),
+                oppgaveQuery.getParams()
+            ).map(oppgaveQuery::mapRowTilOppgaveResultat).asList
         )
     }
 }

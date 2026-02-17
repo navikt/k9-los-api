@@ -70,6 +70,10 @@ import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
 import no.nav.k9.los.nyoppgavestyring.sisteoppgaver.SisteOppgaverRepository
 import no.nav.k9.los.nyoppgavestyring.sisteoppgaver.SisteOppgaverTjeneste
 import no.nav.k9.los.nyoppgavestyring.søkeboks.SøkeboksTjeneste
+import no.nav.k9.los.nyoppgavestyring.uttrekk.UttrekkCsvGenerator
+import no.nav.k9.los.nyoppgavestyring.uttrekk.UttrekkJobb
+import no.nav.k9.los.nyoppgavestyring.uttrekk.UttrekkRepository
+import no.nav.k9.los.nyoppgavestyring.uttrekk.UttrekkTjeneste
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepositoryTxWrapper
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.NøkkeltallRepositoryV3
@@ -129,7 +133,8 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     single {
         SaksbehandlerRepository(
             dataSource = get(),
-            pepClient = get()
+            pepClient = get(),
+            transactionalManager = get(),
         )
     }
 
@@ -217,6 +222,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             saksbehandlerRepository = get(),
             oppgaveKøV3Repository = get(),
             lagretSøkTjeneste = get(),
+            reservasjonV3Tjeneste = get(),
         )
     }
 
@@ -541,5 +547,27 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             lagretSøkRepository = get(),
             oppgaveQueryService = get()
         )
+    }
+
+    single<UttrekkRepository> {
+        UttrekkRepository(dataSource = get())
+    }
+
+    single<UttrekkTjeneste> {
+        UttrekkTjeneste(
+            uttrekkRepository = get(),
+            lagretSøkRepository = get()
+        )
+    }
+
+    single<UttrekkJobb> {
+        UttrekkJobb(
+            oppgaveQueryService = get(),
+            uttrekkTjeneste = get(),
+        )
+    }
+
+    single<UttrekkCsvGenerator> {
+        UttrekkCsvGenerator()
     }
 }

@@ -9,26 +9,23 @@ import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import no.nav.helse.dusseldorf.ktor.jackson.dusseldorfConfigured
 import no.nav.k9.los.AbstractK9LosIntegrationTest
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
-import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.Saksbehandler
-import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
 import no.nav.k9.los.nyoppgavestyring.FeltType
 import no.nav.k9.los.nyoppgavestyring.OppgaveTestDataBuilder
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.cache.PepCache
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.cache.PepCacheRepository
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.cache.TestRepository
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.kodeverk.PersonBeskyttelseType
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.cache.PepCache
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.cache.PepCacheRepository
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.cache.TestRepository
 import no.nav.k9.los.nyoppgavestyring.query.db.OppgaveQueryRepository
-import no.nav.k9.los.nyoppgavestyring.query.dto.query.CombineOppgavefilter
-import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelOrderFelt
-import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
-import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.*
 import no.nav.k9.los.nyoppgavestyring.query.mapping.CombineOperator
 import no.nav.k9.los.nyoppgavestyring.query.mapping.EksternFeltverdiOperator
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
+import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.Saksbehandler
+import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import org.junit.jupiter.api.Test
 import org.koin.test.get
@@ -957,6 +954,41 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
                 )
             ), LocalDateTime.now())
         assertThat(resultat.map { it.eksternId }).containsOnly(oppgaveLukketFørsteJanuar.eksternId)
+    }
+
+    @Test
+    fun `sjekk at ferdigstiltDato returneres som select-felt i uttrekk`() {
+        val oppgaveTestDataBuilder = OppgaveTestDataBuilder()
+        val oppgaveQueryRepository = OppgaveQueryRepository(dataSource, mockk<FeltdefinisjonRepository>())
+        val transactionalManager = get<TransactionalManager>()
+
+        val oppgaveLukket = oppgaveTestDataBuilder
+            .lagOgLagre(
+                status = Oppgavestatus.LUKKET,
+                endretTidspunkt = LocalDateTime.of(2025, 3, 15, 0, 0, 0)
+            )
+
+        val resultat = transactionalManager.transaction { tx ->
+            oppgaveQueryRepository.queryForOppgaveResultat(
+                tx,
+                QueryRequest(
+                    OppgaveQuery(
+                        filtere = listOf(
+                            byggFilter(FeltType.OPPGAVE_STATUS, EksternFeltverdiOperator.EQUALS, "LUKKET"),
+                        ),
+                        select = listOf(
+                            EnkelSelectFelt(område = null, kode = "ferdigstiltDato"),
+                        ),
+                    )
+                ),
+                LocalDateTime.now()
+            )
+        }
+
+        assertThat(resultat).isNotEmpty()
+        val ferdigstiltVerdi = resultat.first().felter.first { it.kode == "ferdigstiltDato" }.verdi
+        assertThat(ferdigstiltVerdi).isNotNull()
+        assertThat(ferdigstiltVerdi).isEqualTo("2025-03-15")
     }
 
     private fun lagOppgaveMedPepCache(

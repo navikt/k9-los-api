@@ -2,7 +2,9 @@ package no.nav.k9.los.nyoppgavestyring.query.db
 
 import kotliquery.Row
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveId
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelSelectFelt
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.Oppgavefilter
+import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.OppgaveResultat
 import no.nav.k9.los.nyoppgavestyring.query.mapping.CombineOperator
 import no.nav.k9.los.nyoppgavestyring.query.mapping.FeltverdiOperator
 
@@ -22,9 +24,11 @@ interface OppgaveQuerySqlBuilder {
     fun utenReservasjoner()
     fun medPaging(limit: Long, offset: Long)
     fun medAntallSomResultat()
+    fun medSelectFelter(selectFelter: List<EnkelSelectFelt>)
 
     fun mapRowTilId(row: Row): OppgaveId
     fun mapRowTilEksternId(row: Row): EksternOppgaveId
+    fun mapRowTilOppgaveResultat(row: Row): OppgaveResultat
 
     /** Skal bare brukes til debugging, siden parametrene settes inn ukritisk */
     fun unsafeDebug(): String {

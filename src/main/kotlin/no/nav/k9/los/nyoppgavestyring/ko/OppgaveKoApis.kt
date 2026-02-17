@@ -58,6 +58,20 @@ fun Route.OppgaveKoApis() {
         }
     }
 
+    get("/saksbehandlere") {
+        requestContextService.withRequestContext(call) {
+            if (pepClient.erOppgaveStyrer()) {
+                val alleSaksbehandlere = saksbehandlerRepository.hentAlleSaksbehandlere()
+                    .map { saksbehandler ->
+                        SaksbehandlerForKolisteDto(saksbehandler)
+                    }
+                call.respond(alleSaksbehandlere)
+            } else {
+                call.respond(HttpStatusCode.Forbidden)
+            }
+        }
+    }
+
     post("/opprett") {
         requestContextService.withRequestContext(call) {
             if (pepClient.erOppgaveStyrer()) {

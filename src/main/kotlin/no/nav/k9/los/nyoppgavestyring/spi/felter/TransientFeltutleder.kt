@@ -16,6 +16,8 @@ interface TransientFeltutleder {
 
     fun orderBy(input: OrderByInput): SqlMedParams
 
+    fun select(input: SelectInput): SqlMedParams
+
     companion object {
         fun hentId(it: TransientFeltutleder): String {
             return it.javaClass.canonicalName
@@ -45,6 +47,13 @@ data class OrderByInput(
     val feltområde: String,
     val feltkode: String,
     val økende: Boolean
+)
+
+data class SelectInput(
+    val spørringstrategi: Spørringstrategi,
+    val now: LocalDateTime,
+    val feltområde: String,
+    val feltkode: String
 )
 
 
