@@ -72,7 +72,6 @@ class SaksbehandlerAdminTjeneste(
                     navn = it.navn,
                     epost = it.epost,
                     enhet = it.enhet,
-                    oppgavekoer = emptyList(),
                     antallAktiveReservasjoner = reservasjonV3Tjeneste.tellReservasjonerForSaksbehandler(it.id!!, tx)
                 )
             }.sortedBy { it.navn }
