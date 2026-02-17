@@ -231,6 +231,10 @@ class ReservasjonV3Tjeneste(
         return null
     }
 
+    fun tellReservasjonerForSaksbehandler(saksbehandlerId: Long, tx: TransactionalSession): Int {
+        return reservasjonV3Repository.tellAktiveReservasjonerForSaksbehandler(saksbehandlerId, tx)
+    }
+
     fun hentReservasjonerForSaksbehandler(saksbehandlerId: Long): List<ReservasjonV3MedOppgaver> {
         return transactionalManager.transaction { tx ->
             val reservasjoner =

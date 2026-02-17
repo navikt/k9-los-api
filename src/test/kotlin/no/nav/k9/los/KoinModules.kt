@@ -133,7 +133,8 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     single {
         SaksbehandlerRepository(
             dataSource = get(),
-            pepClient = get()
+            pepClient = get(),
+            transactionalManager = get(),
         )
     }
 

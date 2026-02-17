@@ -6,6 +6,7 @@ import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
 import org.apache.commons.text.similarity.LevenshteinDistance
 import java.util.Locale
@@ -14,7 +15,8 @@ import javax.sql.DataSource
 
 class SaksbehandlerRepository(
     private val dataSource: DataSource,
-    private val pepClient: IPepClient
+    private val pepClient: IPepClient,
+    private val transactionalManager: TransactionalManager
 ) {
     suspend fun addSaksbehandler(saksbehandler: Saksbehandler) {
         val erSkjermet = pepClient.harTilgangTilKode6()
@@ -209,9 +211,15 @@ class SaksbehandlerRepository(
     }
 
     suspend fun hentAlleSaksbehandlere(): List<Saksbehandler> {
+        return transactionalManager.transactionSuspend { tx ->
+            hentAlleSaksbehandlere(tx)
+        }
+    }
+
+    suspend fun hentAlleSaksbehandlere(tx: TransactionalSession): List<Saksbehandler> {
         val skjermet = pepClient.harTilgangTilKode6()
         val identer = using(sessionOf(dataSource)) {
-            it.run(
+            tx.run(
                 queryOf(
                     "select * from saksbehandler where skjermet = :skjermet",
                     mapOf("skjermet" to skjermet)

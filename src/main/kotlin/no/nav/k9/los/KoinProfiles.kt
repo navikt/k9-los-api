@@ -145,7 +145,8 @@ fun common(app: Application, config: Configuration) = module {
     single {
         SaksbehandlerRepository(
             dataSource = get(),
-            pepClient = get()
+            pepClient = get(),
+            transactionalManager = get(),
         )
     }
 
