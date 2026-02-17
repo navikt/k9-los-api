@@ -7,13 +7,13 @@ import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Datatype
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveId
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.PartisjonertOppgaveId
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelSelectFelt
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.Oppgavefilter
+import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.OppgaveResultat
+import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.Oppgavefeltverdi
 import no.nav.k9.los.nyoppgavestyring.query.mapping.*
-import no.nav.k9.los.nyoppgavestyring.spi.felter.OrderByInput
-import no.nav.k9.los.nyoppgavestyring.spi.felter.SqlMedParams
-import no.nav.k9.los.nyoppgavestyring.spi.felter.TransientFeltutleder
-import no.nav.k9.los.nyoppgavestyring.spi.felter.WhereInput
+import no.nav.k9.los.nyoppgavestyring.spi.felter.*
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -126,15 +126,6 @@ class PartisjonertOppgaveQuerySqlBuilder(
         return "$selectClause $fromClause $whereClause $orderByClause $pagingClause"
     }
 
-    override fun getParams(): Map<String, Any?> {
-        return buildMap {
-            putAll(queryParams)
-            putAll(orderByParams)
-            putAll(oppgavestatusParams)
-            putAll(ferdigstiltDatoParams)
-        }
-    }
-
     override fun medAntallSomResultat() {
         selectClause = "SELECT COUNT(*) as antall"
         orderByClauses.clear()
@@ -147,13 +138,9 @@ class PartisjonertOppgaveQuerySqlBuilder(
     }
 
     override fun medPaging(limit: Long, offset: Long) {
-        if (limit < 0) {
-            return
-        } else if (limit > 0 && offset < 0) {
-            pagingClause = "LIMIT $limit"
-        } else if (limit > 0) {
-            pagingClause = "LIMIT $limit OFFSET $offset"
-        }
+        val limitClause = if (limit > 0) "LIMIT $limit" else ""
+        val offsetClause = if (offset > 0) "OFFSET $offset" else ""
+        pagingClause = listOf(limitClause, offsetClause).joinToString(" ")
     }
 
     override fun medFeltverdi(
@@ -256,6 +243,7 @@ class PartisjonertOppgaveQuerySqlBuilder(
             when (feltkode) {
                 "oppgavestatus" -> "o.oppgavestatus $retning"
                 "oppgavetype" -> "o.oppgavetype_ekstern_id $retning"
+                "ferdigstiltDato" -> "o.ferdigstilt_dato $retning"
                 else -> throw IllegalStateException("Ukjent feltkode for sortering: $feltkode")
             }
         )
@@ -385,5 +373,91 @@ class PartisjonertOppgaveQuerySqlBuilder(
             Datatype.INTEGER -> "ov.verdi_bigint"
             else -> "ov.verdi"
         }
+    }
+
+    // Select-felt støtte for effektive spørringer som returnerer OppgaveResultat
+    private var selectFelter: List<EnkelSelectFelt> = emptyList()
+    private val selectFeltParams: MutableMap<String, Any?> = mutableMapOf()
+
+    override fun medSelectFelter(selectFelter: List<EnkelSelectFelt>) {
+        this.selectFelter = selectFelter
+
+        // Bygg ut SELECT-klausulen med subqueries for hvert felt
+        val selectDeler = mutableListOf<String>()
+        selectDeler.add("o.id")
+        selectDeler.add("o.oppgave_ekstern_id")
+
+        selectFelter.forEachIndexed { index, felt ->
+            val alias = "felt_$index"
+
+            if (felt.område != null) {
+                val transientFeltutleder = hentTransientFeltutleder(felt.område, felt.kode)
+                if (transientFeltutleder != null) {
+                    val sqlMedParams = sikreUnikeParams(
+                        transientFeltutleder.select(
+                            SelectInput(
+                                Spørringstrategi.PARTISJONERT,
+                                now,
+                                felt.område,
+                                felt.kode
+                            )
+                        )
+                    )
+                    selectDeler.add("${sqlMedParams.query} AS $alias")
+                    selectFeltParams.putAll(sqlMedParams.queryParams)
+                } else {
+                    val verdifelt = verdifelt(felt.område, felt.kode)
+                    selectDeler.add("""
+                        (SELECT $verdifelt
+                         FROM oppgavefelt_verdi_part ov
+                         WHERE ov.oppgave_id = o.id
+                           AND ov.oppgavestatus IN ($oppgavestatusPlaceholder) ${ferdigstiltDatoBetingelse("ov")}
+                           AND ov.feltdefinisjon_ekstern_id = :selectFeltkode$index
+                         LIMIT 1) AS $alias
+                    """.trimIndent())
+                    selectFeltParams["selectFeltkode$index"] = felt.kode
+                }
+            } else {
+                val kolonne = when (felt.kode) {
+                    "oppgavestatus" -> "o.oppgavestatus"
+                    "oppgavetype" -> "o.oppgavetype_ekstern_id"
+                    "ferdigstiltDato" -> "o.ferdigstilt_dato"
+                    else -> {
+                        log.warn("Ukjent select-felt uten område: ${felt.kode}")
+                        "NULL"
+                    }
+                }
+                selectDeler.add("$kolonne AS $alias")
+            }
+        }
+
+        selectClause = "SELECT " + selectDeler.joinToString(", ")
+    }
+
+    override fun getParams(): Map<String, Any?> {
+        return buildMap {
+            putAll(queryParams)
+            putAll(orderByParams)
+            putAll(oppgavestatusParams)
+            putAll(ferdigstiltDatoParams)
+            putAll(selectFeltParams)
+        }
+    }
+
+    override fun mapRowTilOppgaveResultat(row: Row): OppgaveResultat {
+        val eksternId = EksternOppgaveId("K9", row.string("oppgave_ekstern_id"))
+
+        val feltverdier = selectFelter.mapIndexed { index, felt ->
+            val alias = "felt_$index"
+            val verdi = row.stringOrNull(alias)
+
+            Oppgavefeltverdi(
+                område = felt.område,
+                kode = felt.kode,
+                verdi = verdi
+            )
+        }
+
+        return OppgaveResultat(id = eksternId, felter = feltverdier)
     }
 }

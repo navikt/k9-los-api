@@ -97,6 +97,7 @@ class LagretSøkRepository(val dataSource: DataSource) {
                 SELECT *
                 FROM lagret_sok
                 WHERE laget_av = :lagetAv
+                ORDER BY id DESC
             """.trimIndent(), mapOf("lagetAv" to saksbehandler.id)
                 ).map {
                     it.toLagretSøk()

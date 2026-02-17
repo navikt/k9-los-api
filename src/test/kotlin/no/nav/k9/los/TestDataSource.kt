@@ -60,6 +60,7 @@ const val TØM_DATA_SQL = """
                 oppgave_v3,
                 oppgave_v3_aktiv,
                 feltdefinisjon,
+                uttrekk,
                 lagret_sok,
                 event,
                 event_historikkvask_bestilt,
