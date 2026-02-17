@@ -2,7 +2,6 @@ package no.nav.k9.los.nyoppgavestyring.lagretsok
 
 import no.nav.k9.los.nyoppgavestyring.kodeverk.PersonBeskyttelseType
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
-import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelOrderFelt
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
 import no.nav.k9.los.nyoppgavestyring.query.mapping.EksternFeltverdiOperator
@@ -33,7 +32,7 @@ class LagretSøk private constructor(
     var sistEndret: LocalDateTime = sistEndret
         private set
 
-    fun endre(endreLagretSøk: EndreLagretSøk, saksbehandler: Saksbehandler) {
+    fun endre(endreLagretSøk: EndreLagretSøkRequest, saksbehandler: Saksbehandler) {
         if (saksbehandler.id != lagetAv) {
             throw IllegalStateException("Kan ikke endre lagret søk som ikke er opprettet av seg selv")
         }
@@ -75,12 +74,12 @@ class LagretSøk private constructor(
         return id?.hashCode() ?: System.identityHashCode(this)
     }
 
-    fun kopier(søk: OpprettLagretSøk, saksbehandler: Saksbehandler): LagretSøk {
+    fun kopier(tittel: String, saksbehandler: Saksbehandler): LagretSøk {
         return LagretSøk(
             id = null,
             lagetAv = saksbehandler.id ?: throw IllegalStateException("Saksbehandler må ha id"),
             versjon = 1,
-            tittel = søk.tittel,
+            tittel = tittel,
             beskrivelse = "",
             sistEndret = LocalDateTime.now(),
             query = this.query
@@ -125,23 +124,6 @@ class LagretSøk private constructor(
                 beskrivelse = "",
                 sistEndret = LocalDateTime.now(),
                 query = nyttLagretSøk.query,
-            )
-        }
-
-        @Deprecated("bruk nyttSøk")
-        fun opprettSøk(
-            opprettLagretSøk: OpprettLagretSøk,
-            saksbehandler: Saksbehandler,
-            kode6: Boolean
-        ): LagretSøk {
-            return LagretSøk(
-                id = null,
-                lagetAv = saksbehandler.id ?: throw IllegalStateException("Saksbehandler må ha id"),
-                versjon = 1,
-                tittel = opprettLagretSøk.tittel,
-                beskrivelse = "",
-                sistEndret = LocalDateTime.now(),
-                query = defaultQuery(kode6),
             )
         }
 

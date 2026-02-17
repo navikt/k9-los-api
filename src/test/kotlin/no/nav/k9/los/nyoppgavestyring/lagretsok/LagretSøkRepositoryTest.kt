@@ -77,7 +77,7 @@ class LagretSøkRepositoryTest : AbstractK9LosIntegrationTest() {
         val id = lagretSøkRepository.opprett(lagretSøk)
 
         val hentetSøk = lagretSøkRepository.hent(id)!!
-        val endreLagretSøk = EndreLagretSøk(
+        val endreLagretSøk = EndreLagretSøkRequest(
             id = id,
             tittel = "Endret tittel",
             beskrivelse = "Endret beskrivelse",
@@ -186,7 +186,7 @@ class LagretSøkRepositoryTest : AbstractK9LosIntegrationTest() {
         val andreSøk = lagretSøkRepository.hent(id)!!
 
         førsteSøk.endre(
-            EndreLagretSøk(
+            EndreLagretSøkRequest(
                 id = id,
                 tittel = "Første endring",
                 beskrivelse = "Første beskrivelse",
@@ -197,7 +197,7 @@ class LagretSøkRepositoryTest : AbstractK9LosIntegrationTest() {
         lagretSøkRepository.endre(førsteSøk)
 
         andreSøk.endre(
-            EndreLagretSøk(
+            EndreLagretSøkRequest(
                 id = id,
                 tittel = "Andre endring",
                 beskrivelse = "Andre beskrivelse",

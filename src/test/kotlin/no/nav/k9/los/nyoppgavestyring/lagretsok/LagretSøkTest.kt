@@ -77,7 +77,7 @@ class LagretSøkTest {
         val lagretSøk = LagretSøk.nyttSøk(opprettLagretSøk, saksbehandler)
         val nyQuery = OppgaveQuery()
 
-        val endreLagretSøk = EndreLagretSøk(
+        val endreLagretSøk = EndreLagretSøkRequest(
             id = 1L,
             tittel = "Ny tittel",
             beskrivelse = "Ny beskrivelse",
@@ -102,7 +102,7 @@ class LagretSøkTest {
 
         val lagretSøk = LagretSøk.nyttSøk(opprettLagretSøk, saksbehandler)
 
-        val endreLagretSøk = EndreLagretSøk(
+        val endreLagretSøk = EndreLagretSøkRequest(
             id = 1L,
             tittel = "Ny tittel",
             beskrivelse = "Ny beskrivelse",
