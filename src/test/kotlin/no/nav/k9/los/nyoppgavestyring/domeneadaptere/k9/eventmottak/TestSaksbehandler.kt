@@ -14,7 +14,10 @@ class TestSaksbehandler: KoinTest {
 
     val datasource = get<DataSource>()
     val pepClient = mockk<IPepClient>(relaxed = true)
-    val repo = SaksbehandlerRepository(datasource, pepClient = pepClient)
+    val repo = SaksbehandlerRepository(
+        datasource, pepClient = pepClient,
+        transactionalManager = get(),
+    )
 
     companion object {
         val SARA = Saksbehandler(

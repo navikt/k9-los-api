@@ -133,7 +133,8 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     single {
         SaksbehandlerRepository(
             dataSource = get(),
-            pepClient = get()
+            pepClient = get(),
+            transactionalManager = get(),
         )
     }
 
@@ -221,6 +222,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             saksbehandlerRepository = get(),
             oppgaveKøV3Repository = get(),
             lagretSøkTjeneste = get(),
+            reservasjonV3Tjeneste = get(),
         )
     }
 

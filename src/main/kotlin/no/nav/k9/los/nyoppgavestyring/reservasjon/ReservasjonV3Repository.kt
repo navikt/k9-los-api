@@ -188,6 +188,30 @@ class ReservasjonV3Repository(
         )
     }
 
+    fun tellAktiveReservasjonerForSaksbehandler(
+        saksbehandlerId: Long,
+        tx: TransactionalSession
+    ): Int {
+        return tx.run(
+            queryOf(
+                """
+                   select count(*)
+                   from reservasjon_v3 r
+                   where r.reservertAv = :reservertAv
+                       and annullert_for_utlop = false
+                       and lower(r.gyldig_tidsrom) <= :now
+                       and upper(r.gyldig_tidsrom) > :now
+                    """.trimIndent(),
+                mapOf(
+                    "reservertAv" to saksbehandlerId,
+                    "now" to LocalDateTime.now().truncatedTo(ChronoUnit.MICROS),
+                )
+            ).map { row ->
+                row.int(1)
+            }.asSingle
+        ) ?: 0
+    }
+
     fun hentAktiveReservasjonerForSaksbehandler(
         saksbehandlerId: Long,
         tx: TransactionalSession

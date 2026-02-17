@@ -15,6 +15,7 @@ import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
 import no.nav.k9.los.nyoppgavestyring.ko.db.OppgaveKoRepository
 import org.junit.jupiter.api.Test
+import org.koin.test.get
 
 class OppgaveKoTest : AbstractK9LosIntegrationTest() {
 
@@ -96,7 +97,7 @@ class OppgaveKoTest : AbstractK9LosIntegrationTest() {
 
     private fun mockLeggTilSaksbehandler(saksbehandlerepost: String) {
         val pepClient = mockk<IPepClient>()
-        val saksbehandlerRepository = SaksbehandlerRepository(dataSource, pepClient)
+        val saksbehandlerRepository = SaksbehandlerRepository(dataSource, pepClient, transactionalManager = get())
         coEvery {
             pepClient.harTilgangTilKode6()
         } returns true

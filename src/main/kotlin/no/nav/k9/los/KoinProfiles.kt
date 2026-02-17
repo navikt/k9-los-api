@@ -145,7 +145,8 @@ fun common(app: Application, config: Configuration) = module {
     single {
         SaksbehandlerRepository(
             dataSource = get(),
-            pepClient = get()
+            pepClient = get(),
+            transactionalManager = get(),
         )
     }
 
@@ -257,6 +258,7 @@ fun common(app: Application, config: Configuration) = module {
             saksbehandlerRepository = get(),
             oppgaveKøV3Repository = get(),
             lagretSøkTjeneste = get(),
+            reservasjonV3Tjeneste = get(),
         )
     }
 

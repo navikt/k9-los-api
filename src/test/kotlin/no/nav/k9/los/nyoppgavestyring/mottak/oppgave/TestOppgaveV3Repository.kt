@@ -24,11 +24,12 @@ class TestOppgaveV3Repository(
         val feltdefinisjonRepository = FeltdefinisjonRepository(
             områdeRepository
         )
+        val transactionalManager = TransactionalManager(dataSource)
         val oppgavetypeRepository = OppgavetypeRepository(
             dataSource,
             feltdefinisjonRepository,
             områdeRepository,
-            GyldigeFeltutledere(SaksbehandlerRepository(dataSource, pepClient))
+            GyldigeFeltutledere(SaksbehandlerRepository(dataSource, pepClient, transactionalManager))
         )
         return TransactionalManager(dataSource).transaction { tx ->
             tx.run(
