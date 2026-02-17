@@ -9,7 +9,7 @@ import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.nyoppgavestyring.lagretsok.LagretSøk
 import no.nav.k9.los.nyoppgavestyring.lagretsok.LagretSøkRepository
-import no.nav.k9.los.nyoppgavestyring.lagretsok.OpprettLagretSøk
+import no.nav.k9.los.nyoppgavestyring.lagretsok.NyttLagretSøkRequest
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
@@ -49,10 +49,9 @@ class UttrekkJobbTest : AbstractK9LosIntegrationTest() {
             )
             val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedEpost("test@nav.no")!!
             saksbehandlerId = saksbehandler.id!!
-            val lagretSøk = LagretSøk.opprettSøk(
-                OpprettLagretSøk(tittel = "Test søk"),
+            val lagretSøk = LagretSøk.nyttSøk(
+                NyttLagretSøkRequest(tittel = "Test søk", query = OppgaveQuery()),
                 saksbehandler,
-                false
             )
             lagretSøkRepository.opprett(lagretSøk)
             testQuery = lagretSøk.query

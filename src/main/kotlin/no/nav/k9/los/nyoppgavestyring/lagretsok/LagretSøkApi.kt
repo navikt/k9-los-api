@@ -12,6 +12,7 @@ import io.ktor.server.routing.get
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.RequestContextService
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.idToken
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
 import org.koin.ktor.ext.inject
 
@@ -95,6 +96,42 @@ fun Route.LagretSøkApi() {
                 val request = call.receive<OpprettLagretSøk>()
                 val lagretSøk = lagretSøkTjeneste.opprett(navIdent, harKode6Tilgang, request)
                 call.respond(HttpStatusCode.Created, lagretSøk)
+            } else {
+                call.respond(HttpStatusCode.Forbidden)
+            }
+        }
+    }
+
+    post("nytt", {
+        request {
+            body<NyttLagretSøkRequest>()
+        }
+        response {
+            HttpStatusCode.Created to { body<Long>() }
+        }
+    }) {
+        requestContextService.withRequestContext(call) {
+            if (pepClient.erOppgaveStyrer()) {
+                val navIdent = coroutineContext.idToken().getNavIdent()
+                val harKode6Tilgang = pepClient.harTilgangTilKode6()
+                val request = call.receive<NyttLagretSøkRequest>()
+                val lagretSøk = lagretSøkTjeneste.nytt(navIdent, harKode6Tilgang, request)
+                call.respond(HttpStatusCode.Created, lagretSøk)
+            } else {
+                call.respond(HttpStatusCode.Forbidden)
+            }
+        }
+    }
+
+    get("default-query", {
+        response {
+            HttpStatusCode.OK to { body<OppgaveQuery>() }
+        }
+    }) {
+        requestContextService.withRequestContext(call) {
+            if (pepClient.erOppgaveStyrer()) {
+                val harKode6Tilgang = pepClient.harTilgangTilKode6()
+                call.respond(LagretSøk.defaultQuery(harKode6Tilgang))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }

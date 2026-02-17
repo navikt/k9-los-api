@@ -88,7 +88,47 @@ class LagretSøk private constructor(
     }
 
     companion object {
+        fun defaultQuery(kode6: Boolean): OppgaveQuery = OppgaveQuery(
+            filtere = listOf(
+                FeltverdiOppgavefilter(
+                    område = null,
+                    kode = "oppgavestatus",
+                    operator = EksternFeltverdiOperator.IN,
+                    verdi = listOf(Oppgavestatus.AAPEN.kode, Oppgavestatus.VENTER.kode)
+                ),
+                FeltverdiOppgavefilter(
+                    område = null,
+                    kode = "personbeskyttelse",
+                    operator = EksternFeltverdiOperator.IN,
+                    verdi = listOf(if (kode6) PersonBeskyttelseType.KODE6.kode else PersonBeskyttelseType.UGRADERT.kode)
+                ),
+                FeltverdiOppgavefilter(
+                    område = "K9",
+                    kode = "ytelsestype",
+                    operator = EksternFeltverdiOperator.IN,
+                    verdi = emptyList()
+                )
+            ),
+            order = emptyList()
+        )
+
         // For nye søk som ikke er lagret ennå
+        fun nyttSøk(
+            nyttLagretSøk: NyttLagretSøkRequest,
+            saksbehandler: Saksbehandler,
+        ): LagretSøk {
+            return LagretSøk(
+                id = null,
+                lagetAv = saksbehandler.id ?: throw IllegalStateException("Saksbehandler må ha id"),
+                versjon = 1,
+                tittel = nyttLagretSøk.tittel,
+                beskrivelse = "",
+                sistEndret = LocalDateTime.now(),
+                query = nyttLagretSøk.query,
+            )
+        }
+
+        @Deprecated("bruk nyttSøk")
         fun opprettSøk(
             opprettLagretSøk: OpprettLagretSøk,
             saksbehandler: Saksbehandler,
@@ -101,23 +141,7 @@ class LagretSøk private constructor(
                 tittel = opprettLagretSøk.tittel,
                 beskrivelse = "",
                 sistEndret = LocalDateTime.now(),
-                query = OppgaveQuery(
-                    filtere = listOf(
-                        FeltverdiOppgavefilter(
-                            område = null,
-                            kode = "oppgavestatus",
-                            operator = EksternFeltverdiOperator.IN,
-                            verdi = Oppgavestatus.entries.map { it.kode }
-                        ),
-                        FeltverdiOppgavefilter(
-                            område = null,
-                            kode = "personbeskyttelse",
-                            operator = EksternFeltverdiOperator.IN,
-                            verdi = listOf(if (kode6) PersonBeskyttelseType.KODE6.kode else PersonBeskyttelseType.UGRADERT.kode)
-                        )
-                    ),
-                    order = listOf(EnkelOrderFelt("K9", "mottattDato", true))
-                ),
+                query = defaultQuery(kode6),
             )
         }
 
