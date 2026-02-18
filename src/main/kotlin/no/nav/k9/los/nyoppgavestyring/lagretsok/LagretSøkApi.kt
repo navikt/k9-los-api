@@ -12,6 +12,7 @@ import io.ktor.server.routing.get
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.RequestContextService
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.idToken
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
 import org.koin.ktor.ext.inject
 
@@ -80,21 +81,35 @@ fun Route.LagretSøkApi() {
         }
     }
 
-    post("opprett", {
+    post("nytt", {
         request {
-            body<OpprettLagretSøk>()
+            body<NyttLagretSøkRequest>()
         }
         response {
             HttpStatusCode.Created to { body<Long>() }
         }
     }) {
         requestContextService.withRequestContext(call) {
-            if (pepClient.harBasisTilgang()) {
+            if (pepClient.erOppgaveStyrer()) {
                 val navIdent = coroutineContext.idToken().getNavIdent()
-                val harKode6Tilgang = pepClient.harTilgangTilKode6()
-                val request = call.receive<OpprettLagretSøk>()
-                val lagretSøk = lagretSøkTjeneste.opprett(navIdent, harKode6Tilgang, request)
+                val request = call.receive<NyttLagretSøkRequest>()
+                val lagretSøk = lagretSøkTjeneste.nytt(navIdent, request)
                 call.respond(HttpStatusCode.Created, lagretSøk)
+            } else {
+                call.respond(HttpStatusCode.Forbidden)
+            }
+        }
+    }
+
+    get("default-query", {
+        response {
+            HttpStatusCode.OK to { body<OppgaveQuery>() }
+        }
+    }) {
+        requestContextService.withRequestContext(call) {
+            if (pepClient.erOppgaveStyrer()) {
+                val harKode6Tilgang = pepClient.harTilgangTilKode6()
+                call.respond(LagretSøk.defaultQuery(harKode6Tilgang))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
@@ -103,7 +118,7 @@ fun Route.LagretSøkApi() {
 
     put("{id}/endre", {
         request {
-            body<EndreLagretSøk>()
+            body<EndreLagretSøkRequest>()
         }
         response {
             HttpStatusCode.OK to { body<LagretSøk>() }
@@ -117,7 +132,7 @@ fun Route.LagretSøkApi() {
                 if (innloggetSaksbehandler == null) {
                     call.respond(HttpStatusCode.Forbidden, "Innlogget bruker er ikke i saksbehandler-tabellen.")
                 } else {
-                    val endreLagretSøk = call.receive<EndreLagretSøk>()
+                    val endreLagretSøk = call.receive<EndreLagretSøkRequest>()
                     val lagretSøk = lagretSøkTjeneste.endre(coroutineContext.idToken().getNavIdent(), endreLagretSøk)
                     call.respond(HttpStatusCode.OK, lagretSøk)
                 }
@@ -129,7 +144,7 @@ fun Route.LagretSøkApi() {
 
     post("{id}/kopier", {
         request {
-            body<OpprettLagretSøk>()
+            body<KopierLagretSøkRequest>()
         }
         response {
             HttpStatusCode.OK to { body<LagretSøk>() }
@@ -143,9 +158,9 @@ fun Route.LagretSøkApi() {
                 if (innloggetSaksbehandler == null) {
                     call.respond(HttpStatusCode.Forbidden, "Innlogget bruker er ikke i saksbehandler-tabellen.")
                 } else {
-                    val kopiRequest = call.receive<OpprettLagretSøk>()
+                    val (tittel) = call.receive<KopierLagretSøkRequest>()
                     val lagretSøkId = call.parameters["id"]!!.toLong()
-                    val nyttLagretSøk = lagretSøkTjeneste.kopier(coroutineContext.idToken().getNavIdent(), lagretSøkId, kopiRequest)
+                    val nyttLagretSøk = lagretSøkTjeneste.kopier(coroutineContext.idToken().getNavIdent(), lagretSøkId, tittel)
                     call.respond(HttpStatusCode.OK, nyttLagretSøk)
                 }
             } else {

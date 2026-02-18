@@ -32,11 +32,12 @@ class LagretSøkTest {
 
     @Test
     fun `opprettSøk skal opprette nytt søk med riktige verdier`() {
-        val opprettLagretSøk = OpprettLagretSøk(
-            tittel = "Test søk"
+        val opprettLagretSøk = NyttLagretSøkRequest(
+            tittel = "Test søk",
+            query = LagretSøk.defaultQuery(false)
         )
 
-        val lagretSøk = LagretSøk.opprettSøk(opprettLagretSøk, saksbehandler, false)
+        val lagretSøk = LagretSøk.nyttSøk(opprettLagretSøk, saksbehandler)
 
         assertThat(lagretSøk.id).isEqualTo(null)
         assertThat(lagretSøk.lagetAv).isEqualTo(123L)
@@ -56,25 +57,27 @@ class LagretSøkTest {
             enhet = null
         )
 
-        val opprettLagretSøk = OpprettLagretSøk(
-            tittel = "Test søk"
+        val opprettLagretSøk = NyttLagretSøkRequest(
+            tittel = "Test søk",
+            query = LagretSøk.defaultQuery(false)
         )
 
         assertThrows<IllegalStateException> {
-            LagretSøk.opprettSøk(opprettLagretSøk, saksbehandlerUtenId, false)
+            LagretSøk.nyttSøk(opprettLagretSøk, saksbehandlerUtenId)
         }
     }
 
     @Test
     fun `endre skal oppdatere søk med nye verdier og inkrementere versjon`() {
-        val opprettLagretSøk = OpprettLagretSøk(
-            tittel = "Opprinnelig tittel"
+        val opprettLagretSøk = NyttLagretSøkRequest(
+            tittel = "Opprinnelig tittel",
+            query = LagretSøk.defaultQuery(false)
         )
 
-        val lagretSøk = LagretSøk.opprettSøk(opprettLagretSøk, saksbehandler, false)
+        val lagretSøk = LagretSøk.nyttSøk(opprettLagretSøk, saksbehandler)
         val nyQuery = OppgaveQuery()
 
-        val endreLagretSøk = EndreLagretSøk(
+        val endreLagretSøk = EndreLagretSøkRequest(
             id = 1L,
             tittel = "Ny tittel",
             beskrivelse = "Ny beskrivelse",
@@ -92,13 +95,14 @@ class LagretSøkTest {
 
     @Test
     fun `endre skal kaste exception hvis annen saksbehandler prøver å endre`() {
-        val opprettLagretSøk = OpprettLagretSøk(
-            tittel = "Test søk"
+        val opprettLagretSøk = NyttLagretSøkRequest(
+            tittel = "Test søk",
+            query = LagretSøk.defaultQuery(false)
         )
 
-        val lagretSøk = LagretSøk.opprettSøk(opprettLagretSøk, saksbehandler, false)
+        val lagretSøk = LagretSøk.nyttSøk(opprettLagretSøk, saksbehandler)
 
-        val endreLagretSøk = EndreLagretSøk(
+        val endreLagretSøk = EndreLagretSøkRequest(
             id = 1L,
             tittel = "Ny tittel",
             beskrivelse = "Ny beskrivelse",
@@ -115,11 +119,12 @@ class LagretSøkTest {
 
     @Test
     fun `sjekkOmKanSlette skal ikke kaste exception for eier`() {
-        val opprettLagretSøk = OpprettLagretSøk(
-            tittel = "Test søk"
+        val opprettLagretSøk = NyttLagretSøkRequest(
+            tittel = "Test søk",
+            query = LagretSøk.defaultQuery(false)
         )
 
-        val lagretSøk = LagretSøk.opprettSøk(opprettLagretSøk, saksbehandler, false)
+        val lagretSøk = LagretSøk.nyttSøk(opprettLagretSøk, saksbehandler)
 
         // Skal ikke kaste exception
         lagretSøk.sjekkOmKanSlette(saksbehandler)
@@ -127,11 +132,12 @@ class LagretSøkTest {
 
     @Test
     fun `sjekkOmKanSlette skal kaste exception hvis annen saksbehandler prøver å slette`() {
-        val opprettLagretSøk = OpprettLagretSøk(
-            tittel = "Test søk"
+        val opprettLagretSøk = NyttLagretSøkRequest(
+            tittel = "Test søk",
+            query = LagretSøk.defaultQuery(false)
         )
 
-        val lagretSøk = LagretSøk.opprettSøk(opprettLagretSøk, saksbehandler, false)
+        val lagretSøk = LagretSøk.nyttSøk(opprettLagretSøk, saksbehandler)
 
         val exception = assertThrows<IllegalStateException> {
             lagretSøk.sjekkOmKanSlette(annenSaksbehandler)
@@ -142,16 +148,9 @@ class LagretSøkTest {
 
     @Test
     fun `equals skal være false mot null`() {
-        val lagretSøk = LagretSøk.opprettSøk(OpprettLagretSøk("Test"), saksbehandler, false)
+        val lagretSøk = LagretSøk.nyttSøk(NyttLagretSøkRequest("Test", LagretSøk.defaultQuery(false)), saksbehandler)
 
         assertThat(lagretSøk.equals(null)).isFalse()
-    }
-
-    @Test
-    fun `equals skal være false mot annen type`() {
-        val lagretSøk = LagretSøk.opprettSøk(OpprettLagretSøk("Test"), saksbehandler, false)
-
-        assertThat(lagretSøk.equals("string")).isFalse()
     }
 
     @Test
@@ -172,7 +171,7 @@ class LagretSøkTest {
 
     @Test
     fun `equals skal være false når ett objekt har id og det andre ikke`() {
-        val lagretSøkUtenId = LagretSøk.opprettSøk(OpprettLagretSøk("Test"), saksbehandler, false)
+        val lagretSøkUtenId = LagretSøk.nyttSøk(NyttLagretSøkRequest("Test", LagretSøk.defaultQuery(false)), saksbehandler)
         val lagretSøkMedId = LagretSøk.fraEksisterende(1L, 123L, 1L, "Test", "Beskrivelse", LocalDateTime.now())
 
         assertThat(lagretSøkUtenId).isNotEqualTo(lagretSøkMedId)
@@ -181,8 +180,8 @@ class LagretSøkTest {
 
     @Test
     fun `equals skal bruke object identity for objekter uten id`() {
-        val lagretSøk1 = LagretSøk.opprettSøk(OpprettLagretSøk("Test"), saksbehandler, false)
-        val lagretSøk2 = LagretSøk.opprettSøk(OpprettLagretSøk("Test"), saksbehandler, false)
+        val lagretSøk1 = LagretSøk.nyttSøk(NyttLagretSøkRequest("Test", LagretSøk.defaultQuery(false)), saksbehandler)
+        val lagretSøk2 = LagretSøk.nyttSøk(NyttLagretSøkRequest("Test", LagretSøk.defaultQuery(false)), saksbehandler)
 
         // To forskjellige objekter uten id skal ikke være like
         assertThat(lagretSøk1).isNotEqualTo(lagretSøk2)
@@ -206,8 +205,8 @@ class LagretSøkTest {
 
     @Test
     fun `hashCode skal bruke object identity for objekter uten id`() {
-        val lagretSøk1 = LagretSøk.opprettSøk(OpprettLagretSøk("Test"), saksbehandler, false)
-        val lagretSøk2 = LagretSøk.opprettSøk(OpprettLagretSøk("Test"), saksbehandler, false)
+        val lagretSøk1 = LagretSøk.nyttSøk(NyttLagretSøkRequest("Test", LagretSøk.defaultQuery(false)), saksbehandler)
+        val lagretSøk2 = LagretSøk.nyttSøk(NyttLagretSøkRequest("Test", LagretSøk.defaultQuery(false)), saksbehandler)
 
         // To forskjellige objekter uten id skal ha forskjellig hashCode
         assertThat(lagretSøk1.hashCode()).isNotEqualTo(lagretSøk2.hashCode())
