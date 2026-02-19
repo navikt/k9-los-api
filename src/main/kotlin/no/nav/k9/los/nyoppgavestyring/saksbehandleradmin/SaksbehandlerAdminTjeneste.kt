@@ -27,15 +27,6 @@ class SaksbehandlerAdminTjeneste(
         return saksbehandler
     }
 
-    suspend fun leggTilSaksbehandlerForNavIdent(ident: String) {
-        if (saksbehandlerRepository.finnSaksbehandlerMedIdent(ident) != null) {
-            throw IllegalStateException("Saksbehandler finnes fra før")
-        }
-        // lagrer med tomme verdier, disse blir populert etter at saksbehandleren har logget seg inn
-        val saksbehandler = Saksbehandler(null, ident, null, null, mutableSetOf(), null)
-        saksbehandlerRepository.addSaksbehandler(saksbehandler)
-    }
-
     suspend fun leggTilSaksbehandlerForEpost(epost: String) {
         if (saksbehandlerRepository.finnSaksbehandlerMedEpost(epost) != null) {
             throw IllegalStateException("Saksbehandler finnes fra før")
@@ -43,6 +34,27 @@ class SaksbehandlerAdminTjeneste(
         // lagrer med tomme verdier, disse blir populert etter at saksbehandleren har logget seg inn
         val saksbehandler = Saksbehandler(null, null, null, epost, mutableSetOf(), null)
         saksbehandlerRepository.addSaksbehandler(saksbehandler)
+    }
+
+    suspend fun slettSaksbehandlerForId(id: Long) {
+        val skjermet = pepClient.harTilgangTilKode6()
+
+        val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedId(id)
+
+        val lagredeSøk = lagretSøkTjeneste.hentAlle(saksbehandler!!.brukerIdent!!)
+        lagredeSøk.forEach {
+            lagretSøkTjeneste.slett(saksbehandler.brukerIdent!!, it.id!!)
+        }
+
+        transactionalManager.transaction { tx ->
+            // V3-modellen: Sletter køer saksbehandler er med i
+            oppgaveKøV3Repository.hentKoerMedOppgittSaksbehandler(tx, saksbehandler.epost, skjermet, true).forEach { kø ->
+                oppgaveKøV3Repository.endre(tx, kø.copy(saksbehandlere = kø.saksbehandlere - saksbehandler.epost), skjermet)
+            }
+
+            // Sletter fra saksbehandler-tabellen
+            saksbehandlerRepository.slettSaksbehandlerForId(tx, id, skjermet)
+        }
     }
 
     suspend fun slettSaksbehandler(

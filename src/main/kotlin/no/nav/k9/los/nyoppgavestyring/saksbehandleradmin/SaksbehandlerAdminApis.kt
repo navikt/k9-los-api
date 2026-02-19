@@ -61,6 +61,17 @@ internal fun Route.SaksbehandlerAdminApis() {
         }
     }
 
+    post("/saksbehandlere/slettForId") {
+        requestContextService.withRequestContext(call) {
+            if (pepClient.erOppgaveStyrer()) {
+                val id = call.receive<Long>()
+                call.respond(saksbehandlerAdminTjeneste.slettSaksbehandlerForId(id))
+            } else {
+                call.respond(HttpStatusCode.Forbidden)
+            }
+        }
+    }
+
     // TODO: slett når frontend har begynt å bruke nytt endepunkt i ReservasjonApis
     get("reservasjoner") {
         requestContextService.withRequestContext(call) {

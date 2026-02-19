@@ -24,12 +24,15 @@ internal fun Route.InnloggetBrukerApi() {
             requestContextService.withRequestContext(call) {
                 val token = call.idToken()
                 val saksbehandlerIdent = azureGraphService.hentIdentTilInnloggetBruker()
-                val finnesISaksbehandlerTabell =
-                    saksbehandlerRepository.finnSaksbehandlerMedIdent(token.getNavIdent()) != null
+                val saksbehandler =
+                    saksbehandlerRepository.finnSaksbehandlerMedIdent(token.getNavIdent())
+                val finnesISaksbehandlerTabell = saksbehandler != null
+
                 val innloggetBrukerDto = InnloggetBrukerDto(
                     token.getUsername(),
                     token.getName(),
                     brukerIdent = saksbehandlerIdent,
+                    id = saksbehandler?.let { saksbehandler.id },
                     kanSaksbehandle = pepClient.harBasisTilgang(), //TODO mismatch mellom navnet 'kanSaksbehandle' og at alle som har tilgang til systemet har basistilgang
                     kanOppgavestyre = pepClient.erOppgaveStyrer(),
                     kanReservere = pepClient.harTilgangTilReserveringAvOppgaver(),
@@ -59,6 +62,7 @@ internal fun Route.InnloggetBrukerApi() {
                     "saksbehandler@nav.no",
                     "Saksbehandler Sara",
                     "Z123456",
+                    id = 1,
                     kanSaksbehandle = true,
                     kanOppgavestyre = true,
                     kanReservere = true,
