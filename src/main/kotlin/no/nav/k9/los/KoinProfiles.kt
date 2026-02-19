@@ -258,6 +258,7 @@ fun common(app: Application, config: Configuration) = module {
             saksbehandlerRepository = get(),
             oppgaveKøV3Repository = get(),
             lagretSøkTjeneste = get(),
+            uttrekkTjeneste = get(),
             reservasjonV3Tjeneste = get(),
         )
     }

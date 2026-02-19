@@ -5,6 +5,7 @@ import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.ko.db.OppgaveKoRepository
 import no.nav.k9.los.nyoppgavestyring.lagretsok.LagretSøkTjeneste
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
+import no.nav.k9.los.nyoppgavestyring.uttrekk.UttrekkTjeneste
 
 class SaksbehandlerAdminTjeneste(
     private val pepClient: IPepClient,
@@ -12,6 +13,7 @@ class SaksbehandlerAdminTjeneste(
     private val saksbehandlerRepository: SaksbehandlerRepository,
     private val oppgaveKøV3Repository: OppgaveKoRepository,
     private val lagretSøkTjeneste: LagretSøkTjeneste,
+    private val uttrekkTjeneste: UttrekkTjeneste,
     private val reservasjonV3Tjeneste: ReservasjonV3Tjeneste
 ) {
 
@@ -66,6 +68,10 @@ class SaksbehandlerAdminTjeneste(
         val lagredeSøk = lagretSøkTjeneste.hentAlle(saksbehandler!!.brukerIdent!!)
         lagredeSøk.forEach {
             lagretSøkTjeneste.slett(saksbehandler.brukerIdent!!, it.id!!)
+        }
+        val uttrekkeneTilSakbehandler = uttrekkTjeneste.hentForSaksbehandler(saksbehandler.id!!)
+        uttrekkeneTilSakbehandler.forEach {
+            uttrekkTjeneste.slett(it.id!!)
         }
 
         transactionalManager.transaction { tx ->
