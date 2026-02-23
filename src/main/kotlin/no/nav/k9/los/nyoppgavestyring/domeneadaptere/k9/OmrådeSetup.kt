@@ -201,6 +201,7 @@ class OmrådeSetup(
             BehandlingStegType.KONTROLLER_LØPENDE_MEDLEMSKAP,
             BehandlingStegType.KONTROLLERER_SØKERS_OPPLYSNINGSPLIKT,
             BehandlingStegType.VURDER_KOMPLETTHET,
+            BehandlingStegType.VURDER_KOMPLETTHET_ETTERSENDELSER,
             BehandlingStegType.POSTCONDITION_KOMPLETTHET,
             BehandlingStegType.KONTROLLER_FAKTA_ARBEIDSFORHOLD -> "Kompletthet" to KodeverkSynlighet.SYNLIG_FAVORITT
 
