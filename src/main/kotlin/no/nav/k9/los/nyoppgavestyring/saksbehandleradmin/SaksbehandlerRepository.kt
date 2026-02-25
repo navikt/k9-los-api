@@ -140,6 +140,74 @@ class SaksbehandlerRepository(
         return saksbehandler
     }
 
+    //Kopi av den andre slettefunksjonen uten gjenbruk, siden den andre skal slettes etterhvert
+    fun slettSaksbehandlerForId(tx: TransactionalSession, id: Long, skjermet: Boolean) {
+        val saksbehandlerId = tx.run(
+            queryOf(
+                """
+                    select id from saksbehandler where id = :id and skjermet = :skjermet
+                """.trimIndent(),
+                mapOf("id" to id, "skjermet" to skjermet)
+            ).map { row ->
+                row.long("id")
+            }.asSingle
+        )
+
+        if (saksbehandlerId == null) {
+            throw IllegalStateException("Fant ikke saksbehandler med id $id")
+        }
+
+        //Sletting av reservasjoner ligger her og ikke i reservasjonV3Repository, siden dette ikke er en del av "vanlig"
+        //saksgang. Tanken var egentlig at reservasjoner og reservasjon_v3_endring ikke skulle slettes.
+        tx.run(
+            queryOf(
+                """
+                    delete from reservasjon_v3_endring where endretav = :saksbehandlerId
+                """.trimIndent(),
+                mapOf("saksbehandlerId" to saksbehandlerId)
+            ).asUpdate
+        )
+
+        tx.run(
+            queryOf(
+                """
+                    delete from reservasjon_v3_endring re
+                     using reservasjon_v3 r 
+                     where r.id = re.annullert_reservasjon_id
+                       and r.reservertav = :saksbehandlerId
+                """.trimIndent(),
+                mapOf("saksbehandlerId" to saksbehandlerId)
+            ).asUpdate
+        )
+
+        tx.run(
+            queryOf(
+                """
+                    delete from reservasjon_v3_endring re
+                     using reservasjon_v3 r 
+                     where r.id = re.ny_reservasjon_id
+                       and r.reservertav = :saksbehandlerId
+                """.trimIndent(),
+                mapOf("saksbehandlerId" to saksbehandlerId)
+            ).asUpdate
+        )
+
+        queryOf(
+            """
+                    delete from reservasjon_v3 where reservertav = :saksbehandlerId
+                """.trimIndent(),
+            mapOf("saksbehandlerId" to saksbehandlerId)
+        ).asUpdate
+
+        tx.run(
+            queryOf(
+                """
+                            delete from saksbehandler where id = :saksbehandlerId""",
+                mapOf("saksbehandlerId" to saksbehandlerId)
+            ).asUpdate
+        )
+    }
+
     fun slettSaksbehandler(tx: TransactionalSession, epost: String, skjermet: Boolean) {
         val saksbehandlerId = tx.run(
             queryOf(

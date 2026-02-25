@@ -94,6 +94,7 @@ class OppgaveKoRepository(
             beskrivelse = string("beskrivelse"),
             oppgaveQuery = objectMapper.readValue(string("query"), OppgaveQuery::class.java),
             frittValgAvOppgave = boolean("fritt_valg_av_oppgave"),
+            saksbehandlerIds = if (medSaksbehandlere) hentKoSaksbehandlerIds(tx, long("id")) else emptyList(),
             saksbehandlere = if (medSaksbehandlere) hentKoSaksbehandlere(tx, long("id")) else emptyList(),
             endretTidspunkt = localDateTimeOrNull("endret_tidspunkt"),
             skjermet = boolean("skjermet")
@@ -234,15 +235,26 @@ class OppgaveKoRepository(
         )
     }
 
+    private fun hentKoSaksbehandlerIds(tx: TransactionalSession, oppgavekoV3Id: Long): List<Long> {
+        return tx.run(
+            queryOf(
+                "SELECT saksbehandler_id FROM OPPGAVEKO_SAKSBEHANDLER WHERE oppgaveko_v3_id = :oppgavekoV3Id",
+                mapOf(
+                    "oppgavekoV3Id" to oppgavekoV3Id
+                )
+            ).map { row -> row.long("saksbehandler_id") }.asList
+        )
+    }
+
     private fun lagreKoSaksbehandlere(tx: TransactionalSession, oppgaveKo: OppgaveKo) {
         fjernAlleSaksbehandlereFraOppgaveKo(tx, oppgaveKo.id)
-        oppgaveKo.saksbehandlere.forEach {
+        oppgaveKo.saksbehandlerIds.forEach { id ->
             tx.run(
                 queryOf(
-                    "INSERT INTO OPPGAVEKO_SAKSBEHANDLER (oppgaveko_v3_id, saksbehandler_epost) VALUES (:oppgavekoV3Id, :epost)",
+                    "INSERT INTO OPPGAVEKO_SAKSBEHANDLER (oppgaveko_v3_id, saksbehandler_id) VALUES (:oppgavekoV3Id, :saksbehandlerId)",
                     mapOf(
                         "oppgavekoV3Id" to oppgaveKo.id,
-                        "epost" to it
+                        "saksbehandlerId" to id
                     )
                 ).asUpdate
             )

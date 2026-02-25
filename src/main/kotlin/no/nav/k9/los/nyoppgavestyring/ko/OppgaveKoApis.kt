@@ -208,8 +208,8 @@ fun Route.OppgaveKoApis() {
         requestContextService.withRequestContext(call) {
             if (pepClient.harTilgangTilReserveringAvOppgaver()) {
                 val oppgavekøId = call.parameters["id"]!!
-                val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedEpost(
-                    kotlin.coroutines.coroutineContext.idToken().getUsername()
+                val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedIdent(
+                    kotlin.coroutines.coroutineContext.idToken().getNavIdent()
                 )!!
                 val oppgaveMuligReservert = oppgaveKoTjeneste.taReservasjonFraKø(
                     innloggetBrukerId = innloggetBruker.id!!,

@@ -6,6 +6,7 @@ import java.time.LocalDateTime
 
 data class ReservasjonDto(
     val reservertAvIdent: String,
+    val reservertAvId: Long,
     val reservertAvEpost: String,
     val reservertAvNavn: String?,
     val saksnummer: String?,
