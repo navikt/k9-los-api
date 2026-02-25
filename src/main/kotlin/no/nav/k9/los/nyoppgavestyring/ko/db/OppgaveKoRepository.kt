@@ -248,13 +248,13 @@ class OppgaveKoRepository(
 
     private fun lagreKoSaksbehandlere(tx: TransactionalSession, oppgaveKo: OppgaveKo) {
         fjernAlleSaksbehandlereFraOppgaveKo(tx, oppgaveKo.id)
-        oppgaveKo.saksbehandlere.forEach {
+        oppgaveKo.saksbehandlerIds.forEach { id ->
             tx.run(
                 queryOf(
-                    "INSERT INTO OPPGAVEKO_SAKSBEHANDLER (oppgaveko_v3_id, saksbehandler_epost) VALUES (:oppgavekoV3Id, :epost)",
+                    "INSERT INTO OPPGAVEKO_SAKSBEHANDLER (oppgaveko_v3_id, saksbehandler_id) VALUES (:oppgavekoV3Id, :saksbehandlerId)",
                     mapOf(
                         "oppgavekoV3Id" to oppgaveKo.id,
-                        "epost" to it
+                        "saksbehandlerId" to id
                     )
                 ).asUpdate
             )
