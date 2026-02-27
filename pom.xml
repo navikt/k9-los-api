@@ -37,7 +37,7 @@
         <commons-text.version>1.15.0</commons-text.version>
         <dusseldorf-ktor.version>7.0.7</dusseldorf-ktor.version>
         <ktor.version>3.4.0</ktor.version>
-        <kafka.version>3.9.1</kafka.version>
+        <kafka.version>4.2.0</kafka.version>
         <nav-tilgangskontroll.version>3.2024.01.24_10.14-f70bae69bd65</nav-tilgangskontroll.version>
         <opentelemetry.version>1.59.0</opentelemetry.version>
         <opentelemetry-instrumentation.version>2.25.0</opentelemetry-instrumentation.version>
