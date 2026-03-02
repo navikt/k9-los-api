@@ -1,15 +1,22 @@
 package no.nav.k9.los
 
-import org.junit.jupiter.api.extension.RegisterExtension
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
+import org.koin.core.context.startKoin
+import org.koin.core.context.stopKoin
 import org.koin.test.KoinTest
-import org.koin.test.junit5.KoinTestExtension
 
 abstract class AbstractK9LosIntegrationTest: AbstractPostgresTest(), KoinTest {
 
-    @JvmField
-    @RegisterExtension
-    val koinTestRule = KoinTestExtension.create {
-        modules(buildAndTestConfig(dataSource))
+    @BeforeEach
+    fun opprettKoin() {
+        stopKoin()
+        startKoin { modules(buildAndTestConfig(dataSource)) }
+    }
+
+    @AfterEach
+    fun rivKoin() {
+        stopKoin()
     }
 
 }
