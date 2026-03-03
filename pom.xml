@@ -45,7 +45,7 @@
         <!-- Test Dependency Versions -->
         <testcontainers.version>1.21.4</testcontainers.version>
         <jsonassert.version>1.5.3</jsonassert.version>
-        <jupiter.version>5.11.4</jupiter.version>
+        <jupiter.version>6.0.3</jupiter.version>
         <assertk.version>0.28.1</assertk.version>
         <mockk.version>1.14.9</mockk.version>
     </properties>
@@ -331,7 +331,7 @@
         <dependency>
             <groupId>org.junit.platform</groupId>
             <artifactId>junit-platform-launcher</artifactId>
-            <version>1.11.4</version>
+            <version>6.0.3</version>
             <scope>test</scope>
         </dependency>
         <dependency>
