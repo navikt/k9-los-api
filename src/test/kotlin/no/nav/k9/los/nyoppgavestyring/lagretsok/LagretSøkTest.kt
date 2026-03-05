@@ -41,7 +41,6 @@ class LagretSøkTest {
 
         assertThat(lagretSøk.id).isEqualTo(null)
         assertThat(lagretSøk.lagetAv).isEqualTo(123L)
-        assertThat(lagretSøk.versjon).isEqualTo(1)
         assertThat(lagretSøk.tittel).isEqualTo("Test søk")
         assertThat(lagretSøk.beskrivelse).isEqualTo("")
     }
@@ -68,7 +67,7 @@ class LagretSøkTest {
     }
 
     @Test
-    fun `endre skal oppdatere søk med nye verdier og inkrementere versjon`() {
+    fun `endre skal oppdatere søk med nye verdier`() {
         val opprettLagretSøk = NyttLagretSøkRequest(
             tittel = "Opprinnelig tittel",
             query = LagretSøk.defaultQuery(false)
@@ -81,13 +80,11 @@ class LagretSøkTest {
             id = 1L,
             tittel = "Ny tittel",
             beskrivelse = "Ny beskrivelse",
-            versjon = lagretSøk.versjon,
             query = nyQuery
         )
 
         lagretSøk.endre(endreLagretSøk, saksbehandler)
 
-        assertThat(lagretSøk.versjon).isEqualTo(2)
         assertThat(lagretSøk.tittel).isEqualTo("Ny tittel")
         assertThat(lagretSøk.beskrivelse).isEqualTo("Ny beskrivelse")
         assertThat(lagretSøk.query).isEqualTo(nyQuery)
@@ -107,7 +104,6 @@ class LagretSøkTest {
             tittel = "Ny tittel",
             beskrivelse = "Ny beskrivelse",
             query = OppgaveQuery(),
-            versjon = lagretSøk.versjon
         )
 
         val exception = assertThrows<IllegalStateException> {
@@ -155,16 +151,52 @@ class LagretSøkTest {
 
     @Test
     fun `equals skal være true for objekter med samme id når begge har id`() {
-        val lagretSøk1 = LagretSøk.fraEksisterende(1L, 123L, 1L, "Tittel1", "Beskrivelse1", LocalDateTime.now())
-        val lagretSøk2 = LagretSøk.fraEksisterende(1L, 123L, 2L, "Tittel2", "Beskrivelse2", LocalDateTime.now())
+        val lagretSøk1 = LagretSøk.fraEksisterende(
+            1L,
+            123L,
+            "Tittel1",
+            "Beskrivelse1",
+            LocalDateTime.now(),
+            OppgaveQuery(),
+            null,
+            null
+        )
+        val lagretSøk2 = LagretSøk.fraEksisterende(
+            1L,
+            123L,
+            "Tittel2",
+            "Beskrivelse2",
+            LocalDateTime.now(),
+            OppgaveQuery(),
+            null,
+            null
+        )
 
         assertThat(lagretSøk1).isEqualTo(lagretSøk2)
     }
 
     @Test
     fun `equals skal være false for objekter med forskjellig id`() {
-        val lagretSøk1 = LagretSøk.fraEksisterende(1L, 123L, 1L, "Tittel", "Beskrivelse", LocalDateTime.now())
-        val lagretSøk2 = LagretSøk.fraEksisterende(2L, 123L, 1L, "Tittel", "Beskrivelse", LocalDateTime.now())
+        val lagretSøk1 = LagretSøk.fraEksisterende(
+            1L,
+            123L,
+            "Tittel",
+            "Beskrivelse",
+            LocalDateTime.now(),
+            OppgaveQuery(),
+            null,
+            null
+        )
+        val lagretSøk2 = LagretSøk.fraEksisterende(
+            2L,
+            123L,
+            "Tittel",
+            "Beskrivelse",
+            LocalDateTime.now(),
+            OppgaveQuery(),
+            null,
+            null
+        )
 
         assertThat(lagretSøk1).isNotEqualTo(lagretSøk2)
     }
@@ -172,7 +204,16 @@ class LagretSøkTest {
     @Test
     fun `equals skal være false når ett objekt har id og det andre ikke`() {
         val lagretSøkUtenId = LagretSøk.nyttSøk(NyttLagretSøkRequest("Test", LagretSøk.defaultQuery(false)), saksbehandler)
-        val lagretSøkMedId = LagretSøk.fraEksisterende(1L, 123L, 1L, "Test", "Beskrivelse", LocalDateTime.now())
+        val lagretSøkMedId = LagretSøk.fraEksisterende(
+            1L,
+            123L,
+            "Test",
+            "Beskrivelse",
+            LocalDateTime.now(),
+            OppgaveQuery(),
+            null,
+            null
+        )
 
         assertThat(lagretSøkUtenId).isNotEqualTo(lagretSøkMedId)
         assertThat(lagretSøkMedId).isNotEqualTo(lagretSøkUtenId)
@@ -189,16 +230,52 @@ class LagretSøkTest {
 
     @Test
     fun `hashCode skal være konsistent med equals for objekter med id`() {
-        val lagretSøk1 = LagretSøk.fraEksisterende(1L, 123L, 1L, "Tittel1", "Beskrivelse1", LocalDateTime.now())
-        val lagretSøk2 = LagretSøk.fraEksisterende(1L, 123L, 2L, "Tittel2", "Beskrivelse2", LocalDateTime.now())
+        val lagretSøk1 = LagretSøk.fraEksisterende(
+            1L,
+            123L,
+            "Tittel1",
+            "Beskrivelse1",
+            LocalDateTime.now(),
+            OppgaveQuery(),
+            null,
+            null
+        )
+        val lagretSøk2 = LagretSøk.fraEksisterende(
+            1L,
+            123L,
+            "Tittel2",
+            "Beskrivelse2",
+            LocalDateTime.now(),
+            OppgaveQuery(),
+            null,
+            null
+        )
 
         assertThat(lagretSøk1.hashCode()).isEqualTo(lagretSøk2.hashCode())
     }
 
     @Test
     fun `hashCode skal være forskjellig for objekter med forskjellig id`() {
-        val lagretSøk1 = LagretSøk.fraEksisterende(1L, 123L, 1L, "Tittel", "Beskrivelse", LocalDateTime.now())
-        val lagretSøk2 = LagretSøk.fraEksisterende(2L, 123L, 1L, "Tittel", "Beskrivelse", LocalDateTime.now())
+        val lagretSøk1 = LagretSøk.fraEksisterende(
+            1L,
+            123L,
+            "Tittel",
+            "Beskrivelse",
+            LocalDateTime.now(),
+            OppgaveQuery(),
+            null,
+            null
+        )
+        val lagretSøk2 = LagretSøk.fraEksisterende(
+            2L,
+            123L,
+            "Tittel",
+            "Beskrivelse",
+            LocalDateTime.now(),
+            OppgaveQuery(),
+            null,
+            null
+        )
 
         assertThat(lagretSøk1.hashCode()).isNotEqualTo(lagretSøk2.hashCode())
     }

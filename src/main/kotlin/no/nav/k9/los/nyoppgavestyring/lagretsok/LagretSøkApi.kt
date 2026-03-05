@@ -221,4 +221,24 @@ fun Route.LagretSøkApi() {
             }
         }
     }
+
+    put("/{id}/oppdater-antall") {
+        requestContextService.withRequestContext(call) {
+            if (pepClient.harBasisTilgang()) {
+                val innloggetSaksbehandler = coroutineContext.idToken().getNavIdent().let {
+                    saksbehandlerRepository.finnSaksbehandlerMedIdent(it)
+                }
+                if (innloggetSaksbehandler == null) {
+                    call.respond(HttpStatusCode.Forbidden, "Innlogget bruker er ikke i saksbehandler-tabellen.")
+                } else {
+                    val lagretSøkId = call.parameters["id"]!!.toLong()
+                    lagretSøkTjeneste.oppdaterAntall(lagretSøkId)
+                    call.respond(HttpStatusCode.OK)
+                }
+            } else {
+                call.respond(HttpStatusCode.Forbidden)
+            }
+        }
+
+    }
 }

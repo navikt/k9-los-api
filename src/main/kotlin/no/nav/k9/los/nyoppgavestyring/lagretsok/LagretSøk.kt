@@ -11,15 +11,13 @@ import java.time.LocalDateTime
 class LagretSøk private constructor(
     val id: Long?,
     val lagetAv: Long,
-    versjon: Long,
     tittel: String,
     beskrivelse: String,
     sistEndret: LocalDateTime,
-    query: OppgaveQuery
+    query: OppgaveQuery,
+    antall: Long?,
+    antallOppdatert: LocalDateTime?,
 ) {
-    var versjon: Long = versjon
-        private set
-
     var tittel: String = tittel
         private set
 
@@ -32,14 +30,16 @@ class LagretSøk private constructor(
     var sistEndret: LocalDateTime = sistEndret
         private set
 
+    var antall: Long? = antall
+        private set
+
+    var antallOppdatert: LocalDateTime? = antallOppdatert
+        private set
+
     fun endre(endreLagretSøk: EndreLagretSøkRequest, saksbehandler: Saksbehandler) {
         if (saksbehandler.id != lagetAv) {
             throw IllegalStateException("Kan ikke endre lagret søk som ikke er opprettet av seg selv")
         }
-        if (endreLagretSøk.versjon != versjon) {
-            throw IllegalStateException("Kan ikke endre lagret søk med feil versjon.")
-        }
-        versjon += 1
         tittel = endreLagretSøk.tittel
         beskrivelse = endreLagretSøk.beskrivelse
         query = endreLagretSøk.query
@@ -78,12 +78,18 @@ class LagretSøk private constructor(
         return LagretSøk(
             id = null,
             lagetAv = saksbehandler.id ?: throw IllegalStateException("Saksbehandler må ha id"),
-            versjon = 1,
             tittel = tittel,
             beskrivelse = "",
             sistEndret = LocalDateTime.now(),
-            query = this.query
+            query = this.query,
+            antall = null,
+            antallOppdatert = null,
         )
+    }
+
+    fun oppdaterAntall(antall: Long) {
+        this.antall = antall
+        this.antallOppdatert = LocalDateTime.now()
     }
 
     companion object {
@@ -119,11 +125,12 @@ class LagretSøk private constructor(
             return LagretSøk(
                 id = null,
                 lagetAv = saksbehandler.id ?: throw IllegalStateException("Saksbehandler må ha id"),
-                versjon = 1,
                 tittel = nyttLagretSøk.tittel,
                 beskrivelse = "",
                 sistEndret = LocalDateTime.now(),
                 query = nyttLagretSøk.query,
+                antall = null,
+                antallOppdatert = null
             )
         }
 
@@ -131,13 +138,14 @@ class LagretSøk private constructor(
         fun fraEksisterende(
             id: Long,
             lagetAv: Long,
-            versjon: Long,
             tittel: String,
             beskrivelse: String,
             sistEndret: LocalDateTime,
-            query: OppgaveQuery = OppgaveQuery()
+            query: OppgaveQuery,
+            antall: Long?,
+            antallOppdatert: LocalDateTime?,
         ): LagretSøk {
-            return LagretSøk(id, lagetAv, versjon, tittel, beskrivelse, sistEndret, query)
+            return LagretSøk(id, lagetAv, tittel, beskrivelse, sistEndret, query, antall, antallOppdatert)
         }
     }
 }

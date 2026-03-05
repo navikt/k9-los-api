@@ -2,6 +2,7 @@ package no.nav.k9.los.nyoppgavestyring.lagretsok
 
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
 import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
+import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
 
 class LagretSøkTjeneste(
@@ -60,5 +61,13 @@ class LagretSøkTjeneste(
             ?: throw IllegalStateException("Lagret søk med id $lagretSøkId finnes ikke")
         val nyttLagretSøk = lagretSøk.kopier(tittel, saksbehandler)
         return lagretSøkRepository.opprett(nyttLagretSøk)
+    }
+
+    fun oppdaterAntall(lagretSøkId: Long) {
+        val lagretSøk = lagretSøkRepository.hent(lagretSøkId)
+            ?: throw IllegalStateException("Lagret søk med id $lagretSøkId finnes ikke")
+        val antall = oppgaveQueryService.queryForAntall(QueryRequest(lagretSøk.query))
+        lagretSøk.oppdaterAntall(antall)
+        lagretSøkRepository.endreAntall(lagretSøk)
     }
 }

@@ -14,8 +14,8 @@ class LagretSøkRepository(val dataSource: DataSource) {
     private val transactionalManager = TransactionalManager(dataSource)
 
     fun hent(id: Long): LagretSøk? {
-        return transactionalManager.transaction {
-            it.run(
+        return transactionalManager.transaction { tx ->
+            tx.run(
                 queryOf(
                     """
                 SELECT *
@@ -35,12 +35,11 @@ class LagretSøkRepository(val dataSource: DataSource) {
             tx.updateAndReturnGeneratedKey(
                 queryOf(
                     """
-                    INSERT INTO lagret_sok (tittel, versjon, beskrivelse, sist_endret, query, laget_av)
-                    VALUES (:tittel, :versjon, :beskrivelse, :sist_endret, :query::jsonb, :lagetAv)
+                    INSERT INTO lagret_sok (tittel, beskrivelse, sist_endret, query, laget_av)
+                    VALUES (:tittel, :beskrivelse, :sist_endret, :query::jsonb, :lagetAv)
                     """.trimIndent(),
                     mapOf(
                         "tittel" to lagretSøk.tittel,
-                        "versjon" to lagretSøk.versjon,
                         "beskrivelse" to lagretSøk.beskrivelse,
                         "sist_endret" to lagretSøk.sistEndret,
                         "query" to LosObjectMapper.instance.writeValueAsString(lagretSøk.query),
@@ -51,19 +50,40 @@ class LagretSøkRepository(val dataSource: DataSource) {
         }!!
     }
 
+    fun endreAntall(lagretSøk: LagretSøk) {
+        transactionalManager.transaction {
+            val antallRaderOppdatert = it.run(
+                queryOf(
+                    """
+                UPDATE lagret_sok
+                set antall = :antall, antall_oppdatert = :antall_oppdatert
+                where id = :id
+                """.trimIndent(),
+                    mapOf(
+                        "id" to lagretSøk.id,
+                        "antall" to lagretSøk.antall,
+                        "antall_oppdatert" to lagretSøk.antallOppdatert,
+                    )
+                ).asUpdate
+            )
+            if (antallRaderOppdatert != 1) {
+                throw IllegalStateException("Feilet ved update på lagret søk. Kan skyldes at søket er slettet.")
+            }
+        }
+    }
+
     fun endre(lagretSøk: LagretSøk) {
         transactionalManager.transaction {
             val antallRaderOppdatert = it.run(
                 queryOf(
                     """
                 UPDATE lagret_sok
-                set tittel = :tittel, versjon = :versjon, beskrivelse = :beskrivelse, sist_endret = :sist_endret, query = :query::jsonb
-                where id = :id and versjon = :versjon - 1
+                set tittel = :tittel, beskrivelse = :beskrivelse, sist_endret = :sist_endret, query = :query::jsonb
+                where id = :id
                 """.trimIndent(),
                     mapOf(
                         "id" to lagretSøk.id,
                         "tittel" to lagretSøk.tittel,
-                        "versjon" to lagretSøk.versjon,
                         "beskrivelse" to lagretSøk.beskrivelse,
                         "sist_endret" to lagretSøk.sistEndret,
                         "query" to LosObjectMapper.instance.writeValueAsString(lagretSøk.query),
@@ -71,7 +91,7 @@ class LagretSøkRepository(val dataSource: DataSource) {
                 ).asUpdate
             )
             if (antallRaderOppdatert != 1) {
-                throw IllegalStateException("Feilet ved update på lagret søk. Kan enten skyldes at søket er slettet, eller at versjonsnummer ikke stemmer (optimistisk lås).")
+                throw IllegalStateException("Feilet ved update på lagret søk. Kan skyldes at søket er slettet.")
             }
         }
     }
@@ -111,10 +131,11 @@ private fun Row.toLagretSøk(): LagretSøk {
     return LagretSøk.fraEksisterende(
         id = long("id"),
         lagetAv = long("laget_av"),
-        versjon = long("versjon"),
         tittel = string("tittel"),
         beskrivelse = string("beskrivelse"),
         sistEndret = localDateTime("sist_endret"),
-        query = LosObjectMapper.instance.readValue(string("query"), OppgaveQuery::class.java)
+        query = LosObjectMapper.instance.readValue(string("query"), OppgaveQuery::class.java),
+        antall = longOrNull("antall"),
+        antallOppdatert = localDateTimeOrNull("antall_oppdatert")
     )
 }

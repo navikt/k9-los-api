@@ -57,7 +57,6 @@ class LagretSøkRepositoryTest : AbstractK9LosIntegrationTest() {
         assertThat(hentetSøk.tittel).isEqualTo("Test søk")
         assertThat(hentetSøk.beskrivelse).isEqualTo("")
         assertThat(hentetSøk.lagetAv).isEqualTo(saksbehandler.id)
-        assertThat(hentetSøk.versjon).isEqualTo(1)
     }
 
     @Test
@@ -82,7 +81,6 @@ class LagretSøkRepositoryTest : AbstractK9LosIntegrationTest() {
             tittel = "Endret tittel",
             beskrivelse = "Endret beskrivelse",
             query = OppgaveQuery(),
-            versjon = lagretSøk.versjon
         )
 
         hentetSøk.endre(endreLagretSøk, saksbehandler)
@@ -91,7 +89,6 @@ class LagretSøkRepositoryTest : AbstractK9LosIntegrationTest() {
         val endretSøk = lagretSøkRepository.hent(id)!!
         assertThat(endretSøk.tittel).isEqualTo("Endret tittel")
         assertThat(endretSøk.beskrivelse).isEqualTo("Endret beskrivelse")
-        assertThat(endretSøk.versjon).isEqualTo(2)
     }
 
     @Test
@@ -171,46 +168,4 @@ class LagretSøkRepositoryTest : AbstractK9LosIntegrationTest() {
         }
     }
 
-    @Test
-    fun `skal kaste exception ved optimistisk låsing ved samtidig endring`() {
-        val opprettLagretSøk = NyttLagretSøkRequest(
-            tittel = "Test søk",
-            query = LagretSøk.defaultQuery(false)
-        )
-
-        val lagretSøk = LagretSøk.nyttSøk(opprettLagretSøk, saksbehandler)
-        val id = lagretSøkRepository.opprett(lagretSøk)
-
-        // Simuler samtidig endring - hent to instanser av samme søk
-        val førsteSøk = lagretSøkRepository.hent(id)!!
-        val andreSøk = lagretSøkRepository.hent(id)!!
-
-        førsteSøk.endre(
-            EndreLagretSøkRequest(
-                id = id,
-                tittel = "Første endring",
-                beskrivelse = "Første beskrivelse",
-                query = OppgaveQuery(),
-                versjon = førsteSøk.versjon
-            ), saksbehandler
-        )
-        lagretSøkRepository.endre(førsteSøk)
-
-        andreSøk.endre(
-            EndreLagretSøkRequest(
-                id = id,
-                tittel = "Andre endring",
-                beskrivelse = "Andre beskrivelse",
-                query = OppgaveQuery(),
-                versjon = andreSøk.versjon // Samme versjon som før første endring
-            ), saksbehandler
-        )
-
-        // Dette skal feile på database-nivå med optimistisk låsing
-        val exception = assertThrows<IllegalStateException> {
-            lagretSøkRepository.endre(andreSøk)
-        }
-
-        assertThat(exception.message).isEqualTo("Feilet ved update på lagret søk. Kan enten skyldes at søket er slettet, eller at versjonsnummer ikke stemmer (optimistisk lås).")
-    }
 }
