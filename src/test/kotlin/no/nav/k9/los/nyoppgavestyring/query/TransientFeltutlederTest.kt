@@ -9,6 +9,7 @@ import no.nav.k9.los.nyoppgavestyring.OppgaveTestDataBuilder
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.*
 import no.nav.k9.los.nyoppgavestyring.query.db.OppgaveQueryRepository
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelOrderFelt
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelSelectFelt
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
 import no.nav.k9.los.nyoppgavestyring.query.mapping.EksternFeltverdiOperator
@@ -115,6 +116,34 @@ class TransientFeltutlederTest : AbstractK9LosIntegrationTest() {
         val oppgave = hentOppgave(result[0])
 
         assertThat(Duration.parse(oppgave.hentVerdi("tidSidenMottattDato")!!).toDays()).isEqualTo(20)
+    }
+
+
+    @Test
+    fun `transient utleder løpende varighet select returnerer dager som heltall`() {
+        testdataLøpendeVarighet()
+
+        val oppgaveQuery = OppgaveQuery(
+            filtere = listOf(
+                byggFilter(FeltType.OPPGAVE_STATUS, EksternFeltverdiOperator.EQUALS, Oppgavestatus.AAPEN.kode)
+            ),
+            select = listOf(
+                EnkelSelectFelt(område = FeltType.TID_SIDEN_MOTTATT_DATO.område, kode = FeltType.TID_SIDEN_MOTTATT_DATO.eksternId)
+            ),
+            order = listOf(
+                byggOrder(FeltType.TID_SIDEN_MOTTATT_DATO, false)
+            )
+        )
+
+        val resultat = transactionalManager.transaction { tx ->
+            oppgaveQueryRepository.queryForOppgaveResultat(tx, QueryRequest(oppgaveQuery), LocalDateTime.now())
+        }
+
+        assertThat(resultat.size).isEqualTo(2)
+        val dagerFørste = resultat[0].felter.first { it.kode == "tidSidenMottattDato" }.verdi
+        val dagerAndre = resultat[1].felter.first { it.kode == "tidSidenMottattDato" }.verdi
+        assertThat(dagerFørste).isEqualTo("20")
+        assertThat(dagerAndre).isEqualTo("10")
     }
 
 
