@@ -7,7 +7,7 @@ import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
-import no.nav.helse.dusseldorf.ktor.jackson.dusseldorfConfigured
+import no.nav.k9.los.ktor.jackson.dusseldorfConfigured
 import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.nyoppgavestyring.FeltType
 import no.nav.k9.los.nyoppgavestyring.OppgaveTestDataBuilder

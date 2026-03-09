@@ -4,7 +4,7 @@ import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.matching.AnythingPattern
 import io.ktor.http.HttpHeaders
-import no.nav.helse.dusseldorf.testsupport.wiremock.WireMockBuilder
+import no.nav.k9.los.testsupport.wiremock.WireMockBuilder
 
 private const val tpsProxyServerPath = "/tps-proxy-mock"
 

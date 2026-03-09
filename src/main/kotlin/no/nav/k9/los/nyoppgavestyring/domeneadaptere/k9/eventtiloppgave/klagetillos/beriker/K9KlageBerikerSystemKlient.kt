@@ -7,9 +7,9 @@ import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.opentelemetry.instrumentation.annotations.WithSpan
 import kotlinx.coroutines.runBlocking
-import no.nav.helse.dusseldorf.ktor.core.Retry
-import no.nav.helse.dusseldorf.oauth2.client.AccessTokenClient
-import no.nav.helse.dusseldorf.oauth2.client.CachedAccessTokenClient
+import no.nav.k9.los.ktor.core.Retry
+import no.nav.k9.los.oauth2.client.AccessTokenClient
+import no.nav.k9.los.oauth2.client.CachedAccessTokenClient
 import no.nav.k9.klage.kontrakt.produksjonsstyring.los.LosOpplysningerSomManglerHistoriskIKlageDto
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.KoinProfile

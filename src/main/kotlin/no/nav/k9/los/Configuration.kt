@@ -1,11 +1,11 @@
 package no.nav.k9.los
 
 import io.ktor.server.config.*
-import no.nav.helse.dusseldorf.ktor.auth.clients
-import no.nav.helse.dusseldorf.ktor.auth.issuers
-import no.nav.helse.dusseldorf.ktor.auth.withoutAdditionalClaimRules
-import no.nav.helse.dusseldorf.ktor.core.getOptionalString
-import no.nav.helse.dusseldorf.ktor.core.getRequiredString
+import no.nav.k9.los.ktor.auth.clients
+import no.nav.k9.los.ktor.auth.issuers
+import no.nav.k9.los.ktor.auth.withoutAdditionalClaimRules
+import no.nav.k9.los.ktor.core.getOptionalString
+import no.nav.k9.los.ktor.core.getRequiredString
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.kafka.IKafkaConfig
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.kafka.KafkaAivenConfig
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.createHikariConfig

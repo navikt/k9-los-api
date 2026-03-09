@@ -5,7 +5,7 @@ import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import kotlinx.coroutines.runBlocking
 import com.github.tomakehurst.wiremock.WireMockServer
-import no.nav.helse.dusseldorf.testsupport.jws.ClientCredentials
+import no.nav.k9.los.testsupport.jws.ClientCredentials
 import no.nav.k9.los.wiremocks.getTpsProxyUrl
 import org.json.JSONObject
 
