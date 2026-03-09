@@ -251,7 +251,10 @@ class OppgaveKoRepository(
         oppgaveKo.saksbehandlerIds.forEach { id ->
             tx.run(
                 queryOf(
-                    "INSERT INTO OPPGAVEKO_SAKSBEHANDLER (oppgaveko_v3_id, saksbehandler_id) VALUES (:oppgavekoV3Id, :saksbehandlerId)",
+                    """
+                    INSERT INTO OPPGAVEKO_SAKSBEHANDLER (oppgaveko_v3_id, saksbehandler_id, saksbehandler_epost) 
+                    SELECT :oppgavekoV3Id, :saksbehandlerId, epost FROM saksbehandler WHERE id = :saksbehandlerId
+                    """,
                     mapOf(
                         "oppgavekoV3Id" to oppgaveKo.id,
                         "saksbehandlerId" to id
@@ -310,6 +313,7 @@ class OppgaveKoRepository(
         val oppdatertNyOppgaveko = nyOppgaveKo.copy(
             oppgaveQuery = if (taMedQuery) gammelOppgaveKo.oppgaveQuery else nyOppgaveKo.oppgaveQuery,
             saksbehandlere = if (taMedSaksbehandlere) gammelOppgaveKo.saksbehandlere else nyOppgaveKo.saksbehandlere,
+            saksbehandlerIds = if (taMedSaksbehandlere) gammelOppgaveKo.saksbehandlerIds else nyOppgaveKo.saksbehandlerIds,
             beskrivelse = gammelOppgaveKo.beskrivelse,
             frittValgAvOppgave = gammelOppgaveKo.frittValgAvOppgave
         )

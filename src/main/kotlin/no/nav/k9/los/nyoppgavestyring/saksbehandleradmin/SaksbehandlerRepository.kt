@@ -18,10 +18,10 @@ class SaksbehandlerRepository(
     private val pepClient: IPepClient,
     private val transactionalManager: TransactionalManager
 ) {
-    suspend fun addSaksbehandler(saksbehandler: Saksbehandler) {
+    suspend fun addSaksbehandler(saksbehandler: Saksbehandler): Long {
         val erSkjermet = pepClient.harTilgangTilKode6()
-        using(sessionOf(dataSource)) {
-            it.transaction { tx ->
+        return using(sessionOf(dataSource)) {
+            val saksbehandlerId = it.transaction { tx ->
                 val run = tx.run(
                     queryOf(
                         "select data from saksbehandler where lower(epost) = lower(:epost) and skjermet = :skjermet for update",
@@ -49,7 +49,7 @@ class SaksbehandlerRepository(
                 }
 
                 val json = LosObjectMapper.instance.writeValueAsString(saksbehandler)
-                tx.run(
+                val saksbehandlerId = tx.run(
                     queryOf(
                         """
                         insert into saksbehandler as k (saksbehandlerid, navn, epost, data, skjermet)
@@ -59,6 +59,7 @@ class SaksbehandlerRepository(
                             saksbehandlerid = :saksbehandlerid,
                             navn = :navn,
                             skjermet = :skjermet
+                        returning id
                      """,
                         mapOf(
                             "saksbehandlerid" to saksbehandler.brukerIdent,
@@ -67,9 +68,11 @@ class SaksbehandlerRepository(
                             "data" to json,
                             "skjermet" to erSkjermet
                         )
-                    ).asUpdate
+                    ).map { row -> row.long("id") }.asSingle
                 )
+                saksbehandlerId!!
             }
+            saksbehandlerId
         }
     }
 

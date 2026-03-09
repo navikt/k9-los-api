@@ -13,6 +13,3 @@ alter table oppgaveko_saksbehandler
 
 alter table oppgaveko_saksbehandler
     alter column saksbehandler_id set not null;
-
-alter table oppgaveko_saksbehandler
-    drop column saksbehandler_epost;
