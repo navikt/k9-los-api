@@ -36,7 +36,6 @@ import no.nav.k9.los.ktor.core.*
 import no.nav.k9.los.ktor.helsesjekk.HelserapporteringJobb
 import no.nav.k9.los.ktor.helsesjekk.Helsetjeneste
 import no.nav.k9.los.ktor.helsesjekk.helseRoute
-import no.nav.k9.los.ktor.jackson.JacksonStatusPages
 import no.nav.k9.los.ktor.jackson.dusseldorfConfigured
 import no.nav.k9.los.ktor.metrics.init
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
@@ -117,9 +116,8 @@ fun Application.k9Los() {
     }
 
     install(StatusPages) {
-        DefaultStatusPages()
-        JacksonStatusPages()
         AuthStatusPages()
+        DefaultStatusPages()
     }
 
     // må se på om dette skal settes opp med Jobbplanlegger oppstartsjobb

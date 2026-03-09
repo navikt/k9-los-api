@@ -14,7 +14,6 @@ import io.ktor.server.testing.*
 import no.nav.k9.los.ktor.auth.*
 import no.nav.k9.los.ktor.core.DefaultStatusPages
 import no.nav.k9.los.ktor.core.logRequests
-import no.nav.k9.los.ktor.jackson.JacksonStatusPages
 import no.nav.k9.los.testsupport.jws.Azure
 import no.nav.k9.los.testsupport.wiremock.WireMockBuilder
 import no.nav.k9.los.testsupport.wiremock.getAzureV2JwksUrl
@@ -71,9 +70,8 @@ class AuthenticationTest {
             logRequests()
         }
         install(StatusPages) {
-            DefaultStatusPages()
-            JacksonStatusPages()
             AuthStatusPages()
+            DefaultStatusPages()
         }
 
         val azureV2 = Issuer(
