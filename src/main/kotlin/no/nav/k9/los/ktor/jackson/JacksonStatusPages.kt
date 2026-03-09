@@ -69,7 +69,7 @@ fun StatusPagesConfig.JacksonStatusPages() {
                 ValidationProblemDetails(
                     setOf(
                         Violation(
-                            parameterName = rootCause.kotlinPropertyName ?: "ukjent",
+                            parameterName = rootCause.kotlinPropertyName,
                             parameterType = ParameterType.ENTITY,
                             reason = "Må være satt.",
                             invalidValue = null

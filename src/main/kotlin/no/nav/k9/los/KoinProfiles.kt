@@ -5,7 +5,7 @@ import io.ktor.client.engine.*
 import io.ktor.client.engine.java.*
 import io.ktor.server.application.*
 import kotlinx.coroutines.channels.Channel
-import no.nav.k9.los.helsesjekk.Helsetjeneste
+import no.nav.k9.los.ktor.helsesjekk.Helsetjeneste
 import no.nav.k9.los.KoinProfile.*
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.adhocjobber.aktivvask.Aktivvask

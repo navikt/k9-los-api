@@ -84,8 +84,7 @@ class ClaimEnforcer(
             val failure = mutableSetOf<Failure>()
 
             ruleSet.forEach { rule ->
-                val outcome = rule.enforce(claims)
-                when (outcome) {
+                when (val outcome = rule.enforce(claims)) {
                     is Successful -> success.add(outcome)
                     else -> failure.add(outcome as Failure)
                 }

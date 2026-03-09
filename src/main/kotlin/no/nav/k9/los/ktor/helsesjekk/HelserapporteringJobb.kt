@@ -1,4 +1,4 @@
-package no.nav.k9.los.helsesjekk
+package no.nav.k9.los.ktor.helsesjekk
 
 import io.prometheus.client.Gauge
 

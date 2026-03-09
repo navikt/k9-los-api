@@ -1,9 +1,7 @@
 package no.nav.k9.los.ktor.core
 
-import io.ktor.server.application.call
-import io.ktor.server.response.respondText
-import io.ktor.server.routing.Route
-import io.ktor.server.routing.get
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 

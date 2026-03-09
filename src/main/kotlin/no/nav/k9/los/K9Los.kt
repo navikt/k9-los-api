@@ -33,9 +33,9 @@ import no.nav.k9.los.ktor.auth.AuthStatusPages
 import no.nav.k9.los.ktor.auth.allIssuers
 import no.nav.k9.los.ktor.auth.multipleJwtIssuers
 import no.nav.k9.los.ktor.core.*
-import no.nav.k9.los.helsesjekk.HelserapporteringJobb
-import no.nav.k9.los.helsesjekk.Helsetjeneste
-import no.nav.k9.los.helsesjekk.helseRoute
+import no.nav.k9.los.ktor.helsesjekk.HelserapporteringJobb
+import no.nav.k9.los.ktor.helsesjekk.Helsetjeneste
+import no.nav.k9.los.ktor.helsesjekk.helseRoute
 import no.nav.k9.los.ktor.jackson.JacksonStatusPages
 import no.nav.k9.los.ktor.jackson.dusseldorfConfigured
 import no.nav.k9.los.ktor.metrics.init
