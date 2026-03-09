@@ -1,9 +1,9 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk
 
-import no.nav.helse.dusseldorf.ktor.health.HealthCheck
-import no.nav.helse.dusseldorf.ktor.health.Healthy
-import no.nav.helse.dusseldorf.ktor.health.Result
-import no.nav.helse.dusseldorf.ktor.health.UnHealthy
+import no.nav.k9.los.helsesjekk.Healthy
+import no.nav.k9.los.helsesjekk.HealthCheck
+import no.nav.k9.los.helsesjekk.Result
+import no.nav.k9.los.helsesjekk.UnHealthy
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.kafka.IKafkaConfig
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.kafka.TopicEntry

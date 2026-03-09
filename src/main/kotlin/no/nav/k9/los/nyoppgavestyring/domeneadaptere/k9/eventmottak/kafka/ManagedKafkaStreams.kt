@@ -1,10 +1,10 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.kafka
 
 import io.prometheus.client.Gauge
-import no.nav.helse.dusseldorf.ktor.health.HealthCheck
-import no.nav.helse.dusseldorf.ktor.health.Healthy
-import no.nav.helse.dusseldorf.ktor.health.Result
-import no.nav.helse.dusseldorf.ktor.health.UnHealthy
+import no.nav.k9.los.helsesjekk.Healthy
+import no.nav.k9.los.helsesjekk.HealthCheck
+import no.nav.k9.los.helsesjekk.Result
+import no.nav.k9.los.helsesjekk.UnHealthy
 import org.apache.kafka.streams.KafkaStreams
 import org.apache.kafka.streams.Topology
 import org.apache.kafka.streams.errors.StreamsUncaughtExceptionHandler

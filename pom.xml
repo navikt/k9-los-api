@@ -122,11 +122,6 @@
         </dependency>
         <dependency>
             <groupId>no.nav.helse</groupId>
-            <artifactId>dusseldorf-ktor-health</artifactId>
-            <version>${dusseldorf-ktor.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>no.nav.helse</groupId>
             <artifactId>dusseldorf-ktor-auth</artifactId>
             <version>${dusseldorf-ktor.version}</version>
         </dependency>

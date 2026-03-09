@@ -48,14 +48,14 @@ internal class AsynkronProsesseringV1Service(
         k9PunsjEventHandler = k9PunsjEventHandler
     )
 
-    private val healthChecks = setOf(
+    val healthChecks = setOf(
         aksjonspunktStream.healthy,
         k9KlageStream.healthy,
         aksjonspunkTilbakeStream.healthy,
         aksjonspunkPunsjStream.healthy
     )
 
-    private val isReadyChecks = setOf(
+    val isReadyChecks = setOf(
         aksjonspunktStream.ready,
         k9KlageStream.ready,
         aksjonspunkTilbakeStream.ready,
@@ -69,7 +69,4 @@ internal class AsynkronProsesseringV1Service(
         aksjonspunkPunsjStream.stop()
         logger.info("Alle streams stoppet.")
     }
-
-    internal fun isReadyChecks() = isReadyChecks
-    internal fun isHealtyChecks() = healthChecks
 }
