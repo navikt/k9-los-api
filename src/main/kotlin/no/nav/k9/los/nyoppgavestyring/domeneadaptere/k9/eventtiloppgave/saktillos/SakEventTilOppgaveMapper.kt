@@ -202,6 +202,7 @@ class SakEventTilOppgaveMapper(
 
             utledAksjonspunkter(event, oppgaveFeltverdiDtos)
             utledÅpneAksjonspunkter(event.behandlingSteg, åpneAksjonspunkter, oppgaveFeltverdiDtos)
+            utledLøsteAksjonspunkter(event.aksjonspunktTilstander, oppgaveFeltverdiDtos)
             utledVenteÅrsakOgFrist(åpneAksjonspunkter, oppgaveFeltverdiDtos)
             utledAutomatiskBehandletFlagg(oppgaveFeltverdiDtos, event)
             utledSøknadsårsaker(event, oppgaveFeltverdiDtos)
@@ -217,6 +218,22 @@ class SakEventTilOppgaveMapper(
             )
 
             return oppgaveFeltverdiDtos
+        }
+
+        private fun utledLøsteAksjonspunkter(
+            aksjonspunktTilstander: List<AksjonspunktTilstandDto>,
+            oppgaveFeltverdiDtos: MutableList<OppgaveFeltverdiDto>
+        ) {
+            aksjonspunktTilstander.forEach { aksjonspunktTilstandDto ->
+                if (aksjonspunktTilstandDto.status == AksjonspunktStatus.UTFØRT) {
+                    oppgaveFeltverdiDtos.add(
+                        OppgaveFeltverdiDto(
+                            nøkkel = "løstAksjonspunkt",
+                            verdi = aksjonspunktTilstandDto.aksjonspunktKode
+                        )
+                    )
+                }
+            }
         }
 
         private fun getåpneAksjonspunkter(event: K9SakEventDto) =

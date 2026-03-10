@@ -137,6 +137,11 @@
           "påkrevd": false
         },
         {
+          "id": "løstAksjonspunkt",
+          "visPåOppgave": true,
+          "påkrevd": false
+        },
+        {
           "id": "avventerSøker",
           "visPåOppgave": false,
           "påkrevd": true

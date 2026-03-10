@@ -246,6 +246,19 @@
       }
     },
     {
+      "id": "løstAksjonspunkt",
+      "visningsnavn": "Løste aksjonspunkt",
+      "beskrivelse": "Tidligere åpne aksjonspunkt som nå er løst",
+      "listetype": false,
+      "tolkesSom": "String",
+      "visTilBruker": true,
+      "kokriterie": true,
+      "kodeverkreferanse": {
+        "område": "K9",
+        "eksternId": "Aksjonspunkt"
+      }
+    },
+    {
       "id": "avventerSaksbehandler",
       "visningsnavn": "Avventer saksbehandler",
       "listetype": false,
