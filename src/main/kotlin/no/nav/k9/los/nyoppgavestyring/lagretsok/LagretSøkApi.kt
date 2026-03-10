@@ -147,7 +147,7 @@ fun Route.LagretSøkApi() {
             body<KopierLagretSøkRequest>()
         }
         response {
-            HttpStatusCode.OK to { body<LagretSøk>() }
+            HttpStatusCode.OK to { body<Long>() }
         }
     }) {
         requestContextService.withRequestContext(call) {
