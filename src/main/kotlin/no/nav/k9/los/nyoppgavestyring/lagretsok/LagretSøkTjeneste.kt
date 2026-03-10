@@ -53,12 +53,12 @@ class LagretSøkTjeneste(
         return oppgaveQueryService.queryForAntall(QueryRequest(lagretSøk.query))
     }
 
-    suspend fun kopier(navIdent: String, lagretSøkId: Long, tittel: String) {
+    suspend fun kopier(navIdent: String, lagretSøkId: Long, tittel: String): Long {
         val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedIdent(navIdent)
             ?: throw IllegalStateException("Innlogget bruker er ikke i saksbehandler-tabellen")
         val lagretSøk = lagretSøkRepository.hent(lagretSøkId)
             ?: throw IllegalStateException("Lagret søk med id $lagretSøkId finnes ikke")
         val nyttLagretSøk = lagretSøk.kopier(tittel, saksbehandler)
-        lagretSøkRepository.opprett(nyttLagretSøk)
+        return lagretSøkRepository.opprett(nyttLagretSøk)
     }
 }

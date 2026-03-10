@@ -50,7 +50,7 @@
       "visningsnavn": "Saksnummer",
       "listetype": false,
       "tolkesSom": "String",
-      "visTilBruker": false,
+      "visTilBruker": true,
       "kokriterie": false
     },
     {
@@ -111,7 +111,7 @@
     },
     {
       "id": "tidSidenMottattDato",
-      "visningsnavn": "Tid siden mottatt dato",
+      "visningsnavn": "Dager siden mottatt dato",
       "listetype": false,
       "tolkesSom": "Duration",
       "visTilBruker": true,
@@ -517,7 +517,7 @@
       "visningsnavn": "Journalpost-ID",
       "listetype": false,
       "tolkesSom": "String",
-      "visTilBruker": false,
+      "visTilBruker": true,
       "kokriterie": false
     },
     {

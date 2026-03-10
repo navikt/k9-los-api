@@ -171,6 +171,7 @@ abstract class LøpendeDurationTransientFeltutleder(
     }
 
     override fun select(input: SelectInput): SqlMedParams {
-        return sumLøpendeDuration(input.spørringstrategi, input.now)
+        val sumDuration = sumLøpendeDuration(input.spørringstrategi, input.now)
+        return SqlMedParams("EXTRACT(DAY FROM ${sumDuration.query})::integer", sumDuration.queryParams)
     }
 }
