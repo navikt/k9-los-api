@@ -29,15 +29,15 @@ import io.prometheus.client.exporter.common.TextFormat
 import io.prometheus.client.hotspot.DefaultExports
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
-import no.nav.helse.dusseldorf.ktor.auth.AuthStatusPages
-import no.nav.helse.dusseldorf.ktor.auth.allIssuers
-import no.nav.helse.dusseldorf.ktor.auth.multipleJwtIssuers
-import no.nav.helse.dusseldorf.ktor.core.*
-import no.nav.helse.dusseldorf.ktor.health.HealthReporter
-import no.nav.helse.dusseldorf.ktor.health.HealthRoute
-import no.nav.helse.dusseldorf.ktor.jackson.JacksonStatusPages
-import no.nav.helse.dusseldorf.ktor.jackson.dusseldorfConfigured
-import no.nav.helse.dusseldorf.ktor.metrics.init
+import no.nav.k9.los.ktor.auth.AuthStatusPages
+import no.nav.k9.los.ktor.auth.allIssuers
+import no.nav.k9.los.ktor.auth.multipleJwtIssuers
+import no.nav.k9.los.ktor.core.*
+import no.nav.k9.los.ktor.helsesjekk.HelserapporteringJobb
+import no.nav.k9.los.ktor.helsesjekk.Helsetjeneste
+import no.nav.k9.los.ktor.helsesjekk.helseRoute
+import no.nav.k9.los.ktor.jackson.dusseldorfConfigured
+import no.nav.k9.los.ktor.metrics.init
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventlagerApi
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.kafka.AsynkronProsesseringV1Service
@@ -78,7 +78,6 @@ import org.koin.core.Koin
 import org.koin.core.qualifier.named
 import org.koin.ktor.ext.getKoin
 import org.koin.ktor.plugin.Koin
-import java.time.Duration
 import java.util.*
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
@@ -117,9 +116,8 @@ fun Application.k9Los() {
     }
 
     install(StatusPages) {
-        DefaultStatusPages()
-        JacksonStatusPages()
         AuthStatusPages()
+        DefaultStatusPages()
     }
 
     // må se på om dette skal settes opp med Jobbplanlegger oppstartsjobb
@@ -175,13 +173,8 @@ fun Application.k9Los() {
             }
         }
         DefaultProbeRoutes()
-        HealthRoute(healthService = koin.get())
+        helseRoute(helsetjeneste = koin.get())
 
-        HealthReporter(
-            app = appId,
-            healthService = koin.get(),
-            frequency = Duration.ofMinutes(1)
-        )
 
         if ((KoinProfile.LOCAL == koin.get<KoinProfile>())) {
             localSetup.initSaksbehandlere()
@@ -270,6 +263,7 @@ private fun Route.api() {
 }
 
 fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
+    val appId = environment.config.id()
     val historikkvaskTjeneste = koin.get<HistorikkvaskTjeneste>()
     val eventTilOppgaveAdapter = koin.get<EventTilOppgaveAdapter>()
 
@@ -281,6 +275,8 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
     val perEnhetService = koin.get<FerdigstiltePerEnhetService>()
     val nyeOgFerdigstilteService = koin.get<NyeOgFerdigstilteService>()
     val uttrekkJobb = koin.get<UttrekkJobb>()
+    val helsetjeneste = koin.get<Helsetjeneste>()
+    val helserapporteringsjobb = HelserapporteringJobb(app = appId, helsetjeneste = helsetjeneste)
 
     val høyPrioritet = 0
     val mediumPrioritet = 5
@@ -450,6 +446,17 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
                 intervall = 10.seconds
             ) {
                 uttrekkJobb.kjørAlleUttrekkSomIkkeHarKjørt()
+            }
+        )
+
+        add(
+            PlanlagtJobb.Periodisk(navn = "Helserapportering",
+                prioritet = høyPrioritet,
+                tidsvindu = heleTiden,
+                intervall = 1.minutes,
+                startForsinkelse = 1.minutes,
+            ) {
+                helserapporteringsjobb.sjekkOgRapporter()
             }
         )
 

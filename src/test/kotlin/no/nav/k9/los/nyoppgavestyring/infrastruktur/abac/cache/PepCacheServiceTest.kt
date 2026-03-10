@@ -11,7 +11,7 @@ import io.mockk.verify
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
-import no.nav.helse.dusseldorf.ktor.jackson.dusseldorfConfigured
+import no.nav.k9.los.ktor.jackson.dusseldorfConfigured
 import no.nav.k9.los.AbstractPostgresTest
 import no.nav.k9.los.buildAndTestConfig
 import no.nav.k9.los.nyoppgavestyring.FeltType

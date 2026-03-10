@@ -5,7 +5,7 @@ import io.ktor.client.engine.*
 import io.ktor.client.engine.java.*
 import io.ktor.server.application.*
 import kotlinx.coroutines.channels.Channel
-import no.nav.helse.dusseldorf.ktor.health.HealthService
+import no.nav.k9.los.ktor.helsesjekk.Helsetjeneste
 import no.nav.k9.los.KoinProfile.*
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.adhocjobber.aktivvask.Aktivvask
@@ -275,8 +275,8 @@ fun common(app: Application, config: Configuration) = module {
     }
 
     single {
-        HealthService(
-            healthChecks = get<AsynkronProsesseringV1Service>().isHealtyChecks()
+        Helsetjeneste(
+            helsesjekker = get<AsynkronProsesseringV1Service>().healthChecks
         )
     }
 

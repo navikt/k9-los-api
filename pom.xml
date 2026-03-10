@@ -35,7 +35,6 @@
         <k9-klage.version>0.4.9</k9-klage.version>
         <jackson.version>2.21.1</jackson.version>
         <commons-text.version>1.15.0</commons-text.version>
-        <dusseldorf-ktor.version>7.0.7</dusseldorf-ktor.version>
         <ktor.version>3.4.0</ktor.version>
         <kafka.version>4.2.0</kafka.version>
         <nav-tilgangskontroll.version>3.2024.01.24_10.14-f70bae69bd65</nav-tilgangskontroll.version>
@@ -51,11 +50,6 @@
     </properties>
 
     <repositories>
-        <repository>
-            <id>github-navikt</id>
-            <name>GitHub Packages - navikt</name>
-            <url>https://maven.pkg.github.com/navikt/dusseldorf-ktor</url>
-        </repository>
         <repository>
             <id>central</id>
             <name>Maven Central</name>
@@ -104,31 +98,83 @@
             <version>26.1.0</version>
         </dependency>
 
-        <!-- Server - Dusseldorf Ktor -->
+        <!-- Server - Ktor -->
         <dependency>
-            <groupId>no.nav.helse</groupId>
-            <artifactId>dusseldorf-ktor-core</artifactId>
-            <version>${dusseldorf-ktor.version}</version>
+            <groupId>io.ktor</groupId>
+            <artifactId>ktor-server-netty-jvm</artifactId>
+            <version>${ktor.version}</version>
         </dependency>
         <dependency>
-            <groupId>no.nav.helse</groupId>
-            <artifactId>dusseldorf-ktor-jackson</artifactId>
-            <version>${dusseldorf-ktor.version}</version>
+            <groupId>io.ktor</groupId>
+            <artifactId>ktor-server-content-negotiation-jvm</artifactId>
+            <version>${ktor.version}</version>
         </dependency>
         <dependency>
-            <groupId>no.nav.helse</groupId>
-            <artifactId>dusseldorf-ktor-metrics</artifactId>
-            <version>${dusseldorf-ktor.version}</version>
+            <groupId>io.ktor</groupId>
+            <artifactId>ktor-server-call-id-jvm</artifactId>
+            <version>${ktor.version}</version>
         </dependency>
         <dependency>
-            <groupId>no.nav.helse</groupId>
-            <artifactId>dusseldorf-ktor-health</artifactId>
-            <version>${dusseldorf-ktor.version}</version>
+            <groupId>io.ktor</groupId>
+            <artifactId>ktor-serialization-jackson-jvm</artifactId>
+            <version>${ktor.version}</version>
         </dependency>
         <dependency>
-            <groupId>no.nav.helse</groupId>
-            <artifactId>dusseldorf-ktor-auth</artifactId>
-            <version>${dusseldorf-ktor.version}</version>
+            <groupId>io.ktor</groupId>
+            <artifactId>ktor-server-auth-jwt-jvm</artifactId>
+            <version>${ktor.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.ktor</groupId>
+            <artifactId>ktor-server-metrics-micrometer-jvm</artifactId>
+            <version>${ktor.version}</version>
+        </dependency>
+
+        <!-- Logging -->
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>1.5.26</version>
+        </dependency>
+        <dependency>
+            <groupId>net.logstash.logback</groupId>
+            <artifactId>logstash-logback-encoder</artifactId>
+            <version>9.0</version>
+        </dependency>
+
+        <!-- Jackson -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-jsr310</artifactId>
+        </dependency>
+
+        <!-- Metrics -->
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-prometheus</artifactId>
+            <version>1.16.2</version>
+        </dependency>
+        <dependency>
+            <groupId>io.prometheus</groupId>
+            <artifactId>simpleclient_common</artifactId>
+            <version>0.16.0</version>
+        </dependency>
+        <dependency>
+            <groupId>io.prometheus</groupId>
+            <artifactId>simpleclient_hotspot</artifactId>
+            <version>0.16.0</version>
+        </dependency>
+
+        <!-- OAuth2 -->
+        <dependency>
+            <groupId>com.nimbusds</groupId>
+            <artifactId>oauth2-oidc-sdk</artifactId>
+            <version>11.32</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.ben-manes.caffeine</groupId>
+            <artifactId>caffeine</artifactId>
+            <version>3.2.3</version>
         </dependency>
 
         <!-- Database -->
@@ -202,11 +248,6 @@
             <groupId>io.ktor</groupId>
             <artifactId>ktor-client-java-jvm</artifactId>
             <version>${ktor.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>no.nav.helse</groupId>
-            <artifactId>dusseldorf-oauth2-client</artifactId>
-            <version>${dusseldorf-ktor.version}</version>
         </dependency>
 
         <!-- Kafka -->
@@ -338,12 +379,6 @@
             <groupId>com.willowtreeapps.assertk</groupId>
             <artifactId>assertk-jvm</artifactId>
             <version>${assertk.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>no.nav.helse</groupId>
-            <artifactId>dusseldorf-test-support</artifactId>
-            <version>${dusseldorf-ktor.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
