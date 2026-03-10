@@ -169,34 +169,6 @@ class OppgaveKoRepository(
 
     fun hentKoerMedOppgittSaksbehandler(
         tx: TransactionalSession,
-        saksbehandlerEpost: String,
-        skjermet: Boolean,
-        medSaksbehandlere: Boolean = true
-    ): List<OppgaveKo> {
-        return tx.run(
-            queryOf(
-                """
-                    select id, versjon, tittel, beskrivelse, query, fritt_valg_av_oppgave, endret_tidspunkt, skjermet
-                    from OPPGAVEKO_V3 ko
-                    where skjermet = :skjermet AND
-                    exists (
-                        select *
-                        from oppgaveko_saksbehandler s
-                        where s.oppgaveko_v3_id = ko.id
-                        and s.saksbehandler_epost = lower(:saksbehandler_epost)
-                        )""",
-                mapOf(
-                    "saksbehandler_epost" to saksbehandlerEpost,
-                    "skjermet" to skjermet
-                )
-            ).map { row ->
-                row.tilOppgaveKo(objectMapper, medSaksbehandlere, tx)
-            }.asList
-        )
-    }
-
-    fun hentKoerMedOppgittSaksbehandler(
-        tx: TransactionalSession,
         saksbehandlerId: Long,
         skjermet: Boolean,
         medSaksbehandlere: Boolean

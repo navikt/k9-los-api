@@ -109,9 +109,12 @@ fun Route.OppgaveKoApis() {
     get("/saksbehandlerskoer") {
         requestContextService.withRequestContext(call) {
             if (pepClient.harBasisTilgang()) {
+                val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedIdent(
+                    kotlin.coroutines.coroutineContext.idToken().getNavIdent()
+                )!!
                 call.respond(
                     oppgaveKoTjeneste.hentKøerForSaksbehandler(
-                        kotlin.coroutines.coroutineContext.idToken().getUsername(),
+                        saksbehandler.id!!,
                         pepClient.harTilgangTilKode6()
                     )
                 )

@@ -50,7 +50,7 @@ class SaksbehandlerAdminTjeneste(
 
         transactionalManager.transaction { tx ->
             // V3-modellen: Sletter køer saksbehandler er med i
-            oppgaveKøV3Repository.hentKoerMedOppgittSaksbehandler(tx, saksbehandler.epost, skjermet, true).forEach { kø ->
+            oppgaveKøV3Repository.hentKoerMedOppgittSaksbehandler(tx, saksbehandler.id!!, skjermet, true).forEach { kø ->
                 oppgaveKøV3Repository.endre(tx, kø.copy(saksbehandlere = kø.saksbehandlere - saksbehandler.epost), skjermet)
             }
 
@@ -76,7 +76,7 @@ class SaksbehandlerAdminTjeneste(
 
         transactionalManager.transaction { tx ->
             // V3-modellen: Sletter køer saksbehandler er med i
-            oppgaveKøV3Repository.hentKoerMedOppgittSaksbehandler(tx, epost, skjermet, true).forEach { kø ->
+            oppgaveKøV3Repository.hentKoerMedOppgittSaksbehandler(tx, saksbehandler.id!!, skjermet, true).forEach { kø ->
                 oppgaveKøV3Repository.endre(tx, kø.copy(saksbehandlere = kø.saksbehandlere - epost), skjermet)
             }
 
