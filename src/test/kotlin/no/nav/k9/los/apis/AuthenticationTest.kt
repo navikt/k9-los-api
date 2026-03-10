@@ -1,6 +1,5 @@
 package no.nav.k9.los.apis
 
-import com.github.tomakehurst.wiremock.WireMockServer
 import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.server.application.*
@@ -15,28 +14,26 @@ import no.nav.k9.los.ktor.auth.*
 import no.nav.k9.los.ktor.core.DefaultStatusPages
 import no.nav.k9.los.ktor.core.logRequests
 import no.nav.k9.los.testsupport.jws.Azure
-import no.nav.k9.los.testsupport.wiremock.WireMockBuilder
-import no.nav.k9.los.testsupport.wiremock.getAzureV2JwksUrl
+import no.nav.k9.los.testsupport.jws.StaticJwkProvider
 import org.junit.jupiter.api.Test
-import java.net.URI
 import kotlin.test.assertEquals
 
 class AuthenticationTest {
 
+    private val jwkProvider = StaticJwkProvider(Azure.V2_0.getPublicJwk())
+
     @Test
     fun `POST request med og uten CORS`() {
-        val wireMock = WireMockBuilder().withAzureSupport().build()
-
         testApplication {
             application {
-                testApp(wireMock = wireMock, cors = true)
+                testApp(cors = true)
             }
             sendJsonRequest(forventetHttpResponseCode = HttpStatusCode.Forbidden)
         }
 
         testApplication {
             application {
-                testApp(wireMock = wireMock, cors = false)
+                testApp(cors = false)
             }
             sendJsonRequest(forventetHttpResponseCode = HttpStatusCode.NoContent)
             sendJsonRequest(
@@ -45,8 +42,6 @@ class AuthenticationTest {
                 )
             )
         }
-
-        wireMock.stop()
     }
 
     private suspend fun ApplicationTestBuilder.sendJsonRequest(
@@ -62,10 +57,7 @@ class AuthenticationTest {
         assertEquals(forventetHttpResponseCode, response.status)
     }
 
-    private fun Application.testApp(
-        wireMock: WireMockServer,
-        cors: Boolean
-    ) {
+    private fun Application.testApp(cors: Boolean) {
         install(CallLogging) {
             logRequests()
         }
@@ -76,9 +68,9 @@ class AuthenticationTest {
 
         val azureV2 = Issuer(
             issuer = Azure.V2_0.getIssuer(),
-            jwksUri = URI(wireMock.getAzureV2JwksUrl()),
             audience = "k9-los-api",
-            alias = "azure-v2"
+            alias = "azure-v2",
+            jwkProvider = jwkProvider
         )
 
         val issuers = mapOf(
