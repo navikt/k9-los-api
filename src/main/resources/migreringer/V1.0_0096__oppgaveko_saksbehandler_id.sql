@@ -4,7 +4,7 @@ alter table oppgaveko_saksbehandler
 update oppgaveko_saksbehandler
 set saksbehandler_id = saksbehandler.id
 from saksbehandler
-where oppgaveko_saksbehandler.saksbehandler_epost = saksbehandler.epost;
+where lower(oppgaveko_saksbehandler.saksbehandler_epost) = lower(saksbehandler.epost);
 
 alter table oppgaveko_saksbehandler
     add constraint oppgaveko_saksbehandler_id_fkey

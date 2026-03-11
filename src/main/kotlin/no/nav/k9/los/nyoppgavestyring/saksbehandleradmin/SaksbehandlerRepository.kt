@@ -195,12 +195,15 @@ class SaksbehandlerRepository(
             ).asUpdate
         )
 
-        queryOf(
-            """
+        tx.run(
+            queryOf(
+                """
                     delete from reservasjon_v3 where reservertav = :saksbehandlerId
                 """.trimIndent(),
-            mapOf("saksbehandlerId" to saksbehandlerId)
-        ).asUpdate
+                mapOf("saksbehandlerId" to saksbehandlerId)
+            ).asUpdate
+        )
+
 
         tx.run(
             queryOf(
