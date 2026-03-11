@@ -109,9 +109,12 @@ fun Route.OppgaveKoApis() {
     get("/saksbehandlerskoer") {
         requestContextService.withRequestContext(call) {
             if (pepClient.harBasisTilgang()) {
+                val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedIdent(
+                    kotlin.coroutines.coroutineContext.idToken().getNavIdent()
+                )!!
                 call.respond(
                     oppgaveKoTjeneste.hentKøerForSaksbehandler(
-                        kotlin.coroutines.coroutineContext.idToken().getUsername(),
+                        saksbehandler.id!!,
                         pepClient.harTilgangTilKode6()
                     )
                 )
@@ -208,8 +211,8 @@ fun Route.OppgaveKoApis() {
         requestContextService.withRequestContext(call) {
             if (pepClient.harTilgangTilReserveringAvOppgaver()) {
                 val oppgavekøId = call.parameters["id"]!!
-                val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedEpost(
-                    kotlin.coroutines.coroutineContext.idToken().getUsername()
+                val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedIdent(
+                    kotlin.coroutines.coroutineContext.idToken().getNavIdent()
                 )!!
                 val oppgaveMuligReservert = oppgaveKoTjeneste.taReservasjonFraKø(
                     innloggetBrukerId = innloggetBruker.id!!,

@@ -94,6 +94,7 @@ class OppgaveKoRepository(
             beskrivelse = string("beskrivelse"),
             oppgaveQuery = objectMapper.readValue(string("query"), OppgaveQuery::class.java),
             frittValgAvOppgave = boolean("fritt_valg_av_oppgave"),
+            saksbehandlerIds = if (medSaksbehandlere) hentKoSaksbehandlerIds(tx, long("id")) else emptyList(),
             saksbehandlere = if (medSaksbehandlere) hentKoSaksbehandlere(tx, long("id")) else emptyList(),
             endretTidspunkt = localDateTimeOrNull("endret_tidspunkt"),
             skjermet = boolean("skjermet")
@@ -168,34 +169,6 @@ class OppgaveKoRepository(
 
     fun hentKoerMedOppgittSaksbehandler(
         tx: TransactionalSession,
-        saksbehandlerEpost: String,
-        skjermet: Boolean,
-        medSaksbehandlere: Boolean = true
-    ): List<OppgaveKo> {
-        return tx.run(
-            queryOf(
-                """
-                    select id, versjon, tittel, beskrivelse, query, fritt_valg_av_oppgave, endret_tidspunkt, skjermet
-                    from OPPGAVEKO_V3 ko
-                    where skjermet = :skjermet AND
-                    exists (
-                        select *
-                        from oppgaveko_saksbehandler s
-                        where s.oppgaveko_v3_id = ko.id
-                        and s.saksbehandler_epost = lower(:saksbehandler_epost)
-                        )""",
-                mapOf(
-                    "saksbehandler_epost" to saksbehandlerEpost,
-                    "skjermet" to skjermet
-                )
-            ).map { row ->
-                row.tilOppgaveKo(objectMapper, medSaksbehandlere, tx)
-            }.asList
-        )
-    }
-
-    fun hentKoerMedOppgittSaksbehandler(
-        tx: TransactionalSession,
         saksbehandlerId: Long,
         skjermet: Boolean,
         medSaksbehandlere: Boolean
@@ -234,15 +207,29 @@ class OppgaveKoRepository(
         )
     }
 
+    private fun hentKoSaksbehandlerIds(tx: TransactionalSession, oppgavekoV3Id: Long): List<Long> {
+        return tx.run(
+            queryOf(
+                "SELECT saksbehandler_id FROM OPPGAVEKO_SAKSBEHANDLER WHERE oppgaveko_v3_id = :oppgavekoV3Id",
+                mapOf(
+                    "oppgavekoV3Id" to oppgavekoV3Id
+                )
+            ).map { row -> row.long("saksbehandler_id") }.asList
+        )
+    }
+
     private fun lagreKoSaksbehandlere(tx: TransactionalSession, oppgaveKo: OppgaveKo) {
         fjernAlleSaksbehandlereFraOppgaveKo(tx, oppgaveKo.id)
-        oppgaveKo.saksbehandlere.forEach {
+        oppgaveKo.saksbehandlerIds.forEach { id ->
             tx.run(
                 queryOf(
-                    "INSERT INTO OPPGAVEKO_SAKSBEHANDLER (oppgaveko_v3_id, saksbehandler_epost) VALUES (:oppgavekoV3Id, :epost)",
+                    """
+                    INSERT INTO OPPGAVEKO_SAKSBEHANDLER (oppgaveko_v3_id, saksbehandler_id, saksbehandler_epost) 
+                    SELECT :oppgavekoV3Id, :saksbehandlerId, epost FROM saksbehandler WHERE id = :saksbehandlerId
+                    """,
                     mapOf(
                         "oppgavekoV3Id" to oppgaveKo.id,
-                        "epost" to it
+                        "saksbehandlerId" to id
                     )
                 ).asUpdate
             )
@@ -298,6 +285,7 @@ class OppgaveKoRepository(
         val oppdatertNyOppgaveko = nyOppgaveKo.copy(
             oppgaveQuery = if (taMedQuery) gammelOppgaveKo.oppgaveQuery else nyOppgaveKo.oppgaveQuery,
             saksbehandlere = if (taMedSaksbehandlere) gammelOppgaveKo.saksbehandlere else nyOppgaveKo.saksbehandlere,
+            saksbehandlerIds = if (taMedSaksbehandlere) gammelOppgaveKo.saksbehandlerIds else nyOppgaveKo.saksbehandlerIds,
             beskrivelse = gammelOppgaveKo.beskrivelse,
             frittValgAvOppgave = gammelOppgaveKo.frittValgAvOppgave
         )

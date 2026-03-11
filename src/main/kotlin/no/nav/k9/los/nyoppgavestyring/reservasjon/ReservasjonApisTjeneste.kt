@@ -237,6 +237,7 @@ class ReservasjonApisTjeneste(
                     ReservasjonDto(
                         reservertAvEpost = saksbehandler.epost,
                         reservertAvIdent = saksbehandler.brukerIdent!!,
+                        reservertAvId = saksbehandler.id!!,
                         reservertAvNavn = saksbehandler.navn,
                         saksnummer = oppgave.hentVerdi("saksnummer"), //TODO: Oppgaveagnostisk logikk. Løses antagelig ved å skrive om frontend i dette tilfellet
                         journalpostId = oppgave.hentVerdi("journalpostId"),
