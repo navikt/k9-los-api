@@ -109,32 +109,14 @@ class ReservasjonV3Tjeneste(
             }
             reservasjon
         } catch (e: AlleredeReservertException) {
-            val aktivReservasjon = reservasjonV3Repository.hentAktivReservasjonForReservasjonsnøkkel(
-                reservasjonsnøkkel,
-                tx
-            )!!
-
-            if (reserverForId != aktivReservasjon.reservertAv) { // reservert av andre
-                log.info("ForsøkReservasjonOgReturnerAktiv: AktivReservasjon ${aktivReservasjon} allerede reservert av annen saksbehandler. Utført av $utføresAvId, forsøkt reservert for $reserverForId")
-                aktivReservasjon
-            } else if (aktivReservasjon.gyldigTil < gyldigTil) {
-                log.info("ForsøkReservasjonOgReturnerAktiv: Sb $reserverForId har allerede reservasjonen ${aktivReservasjon}. Forlenger. Utført av $utføresAvId.")
-                reservasjonV3Repository.forlengReservasjon(
-                    aktivReservasjon,
-                    endretAvBrukerId = utføresAvId,
-                    nyTildato = gyldigTil,
-                    kommentar = kommentar ?: aktivReservasjon.kommentar,
-                    tx
-                )
-            } else {
-                log.info("ForsøkReservasjonOgReturnerAktiv: Sb $reserverForId har allerede reservasjonen med id $aktivReservasjon")
-
-                //allerede reservert lengre enn ønsket
-                // TODO: kort ned reservasjon i stedet? Avklaring neste uke. Sjekke opp mot V1-logikken
-                // Alt 1. - kort ned reservasjon dersom det er innlogget bruker sin reservasjon som endres. Ellers IllegalArgument.
-                // Alt 2. - Alltid feilmelding eller "ikke utført", for så å tvinge kall mot "endre reservasjon()" eller lignenden
-                aktivReservasjon
+            val aktivReservasjon = transactionalManager.transaction { tx2 ->
+                reservasjonV3Repository.hentAktivReservasjonForReservasjonsnøkkel(
+                    reservasjonsnøkkel,
+                    tx2
+                )!!
             }
+            log.info("ForsøkReservasjonOgReturnerAktiv: Reservasjonsnøkkel $reservasjonsnøkkel allerede reservert. Utført av $utføresAvId, forsøkt reservert for $reserverForId")
+            aktivReservasjon
         }
     }
 
