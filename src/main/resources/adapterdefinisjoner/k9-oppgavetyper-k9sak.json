@@ -267,7 +267,8 @@
         {
           "id": "direkteutbetaling",
           "visPåOppgave": true,
-          "påkrevd": false
+          "påkrevd": true,
+          "defaultverdi": false
         },
         {
           "id": "søknadsårsak",
