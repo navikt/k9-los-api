@@ -470,7 +470,15 @@
       "listetype": false,
       "tolkesSom": "boolean",
       "visTilBruker": true,
-      "kokriterie": false
+      "kokriterie": true
+    },
+    {
+      "id": "direkteutbetaling",
+      "visningsnavn": "Direkteutbetaling til søker",
+      "listetype": false,
+      "tolkesSom": "boolean",
+      "visTilBruker": true,
+      "kokriterie": true
     },
     {
       "id": "søknadsårsak",

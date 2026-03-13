@@ -331,6 +331,10 @@ class SakEventTilOppgaveMapper(
                 nøkkel = "utenlandstilsnitt",
                 verdi = event.merknader.contains(BehandlingMerknadType.UTENLANDSTILSNITT).toString()
             ),
+            OppgaveFeltverdiDto(
+                nøkkel = "direkteutbetaling",
+                verdi = event.merknader.contains(BehandlingMerknadType.DIREKTEUTBETALING).toString()
+            ),
             if (event.merknader.contains(BehandlingMerknadType.HASTESAK)) {
                 OppgaveFeltverdiDto(
                     nøkkel = "hastesak",
