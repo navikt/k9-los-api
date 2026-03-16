@@ -26,10 +26,11 @@ internal fun Route.InnloggetBrukerApi() {
         if (configuration.koinProfile() != KoinProfile.LOCAL) {
             requestContextService.withRequestContext(call) {
                 val token = call.idToken()
+                log.info("Henter innlogget saksbehandler med epost ${token.getUsername()} og navn ${token.getName()}")
                 val saksbehandlerIdent = azureGraphService.hentIdentTilInnloggetBruker()
                 val saksbehandler =
                     saksbehandlerRepository.finnSaksbehandlerMedIdent(token.getNavIdent())
-                if (saksbehandlerIdent == null) {
+                if (saksbehandler == null) {
                     log.warn("Saksbehandler med epost ${token.getUsername()} finnes ikke i saksbehandlertabell, og kan derfor ikke oppdateres")
                 }
                 val finnesISaksbehandlerTabell = saksbehandler != null
