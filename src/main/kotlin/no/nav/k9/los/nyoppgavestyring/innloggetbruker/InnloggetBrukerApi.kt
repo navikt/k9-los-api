@@ -30,6 +30,7 @@ internal fun Route.InnloggetBrukerApi() {
                 val saksbehandlerIdent = azureGraphService.hentIdentTilInnloggetBruker()
                 val saksbehandler =
                     saksbehandlerRepository.finnSaksbehandlerMedIdent(token.getNavIdent())
+                        ?: saksbehandlerRepository.finnSaksbehandlerMedEpost(token.getUsername())
                 if (saksbehandler == null) {
                     log.warn("Saksbehandler med epost ${token.getUsername()} finnes ikke i saksbehandlertabell, og kan derfor ikke oppdateres")
                 }
