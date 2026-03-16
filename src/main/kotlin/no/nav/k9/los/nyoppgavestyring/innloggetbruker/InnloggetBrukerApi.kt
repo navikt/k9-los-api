@@ -11,6 +11,7 @@ import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.RequestContextService
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
 import org.koin.ktor.ext.inject
+import org.slf4j.LoggerFactory
 
 internal fun Route.InnloggetBrukerApi() {
     val pepClient by inject<IPepClient>()
@@ -19,6 +20,8 @@ internal fun Route.InnloggetBrukerApi() {
     val azureGraphService by inject<IAzureGraphService>()
     val configuration by inject<Configuration>()
 
+    val log = LoggerFactory.getLogger("InnloggetBrukerApi")
+
     get("/saksbehandler") {
         if (configuration.koinProfile() != KoinProfile.LOCAL) {
             requestContextService.withRequestContext(call) {
@@ -26,6 +29,9 @@ internal fun Route.InnloggetBrukerApi() {
                 val saksbehandlerIdent = azureGraphService.hentIdentTilInnloggetBruker()
                 val saksbehandler =
                     saksbehandlerRepository.finnSaksbehandlerMedIdent(token.getNavIdent())
+                if (saksbehandlerIdent == null) {
+                    log.warn("Saksbehandler med epost ${token.getUsername()} finnes ikke i saksbehandlertabell, og kan derfor ikke oppdateres")
+                }
                 val finnesISaksbehandlerTabell = saksbehandler != null
 
                 val innloggetBrukerDto = InnloggetBrukerDto(
@@ -39,6 +45,9 @@ internal fun Route.InnloggetBrukerApi() {
                     kanDrifte = pepClient.kanLeggeUtDriftsmelding(),
                     finnesISaksbehandlerTabell = finnesISaksbehandlerTabell
                 )
+                if (!innloggetBrukerDto.kanSaksbehandle) {
+                    log.warn("Saksbehandler med epost ${token.getUsername()} har ikke basistilgang, og kan derfor ikke bruke systemet")
+                }
                 if (finnesISaksbehandlerTabell) {
                     //  oppdaterer saksbehandler i tabell etter at epost er lagt inn av avdelingsleder
                     saksbehandlerRepository.addSaksbehandler(
