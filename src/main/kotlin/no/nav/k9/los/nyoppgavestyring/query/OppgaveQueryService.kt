@@ -80,34 +80,6 @@ class OppgaveQueryService {
     }
 
     @WithSpan
-    fun queryToFile(oppgaveQuery: QueryRequest, idToken: IIdToken): String {
-        return using(sessionOf(datasource)) {
-            it.transaction { tx -> queryToFile(tx, oppgaveQuery, idToken) }
-        }
-    }
-
-    @WithSpan
-    fun queryToFile(tx: TransactionalSession, oppgaveQuery: QueryRequest, idToken: IIdToken): String {
-        val oppgaver = query(tx, oppgaveQuery, idToken)
-        if (oppgaver.isEmpty()) {
-            return ""
-        }
-
-        val oppgaverad = oppgaver[0]
-        val oppgavefelter = oppgaveQueryRepository.hentAlleFelter().felter.associateBy {
-            it.område + it.kode
-        }
-
-        val header = oppgaverad.joinToString(";") { oppgavefelter[it.område + it.kode]?.visningsnavn ?: "" }
-
-        return header + "\n" + oppgaver.joinToString("\n") { or: Oppgaverad ->
-            or.joinToString(";") {
-                if (it.verdi == null) "" else it.verdi.toString()
-            }
-        }
-    }
-
-    @WithSpan
     fun query(oppgaveQuery: QueryRequest, idToken: IIdToken): List<Oppgaverad> {
         return using(sessionOf(datasource)) {
             it.transaction { tx -> query(tx, oppgaveQuery, idToken) }
