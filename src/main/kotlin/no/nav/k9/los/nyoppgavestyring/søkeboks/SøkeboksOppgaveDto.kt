@@ -56,7 +56,7 @@ data class SøkeboksOppgaveDto(
         oppgavebehandlingsUrl = oppgaveV3.getOppgaveBehandlingsurl(),
         reservasjonsnøkkel = oppgaveV3.reservasjonsnøkkel,
         reservertAvSaksbehandlerNavn = reservertAv?.navn,
-        reservertAvSaksbehandlerIdent = reservertAv?.brukerIdent,
+        reservertAvSaksbehandlerIdent = reservertAv?.navident,
         reservertTom = reservasjon?.gyldigTil,
     )
 }

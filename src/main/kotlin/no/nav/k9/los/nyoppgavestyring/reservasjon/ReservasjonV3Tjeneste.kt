@@ -398,7 +398,7 @@ class ReservasjonV3Tjeneste(
         if (!hosBeslutter) return false
         val ansvarligSaksbehandlerIdent = oppgave.hentVerdi("ansvarligSaksbehandler") //TODO gjøre oppgavetypeagnostisk
             ?: throw IllegalStateException("Kan ikke beslutte på oppgave uten ansvarlig saksbehandler")
-        val saksbehandlerIdentSomSkalHaReservasjon = saksbehandler.brukerIdent
+        val saksbehandlerIdentSomSkalHaReservasjon = saksbehandler.navident
 
         return ansvarligSaksbehandlerIdent == saksbehandlerIdentSomSkalHaReservasjon
     }

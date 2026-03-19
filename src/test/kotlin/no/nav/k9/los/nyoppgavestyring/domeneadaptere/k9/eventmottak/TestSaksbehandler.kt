@@ -22,28 +22,25 @@ class TestSaksbehandler: KoinTest {
     companion object {
         val SARA = Saksbehandler(
             id = 1,
-            brukerIdent = "Z123456",
+            navident = "Z123456",
             navn = "Sara Saksbehandler",
             epost = "sara.saksbehandler@nav.no",
-            reservasjoner = mutableSetOf(),
             enhet = "2830 NAV DRIFT"
         )
 
         val BIRGER_BESLUTTER = Saksbehandler(
             id = 2,
-            brukerIdent = "Z654321",
+            navident = "Z654321",
             navn = "Birger Beslutter",
             epost = "birger.beslutter@nav.no",
-            reservasjoner = mutableSetOf(),
             enhet = "2830 NAV DRIFT"
         )
 
         val KJERSTI_SKJERMET = Saksbehandler(
             id = 3,
-            brukerIdent = "Z999999",
+            navident = "Z999999",
             navn = "Kjersti Skjermet",
             epost = "kjersti.skjermet@nav.no",
-            reservasjoner = mutableSetOf(),
             enhet = "SKJERMET"
         )
 

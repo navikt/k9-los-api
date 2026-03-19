@@ -55,10 +55,9 @@ internal fun Route.InnloggetBrukerApi() {
                     saksbehandlerRepository.addSaksbehandler(
                         Saksbehandler(
                             id = null,
-                            brukerIdent = saksbehandlerIdent,
+                            navident = saksbehandlerIdent,
                             navn = token.getName(),
                             epost = token.getUsername(),
-                            reservasjoner = mutableSetOf(),
                             enhet = azureGraphService.hentEnhetForInnloggetBruker()
                         )
                     )
