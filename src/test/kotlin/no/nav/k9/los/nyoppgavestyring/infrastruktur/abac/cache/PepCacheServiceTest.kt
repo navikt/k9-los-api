@@ -66,7 +66,7 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
     private val logger: Logger = LoggerFactory.getLogger(PepCacheServiceTest::class.java)
 
     @AfterEach
-    fun rivKoin() {
+    fun stoppKoin() {
         stopKoin()
     }
 
