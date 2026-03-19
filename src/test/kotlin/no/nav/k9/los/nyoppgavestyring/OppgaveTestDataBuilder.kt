@@ -114,6 +114,9 @@ enum class FeltType(
     TID_FORSTE_GANG_HOS_BESLUTTER("tidFørsteGangHosBeslutter"),
     FERDIGSTILT_DATO("ferdigstiltDato", tolkesSom = "Timestamp", område = null),
     SPØRRINGSTRATEGI("spørringstrategi", område = null),
+    AVVENTER_SAKSBEHANDLER("avventerSaksbehandler", tolkesSom = "boolean"),
+    AKKUMULERT_VENTETID_SAKSBEHANDLER("akkumulertVentetidSaksbehandler", tolkesSom = "Duration"),
+    AKKUMULERT_VENTETID_SAKSBEHANDLER_TIDLIGERE("akkumulertVentetidSaksbehandlerForTidligereVersjoner", tolkesSom = "Duration"),
 }
 
 val felter: Map<OmrådeOgKode, OppgavefeltMedMer> = mapOf(
