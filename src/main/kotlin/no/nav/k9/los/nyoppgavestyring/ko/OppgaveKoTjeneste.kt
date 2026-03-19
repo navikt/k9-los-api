@@ -136,21 +136,6 @@ class OppgaveKoTjeneste(
 
     @WithSpan
     fun hentKøerForSaksbehandler(
-        saksbehandlerEpost: String,
-        skjermet: Boolean
-    ): List<OppgaveKo> {
-        return transactionalManager.transaction { tx ->
-            oppgaveKoRepository.hentKoerMedOppgittSaksbehandler(
-                tx = tx,
-                saksbehandlerEpost = saksbehandlerEpost,
-                medSaksbehandlere = false,
-                skjermet = skjermet
-            )
-        }
-    }
-
-    @WithSpan
-    fun hentKøerForSaksbehandler(
         saksbehandlerId: Long,
         skjermet: Boolean
     ): List<OppgaveKo> {

@@ -59,15 +59,16 @@ class OppgaveKoTest : AbstractK9LosIntegrationTest() {
         assertThat(oppgaveKo.tittel).isEqualTo(tittel)
 
         val saksbehandlerepost = "a@b"
-        mockLeggTilSaksbehandler(saksbehandlerepost)
+        val saksbehandlerId = mockLeggTilSaksbehandler(saksbehandlerepost)
 
-        val oppgaveKoFraDb = oppgaveKoRepository.endre(oppgaveKo.copy(saksbehandlere = listOf(saksbehandlerepost)), false)
+
+        val oppgaveKoFraDb = oppgaveKoRepository.endre(oppgaveKo.copy(saksbehandlere = listOf(saksbehandlerepost), saksbehandlerIds = listOf(saksbehandlerId)), false)
         assertThat(oppgaveKoFraDb.saksbehandlere).contains(saksbehandlerepost)
         assertThat(oppgaveKoFraDb.saksbehandlere).hasSize(1)
 
         val saksbehandlerepost2 = "b@c"
-        mockLeggTilSaksbehandler(saksbehandlerepost2)
-        val oppgaveKoFraDb2 = oppgaveKoRepository.endre(oppgaveKoFraDb.copy(saksbehandlere = listOf(saksbehandlerepost2)), false)
+        val saksbehandlerId2 = mockLeggTilSaksbehandler(saksbehandlerepost2)
+        val oppgaveKoFraDb2 = oppgaveKoRepository.endre(oppgaveKoFraDb.copy(saksbehandlere = listOf(saksbehandlerepost2), saksbehandlerIds = listOf(saksbehandlerId2)), false)
         assertThat(oppgaveKoFraDb2.saksbehandlere).contains(saksbehandlerepost2)
         assertThat(oppgaveKoFraDb2.saksbehandlere).hasSize(1)
 
@@ -81,8 +82,8 @@ class OppgaveKoTest : AbstractK9LosIntegrationTest() {
         val tittel = "Testkø"
         val saksbehandlerepost = "a@b"
         val oppgaveKo = oppgaveKoRepository.leggTil(tittel, skjermet = false)
-        mockLeggTilSaksbehandler(saksbehandlerepost)
-        val gammelOppgaveko = oppgaveKoRepository.endre(oppgaveKo.copy(saksbehandlere = listOf(saksbehandlerepost)), false)
+        val saksbehandlerId = mockLeggTilSaksbehandler(saksbehandlerepost)
+        val gammelOppgaveko = oppgaveKoRepository.endre(oppgaveKo.copy(saksbehandlere = listOf(saksbehandlerepost), saksbehandlerIds = listOf(saksbehandlerId)), false)
 
         val nyTittel = "Ny tittel"
         val nyOppgaveKo = oppgaveKoRepository.kopier(gammelOppgaveko.id, nyTittel,
@@ -95,14 +96,14 @@ class OppgaveKoTest : AbstractK9LosIntegrationTest() {
         assertThat(nyOppgaveKo.tittel).isEqualTo(nyTittel)
     }
 
-    private fun mockLeggTilSaksbehandler(saksbehandlerepost: String) {
+    private fun mockLeggTilSaksbehandler(saksbehandlerepost: String): Long {
         val pepClient = mockk<IPepClient>()
         val saksbehandlerRepository = SaksbehandlerRepository(dataSource, pepClient, transactionalManager = get())
         coEvery {
             pepClient.harTilgangTilKode6()
         } returns true
 
-        runBlocking {
+        return runBlocking {
             saksbehandlerRepository.addSaksbehandler(
                 Saksbehandler(
                     id = null,

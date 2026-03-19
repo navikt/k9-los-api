@@ -111,7 +111,7 @@
     },
     {
       "id": "tidSidenMottattDato",
-      "visningsnavn": "Tid siden mottatt dato",
+      "visningsnavn": "Dager siden mottatt dato",
       "listetype": false,
       "tolkesSom": "Duration",
       "visTilBruker": true,
@@ -470,7 +470,15 @@
       "listetype": false,
       "tolkesSom": "boolean",
       "visTilBruker": true,
-      "kokriterie": false
+      "kokriterie": true
+    },
+    {
+      "id": "direkteutbetaling",
+      "visningsnavn": "Direkteutbetaling til søker",
+      "listetype": false,
+      "tolkesSom": "boolean",
+      "visTilBruker": true,
+      "kokriterie": true
     },
     {
       "id": "søknadsårsak",
