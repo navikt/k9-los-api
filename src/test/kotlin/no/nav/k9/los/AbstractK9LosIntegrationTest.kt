@@ -9,13 +9,13 @@ import org.koin.test.KoinTest
 abstract class AbstractK9LosIntegrationTest: AbstractPostgresTest(), KoinTest {
 
     @BeforeEach
-    fun opprettKoin() {
+    fun startKoin() {
         stopKoin()
         startKoin { modules(buildAndTestConfig(dataSource)) }
     }
 
     @AfterEach
-    fun rivKoin() {
+    fun stoppKoin() {
         stopKoin()
     }
 
