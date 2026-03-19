@@ -7,6 +7,7 @@ import no.nav.k9.los.nyoppgavestyring.query.dto.query.CombineOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.Oppgavefilter
 import org.postgresql.util.PGInterval
+import java.time.Duration
 
 object OppgavefilterDatatypeMapper {
     fun map(felter: Map<OmrådeOgKode, OppgavefeltMedMer>, oppgavefiltere: List<Oppgavefilter>): List<Oppgavefilter> {
@@ -32,12 +33,22 @@ object OppgavefilterDatatypeMapper {
                 when {
                     verdi == null || verdi !is String -> verdi
                     datatype == Datatype.INTEGER -> verdi.toLong()
-                    datatype == Datatype.DURATION -> PGInterval(verdi)
+                    datatype == Datatype.DURATION -> iso8601TilPGInterval(verdi)
                     // Datatype.TIMESTAMP -> filter.copy(verdi = listOf(LocalDateTime.parse(verdi)))
                     // Datatype.BOOLEAN -> filter.copy(verdi = listOf(verdi.toBoolean()))
                     else -> verdi
                 }
             }
         )
+    }
+
+    private fun iso8601TilPGInterval(iso8601: String): PGInterval {
+        val duration = Duration.parse(iso8601)
+        val totalSeconds = duration.seconds
+        val days = (totalSeconds / 86400).toInt()
+        val hours = ((totalSeconds % 86400) / 3600).toInt()
+        val minutes = ((totalSeconds % 3600) / 60).toInt()
+        val seconds = (totalSeconds % 60).toDouble()
+        return PGInterval(0, 0, days, hours, minutes, seconds)
     }
 }
