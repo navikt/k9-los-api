@@ -503,10 +503,6 @@
                     <consoleOutputReporter>
                         <disable>false</disable>
                     </consoleOutputReporter>
-                    <!-- System properties for TestContainers -->
-                    <systemPropertyVariables>
-                        <testcontainers.reuse.enable>true</testcontainers.reuse.enable>
-                    </systemPropertyVariables>
                     <!-- Increase timeout for container startup -->
                     <forkedProcessTimeoutInSeconds>600</forkedProcessTimeoutInSeconds>
                 </configuration>
