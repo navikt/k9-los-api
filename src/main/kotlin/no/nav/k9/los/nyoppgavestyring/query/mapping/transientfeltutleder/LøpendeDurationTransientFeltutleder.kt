@@ -117,10 +117,7 @@ abstract class LøpendeDurationTransientFeltutleder(
     }
 
     private fun områdeOgKodeSql(områdeOgKode: OmrådeOgKode, spørringstrategi: Spørringstrategi) =
-        when (spørringstrategi) {
-            Spørringstrategi.PARTISJONERT -> "ov.feltdefinisjon_ekstern_id = '${områdeOgKode.kode}'"
-            Spørringstrategi.AKTIV -> "ov.omrade_ekstern_id = '${områdeOgKode.område}' AND ov.feltdefinisjon_ekstern_id = '${områdeOgKode.kode}'"
-        }
+        "ov.feltdefinisjon_ekstern_id = '${områdeOgKode.kode}'"
 
     override fun hentVerdi(input: HentVerdiInput): List<String> {
         var løpendeDuration = Duration.ZERO

@@ -12,7 +12,7 @@ import no.nav.k9.los.nyoppgavestyring.ko.*
 import no.nav.k9.los.nyoppgavestyring.ko.db.OppgaveKoRepository
 import no.nav.k9.los.nyoppgavestyring.ko.dto.OppgaveKo
 import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.AktivOppgaveRepository
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.PartisjonertOppgaveRepository
 import no.nav.k9.los.nyoppgavestyring.query.Avgrensning
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
 import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
@@ -24,7 +24,7 @@ import java.util.*
 class RefreshK9v3Tjeneste(
     val k9SakService: IK9SakService,
     val oppgaveQueryService: OppgaveQueryService,
-    val aktivOppgaveRepository: AktivOppgaveRepository,
+    val partisjonertOppgaveRepository: PartisjonertOppgaveRepository,
     val oppgaveKoRepository: OppgaveKoRepository,
     val transactionalManager: TransactionalManager,
     val antallPrKø: Int = 10
@@ -133,7 +133,7 @@ class RefreshK9v3Tjeneste(
                 }
             }
             DetaljerMetrikker.time("RefreshK9V3", "refreshForKøer", "parsaker") {
-                aktivOppgaveRepository.hentK9sakParsakOppgaver(tx, førsteOppgaver)
+                partisjonertOppgaveRepository.hentK9sakParsakOppgaver(tx, førsteOppgaver)
                     .map { UUID.fromString(it.eksternId) }.toSet()
             }
         }

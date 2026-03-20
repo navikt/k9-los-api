@@ -313,7 +313,7 @@ class EventTilOppgaveAdapterSpec : KoinTest, FreeSpec() {
                     transactionalManager.transaction { tx ->
                         oppgaveV3Tjeneste.hentHøyesteInternVersjon(eksternId.toString(), K9Oppgavetypenavn.SAK.kode, "K9", tx) shouldBe 0
                         oppgaveV3Tjeneste.hentAktivOppgave(eksternId.toString(), K9Oppgavetypenavn.SAK.kode, "K9", tx).hentVerdi("saksnummer") shouldBe "76"
-                        oppgaveQueryService.queryForAntall(QueryRequest( //for å sjekke innhold i oppgave_v3_aktiv
+                        oppgaveQueryService.queryForAntall(QueryRequest( //for å sjekke innhold i oppgave_v3_part
                             OppgaveQuery(
                                 listOf(
                                     FeltverdiOppgavefilter(

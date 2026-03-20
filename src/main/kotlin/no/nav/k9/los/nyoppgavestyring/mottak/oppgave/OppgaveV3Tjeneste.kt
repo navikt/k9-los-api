@@ -110,10 +110,6 @@ class OppgaveV3Tjeneste(
         )
     }
 
-    fun slettAktivOppgave(innkommendeOppgave: OppgaveV3, tx: TransactionalSession) {
-        AktivOppgaveRepository.slettAktivOppgave(tx, innkommendeOppgave)
-    }
-
     fun slettOppgave(oppgavenøkkel: OppgaveNøkkelDto, tx: TransactionalSession) {
         oppgaveV3Repository.slettOppgave(oppgavenøkkel, tx)
     }
