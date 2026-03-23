@@ -50,24 +50,6 @@ fun Route.OppgaveQueryApis() {
         }
     }
 
-    post("/queryToFile") {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.harBasisTilgang()) {
-                val oppgaveQuery = call.receive<OppgaveQuery>()
-                val idToken = kotlin.coroutines.coroutineContext.idToken()
-                call.response.header(
-                    HttpHeaders.ContentDisposition,
-                    ContentDisposition.Attachment.withParameter(
-                        ContentDisposition.Parameters.FileName, "oppgaver.csv"
-                    ).toString()
-                )
-                call.respondText(oppgaveQueryService.queryToFile(QueryRequest(oppgaveQuery), idToken))
-            } else {
-                call.respond(HttpStatusCode.Forbidden)
-            }
-        }
-    }
-
     get("/felter") {
         requestContextService.withRequestContext(call) {
             if (pepClient.harBasisTilgang()) {

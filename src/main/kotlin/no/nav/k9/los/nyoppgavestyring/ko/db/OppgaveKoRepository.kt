@@ -5,6 +5,7 @@ import kotliquery.*
 import no.nav.k9.los.nyoppgavestyring.ko.dto.OppgaveKo
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
+import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 import javax.sql.DataSource
 
@@ -14,6 +15,7 @@ class OppgaveKoRepository(
 
     companion object {
         val objectMapper = LosObjectMapper.instance
+        private val log = LoggerFactory.getLogger(OppgaveKoRepository::class.java)
     }
 
     private val standardOppgaveString: String by lazy {
@@ -159,7 +161,20 @@ class OppgaveKoRepository(
         )
 
         if (rows != 1) {
-            throw IllegalStateException("Feil ved oppdatering av oppgavekø: ${oppgaveKo.id}, rows: $rows")
+            val dbRow = tx.run(
+                queryOf(
+                    "SELECT versjon, skjermet FROM OPPGAVEKO_V3 WHERE id = :id",
+                    mapOf("id" to oppgaveKo.id)
+                ).map { row -> row.long("versjon") to row.boolean("skjermet") }.asSingle
+            )
+            val feilmelding = when {
+                dbRow == null -> "Oppgavekø ${oppgaveKo.id} finnes ikke i databasen"
+                dbRow.second != skjermet -> "Skjermet-mismatch for oppgavekø ${oppgaveKo.id}: kø har skjermet=${dbRow.second}, men innlogget bruker har skjermet=$skjermet"
+                dbRow.first != oppgaveKo.versjon -> "Optimistisk låsing feilet for oppgavekø ${oppgaveKo.id}: kø har versjon=${dbRow.first}, men mottok versjon=${oppgaveKo.versjon}"
+                else -> "Ukjent feil ved oppdatering av oppgavekø ${oppgaveKo.id}, rows: $rows"
+            }
+            log.warn(feilmelding)
+            throw IllegalStateException(feilmelding)
         }
 
         lagreKoSaksbehandlere(tx, oppgaveKo)
@@ -221,7 +236,7 @@ class OppgaveKoRepository(
     private fun lagreKoSaksbehandlere(tx: TransactionalSession, oppgaveKo: OppgaveKo) {
         fjernAlleSaksbehandlereFraOppgaveKo(tx, oppgaveKo.id)
         oppgaveKo.saksbehandlerIds.forEach { id ->
-            tx.run(
+            val insertedRows = tx.run(
                 queryOf(
                     """
                     INSERT INTO OPPGAVEKO_SAKSBEHANDLER (oppgaveko_v3_id, saksbehandler_id, saksbehandler_epost) 
@@ -233,6 +248,9 @@ class OppgaveKoRepository(
                     )
                 ).asUpdate
             )
+            if (insertedRows == 0) {
+                log.warn("Kunne ikke knytte saksbehandler med id=$id til oppgavekø ${oppgaveKo.id}: saksbehandler finnes ikke i databasen")
+            }
         }
     }
 
