@@ -145,7 +145,7 @@ abstract class LøpendeDurationTransientFeltutleder(
             }.reduce { d1, d2 -> d1 + d2 }
         }
 
-        return listOf(løpendeDuration.toString())
+        return listOf(formatDurationMedDager(løpendeDuration))
     }
 
     override fun where(input: WhereInput): SqlMedParams {
@@ -172,6 +172,26 @@ abstract class LøpendeDurationTransientFeltutleder(
 
     override fun select(input: SelectInput): SqlMedParams {
         val sumDuration = sumLøpendeDuration(input.spørringstrategi, input.now)
-        return SqlMedParams("EXTRACT(DAY FROM ${sumDuration.query})::integer", sumDuration.queryParams)
+        val interval = sumDuration.query
+        val query = """
+            'P' 
+            || EXTRACT(EPOCH FROM $interval)::bigint / 86400 || 'D'
+            || 'T'
+            || (EXTRACT(EPOCH FROM $interval)::bigint % 86400) / 3600 || 'H'
+            || (EXTRACT(EPOCH FROM $interval)::bigint % 3600) / 60 || 'M'
+            || EXTRACT(EPOCH FROM $interval)::bigint % 60 || 'S'
+        """.trimIndent()
+        return SqlMedParams(query, sumDuration.queryParams)
+    }
+
+    companion object {
+        fun formatDurationMedDager(duration: Duration): String {
+            val totalSeconds = duration.seconds
+            val days = totalSeconds / 86400
+            val hours = (totalSeconds % 86400) / 3600
+            val minutes = (totalSeconds % 3600) / 60
+            val seconds = totalSeconds % 60
+            return "P${days}DT${hours}H${minutes}M${seconds}S"
+        }
     }
 }

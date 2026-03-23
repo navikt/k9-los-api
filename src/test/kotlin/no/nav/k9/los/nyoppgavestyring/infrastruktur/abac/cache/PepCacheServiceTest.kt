@@ -45,12 +45,13 @@ import no.nav.k9.sak.typer.AktørId
 import no.nav.k9.sak.typer.JournalpostId
 import no.nav.sif.abac.kontrakt.abac.Diskresjonskode
 import org.intellij.lang.annotations.Language
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.RegisterExtension
+import org.koin.core.context.startKoin
+import org.koin.core.context.stopKoin
 import org.koin.test.KoinTest
 import org.koin.test.get
-import org.koin.test.junit5.KoinTestExtension
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.Duration
@@ -64,14 +65,16 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
     val pepClient = mockk<IPepClient>()
     private val logger: Logger = LoggerFactory.getLogger(PepCacheServiceTest::class.java)
 
-    @JvmField
-    @RegisterExtension
-    val koinTestRule = KoinTestExtension.create {
-        modules(buildAndTestConfig(dataSource, pepClient))
+    @AfterEach
+    fun stoppKoin() {
+        stopKoin()
     }
 
     @BeforeEach
     fun setup() {
+        stopKoin()
+        startKoin { modules(buildAndTestConfig(dataSource, pepClient)) }
+
         runBlocking {
             // Gir tilgang til kode6 for å isolere testing av cache-oppdatering
             coEvery { pepClient.harTilgangTilOppgaveV3(any(), any()) } returns true
