@@ -120,7 +120,7 @@ class TransientFeltutlederTest : AbstractK9LosIntegrationTest() {
 
 
     @Test
-    fun `transient utleder løpende varighet select returnerer dager som heltall`() {
+    fun `transient utleder løpende varighet select returnerer ISO 8601 duration`() {
         testdataLøpendeVarighet()
 
         val oppgaveQuery = OppgaveQuery(
@@ -140,10 +140,10 @@ class TransientFeltutlederTest : AbstractK9LosIntegrationTest() {
         }
 
         assertThat(resultat.size).isEqualTo(2)
-        val dagerFørste = resultat[0].felter.first { it.kode == "tidSidenMottattDato" }.verdi
-        val dagerAndre = resultat[1].felter.first { it.kode == "tidSidenMottattDato" }.verdi
-        assertThat(dagerFørste).isEqualTo("20")
-        assertThat(dagerAndre).isEqualTo("10")
+        val dagerFørste = Duration.parse(resultat[0].felter.first { it.kode == "tidSidenMottattDato" }.verdi as String).toDays()
+        val dagerAndre = Duration.parse(resultat[1].felter.first { it.kode == "tidSidenMottattDato" }.verdi as String).toDays()
+        assertThat(dagerFørste).isEqualTo(20)
+        assertThat(dagerAndre).isEqualTo(10)
     }
 
 
