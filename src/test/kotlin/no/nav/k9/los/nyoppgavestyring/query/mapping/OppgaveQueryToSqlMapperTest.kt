@@ -72,7 +72,7 @@ class OppgaveQueryToSqlMapperTest {
         )
 
         assertThat(sqlBuilder.getQuery()).contains(sqlBuilder.getParams().keys)
-        assertThat(sqlBuilder.getParams()).hasSize(20)
+        assertThat(sqlBuilder.getParams()).hasSize(11) // Antallet er spesifikt for partisjonerte tabeller
     }
 
     @Test
