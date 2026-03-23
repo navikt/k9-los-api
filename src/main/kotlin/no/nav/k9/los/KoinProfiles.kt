@@ -504,7 +504,6 @@ fun common(app: Application, config: Configuration) = module {
         RefreshK9v3Tjeneste(
             k9SakService = get(),
             oppgaveQueryService = get(),
-            partisjonertOppgaveRepository = get(),
             oppgaveKoRepository = get(),
             transactionalManager = get()
         )

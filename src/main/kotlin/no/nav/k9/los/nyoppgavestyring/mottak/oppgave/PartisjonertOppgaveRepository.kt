@@ -4,10 +4,8 @@ import io.opentelemetry.instrumentation.annotations.WithSpan
 import kotliquery.Row
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.util.InClauseHjelper
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.Oppgavetype
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
-import no.nav.k9.los.nyoppgavestyring.query.db.EksternOppgaveId
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgavefelt
 import org.slf4j.LoggerFactory
@@ -285,37 +283,6 @@ class PartisjonertOppgaveRepository(val oppgavetypeRepository: OppgavetypeReposi
             felter = oppgavefelter,
             reservasjonsnøkkel = row.string("reservasjonsnokkel"),
         ).fyllDefaultverdier().utledTransienteFelter(now)
-    }
-
-    @WithSpan
-    fun hentK9sakParsakOppgaver(tx: TransactionalSession, oppgaver: Collection<Oppgave>): Set<EksternOppgaveId> {
-        if (oppgaver.isEmpty()) {
-            return emptySet()
-        }
-        return tx.run(
-            queryOf(
-                """                
-                select oppg.oppgave_ekstern_id as ekstern_id
-                 from oppgave_v3_part oppg
-                 where 
-                    oppg.oppgavetype_ekstern_id = 'k9sak'
-                 and 
-                    oppg.oppgavestatus in ('AAPEN', 'VENTER')
-                 and 
-                    reservasjonsnokkel in (
-                       select reservasjonsnokkel from oppgave_v3_part where oppgave_ekstern_id in (${
-                    InClauseHjelper.tilParameternavn(
-                        oppgaver,
-                        "o"
-                    )
-                }) and oppgavestatus in ('AAPEN', 'VENTER')
-                    )
-            """.trimIndent(),
-                InClauseHjelper.parameternavnTilVerdierMap(oppgaver.map { it.eksternId }, "o")
-            ).map { row ->
-                EksternOppgaveId("K9", row.string("ekstern_id"))
-            }.asList
-        ).toSet()
     }
 
     private fun hentOppgavefelter(tx: TransactionalSession, oppgaveId: Long, oppgavetype: Oppgavetype): List<Oppgavefelt> {

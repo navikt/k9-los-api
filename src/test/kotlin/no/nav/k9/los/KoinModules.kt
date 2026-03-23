@@ -462,7 +462,6 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
         RefreshK9v3Tjeneste(
             k9SakService = get(),
             oppgaveQueryService = get(),
-            partisjonertOppgaveRepository = get(),
             oppgaveKoRepository = get(),
             transactionalManager = get()
         )
