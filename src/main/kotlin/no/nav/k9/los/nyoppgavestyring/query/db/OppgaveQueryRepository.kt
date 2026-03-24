@@ -14,7 +14,11 @@ import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
 import no.nav.k9.los.nyoppgavestyring.query.dto.felter.Oppgavefelt
 import no.nav.k9.los.nyoppgavestyring.query.dto.felter.Oppgavefelter
 import no.nav.k9.los.nyoppgavestyring.query.dto.felter.Verdiforklaring
-import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.GruppertOppgaveAntall
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.AggregertSelectFelt
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.AntallSelectFelt
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelSelectFelt
+import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.GruppertOppgaveResultat
+import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.OppgaveQueryResultat
 import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.OppgaveResultat
 import no.nav.k9.los.nyoppgavestyring.query.mapping.OppgaveQueryToSqlMapper
 import no.nav.k9.los.nyoppgavestyring.query.mapping.transientfeltutleder.GyldigeTransientFeltutleder
@@ -252,21 +256,41 @@ class OppgaveQueryRepository(
     }
 
     @WithSpan
-    fun queryForGruppering(
+    fun queryMedSelect(
         tx: TransactionalSession,
         request: QueryRequest,
         now: LocalDateTime
-    ): List<GruppertOppgaveAntall> {
+    ): OppgaveQueryResultat {
         val felter = hentAlleFelterMedMer(tx, medKodeverk = false)
             .associateBy { felt -> OmrådeOgKode(felt.oppgavefelt.område, felt.oppgavefelt.kode) }
 
-        val oppgaveQuery = OppgaveQueryToSqlMapper.toSqlOppgaveQueryForGruppering(request, felter, now)
+        val sqlBuilder = OppgaveQueryToSqlMapper.toSql(request, felter, now)
 
-        return tx.run(
-            queryOf(
-                oppgaveQuery.getQuery(),
-                oppgaveQuery.getParams()
-            ).map(oppgaveQuery::mapRowTilGruppertAntall).asList
-        )
+        val enkelSelectFelter = request.oppgaveQuery.select.filterIsInstance<EnkelSelectFelt>()
+        val aggregerteFelter = request.oppgaveQuery.select.filterIsInstance<AggregertSelectFelt>()
+
+        return when {
+            aggregerteFelter.isNotEmpty() && enkelSelectFelter.isEmpty() && aggregerteFelter.size == 1 && aggregerteFelter[0] is AntallSelectFelt -> {
+                val antall = tx.run(
+                    queryOf(sqlBuilder.getQuery(), sqlBuilder.getParams())
+                        .map { row -> row.long("agg_0") }.asSingle
+                )!!
+                OppgaveQueryResultat.AntallResultat(antall)
+            }
+            aggregerteFelter.isNotEmpty() -> {
+                val rader = tx.run(
+                    queryOf(sqlBuilder.getQuery(), sqlBuilder.getParams())
+                        .map(sqlBuilder::mapRowTilGruppertResultat).asList
+                )
+                OppgaveQueryResultat.GruppertResultat(rader)
+            }
+            else -> {
+                val rader = tx.run(
+                    queryOf(sqlBuilder.getQuery(), sqlBuilder.getParams())
+                        .map(sqlBuilder::mapRowTilOppgaveResultat).asList
+                )
+                OppgaveQueryResultat.SelectResultat(rader)
+            }
+        }
     }
 }

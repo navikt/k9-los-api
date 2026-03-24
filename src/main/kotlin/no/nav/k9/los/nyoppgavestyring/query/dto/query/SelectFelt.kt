@@ -7,7 +7,11 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo
 
 @JsonSubTypes(value = [
     JsonSubTypes.Type(value = EnkelSelectFelt::class, name = "enkel"),
-    JsonSubTypes.Type(value = AggregertSelectFelt::class, name = "aggregert")
+    JsonSubTypes.Type(value = AntallSelectFelt::class, name = "antall"),
+    JsonSubTypes.Type(value = GjennomsnittSelectFelt::class, name = "gjennomsnitt"),
+    JsonSubTypes.Type(value = MinSelectFelt::class, name = "min"),
+    JsonSubTypes.Type(value = MaksSelectFelt::class, name = "maks"),
+    JsonSubTypes.Type(value = SumSelectFelt::class, name = "sum")
 ])
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type", defaultImpl = SelectFelt::class)
 @JsonIgnoreProperties(ignoreUnknown = true)

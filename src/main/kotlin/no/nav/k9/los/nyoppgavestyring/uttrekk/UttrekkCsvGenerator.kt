@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.type.TypeReference
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.OppgaveResultat
 import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.Oppgavefeltverdi
-import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.Oppgaverad
 
 class UttrekkCsvGenerator {
 
@@ -17,7 +16,7 @@ class UttrekkCsvGenerator {
         return genererCsv(oppgaverader.map { it.felter })
     }
 
-    private fun genererCsv(oppgaverader: List<Oppgaverad>): String {
+    private fun genererCsv(oppgaverader: List<List<Oppgavefeltverdi>>): String {
         if (oppgaverader.isEmpty()) {
             return ""
         }

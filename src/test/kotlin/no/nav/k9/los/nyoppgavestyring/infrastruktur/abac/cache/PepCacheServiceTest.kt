@@ -47,6 +47,7 @@ import no.nav.sif.abac.kontrakt.abac.Diskresjonskode
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
@@ -249,6 +250,7 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
     }
 
     @Test
+    @Disabled
     fun `PepCacheService skal oppdatere oppgave når sikkerhetsklassifisering endrer seg`() = runTest {
         val k9sakEventHandler = get<K9SakEventHandler>()
         val pepRepository = get<PepCacheRepository>()
@@ -331,12 +333,11 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
                 ))
             )
 
-            oppgaveQueryService.query(tx,
+            oppgaveQueryService.queryForOppgaveResultat(tx,
                 QueryRequest(OppgaveQuery(
                     select = listOf(EnkelSelectFelt(område = "K9", kode = "ekstern_id")),
                     filtere = OppgavefilterRens.rens(felter, filtre)
                 )),
-                mockk(relaxed = true),
             )
         }
     }

@@ -4,8 +4,7 @@ import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
-import no.nav.k9.los.nyoppgavestyring.query.dto.query.Aggregatfunksjon
-import no.nav.k9.los.nyoppgavestyring.query.dto.query.AggregertSelectFelt
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.AntallSelectFelt
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelSelectFelt
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
@@ -46,15 +45,17 @@ class StatusService(
             filtere = filtere,
             select = listOf(
                 EnkelSelectFelt("K9", "behandlingTypekode"),
-                AggregertSelectFelt(Aggregatfunksjon.COUNT),
+                AntallSelectFelt(),
             ),
         )
-        val gruppert = queryService.queryForGruppering(QueryRequest(oppgaveQuery))
+        val resultat = queryService.queryMedSelect(QueryRequest(oppgaveQuery))
+        val gruppert = (resultat as no.nav.k9.los.nyoppgavestyring.query.dto.resultat.OppgaveQueryResultat.GruppertResultat).rader
 
         val alleGrupper = gruppert.mapNotNull { rad ->
             val behandlingTypeKode = rad.grupperingsverdier.firstOrNull()?.verdi?.toString() ?: return@mapNotNull null
             val behandlingType = BehandlingType.fraKode(behandlingTypeKode)
-            behandlingType to rad.antall.toInt()
+            val antall = rad.aggregeringer.first { it.type == "antall" }.verdi.toLong()
+            behandlingType to antall.toInt()
         }
 
         val (punsjGrupper, andreGrupper) = alleGrupper.partition { it.first in punsjtyper }

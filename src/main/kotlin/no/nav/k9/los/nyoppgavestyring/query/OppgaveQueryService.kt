@@ -1,25 +1,20 @@
 package no.nav.k9.los.nyoppgavestyring.query
 
 import io.opentelemetry.instrumentation.annotations.WithSpan
-import kotlinx.coroutines.runBlocking
 import kotliquery.TransactionalSession
 import kotliquery.sessionOf
 import kotliquery.using
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.idtoken.IIdToken
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.CoroutineRequestContext
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.*
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Id
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.PartisjonertOppgaveId
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.PartisjonertOppgaveRepository
 import no.nav.k9.los.nyoppgavestyring.query.db.EksternOppgaveId
 import no.nav.k9.los.nyoppgavestyring.query.db.OppgaveQueryRepository
 import no.nav.k9.los.nyoppgavestyring.query.dto.felter.Oppgavefelter
-import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelSelectFelt
-import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
-import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.GruppertOppgaveAntall
-import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.OppgaveResultat
-import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.Oppgavefeltverdi
-import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.Oppgaverad
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.AntallSelectFelt
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
+import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.OppgaveQueryResultat
+import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.OppgaveResultat
 import org.koin.java.KoinJavaComponent.inject
 import java.time.LocalDateTime
 import javax.sql.DataSource
@@ -29,7 +24,6 @@ class OppgaveQueryService {
     private val oppgaveQueryRepository by inject<OppgaveQueryRepository>(OppgaveQueryRepository::class.java)
     private val oppgaveRepository by inject<OppgaveRepository>(OppgaveRepository::class.java)
     private val partisjonertOppgaveRepository by inject<PartisjonertOppgaveRepository>(PartisjonertOppgaveRepository::class.java)
-    private val pepClient by inject<IPepClient>(IPepClient::class.java)
 
     @WithSpan
     fun queryForOppgave(oppgaveQuery: QueryRequest): List<Oppgave> {
@@ -51,16 +45,20 @@ class OppgaveQueryService {
     }
 
     @WithSpan
-    fun queryForAntall(request: QueryRequest, now : LocalDateTime = LocalDateTime.now()): Long {
-        return using(sessionOf(datasource)) {
-            it.transaction { tx -> oppgaveQueryRepository.queryForAntall(tx, request, now) }
+    fun queryForAntall(request: QueryRequest, now: LocalDateTime = LocalDateTime.now()): Long {
+        val antallRequest = if (request.oppgaveQuery.select.any { it is AntallSelectFelt }) {
+            request
+        } else {
+            request.copy(oppgaveQuery = request.oppgaveQuery.copy(select = listOf(AntallSelectFelt())))
         }
+        val resultat = queryMedSelect(antallRequest, now)
+        return (resultat as OppgaveQueryResultat.AntallResultat).antall
     }
 
     @WithSpan
-    fun queryForGruppering(request: QueryRequest, now: LocalDateTime = LocalDateTime.now()): List<GruppertOppgaveAntall> {
+    fun queryMedSelect(request: QueryRequest, now: LocalDateTime = LocalDateTime.now()): OppgaveQueryResultat {
         return using(sessionOf(datasource)) {
-            it.transaction { tx -> oppgaveQueryRepository.queryForGruppering(tx, request, now) }
+            it.transaction { tx -> oppgaveQueryRepository.queryMedSelect(tx, request, now) }
         }
     }
 
@@ -82,100 +80,18 @@ class OppgaveQueryService {
     @WithSpan
     fun queryForOppgaveResultat(tx: TransactionalSession, request: QueryRequest): List<OppgaveResultat> {
         val now = LocalDateTime.now()
-        return oppgaveQueryRepository.queryForOppgaveResultat(tx, request, now)
+        val resultat = oppgaveQueryRepository.queryMedSelect(tx, request, now)
+        return (resultat as OppgaveQueryResultat.SelectResultat).rader
     }
 
-    @WithSpan
-    fun query(oppgaveQuery: QueryRequest, idToken: IIdToken): List<Oppgaverad> {
-        return using(sessionOf(datasource)) {
-            it.transaction { tx -> query(tx, oppgaveQuery, idToken) }
-        }
-    }
 
-    @WithSpan
-    fun query(tx: TransactionalSession, request: QueryRequest, idToken: IIdToken): List<Oppgaverad> {
-        val now = LocalDateTime.now()
-        val oppgaveIder = oppgaveQueryRepository.query(tx, request, now)
-
-        val oppgaverader = runBlocking(context = CoroutineRequestContext(idToken)) {
-            mapOppgaver(tx, request, oppgaveIder, now)
-        }
-
-        if (request.oppgaveQuery.select.isEmpty()) {
-            return listOf(listOf(Oppgavefeltverdi(null, "Antall", oppgaverader.size)))
-        }
-
-        return oppgaverader
-    }
 
     @WithSpan
     fun hentAlleFelter(): Oppgavefelter {
         return oppgaveQueryRepository.hentAlleFelter()
     }
 
-    @WithSpan
-    private suspend fun mapOppgaver(tx: TransactionalSession, request: QueryRequest, oppgaveIder: List<OppgaveId>, now: LocalDateTime): List<Oppgaverad> {
-        val oppgaverader = mutableListOf<Oppgaverad>()
-        val limit = request.avgrensning?.limit ?: -1
-        var antall = 0
-        for (oppgaveId in oppgaveIder) {
-            val oppgaverad = mapOppgave(tx, request.oppgaveQuery, oppgaveId, now)
-            if (oppgaverad != null) {
-                oppgaverader.add(oppgaverad)
-                antall++
-                if (limit in 0..antall) {
-                    return oppgaverader
-                }
-            }
-        }
-        return oppgaverader
-    }
 
-    @WithSpan
-    private suspend fun mapOppgave(tx: TransactionalSession, oppgaveQuery: OppgaveQuery, oppgaveId: OppgaveId, now: LocalDateTime): Oppgaverad? {
-        val oppgave = when (oppgaveId) {
-            is OppgaveV3Id -> oppgaveRepository.hentOppgaveForId(tx, oppgaveId, now)
-            is PartisjonertOppgaveId -> partisjonertOppgaveRepository.hentOppgaveEksternIdOgOppgavetype(oppgaveId, tx)
-                .let { (oppgaveEksternId, oppgavetypeEksternId) ->
-                    oppgaveRepository.hentOppgaveForEksternIdOgOppgavetype(
-                        tx,
-                        oppgaveEksternId,
-                        oppgavetypeEksternId
-                    )
-                }
-        }
-
-        if (!pepClient.harTilgangTilOppgaveV3(oppgave = oppgave)) {
-            return null
-        }
-
-        return if (oppgaveQuery.select.isEmpty()) {
-            emptyList()
-        } else {
-            return toOppgavefeltverdier(oppgaveQuery, oppgave)
-        }
-    }
-
-    private fun toOppgavefeltverdier(
-        oppgaveQuery: OppgaveQuery,
-        oppgave: Oppgave
-    ) = oppgaveQuery.select.map {
-        if (it is EnkelSelectFelt) {
-            val verdi = when (it.kode) {
-                "oppgavestatus" -> oppgave.status
-                "oppgavetype" -> oppgave.oppgavetype.eksternId
-                else -> oppgave.hentVerdiEllerListe(requireNotNull(it.område), it.kode)
-            }
-            Oppgavefeltverdi(
-                it.område,
-                it.kode,
-                verdi
-            )
-        } else {
-            // Aggregerte felter håndteres via queryForGruppering
-            Oppgavefeltverdi("", "", "")
-        }
-    }
 
     fun validate(request: QueryRequest): Boolean {
         try {

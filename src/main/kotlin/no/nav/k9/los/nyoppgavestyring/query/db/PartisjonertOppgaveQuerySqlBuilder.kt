@@ -10,7 +10,10 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.PartisjonertOppgaveId
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelSelectFelt
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.Oppgavefilter
-import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.GruppertOppgaveAntall
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.AggregertSelectFelt
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.AntallSelectFelt
+import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.Aggregertverdi
+import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.GruppertOppgaveResultat
 import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.OppgaveResultat
 import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.Oppgavefeltverdi
 import no.nav.k9.los.nyoppgavestyring.query.mapping.*
@@ -458,10 +461,12 @@ class PartisjonertOppgaveQuerySqlBuilder(
 
     // Gruppering-støtte for COUNT(*) ... GROUP BY queries
     private var grupperingsFelter: List<EnkelSelectFelt> = emptyList()
+    private var aggregerteFelter: List<AggregertSelectFelt> = emptyList()
     private val grupperingParams: MutableMap<String, Any?> = mutableMapOf()
 
-    override fun medGruppering(grupperingsFelter: List<EnkelSelectFelt>) {
+    override fun medGruppering(grupperingsFelter: List<EnkelSelectFelt>, aggregerteFelter: List<AggregertSelectFelt>) {
         this.grupperingsFelter = grupperingsFelter
+        this.aggregerteFelter = aggregerteFelter
 
         val selectDeler = mutableListOf<String>()
         val groupByDeler = mutableListOf<String>()
@@ -512,15 +517,36 @@ class PartisjonertOppgaveQuerySqlBuilder(
             groupByDeler.add(alias)
         }
 
-        selectDeler.add("COUNT(*) AS antall")
+        aggregerteFelter.forEachIndexed { index, felt ->
+            val alias = "agg_$index"
+            when (felt) {
+                is AntallSelectFelt -> selectDeler.add("COUNT(*) AS $alias")
+                else -> {
+                    val feltOmråde = requireNotNull(felt.område) { "AggregertSelectFelt ${felt.sql} mangler område" }
+                    val feltKode = requireNotNull(felt.kode) { "AggregertSelectFelt ${felt.sql} mangler kode" }
+                    val verdifelt = verdifelt(feltOmråde, feltKode)
+                    selectDeler.add("""
+                        ${felt.sql}((SELECT $verdifelt
+                         FROM oppgavefelt_verdi_part ov
+                         WHERE ov.oppgave_id = o.id
+                           AND ov.oppgavestatus IN ($oppgavestatusPlaceholder) ${ferdigstiltDatoBetingelse("ov")}
+                           AND ov.feltdefinisjon_ekstern_id = :aggFeltkode$index
+                         LIMIT 1)) AS $alias
+                    """.trimIndent())
+                    grupperingParams["aggFeltkode$index"] = feltKode
+                }
+            }
+        }
 
         selectClause = "SELECT " + selectDeler.joinToString(", ")
-        groupByClause = "GROUP BY " + groupByDeler.joinToString(", ")
+        if (groupByDeler.isNotEmpty()) {
+            groupByClause = "GROUP BY " + groupByDeler.joinToString(", ")
+        }
         orderByClauses.clear()
         orderByParams.clear()
     }
 
-    override fun mapRowTilGruppertAntall(row: Row): GruppertOppgaveAntall {
+    override fun mapRowTilGruppertResultat(row: Row): GruppertOppgaveResultat {
         val grupperingsverdier = grupperingsFelter.mapIndexed { index, felt ->
             val alias = "gruppe_$index"
             Oppgavefeltverdi(
@@ -529,9 +555,18 @@ class PartisjonertOppgaveQuerySqlBuilder(
                 verdi = row.stringOrNull(alias)
             )
         }
-        return GruppertOppgaveAntall(
+        val aggregeringer = aggregerteFelter.mapIndexed { index, felt ->
+            val alias = "agg_$index"
+            when (felt) {
+                is AntallSelectFelt -> Aggregertverdi(type = "antall", område = null, kode = null, verdi = row.long(alias))
+                else -> {
+                    Aggregertverdi(type = felt.sql.lowercase(), område = felt.område, kode = felt.kode, verdi = row.double(alias))
+                }
+            }
+        }
+        return GruppertOppgaveResultat(
             grupperingsverdier = grupperingsverdier,
-            antall = row.long("antall")
+            aggregeringer = aggregeringer,
         )
     }
 

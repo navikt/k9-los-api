@@ -2,6 +2,7 @@ package no.nav.k9.los.nyoppgavestyring.query.dto.query
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonTypeName
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonAutoDetect(
@@ -9,8 +10,10 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
     setterVisibility = JsonAutoDetect.Visibility.NONE,
     fieldVisibility = JsonAutoDetect.Visibility.ANY
 )
-abstract class AggregertSelectFelt : SelectFelt() {
-    abstract val sql: String
-    open val område: String? get() = null
-    open val kode: String? get() = null
+@JsonTypeName("gjennomsnitt")
+class GjennomsnittSelectFelt(
+    override val område: String?,
+    override val kode: String
+) : AggregertSelectFelt() {
+    override val sql = "AVG"
 }

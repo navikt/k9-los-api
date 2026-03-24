@@ -21,6 +21,7 @@ import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.query.db.OppgaveQueryRepository
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.*
+import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.OppgaveQueryResultat
 import no.nav.k9.los.nyoppgavestyring.query.mapping.CombineOperator
 import no.nav.k9.los.nyoppgavestyring.query.mapping.EksternFeltverdiOperator
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
@@ -1005,18 +1006,20 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
             ),
             select = listOf(
                 EnkelSelectFelt("K9", "behandlingTypekode"),
-                AggregertSelectFelt(Aggregatfunksjon.COUNT),
+                AntallSelectFelt(),
             ),
         )
 
         val queryService = get<OppgaveQueryService>()
-        val resultat = queryService.queryForGruppering(QueryRequest(query))
+        val resultat = queryService.queryMedSelect(QueryRequest(query))
 
-        assertThat(resultat).hasSize(2)
-        val bt002 = resultat.first { it.grupperingsverdier.first().verdi == "BT-002" }
-        val bt004 = resultat.first { it.grupperingsverdier.first().verdi == "BT-004" }
-        assertThat(bt002.antall).isEqualTo(2)
-        assertThat(bt004.antall).isEqualTo(1)
+        assertThat(resultat).isInstanceOf(OppgaveQueryResultat.GruppertResultat::class.java)
+        val grupper = (resultat as OppgaveQueryResultat.GruppertResultat).rader
+        assertThat(grupper).hasSize(2)
+        val bt002 = grupper.first { it.grupperingsverdier.first().verdi == "BT-002" }
+        val bt004 = grupper.first { it.grupperingsverdier.first().verdi == "BT-004" }
+        assertThat(bt002.aggregeringer.first { it.type == "antall" }.verdi).isEqualTo(2L)
+        assertThat(bt004.aggregeringer.first { it.type == "antall" }.verdi).isEqualTo(1L)
     }
 
     @Test
@@ -1032,18 +1035,20 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
             ),
             select = listOf(
                 EnkelSelectFelt(null, "oppgavestatus"),
-                AggregertSelectFelt(Aggregatfunksjon.COUNT),
+                AntallSelectFelt(),
             ),
         )
 
         val queryService = get<OppgaveQueryService>()
-        val resultat = queryService.queryForGruppering(QueryRequest(query))
+        val resultat = queryService.queryMedSelect(QueryRequest(query))
 
-        assertThat(resultat).hasSize(2)
-        val aapen = resultat.first { it.grupperingsverdier.first().verdi == Oppgavestatus.AAPEN.kode }
-        val venter = resultat.first { it.grupperingsverdier.first().verdi == Oppgavestatus.VENTER.kode }
-        assertThat(aapen.antall).isEqualTo(2)
-        assertThat(venter.antall).isEqualTo(1)
+        assertThat(resultat).isInstanceOf(OppgaveQueryResultat.GruppertResultat::class.java)
+        val grupper = (resultat as OppgaveQueryResultat.GruppertResultat).rader
+        assertThat(grupper).hasSize(2)
+        val aapen = grupper.first { it.grupperingsverdier.first().verdi == Oppgavestatus.AAPEN.kode }
+        val venter = grupper.first { it.grupperingsverdier.first().verdi == Oppgavestatus.VENTER.kode }
+        assertThat(aapen.aggregeringer.first { it.type == "antall" }.verdi).isEqualTo(2L)
+        assertThat(venter.aggregeringer.first { it.type == "antall" }.verdi).isEqualTo(1L)
     }
 
     private fun lagOppgaveMedPepCache(

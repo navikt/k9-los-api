@@ -78,25 +78,32 @@ object OppgaveQueryToSqlMapper {
         return query
     }
 
-    fun toSqlOppgaveQueryForGruppering(
+    fun toSql(
         request: QueryRequest,
         felter: Map<OmrådeOgKode, OppgavefeltMedMer>,
         now: LocalDateTime
     ): OppgaveQuerySqlBuilder {
-        val queryBuilder = utledSqlBuilder(felter, request, now)
+        val query = utledSqlBuilder(felter, request, now)
         val combineOperator = CombineOperator.AND
-        håndterFiltere(
-            queryBuilder,
-            felter,
-            queryBuilder.filterRens(felter, request.oppgaveQuery.filtere),
-            combineOperator
-        )
+        håndterFiltere(query, felter, query.filterRens(felter, request.oppgaveQuery.filtere), combineOperator)
         if (request.fjernReserverte) {
-            queryBuilder.utenReservasjoner()
+            query.utenReservasjoner()
         }
-        val grupperingsFelter = request.oppgaveQuery.select.filterIsInstance<EnkelSelectFelt>()
-        queryBuilder.medGruppering(grupperingsFelter)
-        return queryBuilder
+        request.avgrensning?.let { query.medPaging(it.limit, it.offset) }
+
+        val enkelSelectFelter = request.oppgaveQuery.select.filterIsInstance<EnkelSelectFelt>()
+        val aggregerteFelter = request.oppgaveQuery.select.filterIsInstance<AggregertSelectFelt>()
+
+        if (aggregerteFelter.isNotEmpty()) {
+            query.medGruppering(enkelSelectFelter, aggregerteFelter)
+        } else if (enkelSelectFelter.isNotEmpty()) {
+            query.medSelectFelter(enkelSelectFelter)
+            håndterOrder(query, request.oppgaveQuery.order)
+        } else {
+            throw IllegalArgumentException("OppgaveQuery.select kan ikke v\u00e6re tom for enhetlig query")
+        }
+
+        return query
     }
 
     fun traverserFiltereOgFinnOppgavestatus(queryRequest: QueryRequest): List<Oppgavestatus> {

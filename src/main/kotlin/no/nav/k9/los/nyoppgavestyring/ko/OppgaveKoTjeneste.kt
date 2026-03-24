@@ -29,7 +29,7 @@ import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelOrderFelt
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelSelectFelt
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OrderFelt
-import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.Oppgaverad
+import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.OppgaveResultat
 import no.nav.k9.los.nyoppgavestyring.reservasjon.AlleredeReservertException
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ManglerTilgangException
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
@@ -83,21 +83,20 @@ class OppgaveKoTjeneste(
             })
         }
 
-        val køRespons = oppgaveQueryService.query(
+        val oppgaveResultater = oppgaveQueryService.queryForOppgaveResultat(
             QueryRequest(
                 oppgaveQuery = ko.oppgaveQuery.copy(select = selects),
                 fjernReserverte = fjernReserverte,
                 avgrensning = Avgrensning.maxAntall(ønsketAntallSaker)
-            ),
-            idToken
+            )
         )
 
-        return byggDto(køRespons, ko.oppgaveQuery.order)
+        return byggDto(oppgaveResultater, ko.oppgaveQuery.order)
     }
 
 
     private suspend fun byggDto(
-        køRespons: List<Oppgaverad>,
+        oppgaveResultater: List<OppgaveResultat>,
         orderFelter: List<OrderFelt>
     ): NesteOppgaverFraKoDto {
         val visningskolonner = buildMap {
@@ -112,20 +111,25 @@ class OppgaveKoTjeneste(
             })
         }
 
-        val rader: List<Map<String, String>> = køRespons.map { rad ->
-            rad.mapNotNull { feltverdi ->
-                feltverdi.verdi?.let { verdi ->
-                    when (feltverdi.kode) {
-                        "aktorId" -> "søker" to (pdlService.person(verdi as String).person
-                            ?.let { "${it.navn()} ${it.fnr()}" }
-                            ?: "Ukjent navn Ukjent fnummer")
-                        "journalpostId", "saksnummer" -> "id" to (verdi as String)
-                        "behandlingTypekode" -> "behandlingType" to BehandlingType.fraKode(verdi as String).navn
-                        in visningskolonner -> feltverdi.kode to verdi.toString()
-                        else -> null
+        val rader: List<Map<String, String>> = oppgaveResultater.map { resultat ->
+            buildMap {
+                resultat.hentVerdi("K9", "aktorId")?.let { verdi ->
+                    put("søker", pdlService.person(verdi.toString()).person
+                        ?.let { "${it.navn()} ${it.fnr()}" }
+                        ?: "Ukjent navn Ukjent fnummer")
+                }
+                resultat.hentVerdi("K9", "journalpostId")?.let { put("id", it.toString()) }
+                    ?: resultat.hentVerdi("K9", "saksnummer")?.let { put("id", it.toString()) }
+                resultat.hentVerdi("K9", "behandlingTypekode")?.let {
+                    put("behandlingType", BehandlingType.fraKode(it.toString()).navn)
+                }
+                for ((kolonne, _) in visningskolonner) {
+                    if (kolonne !in this) {
+                        val felt = resultat.felter.firstOrNull { it.kode == kolonne }
+                        felt?.verdi?.let { put(kolonne, it.toString()) }
                     }
                 }
-            }.toMap()
+            }
         }
 
         return NesteOppgaverFraKoDto(
