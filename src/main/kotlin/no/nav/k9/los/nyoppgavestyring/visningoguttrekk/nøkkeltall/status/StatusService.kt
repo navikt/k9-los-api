@@ -1,14 +1,18 @@
 package no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.status
 
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
+import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.OppgaverGruppertRepository
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelSelectFelt
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
+import no.nav.k9.los.nyoppgavestyring.query.mapping.EksternFeltverdiOperator
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 class StatusService(
     private val queryService: OppgaveQueryService,
-    private val oppgaverGruppertRepository: OppgaverGruppertRepository,
 ) {
     private val log: Logger = LoggerFactory.getLogger(StatusService::class.java)
 
@@ -30,16 +34,31 @@ class StatusService(
     )
 
     fun hentStatus(harTilgangTilKode6: Boolean): List<StatusDto> {
-        val alleGrupper =
-            oppgaverGruppertRepository.hentAntallÅpneOppgaverPrOppgavetypeBehandlingstype(harTilgangTilKode6)
+        val filtere = buildList {
+            add(FeltverdiOppgavefilter(null, "oppgavestatus", EksternFeltverdiOperator.IN, listOf(Oppgavestatus.AAPEN.kode, Oppgavestatus.VENTER.kode)))
+            if (!harTilgangTilKode6) {
+                add(FeltverdiOppgavefilter(null, "personbeskyttelse", EksternFeltverdiOperator.EQUALS, listOf("UTEN_KODE6")))
+            }
+        }
+        val oppgaveQuery = OppgaveQuery(
+            filtere = filtere,
+            groupBy = listOf(EnkelSelectFelt("K9", "behandlingTypekode"))
+        )
+        val gruppert = queryService.queryForGruppering(QueryRequest(oppgaveQuery))
 
-        val (punsjGrupper, andreGrupper) = alleGrupper.partition { it.behandlingstype in punsjtyper }
+        val alleGrupper = gruppert.mapNotNull { rad ->
+            val behandlingTypeKode = rad.grupperingsverdier.firstOrNull()?.verdi?.toString() ?: return@mapNotNull null
+            val behandlingType = BehandlingType.fraKode(behandlingTypeKode)
+            behandlingType to rad.antall.toInt()
+        }
+
+        val (punsjGrupper, andreGrupper) = alleGrupper.partition { it.first in punsjtyper }
 
         return buildList {
-            add(StatusDto("Åpne behandlinger", andreGrupper.sumOf { it.antall }))
-            addAll(andreGrupper.map { StatusDto(it.behandlingstype.navn, it.antall) })
+            add(StatusDto("Åpne behandlinger", andreGrupper.sumOf { it.second }))
+            addAll(andreGrupper.map { StatusDto(it.first.navn, it.second) })
             if (punsjGrupper.isNotEmpty()) {
-                add(StatusDto("Punsj", punsjGrupper.sumOf { it.antall }))
+                add(StatusDto("Punsj", punsjGrupper.sumOf { it.second }))
             }
         }
     }

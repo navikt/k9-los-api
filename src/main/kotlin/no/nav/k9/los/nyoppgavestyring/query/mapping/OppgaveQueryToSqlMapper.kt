@@ -78,6 +78,26 @@ object OppgaveQueryToSqlMapper {
         return query
     }
 
+    fun toSqlOppgaveQueryForGruppering(
+        request: QueryRequest,
+        felter: Map<OmrådeOgKode, OppgavefeltMedMer>,
+        now: LocalDateTime
+    ): OppgaveQuerySqlBuilder {
+        val queryBuilder = utledSqlBuilder(felter, request, now)
+        val combineOperator = CombineOperator.AND
+        håndterFiltere(
+            queryBuilder,
+            felter,
+            queryBuilder.filterRens(felter, request.oppgaveQuery.filtere),
+            combineOperator
+        )
+        if (request.fjernReserverte) {
+            queryBuilder.utenReservasjoner()
+        }
+        queryBuilder.medGruppering(request.oppgaveQuery.groupBy)
+        return queryBuilder
+    }
+
     fun traverserFiltereOgFinnOppgavestatus(queryRequest: QueryRequest): List<Oppgavestatus> {
         val statuser = mutableSetOf<Oppgavestatus>()
         rekursivtSøk(

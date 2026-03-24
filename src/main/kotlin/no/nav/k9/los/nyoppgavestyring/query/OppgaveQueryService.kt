@@ -14,6 +14,7 @@ import no.nav.k9.los.nyoppgavestyring.query.db.OppgaveQueryRepository
 import no.nav.k9.los.nyoppgavestyring.query.dto.felter.Oppgavefelter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelSelectFelt
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
+import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.GruppertOppgaveAntall
 import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.OppgaveResultat
 import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.Oppgavefeltverdi
 import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.Oppgaverad
@@ -53,6 +54,13 @@ class OppgaveQueryService {
     fun queryForAntall(request: QueryRequest, now : LocalDateTime = LocalDateTime.now()): Long {
         return using(sessionOf(datasource)) {
             it.transaction { tx -> oppgaveQueryRepository.queryForAntall(tx, request, now) }
+        }
+    }
+
+    @WithSpan
+    fun queryForGruppering(request: QueryRequest, now: LocalDateTime = LocalDateTime.now()): List<GruppertOppgaveAntall> {
+        return using(sessionOf(datasource)) {
+            it.transaction { tx -> oppgaveQueryRepository.queryForGruppering(tx, request, now) }
         }
     }
 

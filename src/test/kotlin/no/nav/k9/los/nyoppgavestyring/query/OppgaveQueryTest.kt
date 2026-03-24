@@ -991,6 +991,55 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
         assertThat(ferdigstiltVerdi).isEqualTo("2025-03-15")
     }
 
+
+    @Test
+    fun `queryForGruppering grupperer oppgaver på angitt felt`() {
+        val builder = OppgaveTestDataBuilder()
+        builder.medOppgaveFeltVerdi(FeltType.BEHANDLING_TYPE, "BT-002").lagOgLagre()
+        builder.medOppgaveFeltVerdi(FeltType.BEHANDLING_TYPE, "BT-002").lagOgLagre()
+        builder.medOppgaveFeltVerdi(FeltType.BEHANDLING_TYPE, "BT-004").lagOgLagre()
+
+        val query = OppgaveQuery(
+            filtere = listOf(
+                byggFilter(FeltType.OPPGAVE_STATUS, EksternFeltverdiOperator.IN, Oppgavestatus.AAPEN.kode)
+            ),
+            groupBy = listOf(EnkelSelectFelt("K9", "behandlingTypekode"))
+        )
+
+        val queryService = get<OppgaveQueryService>()
+        val resultat = queryService.queryForGruppering(QueryRequest(query))
+
+        assertThat(resultat).hasSize(2)
+        val bt002 = resultat.first { it.grupperingsverdier.first().verdi == "BT-002" }
+        val bt004 = resultat.first { it.grupperingsverdier.first().verdi == "BT-004" }
+        assertThat(bt002.antall).isEqualTo(2)
+        assertThat(bt004.antall).isEqualTo(1)
+    }
+
+    @Test
+    fun `queryForGruppering på felt uten område`() {
+        val builder = OppgaveTestDataBuilder()
+        builder.lagOgLagre(Oppgavestatus.AAPEN)
+        builder.lagOgLagre(Oppgavestatus.AAPEN)
+        builder.lagOgLagre(Oppgavestatus.VENTER)
+
+        val query = OppgaveQuery(
+            filtere = listOf(
+                byggFilter(FeltType.OPPGAVE_STATUS, EksternFeltverdiOperator.IN, Oppgavestatus.AAPEN.kode, Oppgavestatus.VENTER.kode)
+            ),
+            groupBy = listOf(EnkelSelectFelt(null, "oppgavestatus"))
+        )
+
+        val queryService = get<OppgaveQueryService>()
+        val resultat = queryService.queryForGruppering(QueryRequest(query))
+
+        assertThat(resultat).hasSize(2)
+        val aapen = resultat.first { it.grupperingsverdier.first().verdi == Oppgavestatus.AAPEN.kode }
+        val venter = resultat.first { it.grupperingsverdier.first().verdi == Oppgavestatus.VENTER.kode }
+        assertThat(aapen.antall).isEqualTo(2)
+        assertThat(venter.antall).isEqualTo(1)
+    }
+
     private fun lagOppgaveMedPepCache(
         kode6: Boolean = false,
         kode7: Boolean = false,

@@ -39,6 +39,17 @@ fun Route.OppgaveQueryApis() {
         }
     }
 
+    post("/query/gruppert") {
+        requestContextService.withRequestContext(call) {
+            if (pepClient.harBasisTilgang()) {
+                val oppgaveQuery = call.receive<OppgaveQuery>()
+                call.respond(oppgaveQueryService.queryForGruppering(QueryRequest(oppgaveQuery)))
+            } else {
+                call.respond(HttpStatusCode.Forbidden)
+            }
+        }
+    }
+
     post("/validate") {
         requestContextService.withRequestContext(call) {
             if (pepClient.harBasisTilgang()) {

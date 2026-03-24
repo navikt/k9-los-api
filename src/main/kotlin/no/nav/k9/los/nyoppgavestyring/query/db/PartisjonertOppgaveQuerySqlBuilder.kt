@@ -10,6 +10,7 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.PartisjonertOppgaveId
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelSelectFelt
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.Oppgavefilter
+import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.GruppertOppgaveAntall
 import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.OppgaveResultat
 import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.Oppgavefeltverdi
 import no.nav.k9.los.nyoppgavestyring.query.mapping.*
@@ -95,6 +96,7 @@ class PartisjonertOppgaveQuerySqlBuilder(
     private var whereClause = "WHERE o.oppgavestatus IN ($oppgavestatusPlaceholder) ${ferdigstiltDatoBetingelse("o")}"
     private val orderByClauses = mutableListOf<String>()
     private val orderByClause get() = if (orderByClauses.isNotEmpty()) "ORDER BY " + orderByClauses.joinToString(", ") else ""
+    private var groupByClause = ""
     private var pagingClause = ""
 
     private val utenReservasjonerBetingelse = """
@@ -123,7 +125,7 @@ class PartisjonertOppgaveQuerySqlBuilder(
     }
 
     override fun getQuery(): String {
-        return "$selectClause $fromClause $whereClause $orderByClause $pagingClause"
+        return "$selectClause $fromClause $whereClause $groupByClause $orderByClause $pagingClause"
     }
 
     override fun medAntallSomResultat() {
@@ -453,6 +455,86 @@ class PartisjonertOppgaveQuerySqlBuilder(
         selectClause = "SELECT " + selectDeler.joinToString(", ")
     }
 
+
+    // Gruppering-støtte for COUNT(*) ... GROUP BY queries
+    private var grupperingsFelter: List<EnkelSelectFelt> = emptyList()
+    private val grupperingParams: MutableMap<String, Any?> = mutableMapOf()
+
+    override fun medGruppering(grupperingsFelter: List<EnkelSelectFelt>) {
+        this.grupperingsFelter = grupperingsFelter
+
+        val selectDeler = mutableListOf<String>()
+        val groupByDeler = mutableListOf<String>()
+
+        grupperingsFelter.forEachIndexed { index, felt ->
+            val alias = "gruppe_$index"
+
+            if (felt.område != null) {
+                val transientFeltutleder = hentTransientFeltutleder(felt.område, felt.kode)
+                if (transientFeltutleder != null) {
+                    val sqlMedParams = sikreUnikeParams(
+                        transientFeltutleder.select(
+                            SelectInput(
+                                Spørringstrategi.PARTISJONERT,
+                                now,
+                                felt.område,
+                                felt.kode
+                            )
+                        )
+                    )
+                    selectDeler.add("${sqlMedParams.query} AS $alias")
+                    grupperingParams.putAll(sqlMedParams.queryParams)
+                } else {
+                    val verdifelt = verdifelt(felt.område, felt.kode)
+                    selectDeler.add("""
+                        (SELECT $verdifelt
+                         FROM oppgavefelt_verdi_part ov
+                         WHERE ov.oppgave_id = o.id
+                           AND ov.oppgavestatus IN ($oppgavestatusPlaceholder) ${ferdigstiltDatoBetingelse("ov")}
+                           AND ov.feltdefinisjon_ekstern_id = :grupperingFeltkode$index
+                         LIMIT 1) AS $alias
+                    """.trimIndent())
+                    grupperingParams["grupperingFeltkode$index"] = felt.kode
+                }
+            } else {
+                val kolonne = when (felt.kode) {
+                    "oppgavestatus" -> "o.oppgavestatus"
+                    "oppgavetype" -> "o.oppgavetype_ekstern_id"
+                    "ferdigstiltDato" -> "o.ferdigstilt_dato"
+                    "reservasjonsnokkel" -> "o.reservasjonsnokkel"
+                    else -> {
+                        log.warn("Ukjent grupperings-felt uten område: ${felt.kode}")
+                        "NULL"
+                    }
+                }
+                selectDeler.add("$kolonne AS $alias")
+            }
+            groupByDeler.add(alias)
+        }
+
+        selectDeler.add("COUNT(*) AS antall")
+
+        selectClause = "SELECT " + selectDeler.joinToString(", ")
+        groupByClause = "GROUP BY " + groupByDeler.joinToString(", ")
+        orderByClauses.clear()
+        orderByParams.clear()
+    }
+
+    override fun mapRowTilGruppertAntall(row: Row): GruppertOppgaveAntall {
+        val grupperingsverdier = grupperingsFelter.mapIndexed { index, felt ->
+            val alias = "gruppe_$index"
+            Oppgavefeltverdi(
+                område = felt.område,
+                kode = felt.kode,
+                verdi = row.stringOrNull(alias)
+            )
+        }
+        return GruppertOppgaveAntall(
+            grupperingsverdier = grupperingsverdier,
+            antall = row.long("antall")
+        )
+    }
+
     override fun getParams(): Map<String, Any?> {
         return buildMap {
             putAll(queryParams)
@@ -460,6 +542,7 @@ class PartisjonertOppgaveQuerySqlBuilder(
             putAll(oppgavestatusParams)
             putAll(ferdigstiltDatoParams)
             putAll(selectFeltParams)
+            putAll(grupperingParams)
         }
     }
 
