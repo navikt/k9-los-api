@@ -4,6 +4,8 @@ import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.Aggregatfunksjon
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.AggregertSelectFelt
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelSelectFelt
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
@@ -42,7 +44,10 @@ class StatusService(
         }
         val oppgaveQuery = OppgaveQuery(
             filtere = filtere,
-            groupBy = listOf(EnkelSelectFelt("K9", "behandlingTypekode"))
+            select = listOf(
+                EnkelSelectFelt("K9", "behandlingTypekode"),
+                AggregertSelectFelt(Aggregatfunksjon.COUNT),
+            ),
         )
         val gruppert = queryService.queryForGruppering(QueryRequest(oppgaveQuery))
 

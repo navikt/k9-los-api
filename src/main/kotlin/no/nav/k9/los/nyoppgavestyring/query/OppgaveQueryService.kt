@@ -172,7 +172,7 @@ class OppgaveQueryService {
                 verdi
             )
         } else {
-            // TODO: Støtt aggregerte felter:
+            // Aggregerte felter håndteres via queryForGruppering
             Oppgavefeltverdi("", "", "")
         }
     }

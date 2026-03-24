@@ -1003,7 +1003,10 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
             filtere = listOf(
                 byggFilter(FeltType.OPPGAVE_STATUS, EksternFeltverdiOperator.IN, Oppgavestatus.AAPEN.kode)
             ),
-            groupBy = listOf(EnkelSelectFelt("K9", "behandlingTypekode"))
+            select = listOf(
+                EnkelSelectFelt("K9", "behandlingTypekode"),
+                AggregertSelectFelt(Aggregatfunksjon.COUNT),
+            ),
         )
 
         val queryService = get<OppgaveQueryService>()
@@ -1027,7 +1030,10 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
             filtere = listOf(
                 byggFilter(FeltType.OPPGAVE_STATUS, EksternFeltverdiOperator.IN, Oppgavestatus.AAPEN.kode, Oppgavestatus.VENTER.kode)
             ),
-            groupBy = listOf(EnkelSelectFelt(null, "oppgavestatus"))
+            select = listOf(
+                EnkelSelectFelt(null, "oppgavestatus"),
+                AggregertSelectFelt(Aggregatfunksjon.COUNT),
+            ),
         )
 
         val queryService = get<OppgaveQueryService>()

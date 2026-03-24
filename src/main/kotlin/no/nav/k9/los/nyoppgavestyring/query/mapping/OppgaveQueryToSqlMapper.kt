@@ -94,7 +94,8 @@ object OppgaveQueryToSqlMapper {
         if (request.fjernReserverte) {
             queryBuilder.utenReservasjoner()
         }
-        queryBuilder.medGruppering(request.oppgaveQuery.groupBy)
+        val grupperingsFelter = request.oppgaveQuery.select.filterIsInstance<EnkelSelectFelt>()
+        queryBuilder.medGruppering(grupperingsFelter)
         return queryBuilder
     }
 
