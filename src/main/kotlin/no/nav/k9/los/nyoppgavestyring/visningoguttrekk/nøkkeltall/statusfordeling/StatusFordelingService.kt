@@ -8,9 +8,12 @@ import no.nav.k9.los.nyoppgavestyring.kodeverk.PersonBeskyttelseType
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
 import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.AntallSelectFelt
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelSelectFelt
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.Oppgavefilter
+import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.OppgaveQueryResultat
 import no.nav.k9.los.nyoppgavestyring.query.mapping.EksternFeltverdiOperator
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.KodeOgNavn
 import org.slf4j.Logger
@@ -49,132 +52,127 @@ class StatusFordelingService(val queryService: OppgaveQueryService) {
 
     private companion object {
         val kunKode6 = FeltverdiOppgavefilter(
-            null,
-            "personbeskyttelse",
-            EksternFeltverdiOperator.EQUALS,
+            null, "personbeskyttelse", EksternFeltverdiOperator.EQUALS,
             listOf(PersonBeskyttelseType.KODE6.kode)
         )
 
         val ikkeKode6 = FeltverdiOppgavefilter(
-            null,
-            "personbeskyttelse",
-            EksternFeltverdiOperator.EQUALS,
+            null, "personbeskyttelse", EksternFeltverdiOperator.EQUALS,
             listOf(PersonBeskyttelseType.UTEN_KODE6.kode)
         )
 
         val åpenVenterUavklart = FeltverdiOppgavefilter(
-            område = null,
-            kode = "oppgavestatus",
-            operator = EksternFeltverdiOperator.IN,
-            verdi = listOf(
-                Oppgavestatus.AAPEN.kode,
-                Oppgavestatus.VENTER.kode,
-                Oppgavestatus.UAVKLART.kode
-            )
+            område = null, kode = "oppgavestatus", operator = EksternFeltverdiOperator.IN,
+            verdi = listOf(Oppgavestatus.AAPEN.kode, Oppgavestatus.VENTER.kode, Oppgavestatus.UAVKLART.kode)
         )
 
-        val åpen = FeltverdiOppgavefilter(
-            område = null,
-            kode = "oppgavestatus",
-            operator = EksternFeltverdiOperator.EQUALS,
-            verdi = listOf(
-                Oppgavestatus.AAPEN.kode,
-            )
-        )
+        val punsj = FeltverdiOppgavefilter(null, "oppgavetype", EksternFeltverdiOperator.EQUALS, listOf("k9punsj"))
+        val ikkePunsj = FeltverdiOppgavefilter(null, "oppgavetype", EksternFeltverdiOperator.NOT_EQUALS, listOf("k9punsj"))
+        val førstegang = FeltverdiOppgavefilter("K9", "behandlingTypekode", EksternFeltverdiOperator.EQUALS, listOf(BehandlingType.FORSTEGANGSSOKNAD.kode))
+        val klage = FeltverdiOppgavefilter(null, "oppgavetype", EksternFeltverdiOperator.EQUALS, listOf("k9klage"))
+        val revurdering = FeltverdiOppgavefilter("K9", "behandlingTypekode", EksternFeltverdiOperator.IN, listOf(BehandlingType.REVURDERING.kode, BehandlingType.REVURDERING_TILBAKEKREVING.kode))
+        val feilutbetaling = FeltverdiOppgavefilter(null, "oppgavetype", EksternFeltverdiOperator.EQUALS, listOf("k9tilbake"))
+        val unntak = FeltverdiOppgavefilter("K9", "behandlingTypekode", EksternFeltverdiOperator.EQUALS, listOf(BehandlingType.UNNTAKSBEHANDLING.kode))
+    }
 
-        val venter = FeltverdiOppgavefilter(
-            område = null,
-            kode = "oppgavestatus",
-            operator = EksternFeltverdiOperator.EQUALS,
-            verdi = listOf(
-                Oppgavestatus.VENTER.kode,
-            )
+    /**
+     * Kjører én GROUP BY-query på oppgavestatus og returnerer antall per status.
+     * Erstatter 3-4 separate queryForAntall-kall per statuskort.
+     */
+    private fun antallPerStatus(vararg filtere: Oppgavefilter): Map<String, Long> {
+        val query = OppgaveQuery(
+            filtere = listOf(åpenVenterUavklart) + filtere.toList(),
+            select = listOf(
+                EnkelSelectFelt(null, "oppgavestatus"),
+                AntallSelectFelt(),
+            ),
         )
+        val resultat = queryService.queryMedSelect(QueryRequest(query))
+        if (resultat !is OppgaveQueryResultat.GruppertResultat) return emptyMap()
 
-        val uavklart = FeltverdiOppgavefilter(
-            område = null,
-            kode = "oppgavestatus",
-            operator = EksternFeltverdiOperator.EQUALS,
-            verdi = listOf(
-                Oppgavestatus.UAVKLART.kode,
-            )
-        )
+        return resultat.rader.associate { rad ->
+            val status = rad.grupperingsverdier.first().verdi?.toString() ?: ""
+            val antall = rad.aggregeringer.first { it.type == "antall" }.verdi.toLong()
+            status to antall
+        }
+    }
 
-        val punsj = FeltverdiOppgavefilter(
-            område = null,
-            kode = "oppgavetype",
-            operator = EksternFeltverdiOperator.EQUALS,
-            verdi = listOf("k9punsj")
-        )
+    /**
+     * Bygger et statuskort fra grupperte antall. Kildiespørringer bevares per linje
+     * slik at frontend kan drille ned.
+     */
+    private fun byggStatuskort(
+        gruppe: StatusGruppe,
+        personbeskyttelse: Oppgavefilter,
+        vararg gruppefiltre: Oppgavefilter
+    ): StatuskortDto {
+        val statusAntall = antallPerStatus(personbeskyttelse, *gruppefiltre)
 
-        val ikkePunsj = FeltverdiOppgavefilter(
-            område = null,
-            kode = "oppgavetype",
-            operator = EksternFeltverdiOperator.NOT_EQUALS,
-            verdi = listOf("k9punsj")
-        )
+        val åpne = statusAntall[Oppgavestatus.AAPEN.kode] ?: 0L
+        val ventende = statusAntall[Oppgavestatus.VENTER.kode] ?: 0L
+        val uavklarte = statusAntall[Oppgavestatus.UAVKLART.kode] ?: 0L
+        val totalt = åpne + ventende + uavklarte
 
-        val førstegang = FeltverdiOppgavefilter(
-            "K9",
-            "behandlingTypekode",
-            EksternFeltverdiOperator.EQUALS,
-            listOf(BehandlingType.FORSTEGANGSSOKNAD.kode)
-        )
+        val alleFiltre = gruppefiltre.toList()
+        fun kildeQuery(vararg ekstraFiltre: Oppgavefilter) =
+            OppgaveQuery((listOf(personbeskyttelse) + alleFiltre + ekstraFiltre.toList()))
 
-        val klage = FeltverdiOppgavefilter(
-            null,
-            "oppgavetype",
-            EksternFeltverdiOperator.EQUALS,
-            listOf("k9klage")
-        )
+        val åpenFilter = FeltverdiOppgavefilter(null, "oppgavestatus", EksternFeltverdiOperator.EQUALS, listOf(Oppgavestatus.AAPEN.kode))
+        val venterFilter = FeltverdiOppgavefilter(null, "oppgavestatus", EksternFeltverdiOperator.EQUALS, listOf(Oppgavestatus.VENTER.kode))
+        val uavklartFilter = FeltverdiOppgavefilter(null, "oppgavestatus", EksternFeltverdiOperator.EQUALS, listOf(Oppgavestatus.UAVKLART.kode))
 
-        val venterKabal = FeltverdiOppgavefilter(
-            område = "K9",
-            kode = "aktivVenteårsak",
-            operator = EksternFeltverdiOperator.EQUALS,
-            listOf(Venteårsak.OVERSENDT_KABAL.kode)
-        )
-
-        val venterIkkeKabal = FeltverdiOppgavefilter(
-            område = "K9",
-            kode = "aktivVenteårsak",
-            operator = EksternFeltverdiOperator.NOT_EQUALS,
-            listOf(Venteårsak.OVERSENDT_KABAL.kode)
-        )
-
-        val revurdering = FeltverdiOppgavefilter(
-            "K9",
-            "behandlingTypekode",
-            EksternFeltverdiOperator.IN,
-            listOf(
-                BehandlingType.REVURDERING.kode,
-                BehandlingType.REVURDERING_TILBAKEKREVING.kode)
-        )
-
-        val feilutbetaling = FeltverdiOppgavefilter(
-            null,
-            "oppgavetype",
-            EksternFeltverdiOperator.EQUALS,
-            listOf("k9tilbake")
-        )
-
-        val unntak = FeltverdiOppgavefilter(
-            "K9",
-            "behandlingTypekode",
-            EksternFeltverdiOperator.EQUALS,
-            listOf(BehandlingType.UNNTAKSBEHANDLING.kode)
+        return StatuskortDto(
+            tittel = KodeOgNavn(gruppe.name, gruppe.tekst),
+            topplinje = StatuslinjeDto("åpne", åpne, kildeQuery(åpenFilter)),
+            linjer = listOf(
+                StatuslinjeDto("venter", ventende, kildeQuery(venterFilter)),
+                StatuslinjeDto("uavklart", uavklarte, kildeQuery(uavklartFilter)),
+            ),
+            bunnlinje = StatuslinjeDto("totalt", totalt, kildeQuery(åpenVenterUavklart)),
         )
     }
 
-    private fun antall(
-        visningsnavn: String,
-        vararg filtere: Oppgavefilter
-    ): StatuslinjeDto {
-        val query = OppgaveQuery(filtere.toList())
-        return StatuslinjeDto(
-            visningsnavn,
-            queryService.queryForAntall(QueryRequest(query)),
-            query
+    /**
+     * KLAGE har ekstra dimensjon: venter-Kabal vs venter-annet.
+     * Kjører en ekstra GROUP BY på aktivÅrsak for venter-oppgavene.
+     */
+    private fun byggKlageStatuskort(personbeskyttelse: Oppgavefilter): StatuskortDto {
+        val statusAntall = antallPerStatus(personbeskyttelse, klage)
+
+        val åpne = statusAntall[Oppgavestatus.AAPEN.kode] ?: 0L
+        val uavklarte = statusAntall[Oppgavestatus.UAVKLART.kode] ?: 0L
+        val totalt = åpne + (statusAntall[Oppgavestatus.VENTER.kode] ?: 0L) + uavklarte
+
+        // Ekstra query for venteårsak-split innenfor venter-klage
+        val venterKabalQuery = OppgaveQuery(
+            filtere = listOf(
+                personbeskyttelse, klage,
+                FeltverdiOppgavefilter(null, "oppgavestatus", EksternFeltverdiOperator.EQUALS, listOf(Oppgavestatus.VENTER.kode)),
+                FeltverdiOppgavefilter("K9", "aktivVenteårsak", EksternFeltverdiOperator.EQUALS, listOf(Venteårsak.OVERSENDT_KABAL.kode)),
+            ),
+            select = listOf(AntallSelectFelt()),
+        )
+        val venterKabal = (queryService.queryMedSelect(QueryRequest(venterKabalQuery)) as OppgaveQueryResultat.AntallResultat).antall
+        val venterAnnet = (statusAntall[Oppgavestatus.VENTER.kode] ?: 0L) - venterKabal
+
+        fun kildeQuery(vararg ekstraFiltre: Oppgavefilter) =
+            OppgaveQuery(listOf(personbeskyttelse, klage) + ekstraFiltre.toList())
+
+        val åpenFilter = FeltverdiOppgavefilter(null, "oppgavestatus", EksternFeltverdiOperator.EQUALS, listOf(Oppgavestatus.AAPEN.kode))
+        val venterFilter = FeltverdiOppgavefilter(null, "oppgavestatus", EksternFeltverdiOperator.EQUALS, listOf(Oppgavestatus.VENTER.kode))
+        val uavklartFilter = FeltverdiOppgavefilter(null, "oppgavestatus", EksternFeltverdiOperator.EQUALS, listOf(Oppgavestatus.UAVKLART.kode))
+        val kabalFilter = FeltverdiOppgavefilter("K9", "aktivVenteårsak", EksternFeltverdiOperator.EQUALS, listOf(Venteårsak.OVERSENDT_KABAL.kode))
+        val ikkeKabalFilter = FeltverdiOppgavefilter("K9", "aktivVenteårsak", EksternFeltverdiOperator.NOT_EQUALS, listOf(Venteårsak.OVERSENDT_KABAL.kode))
+
+        return StatuskortDto(
+            tittel = KodeOgNavn(StatusGruppe.KLAGE.name, StatusGruppe.KLAGE.tekst),
+            topplinje = StatuslinjeDto("åpne", åpne, kildeQuery(åpenFilter)),
+            linjer = listOf(
+                StatuslinjeDto("venter Kabal", venterKabal, kildeQuery(venterFilter, kabalFilter)),
+                StatuslinjeDto("venter annet", venterAnnet, kildeQuery(venterFilter, ikkeKabalFilter)),
+                StatuslinjeDto("uavklart", uavklarte, kildeQuery(uavklartFilter)),
+            ),
+            bunnlinje = StatuslinjeDto("totalt", totalt, kildeQuery(åpenVenterUavklart)),
         )
     }
 
@@ -182,67 +180,12 @@ class StatusFordelingService(val queryService: OppgaveQueryService) {
         val personbeskyttelse = if (kode6) kunKode6 else ikkeKode6
         val tall = StatusGruppe.entries.map { gruppe ->
             when (gruppe) {
-                StatusGruppe.BEHANDLINGER -> StatuskortDto(
-                    tittel = KodeOgNavn(gruppe.name, gruppe.tekst),
-                    topplinje = antall("åpne", personbeskyttelse, åpen, ikkePunsj),
-                    linjer =
-                        listOf(
-                            antall("venter", personbeskyttelse, venter, ikkePunsj),
-                            antall("uavklart", personbeskyttelse, uavklart, ikkePunsj),
-                        ),
-                    bunnlinje = antall("totalt", personbeskyttelse, åpenVenterUavklart, ikkePunsj),
-                )
-
-                StatusGruppe.FØRSTEGANG -> StatuskortDto(
-                    tittel = KodeOgNavn(gruppe.name, gruppe.tekst),
-                    topplinje = antall("åpne", personbeskyttelse, åpen, førstegang),
-                    linjer = listOf(
-                        antall("venter", personbeskyttelse, venter, førstegang),
-                        antall("uavklart", personbeskyttelse, uavklart, førstegang),
-                    ),
-                    bunnlinje = antall("totalt", personbeskyttelse, åpenVenterUavklart, førstegang)
-                )
-
-                StatusGruppe.REVURDERING -> StatuskortDto(
-                    tittel = KodeOgNavn(gruppe.name, gruppe.tekst),
-                    topplinje = antall("åpne", personbeskyttelse, åpen, revurdering),
-                    linjer = listOf(
-                        antall("venter", personbeskyttelse, venter, revurdering),
-                        antall("uavklart", personbeskyttelse, uavklart, revurdering),
-                    ),
-                    bunnlinje = antall("totalt", personbeskyttelse, åpenVenterUavklart, revurdering),
-                )
-
-                StatusGruppe.FEILUTBETALING -> StatuskortDto(
-                    tittel = KodeOgNavn(gruppe.name, gruppe.tekst),
-                    topplinje = antall("åpne", personbeskyttelse, åpen, feilutbetaling),
-                    linjer = listOf(
-                        antall("venter", personbeskyttelse, venter, feilutbetaling),
-                        antall("uavklart", personbeskyttelse, uavklart, feilutbetaling),
-                    ),
-                    bunnlinje = antall("totalt", personbeskyttelse, åpenVenterUavklart, feilutbetaling),
-                )
-
-                StatusGruppe.KLAGE -> StatuskortDto(
-                    tittel = KodeOgNavn(gruppe.name, gruppe.tekst),
-                    topplinje = antall("åpne", personbeskyttelse, åpen, klage),
-                    linjer = listOf(
-                        antall("venter Kabal", personbeskyttelse, venter, klage, venterKabal),
-                        antall("venter annet", personbeskyttelse, venter, klage, venterIkkeKabal),
-                        antall("uavklart", personbeskyttelse, uavklart, klage),
-                    ),
-                    bunnlinje = antall("totalt", personbeskyttelse, åpenVenterUavklart, klage),
-                )
-
-                StatusGruppe.PUNSJ -> StatuskortDto(
-                    tittel = KodeOgNavn(gruppe.name, gruppe.tekst),
-                    topplinje = antall("åpne", personbeskyttelse, åpen, punsj),
-                    linjer = listOf(
-                        antall("venter", personbeskyttelse, venter, punsj),
-                        antall("uavklart", personbeskyttelse, uavklart, punsj),
-                    ),
-                    bunnlinje = antall("totalt", personbeskyttelse, åpenVenterUavklart, punsj),
-                )
+                StatusGruppe.BEHANDLINGER -> byggStatuskort(gruppe, personbeskyttelse, ikkePunsj)
+                StatusGruppe.FØRSTEGANG -> byggStatuskort(gruppe, personbeskyttelse, førstegang)
+                StatusGruppe.REVURDERING -> byggStatuskort(gruppe, personbeskyttelse, revurdering)
+                StatusGruppe.FEILUTBETALING -> byggStatuskort(gruppe, personbeskyttelse, feilutbetaling)
+                StatusGruppe.KLAGE -> byggKlageStatuskort(personbeskyttelse)
+                StatusGruppe.PUNSJ -> byggStatuskort(gruppe, personbeskyttelse, punsj)
             }
         }
 
