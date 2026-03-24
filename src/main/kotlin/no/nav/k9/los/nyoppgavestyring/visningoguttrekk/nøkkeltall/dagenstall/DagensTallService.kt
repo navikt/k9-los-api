@@ -180,12 +180,18 @@ class DagensTallService(
     private fun hentFraDatabase(): DagensTallResponse {
         val iDag = LocalDate.now()
         val syvDagerSiden = iDag.minusWeeks(1)
+        val fjortenDagerSiden = iDag.minusWeeks(2)
+        val tjueåtteDagerSiden = iDag.minusWeeks(4)
 
         // 4 grupperte queries erstatter 336 enkelt-queries
         val inngangIdag = hentGrupperte(listOf(mottattDato(iDag)), medHelautomatisk = false)
         val inngangSiste7 = hentGrupperte(listOf(mottattDato(syvDagerSiden)), medHelautomatisk = false)
+        val inngangSiste14 = hentGrupperte(listOf(mottattDato(fjortenDagerSiden)), medHelautomatisk = false)
+        val inngangSiste28 = hentGrupperte(listOf(mottattDato(tjueåtteDagerSiden)), medHelautomatisk = false)
         val ferdigstiltIdag = hentGrupperte(listOf(lukket, ferdigstiltDato(iDag)), medHelautomatisk = true)
         val ferdigstiltSiste7 = hentGrupperte(listOf(lukket, ferdigstiltDato(syvDagerSiden)), medHelautomatisk = true)
+        val ferdigstiltSiste14 = hentGrupperte(listOf(lukket, ferdigstiltDato(fjortenDagerSiden)), medHelautomatisk = true)
+        val ferdigstiltSiste28 = hentGrupperte(listOf(lukket, ferdigstiltDato(tjueåtteDagerSiden)), medHelautomatisk = true)
 
         val tall = DagensTallHovedgruppe.entries.flatMap { hovedgruppe ->
             val ytelser = hovedgruppeYtelser[hovedgruppe]
@@ -227,11 +233,21 @@ class DagensTallService(
                     )
                 }
 
+                val idag = dagenstallKort(inngangIdag, ferdigstiltIdag, iDag)
+                val siste7Dager = dagenstallKort(inngangSiste7, ferdigstiltSiste7, syvDagerSiden)
+                val siste14Dager = dagenstallKort(inngangSiste14, ferdigstiltSiste14, fjortenDagerSiden)
+                val siste28Dager = dagenstallKort(inngangSiste28, ferdigstiltSiste28, tjueåtteDagerSiden)
                 DagensTallDto(
                     hovedgruppe = hovedgruppe,
                     undergruppe = undergruppe,
-                    idag = dagenstallKort(inngangIdag, ferdigstiltIdag, iDag),
-                    siste7Dager = dagenstallKort(inngangSiste7, ferdigstiltSiste7, syvDagerSiden)
+                    idag = idag,
+                    siste7Dager = siste7Dager,
+                    serier = mapOf(
+                        "idag" to idag,
+                        "siste7Dager" to siste7Dager,
+                        "siste14Dager" to siste14Dager,
+                        "siste28Dager" to siste28Dager
+                    )
                 )
             }
         }

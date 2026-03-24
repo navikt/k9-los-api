@@ -10,7 +10,9 @@ data class DagensTallDto(
     @JsonFormat(shape = JsonFormat.Shape.ARRAY)
     val idag: Pair<DagensTallKortDto, DagensTallKortDto>,
     @JsonFormat(shape = JsonFormat.Shape.ARRAY)
-    val siste7Dager: Pair<DagensTallKortDto, DagensTallKortDto>
+    val siste7Dager: Pair<DagensTallKortDto, DagensTallKortDto>,
+
+    val serier: Map<String, Pair<DagensTallKortDto, DagensTallKortDto>>
 )
 
 data class DagensTallKortDto(
