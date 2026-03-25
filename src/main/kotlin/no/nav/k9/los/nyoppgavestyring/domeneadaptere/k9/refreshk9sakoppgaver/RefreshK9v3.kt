@@ -32,7 +32,7 @@ class RefreshK9v3(
                             //ta litt pause for å ikke lage unødvendig høy last
                             //TODO tilpasse når vi har fått erfaring fra prod
                             //kan fjernes dersom vi får på plass å bare hente oppgaver fra køer som er direkte påvirket
-                            delay(15.seconds)
+                            Thread.sleep(15000)
                         }
                     } catch (e: Exception) {
                         log.error("Feilet ved refresh av oppgaver i k9-sak: " + hendelser.joinToString(", "), e)
