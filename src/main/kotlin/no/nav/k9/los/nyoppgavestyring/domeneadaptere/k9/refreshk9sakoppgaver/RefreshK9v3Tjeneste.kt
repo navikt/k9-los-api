@@ -71,7 +71,7 @@ class RefreshK9v3Tjeneste(
             behandlingerTilOppfriskning(tx, antallPrKø)
         }
 
-        DetaljerMetrikker.timeSuspended("RefreshK9V3", "refreshForKøer") {
+        DetaljerMetrikker.timeSuspended("RefreshK9V3", "refreshForKøer", "k9SakService") {
             k9SakService.refreshBehandlinger(behandlinger)
         }
 
