@@ -39,6 +39,10 @@ object DetaljerMetrikker {
     }
 
     suspend fun <T> timeSuspended(label1: String, label2: String, operasjon: (suspend () -> T)): T {
+        return timeSuspended(label1, label2, "n/a", operasjon)
+    }
+
+    suspend fun <T> timeSuspended(label1: String, label2: String, label3: String, operasjon: (suspend () -> T)): T {
         val t0 = System.nanoTime()
         var status = "OK"
         try {
@@ -48,7 +52,7 @@ object DetaljerMetrikker {
             status = e.javaClass.simpleName
             throw e
         } finally {
-            observe(t0, label1, label2, status)
+            observe(t0, label1, label2, label3, status)
         }
     }
 
