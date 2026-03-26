@@ -191,7 +191,9 @@ class OmrådeSetup(
             BehandlingStegType.VURDER_OPPTJENING_FAKTA,
             BehandlingStegType.VURDER_OPPTJENINGSVILKÅR,
             BehandlingStegType.VURDER_UTLAND,
-            BehandlingStegType.VURDER_SØKNADSFRIST -> "Inngangsvilkår" to KodeverkSynlighet.SYNLIG_FAVORITT
+            BehandlingStegType.VURDER_SØKNADSFRIST,
+            BehandlingStegType.VURDER_RETT_FRA_DAG_1,
+                -> "Inngangsvilkår" to KodeverkSynlighet.SYNLIG_FAVORITT
 
             BehandlingStegType.KONTROLLER_FAKTA,
             BehandlingStegType.VURDER_KOMPLETTHET_BEREGNING,

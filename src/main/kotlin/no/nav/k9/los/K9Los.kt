@@ -129,12 +129,7 @@ fun Application.k9Los() {
         )
     ) { start(koin.get<Channel<KøpåvirkendeHendelse>>(named("KøpåvirkendeHendelseChannel"))) }
 
-    K9sakBehandlingsoppfriskingJobb(
-        reservasjonRepository = koin.get(),
-        refreshK9v3Tjeneste = koin.get(),
-        refreshOppgaveChannel = koin.get<Channel<UUID>>(named("oppgaveRefreshChannel")),
-        configuration = koin.get()
-    ).run { start() }
+
 
     val asynkronProsesseringV1Service = koin.get<AsynkronProsesseringV1Service>()
 
@@ -282,6 +277,12 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
     val nyeOgFerdigstilteService = koin.get<NyeOgFerdigstilteService>()
     val uttrekkJobb = koin.get<UttrekkJobb>()
 
+    val k9sakBehandlingsoppfriskingJobb = K9sakBehandlingsoppfriskingJobb(
+        reservasjonRepository = koin.get(),
+        refreshK9v3Tjeneste = koin.get(),
+        refreshOppgaveChannel = koin.get<Channel<UUID>>(named("oppgaveRefreshChannel")),
+    )
+
     val høyPrioritet = 0
     val mediumPrioritet = 5
     val lavPrioritet = 10
@@ -428,6 +429,17 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
                 minutter = listOf(0, 10, 20, 30, 40, 50),
             ) {
                 nyeOgFerdigstilteService.oppdaterCache(this)
+            }
+        )
+
+        add(
+            PlanlagtJobb.TimeJobb(
+                navn = "K9sakBehandlingsoppfriskingJobb",
+                prioritet = lavPrioritet,
+                tidsvindu = Tidsvindu.hverdagerOgLørdag(5, 6),
+                minutter = listOf(3), // vilkårlig valgt minutt tidlig i timen 5-6
+            ) {
+                k9sakBehandlingsoppfriskingJobb.utfør()
             }
         )
 
