@@ -38,47 +38,30 @@ sealed class Tidsvindu {
     }
 
     companion object {
-        fun hverdager(fraKl: Int = 0, tilKl: Int = 24): Tidsvindu {
+        private fun forDager(dager: List<DayOfWeek>, fraKl: Int, tilKl: Int): Tidsvindu {
             return TidsvinduMedPerioder(
-                listOf(
-                    DayOfWeek.MONDAY,
-                    DayOfWeek.TUESDAY,
-                    DayOfWeek.WEDNESDAY,
-                    DayOfWeek.THURSDAY,
-                    DayOfWeek.FRIDAY
-                ).map {
+                dager.map {
                     DagligPeriode(
                         dag = it,
-                        tidsperiode = Tidsperiode(
-                            fraKl = fraKl,
-                            tilKl = tilKl
-                        )
+                        tidsperiode = Tidsperiode(fraKl = fraKl, tilKl = tilKl)
                     )
                 }
             )
         }
 
-        fun alleDager(fraKl: Int = 0, tilKl: Int = 24): Tidsvindu {
-            return TidsvinduMedPerioder(
-                listOf(
-                    DayOfWeek.MONDAY,
-                    DayOfWeek.TUESDAY,
-                    DayOfWeek.WEDNESDAY,
-                    DayOfWeek.THURSDAY,
-                    DayOfWeek.FRIDAY,
-                    DayOfWeek.SATURDAY,
-                    DayOfWeek.SUNDAY
-                ).map {
-                    DagligPeriode(
-                        dag = it,
-                        tidsperiode = Tidsperiode(
-                            fraKl = fraKl,
-                            tilKl = tilKl
-                        )
-                    )
-                }
-            )
-        }
+        private val HVERDAGER = listOf(
+            DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY,
+            DayOfWeek.THURSDAY, DayOfWeek.FRIDAY
+        )
+
+        fun hverdager(fraKl: Int = 0, tilKl: Int = 24): Tidsvindu =
+            forDager(HVERDAGER, fraKl, tilKl)
+
+        fun hverdagerOgLørdag(fraKl: Int = 0, tilKl: Int = 24): Tidsvindu =
+            forDager(HVERDAGER + DayOfWeek.SATURDAY, fraKl, tilKl)
+
+        fun alleDager(fraKl: Int = 0, tilKl: Int = 24): Tidsvindu =
+            forDager(DayOfWeek.entries, fraKl, tilKl)
     }
 }
 
