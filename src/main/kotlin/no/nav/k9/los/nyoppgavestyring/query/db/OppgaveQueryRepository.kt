@@ -19,6 +19,7 @@ import no.nav.k9.los.nyoppgavestyring.query.mapping.OppgaveQueryToSqlMapper
 import no.nav.k9.los.nyoppgavestyring.query.mapping.transientfeltutleder.GyldigeTransientFeltutleder
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.slf4j.event.Level
 import java.time.LocalDateTime
 import javax.sql.DataSource
 
@@ -69,6 +70,7 @@ class OppgaveQueryRepository(
 
     @WithSpan
     private fun queryForAntall(tx: TransactionalSession, oppgaveQuery: OppgaveQuerySqlBuilder): Long {
+        loggSqlDebug(oppgaveQuery)
         return tx.run(
             queryOf(
                 oppgaveQuery.getQuery(),
@@ -211,6 +213,8 @@ class OppgaveQueryRepository(
     }
 
     private fun query(tx: TransactionalSession, oppgaveQuery: OppgaveQuerySqlBuilder): List<OppgaveId> {
+        loggSqlDebug(oppgaveQuery)
+
         return tx.run(
             queryOf(
                 oppgaveQuery.getQuery(),
@@ -223,6 +227,7 @@ class OppgaveQueryRepository(
         tx: TransactionalSession,
         oppgaveQuery: OppgaveQuerySqlBuilder
     ): List<EksternOppgaveId> {
+        loggSqlDebug(oppgaveQuery)
         return tx.run(
             queryOf(
                 oppgaveQuery.getQuery(),
@@ -242,11 +247,20 @@ class OppgaveQueryRepository(
 
         val oppgaveQuery = OppgaveQueryToSqlMapper.toSqlOppgaveQueryMedSelectFelter(request, felter, now)
 
+        loggSqlDebug(oppgaveQuery)
+
         return tx.run(
             queryOf(
                 oppgaveQuery.getQuery(),
                 oppgaveQuery.getParams()
             ).map(oppgaveQuery::mapRowTilOppgaveResultat).asList
         )
+    }
+
+    private fun loggSqlDebug(oppgaveQuery: OppgaveQuerySqlBuilder) {
+        log.atLevel(Level.DEBUG)
+            .setMessage("Kjører følgende intrapolerte SQL: \n{}")
+            .addArgument { oppgaveQuery.unsafeDebug() }
+            .log()
     }
 }
