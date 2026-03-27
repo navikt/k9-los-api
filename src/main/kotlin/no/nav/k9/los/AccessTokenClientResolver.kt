@@ -1,10 +1,10 @@
 package no.nav.k9.los
 
-import no.nav.helse.dusseldorf.ktor.auth.Client
-import no.nav.helse.dusseldorf.ktor.auth.PrivateKeyClient
-import no.nav.helse.dusseldorf.oauth2.client.DirectKeyId
-import no.nav.helse.dusseldorf.oauth2.client.FromJwk
-import no.nav.helse.dusseldorf.oauth2.client.SignedJwtAccessTokenClient
+import no.nav.k9.los.ktor.auth.Client
+import no.nav.k9.los.ktor.auth.PrivateKeyClient
+import no.nav.k9.los.oauth2.client.DirectKeyId
+import no.nav.k9.los.oauth2.client.FromJwk
+import no.nav.k9.los.oauth2.client.SignedJwtAccessTokenClient
 import no.nav.k9.los.Configuration.Companion.AZURE_V2_ALIAS
 
 class AccessTokenClientResolver(

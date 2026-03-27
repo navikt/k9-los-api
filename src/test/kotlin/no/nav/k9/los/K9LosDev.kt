@@ -1,7 +1,6 @@
 package no.nav.k9.los
 
 import io.ktor.server.testing.*
-import no.nav.helse.dusseldorf.testsupport.asArguments
 
 class K9LosDev {
     companion object {
@@ -13,5 +12,8 @@ class K9LosDev {
                 no.nav.k9.los.main(testArgs.asArguments())
             }
         }
+
+        private fun Map<String, String>.asArguments(): Array<String> =
+            flatMap { (key, value) -> listOf("-P:$key=$value") }.toTypedArray()
     }
 }

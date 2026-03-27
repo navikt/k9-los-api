@@ -1,26 +1,15 @@
 package no.nav.k9.los
 
-import io.ktor.client.*
-import io.ktor.client.request.*
-import io.ktor.client.statement.*
-import kotlinx.coroutines.runBlocking
-import com.github.tomakehurst.wiremock.WireMockServer
-import no.nav.helse.dusseldorf.testsupport.jws.ClientCredentials
-import no.nav.k9.los.wiremocks.getTpsProxyUrl
-import org.json.JSONObject
+import no.nav.k9.los.testsupport.jws.ClientCredentials
 
 object TestConfiguration {
 
     fun asMap(
-        wireMockServer: WireMockServer? = null,
         port: Int = 8020,
-        tpsProxyBaseUrl: String? = wireMockServer?.getTpsProxyUrl()
     ): Map<String, String> {
-        val map = mutableMapOf(
-            Pair("ktor.deployment.port", "$port"),
-            Pair("nav.register_urls.tps_proxy_v1", "$tpsProxyBaseUrl"),
-            Pair("nav.register_urls.pdl_url", "$tpsProxyBaseUrl")
-        )
+        val map = mutableMapOf<String, String>()
+
+        map["ktor.deployment.port"] = "$port"
 
         map["nav.register_urls.k9_url"] = "http://localhost:8080"
         map["nav.register_urls.k9_klage_url"] = "http://localhost:8080"
@@ -56,13 +45,5 @@ object TestConfiguration {
         map["nav.kafka.åpenStatistikkSakTopic"] = "aapen-k9statistikk-sak-v2"
         map["nav.nokkeltall.enheter"] = "NAV DRIFT"
         return map.toMap()
-    }
-
-    private fun String.getAsJson(): JSONObject {
-        val httpClient = HttpClient()
-        return runBlocking {
-            val response = httpClient.get(this@getAsJson)
-            JSONObject(response.bodyAsText())
-        }
     }
 }

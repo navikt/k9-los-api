@@ -1,6 +1,6 @@
 package no.nav.k9.los.apis
 
-import no.nav.helse.dusseldorf.testsupport.jws.Azure
+import no.nav.k9.los.testsupport.jws.Azure
 import java.util.*
 
 internal fun authorizationHeader(
