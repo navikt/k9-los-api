@@ -24,7 +24,7 @@ data class ReservasjonV3Dto(
     ) : this(
         reserverteV3Oppgaver = oppgaver,
         reservasjonsnøkkel = reservasjonV3.reservasjonsnøkkel,
-        reservertAvIdent = reservertAv.brukerIdent!!,
+        reservertAvIdent = reservertAv.navident!!,
         reservertAvEpost = reservertAv.epost,
         reservertAvId = reservertAv.id!!,
         reservertAvNavn = reservertAv.navn,

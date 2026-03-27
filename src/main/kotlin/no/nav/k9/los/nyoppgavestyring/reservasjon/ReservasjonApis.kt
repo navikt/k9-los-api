@@ -34,7 +34,7 @@ internal fun Route.ReservasjonApis() {
                     ?: throw IllegalStateException("Fant ikke saksbehandler $navident ved forsøk på å reservasjon av oppgave")
 
                 try {
-                    log.info("Forsøker å ta reservasjon direkte på ${oppgaveIdMedOverstyringDto.oppgaveNøkkel.oppgaveEksternId} for ${innloggetBruker.brukerIdent}")
+                    log.info("Forsøker å ta reservasjon direkte på ${oppgaveIdMedOverstyringDto.oppgaveNøkkel.oppgaveEksternId} for ${innloggetBruker.navident}")
                     val oppgave = reservasjonApisTjeneste.reserverOppgave(innloggetBruker, oppgaveIdMedOverstyringDto)
                     call.respond(oppgave)
                 } catch (e: ManglerTilgangException) {
@@ -78,7 +78,7 @@ internal fun Route.ReservasjonApis() {
                     log.info(
                         "Opphever reservasjoner ${
                             params.map { it.oppgaveNøkkel }.joinToString(", ")
-                        } (Gjort av ${innloggetBruker.brukerIdent})"
+                        } (Gjort av ${innloggetBruker.navident})"
                     )
                     reservasjonApisTjeneste.annullerReservasjoner(params, innloggetBruker)
                     call.respond(HttpStatusCode.OK) //TODO: Hva er evt meningsfullt å returnere her?
@@ -120,7 +120,7 @@ internal fun Route.ReservasjonApis() {
                 )!!
 
                 try {
-                    log.info("Flytter reservasjonen ${params.oppgaveNøkkel.oppgaveEksternId} til ${params.brukerIdent} (Gjort av ${innloggetBruker.brukerIdent})")
+                    log.info("Flytter reservasjonen ${params.oppgaveNøkkel.oppgaveEksternId} til ${params.brukerIdent} (Gjort av ${innloggetBruker.navident})")
                     call.respond(reservasjonApisTjeneste.overførReservasjon(params, innloggetBruker))
                 } catch (e: FinnerIkkeDataException) {
                     call.respond(HttpStatusCode.NotFound, "Fant ingen aktiv reservasjon for angitt reservasjonsnøkkel")
@@ -166,9 +166,9 @@ internal fun Route.ReservasjonApis() {
             if (pepClient.harBasisTilgang()) {
                 val alleSaksbehandlere = saksbehandlerRepository.hentAlleSaksbehandlere()
                 val saksbehandlerDtoListe =
-                    alleSaksbehandlere.filter { saksbehandler -> !saksbehandler.navn.isNullOrBlank() && !saksbehandler.brukerIdent.isNullOrBlank() }
+                    alleSaksbehandlere.filter { saksbehandler -> !saksbehandler.navn.isNullOrBlank() && !saksbehandler.navident.isNullOrBlank() }
                         .map { saksbehandler ->
-                            SaksbehandlerDto(saksbehandler.brukerIdent!!, saksbehandler.navn!!)
+                            SaksbehandlerDto(saksbehandler.navident!!, saksbehandler.navn!!)
                         }
                 call.respond(saksbehandlerDtoListe)
             } else {

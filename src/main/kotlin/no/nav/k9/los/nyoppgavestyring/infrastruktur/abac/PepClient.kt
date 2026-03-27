@@ -104,7 +104,7 @@ class PepClient(
         return runBlocking {
             harTilgang(
                 oppgavetype = oppgave.oppgavetype.eksternId,
-                identTilInnloggetBruker = saksbehandler.brukerIdent!!,
+                identTilInnloggetBruker = saksbehandler.navident!!,
                 action = action,
                 saksnummer = oppgave.hentVerdi("saksnummer"),
                 aktørIdSøker = oppgave.hentVerdi("aktorId"),
