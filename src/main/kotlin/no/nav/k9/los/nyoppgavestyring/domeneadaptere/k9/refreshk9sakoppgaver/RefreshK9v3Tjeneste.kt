@@ -10,10 +10,13 @@ import no.nav.k9.los.nyoppgavestyring.ko.*
 import no.nav.k9.los.nyoppgavestyring.ko.db.OppgaveKoRepository
 import no.nav.k9.los.nyoppgavestyring.ko.dto.OppgaveKo
 import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.AktivOppgaveRepository
 import no.nav.k9.los.nyoppgavestyring.query.Avgrensning
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
 import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
+import no.nav.k9.los.nyoppgavestyring.query.db.EksternOppgaveId
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
+import no.nav.k9.los.nyoppgavestyring.query.mapping.EksternFeltverdiOperator
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -22,7 +25,6 @@ import java.util.*
 class RefreshK9v3Tjeneste(
     val k9SakService: IK9SakService,
     val oppgaveQueryService: OppgaveQueryService,
-    val aktivOppgaveRepository: AktivOppgaveRepository,
     val oppgaveKoRepository: OppgaveKoRepository,
     val transactionalManager: TransactionalManager,
     val antallPrKø: Int = 10
@@ -129,10 +131,41 @@ class RefreshK9v3Tjeneste(
                 }
             }
             DetaljerMetrikker.time("RefreshK9V3", "refreshForKøer", "parsaker") {
-                aktivOppgaveRepository.hentK9sakParsakOppgaver(tx, førsteOppgaver)
+                hentK9sakParsakOppgaver(førsteOppgaver)
                     .map { UUID.fromString(it.eksternId) }.toSet()
             }
         }
+    }
+
+    @WithSpan
+    private fun hentK9sakParsakOppgaver(oppgaver: Collection<Oppgave>): Set<EksternOppgaveId> {
+        if (oppgaver.isEmpty()) {
+            return emptySet()
+        }
+        val reservasjonsnøkler = oppgaver.map { it.reservasjonsnøkkel }.distinct()
+        val query = OppgaveQuery(
+            filtere = listOf(
+                FeltverdiOppgavefilter(
+                    område = null,
+                    kode = "oppgavetype",
+                    operator = EksternFeltverdiOperator.EQUALS,
+                    verdi = listOf("k9sak")
+                ),
+                FeltverdiOppgavefilter(
+                    område = null,
+                    kode = "oppgavestatus",
+                    operator = EksternFeltverdiOperator.IN,
+                    verdi = listOf("AAPEN", "VENTER")
+                ),
+                FeltverdiOppgavefilter(
+                    område = null,
+                    kode = "reservasjonsnokkel",
+                    operator = EksternFeltverdiOperator.IN,
+                    verdi = reservasjonsnøkler
+                )
+            )
+        )
+        return oppgaveQueryService.queryForOppgaveEksternId(QueryRequest(query)).toSet()
     }
 
     companion object {

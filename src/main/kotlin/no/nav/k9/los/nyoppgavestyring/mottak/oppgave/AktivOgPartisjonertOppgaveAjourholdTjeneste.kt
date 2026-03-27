@@ -11,9 +11,8 @@ class AktivOgPartisjonertOppgaveAjourholdTjeneste(
     fun ajourholdOppgave(innkommendeOppgave: OppgaveV3, internVersjon: Int, tx: TransactionalSession) {
         val ignorerForKøer = gjelderFRISINN(innkommendeOppgave)
         if (ignorerForKøer) {
-            log.info("Oppdaterer ikke aktiv oppgave, da hendelsen gjaldt frisinn for oppgaveId ${innkommendeOppgave.eksternId}")
+            log.info("Oppdaterer ikke oppgave, da hendelsen gjaldt frisinn for oppgaveId ${innkommendeOppgave.eksternId}")
         } else {
-            AktivOppgaveRepository.ajourholdAktivOppgave(innkommendeOppgave, internVersjon, tx)
             partisjonertOppgaveRepository.ajourhold(innkommendeOppgave, tx)
         }
     }
