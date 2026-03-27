@@ -50,7 +50,7 @@ class ReservasjonApisTjeneste(
                 oppgaveNøkkel.oppgaveEksternId
             )
 
-            reservasjonV3Tjeneste.forsøkReservasjonOgReturnerAktivMenSjekkLegacyFørst(
+            reservasjonV3Tjeneste.forsøkReservasjonOgReturnerAktiv(
                 reservasjonsnøkkel = oppgaveV3.reservasjonsnøkkel,
                 reserverForId = reserverForSaksbehandler.id!!,
                 gyldigFra = reserverFra,
