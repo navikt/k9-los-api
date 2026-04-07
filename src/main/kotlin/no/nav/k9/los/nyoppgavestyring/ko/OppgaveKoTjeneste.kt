@@ -3,17 +3,18 @@ package no.nav.k9.los.nyoppgavestyring.ko
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.extension.kotlin.asContextElement
 import io.opentelemetry.instrumentation.annotations.WithSpan
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.runBlocking
 import kotliquery.TransactionalSession
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.idtoken.IIdToken
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.metrikker.DetaljerMetrikker
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.IPdlService
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.fnr
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.navn
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.CoroutineRequestContext
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.Cache
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.leggTilDagerHoppOverHelg
 import no.nav.k9.los.nyoppgavestyring.ko.db.OppgaveKoRepository
@@ -61,47 +62,40 @@ class OppgaveKoTjeneste(
     @WithSpan
     suspend fun hentOppgaverFraKø(
         oppgaveKoId: Long,
-        ønsketAntallSaker: Long,
-        fjernReserverte: Boolean = false,
-        idToken: IIdToken
+        ønsketAntallOppgaver: Long,
+        fjernReserverte: Boolean = false
     ): NesteOppgaverFraKoDto {
-        val ko = oppgaveKoRepository.hent(oppgaveKoId, pepClient.harTilgangTilKode6())
+        val kø = oppgaveKoRepository.hent(oppgaveKoId, pepClient.harTilgangTilKode6())
         val tilgjengeligeOppgaver = hentTilgjengeligeOppgaverFraKø(
-            ko = ko,
-            ønsketAntallSaker = ønsketAntallSaker,
+            kø = kø,
+            ønsketAntallOppgaver = ønsketAntallOppgaver,
             fjernReserverte = fjernReserverte,
-            idToken = idToken,
         )
 
-        return byggDto(tilgjengeligeOppgaver, ko.oppgaveQuery.order)
+        return byggDto(tilgjengeligeOppgaver, kø.oppgaveQuery.order)
     }
 
 
     private suspend fun hentTilgjengeligeOppgaverFraKø(
-        ko: OppgaveKo,
-        ønsketAntallSaker: Long,
+        kø: OppgaveKo,
+        ønsketAntallOppgaver: Long,
         fjernReserverte: Boolean,
-        idToken: IIdToken,
     ): List<Oppgave> {
-        if (ønsketAntallSaker <= 0) return emptyList()
-
-        return withContext(CoroutineRequestContext(idToken) + Span.current().asContextElement()) {
-            val kandidatOppgaver = oppgaveQueryService.queryForOppgave(
-                QueryRequest(
-                    oppgaveQuery = ko.oppgaveQuery,
-                    fjernReserverte = fjernReserverte,
-                    avgrensning = Avgrensning.maxAntall(ønsketAntallSaker),
-                )
+        val kandidatOppgaver = oppgaveQueryService.queryForOppgave(
+            QueryRequest(
+                oppgaveQuery = kø.oppgaveQuery,
+                fjernReserverte = fjernReserverte,
+                avgrensning = Avgrensning.maxAntall(ønsketAntallOppgaver),
             )
+        )
 
-            val tilgjengeligeKandidater = kandidatOppgaver.filter { pepClient.harTilgangTilOppgaveV3(it) }
-            val filtrertBort = kandidatOppgaver.size - tilgjengeligeKandidater.size
-            if (filtrertBort > 0) {
-                log.info("Filtrerte bort {} oppgaver fra kø {}", filtrertBort, ko.id)
-            }
-
-            tilgjengeligeKandidater
+        val tilgjengeligeOppgaver = kandidatOppgaver.filter { pepClient.harTilgangTilOppgaveV3(it) }
+        val filtrertBort = kandidatOppgaver.size - tilgjengeligeOppgaver.size
+        if (filtrertBort > 0) {
+            log.info("Filtrerte bort {} oppgaver fra kø {} etter pepClient-kall", filtrertBort, kø.id)
         }
+
+        return tilgjengeligeOppgaver
     }
 
 
@@ -128,7 +122,8 @@ class OppgaveKoTjeneste(
         val rader: List<Map<String, String>> = oppgaver.map { oppgave ->
             buildMap {
                 oppgave.hentVerdi("aktorId")?.let { aktørId ->
-                    put("søker", pdlService.person(aktørId).person
+                    put(
+                        "søker", pdlService.person(aktørId).person
                         ?.let { "${it.navn()} ${it.fnr()}" }
                         ?: "Ukjent navn Ukjent fnummer")
                 }
@@ -252,20 +247,20 @@ class OppgaveKoTjeneste(
         var antallKandidaterEtterspurt = 1
         while (true) {
             val kandidatOppgaver = DetaljerMetrikker.time("taReservasjonFraKø", "queryForOppgaveId", "$oppgaveKoId") {
-                    oppgaveQueryService.queryForOppgave(
-                        QueryRequest(
-                            oppgavekø.oppgaveQuery,
-                            fjernReserverte = true,
-                            avgrensning = Avgrensning(limit = antallKandidaterEtterspurt.toLong())
-                        )
+                oppgaveQueryService.queryForOppgave(
+                    QueryRequest(
+                        oppgavekø.oppgaveQuery,
+                        fjernReserverte = true,
+                        avgrensning = Avgrensning(limit = antallKandidaterEtterspurt.toLong())
                     )
-                }
+                )
+            }
             log.info("Spurte etter $antallKandidaterEtterspurt kandidater fra køen med id $oppgaveKoId, fikk ${kandidatOppgaver.size}")
             val muligReservert = DetaljerMetrikker.time("taReservasjonFraKø", "finnReservasjonFraKø", "$oppgaveKoId") {
-                    transactionalManager.transaction { tx ->
-                        finnReservasjonFraKø(kandidatOppgaver, tx, innloggetBrukerId)
-                    }
+                transactionalManager.transaction { tx ->
+                    finnReservasjonFraKø(kandidatOppgaver, tx, innloggetBrukerId)
                 }
+            }
             if (muligReservert is OppgaveMuligReservert.Reservert) {
                 return muligReservert
             }

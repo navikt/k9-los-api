@@ -12,7 +12,6 @@ import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.Action
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.idtoken.IIdToken
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.IPdlService
 import no.nav.k9.los.nyoppgavestyring.ko.db.OppgaveKoRepository
 import no.nav.k9.los.nyoppgavestyring.ko.dto.OppgaveKo
@@ -83,9 +82,7 @@ class OppgaveKoTjenesteTest {
 
         val resultat = tjeneste.hentOppgaverFraKø(
             oppgaveKoId = 1L,
-            ønsketAntallSaker = 2L,
-            fjernReserverte = false,
-            idToken = mockk<IIdToken>(relaxed = true),
+            ønsketAntallOppgaver = 2L,
         )
 
         assertThat(resultat.rader).hasSize(1)

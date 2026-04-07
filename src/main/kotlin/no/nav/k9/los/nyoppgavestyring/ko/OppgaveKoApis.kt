@@ -1,7 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.ko
 
 import io.ktor.http.*
-import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
@@ -152,10 +151,9 @@ fun Route.OppgaveKoApis() {
                     oppgaveKoTjeneste.hentOppgaverFraKø(
                         oppgavekøId.toLong(),
                         10,
-                        fjernReserverte = true,
-                        kotlin.coroutines.coroutineContext.idToken()
+                        fjernReserverte = true
                     )
-                ) //Finn et fornuftig antall?
+                )
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
