@@ -1,13 +1,11 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.refreshk9sakoppgaver
 
-import io.opentelemetry.api.trace.Span
-import io.opentelemetry.extension.kotlin.asContextElement
 import io.opentelemetry.instrumentation.annotations.WithSpan
-import kotlinx.coroutines.runBlocking
 import kotliquery.TransactionalSession
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.refreshk9sakoppgaver.restklient.IK9SakService
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.metrikker.DetaljerMetrikker
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.refreshk9sakoppgaver.restklient.IK9SakService
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.OpentelemetrySpanUtil
 import no.nav.k9.los.nyoppgavestyring.ko.*
 import no.nav.k9.los.nyoppgavestyring.ko.db.OppgaveKoRepository
 import no.nav.k9.los.nyoppgavestyring.ko.dto.OppgaveKo
@@ -20,7 +18,7 @@ import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
 import no.nav.k9.los.nyoppgavestyring.query.mapping.EksternFeltverdiOperator
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.OpentelemetrySpanUtil
+import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.*
 
@@ -39,13 +37,13 @@ class RefreshK9v3Tjeneste(
     }
 
     @WithSpan
-    fun refreshK9(hendelser: List<KøpåvirkendeHendelse>): RefreshUtført {
-        return transactionalManager.transaction { tx ->
+    suspend fun refreshK9(hendelser: List<KøpåvirkendeHendelse>): RefreshUtført {
+        return transactionalManager.transactionSuspend { tx ->
             refreshK9(tx, hendelser)
         }
     }
 
-    private fun refreshK9(tx: TransactionalSession, hendelser: List<KøpåvirkendeHendelse>): RefreshUtført {
+    private suspend fun refreshK9(tx: TransactionalSession, hendelser: List<KøpåvirkendeHendelse>): RefreshUtført {
 
         val aktuelleHendelser = hendelser
             .filterNot { it is OppgaveHendelseMottatt && it.fagsystem != Fagsystem.K9SAK }
@@ -55,7 +53,7 @@ class RefreshK9v3Tjeneste(
 
         if (aktuelleHendelser.isEmpty()) {
             log.info("Fikk ${hendelser.size}, ingen var aktuelle for å refreshe k9sak")
-            return RefreshUtført.INGENTING;
+            return RefreshUtført.INGENTING
         }
 
         val oppfriskerFraAlleKøer: Boolean
@@ -75,10 +73,8 @@ class RefreshK9v3Tjeneste(
             behandlingerTilOppfriskning(tx, antallPrKø)
         }
 
-        DetaljerMetrikker.time("RefreshK9V3", "refreshForKøer", "k9SakService") {
-            runBlocking(Span.current().asContextElement()) {
-                k9SakService.refreshBehandlinger(behandlinger)
-            }
+        DetaljerMetrikker.timeSuspended("RefreshK9V3", "refreshForKøer", "k9SakService") {
+            k9SakService.refreshBehandlinger(behandlinger)
         }
 
         return if (oppfriskerFraAlleKøer) {
@@ -173,7 +169,7 @@ class RefreshK9v3Tjeneste(
     }
 
     companion object {
-        val log = LoggerFactory.getLogger("RefreshK9v3Tjeneste")
+        val log: Logger = LoggerFactory.getLogger("RefreshK9v3Tjeneste")
     }
 
 }

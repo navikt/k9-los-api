@@ -224,7 +224,14 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             config = get(),
         )
     }
-    single { OppgavetypeRepository(dataSource = get(), feltdefinisjonRepository = get(), områdeRepository = get(), gyldigeFeltutledere = get()) }
+    single {
+        OppgavetypeRepository(
+            dataSource = get(),
+            feltdefinisjonRepository = get(),
+            områdeRepository = get(),
+            gyldigeFeltutledere = get()
+        )
+    }
     single { OppgaveV3Repository(dataSource = get(), oppgavetypeRepository = get()) }
     single { PartisjonertOppgaveRepository(oppgavetypeRepository = get()) }
     single { K9SakOppgaveTilDVHMapper() }
