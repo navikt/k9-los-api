@@ -34,7 +34,7 @@ import java.time.LocalDateTime
 class OppgaveKoTjenesteTest {
 
     @Test
-    fun `hentOppgaverFraKø filtrerer med pep og fyller opp fra neste side`() = runBlocking {
+    fun `hentOppgaverFraKø filtrerer med pep uten å hente flere sider`() = runBlocking {
         val oppgaveKoRepository = mockk<OppgaveKoRepository>()
         val oppgaveQueryService = mockk<OppgaveQueryService>()
         val pepClient = mockk<IPepClient>()
@@ -66,7 +66,6 @@ class OppgaveKoTjenesteTest {
 
         val utenTilgang = oppgave("uten-tilgang", "SAK-1")
         val førsteMedTilgang = oppgave("med-tilgang-1", "SAK-2")
-        val andreMedTilgang = oppgave("med-tilgang-2", "SAK-3")
 
         coEvery { pepClient.harTilgangTilKode6() } returns false
         every { oppgaveKoRepository.hent(1L, false) } returns kø
@@ -75,22 +74,12 @@ class OppgaveKoTjenesteTest {
                 QueryRequest(
                     oppgaveQuery = kø.oppgaveQuery,
                     fjernReserverte = false,
-                    avgrensning = Avgrensning(limit = 2, offset = 0),
+                    avgrensning = Avgrensning.maxAntall(2),
                 )
             )
         } returns listOf(utenTilgang, førsteMedTilgang)
-        every {
-            oppgaveQueryService.queryForOppgave(
-                QueryRequest(
-                    oppgaveQuery = kø.oppgaveQuery,
-                    fjernReserverte = false,
-                    avgrensning = Avgrensning(limit = 2, offset = 2),
-                )
-            )
-        } returns listOf(andreMedTilgang)
         coEvery { pepClient.harTilgangTilOppgaveV3(utenTilgang, Action.read, null) } returns false
         coEvery { pepClient.harTilgangTilOppgaveV3(førsteMedTilgang, Action.read, null) } returns true
-        coEvery { pepClient.harTilgangTilOppgaveV3(andreMedTilgang, Action.read, null) } returns true
 
         val resultat = tjeneste.hentOppgaverFraKø(
             oppgaveKoId = 1L,
@@ -99,14 +88,14 @@ class OppgaveKoTjenesteTest {
             idToken = mockk<IIdToken>(relaxed = true),
         )
 
-        assertThat(resultat.rader).hasSize(2)
-        assertThat(resultat.rader.mapNotNull { it["id"] }).containsExactly("SAK-2", "SAK-3")
-        coVerify {
+        assertThat(resultat.rader).hasSize(1)
+        assertThat(resultat.rader.mapNotNull { it["id"] }).containsExactly("SAK-2")
+        coVerify(exactly = 1) {
             oppgaveQueryService.queryForOppgave(
                 QueryRequest(
                     oppgaveQuery = kø.oppgaveQuery,
                     fjernReserverte = false,
-                    avgrensning = Avgrensning(limit = 2, offset = 2),
+                    avgrensning = Avgrensning.maxAntall(2),
                 )
             )
         }

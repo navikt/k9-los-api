@@ -85,31 +85,22 @@ class OppgaveKoTjeneste(
     ): List<Oppgave> {
         if (ønsketAntallSaker <= 0) return emptyList()
 
-        val tilgjengeligeOppgaver = mutableListOf<Oppgave>()
-        val sidestørrelse = ønsketAntallSaker.coerceAtLeast(1)
-        var offset = 0L
-
         return withContext(CoroutineRequestContext(idToken) + Span.current().asContextElement()) {
-            while (tilgjengeligeOppgaver.size < ønsketAntallSaker) {
-                val kandidatOppgaver = oppgaveQueryService.queryForOppgave(
-                    QueryRequest(
-                        oppgaveQuery = ko.oppgaveQuery,
-                        fjernReserverte = fjernReserverte,
-                        avgrensning = Avgrensning(limit = sidestørrelse, offset = offset),
-                    )
+            val kandidatOppgaver = oppgaveQueryService.queryForOppgave(
+                QueryRequest(
+                    oppgaveQuery = ko.oppgaveQuery,
+                    fjernReserverte = fjernReserverte,
+                    avgrensning = Avgrensning.maxAntall(ønsketAntallSaker),
                 )
+            )
 
-                if (kandidatOppgaver.isEmpty()) break
-
-                val tilgjengeligeKandidater = kandidatOppgaver.filter { pepClient.harTilgangTilOppgaveV3(it) }
-                val gjenværendePlasser = (ønsketAntallSaker - tilgjengeligeOppgaver.size).toInt()
-                tilgjengeligeOppgaver.addAll(tilgjengeligeKandidater.take(gjenværendePlasser))
-
-                if (kandidatOppgaver.size < sidestørrelse) break
-                offset += sidestørrelse
+            val tilgjengeligeKandidater = kandidatOppgaver.filter { pepClient.harTilgangTilOppgaveV3(it) }
+            val filtrertBort = kandidatOppgaver.size - tilgjengeligeKandidater.size
+            if (filtrertBort > 0) {
+                log.info("Filtrerte bort {} oppgaver fra kø {}", filtrertBort, ko.id)
             }
 
-            tilgjengeligeOppgaver
+            tilgjengeligeKandidater
         }
     }
 
