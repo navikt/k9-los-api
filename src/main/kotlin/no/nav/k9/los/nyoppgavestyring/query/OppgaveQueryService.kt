@@ -46,11 +46,12 @@ class OppgaveQueryService {
 
     @WithSpan
     fun queryForAntall(request: QueryRequest, now: LocalDateTime = LocalDateTime.now()): Long {
-        val antallRequest = if (request.oppgaveQuery.select.any { it is AntallSelectFelt }) {
-            request
-        } else {
-            request.copy(oppgaveQuery = request.oppgaveQuery.copy(select = listOf(AntallSelectFelt())))
-        }
+        val antallRequest = request.copy(
+            oppgaveQuery = request.oppgaveQuery.copy(
+                select = listOf(AntallSelectFelt()),
+                order = emptyList(),
+            )
+        )
         val resultat = queryMedSelect(antallRequest, now)
         return (resultat as OppgaveQueryResultat.AntallResultat).antall
     }

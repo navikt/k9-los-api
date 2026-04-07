@@ -7,11 +7,7 @@ import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Datatype
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveId
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.PartisjonertOppgaveId
-import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelSelectFelt
-import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
-import no.nav.k9.los.nyoppgavestyring.query.dto.query.Oppgavefilter
-import no.nav.k9.los.nyoppgavestyring.query.dto.query.AggregertSelectFelt
-import no.nav.k9.los.nyoppgavestyring.query.dto.query.AntallSelectFelt
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.*
 import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.Aggregertverdi
 import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.GruppertOppgaveResultat
 import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.OppgaveResultat
@@ -101,6 +97,7 @@ class PartisjonertOppgaveQuerySqlBuilder(
     private val orderByClause get() = if (orderByClauses.isNotEmpty()) "ORDER BY " + orderByClauses.joinToString(", ") else ""
     private var groupByClause = ""
     private var pagingClause = ""
+    private val grupperingsAlias = mutableMapOf<OmrådeOgKode, String>()
 
     private val utenReservasjonerBetingelse = """
         AND NOT EXISTS (
@@ -255,6 +252,14 @@ class PartisjonertOppgaveQuerySqlBuilder(
     }
 
     override fun medEnkelOrder(feltområde: String?, feltkode: String, økende: Boolean) {
+        if (aggregerteFelter.isNotEmpty()) {
+            val alias = grupperingsAlias[OmrådeOgKode(feltområde, feltkode)]
+                ?: throw IllegalStateException("Kan ikke sortere gruppert query på felt som ikke er en del av grupperingen: ${feltområde ?: "null"}.$feltkode")
+            val retning = if (økende) "ASC" else "DESC"
+            orderByClauses.add("$alias $retning")
+            return
+        }
+
         if (feltområde != null) {
             medEnkelOrderAvOppgavefelt(feltområde, feltkode, økende)
             return
@@ -467,6 +472,7 @@ class PartisjonertOppgaveQuerySqlBuilder(
     override fun medGruppering(grupperingsFelter: List<EnkelSelectFelt>, aggregerteFelter: List<AggregertSelectFelt>) {
         this.grupperingsFelter = grupperingsFelter
         this.aggregerteFelter = aggregerteFelter
+        grupperingsAlias.clear()
 
         val selectDeler = mutableListOf<String>()
         val groupByDeler = mutableListOf<String>()
@@ -514,6 +520,7 @@ class PartisjonertOppgaveQuerySqlBuilder(
                 }
                 selectDeler.add("$kolonne AS $alias")
             }
+            grupperingsAlias[OmrådeOgKode(felt.område, felt.kode)] = alias
             groupByDeler.add(alias)
         }
 
@@ -522,6 +529,8 @@ class PartisjonertOppgaveQuerySqlBuilder(
             when (felt) {
                 is AntallSelectFelt -> selectDeler.add("COUNT(*) AS $alias")
                 else -> {
+                    // TODO: Full støtte for SUM/AVG/MIN/MAX krever datatypebevisst SQL og radmapping.
+                    // Dagens løsning fungerer for enkle tilfeller, men dekker ikke alle felt- og returtyper korrekt.
                     val feltOmråde = requireNotNull(felt.område) { "AggregertSelectFelt ${felt.sql} mangler område" }
                     val feltKode = requireNotNull(felt.kode) { "AggregertSelectFelt ${felt.sql} mangler kode" }
                     val verdifelt = verdifelt(feltOmråde, feltKode)

@@ -1051,6 +1051,59 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
         assertThat(venter.aggregeringer.first { it.type == "antall" }.verdi).isEqualTo(1L)
     }
 
+    @Test
+    fun `queryForAntall ignorerer select og order fra gruppert query`() {
+        val builder = OppgaveTestDataBuilder()
+        builder.medOppgaveFeltVerdi(FeltType.BEHANDLING_TYPE, "BT-002").lagOgLagre()
+        builder.medOppgaveFeltVerdi(FeltType.BEHANDLING_TYPE, "BT-002").lagOgLagre()
+        builder.medOppgaveFeltVerdi(FeltType.BEHANDLING_TYPE, "BT-004").lagOgLagre()
+
+        val query = OppgaveQuery(
+            filtere = listOf(
+                byggFilter(FeltType.OPPGAVE_STATUS, EksternFeltverdiOperator.IN, Oppgavestatus.AAPEN.kode)
+            ),
+            select = listOf(
+                EnkelSelectFelt("K9", "behandlingTypekode"),
+                AntallSelectFelt(),
+            ),
+            order = listOf(
+                EnkelOrderFelt("K9", "behandlingTypekode", true),
+            ),
+        )
+
+        val queryService = get<OppgaveQueryService>()
+        assertThat(queryService.queryForAntall(QueryRequest(query))).isEqualTo(3L)
+    }
+
+    @Test
+    fun `queryForGruppering respekterer order på grupperingsfelt`() {
+        val builder = OppgaveTestDataBuilder()
+        builder.medOppgaveFeltVerdi(FeltType.BEHANDLING_TYPE, "BT-004").lagOgLagre()
+        builder.medOppgaveFeltVerdi(FeltType.BEHANDLING_TYPE, "BT-002").lagOgLagre()
+        builder.medOppgaveFeltVerdi(FeltType.BEHANDLING_TYPE, "BT-002").lagOgLagre()
+
+        val query = OppgaveQuery(
+            filtere = listOf(
+                byggFilter(FeltType.OPPGAVE_STATUS, EksternFeltverdiOperator.IN, Oppgavestatus.AAPEN.kode)
+            ),
+            select = listOf(
+                EnkelSelectFelt("K9", "behandlingTypekode"),
+                AntallSelectFelt(),
+            ),
+            order = listOf(
+                EnkelOrderFelt("K9", "behandlingTypekode", true),
+            ),
+        )
+
+        val queryService = get<OppgaveQueryService>()
+        val resultat = queryService.queryMedSelect(QueryRequest(query))
+
+        assertThat(resultat).isInstanceOf(OppgaveQueryResultat.GruppertResultat::class.java)
+        val grupper = (resultat as OppgaveQueryResultat.GruppertResultat).rader
+        assertThat(grupper.map { it.grupperingsverdier.first().verdi }).containsExactly("BT-002", "BT-004")
+    }
+
+
     private fun lagOppgaveMedPepCache(
         kode6: Boolean = false,
         kode7: Boolean = false,

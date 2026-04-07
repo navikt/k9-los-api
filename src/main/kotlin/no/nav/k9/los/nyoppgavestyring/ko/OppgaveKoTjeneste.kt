@@ -3,11 +3,8 @@ package no.nav.k9.los.nyoppgavestyring.ko
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.extension.kotlin.asContextElement
 import io.opentelemetry.instrumentation.annotations.WithSpan
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
+import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.runBlocking
 import kotliquery.TransactionalSession
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
@@ -16,6 +13,7 @@ import no.nav.k9.los.nyoppgavestyring.infrastruktur.metrikker.DetaljerMetrikker
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.IPdlService
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.fnr
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.navn
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.CoroutineRequestContext
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.Cache
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.leggTilDagerHoppOverHelg
 import no.nav.k9.los.nyoppgavestyring.ko.db.OppgaveKoRepository
@@ -27,9 +25,7 @@ import no.nav.k9.los.nyoppgavestyring.query.Avgrensning
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
 import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelOrderFelt
-import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelSelectFelt
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OrderFelt
-import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.OppgaveResultat
 import no.nav.k9.los.nyoppgavestyring.reservasjon.AlleredeReservertException
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ManglerTilgangException
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
@@ -70,35 +66,62 @@ class OppgaveKoTjeneste(
         idToken: IIdToken
     ): NesteOppgaverFraKoDto {
         val ko = oppgaveKoRepository.hent(oppgaveKoId, pepClient.harTilgangTilKode6())
-
-        val selects = buildList {
-            add(EnkelSelectFelt("K9", "aktorId"))
-            add(EnkelSelectFelt("K9", "saksnummer"))
-            add(EnkelSelectFelt("K9", "journalpostId"))
-            add(EnkelSelectFelt("K9", "behandlingTypekode"))
-            addAll(ko.oppgaveQuery.order.map {
-                when (it) {
-                    is EnkelOrderFelt -> EnkelSelectFelt(it.område, it.kode)
-                }
-            })
-        }
-
-        val oppgaveResultater = oppgaveQueryService.queryForOppgaveResultat(
-            QueryRequest(
-                oppgaveQuery = ko.oppgaveQuery.copy(select = selects),
-                fjernReserverte = fjernReserverte,
-                avgrensning = Avgrensning.maxAntall(ønsketAntallSaker)
-            )
+        val tilgjengeligeOppgaver = hentTilgjengeligeOppgaverFraKø(
+            ko = ko,
+            ønsketAntallSaker = ønsketAntallSaker,
+            fjernReserverte = fjernReserverte,
+            idToken = idToken,
         )
 
-        return byggDto(oppgaveResultater, ko.oppgaveQuery.order)
+        return byggDto(tilgjengeligeOppgaver, ko.oppgaveQuery.order)
+    }
+
+
+    private suspend fun hentTilgjengeligeOppgaverFraKø(
+        ko: OppgaveKo,
+        ønsketAntallSaker: Long,
+        fjernReserverte: Boolean,
+        idToken: IIdToken,
+    ): List<Oppgave> {
+        if (ønsketAntallSaker <= 0) return emptyList()
+
+        val tilgjengeligeOppgaver = mutableListOf<Oppgave>()
+        val sidestørrelse = ønsketAntallSaker.coerceAtLeast(1)
+        var offset = 0L
+
+        return withContext(CoroutineRequestContext(idToken) + Span.current().asContextElement()) {
+            while (tilgjengeligeOppgaver.size < ønsketAntallSaker) {
+                val kandidatOppgaver = oppgaveQueryService.queryForOppgave(
+                    QueryRequest(
+                        oppgaveQuery = ko.oppgaveQuery,
+                        fjernReserverte = fjernReserverte,
+                        avgrensning = Avgrensning(limit = sidestørrelse, offset = offset),
+                    )
+                )
+
+                if (kandidatOppgaver.isEmpty()) break
+
+                val tilgjengeligeKandidater = kandidatOppgaver.filter { pepClient.harTilgangTilOppgaveV3(it) }
+                val gjenværendePlasser = (ønsketAntallSaker - tilgjengeligeOppgaver.size).toInt()
+                tilgjengeligeOppgaver.addAll(tilgjengeligeKandidater.take(gjenværendePlasser))
+
+                if (kandidatOppgaver.size < sidestørrelse) break
+                offset += sidestørrelse
+            }
+
+            tilgjengeligeOppgaver
+        }
     }
 
 
     private suspend fun byggDto(
-        oppgaveResultater: List<OppgaveResultat>,
+        oppgaver: List<Oppgave>,
         orderFelter: List<OrderFelt>
     ): NesteOppgaverFraKoDto {
+        val orderFelterPerKode = orderFelter
+            .filterIsInstance<EnkelOrderFelt>()
+            .associateBy { it.kode }
+
         val visningskolonner = buildMap {
             put("søker", "Søker")
             put("id", "Id")
@@ -111,22 +134,29 @@ class OppgaveKoTjeneste(
             })
         }
 
-        val rader: List<Map<String, String>> = oppgaveResultater.map { resultat ->
+        val rader: List<Map<String, String>> = oppgaver.map { oppgave ->
             buildMap {
-                resultat.hentVerdi("K9", "aktorId")?.let { verdi ->
-                    put("søker", pdlService.person(verdi.toString()).person
+                oppgave.hentVerdi("aktorId")?.let { aktørId ->
+                    put("søker", pdlService.person(aktørId).person
                         ?.let { "${it.navn()} ${it.fnr()}" }
                         ?: "Ukjent navn Ukjent fnummer")
                 }
-                resultat.hentVerdi("K9", "journalpostId")?.let { put("id", it.toString()) }
-                    ?: resultat.hentVerdi("K9", "saksnummer")?.let { put("id", it.toString()) }
-                resultat.hentVerdi("K9", "behandlingTypekode")?.let {
-                    put("behandlingType", BehandlingType.fraKode(it.toString()).navn)
+                oppgave.hentVerdi("journalpostId")?.let { put("id", it) }
+                    ?: oppgave.hentVerdi("saksnummer")?.let { put("id", it) }
+                oppgave.hentVerdi("behandlingTypekode")?.let {
+                    put("behandlingType", BehandlingType.fraKode(it).navn)
                 }
                 for ((kolonne, _) in visningskolonner) {
                     if (kolonne !in this) {
-                        val felt = resultat.felter.firstOrNull { it.kode == kolonne }
-                        felt?.verdi?.let { put(kolonne, it.toString()) }
+                        val orderFelt = orderFelterPerKode[kolonne]
+                        val verdi = when {
+                            orderFelt == null -> null
+                            orderFelt.område != null -> oppgave.hentVerdiEllerListe(orderFelt.område, orderFelt.kode)
+                            orderFelt.kode == "oppgavestatus" -> oppgave.status
+                            orderFelt.kode == "oppgavetype" -> oppgave.oppgavetype.eksternId
+                            else -> oppgave.hentVerdi(orderFelt.kode)
+                        }
+                        verdi?.let { put(kolonne, it.toString()) }
                     }
                 }
             }

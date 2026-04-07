@@ -96,6 +96,9 @@ object OppgaveQueryToSqlMapper {
 
         if (aggregerteFelter.isNotEmpty()) {
             query.medGruppering(enkelSelectFelter, aggregerteFelter)
+            if (enkelSelectFelter.isNotEmpty()) {
+                håndterOrder(query, request.oppgaveQuery.order)
+            }
         } else if (enkelSelectFelter.isNotEmpty()) {
             query.medSelectFelter(enkelSelectFelter)
             håndterOrder(query, request.oppgaveQuery.order)
