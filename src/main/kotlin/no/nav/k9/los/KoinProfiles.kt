@@ -401,7 +401,12 @@ fun common(app: Application, config: Configuration) = module {
     }
 
     single {
-        OppgaveQueryService()
+        OppgaveQueryService(
+            datasource = get(),
+            oppgaveQueryRepository = get(),
+            oppgaveRepository = get(),
+            partisjonertOppgaveRepository = get(),
+        )
     }
 
     single {

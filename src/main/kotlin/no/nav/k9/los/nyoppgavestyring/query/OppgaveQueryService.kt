@@ -16,15 +16,15 @@ import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveIdSelectFelt
 import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.OppgaveQueryResultat
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
-import org.koin.java.KoinJavaComponent.inject
 import java.time.LocalDateTime
 import javax.sql.DataSource
 
-class OppgaveQueryService {
-    private val datasource by inject<DataSource>(DataSource::class.java)
-    private val oppgaveQueryRepository by inject<OppgaveQueryRepository>(OppgaveQueryRepository::class.java)
-    private val oppgaveRepository by inject<OppgaveRepository>(OppgaveRepository::class.java)
-    private val partisjonertOppgaveRepository by inject<PartisjonertOppgaveRepository>(PartisjonertOppgaveRepository::class.java)
+class OppgaveQueryService(
+    private val datasource: DataSource,
+    private val oppgaveQueryRepository: OppgaveQueryRepository,
+    private val oppgaveRepository: OppgaveRepository,
+    private val partisjonertOppgaveRepository: PartisjonertOppgaveRepository,
+) {
 
     @WithSpan
     fun queryForOppgave(oppgaveQuery: QueryRequest): List<Oppgave> {
@@ -39,10 +39,9 @@ class OppgaveQueryService {
         val oppgaveIdRequest = request.copy(
             oppgaveQuery = request.oppgaveQuery.copy(
                 select = listOf(OppgaveIdSelectFelt),
-                order = emptyList(),
             )
         )
-        val resultat = oppgaveQueryRepository.query(tx, oppgaveIdRequest, LocalDateTime.now()) as OppgaveQueryResultat.OppgaveIdResultat
+        val resultat = oppgaveQueryRepository.query(tx, oppgaveIdRequest, now) as OppgaveQueryResultat.OppgaveIdResultat
         return resultat.ider.map { oppgaveId ->
             when (oppgaveId) {
                 is OppgaveV3Id -> oppgaveRepository.hentOppgaveForId(tx, oppgaveId, now)

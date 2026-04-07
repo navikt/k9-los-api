@@ -5,9 +5,7 @@ import assertk.assertions.*
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
-import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.selects.select
 import no.nav.helse.dusseldorf.ktor.jackson.dusseldorfConfigured
 import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.nyoppgavestyring.FeltType
@@ -17,10 +15,7 @@ import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.cache.PepCacheRepositor
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.cache.TestRepository
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.kodeverk.PersonBeskyttelseType
-import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonRepository
-import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
-import no.nav.k9.los.nyoppgavestyring.query.db.OppgaveQueryRepository
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.*
 import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.OppgaveQueryResultat
 import no.nav.k9.los.nyoppgavestyring.query.mapping.CombineOperator
@@ -45,7 +40,6 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
     @Test
     fun `sjekker at oppgave-query kan kjøres mot database`() {
         OppgaveTestDataBuilder()
-        val oppgaveQueryRepository = OppgaveQueryRepository(dataSource, mockk<FeltdefinisjonRepository>())
         val oppgaveQuery = OppgaveQuery(
             listOf(
                 FeltverdiOppgavefilter(null, "oppgavestatus", EksternFeltverdiOperator.EQUALS, listOf(Oppgavestatus.AAPEN.kode)),
@@ -76,7 +70,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
         val json = sw.toString()
         om.readValue(json, OppgaveQuery::class.java)
 
-        val result = oppgaveQueryRepository.queryForOppgaveId(QueryRequest(oppgaveQuery))
+        val result = queryForOppgave(QueryRequest(oppgaveQuery))
         assertThat(result).isEmpty()
     }
 
@@ -86,14 +80,13 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
             .medOppgaveFeltVerdi(FeltType.AKSJONSPUNKT, "5016")
             .lagOgLagre()
 
-        val oppgaveQueryRepository = OppgaveQueryRepository(dataSource, mockk<FeltdefinisjonRepository>())
         val oppgaveQuery = OppgaveQuery(
             listOf(
                 byggFilter(FeltType.AKSJONSPUNKT, EksternFeltverdiOperator.EQUALS, "5016")
             )
         )
 
-        val result = oppgaveQueryRepository.queryForOppgaveId(QueryRequest(oppgaveQuery))
+        val result = queryForOppgave(QueryRequest(oppgaveQuery))
         assertThat(result).isNotEmpty()
     }
 
@@ -103,14 +96,8 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
             .medOppgaveFeltVerdi(FeltType.MOTTATT_DATO, "2023-05-15T00:00:00.000")
             .lagOgLagre()
 
-        val områdeRepository = OmrådeRepository(dataSource)
-        val feltdefinisjonRepository = FeltdefinisjonRepository(
-            områdeRepository
-        )
-        val oppgaveQueryRepository = OppgaveQueryRepository(dataSource, feltdefinisjonRepository)
-
         assertThat(
-            oppgaveQueryRepository.queryForOppgaveId(
+            queryForOppgave(
                 QueryRequest(
                     OppgaveQuery(
                         listOf(
@@ -126,7 +113,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
         ).isNotEmpty()
 
         assertThat(
-            oppgaveQueryRepository.queryForOppgaveId(
+            queryForOppgave(
                 QueryRequest(
                     OppgaveQuery(
                         listOf(
@@ -138,7 +125,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
         ).isEmpty()
 
         assertThat(
-            oppgaveQueryRepository.queryForOppgaveId(
+            queryForOppgave(
                 QueryRequest(
                     OppgaveQuery(
                         listOf(
@@ -154,7 +141,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
         ).isEmpty()
 
         assertThat(
-            oppgaveQueryRepository.queryForOppgaveId(
+            queryForOppgave(
                 QueryRequest(
                     OppgaveQuery(
                         listOf(
@@ -172,10 +159,9 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
             .medOppgaveFeltVerdi(FeltType.MOTTATT_DATO, "2023-05-15T00:00:00.000")
             .lagOgLagre()
 
-        val oppgaveQueryRepository = OppgaveQueryRepository(dataSource, mockk<FeltdefinisjonRepository>())
 
         assertThat(
-            oppgaveQueryRepository.queryForOppgaveId(
+            queryForOppgave(
                 QueryRequest(
                     OppgaveQuery(
                         listOf(
@@ -191,7 +177,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
         ).isNotEmpty()
 
         assertThat(
-            oppgaveQueryRepository.queryForOppgaveId(
+            queryForOppgave(
                 QueryRequest(
                     OppgaveQuery(
                         listOf(
@@ -203,7 +189,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
         ).isNotEmpty()
 
         assertThat(
-            oppgaveQueryRepository.queryForOppgaveId(
+            queryForOppgave(
                 QueryRequest(
                     OppgaveQuery(
                         listOf(
@@ -226,10 +212,9 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
             .medOppgaveFeltVerdi(FeltType.MOTTATT_DATO, "2023-05-15T00:00:00.000")
             .lagOgLagre()
 
-        val oppgaveQueryRepository = OppgaveQueryRepository(dataSource, mockk<FeltdefinisjonRepository>())
 
         assertThat(
-            oppgaveQueryRepository.queryForOppgaveId(
+            queryForOppgave(
                 QueryRequest(
                     OppgaveQuery(
                         listOf(
@@ -248,13 +233,13 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
             )
         )
         assertThat(
-            oppgaveQueryRepository.queryForOppgaveId(
+            queryForOppgave(
                 request
             )
         ).isNotEmpty()
 
         assertThat(
-            oppgaveQueryRepository.queryForOppgaveId(
+            queryForOppgave(
                 QueryRequest(
                     OppgaveQuery(
                         listOf(
@@ -273,10 +258,9 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
             .medOppgaveFeltVerdi(FeltType.BEHANDLINGUUID, behandlingUuid)
             .lagOgLagre()   // avventerArbeidsgiver er null
 
-        val oppgaveQueryRepository = OppgaveQueryRepository(dataSource, mockk<FeltdefinisjonRepository>())
 
         assertThat(
-            oppgaveQueryRepository.queryForOppgaveId(
+            queryForOppgave(
                 QueryRequest(
                     OppgaveQuery(
                         listOf(
@@ -289,7 +273,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
         ).isNotEmpty()
 
         assertThat(
-            oppgaveQueryRepository.queryForOppgaveId(
+            queryForOppgave(
                 QueryRequest(
                     OppgaveQuery(
                         listOf(
@@ -302,7 +286,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
         ).isNotEmpty()
 
         assertThat(
-            oppgaveQueryRepository.queryForOppgaveId(
+            queryForOppgave(
                 QueryRequest(
                     OppgaveQuery(
                         listOf(
@@ -315,7 +299,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
         ).isNotEmpty()
 
         assertThat(
-            oppgaveQueryRepository.queryForOppgaveId(
+            queryForOppgave(
                 QueryRequest(
                     OppgaveQuery(
                         listOf(
@@ -328,7 +312,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
         ).isEmpty()
 
         assertThat(
-            oppgaveQueryRepository.queryForOppgaveId(
+            queryForOppgave(
                 QueryRequest(
                     OppgaveQuery(
                         listOf(
@@ -341,7 +325,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
         ).isEmpty()
 
         assertThat(
-            oppgaveQueryRepository.queryForOppgaveId(
+            queryForOppgave(
                 QueryRequest(
                     OppgaveQuery(
                         listOf(
@@ -362,10 +346,9 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
             .medOppgaveFeltVerdi(FeltType.AVVENTER_ARBEIDSGIVER, "true")
             .lagOgLagre()
 
-        val oppgaveQueryRepository = OppgaveQueryRepository(dataSource, mockk<FeltdefinisjonRepository>())
 
         assertThat(
-            oppgaveQueryRepository.queryForOppgaveId(
+            queryForOppgave(
                 QueryRequest(
                     OppgaveQuery(
                         listOf(
@@ -378,7 +361,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
         ).isEmpty()
 
         assertThat(
-            oppgaveQueryRepository.queryForOppgaveId(
+            queryForOppgave(
                 QueryRequest(
                     OppgaveQuery(
                         listOf(
@@ -391,7 +374,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
         ).isEmpty()
 
         assertThat(
-            oppgaveQueryRepository.queryForOppgaveId(
+            queryForOppgave(
                 QueryRequest(
                     OppgaveQuery(
                         listOf(
@@ -404,7 +387,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
         ).isNotEmpty()
 
         assertThat(
-            oppgaveQueryRepository.queryForOppgaveId(
+            queryForOppgave(
                 QueryRequest(
                     OppgaveQuery(
                         listOf(
@@ -417,7 +400,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
         ).isNotEmpty()
 
         assertThat(
-            oppgaveQueryRepository.queryForOppgaveId(
+            queryForOppgave(
                 QueryRequest(
                     OppgaveQuery(
                         listOf(
@@ -430,7 +413,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
         ).isNotEmpty()
 
         assertThat(
-            oppgaveQueryRepository.queryForOppgaveId(
+            queryForOppgave(
                 QueryRequest(
                     OppgaveQuery(
                         listOf(
@@ -451,10 +434,9 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
             .medOppgaveFeltVerdi(FeltType.MOTTATT_DATO, "2023-05-15T12:00:00.000")
             .lagOgLagre()
 
-        val oppgaveQueryRepository = OppgaveQueryRepository(dataSource, mockk<FeltdefinisjonRepository>())
 
         assertThat(
-            oppgaveQueryRepository.queryForOppgaveId(
+            queryForOppgave(
                 QueryRequest(
                     OppgaveQuery(
                         listOf(
@@ -471,7 +453,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
         ).isEmpty()
 
         assertThat(
-            oppgaveQueryRepository.queryForOppgaveId(
+            queryForOppgave(
                 QueryRequest(
                     OppgaveQuery(
                         listOf(
@@ -489,7 +471,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
         ).isEmpty()
 
         assertThat(
-            oppgaveQueryRepository.queryForOppgaveId(
+            queryForOppgave(
                 QueryRequest(
                     OppgaveQuery(
                         listOf(
@@ -514,12 +496,11 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
             .medOppgaveFeltVerdi(FeltType.BEHANDLINGUUID, behandlingUuid)
             .lagOgLagre()
 
-        val oppgaveQueryRepository = OppgaveQueryRepository(dataSource, mockk<FeltdefinisjonRepository>())
 
-        assertThat(oppgaveQueryRepository.queryForOppgaveId(QueryRequest(OppgaveQuery(listOf())))).isNotEmpty()
+        assertThat(queryForOppgave(QueryRequest(OppgaveQuery(listOf())))).isNotEmpty()
 
         assertThat(
-            oppgaveQueryRepository.queryForOppgaveId(
+            queryForOppgave(
                 QueryRequest(
                     OppgaveQuery(
                         listOf(
@@ -538,14 +519,13 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
             //denne har IKKE fagsystem
             .lagOgLagre()
 
-        val oppgaveQueryRepository = OppgaveQueryRepository(dataSource, mockk<FeltdefinisjonRepository>())
         val oppgaveQuery = OppgaveQuery(
             listOf(
                 FeltverdiOppgavefilter("K9", "fagsystem", EksternFeltverdiOperator.NOT_EQUALS, listOf("K9PUNSJ"))
             )
         )
 
-        val result = oppgaveQueryRepository.queryForOppgaveId(QueryRequest(oppgaveQuery))
+        val result = queryForOppgave(QueryRequest(oppgaveQuery))
         assertThat(result).hasSize(1)
     }
 
@@ -556,14 +536,13 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
             .medOppgaveFeltVerdi(FeltType.FAGSYSTEM, "K9SAK")
             .lagOgLagre()
 
-        val oppgaveQueryRepository = OppgaveQueryRepository(dataSource, mockk<FeltdefinisjonRepository>())
         val oppgaveQuery = OppgaveQuery(
             listOf(
                 FeltverdiOppgavefilter("K9", "fagsystem", EksternFeltverdiOperator.NOT_EQUALS, listOf("K9PUNSJ"))
             )
         )
 
-        val result = oppgaveQueryRepository.queryForOppgaveId(QueryRequest(oppgaveQuery))
+        val result = queryForOppgave(QueryRequest(oppgaveQuery))
         assertThat(result).hasSize(1)
     }
 
@@ -574,14 +553,13 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
             .medOppgaveFeltVerdi(FeltType.FAGSYSTEM, "K9PUNSJ")
             .lagOgLagre()
 
-        val oppgaveQueryRepository = OppgaveQueryRepository(dataSource, mockk<FeltdefinisjonRepository>())
         val oppgaveQuery = OppgaveQuery(
             listOf(
                 FeltverdiOppgavefilter("K9", "fagsystem", EksternFeltverdiOperator.NOT_EQUALS, listOf("K9PUNSJ"))
             )
         )
 
-        val result = oppgaveQueryRepository.queryForOppgaveId(QueryRequest(oppgaveQuery))
+        val result = queryForOppgave(QueryRequest(oppgaveQuery))
         assertThat(result).isEmpty()
     }
 
@@ -589,21 +567,19 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
     fun `Resultat skal inneholde alle sikkerhetsklassifiseringer når ikke beskyttelse eller egen ansatt er spesifisert i filtre`() {
         val eksternId = lagOppgaveMedPepCache(kode6 = true, kode7 = true, egenAnsatt = true)
 
-        val oppgaveQueryRepository = OppgaveQueryRepository(dataSource, mockk<FeltdefinisjonRepository>())
         val query = OppgaveQuery(
             listOf(
                 byggFilter(FeltType.BEHANDLINGUUID, EksternFeltverdiOperator.EQUALS, eksternId),
             )
         )
 
-        assertThat(oppgaveQueryRepository.queryForOppgaveId(QueryRequest(query))).isNotEmpty()
+        assertThat(queryForOppgave(QueryRequest(query))).isNotEmpty()
     }
 
     @Test // Ikke tilgangskontroll, men kun ment for ytelsesoptimalisering
     fun `Resultat skal inneholde alle resultat uavhengig av forespurt sikkerhetsklassifisering hvis pepcache mangler`() {
         val eksternId = lagOppgave()
 
-        val oppgaveQueryRepository = OppgaveQueryRepository(dataSource, mockk<FeltdefinisjonRepository>())
         val query = OppgaveQuery(
             listOf(
                 byggFilter(FeltType.BEHANDLINGUUID, EksternFeltverdiOperator.EQUALS, eksternId),
@@ -615,7 +591,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
             )
         )
 
-        assertThat(oppgaveQueryRepository.queryForOppgaveId(QueryRequest(query))).isNotEmpty()
+        assertThat(queryForOppgave(QueryRequest(query))).isNotEmpty()
     }
 
     @Test
@@ -624,7 +600,6 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
 
         loggAlleOppgaverMedFelterOgCache()
 
-        val oppgaveQueryRepository = OppgaveQueryRepository(dataSource, mockk<FeltdefinisjonRepository>())
         val query = OppgaveQuery(
             listOf(
                 byggFilter(FeltType.BEHANDLINGUUID, EksternFeltverdiOperator.EQUALS, eksternId),
@@ -636,7 +611,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
             )
         )
 
-        assertThat(oppgaveQueryRepository.queryForOppgaveId(QueryRequest(query))).isNotEmpty()
+        assertThat(queryForOppgave(QueryRequest(query))).isNotEmpty()
     }
 
     @Test
@@ -645,7 +620,6 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
 
         loggAlleOppgaverMedFelterOgCache()
 
-        val oppgaveQueryRepository = OppgaveQueryRepository(dataSource, mockk<FeltdefinisjonRepository>())
         val query = OppgaveQuery(
             listOf(
                 byggFilter(FeltType.BEHANDLINGUUID, EksternFeltverdiOperator.EQUALS, eksternId),
@@ -657,7 +631,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
             )
         )
 
-        assertThat(oppgaveQueryRepository.queryForOppgaveId(QueryRequest(query))).isNotEmpty()
+        assertThat(queryForOppgave(QueryRequest(query))).isNotEmpty()
     }
 
     @Test
@@ -667,7 +641,6 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
 
         loggAlleOppgaverMedFelterOgCache()
 
-        val oppgaveQueryRepository = OppgaveQueryRepository(dataSource, mockk<FeltdefinisjonRepository>())
         val query = OppgaveQuery(
             listOf(
                 byggFilter(FeltType.BEHANDLINGUUID, EksternFeltverdiOperator.EQUALS, eksternId6, eksternId7),
@@ -679,7 +652,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
             )
         )
 
-        assertThat(oppgaveQueryRepository.queryForOppgaveId(QueryRequest(query))).isEmpty()
+        assertThat(queryForOppgave(QueryRequest(query))).isEmpty()
     }
 
     @Test
@@ -690,7 +663,6 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
             .medOppgaveFeltVerdi(FeltType.LIGGER_HOS_BESLUTTER, true.toString())
             .lagOgLagre()
 
-        val oppgaveQueryRepository = OppgaveQueryRepository(dataSource, mockk<FeltdefinisjonRepository>())
         val query = OppgaveQuery(
             listOf(
                 byggFilter(FeltType.LIGGER_HOS_BESLUTTER, EksternFeltverdiOperator.EQUALS, "true"),
@@ -701,7 +673,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
                 )
             )
         )
-        assertThat(oppgaveQueryRepository.queryForOppgaveId(QueryRequest(query))).hasSize(1)
+        assertThat(queryForOppgave(QueryRequest(query))).hasSize(1)
     }
 
     @Test
@@ -712,7 +684,6 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
             .medOppgaveFeltVerdi(FeltType.LIGGER_HOS_BESLUTTER, true.toString())
             .lagOgLagre()
 
-        val oppgaveQueryRepository = OppgaveQueryRepository(dataSource, mockk<FeltdefinisjonRepository>())
         val query = OppgaveQuery(
             listOf(
                 byggFilter(FeltType.LIGGER_HOS_BESLUTTER, EksternFeltverdiOperator.EQUALS, "true"),
@@ -723,7 +694,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
                 )
             )
         )
-        assertThat(oppgaveQueryRepository.queryForOppgaveId(QueryRequest(query))).hasSize(1)
+        assertThat(queryForOppgave(QueryRequest(query))).hasSize(1)
     }
 
     @Test
@@ -735,7 +706,6 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
             .medOppgaveFeltVerdi(FeltType.LIGGER_HOS_BESLUTTER, true.toString())
             .lagOgLagre()
 
-        val oppgaveQueryRepository = OppgaveQueryRepository(dataSource, mockk<FeltdefinisjonRepository>())
         val query = OppgaveQuery(
             listOf(
                 byggFilter(FeltType.LIGGER_HOS_BESLUTTER, EksternFeltverdiOperator.EQUALS, "true"),
@@ -746,7 +716,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
                 )
             )
         )
-        assertThat(oppgaveQueryRepository.queryForOppgaveId(QueryRequest(query))).hasSize(1)
+        assertThat(queryForOppgave(QueryRequest(query))).hasSize(1)
     }
 
     @Test
@@ -851,14 +821,13 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
         OppgaveTestDataBuilder()
             .lagOgLagre(Oppgavestatus.LUKKET)
 
-        val oppgaveQueryRepository = OppgaveQueryRepository(dataSource, mockk<FeltdefinisjonRepository>())
         val oppgaveQuery = OppgaveQuery(
             listOf(
                 byggFilter(FeltType.OPPGAVE_STATUS, EksternFeltverdiOperator.IN, Oppgavestatus.LUKKET.kode),
             )
         )
 
-        assertThat(oppgaveQueryRepository.queryForOppgaveId(QueryRequest(oppgaveQuery)).size).isEqualTo(1)
+        assertThat(queryForOppgave(QueryRequest(oppgaveQuery)).size).isEqualTo(1)
     }
 
     @Test
@@ -869,7 +838,6 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
         OppgaveTestDataBuilder()
             .lagOgLagre(Oppgavestatus.LUKKET)
 
-        val oppgaveQueryRepository = OppgaveQueryRepository(dataSource, mockk<FeltdefinisjonRepository>())
 
         val oppgaveQuery = OppgaveQuery(
             listOf(
@@ -877,7 +845,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
             )
         )
 
-        assertThat(oppgaveQueryRepository.queryForOppgaveId(QueryRequest(oppgaveQuery)).size).isEqualTo(1)
+        assertThat(queryForOppgave(QueryRequest(oppgaveQuery)).size).isEqualTo(1)
 
         val oppgaveQuery2 = OppgaveQuery(
             listOf(
@@ -885,14 +853,14 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
             )
         )
 
-        assertThat(oppgaveQueryRepository.queryForOppgaveId(QueryRequest(oppgaveQuery2)).size).isEqualTo(0)
+        assertThat(queryForOppgave(QueryRequest(oppgaveQuery2)).size).isEqualTo(0)
 
         val oppgaveQuery4 = OppgaveQuery(
             listOf(
             )
         )
 
-        assertThat(oppgaveQueryRepository.queryForOppgaveId(QueryRequest(oppgaveQuery4)).size).isEqualTo(2)
+        assertThat(queryForOppgave(QueryRequest(oppgaveQuery4)).size).isEqualTo(2)
 
         val oppgaveQuery5 = OppgaveQuery(
             listOf(
@@ -905,7 +873,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
             )
         )
 
-        assertThat(oppgaveQueryRepository.queryForOppgaveId(QueryRequest(oppgaveQuery5)).size).isEqualTo(2)
+        assertThat(queryForOppgave(QueryRequest(oppgaveQuery5)).size).isEqualTo(2)
     }
 
     @Test
@@ -915,7 +883,6 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
 
         loggAlleOppgaverMedFelterOgCache()
 
-        val oppgaveQueryRepository = OppgaveQueryRepository(dataSource, mockk<FeltdefinisjonRepository>())
         val query = OppgaveQuery(
             listOf(
                 byggFilter(FeltType.BEHANDLINGUUID, EksternFeltverdiOperator.EQUALS, eksternId7, eksternIdOrdinær),
@@ -927,16 +894,15 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
             )
         )
 
-        assertThat(oppgaveQueryRepository.queryForOppgaveId(QueryRequest(query))).isEmpty()
+        assertThat(queryForOppgave(QueryRequest(query))).isEmpty()
     }
 
     @Test
     fun `sjekk at ferdigstiltDato kan brukes som felt`() {
         val oppgaveTestDataBuilder = OppgaveTestDataBuilder()
-        val oppgaveQueryRepository = OppgaveQueryRepository(dataSource, mockk<FeltdefinisjonRepository>())
 
         // lager to oppgaver, en ferdigstilt i dag og en ferdigstilt 1. januar 2025
-       oppgaveTestDataBuilder
+        oppgaveTestDataBuilder
             .lagOgLagre(
                 status = Oppgavestatus.LUKKET,
             )
@@ -946,7 +912,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
                 endretTidspunkt = LocalDateTime.of(2025, 1, 1, 0, 0, 0)
             )
 
-        val resultat = oppgaveQueryRepository.query(
+        val resultat = executeQuery(
             QueryRequest(
                 OppgaveQuery(
                     filtere = listOf(
@@ -957,37 +923,30 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
                 )
             ), LocalDateTime.now())
         resultat as OppgaveQueryResultat.EksternIdResultat
-        assertThat(resultat.ider).containsOnly(oppgaveLukketFørsteJanuar.eksternId)
+        assertThat(resultat.ider.map { it.eksternId }).containsOnly(oppgaveLukketFørsteJanuar.eksternId)
     }
 
     @Test
     fun `sjekk at ferdigstiltDato returneres som select-felt i uttrekk`() {
         val oppgaveTestDataBuilder = OppgaveTestDataBuilder()
-        val oppgaveQueryRepository = OppgaveQueryRepository(dataSource, mockk<FeltdefinisjonRepository>())
-        val transactionalManager = get<TransactionalManager>()
 
-        val oppgaveLukket = oppgaveTestDataBuilder
-            .lagOgLagre(
-                status = Oppgavestatus.LUKKET,
-                endretTidspunkt = LocalDateTime.of(2025, 3, 15, 0, 0, 0)
-            )
+        oppgaveTestDataBuilder.lagOgLagre(
+            status = Oppgavestatus.LUKKET,
+            endretTidspunkt = LocalDateTime.of(2025, 3, 15, 0, 0, 0)
+        )
 
-        val resultat = transactionalManager.transaction { tx ->
-            oppgaveQueryRepository.query(
-                tx,
-                QueryRequest(
-                    OppgaveQuery(
-                        filtere = listOf(
-                            byggFilter(FeltType.OPPGAVE_STATUS, EksternFeltverdiOperator.EQUALS, "LUKKET"),
-                        ),
-                        select = listOf(
-                            EnkelSelectFelt(område = null, kode = "ferdigstiltDato"),
-                        ),
-                    )
-                ),
-                LocalDateTime.now()
+        val resultat = executeQuery(
+            QueryRequest(
+                OppgaveQuery(
+                    filtere = listOf(
+                        byggFilter(FeltType.OPPGAVE_STATUS, EksternFeltverdiOperator.EQUALS, "LUKKET"),
+                    ),
+                    select = listOf(
+                        EnkelSelectFelt(område = null, kode = "ferdigstiltDato"),
+                    ),
+                )
             )
-        }
+        )
 
         assertThat(resultat).isInstanceOf(OppgaveQueryResultat.SelectResultat::class.java)
         resultat as OppgaveQueryResultat.SelectResultat
@@ -1106,6 +1065,13 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
         val grupper = (resultat as OppgaveQueryResultat.GruppertResultat).rader
         assertThat(grupper.map { it.grupperingsverdier.first().verdi }).containsExactly("BT-002", "BT-004")
     }
+
+    private fun queryForOppgave(request: QueryRequest) = get<OppgaveQueryService>().queryForOppgave(request)
+
+    private fun executeQuery(
+        request: QueryRequest,
+        now: LocalDateTime = LocalDateTime.now()
+    ) = get<OppgaveQueryService>().query(request, now)
 
 
     private fun lagOppgaveMedPepCache(

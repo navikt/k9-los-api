@@ -413,7 +413,12 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     }
 
     single {
-        OppgaveQueryService()
+        OppgaveQueryService(
+            datasource = get(),
+            oppgaveQueryRepository = get(),
+            oppgaveRepository = get(),
+            partisjonertOppgaveRepository = get(),
+        )
     }
 
     single {
