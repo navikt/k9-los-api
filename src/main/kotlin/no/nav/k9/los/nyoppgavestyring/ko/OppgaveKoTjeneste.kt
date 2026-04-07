@@ -26,7 +26,6 @@ import no.nav.k9.los.nyoppgavestyring.query.Avgrensning
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
 import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelOrderFelt
-import no.nav.k9.los.nyoppgavestyring.query.dto.query.OrderFelt
 import no.nav.k9.los.nyoppgavestyring.reservasjon.AlleredeReservertException
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ManglerTilgangException
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
@@ -72,7 +71,9 @@ class OppgaveKoTjeneste(
             fjernReserverte = fjernReserverte,
         )
 
-        return byggDto(tilgjengeligeOppgaver, kø.oppgaveQuery.order)
+        // Kun mulig med en enkelt order på køer per i dag. Inkluderer den som kolonne.
+        val orderFelt = kø.oppgaveQuery.order.filterIsInstance<EnkelOrderFelt>().first()
+        return byggDto(tilgjengeligeOppgaver, orderFelt)
     }
 
 
@@ -101,22 +102,16 @@ class OppgaveKoTjeneste(
 
     private suspend fun byggDto(
         oppgaver: List<Oppgave>,
-        orderFelter: List<OrderFelt>
+        orderFelt: EnkelOrderFelt
     ): NesteOppgaverFraKoDto {
-        val orderFelterPerKode = orderFelter
-            .filterIsInstance<EnkelOrderFelt>()
-            .associateBy { it.kode }
 
         val visningskolonner = buildMap {
             put("søker", "Søker")
             put("id", "Id")
             put("behandlingType", "Behandlingstype")
-            putAll(orderFelter.map {
-                val orderFelt = it as EnkelOrderFelt
-                val visningsnavn =
-                    feltdefinisjonTjeneste.hent(orderFelt.område!!).hentFeltdefinisjon(orderFelt.kode).visningsnavn
-                orderFelt.kode to visningsnavn
-            })
+            val orderVisningsnavn =
+                feltdefinisjonTjeneste.hent(orderFelt.område!!).hentFeltdefinisjon(orderFelt.kode).visningsnavn
+            put(orderFelt.kode, orderVisningsnavn)
         }
 
         val rader: List<Map<String, String>> = oppgaver.map { oppgave ->
@@ -124,8 +119,8 @@ class OppgaveKoTjeneste(
                 oppgave.hentVerdi("aktorId")?.let { aktørId ->
                     put(
                         "søker", pdlService.person(aktørId).person
-                        ?.let { "${it.navn()} ${it.fnr()}" }
-                        ?: "Ukjent navn Ukjent fnummer")
+                            ?.let { "${it.navn()} ${it.fnr()}" }
+                            ?: "Ukjent navn Ukjent fnummer")
                 }
                 oppgave.hentVerdi("journalpostId")?.let { put("id", it) }
                     ?: oppgave.hentVerdi("saksnummer")?.let { put("id", it) }
@@ -134,7 +129,6 @@ class OppgaveKoTjeneste(
                 }
                 for ((kolonne, _) in visningskolonner) {
                     if (kolonne !in this) {
-                        val orderFelt = orderFelterPerKode[kolonne]
                         val verdi = when {
                             orderFelt == null -> null
                             orderFelt.område != null -> oppgave.hentVerdiEllerListe(orderFelt.område, orderFelt.kode)
