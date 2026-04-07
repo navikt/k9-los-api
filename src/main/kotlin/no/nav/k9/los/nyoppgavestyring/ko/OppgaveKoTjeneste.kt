@@ -72,7 +72,7 @@ class OppgaveKoTjeneste(
         )
 
         // Kun mulig med en enkelt order på køer per i dag. Inkluderer den som kolonne.
-        val orderFelt = kø.oppgaveQuery.order.filterIsInstance<EnkelOrderFelt>().first()
+        val orderFelt = kø.oppgaveQuery.order.filterIsInstance<EnkelOrderFelt>().firstOrNull()
         return byggDto(tilgjengeligeOppgaver, orderFelt)
     }
 
@@ -102,16 +102,18 @@ class OppgaveKoTjeneste(
 
     private suspend fun byggDto(
         oppgaver: List<Oppgave>,
-        orderFelt: EnkelOrderFelt
+        orderFelt: EnkelOrderFelt?
     ): NesteOppgaverFraKoDto {
 
         val visningskolonner = buildMap {
             put("søker", "Søker")
             put("id", "Id")
             put("behandlingType", "Behandlingstype")
-            val orderVisningsnavn =
-                feltdefinisjonTjeneste.hent(orderFelt.område!!).hentFeltdefinisjon(orderFelt.kode).visningsnavn
-            put(orderFelt.kode, orderVisningsnavn)
+            if (orderFelt != null) {
+                val orderVisningsnavn =
+                    feltdefinisjonTjeneste.hent(orderFelt.område!!).hentFeltdefinisjon(orderFelt.kode).visningsnavn
+                put(orderFelt.kode, orderVisningsnavn)
+            }
         }
 
         val rader: List<Map<String, String>> = oppgaver.map { oppgave ->
@@ -131,10 +133,7 @@ class OppgaveKoTjeneste(
                     if (kolonne !in this) {
                         val verdi = when {
                             orderFelt == null -> null
-                            orderFelt.område != null -> oppgave.hentVerdiEllerListe(orderFelt.område, orderFelt.kode)
-                            orderFelt.kode == "oppgavestatus" -> oppgave.status
-                            orderFelt.kode == "oppgavetype" -> oppgave.oppgavetype.eksternId
-                            else -> oppgave.hentVerdi(orderFelt.kode)
+                            else -> oppgave.hentVerdiEllerListe(orderFelt.område, orderFelt.kode)
                         }
                         verdi?.let { put(kolonne, it.toString()) }
                     }

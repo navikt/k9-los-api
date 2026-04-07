@@ -1,8 +1,8 @@
 package no.nav.k9.los.nyoppgavestyring.uttrekk
 
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
 import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.AntallSelectFelt
 import org.slf4j.LoggerFactory
 import kotlin.time.measureTime
 
@@ -16,20 +16,19 @@ class UttrekkJobb(
     fun kjørUttrekk(uttrekkId: Long) {
         try {
             val uttrekk = uttrekkTjeneste.startUttrekk(uttrekkId)
-            val queryRequest = QueryRequest(uttrekk.query, avgrensning = uttrekk.avgrensning)
+            var queryRequest = QueryRequest(uttrekk.query, avgrensning = uttrekk.avgrensning)
 
-            when (uttrekk.typeKjøring) {
-                TypeKjøring.ANTALL -> {
-                    val antall = oppgaveQueryService.queryForAntall(queryRequest)
-                    uttrekkTjeneste.fullførUttrekk(uttrekkId, antall.toInt())
-                }
-
-                TypeKjøring.OPPGAVER -> {
-                    val oppgaver = oppgaveQueryService.queryForOppgaveResultat(queryRequest)
-                    val resultatJson = LosObjectMapper.instance.writeValueAsString(oppgaver)
-                    uttrekkTjeneste.fullførUttrekk(uttrekkId, oppgaver.size, resultatJson)
-                }
+            if (uttrekk.typeKjøring == TypeKjøring.ANTALL) {
+                // Overstyrer queryRequest for å kun få antallet, usikker på om dette er det peneste...
+                queryRequest = QueryRequest(queryRequest.oppgaveQuery.copy(select = listOf(AntallSelectFelt())))
             }
+
+            val resultat = oppgaveQueryService.queryMedSelect(queryRequest)
+
+            uttrekkTjeneste.fullførUttrekk(
+                uttrekkId,
+                resultat
+            )
         } catch (e: Exception) {
             uttrekkTjeneste.feilUttrekk(uttrekkId, e.message)
         }

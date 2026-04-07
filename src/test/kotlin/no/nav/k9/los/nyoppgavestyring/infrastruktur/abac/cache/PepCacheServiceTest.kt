@@ -22,7 +22,6 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.K9Puns
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventDto
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventHandler
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.EventTilOppgaveAdapter
-import no.nav.k9.los.nyoppgavestyring.felter
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.jobbplanlegger.Jobbplanlegger
@@ -33,13 +32,11 @@ import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
 import no.nav.k9.los.nyoppgavestyring.kodeverk.PersonBeskyttelseType
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
 import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
-import no.nav.k9.los.nyoppgavestyring.query.dto.query.CombineOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelSelectFelt
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
-import no.nav.k9.los.nyoppgavestyring.query.mapping.CombineOperator
+import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.OppgaveQueryResultat
 import no.nav.k9.los.nyoppgavestyring.query.mapping.EksternFeltverdiOperator
-import no.nav.k9.los.nyoppgavestyring.query.mapping.OppgavefilterRens
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import no.nav.k9.sak.typer.AktørId
 import no.nav.k9.sak.typer.JournalpostId
@@ -145,7 +142,8 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
 
     @Test
     fun `Alle ordinære eventer på K9punsjEventHandler skal oppdatere pepcache for å alltid få med aktørendringer i sak`() {
-        val k9punsjEventHandler = get<no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventHandler>()
+        val k9punsjEventHandler =
+            get<no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventHandler>()
         val pepRepository = get<PepCacheRepository>()
         val oppgaveAdapter = get<EventTilOppgaveAdapter>()
 
@@ -164,7 +162,8 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
 
     @Test
     fun `Eventer i K9punsjEventHandler med kode6 skal oppdatere pepcache`() {
-        val k9punsjEventHandler = get<no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventHandler>()
+        val k9punsjEventHandler =
+            get<no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventHandler>()
         val pepRepository = get<PepCacheRepository>()
         val oppgaveAdapter = get<EventTilOppgaveAdapter>()
 
@@ -183,7 +182,8 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
 
     @Test
     fun `Eventer i K9punsjEventHandler med kode7 skal oppdatere pepcache`() {
-        val k9punsjEventHandler = get<no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventHandler>()
+        val k9punsjEventHandler =
+            get<no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventHandler>()
         val pepRepository = get<PepCacheRepository>()
         val oppgaveAdapter = get<EventTilOppgaveAdapter>()
 
@@ -277,22 +277,71 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
         val eksternId = UUID.randomUUID().toString()
         k9sakEventHandler.prosesser(lagBehandlingprosessEventMedStatus(eksternId, saksnummer))
 
-        assertThat(hentOppgaverMedSikkerhetsklassifisering(oppgaveQueryService, eksternId, PersonBeskyttelseType.UGRADERT)).isNotEmpty()
-        assertThat(hentOppgaverMedSikkerhetsklassifisering(oppgaveQueryService, eksternId, PersonBeskyttelseType.UTEN_KODE6)).isNotEmpty()
+        assertThat(
+            hentOppgaverMedSikkerhetsklassifisering(
+                oppgaveQueryService,
+                eksternId,
+                PersonBeskyttelseType.UGRADERT
+            )
+        ).isNotEmpty()
+        assertThat(
+            hentOppgaverMedSikkerhetsklassifisering(
+                oppgaveQueryService,
+                eksternId,
+                PersonBeskyttelseType.UTEN_KODE6
+            )
+        ).isNotEmpty()
         verify(exactly = 2) { runBlocking { pepClient.harTilgangTilOppgaveV3(any()) } } //oppgaven hentet ut 2 ganger fra kø, gir to kall til pep klient
-        assertThat(hentOppgaverMedSikkerhetsklassifisering(oppgaveQueryService, eksternId, PersonBeskyttelseType.KODE6)).isEmpty()
+        assertThat(
+            hentOppgaverMedSikkerhetsklassifisering(
+                oppgaveQueryService,
+                eksternId,
+                PersonBeskyttelseType.KODE6
+            )
+        ).isEmpty()
         verify(exactly = 2) { runBlocking { pepClient.harTilgangTilOppgaveV3(any()) } } //oppgaven var ikke i køa, så gjør ikke ekstra kall til pep-klent
 
         gjørSakKode6(saksnummer)
         ventPåAntallForsøk(10, "Pepcache") { pepRepository.hent("K9", eksternId)?.kode6 == true }
 
-        assertThat(hentOppgaverMedSikkerhetsklassifisering(oppgaveQueryService, eksternId, PersonBeskyttelseType.UGRADERT)).isEmpty()
-        assertThat(hentOppgaverMedSikkerhetsklassifisering(oppgaveQueryService, eksternId, PersonBeskyttelseType.KODE7_ELLER_EGEN_ANSATT)).isEmpty()
-        assertThat(hentOppgaverMedSikkerhetsklassifisering(oppgaveQueryService, eksternId, PersonBeskyttelseType.UTEN_KODE6)).isEmpty()
-        assertThat(hentOppgaverMedSikkerhetsklassifisering(oppgaveQueryService, eksternId, PersonBeskyttelseType.KODE6)).isNotEmpty()
+        assertThat(
+            hentOppgaverMedSikkerhetsklassifisering(
+                oppgaveQueryService,
+                eksternId,
+                PersonBeskyttelseType.UGRADERT
+            )
+        ).isEmpty()
+        assertThat(
+            hentOppgaverMedSikkerhetsklassifisering(
+                oppgaveQueryService,
+                eksternId,
+                PersonBeskyttelseType.KODE7_ELLER_EGEN_ANSATT
+            )
+        ).isEmpty()
+        assertThat(
+            hentOppgaverMedSikkerhetsklassifisering(
+                oppgaveQueryService,
+                eksternId,
+                PersonBeskyttelseType.UTEN_KODE6
+            )
+        ).isEmpty()
+        assertThat(
+            hentOppgaverMedSikkerhetsklassifisering(
+                oppgaveQueryService,
+                eksternId,
+                PersonBeskyttelseType.KODE6
+            )
+        ).isNotEmpty()
 
         jobbplanlegger.stopp()
-        verify(exactly = 3) { runBlocking { pepClient.harTilgangTilOppgaveV3(any(), any()) } } //oppgaven var bare i kode6-køa, så ble ett ekstra kall til pep-klent
+        verify(exactly = 3) {
+            runBlocking {
+                pepClient.harTilgangTilOppgaveV3(
+                    any(),
+                    any()
+                )
+            }
+        } //oppgaven var bare i kode6-køa, så ble ett ekstra kall til pep-klent
     }
 
     private fun loggAlleOppgaverMedFelterOgCache() {
@@ -304,8 +353,15 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
         transactionalManager.transaction { tx ->
             testRepository.hentEksternIdForAlleOppgaver(tx).forEach { eksternId ->
                 logger.info("eksternId $eksternId")
-                logger.info("Oppgave: "+oppgaveRepository.hentNyesteOppgaveForEksternId(tx, "K9", eksternId).felter.joinToString(", ") { it.eksternId + "-" + it.verdi })
-                logger.info("Pep: "+pepCache.hent("K9", eksternId, tx)?.run { "kode6-$kode6, kode7-$kode7, egenansatt-$egenAnsatt, oppdater-$oppdatert" })
+                logger.info(
+                    "Oppgave: " + oppgaveRepository.hentNyesteOppgaveForEksternId(
+                        tx,
+                        "K9",
+                        eksternId
+                    ).felter.joinToString(", ") { it.eksternId + "-" + it.verdi })
+                logger.info(
+                    "Pep: " + pepCache.hent("K9", eksternId, tx)
+                        ?.run { "kode6-$kode6, kode7-$kode7, egenansatt-$egenAnsatt, oppdater-$oppdatert" })
             }
         }
     }
@@ -315,30 +371,31 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
         eksternId: String,
         sikkerhetsklassifiseringtype: PersonBeskyttelseType
     ): List<Any> {
-        val transactionalManager = get<TransactionalManager>()
-        return transactionalManager.transaction { tx ->
-            val filtre = listOf(
-                CombineOppgavefilter(combineOperator = CombineOperator.AND, filtere = listOf(
-                    FeltverdiOppgavefilter(
-                        område = null,
-                        kode = FeltType.PERSONBESKYTTELSE.eksternId,
-                        operator = EksternFeltverdiOperator.EQUALS,
-                        verdi = listOf(sikkerhetsklassifiseringtype.kode)
-                    ),
-                    FeltverdiOppgavefilter(område = "K9",
-                        kode = FeltType.BEHANDLINGUUID.eksternId,
-                        operator = EksternFeltverdiOperator.EQUALS,
-                        verdi = listOf(eksternId)
-                    )
-                ))
-            )
-
-            oppgaveQueryService.queryForOppgaveResultat(tx,
-                QueryRequest(OppgaveQuery(
+        val resultat = oppgaveQueryService.queryMedSelect(
+            QueryRequest(
+                OppgaveQuery(
                     select = listOf(EnkelSelectFelt(område = "K9", kode = "ekstern_id")),
-                    filtere = OppgavefilterRens.rens(felter, filtre)
-                )),
-            )
+                    filtere = listOf(
+                        FeltverdiOppgavefilter(
+                            område = null,
+                            kode = FeltType.PERSONBESKYTTELSE.eksternId,
+                            operator = EksternFeltverdiOperator.EQUALS,
+                            verdi = listOf(sikkerhetsklassifiseringtype.kode)
+                        ),
+                        FeltverdiOppgavefilter(
+                            område = "K9",
+                            kode = FeltType.BEHANDLINGUUID.eksternId,
+                            operator = EksternFeltverdiOperator.EQUALS,
+                            verdi = listOf(eksternId)
+                        )
+                    )
+                )
+            ),
+        )
+
+        return when (resultat) {
+            is OppgaveQueryResultat.SelectResultat -> resultat.rader
+            else -> emptyList()
         }
     }
 
@@ -414,7 +471,7 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
 
     private suspend fun ventPåAntallForsøk(antall: Int, beskrivelse: String = "", f: () -> Boolean) {
         for (i in 0..antall) {
-            delay(500)
+            delay(500.milliseconds)
             if (i == antall) throw IllegalStateException("Ikke oppfylt innen tidsfrist: $beskrivelse")
             if (f()) {
                 logger.info("Oppfylt innen tidsfrist: $beskrivelse")

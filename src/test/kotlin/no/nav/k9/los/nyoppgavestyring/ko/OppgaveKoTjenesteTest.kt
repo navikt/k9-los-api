@@ -9,19 +9,20 @@ import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.Action
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.IPdlService
 import no.nav.k9.los.nyoppgavestyring.ko.db.OppgaveKoRepository
 import no.nav.k9.los.nyoppgavestyring.ko.dto.OppgaveKo
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
+import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.Område
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.Oppgavetype
-import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonTjeneste
 import no.nav.k9.los.nyoppgavestyring.query.Avgrensning
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
 import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelOrderFelt
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
@@ -33,7 +34,7 @@ import java.time.LocalDateTime
 class OppgaveKoTjenesteTest {
 
     @Test
-    fun `hentOppgaverFraKø filtrerer med pep uten å hente flere sider`() = runBlocking {
+    fun `hentOppgaverFraKø filtrerer med pep`() = runBlocking {
         val oppgaveKoRepository = mockk<OppgaveKoRepository>()
         val oppgaveQueryService = mockk<OppgaveQueryService>()
         val pepClient = mockk<IPepClient>()
@@ -55,7 +56,7 @@ class OppgaveKoTjenesteTest {
             versjon = 1L,
             tittel = "Testkø",
             beskrivelse = "",
-            oppgaveQuery = OppgaveQuery(filtere = emptyList()),
+            oppgaveQuery = OppgaveQuery(filtere = emptyList(), order = listOf(EnkelOrderFelt(område = "K9", kode = "mottattDato", økende = false))),
             frittValgAvOppgave = false,
             saksbehandlerIds = emptyList(),
             saksbehandlere = emptyList(),

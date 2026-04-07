@@ -70,15 +70,6 @@ class OppgaveQueryService {
     }
 
     @WithSpan
-    fun queryForOppgaveResultat(request: QueryRequest): List<OppgaveResultat> {
-        return using(sessionOf(datasource)) {
-            it.transaction { tx ->
-                queryForOppgaveResultat(tx, request)
-            }
-        }
-    }
-
-    @WithSpan
     fun queryForOppgaveResultat(tx: TransactionalSession, request: QueryRequest): List<OppgaveResultat> {
         val now = LocalDateTime.now()
         val resultat = oppgaveQueryRepository.queryMedSelect(tx, request, now)
