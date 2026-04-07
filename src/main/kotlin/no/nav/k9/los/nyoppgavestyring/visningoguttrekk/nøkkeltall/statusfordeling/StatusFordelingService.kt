@@ -84,10 +84,10 @@ class StatusFordelingService(val queryService: OppgaveQueryService) {
             filtere = listOf(åpenVenterUavklart) + filtere.toList(),
             select = listOf(
                 EnkelSelectFelt(null, "oppgavestatus"),
-                AntallSelectFelt(),
+                AntallSelectFelt,
             ),
         )
-        val resultat = queryService.queryMedSelect(QueryRequest(query))
+        val resultat = queryService.query(QueryRequest(query))
         if (resultat !is OppgaveQueryResultat.GruppertResultat) return emptyMap()
 
         return resultat.rader.associate { rad ->
@@ -150,9 +150,9 @@ class StatusFordelingService(val queryService: OppgaveQueryService) {
                 FeltverdiOppgavefilter(null, "oppgavestatus", EksternFeltverdiOperator.EQUALS, listOf(Oppgavestatus.VENTER.kode)),
                 FeltverdiOppgavefilter("K9", "aktivVenteårsak", EksternFeltverdiOperator.EQUALS, listOf(Venteårsak.OVERSENDT_KABAL.kode)),
             ),
-            select = listOf(AntallSelectFelt()),
+            select = listOf(AntallSelectFelt),
         )
-        val venterKabal = (queryService.queryMedSelect(QueryRequest(venterKabalQuery)) as OppgaveQueryResultat.AntallResultat).antall
+        val venterKabal = (queryService.query(QueryRequest(venterKabalQuery)) as OppgaveQueryResultat.AntallResultat).antall
         val venterAnnet = (statusAntall[Oppgavestatus.VENTER.kode] ?: 0L) - venterKabal
 
         fun kildeQuery(vararg ekstraFiltre: Oppgavefilter) =

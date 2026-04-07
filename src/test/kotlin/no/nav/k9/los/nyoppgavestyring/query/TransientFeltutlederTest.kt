@@ -7,11 +7,15 @@ import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.FeltType
 import no.nav.k9.los.nyoppgavestyring.OppgaveTestDataBuilder
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.*
+import no.nav.k9.los.nyoppgavestyring.query.db.OppgaveId
 import no.nav.k9.los.nyoppgavestyring.query.db.OppgaveQueryRepository
+import no.nav.k9.los.nyoppgavestyring.query.db.OppgaveV3Id
+import no.nav.k9.los.nyoppgavestyring.query.db.PartisjonertOppgaveId
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelOrderFelt
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelSelectFelt
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
+import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.OppgaveQueryResultat
 import no.nav.k9.los.nyoppgavestyring.query.mapping.EksternFeltverdiOperator
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
@@ -57,8 +61,8 @@ class TransientFeltutlederTest : AbstractK9LosIntegrationTest() {
             )
         )
 
-        val result = oppgaveQueryRepository.query(QueryRequest(oppgaveQueryUtenStatusfilter))
-        val resultMedStatusfilter = oppgaveQueryRepository.query(QueryRequest(oppgaveQueryMedStatusfilter))
+        val result = oppgaveQueryRepository.queryForOppgaveId(QueryRequest(oppgaveQueryUtenStatusfilter))
+        val resultMedStatusfilter = oppgaveQueryRepository.queryForOppgaveId(QueryRequest(oppgaveQueryMedStatusfilter))
         assertThat(result.size).isEqualTo(1)
         assertThat(resultMedStatusfilter.size).isEqualTo(1)
 
@@ -85,7 +89,7 @@ class TransientFeltutlederTest : AbstractK9LosIntegrationTest() {
             )
         )
 
-        val result = oppgaveQueryRepository.query(QueryRequest(oppgaveQuery))
+        val result = oppgaveQueryRepository.queryForOppgaveId(QueryRequest(oppgaveQuery))
         assertThat(result.size).isEqualTo(2)
 
         val oppgave = hentOppgave(result[0])
@@ -110,7 +114,7 @@ class TransientFeltutlederTest : AbstractK9LosIntegrationTest() {
             )
         )
 
-        val result = oppgaveQueryRepository.query(QueryRequest(oppgaveQuery))
+        val result = oppgaveQueryRepository.queryForOppgaveId(QueryRequest(oppgaveQuery))
         assertThat(result.size).isEqualTo(2)
 
         val oppgave = hentOppgave(result[0])
@@ -135,9 +139,10 @@ class TransientFeltutlederTest : AbstractK9LosIntegrationTest() {
             )
         )
 
-        val resultat = transactionalManager.transaction { tx ->
-            oppgaveQueryRepository.queryForOppgaveResultat(tx, QueryRequest(oppgaveQuery), LocalDateTime.now())
+        val queryResultat = transactionalManager.transaction { tx ->
+            oppgaveQueryRepository.query(tx, QueryRequest(oppgaveQuery), LocalDateTime.now())
         }
+        val resultat = (queryResultat as OppgaveQueryResultat.SelectResultat).rader
 
         assertThat(resultat.size).isEqualTo(2)
         val dagerFørste = Duration.parse(resultat[0].felter.first { it.kode == "tidSidenMottattDato" }.verdi as String).toDays()

@@ -118,10 +118,10 @@ class DagensTallService(
             add(EnkelSelectFelt(null, "oppgavetype"))
             add(EnkelSelectFelt("K9", "behandlingTypekode"))
             if (medHelautomatisk) add(EnkelSelectFelt("K9", "helautomatiskBehandlet"))
-            add(AntallSelectFelt())
+            add(AntallSelectFelt)
         }
         val query = OppgaveQuery(filtere = filtere, select = selectFelter)
-        val resultat = queryService.queryMedSelect(QueryRequest(query))
+        val resultat = queryService.query(QueryRequest(query))
         if (resultat !is OppgaveQueryResultat.GruppertResultat) return emptyList()
 
         return resultat.rader.map { rad ->

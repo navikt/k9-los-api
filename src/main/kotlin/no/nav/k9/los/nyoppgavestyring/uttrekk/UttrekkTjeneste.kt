@@ -79,6 +79,11 @@ class UttrekkTjeneste(
                 antall = resultat.rader.size
                 resultatJson = LosObjectMapper.instance.writeValueAsString(resultat.rader)
             }
+            else -> {
+                uttrekk.markerSomFeilet("Ugyldig resultat")
+                uttrekkRepository.oppdater(uttrekk, null)
+                return uttrekk
+            }
         }
         uttrekk.markerSomFullført(antall)
         uttrekkRepository.oppdater(uttrekk, resultatJson)

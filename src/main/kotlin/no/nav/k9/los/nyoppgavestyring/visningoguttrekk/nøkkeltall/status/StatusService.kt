@@ -45,10 +45,10 @@ class StatusService(
             filtere = filtere,
             select = listOf(
                 EnkelSelectFelt("K9", "behandlingTypekode"),
-                AntallSelectFelt(),
+                AntallSelectFelt,
             ),
         )
-        val resultat = queryService.queryMedSelect(QueryRequest(oppgaveQuery))
+        val resultat = queryService.query(QueryRequest(oppgaveQuery))
         val gruppert = (resultat as no.nav.k9.los.nyoppgavestyring.query.dto.resultat.OppgaveQueryResultat.GruppertResultat).rader
 
         val alleGrupper = gruppert.mapNotNull { rad ->

@@ -10,7 +10,5 @@ import com.fasterxml.jackson.annotation.JsonTypeName
     setterVisibility = JsonAutoDetect.Visibility.NONE,
     fieldVisibility = JsonAutoDetect.Visibility.ANY
 )
-@JsonTypeName("antall")
-object AntallSelectFelt : AggregertSelectFelt() {
-    override val sql = "COUNT(*)"
-}
+@JsonTypeName("oppgave_id")
+object OppgaveIdSelectFelt : SelectFelt()

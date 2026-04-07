@@ -20,10 +20,10 @@ class UttrekkJobb(
 
             if (uttrekk.typeKjøring == TypeKjøring.ANTALL) {
                 // Overstyrer queryRequest for å kun få antallet, usikker på om dette er det peneste...
-                queryRequest = QueryRequest(queryRequest.oppgaveQuery.copy(select = listOf(AntallSelectFelt())))
+                queryRequest = QueryRequest(queryRequest.oppgaveQuery.copy(select = listOf(AntallSelectFelt)))
             }
 
-            val resultat = oppgaveQueryService.queryMedSelect(queryRequest)
+            val resultat = oppgaveQueryService.query(queryRequest)
 
             uttrekkTjeneste.fullførUttrekk(
                 uttrekkId,

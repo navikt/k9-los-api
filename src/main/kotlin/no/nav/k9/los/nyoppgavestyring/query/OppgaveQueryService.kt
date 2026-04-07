@@ -4,15 +4,16 @@ import io.opentelemetry.instrumentation.annotations.WithSpan
 import kotliquery.TransactionalSession
 import kotliquery.sessionOf
 import kotliquery.using
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Id
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.PartisjonertOppgaveId
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.PartisjonertOppgaveRepository
 import no.nav.k9.los.nyoppgavestyring.query.db.EksternOppgaveId
 import no.nav.k9.los.nyoppgavestyring.query.db.OppgaveQueryRepository
+import no.nav.k9.los.nyoppgavestyring.query.db.OppgaveV3Id
+import no.nav.k9.los.nyoppgavestyring.query.db.PartisjonertOppgaveId
 import no.nav.k9.los.nyoppgavestyring.query.dto.felter.Oppgavefelter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.AntallSelectFelt
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.EksternIdSelectFelt
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveIdSelectFelt
 import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.OppgaveQueryResultat
-import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.OppgaveResultat
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import org.koin.java.KoinJavaComponent.inject
@@ -33,10 +34,16 @@ class OppgaveQueryService {
     }
 
     @WithSpan
-    fun queryForOppgave(tx: TransactionalSession, oppgaveQuery: QueryRequest): List<Oppgave> {
+    fun queryForOppgave(tx: TransactionalSession, request: QueryRequest): List<Oppgave> {
         val now = LocalDateTime.now()
-        val oppgaveIder = oppgaveQueryRepository.query(tx, oppgaveQuery, LocalDateTime.now())
-        return oppgaveIder.map { oppgaveId ->
+        val oppgaveIdRequest = request.copy(
+            oppgaveQuery = request.oppgaveQuery.copy(
+                select = listOf(OppgaveIdSelectFelt),
+                order = emptyList(),
+            )
+        )
+        val resultat = oppgaveQueryRepository.query(tx, oppgaveIdRequest, LocalDateTime.now()) as OppgaveQueryResultat.OppgaveIdResultat
+        return resultat.ider.map { oppgaveId ->
             when (oppgaveId) {
                 is OppgaveV3Id -> oppgaveRepository.hentOppgaveForId(tx, oppgaveId, now)
                 is PartisjonertOppgaveId -> partisjonertOppgaveRepository.hentOppgaveForId(oppgaveId, tx)
@@ -48,47 +55,42 @@ class OppgaveQueryService {
     fun queryForAntall(request: QueryRequest, now: LocalDateTime = LocalDateTime.now()): Long {
         val antallRequest = request.copy(
             oppgaveQuery = request.oppgaveQuery.copy(
-                select = listOf(AntallSelectFelt()),
+                select = listOf(AntallSelectFelt),
                 order = emptyList(),
             )
         )
-        val resultat = queryMedSelect(antallRequest, now)
+        val resultat = query(antallRequest, now)
         return (resultat as OppgaveQueryResultat.AntallResultat).antall
     }
 
     @WithSpan
-    fun queryMedSelect(request: QueryRequest, now: LocalDateTime = LocalDateTime.now()): OppgaveQueryResultat {
+    fun query(request: QueryRequest, now: LocalDateTime = LocalDateTime.now()): OppgaveQueryResultat {
         return using(sessionOf(datasource)) {
-            it.transaction { tx -> oppgaveQueryRepository.queryMedSelect(tx, request, now) }
+            it.transaction { tx -> oppgaveQueryRepository.query(tx, request, now) }
         }
     }
 
     @WithSpan
-    fun queryForOppgaveEksternId(oppgaveQuery: QueryRequest): List<EksternOppgaveId> {
+    fun queryForOppgaveEksternId(request: QueryRequest): List<EksternOppgaveId> {
         val now = LocalDateTime.now()
-        return oppgaveQueryRepository.queryForEksternId(oppgaveQuery, now)
+        val eksternIdRequest = request.copy(
+            oppgaveQuery = request.oppgaveQuery.copy(
+                select = listOf(EksternIdSelectFelt),
+            )
+        )
+        val resultat = query(eksternIdRequest, now) as OppgaveQueryResultat.EksternIdResultat
+        return resultat.ider
     }
-
-    @WithSpan
-    fun queryForOppgaveResultat(tx: TransactionalSession, request: QueryRequest): List<OppgaveResultat> {
-        val now = LocalDateTime.now()
-        val resultat = oppgaveQueryRepository.queryMedSelect(tx, request, now)
-        return (resultat as OppgaveQueryResultat.SelectResultat).rader
-    }
-
-
 
     @WithSpan
     fun hentAlleFelter(): Oppgavefelter {
         return oppgaveQueryRepository.hentAlleFelter()
     }
 
-
-
     fun validate(request: QueryRequest): Boolean {
         try {
             queryForAntall(request)
-        } catch (e: RuntimeException) {
+        } catch (_: RuntimeException) {
             return false
         }
 

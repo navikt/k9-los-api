@@ -1,7 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.query.db
 
 import kotliquery.Row
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveId
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelSelectFelt
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.Oppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.AggregertSelectFelt
