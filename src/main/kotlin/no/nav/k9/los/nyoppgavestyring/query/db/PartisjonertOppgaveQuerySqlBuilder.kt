@@ -415,16 +415,16 @@ class PartisjonertOppgaveQuerySqlBuilder(
     private fun validerStøttetAggregering(
         funksjon: Aggregeringsfunksjon,
         datatype: Datatype,
-        feltområde: String?,
         feltkode: String,
     ) {
         when (funksjon) {
             Aggregeringsfunksjon.ANTALL -> Unit
             Aggregeringsfunksjon.SUM, Aggregeringsfunksjon.GJENNOMSNITT -> require(datatype == Datatype.INTEGER) {
-                "Aggregeringsfunksjon $funksjon støttes kun for heltallsfelt. Felt ${feltområde ?: "null"}.$feltkode er ${datatype.kode}."
+                "Aggregeringsfunksjon $funksjon støttes kun for heltallsfelt. Felt $feltkode er ${datatype.kode}."
             }
+
             Aggregeringsfunksjon.MIN, Aggregeringsfunksjon.MAKS -> require(datatype != Datatype.DURATION) {
-                "Aggregeringsfunksjon $funksjon støttes ikke for Duration-felt ennå. Felt ${feltområde ?: "null"}.$feltkode er ${datatype.kode}."
+                "Aggregeringsfunksjon $funksjon støttes ikke for Duration-felt ennå. Felt $feltkode er ${datatype.kode}."
             }
         }
     }
@@ -452,7 +452,7 @@ class PartisjonertOppgaveQuerySqlBuilder(
     private fun byggAggregeringsgrunnlag(felt: AggregertSelectFelt, index: Int): Aggregeringsgrunnlag {
         val feltKode = requireNotNull(felt.kode) { "AggregertSelectFelt ${felt.funksjon} mangler kode" }
         val datatype = datatypeForFelt(felt.område, feltKode)
-        validerStøttetAggregering(felt.funksjon, datatype, felt.område, feltKode)
+        validerStøttetAggregering(felt.funksjon, datatype, feltKode)
 
         if (felt.område == null) {
             return Aggregeringsgrunnlag(
@@ -498,26 +498,19 @@ class PartisjonertOppgaveQuerySqlBuilder(
     }
 
     private fun byggAggregeringsuttrykk(
-        funksjon: Aggregeringsfunksjon,
-        grunnlag: Aggregeringsgrunnlag,
-    ): String {
-        return when (funksjon) {
+        felt: AggregertSelectFelt,
+        index: Int,
+    ): Pair<String, Map<String, Any?>> {
+        if (felt.funksjon == Aggregeringsfunksjon.ANTALL) return "COUNT(*)" to emptyMap()
+
+        val grunnlag = byggAggregeringsgrunnlag(felt, index)
+
+        return when (felt.funksjon) {
             Aggregeringsfunksjon.GJENNOMSNITT -> "AVG(${grunnlag.uttrykk})"
             Aggregeringsfunksjon.SUM -> "SUM(${grunnlag.uttrykk})"
-            Aggregeringsfunksjon.MIN -> when (grunnlag.datatype) {
-                Datatype.BOOLEAN -> "BOOL_AND(${grunnlag.uttrykk})"
-                else -> "MIN(${grunnlag.uttrykk})"
-            }
-            Aggregeringsfunksjon.MAKS -> when (grunnlag.datatype) {
-                Datatype.BOOLEAN -> "BOOL_OR(${grunnlag.uttrykk})"
-                else -> "MAX(${grunnlag.uttrykk})"
-            }
-            Aggregeringsfunksjon.ANTALL -> throw IllegalArgumentException("COUNT håndteres separat.")
-        }
-    }
-
-    private fun tekstifiserAggregering(uttrykk: String): String {
-        return "($uttrykk)::text"
+            Aggregeringsfunksjon.MIN -> "MIN(${grunnlag.uttrykk})"
+            Aggregeringsfunksjon.MAKS -> "MAX(${grunnlag.uttrykk})"
+        } to grunnlag.queryParams
     }
 
     // Select-felt støtte for effektive spørringer som returnerer OppgaveResultat
@@ -647,15 +640,9 @@ class PartisjonertOppgaveQuerySqlBuilder(
 
         aggregerteFelter.forEachIndexed { index, felt ->
             val alias = "agg_$index"
-            val aggregertUttrykk = when (felt.funksjon) {
-                Aggregeringsfunksjon.ANTALL -> "COUNT(*)"
-                else -> {
-                    val grunnlag = byggAggregeringsgrunnlag(felt, index)
-                    grupperingParams.putAll(grunnlag.queryParams)
-                    byggAggregeringsuttrykk(felt.funksjon, grunnlag)
-                }
-            }
-            selectDeler.add("${tekstifiserAggregering(aggregertUttrykk)} AS $alias")
+            val (uttrykk, params) = byggAggregeringsuttrykk(felt, index)
+            grupperingParams.putAll(params)
+            selectDeler.add("($uttrykk)::text AS $alias")
         }
 
         selectClause = "SELECT " + selectDeler.joinToString(", ")

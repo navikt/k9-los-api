@@ -1120,30 +1120,6 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
     }
 
     @Test
-    fun `queryForGruppering aggregerer booleanfelt datatypebevisst`() {
-        val builder = OppgaveTestDataBuilder()
-        builder.medOppgaveFeltVerdi(FeltType.LIGGER_HOS_BESLUTTER, true.toString()).lagOgLagre()
-        builder.medOppgaveFeltVerdi(FeltType.LIGGER_HOS_BESLUTTER, false.toString()).lagOgLagre()
-
-        val query = OppgaveQuery(
-            filtere = listOf(
-                byggFilter(FeltType.OPPGAVE_STATUS, EksternFeltverdiOperator.EQUALS, Oppgavestatus.AAPEN.kode)
-            ),
-            select = listOf(
-                AggregertSelectFelt(Aggregeringsfunksjon.MIN, "K9", FeltType.LIGGER_HOS_BESLUTTER.eksternId),
-                AggregertSelectFelt(Aggregeringsfunksjon.MAKS, "K9", FeltType.LIGGER_HOS_BESLUTTER.eksternId),
-            ),
-        )
-
-        val resultat = get<OppgaveQueryService>().query(QueryRequest(query))
-
-        assertThat(resultat).isInstanceOf(OppgaveQueryResultat.GruppertResultat::class.java)
-        val rad = (resultat as OppgaveQueryResultat.GruppertResultat).rader.single()
-        assertThat(rad.aggregeringer.first { it.type == Aggregeringsfunksjon.MIN }.verdi).isEqualTo("false")
-        assertThat(rad.aggregeringer.first { it.type == Aggregeringsfunksjon.MAKS }.verdi).isEqualTo("true")
-    }
-
-    @Test
     fun `queryForGruppering avviser sum på timestampfelt`() {
         val builder = OppgaveTestDataBuilder()
         builder.medOppgaveFeltVerdi(FeltType.MOTTATT_DATO, "2023-05-15T12:30:00").lagOgLagre()
@@ -1160,7 +1136,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
         val exception = assertThrows<IllegalArgumentException> {
             get<OppgaveQueryService>().query(QueryRequest(query))
         }
-        assertThat(checkNotNull(exception.message)).contains("kun for heltallsfelt")
+        assertThat(exception.message).isNotNull().contains("kun for heltallsfelt")
     }
 
     private fun queryForOppgave(request: QueryRequest) = get<OppgaveQueryService>().queryForOppgave(request)
