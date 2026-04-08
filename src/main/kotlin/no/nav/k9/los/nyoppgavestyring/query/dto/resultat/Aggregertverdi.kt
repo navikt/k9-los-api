@@ -6,5 +6,5 @@ data class Aggregertverdi(
     val type: Aggregeringsfunksjon,
     val område: String?,
     val kode: String?,
-    val verdi: Number,
+    val verdi: String?,
 )

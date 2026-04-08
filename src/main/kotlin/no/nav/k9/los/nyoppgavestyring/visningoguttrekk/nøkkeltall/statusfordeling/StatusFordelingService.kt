@@ -92,7 +92,7 @@ class StatusFordelingService(val queryService: OppgaveQueryService) {
 
         return resultat.rader.associate { rad ->
             val status = rad.grupperingsverdier.first().verdi?.toString() ?: ""
-            val antall = rad.aggregeringer.first { it.type == Aggregeringsfunksjon.ANTALL }.verdi.toLong()
+            val antall = checkNotNull(rad.aggregeringer.first { it.type == Aggregeringsfunksjon.ANTALL }.verdi).toLong()
             status to antall
         }
     }

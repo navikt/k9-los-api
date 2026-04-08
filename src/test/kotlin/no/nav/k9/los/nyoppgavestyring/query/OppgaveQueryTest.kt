@@ -25,6 +25,7 @@ import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.koin.test.get
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -981,8 +982,8 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
         assertThat(grupper).hasSize(2)
         val bt002 = grupper.first { it.grupperingsverdier.first().verdi == "BT-002" }
         val bt004 = grupper.first { it.grupperingsverdier.first().verdi == "BT-004" }
-        assertThat(bt002.aggregeringer.first { it.type == Aggregeringsfunksjon.ANTALL }.verdi).isEqualTo(2L)
-        assertThat(bt004.aggregeringer.first { it.type == Aggregeringsfunksjon.ANTALL }.verdi).isEqualTo(1L)
+        assertThat(bt002.aggregeringer.first { it.type == Aggregeringsfunksjon.ANTALL }.verdi).isEqualTo("2")
+        assertThat(bt004.aggregeringer.first { it.type == Aggregeringsfunksjon.ANTALL }.verdi).isEqualTo("1")
     }
 
     @Test
@@ -1010,8 +1011,8 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
         assertThat(grupper).hasSize(2)
         val aapen = grupper.first { it.grupperingsverdier.first().verdi == Oppgavestatus.AAPEN.kode }
         val venter = grupper.first { it.grupperingsverdier.first().verdi == Oppgavestatus.VENTER.kode }
-        assertThat(aapen.aggregeringer.first { it.type == Aggregeringsfunksjon.ANTALL }.verdi).isEqualTo(2L)
-        assertThat(venter.aggregeringer.first { it.type == Aggregeringsfunksjon.ANTALL }.verdi).isEqualTo(1L)
+        assertThat(aapen.aggregeringer.first { it.type == Aggregeringsfunksjon.ANTALL }.verdi).isEqualTo("2")
+        assertThat(venter.aggregeringer.first { it.type == Aggregeringsfunksjon.ANTALL }.verdi).isEqualTo("1")
     }
 
     @Test
@@ -1064,6 +1065,102 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
         assertThat(resultat).isInstanceOf(OppgaveQueryResultat.GruppertResultat::class.java)
         val grupper = (resultat as OppgaveQueryResultat.GruppertResultat).rader
         assertThat(grupper.map { it.grupperingsverdier.first().verdi }).containsExactly("BT-002", "BT-004")
+    }
+
+    @Test
+    fun `queryForGruppering aggregerer heltallsfelt datatypebevisst`() {
+        val builder = OppgaveTestDataBuilder(definisjonskilde = "k9-tilbake-til-los", oppgaveTypeNavn = "k9tilbake")
+        builder.medOppgaveFeltVerdi(FeltType.FEILUTBETALT_BELØP, "100").lagOgLagre()
+        builder.medOppgaveFeltVerdi(FeltType.FEILUTBETALT_BELØP, "200").lagOgLagre()
+
+        val query = OppgaveQuery(
+            filtere = listOf(
+                byggFilter(FeltType.OPPGAVE_STATUS, EksternFeltverdiOperator.EQUALS, Oppgavestatus.AAPEN.kode)
+            ),
+            select = listOf(
+                AggregertSelectFelt(Aggregeringsfunksjon.SUM, "K9", FeltType.FEILUTBETALT_BELØP.eksternId),
+                AggregertSelectFelt(Aggregeringsfunksjon.GJENNOMSNITT, "K9", FeltType.FEILUTBETALT_BELØP.eksternId),
+                AggregertSelectFelt(Aggregeringsfunksjon.MIN, "K9", FeltType.FEILUTBETALT_BELØP.eksternId),
+                AggregertSelectFelt(Aggregeringsfunksjon.MAKS, "K9", FeltType.FEILUTBETALT_BELØP.eksternId),
+            ),
+        )
+
+        val resultat = get<OppgaveQueryService>().query(QueryRequest(query))
+
+        assertThat(resultat).isInstanceOf(OppgaveQueryResultat.GruppertResultat::class.java)
+        val rad = (resultat as OppgaveQueryResultat.GruppertResultat).rader.single()
+        assertThat(rad.aggregeringer.first { it.type == Aggregeringsfunksjon.SUM }.verdi).isEqualTo("300")
+        assertThat(checkNotNull(rad.aggregeringer.first { it.type == Aggregeringsfunksjon.GJENNOMSNITT }.verdi)).startsWith("150")
+        assertThat(rad.aggregeringer.first { it.type == Aggregeringsfunksjon.MIN }.verdi).isEqualTo("100")
+        assertThat(rad.aggregeringer.first { it.type == Aggregeringsfunksjon.MAKS }.verdi).isEqualTo("200")
+    }
+
+    @Test
+    fun `queryForGruppering aggregerer timestampfelt datatypebevisst`() {
+        val builder = OppgaveTestDataBuilder()
+        builder.medOppgaveFeltVerdi(FeltType.MOTTATT_DATO, "2023-05-15T12:30:00").lagOgLagre()
+        builder.medOppgaveFeltVerdi(FeltType.MOTTATT_DATO, "2023-05-14T08:15:00").lagOgLagre()
+
+        val query = OppgaveQuery(
+            filtere = listOf(
+                byggFilter(FeltType.OPPGAVE_STATUS, EksternFeltverdiOperator.EQUALS, Oppgavestatus.AAPEN.kode)
+            ),
+            select = listOf(
+                AggregertSelectFelt(Aggregeringsfunksjon.MIN, "K9", FeltType.MOTTATT_DATO.eksternId),
+                AggregertSelectFelt(Aggregeringsfunksjon.MAKS, "K9", FeltType.MOTTATT_DATO.eksternId),
+            ),
+        )
+
+        val resultat = get<OppgaveQueryService>().query(QueryRequest(query))
+
+        assertThat(resultat).isInstanceOf(OppgaveQueryResultat.GruppertResultat::class.java)
+        val rad = (resultat as OppgaveQueryResultat.GruppertResultat).rader.single()
+        assertThat(checkNotNull(rad.aggregeringer.first { it.type == Aggregeringsfunksjon.MIN }.verdi)).startsWith("2023-05-14 08:15:00")
+        assertThat(checkNotNull(rad.aggregeringer.first { it.type == Aggregeringsfunksjon.MAKS }.verdi)).startsWith("2023-05-15 12:30:00")
+    }
+
+    @Test
+    fun `queryForGruppering aggregerer booleanfelt datatypebevisst`() {
+        val builder = OppgaveTestDataBuilder()
+        builder.medOppgaveFeltVerdi(FeltType.LIGGER_HOS_BESLUTTER, true.toString()).lagOgLagre()
+        builder.medOppgaveFeltVerdi(FeltType.LIGGER_HOS_BESLUTTER, false.toString()).lagOgLagre()
+
+        val query = OppgaveQuery(
+            filtere = listOf(
+                byggFilter(FeltType.OPPGAVE_STATUS, EksternFeltverdiOperator.EQUALS, Oppgavestatus.AAPEN.kode)
+            ),
+            select = listOf(
+                AggregertSelectFelt(Aggregeringsfunksjon.MIN, "K9", FeltType.LIGGER_HOS_BESLUTTER.eksternId),
+                AggregertSelectFelt(Aggregeringsfunksjon.MAKS, "K9", FeltType.LIGGER_HOS_BESLUTTER.eksternId),
+            ),
+        )
+
+        val resultat = get<OppgaveQueryService>().query(QueryRequest(query))
+
+        assertThat(resultat).isInstanceOf(OppgaveQueryResultat.GruppertResultat::class.java)
+        val rad = (resultat as OppgaveQueryResultat.GruppertResultat).rader.single()
+        assertThat(rad.aggregeringer.first { it.type == Aggregeringsfunksjon.MIN }.verdi).isEqualTo("false")
+        assertThat(rad.aggregeringer.first { it.type == Aggregeringsfunksjon.MAKS }.verdi).isEqualTo("true")
+    }
+
+    @Test
+    fun `queryForGruppering avviser sum på timestampfelt`() {
+        val builder = OppgaveTestDataBuilder()
+        builder.medOppgaveFeltVerdi(FeltType.MOTTATT_DATO, "2023-05-15T12:30:00").lagOgLagre()
+
+        val query = OppgaveQuery(
+            filtere = listOf(
+                byggFilter(FeltType.OPPGAVE_STATUS, EksternFeltverdiOperator.EQUALS, Oppgavestatus.AAPEN.kode)
+            ),
+            select = listOf(
+                AggregertSelectFelt(Aggregeringsfunksjon.SUM, "K9", FeltType.MOTTATT_DATO.eksternId),
+            ),
+        )
+
+        val exception = assertThrows<IllegalArgumentException> {
+            get<OppgaveQueryService>().query(QueryRequest(query))
+        }
+        assertThat(checkNotNull(exception.message)).contains("kun for heltallsfelt")
     }
 
     private fun queryForOppgave(request: QueryRequest) = get<OppgaveQueryService>().queryForOppgave(request)

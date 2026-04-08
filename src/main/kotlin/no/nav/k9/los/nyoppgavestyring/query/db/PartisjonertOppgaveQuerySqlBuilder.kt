@@ -401,6 +401,125 @@ class PartisjonertOppgaveQuerySqlBuilder(
         }
     }
 
+    private data class Aggregeringsgrunnlag(
+        val uttrykk: String,
+        val datatype: Datatype,
+        val queryParams: Map<String, Any?> = emptyMap(),
+    )
+
+    private fun datatypeForFelt(feltområde: String?, feltkode: String): Datatype {
+        return oppgavefelterKodeOgType[OmrådeOgKode(feltområde, feltkode)]
+            ?: throw IllegalStateException("Fant ikke datatype for aggregeringsfelt ${feltområde ?: "null"}.$feltkode")
+    }
+
+    private fun validerStøttetAggregering(
+        funksjon: Aggregeringsfunksjon,
+        datatype: Datatype,
+        feltområde: String?,
+        feltkode: String,
+    ) {
+        when (funksjon) {
+            Aggregeringsfunksjon.ANTALL -> Unit
+            Aggregeringsfunksjon.SUM, Aggregeringsfunksjon.GJENNOMSNITT -> require(datatype == Datatype.INTEGER) {
+                "Aggregeringsfunksjon $funksjon støttes kun for heltallsfelt. Felt ${feltområde ?: "null"}.$feltkode er ${datatype.kode}."
+            }
+            Aggregeringsfunksjon.MIN, Aggregeringsfunksjon.MAKS -> require(datatype != Datatype.DURATION) {
+                "Aggregeringsfunksjon $funksjon støttes ikke for Duration-felt ennå. Felt ${feltområde ?: "null"}.$feltkode er ${datatype.kode}."
+            }
+        }
+    }
+
+    private fun kolonneForAggregeringsfeltUtenOmråde(feltkode: String): String {
+        return when (feltkode) {
+            "oppgavestatus" -> "o.oppgavestatus"
+            "oppgavetype" -> "o.oppgavetype_ekstern_id"
+            "ferdigstiltDato" -> "o.ferdigstilt_dato"
+            "reservasjonsnokkel" -> "o.reservasjonsnokkel"
+            "sistEndret" -> "o.endret_tidspunkt"
+            else -> throw IllegalStateException("Ukjent aggregeringsfelt uten område: $feltkode")
+        }
+    }
+
+    private fun kastOppgavefeltuttrykkTilDatatype(uttrykk: String, datatype: Datatype): String {
+        return when (datatype) {
+            Datatype.INTEGER, Datatype.STRING -> uttrykk
+            Datatype.TIMESTAMP -> "CAST($uttrykk AS timestamp)"
+            Datatype.BOOLEAN -> "CAST($uttrykk AS boolean)"
+            Datatype.DURATION -> throw IllegalArgumentException("Aggregering støttes ikke for Duration-felt ennå.")
+        }
+    }
+
+    private fun byggAggregeringsgrunnlag(felt: AggregertSelectFelt, index: Int): Aggregeringsgrunnlag {
+        val feltKode = requireNotNull(felt.kode) { "AggregertSelectFelt ${felt.funksjon} mangler kode" }
+        val datatype = datatypeForFelt(felt.område, feltKode)
+        validerStøttetAggregering(felt.funksjon, datatype, felt.område, feltKode)
+
+        if (felt.område == null) {
+            return Aggregeringsgrunnlag(
+                uttrykk = kolonneForAggregeringsfeltUtenOmråde(feltKode),
+                datatype = datatype
+            )
+        }
+
+        val transientFeltutleder = hentTransientFeltutleder(felt.område, feltKode)
+        if (transientFeltutleder != null) {
+            val sqlMedParams = sikreUnikeParams(
+                transientFeltutleder.select(
+                    SelectInput(
+                        Spørringstrategi.PARTISJONERT,
+                        now,
+                        felt.område,
+                        feltKode
+                    )
+                )
+            )
+            return Aggregeringsgrunnlag(
+                uttrykk = kastOppgavefeltuttrykkTilDatatype(sqlMedParams.query, datatype),
+                datatype = datatype,
+                queryParams = sqlMedParams.queryParams
+            )
+        }
+
+        val verdifelt = verdifelt(felt.område, feltKode)
+        val baseUttrykk = """
+            (SELECT $verdifelt
+             FROM oppgavefelt_verdi_part ov
+             WHERE ov.oppgave_id = o.id
+               AND ov.oppgavestatus IN ($oppgavestatusPlaceholder) ${ferdigstiltDatoBetingelse("ov")}
+               AND ov.feltdefinisjon_ekstern_id = :aggFeltkode$index
+             LIMIT 1)
+        """.trimIndent()
+
+        return Aggregeringsgrunnlag(
+            uttrykk = kastOppgavefeltuttrykkTilDatatype(baseUttrykk, datatype),
+            datatype = datatype,
+            queryParams = mapOf("aggFeltkode$index" to feltKode)
+        )
+    }
+
+    private fun byggAggregeringsuttrykk(
+        funksjon: Aggregeringsfunksjon,
+        grunnlag: Aggregeringsgrunnlag,
+    ): String {
+        return when (funksjon) {
+            Aggregeringsfunksjon.GJENNOMSNITT -> "AVG(${grunnlag.uttrykk})"
+            Aggregeringsfunksjon.SUM -> "SUM(${grunnlag.uttrykk})"
+            Aggregeringsfunksjon.MIN -> when (grunnlag.datatype) {
+                Datatype.BOOLEAN -> "BOOL_AND(${grunnlag.uttrykk})"
+                else -> "MIN(${grunnlag.uttrykk})"
+            }
+            Aggregeringsfunksjon.MAKS -> when (grunnlag.datatype) {
+                Datatype.BOOLEAN -> "BOOL_OR(${grunnlag.uttrykk})"
+                else -> "MAX(${grunnlag.uttrykk})"
+            }
+            Aggregeringsfunksjon.ANTALL -> throw IllegalArgumentException("COUNT håndteres separat.")
+        }
+    }
+
+    private fun tekstifiserAggregering(uttrykk: String): String {
+        return "($uttrykk)::text"
+    }
+
     // Select-felt støtte for effektive spørringer som returnerer OppgaveResultat
     private var selectFelter: List<EnkelSelectFelt> = emptyList()
     private val selectFeltParams: MutableMap<String, Any?> = mutableMapOf()
@@ -528,32 +647,15 @@ class PartisjonertOppgaveQuerySqlBuilder(
 
         aggregerteFelter.forEachIndexed { index, felt ->
             val alias = "agg_$index"
-            when (felt.funksjon) {
-                Aggregeringsfunksjon.ANTALL -> selectDeler.add("COUNT(*) AS $alias")
+            val aggregertUttrykk = when (felt.funksjon) {
+                Aggregeringsfunksjon.ANTALL -> "COUNT(*)"
                 else -> {
-                    val feltOmråde =
-                        requireNotNull(felt.område) { "AggregertSelectFelt ${felt.funksjon} mangler område" }
-                    val feltKode = requireNotNull(felt.kode) { "AggregertSelectFelt ${felt.funksjon} mangler kode" }
-                    val verdifelt = verdifelt(feltOmråde, feltKode)
-                    val sqlAggregeringsfunksjon = when (felt.funksjon) {
-                        Aggregeringsfunksjon.GJENNOMSNITT -> "AVG"
-                        Aggregeringsfunksjon.SUM -> "SUM"
-                        Aggregeringsfunksjon.MIN -> "MIN"
-                        Aggregeringsfunksjon.MAKS -> "MAX"
-                    }
-                    selectDeler.add(
-                        """
-                        $sqlAggregeringsfunksjon((SELECT $verdifelt
-                         FROM oppgavefelt_verdi_part ov
-                         WHERE ov.oppgave_id = o.id
-                           AND ov.oppgavestatus IN ($oppgavestatusPlaceholder) ${ferdigstiltDatoBetingelse("ov")}
-                           AND ov.feltdefinisjon_ekstern_id = :aggFeltkode$index
-                         LIMIT 1)) AS $alias
-                    """.trimIndent()
-                    )
-                    grupperingParams["aggFeltkode$index"] = felt.kode
+                    val grunnlag = byggAggregeringsgrunnlag(felt, index)
+                    grupperingParams.putAll(grunnlag.queryParams)
+                    byggAggregeringsuttrykk(felt.funksjon, grunnlag)
                 }
             }
+            selectDeler.add("${tekstifiserAggregering(aggregertUttrykk)} AS $alias")
         }
 
         selectClause = "SELECT " + selectDeler.joinToString(", ")
@@ -579,7 +681,7 @@ class PartisjonertOppgaveQuerySqlBuilder(
                 type = felt.funksjon,
                 område = felt.område,
                 kode = felt.kode,
-                verdi = row.long(alias)
+                verdi = row.stringOrNull(alias)
             )
         }
         return GruppertOppgaveResultat(

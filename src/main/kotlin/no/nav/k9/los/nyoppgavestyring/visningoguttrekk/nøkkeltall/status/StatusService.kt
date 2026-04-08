@@ -51,7 +51,7 @@ class StatusService(
         val alleGrupper = gruppert.mapNotNull { rad ->
             val behandlingTypeKode = rad.grupperingsverdier.firstOrNull()?.verdi?.toString() ?: return@mapNotNull null
             val behandlingType = BehandlingType.fraKode(behandlingTypeKode)
-            val antall = rad.aggregeringer.first { it.type == Aggregeringsfunksjon.ANTALL }.verdi.toLong()
+            val antall = checkNotNull(rad.aggregeringer.first { it.type == Aggregeringsfunksjon.ANTALL }.verdi).toLong()
             behandlingType to antall.toInt()
         }
 

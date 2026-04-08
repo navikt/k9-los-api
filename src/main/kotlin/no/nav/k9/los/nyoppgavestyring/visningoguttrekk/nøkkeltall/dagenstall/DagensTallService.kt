@@ -131,7 +131,7 @@ class DagensTallService(
                 oppgavetype = rad.grupperingsverdier.find { it.kode == "oppgavetype" }?.verdi?.toString(),
                 behandlingTypekode = rad.grupperingsverdier.find { it.kode == "behandlingTypekode" }?.verdi?.toString(),
                 helautomatisk = if (medHelautomatisk) rad.grupperingsverdier.find { it.kode == "helautomatiskBehandlet" }?.verdi?.toString() else null,
-                antall = rad.aggregeringer.first { it.type == Aggregeringsfunksjon.ANTALL }.verdi.toLong()
+                antall = checkNotNull(rad.aggregeringer.first { it.type == Aggregeringsfunksjon.ANTALL }.verdi).toLong()
             )
         }
     }
