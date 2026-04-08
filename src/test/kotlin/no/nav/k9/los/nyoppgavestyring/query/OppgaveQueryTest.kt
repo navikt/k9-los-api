@@ -969,7 +969,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
             ),
             select = listOf(
                 EnkelSelectFelt("K9", "behandlingTypekode"),
-                AntallSelectFelt,
+                AggregertSelectFelt(Aggregeringsfunksjon.ANTALL),
             ),
         )
 
@@ -981,8 +981,8 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
         assertThat(grupper).hasSize(2)
         val bt002 = grupper.first { it.grupperingsverdier.first().verdi == "BT-002" }
         val bt004 = grupper.first { it.grupperingsverdier.first().verdi == "BT-004" }
-        assertThat(bt002.aggregeringer.first { it.type == "antall" }.verdi).isEqualTo(2L)
-        assertThat(bt004.aggregeringer.first { it.type == "antall" }.verdi).isEqualTo(1L)
+        assertThat(bt002.aggregeringer.first { it.type == Aggregeringsfunksjon.ANTALL }.verdi).isEqualTo(2L)
+        assertThat(bt004.aggregeringer.first { it.type == Aggregeringsfunksjon.ANTALL }.verdi).isEqualTo(1L)
     }
 
     @Test
@@ -998,7 +998,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
             ),
             select = listOf(
                 EnkelSelectFelt(null, "oppgavestatus"),
-                AntallSelectFelt,
+                AggregertSelectFelt(Aggregeringsfunksjon.ANTALL),
             ),
         )
 
@@ -1010,8 +1010,8 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
         assertThat(grupper).hasSize(2)
         val aapen = grupper.first { it.grupperingsverdier.first().verdi == Oppgavestatus.AAPEN.kode }
         val venter = grupper.first { it.grupperingsverdier.first().verdi == Oppgavestatus.VENTER.kode }
-        assertThat(aapen.aggregeringer.first { it.type == "antall" }.verdi).isEqualTo(2L)
-        assertThat(venter.aggregeringer.first { it.type == "antall" }.verdi).isEqualTo(1L)
+        assertThat(aapen.aggregeringer.first { it.type == Aggregeringsfunksjon.ANTALL }.verdi).isEqualTo(2L)
+        assertThat(venter.aggregeringer.first { it.type == Aggregeringsfunksjon.ANTALL }.verdi).isEqualTo(1L)
     }
 
     @Test
@@ -1027,7 +1027,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
             ),
             select = listOf(
                 EnkelSelectFelt("K9", "behandlingTypekode"),
-                AntallSelectFelt,
+                AggregertSelectFelt(Aggregeringsfunksjon.ANTALL),
             ),
             order = listOf(
                 EnkelOrderFelt("K9", "behandlingTypekode", true),
@@ -1051,7 +1051,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
             ),
             select = listOf(
                 EnkelSelectFelt("K9", "behandlingTypekode"),
-                AntallSelectFelt,
+                AggregertSelectFelt(Aggregeringsfunksjon.ANTALL),
             ),
             order = listOf(
                 EnkelOrderFelt("K9", "behandlingTypekode", true),

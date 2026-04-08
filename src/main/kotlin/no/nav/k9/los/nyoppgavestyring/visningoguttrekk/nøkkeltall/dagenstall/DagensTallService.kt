@@ -10,7 +10,8 @@ import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
 import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
-import no.nav.k9.los.nyoppgavestyring.query.dto.query.AntallSelectFelt
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.Aggregeringsfunksjon
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.AggregertSelectFelt
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelSelectFelt
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
@@ -118,7 +119,7 @@ class DagensTallService(
             add(EnkelSelectFelt(null, "oppgavetype"))
             add(EnkelSelectFelt("K9", "behandlingTypekode"))
             if (medHelautomatisk) add(EnkelSelectFelt("K9", "helautomatiskBehandlet"))
-            add(AntallSelectFelt)
+            add(AggregertSelectFelt(Aggregeringsfunksjon.ANTALL))
         }
         val query = OppgaveQuery(filtere = filtere, select = selectFelter)
         val resultat = queryService.query(QueryRequest(query))
@@ -130,7 +131,7 @@ class DagensTallService(
                 oppgavetype = rad.grupperingsverdier.find { it.kode == "oppgavetype" }?.verdi?.toString(),
                 behandlingTypekode = rad.grupperingsverdier.find { it.kode == "behandlingTypekode" }?.verdi?.toString(),
                 helautomatisk = if (medHelautomatisk) rad.grupperingsverdier.find { it.kode == "helautomatiskBehandlet" }?.verdi?.toString() else null,
-                antall = rad.aggregeringer.first { it.type == "antall" }.verdi.toLong()
+                antall = rad.aggregeringer.first { it.type == Aggregeringsfunksjon.ANTALL }.verdi.toLong()
             )
         }
     }

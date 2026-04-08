@@ -8,7 +8,8 @@ import no.nav.k9.los.nyoppgavestyring.kodeverk.PersonBeskyttelseType
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
 import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
-import no.nav.k9.los.nyoppgavestyring.query.dto.query.AntallSelectFelt
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.Aggregeringsfunksjon
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.AggregertSelectFelt
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelSelectFelt
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
@@ -72,7 +73,6 @@ class StatusFordelingService(val queryService: OppgaveQueryService) {
         val klage = FeltverdiOppgavefilter(null, "oppgavetype", EksternFeltverdiOperator.EQUALS, listOf("k9klage"))
         val revurdering = FeltverdiOppgavefilter("K9", "behandlingTypekode", EksternFeltverdiOperator.IN, listOf(BehandlingType.REVURDERING.kode, BehandlingType.REVURDERING_TILBAKEKREVING.kode))
         val feilutbetaling = FeltverdiOppgavefilter(null, "oppgavetype", EksternFeltverdiOperator.EQUALS, listOf("k9tilbake"))
-        val unntak = FeltverdiOppgavefilter("K9", "behandlingTypekode", EksternFeltverdiOperator.EQUALS, listOf(BehandlingType.UNNTAKSBEHANDLING.kode))
     }
 
     /**
@@ -84,7 +84,7 @@ class StatusFordelingService(val queryService: OppgaveQueryService) {
             filtere = listOf(åpenVenterUavklart) + filtere.toList(),
             select = listOf(
                 EnkelSelectFelt(null, "oppgavestatus"),
-                AntallSelectFelt,
+                AggregertSelectFelt(Aggregeringsfunksjon.ANTALL),
             ),
         )
         val resultat = queryService.query(QueryRequest(query))
@@ -92,7 +92,7 @@ class StatusFordelingService(val queryService: OppgaveQueryService) {
 
         return resultat.rader.associate { rad ->
             val status = rad.grupperingsverdier.first().verdi?.toString() ?: ""
-            val antall = rad.aggregeringer.first { it.type == "antall" }.verdi.toLong()
+            val antall = rad.aggregeringer.first { it.type == Aggregeringsfunksjon.ANTALL }.verdi.toLong()
             status to antall
         }
     }
@@ -150,7 +150,7 @@ class StatusFordelingService(val queryService: OppgaveQueryService) {
                 FeltverdiOppgavefilter(null, "oppgavestatus", EksternFeltverdiOperator.EQUALS, listOf(Oppgavestatus.VENTER.kode)),
                 FeltverdiOppgavefilter("K9", "aktivVenteårsak", EksternFeltverdiOperator.EQUALS, listOf(Venteårsak.OVERSENDT_KABAL.kode)),
             ),
-            select = listOf(AntallSelectFelt),
+            select = listOf(AggregertSelectFelt(Aggregeringsfunksjon.ANTALL)),
         )
         val venterKabal = (queryService.query(QueryRequest(venterKabalQuery)) as OppgaveQueryResultat.AntallResultat).antall
         val venterAnnet = (statusAntall[Oppgavestatus.VENTER.kode] ?: 0L) - venterKabal

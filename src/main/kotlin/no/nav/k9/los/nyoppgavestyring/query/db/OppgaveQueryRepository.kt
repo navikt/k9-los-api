@@ -222,7 +222,7 @@ class OppgaveQueryRepository(
                 val ider = queryForEksternId(tx, sqlBuilder)
                 OppgaveQueryResultat.EksternIdResultat(ider)
             }
-            aggregerteFelter.isNotEmpty() && enkelSelectFelter.isEmpty() && aggregerteFelter.size == 1 && aggregerteFelter[0] is AntallSelectFelt -> {
+            aggregerteFelter.isNotEmpty() && enkelSelectFelter.isEmpty() && aggregerteFelter.size == 1 && aggregerteFelter[0].funksjon == Aggregeringsfunksjon.ANTALL -> {
                 val sqlBuilder = OppgaveQueryToSqlMapper.toSql(request, felter, now)
                 val antall = tx.run(
                     queryOf(sqlBuilder.getQuery(), sqlBuilder.getParams())

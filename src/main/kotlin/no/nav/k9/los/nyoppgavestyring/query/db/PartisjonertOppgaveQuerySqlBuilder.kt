@@ -89,7 +89,7 @@ class PartisjonertOppgaveQuerySqlBuilder(
         FROM oppgave_v3_part o
         LEFT JOIN oppgave_pep_cache opc ON (opc.kildeomrade = 'K9' AND o.oppgave_ekstern_id = opc.ekstern_id)
     """.trimIndent()
-    
+
     private var whereClause = "WHERE o.oppgavestatus IN ($oppgavestatusPlaceholder) ${ferdigstiltDatoBetingelse("o")}"
     private val orderByClauses = mutableListOf<String>()
     private val orderByClause get() = if (orderByClauses.isNotEmpty()) "ORDER BY " + orderByClauses.joinToString(", ") else ""
@@ -433,14 +433,16 @@ class PartisjonertOppgaveQuerySqlBuilder(
                     selectFeltParams.putAll(sqlMedParams.queryParams)
                 } else {
                     val verdifelt = verdifelt(felt.område, felt.kode)
-                    selectDeler.add("""
+                    selectDeler.add(
+                        """
                         (SELECT $verdifelt
                          FROM oppgavefelt_verdi_part ov
                          WHERE ov.oppgave_id = o.id
                            AND ov.oppgavestatus IN ($oppgavestatusPlaceholder) ${ferdigstiltDatoBetingelse("ov")}
                            AND ov.feltdefinisjon_ekstern_id = :selectFeltkode$index
                          LIMIT 1) AS $alias
-                    """.trimIndent())
+                    """.trimIndent()
+                    )
                     selectFeltParams["selectFeltkode$index"] = felt.kode
                 }
             } else {
@@ -495,14 +497,16 @@ class PartisjonertOppgaveQuerySqlBuilder(
                     grupperingParams.putAll(sqlMedParams.queryParams)
                 } else {
                     val verdifelt = verdifelt(felt.område, felt.kode)
-                    selectDeler.add("""
+                    selectDeler.add(
+                        """
                         (SELECT $verdifelt
                          FROM oppgavefelt_verdi_part ov
                          WHERE ov.oppgave_id = o.id
                            AND ov.oppgavestatus IN ($oppgavestatusPlaceholder) ${ferdigstiltDatoBetingelse("ov")}
                            AND ov.feltdefinisjon_ekstern_id = :grupperingFeltkode$index
                          LIMIT 1) AS $alias
-                    """.trimIndent())
+                    """.trimIndent()
+                    )
                     grupperingParams["grupperingFeltkode$index"] = felt.kode
                 }
             } else {
@@ -524,23 +528,30 @@ class PartisjonertOppgaveQuerySqlBuilder(
 
         aggregerteFelter.forEachIndexed { index, felt ->
             val alias = "agg_$index"
-            when (felt) {
-                is AntallSelectFelt -> selectDeler.add("COUNT(*) AS $alias")
+            when (felt.funksjon) {
+                Aggregeringsfunksjon.ANTALL -> selectDeler.add("COUNT(*) AS $alias")
                 else -> {
-                    // TODO: Full støtte for SUM/AVG/MIN/MAX krever datatypebevisst SQL og radmapping.
-                    // Dagens løsning fungerer for enkle tilfeller, men dekker ikke alle felt- og returtyper korrekt.
-                    val feltOmråde = requireNotNull(felt.område) { "AggregertSelectFelt ${felt.sql} mangler område" }
-                    val feltKode = requireNotNull(felt.kode) { "AggregertSelectFelt ${felt.sql} mangler kode" }
+                    val feltOmråde =
+                        requireNotNull(felt.område) { "AggregertSelectFelt ${felt.funksjon} mangler område" }
+                    val feltKode = requireNotNull(felt.kode) { "AggregertSelectFelt ${felt.funksjon} mangler kode" }
                     val verdifelt = verdifelt(feltOmråde, feltKode)
-                    selectDeler.add("""
-                        ${felt.sql}((SELECT $verdifelt
+                    val sqlAggregeringsfunksjon = when (felt.funksjon) {
+                        Aggregeringsfunksjon.GJENNOMSNITT -> "AVG"
+                        Aggregeringsfunksjon.SUM -> "SUM"
+                        Aggregeringsfunksjon.MIN -> "MIN"
+                        Aggregeringsfunksjon.MAKS -> "MAX"
+                    }
+                    selectDeler.add(
+                        """
+                        $sqlAggregeringsfunksjon((SELECT $verdifelt
                          FROM oppgavefelt_verdi_part ov
                          WHERE ov.oppgave_id = o.id
                            AND ov.oppgavestatus IN ($oppgavestatusPlaceholder) ${ferdigstiltDatoBetingelse("ov")}
                            AND ov.feltdefinisjon_ekstern_id = :aggFeltkode$index
                          LIMIT 1)) AS $alias
-                    """.trimIndent())
-                    grupperingParams["aggFeltkode$index"] = feltKode
+                    """.trimIndent()
+                    )
+                    grupperingParams["aggFeltkode$index"] = felt.kode
                 }
             }
         }
@@ -564,12 +575,12 @@ class PartisjonertOppgaveQuerySqlBuilder(
         }
         val aggregeringer = aggregerteFelter.mapIndexed { index, felt ->
             val alias = "agg_$index"
-            when (felt) {
-                is AntallSelectFelt -> Aggregertverdi(type = "antall", område = null, kode = null, verdi = row.long(alias))
-                else -> {
-                    Aggregertverdi(type = felt.sql.lowercase(), område = felt.område, kode = felt.kode, verdi = row.double(alias))
-                }
-            }
+            Aggregertverdi(
+                type = felt.funksjon,
+                område = felt.område,
+                kode = felt.kode,
+                verdi = row.long(alias)
+            )
         }
         return GruppertOppgaveResultat(
             grupperingsverdier = grupperingsverdier,

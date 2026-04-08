@@ -2,7 +2,8 @@ package no.nav.k9.los.nyoppgavestyring.uttrekk
 
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
 import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
-import no.nav.k9.los.nyoppgavestyring.query.dto.query.AntallSelectFelt
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.Aggregeringsfunksjon
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.AggregertSelectFelt
 import org.slf4j.LoggerFactory
 import kotlin.time.measureTime
 
@@ -20,7 +21,15 @@ class UttrekkJobb(
 
             if (uttrekk.typeKjøring == TypeKjøring.ANTALL) {
                 // Overstyrer queryRequest for å kun få antallet, usikker på om dette er det peneste...
-                queryRequest = QueryRequest(queryRequest.oppgaveQuery.copy(select = listOf(AntallSelectFelt)))
+                queryRequest = QueryRequest(
+                    queryRequest.oppgaveQuery.copy(
+                        select = listOf(
+                            AggregertSelectFelt(
+                                Aggregeringsfunksjon.ANTALL
+                            )
+                        )
+                    )
+                )
             }
 
             val resultat = oppgaveQueryService.query(queryRequest)

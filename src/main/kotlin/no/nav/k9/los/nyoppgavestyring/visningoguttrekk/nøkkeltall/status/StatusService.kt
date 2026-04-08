@@ -2,12 +2,9 @@ package no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.status
 
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
-import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
-import no.nav.k9.los.nyoppgavestyring.query.dto.query.AntallSelectFelt
-import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelSelectFelt
-import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
-import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
+import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.*
 import no.nav.k9.los.nyoppgavestyring.query.mapping.EksternFeltverdiOperator
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -45,7 +42,7 @@ class StatusService(
             filtere = filtere,
             select = listOf(
                 EnkelSelectFelt("K9", "behandlingTypekode"),
-                AntallSelectFelt,
+                AggregertSelectFelt(Aggregeringsfunksjon.ANTALL),
             ),
         )
         val resultat = queryService.query(QueryRequest(oppgaveQuery))
@@ -54,7 +51,7 @@ class StatusService(
         val alleGrupper = gruppert.mapNotNull { rad ->
             val behandlingTypeKode = rad.grupperingsverdier.firstOrNull()?.verdi?.toString() ?: return@mapNotNull null
             val behandlingType = BehandlingType.fraKode(behandlingTypeKode)
-            val antall = rad.aggregeringer.first { it.type == "antall" }.verdi.toLong()
+            val antall = rad.aggregeringer.first { it.type == Aggregeringsfunksjon.ANTALL }.verdi.toLong()
             behandlingType to antall.toInt()
         }
 
