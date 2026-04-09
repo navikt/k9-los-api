@@ -1,30 +1,22 @@
 package no.nav.k9.los.nyoppgavestyring.uttrekk
 
-import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.Oppgavefeltverdi
-
 class UttrekkCsvGenerator {
 
     fun genererCsv(resultatJson: String): String {
-        val oppgaverader = UttrekkResultatMapper.tilOppgaveResultater(resultatJson)
+        val rader = UttrekkResultatMapper.fraLagretJson(resultatJson)
 
-        return genererCsv(oppgaverader.map { it.felter })
-    }
-
-    private fun genererCsv(oppgaverader: List<List<Oppgavefeltverdi>>): String {
-        if (oppgaverader.isEmpty()) {
+        if (rader.isEmpty()) {
             return ""
         }
 
         return buildString {
-            // Kode fra første rad som kolonnenavn
-            // Bruke feltdefinisjon for å hente visningsnavn er en mulig forbedring
-            val headers = oppgaverader.first().map { it.kode }
+            val headers = rader.first().kolonner.map { it.csvKolonnenavn() }
             append(headers.joinToString(","))
             append("\n")
 
-            for (rad in oppgaverader) {
-                val values = rad.map { feltverdi ->
-                    feltverdi.verdi?.toString() ?: ""
+            for (rad in rader) {
+                val values = rad.kolonner.map { kolonne ->
+                    kolonne.verdi?.toString() ?: ""
                 }
                 append(values.joinToString(","))
                 append("\n")

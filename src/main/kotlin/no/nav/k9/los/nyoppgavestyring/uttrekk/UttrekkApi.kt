@@ -280,14 +280,14 @@ fun Route.UttrekkApi() {
                     return@withRequestContext
                 }
 
-                val alleRader = UttrekkResultatMapper.tilOppgaveResultater(resultatJson)
+                val alleRader = UttrekkResultatMapper.fraLagretJson(resultatJson)
 
                 val paginertRader = alleRader
                     .drop(offset)
                     .let { if (limit != null) it.take(limit) else it }
 
                 val kolonner = when {
-                    alleRader.isNotEmpty() -> alleRader.first().felter.map { it.kode }
+                    alleRader.isNotEmpty() -> alleRader.first().kolonner.map { it.csvKolonnenavn() }
                     else -> uttrekk.query.select.filterIsInstance<EnkelSelectFelt>().map { it.kode } +
                         uttrekk.query.select.filterIsInstance<AggregertSelectFelt>().map { aggregert ->
                             val funksjon = aggregert.funksjon.name.lowercase()

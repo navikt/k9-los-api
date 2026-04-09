@@ -12,32 +12,32 @@ class UttrekkCsvGeneratorTest {
         val resultatJson = """
             [
               {
-                "id": {"område": "K9", "eksternId": "1"},
-                "felter": [
+                "id": "1",
+                "kolonner": [
                   {
                     "kode": "saksnummer",
-                    "verdi": "1270379",
-                    "område": "K9"
+                    "område": "K9",
+                    "verdi": "1270379"
                   },
                   {
                     "kode": "behandlingstype",
-                    "verdi": "Pleiepenger",
-                    "område": "K9"
+                    "område": "K9",
+                    "verdi": "Pleiepenger"
                   }
                 ]
               },
               {
-                "id": {"område": "K9", "eksternId": "2"},
-                "felter": [
+                "id": "2",
+                "kolonner": [
                   {
                     "kode": "saksnummer",
-                    "verdi": "1336828",
-                    "område": "K9"
+                    "område": "K9",
+                    "verdi": "1336828"
                   },
                   {
                     "kode": "behandlingstype",
-                    "verdi": "Omsorgspenger",
-                    "område": "K9"
+                    "område": "K9",
+                    "verdi": "Omsorgspenger"
                   }
                 ]
               }
@@ -57,17 +57,17 @@ class UttrekkCsvGeneratorTest {
         val resultatJson = """
             [
               {
-                "id": {"område": "K9", "eksternId": "1"},
-                "felter": [
+                "id": "1",
+                "kolonner": [
                   {
                     "kode": "saksnummer",
-                    "verdi": "123456",
-                    "område": "K9"
+                    "område": "K9",
+                    "verdi": "123456"
                   },
                   {
                     "kode": "enhet",
-                    "verdi": null,
-                    "område": "K9"
+                    "område": "K9",
+                    "verdi": null
                   }
                 ]
               }
@@ -88,28 +88,25 @@ class UttrekkCsvGeneratorTest {
     }
 
     @Test
-    fun `skal generere CSV for gruppert uttrekk`() {
+    fun `skal generere CSV for aggregert uttrekk`() {
         val resultatJson = """
             [
               {
-                "grupperingsverdier": [
+                "id": "0",
+                "kolonner": [
                   {
-                    "område": "K9",
                     "kode": "behandlingTypekode",
+                    "område": "K9",
                     "verdi": "BT-002"
-                  }
-                ],
-                "aggregeringer": [
+                  },
                   {
-                    "type": "ANTALL",
-                    "område": null,
-                    "kode": null,
+                    "funksjon": "ANTALL",
                     "verdi": "2"
                   },
                   {
-                    "type": "SUM",
-                    "område": "K9",
                     "kode": "feilutbetaltBelop",
+                    "område": "K9",
+                    "funksjon": "SUM",
                     "verdi": "300"
                   }
                 ]

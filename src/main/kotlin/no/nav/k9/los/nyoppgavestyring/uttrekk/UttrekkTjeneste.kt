@@ -71,13 +71,11 @@ class UttrekkTjeneste(
                 antall = resultat.antall.toInt()
                 resultatJson = null
             }
-            is OppgaveQueryResultat.SelectResultat -> {
-                antall = resultat.rader.size
-                resultatJson = LosObjectMapper.instance.writeValueAsString(resultat.rader)
-            }
+            is OppgaveQueryResultat.SelectResultat,
             is OppgaveQueryResultat.GruppertResultat -> {
-                antall = resultat.rader.size
-                resultatJson = LosObjectMapper.instance.writeValueAsString(resultat.rader)
+                val uttrekkRader = UttrekkResultatMapper.tilUttrekkRader(resultat)
+                antall = uttrekkRader.size
+                resultatJson = LosObjectMapper.instance.writeValueAsString(uttrekkRader)
             }
             else -> {
                 uttrekk.markerSomFeilet("Ugyldig resultat")
