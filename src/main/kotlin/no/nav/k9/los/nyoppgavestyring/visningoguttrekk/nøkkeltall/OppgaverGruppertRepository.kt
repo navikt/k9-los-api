@@ -44,10 +44,11 @@ class OppgaverGruppertRepository(private val dataSource: DataSource) {
                     """
                     with oppgaver as (
                           select
-                              (select verdi from oppgavefelt_verdi_aktiv ova where ova.oppgave_id = oa.id and ova.feltdefinisjon_ekstern_id = 'behandlingTypekode') as behandlingType
-                          from oppgave_v3_aktiv oa
-                          join oppgave_pep_cache opc on opc.ekstern_id = oa.ekstern_id
-                          where opc.kode6 = :kode6)
+                              (select verdi from oppgavefelt_verdi_part ova where ova.oppgave_id = oa.id and ova.feltdefinisjon_ekstern_id = 'behandlingTypekode') as behandlingType
+                          from oppgave_v3_part oa
+                          join oppgave_pep_cache opc on opc.ekstern_id = oa.oppgave_ekstern_id
+                          where oa.oppgavestatus in ('AAPEN', 'VENTER')
+                            and opc.kode6 = :kode6)
                     select behandlingType, count(*) as antall
                     from oppgaver
                     group by behandlingType;
