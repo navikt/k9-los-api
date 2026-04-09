@@ -220,6 +220,23 @@ class PartisjonertOppgaveQuerySqlBuilder(
                 }
             }
 
+            "reservasjonsnokkel" -> {
+                val (feltverdiPlaceholder, feltVerdiMap) = if (feltverdier.size > 1) {
+                    val prefix = "reservasjonsnokkel${index * 1000}"
+                    "(${
+                        InClauseHjelper.tilParameternavn(
+                            feltverdier,
+                            prefix
+                        )
+                    })" to InClauseHjelper.parameternavnTilVerdierMap(feltverdier, prefix)
+                } else {
+                    ":reservasjonsnokkel$index" to mapOf("reservasjonsnokkel$index" to feltverdier.first())
+                }
+
+                whereClause += " ${combineOperator.sql} o.reservasjonsnokkel ${operator.sql} $feltverdiPlaceholder"
+                queryParams.putAll(feltVerdiMap)
+            }
+
             else -> log.warn("Håndterer ikke filter for $feltkode. Legg til i ignorering hvis feltet håndteres spesielt.")
         }
     }
@@ -244,6 +261,7 @@ class PartisjonertOppgaveQuerySqlBuilder(
                 "oppgavestatus" -> "o.oppgavestatus $retning"
                 "oppgavetype" -> "o.oppgavetype_ekstern_id $retning"
                 "ferdigstiltDato" -> "o.ferdigstilt_dato $retning"
+                "reservasjonsnokkel" -> "o.reservasjonsnokkel $retning"
                 else -> throw IllegalStateException("Ukjent feltkode for sortering: $feltkode")
             }
         )
@@ -422,6 +440,7 @@ class PartisjonertOppgaveQuerySqlBuilder(
                     "oppgavestatus" -> "o.oppgavestatus"
                     "oppgavetype" -> "o.oppgavetype_ekstern_id"
                     "ferdigstiltDato" -> "o.ferdigstilt_dato"
+                    "reservasjonsnokkel" -> "o.reservasjonsnokkel"
                     else -> {
                         log.warn("Ukjent select-felt uten område: ${felt.kode}")
                         "NULL"

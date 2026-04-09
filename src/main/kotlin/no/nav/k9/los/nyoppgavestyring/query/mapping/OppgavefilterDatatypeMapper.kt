@@ -7,9 +7,13 @@ import no.nav.k9.los.nyoppgavestyring.query.dto.query.CombineOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.Oppgavefilter
 import org.postgresql.util.PGInterval
+import org.slf4j.LoggerFactory
 import java.time.Duration
+import java.time.format.DateTimeParseException
 
 object OppgavefilterDatatypeMapper {
+    private val log = LoggerFactory.getLogger(OppgavefilterDatatypeMapper::class.java)
+
     fun map(felter: Map<OmrådeOgKode, OppgavefeltMedMer>, oppgavefiltere: List<Oppgavefilter>): List<Oppgavefilter> {
         return oppgavefiltere.map { filter ->
             when (filter) {
@@ -43,7 +47,12 @@ object OppgavefilterDatatypeMapper {
     }
 
     private fun iso8601TilPGInterval(iso8601: String): PGInterval {
-        val duration = Duration.parse(iso8601)
+        val duration = try {
+            Duration.parse(iso8601)
+        } catch (e: DateTimeParseException) {
+            log.warn("Kunne ikke parse duration fra '{}'", iso8601)
+            throw e
+        }
         val totalSeconds = duration.seconds
         val days = (totalSeconds / 86400).toInt()
         val hours = ((totalSeconds % 86400) / 3600).toInt()
