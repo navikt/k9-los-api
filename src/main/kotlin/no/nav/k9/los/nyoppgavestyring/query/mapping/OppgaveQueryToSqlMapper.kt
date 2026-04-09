@@ -13,13 +13,9 @@ object OppgaveQueryToSqlMapper {
         now: LocalDateTime
     ): OppgaveQuerySqlBuilder {
         val oppgavestatusFilter = traverserFiltereOgFinnOppgavestatus(request)
-        val spørringstrategiFilter = traverserFiltereOgFinnSpørringsstrategi(request)
         val ferdigstiltDatofilter = traverserFiltereOgFinnFerdigstiltDatofilter(request)
 
-        return when (spørringstrategiFilter) {
-            Spørringstrategi.AKTIV -> AktivOppgaveQuerySqlBuilder(felter, oppgavestatusFilter, now)
-            Spørringstrategi.PARTISJONERT, null -> PartisjonertOppgaveQuerySqlBuilder(felter, oppgavestatusFilter, now, ferdigstiltDatofilter)
-        }
+        return PartisjonertOppgaveQuerySqlBuilder(felter, oppgavestatusFilter, now, ferdigstiltDatofilter)
     }
 
     fun toSqlOppgaveQuery(
