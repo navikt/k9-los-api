@@ -1,6 +1,7 @@
 package no.nav.k9.los.nyoppgavestyring.query.db
 
 import kotliquery.Row
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.Aggregeringsfunksjon
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelSelectFelt
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.Oppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.AggregertSelectFelt
@@ -21,6 +22,7 @@ interface OppgaveQuerySqlBuilder {
     )
     fun medBlokk(combineOperator: CombineOperator, defaultTrue: Boolean, blokk: () -> Unit)
     fun medEnkelOrder(feltområde: String?, feltkode: String, økende: Boolean)
+    fun medAggregertOrder(funksjon: Aggregeringsfunksjon, feltområde: String?, feltkode: String?, økende: Boolean)
 
     fun utenReservasjoner()
     fun medPaging(limit: Long, offset: Long)

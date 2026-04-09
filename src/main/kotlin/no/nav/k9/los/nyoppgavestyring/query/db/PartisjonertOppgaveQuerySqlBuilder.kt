@@ -96,6 +96,7 @@ class PartisjonertOppgaveQuerySqlBuilder(
     private var groupByClause = ""
     private var pagingClause = ""
     private val grupperingsAlias = mutableMapOf<OmrådeOgKode, String>()
+    private val aggregeringsOrderByUttrykk = mutableMapOf<Int, String>()
 
     private val utenReservasjonerBetingelse = """
         AND NOT EXISTS (
@@ -273,6 +274,40 @@ class PartisjonertOppgaveQuerySqlBuilder(
                 else -> throw IllegalStateException("Ukjent feltkode for sortering: $feltkode")
             }
         )
+    }
+
+    override fun medAggregertOrder(
+        funksjon: Aggregeringsfunksjon,
+        feltområde: String?,
+        feltkode: String?,
+        økende: Boolean
+    ) {
+        if (aggregerteFelter.isEmpty()) {
+            throw IllegalStateException("Kan ikke sortere på aggregert felt uten aggregering.")
+        }
+
+        val matchendeAggregeringer = aggregerteFelter.mapIndexedNotNull { index, felt ->
+            if (felt.funksjon == funksjon && felt.område == feltområde && felt.kode == feltkode) index to felt else null
+        }
+
+        require(matchendeAggregeringer.isNotEmpty()) {
+            "Fant ingen aggregert felt for sortering: $funksjon ${feltkode ?: "(uten felt)"}"
+        }
+
+        require(matchendeAggregeringer.size == 1) {
+            "Aggregert sortering er tvetydig for: $funksjon ${feltkode ?: "(uten felt)"}"
+        }
+
+        val (index, felt) = matchendeAggregeringer.single()
+        val retning = if (økende) "ASC" else "DESC"
+
+        val orderByUttrykk = aggregeringsOrderByUttrykk[index] ?: run {
+            val (aggregeringsuttrykk, params) = byggAggregeringsuttrykk(felt, index)
+            orderByParams.putAll(params)
+            lagAggregeringsOrderByUttrykk(felt, aggregeringsuttrykk)
+        }
+
+        orderByClauses.add("$orderByUttrykk $retning")
     }
 
     override fun mapRowTilId(row: Row): OppgaveId {
@@ -513,6 +548,26 @@ class PartisjonertOppgaveQuerySqlBuilder(
         } to grunnlag.queryParams
     }
 
+    private fun erNumeriskAggregering(felt: AggregertSelectFelt): Boolean {
+        val feltKode = felt.kode ?: return false
+        return datatypeForFelt(felt.område, feltKode) == Datatype.INTEGER
+    }
+
+    private fun lagAggregeringsOrderByUttrykk(
+        felt: AggregertSelectFelt,
+        aggregeringsuttrykk: String,
+    ): String {
+        return when {
+            felt.funksjon in setOf(Aggregeringsfunksjon.ANTALL, Aggregeringsfunksjon.SUM, Aggregeringsfunksjon.GJENNOMSNITT) ->
+                "CAST(($aggregeringsuttrykk) AS numeric)"
+
+            felt.funksjon in setOf(Aggregeringsfunksjon.MIN, Aggregeringsfunksjon.MAKS) && erNumeriskAggregering(felt) ->
+                "CAST(($aggregeringsuttrykk) AS numeric)"
+
+            else -> "($aggregeringsuttrykk)"
+        }
+    }
+
     // Select-felt støtte for effektive spørringer som returnerer OppgaveResultat
     private var selectFelter: List<EnkelSelectFelt> = emptyList()
     private val selectFeltParams: MutableMap<String, Any?> = mutableMapOf()
@@ -585,6 +640,7 @@ class PartisjonertOppgaveQuerySqlBuilder(
         this.grupperingsFelter = grupperingsFelter
         this.aggregerteFelter = aggregerteFelter
         grupperingsAlias.clear()
+        aggregeringsOrderByUttrykk.clear()
 
         val selectDeler = mutableListOf<String>()
         val groupByDeler = mutableListOf<String>()
@@ -643,6 +699,7 @@ class PartisjonertOppgaveQuerySqlBuilder(
             val (uttrykk, params) = byggAggregeringsuttrykk(felt, index)
             grupperingParams.putAll(params)
             selectDeler.add("($uttrykk)::text AS $alias")
+            aggregeringsOrderByUttrykk[index] = lagAggregeringsOrderByUttrykk(felt, uttrykk)
         }
 
         selectClause = "SELECT " + selectDeler.joinToString(", ")

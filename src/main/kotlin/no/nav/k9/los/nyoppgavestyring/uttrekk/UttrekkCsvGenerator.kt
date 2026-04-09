@@ -1,17 +1,11 @@
 package no.nav.k9.los.nyoppgavestyring.uttrekk
 
-import com.fasterxml.jackson.core.type.TypeReference
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
-import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.OppgaveResultat
 import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.Oppgavefeltverdi
 
 class UttrekkCsvGenerator {
 
     fun genererCsv(resultatJson: String): String {
-        val oppgaverader = LosObjectMapper.instance.readValue(
-            resultatJson,
-            object : TypeReference<List<OppgaveResultat>>() {}
-        )
+        val oppgaverader = UttrekkResultatMapper.tilOppgaveResultater(resultatJson)
 
         return genererCsv(oppgaverader.map { it.felter })
     }

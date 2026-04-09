@@ -14,6 +14,7 @@ import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.cache.PepCache
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.cache.PepCacheRepository
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.cache.TestRepository
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.nyoppgavestyring.kodeverk.PersonBeskyttelseType
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.*
@@ -1068,6 +1069,123 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
     }
 
     @Test
+    fun `queryForGruppering respekterer order på aggregert ANTALL fallende`() {
+        val builder = OppgaveTestDataBuilder()
+        builder.medOppgaveFeltVerdi(FeltType.BEHANDLING_TYPE, "BT-001").lagOgLagre()
+        builder.medOppgaveFeltVerdi(FeltType.BEHANDLING_TYPE, "BT-001").lagOgLagre()
+        builder.medOppgaveFeltVerdi(FeltType.BEHANDLING_TYPE, "BT-001").lagOgLagre()
+        builder.medOppgaveFeltVerdi(FeltType.BEHANDLING_TYPE, "BT-002").lagOgLagre()
+        builder.medOppgaveFeltVerdi(FeltType.BEHANDLING_TYPE, "BT-002").lagOgLagre()
+        builder.medOppgaveFeltVerdi(FeltType.BEHANDLING_TYPE, "BT-003").lagOgLagre()
+
+        val query = OppgaveQuery(
+            filtere = listOf(
+                byggFilter(FeltType.OPPGAVE_STATUS, EksternFeltverdiOperator.IN, Oppgavestatus.AAPEN.kode)
+            ),
+            select = listOf(
+                EnkelSelectFelt("K9", "behandlingTypekode"),
+                AggregertSelectFelt(Aggregeringsfunksjon.ANTALL),
+            ),
+            order = listOf(
+                AggregertOrderFelt(Aggregeringsfunksjon.ANTALL, økende = false),
+            ),
+        )
+
+        val resultat = get<OppgaveQueryService>().query(QueryRequest(query))
+
+        assertThat(resultat).isInstanceOf(OppgaveQueryResultat.GruppertResultat::class.java)
+        val grupper = (resultat as OppgaveQueryResultat.GruppertResultat).rader
+        assertThat(grupper.map { it.grupperingsverdier.first().verdi }).containsExactly("BT-001", "BT-002", "BT-003")
+        assertThat(grupper.map { it.aggregeringer.first { agg -> agg.type == Aggregeringsfunksjon.ANTALL }.verdi }).containsExactly("3", "2", "1")
+    }
+
+    @Test
+    fun `queryForGruppering med mixed order gir deterministisk resultat`() {
+        val builder = OppgaveTestDataBuilder()
+        builder.medOppgaveFeltVerdi(FeltType.BEHANDLING_TYPE, "BT-003").lagOgLagre()
+        builder.medOppgaveFeltVerdi(FeltType.BEHANDLING_TYPE, "BT-003").lagOgLagre()
+        builder.medOppgaveFeltVerdi(FeltType.BEHANDLING_TYPE, "BT-001").lagOgLagre()
+        builder.medOppgaveFeltVerdi(FeltType.BEHANDLING_TYPE, "BT-001").lagOgLagre()
+        builder.medOppgaveFeltVerdi(FeltType.BEHANDLING_TYPE, "BT-002").lagOgLagre()
+
+        val query = OppgaveQuery(
+            filtere = listOf(
+                byggFilter(FeltType.OPPGAVE_STATUS, EksternFeltverdiOperator.IN, Oppgavestatus.AAPEN.kode)
+            ),
+            select = listOf(
+                EnkelSelectFelt("K9", "behandlingTypekode"),
+                AggregertSelectFelt(Aggregeringsfunksjon.ANTALL),
+            ),
+            order = listOf(
+                AggregertOrderFelt(Aggregeringsfunksjon.ANTALL, økende = false),
+                EnkelOrderFelt("K9", "behandlingTypekode", true),
+            ),
+        )
+
+        val resultat = get<OppgaveQueryService>().query(QueryRequest(query))
+
+        assertThat(resultat).isInstanceOf(OppgaveQueryResultat.GruppertResultat::class.java)
+        val grupper = (resultat as OppgaveQueryResultat.GruppertResultat).rader
+        assertThat(grupper.map { it.grupperingsverdier.first().verdi }).containsExactly("BT-001", "BT-003", "BT-002")
+    }
+
+    @Test
+    fun `queryForGruppering avviser aggregert order som ikke finnes i select`() {
+        OppgaveTestDataBuilder()
+            .medOppgaveFeltVerdi(FeltType.BEHANDLING_TYPE, "BT-001")
+            .lagOgLagre()
+
+        val query = OppgaveQuery(
+            filtere = listOf(
+                byggFilter(FeltType.OPPGAVE_STATUS, EksternFeltverdiOperator.IN, Oppgavestatus.AAPEN.kode)
+            ),
+            select = listOf(
+                EnkelSelectFelt("K9", "behandlingTypekode"),
+                AggregertSelectFelt(Aggregeringsfunksjon.ANTALL),
+            ),
+            order = listOf(
+                AggregertOrderFelt(
+                    funksjon = Aggregeringsfunksjon.SUM,
+                    område = "K9",
+                    kode = FeltType.FEILUTBETALT_BELØP.eksternId,
+                    økende = false
+                )
+            )
+        )
+
+        val exception = assertThrows<IllegalArgumentException> {
+            get<OppgaveQueryService>().query(QueryRequest(query))
+        }
+        assertThat(exception.message).isNotNull().contains("Fant ingen aggregert felt for sortering")
+    }
+
+    @Test
+    fun `queryForGruppering avviser tvetydig aggregert order`() {
+        OppgaveTestDataBuilder()
+            .medOppgaveFeltVerdi(FeltType.BEHANDLING_TYPE, "BT-001")
+            .lagOgLagre()
+
+        val query = OppgaveQuery(
+            filtere = listOf(
+                byggFilter(FeltType.OPPGAVE_STATUS, EksternFeltverdiOperator.IN, Oppgavestatus.AAPEN.kode)
+            ),
+            select = listOf(
+                EnkelSelectFelt("K9", "behandlingTypekode"),
+                AggregertSelectFelt(Aggregeringsfunksjon.ANTALL),
+                AggregertSelectFelt(Aggregeringsfunksjon.ANTALL),
+            ),
+            order = listOf(
+                AggregertOrderFelt(Aggregeringsfunksjon.ANTALL, økende = false),
+            ),
+        )
+
+        val exception = assertThrows<IllegalArgumentException> {
+            get<OppgaveQueryService>().query(QueryRequest(query))
+        }
+        assertThat(exception.message).isNotNull().contains("Aggregert sortering er tvetydig")
+    }
+
+    @Test
     fun `queryForGruppering aggregerer heltallsfelt datatypebevisst`() {
         val builder = OppgaveTestDataBuilder(definisjonskilde = "k9-tilbake-til-los", oppgaveTypeNavn = "k9tilbake")
         builder.medOppgaveFeltVerdi(FeltType.FEILUTBETALT_BELØP, "100").lagOgLagre()
@@ -1229,6 +1347,33 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
 
         val objectAgain: OppgaveQuery = om.readValue(json, OppgaveQuery::class.java)
         assertThat(objectAgain).isNotNull()
+    }
+
+    @Test
+    fun `sjekker at oppgave-query serialiserer og deserialiserer AggregertOrderFelt`() {
+        val query = OppgaveQuery(
+            filtere = listOf(
+                byggFilter(FeltType.OPPGAVE_STATUS, EksternFeltverdiOperator.EQUALS, Oppgavestatus.AAPEN.kode)
+            ),
+            select = listOf(
+                EnkelSelectFelt("K9", "behandlingTypekode"),
+                AggregertSelectFelt(Aggregeringsfunksjon.ANTALL),
+            ),
+            order = listOf(
+                EnkelOrderFelt("K9", "behandlingTypekode", true),
+                AggregertOrderFelt(Aggregeringsfunksjon.ANTALL, økende = false),
+            )
+        )
+
+        val json = LosObjectMapper.instance.writeValueAsString(query)
+        val deserialisert = LosObjectMapper.instance.readValue(json, OppgaveQuery::class.java)
+
+        assertThat(deserialisert.order).hasSize(2)
+        assertThat(deserialisert.order[0]).isInstanceOf(EnkelOrderFelt::class.java)
+        assertThat(deserialisert.order[1]).isInstanceOf(AggregertOrderFelt::class.java)
+        val aggregertOrderFelt = deserialisert.order[1] as AggregertOrderFelt
+        assertThat(aggregertOrderFelt.funksjon).isEqualTo(Aggregeringsfunksjon.ANTALL)
+        assertThat(aggregertOrderFelt.økende).isFalse()
     }
 
     private fun loggAlleOppgaverMedFelterOgCache() {

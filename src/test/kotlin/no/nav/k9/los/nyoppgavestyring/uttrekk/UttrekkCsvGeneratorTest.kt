@@ -86,4 +86,41 @@ class UttrekkCsvGeneratorTest {
         val csv = csvGenerator.genererCsv("[]")
         assertThat(csv).isEqualTo("")
     }
+
+    @Test
+    fun `skal generere CSV for gruppert uttrekk`() {
+        val resultatJson = """
+            [
+              {
+                "grupperingsverdier": [
+                  {
+                    "område": "K9",
+                    "kode": "behandlingTypekode",
+                    "verdi": "BT-002"
+                  }
+                ],
+                "aggregeringer": [
+                  {
+                    "type": "ANTALL",
+                    "område": null,
+                    "kode": null,
+                    "verdi": "2"
+                  },
+                  {
+                    "type": "SUM",
+                    "område": "K9",
+                    "kode": "feilutbetaltBelop",
+                    "verdi": "300"
+                  }
+                ]
+              }
+            ]
+        """.trimIndent()
+
+        val csv = csvGenerator.genererCsv(resultatJson)
+
+        val lines = csv.split("\n").filter { it.isNotEmpty() }
+        assertThat(lines[0]).isEqualTo("behandlingTypekode,antall,sum_feilutbetaltBelop")
+        assertThat(lines[1]).isEqualTo("BT-002,2,300")
+    }
 }
