@@ -19,6 +19,7 @@ import no.nav.k9.los.nyoppgavestyring.query.mapping.OppgaveQueryToSqlMapper
 import no.nav.k9.los.nyoppgavestyring.query.mapping.transientfeltutleder.GyldigeTransientFeltutleder
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.slf4j.MDC
 import org.slf4j.event.Level
 import java.time.LocalDateTime
 import javax.sql.DataSource
@@ -232,6 +233,7 @@ class OppgaveQueryRepository(
             }
             aggregerteFelter.isNotEmpty() -> {
                 val sqlBuilder = OppgaveQueryToSqlMapper.toSql(request, felter, now)
+                loggSqlHvisAktivert(sqlBuilder)
                 val rader = tx.run(
                     queryOf(sqlBuilder.getQuery(), sqlBuilder.getParams())
                         .map(sqlBuilder::mapRowTilGruppertResultat).asList
@@ -254,5 +256,11 @@ class OppgaveQueryRepository(
             .setMessage("Kjører følgende intrapolerte SQL: \n{}")
             .addArgument { oppgaveQuery.unsafeDebug() }
             .log()
+    }
+
+    private fun loggSqlHvisAktivert(oppgaveQuery: OppgaveQuerySqlBuilder) {
+        if (MDC.get("debugSql") != null) {
+            log.info("Kjører følgende intrapolerte SQL: \n{}", oppgaveQuery.unsafeDebug())
+        }
     }
 }

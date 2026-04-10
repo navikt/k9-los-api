@@ -21,6 +21,7 @@ import no.nav.k9.los.nyoppgavestyring.query.mapping.EksternFeltverdiOperator
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.KodeOgNavn
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.slf4j.MDC
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.YearMonth
@@ -95,8 +96,13 @@ class DagensTallService(
         scope.launch(Dispatchers.IO) {
             cache.removeExpiredObjects(LocalDateTime.now())
             val tidBruktPåOppdatering = measureTime {
-                val dagensTall = hentFraDatabase()
-                cache.set(LocalDate.now(), CacheObject(dagensTall, LocalDateTime.now().plusDays(1)))
+                MDC.put("debugSql", "true")
+                try {
+                    val dagensTall = hentFraDatabase()
+                    cache.set(LocalDate.now(), CacheObject(dagensTall, LocalDateTime.now().plusDays(1)))
+                } finally {
+                    MDC.remove("debugSql")
+                }
             }
             log.info("Oppdaterte dagens tall på $tidBruktPåOppdatering")
         }
