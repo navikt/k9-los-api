@@ -44,7 +44,9 @@ class DagensTallService(
         val mottattDato = { dato: LocalDate -> FeltverdiOppgavefilter("K9", "mottattDato", EksternFeltverdiOperator.GREATER_THAN_OR_EQUALS, listOf(dato.toString())) }
         val ferdigstiltDato = { dato: LocalDate -> FeltverdiOppgavefilter(null, "ferdigstiltDato", EksternFeltverdiOperator.GREATER_THAN_OR_EQUALS, listOf(dato.toString())) }
         val mottattDatoFør = { dato: LocalDate -> FeltverdiOppgavefilter("K9", "mottattDato", EksternFeltverdiOperator.LESS_THAN, listOf(dato.toString())) }
-        val ferdigstiltDatoFør = { dato: LocalDate -> FeltverdiOppgavefilter(null, "ferdigstiltDato", EksternFeltverdiOperator.LESS_THAN, listOf(dato.toString())) }
+        val ferdigstiltDatoMellom = { fra: LocalDate, tilEksklusive: LocalDate ->
+            FeltverdiOppgavefilter(null, "ferdigstiltDato", EksternFeltverdiOperator.INTERVAL, listOf(fra.toString(), tilEksklusive.minusDays(1).toString()))
+        }
         val lukket = FeltverdiOppgavefilter(null, "oppgavestatus", EksternFeltverdiOperator.EQUALS, listOf(Oppgavestatus.LUKKET.kode))
 
         val førstegang = FeltverdiOppgavefilter("K9", "behandlingTypekode", EksternFeltverdiOperator.EQUALS, listOf(BehandlingType.FORSTEGANGSSOKNAD.kode))
@@ -185,7 +187,7 @@ class DagensTallService(
             hentGrupperte(listOf(mottattDato(start), mottattDatoFør(slutt)), medHelautomatisk = false)
         }
         val månedligFerdigstilt = måneder.map { (start, slutt) ->
-            hentGrupperte(listOf(lukket, ferdigstiltDato(start), ferdigstiltDatoFør(slutt)), medHelautomatisk = true)
+            hentGrupperte(listOf(lukket, ferdigstiltDatoMellom(start, slutt)), medHelautomatisk = true)
         }
 
         val tall = DagensTallHovedgruppe.entries.flatMap { hovedgruppe ->
@@ -195,8 +197,6 @@ class DagensTallService(
                 fun dagenstallKort(
                     inngang: List<TelleRad>,
                     ferdigstilt: List<TelleRad>,
-                    inngangDatoFiltre: List<FeltverdiOppgavefilter>,
-                    ferdigstiltDatoFiltre: List<FeltverdiOppgavefilter>
                 ): Pair<DagensTallKortDto, DagensTallKortDto> {
                     return Pair(
                         DagensTallKortDto(
@@ -225,16 +225,14 @@ class DagensTallService(
                     )
                 }
 
-                val idag = dagenstallKort(inngangIdag, ferdigstiltIdag, listOf(mottattDato(iDag)), listOf(ferdigstiltDato(iDag)))
-                val siste7Dager = dagenstallKort(inngangSiste7, ferdigstiltSiste7, listOf(mottattDato(syvDagerSiden)), listOf(ferdigstiltDato(syvDagerSiden)))
-                val siste14Dager = dagenstallKort(inngangSiste14, ferdigstiltSiste14, listOf(mottattDato(fjortenDagerSiden)), listOf(ferdigstiltDato(fjortenDagerSiden)))
-                val siste28Dager = dagenstallKort(inngangSiste28, ferdigstiltSiste28, listOf(mottattDato(tjueåtteDagerSiden)), listOf(ferdigstiltDato(tjueåtteDagerSiden)))
+                val idag = dagenstallKort(inngangIdag, ferdigstiltIdag)
+                val siste7Dager = dagenstallKort(inngangSiste7, ferdigstiltSiste7)
+                val siste14Dager = dagenstallKort(inngangSiste14, ferdigstiltSiste14)
+                val siste28Dager = dagenstallKort(inngangSiste28, ferdigstiltSiste28)
 
-                val månedSerier = måneder.mapIndexed { index, (start, slutt) ->
+                val månedSerier = måneder.mapIndexed { index, (start, _) ->
                     YearMonth.from(start).toString() to dagenstallKort(
                         månedligInngang[index], månedligFerdigstilt[index],
-                        listOf(mottattDato(start), mottattDatoFør(slutt)),
-                        listOf(ferdigstiltDato(start), ferdigstiltDatoFør(slutt))
                     )
                 }
 
