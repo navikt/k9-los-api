@@ -160,30 +160,12 @@ class DagensTallService(
         DagensTallUndergruppe.UNNTAKSBEHANDLING -> rad.behandlingTypekode == BehandlingType.UNNTAKSBEHANDLING.kode
     }
 
-    /**
-     * Bygger kildespørring for frontend drill-down. Selve tellingen
-     * gjøres fra grupperte data, men kildespørringen bevares for navigering.
-     */
-    private fun kildeQuery(
-        hovedgruppe: DagensTallHovedgruppe,
-        undergruppe: DagensTallUndergruppe,
-        vararg ekstraFiltre: FeltverdiOppgavefilter
-    ): OppgaveQuery {
-        val filtere = buildList {
-            addAll(ekstraFiltre)
-            ytelseFilter(hovedgruppe)?.let { add(it) }
-            behandlingFilter(undergruppe)?.let { add(it) }
-        }
-        return OppgaveQuery(filtere)
-    }
-
     private fun hentFraDatabase(): DagensTallResponse {
         val iDag = LocalDate.now()
         val syvDagerSiden = iDag.minusWeeks(1)
         val fjortenDagerSiden = iDag.minusWeeks(2)
         val tjueåtteDagerSiden = iDag.minusWeeks(4)
 
-        // 4 grupperte queries erstatter 336 enkelt-queries
         val inngangIdag = hentGrupperte(listOf(mottattDato(iDag)), medHelautomatisk = false)
         val inngangSiste7 = hentGrupperte(listOf(mottattDato(syvDagerSiden)), medHelautomatisk = false)
         val inngangSiste14 = hentGrupperte(listOf(mottattDato(fjortenDagerSiden)), medHelautomatisk = false)
@@ -221,7 +203,6 @@ class DagensTallService(
                             hovedtall = DagensTallLinjeDto(
                                 "Inngang",
                                 inngang.tell(ytelser, undergruppe),
-                                kildeQuery(hovedgruppe, undergruppe, *inngangDatoFiltre.toTypedArray())
                             ),
                             linjer = emptyList()
                         ),
@@ -229,18 +210,15 @@ class DagensTallService(
                             hovedtall = DagensTallLinjeDto(
                                 "Ferdigstilt",
                                 ferdigstilt.tell(ytelser, undergruppe),
-                                kildeQuery(hovedgruppe, undergruppe, lukket, *ferdigstiltDatoFiltre.toTypedArray())
                             ),
                             linjer = listOf(
                                 DagensTallLinjeDto(
                                     "manuelt",
                                     ferdigstilt.tell(ytelser, undergruppe, helautomatisk = false),
-                                    kildeQuery(hovedgruppe, undergruppe, lukket, *ferdigstiltDatoFiltre.toTypedArray(), ikkeHelautomatisk)
                                 ),
                                 DagensTallLinjeDto(
                                     "automatisk",
                                     ferdigstilt.tell(ytelser, undergruppe, helautomatisk = true),
-                                    kildeQuery(hovedgruppe, undergruppe, lukket, *ferdigstiltDatoFiltre.toTypedArray(), helautomatisk)
                                 )
                             )
                         )
@@ -249,8 +227,8 @@ class DagensTallService(
 
                 val idag = dagenstallKort(inngangIdag, ferdigstiltIdag, listOf(mottattDato(iDag)), listOf(ferdigstiltDato(iDag)))
                 val siste7Dager = dagenstallKort(inngangSiste7, ferdigstiltSiste7, listOf(mottattDato(syvDagerSiden)), listOf(ferdigstiltDato(syvDagerSiden)))
-//                val siste14Dager = dagenstallKort(inngangSiste14, ferdigstiltSiste14, listOf(mottattDato(fjortenDagerSiden)), listOf(ferdigstiltDato(fjortenDagerSiden)))
-//                val siste28Dager = dagenstallKort(inngangSiste28, ferdigstiltSiste28, listOf(mottattDato(tjueåtteDagerSiden)), listOf(ferdigstiltDato(tjueåtteDagerSiden)))
+                val siste14Dager = dagenstallKort(inngangSiste14, ferdigstiltSiste14, listOf(mottattDato(fjortenDagerSiden)), listOf(ferdigstiltDato(fjortenDagerSiden)))
+                val siste28Dager = dagenstallKort(inngangSiste28, ferdigstiltSiste28, listOf(mottattDato(tjueåtteDagerSiden)), listOf(ferdigstiltDato(tjueåtteDagerSiden)))
 
                 val månedSerier = måneder.mapIndexed { index, (start, slutt) ->
                     YearMonth.from(start).toString() to dagenstallKort(
@@ -266,8 +244,8 @@ class DagensTallService(
                     serier = mapOf(
                         "idag" to idag,
                         "siste7Dager" to siste7Dager,
-//                        "siste14Dager" to siste14Dager,
-//                        "siste28Dager" to siste28Dager,
+                        "siste14Dager" to siste14Dager,
+                        "siste28Dager" to siste28Dager,
                     ) + månedSerier
                 )
             }

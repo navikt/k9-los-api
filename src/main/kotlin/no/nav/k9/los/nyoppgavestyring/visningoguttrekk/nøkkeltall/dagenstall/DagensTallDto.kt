@@ -18,5 +18,4 @@ data class DagensTallKortDto(
 data class DagensTallLinjeDto(
     val visningsnavn: String,
     val verdi: Long,
-    val kildespørring: OppgaveQuery,
 )
