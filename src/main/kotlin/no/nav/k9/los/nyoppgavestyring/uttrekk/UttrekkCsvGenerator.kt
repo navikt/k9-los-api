@@ -15,7 +15,10 @@ class UttrekkCsvGenerator {
             val headers = select.map {
                 when (it) {
                     is EnkelSelectFelt -> it.kode
-                    is AggregertSelectFelt -> it.funksjon.name.lowercase()
+                    is AggregertSelectFelt -> {
+                        val funksjonNavn = it.funksjon.name.lowercase()
+                        if (it.kode != null) "${funksjonNavn}_${it.kode}" else funksjonNavn
+                    }
                     EksternIdSelectFelt -> "ekstern_id"
                     OppgaveIdSelectFelt -> "oppgave_id"
                 }
@@ -25,7 +28,7 @@ class UttrekkCsvGenerator {
 
             for (rad in rader) {
                 val values = rad.kolonner.map { kolonne ->
-                    kolonne.toString()
+                    kolonne?.toString() ?: ""
                 }
                 append(values.joinToString(","))
                 append("\n")

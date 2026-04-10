@@ -1,6 +1,5 @@
 package no.nav.k9.los.nyoppgavestyring.uttrekk
 
-import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.JsonNode
 import kotliquery.queryOf
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
@@ -45,17 +44,23 @@ class MigrerUttrekkResultatJobb(
 
         fun konverterTilNyttFormat(resultatJson: String): String {
             val node = objectMapper.readTree(resultatJson)
-            val rader = node.map { element -> konverterRad(element) }
+            val rader = node.map { element ->
+                val eksternId = element["id"]["eksternId"].asText()
+                val kolonner = element["felter"].map { felt -> jsonNodeTilVerdi(felt["verdi"]) }
+                UttrekkRad(id = eksternId, kolonner = kolonner)
+            }
             return objectMapper.writeValueAsString(rader)
         }
 
-        private fun konverterRad(element: JsonNode): UttrekkRad {
-            val eksternId = element["id"]["eksternId"].asText()
-            val felter = objectMapper.convertValue(
-                element["felter"]["verdi"],
-                object : TypeReference<List<Any?>>() {}
-            )
-            return UttrekkRad(id = eksternId, kolonner = felter)
+        private fun jsonNodeTilVerdi(node: JsonNode?): Any? {
+            return when {
+                node == null || node.isNull -> null
+                node.isTextual -> node.asText()
+                node.isIntegralNumber -> node.longValue()
+                node.isFloatingPointNumber -> node.doubleValue()
+                node.isBoolean -> node.booleanValue()
+                else -> node.asText()
+            }
         }
 
         // Extensionfunction siden det er repositorymetode kun brukt her, som skal slettes etter kjøring
