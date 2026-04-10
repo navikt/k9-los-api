@@ -1,8 +1,10 @@
 package no.nav.k9.los.nyoppgavestyring.uttrekk
 
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.*
+
 class UttrekkCsvGenerator {
 
-    fun genererCsv(resultatJson: String): String {
+    fun genererCsv(select: List<SelectFelt>, resultatJson: String): String {
         val rader = UttrekkResultatMapper.fraLagretJson(resultatJson)
 
         if (rader.isEmpty()) {
@@ -10,13 +12,20 @@ class UttrekkCsvGenerator {
         }
 
         return buildString {
-            val headers = rader.first().kolonner.map { it.csvKolonnenavn() }
+            val headers = select.map {
+                when (it) {
+                    is EnkelSelectFelt -> it.kode
+                    is AggregertSelectFelt -> it.funksjon.name.lowercase()
+                    EksternIdSelectFelt -> "ekstern_id"
+                    OppgaveIdSelectFelt -> "oppgave_id"
+                }
+            }
             append(headers.joinToString(","))
             append("\n")
 
             for (rad in rader) {
                 val values = rad.kolonner.map { kolonne ->
-                    kolonne.verdi?.toString() ?: ""
+                    kolonne.toString()
                 }
                 append(values.joinToString(","))
                 append("\n")

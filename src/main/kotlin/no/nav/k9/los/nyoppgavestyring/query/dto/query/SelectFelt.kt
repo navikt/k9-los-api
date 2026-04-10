@@ -16,4 +16,4 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo
     setterVisibility = JsonAutoDetect.Visibility.NONE,
     fieldVisibility = JsonAutoDetect.Visibility.ANY
 )
-open class SelectFelt
+sealed class SelectFelt

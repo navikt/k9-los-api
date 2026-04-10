@@ -44,7 +44,7 @@ class UttrekkCsvGeneratorTest {
             ]
         """.trimIndent()
 
-        val csv = csvGenerator.genererCsv(resultatJson)
+        val csv = csvGenerator.genererCsv(listOf(), resultatJson)
 
         val lines = csv.split("\n").filter { it.isNotEmpty() }
         assertThat(lines[0]).isEqualTo("saksnummer,behandlingstype")
@@ -74,7 +74,7 @@ class UttrekkCsvGeneratorTest {
             ]
         """.trimIndent()
 
-        val csv = csvGenerator.genererCsv(resultatJson)
+        val csv = csvGenerator.genererCsv(listOf(), resultatJson)
 
         val lines = csv.split("\n").filter { it.isNotEmpty() }
         assertThat(lines[0]).isEqualTo("saksnummer,enhet")
@@ -83,7 +83,7 @@ class UttrekkCsvGeneratorTest {
 
     @Test
     fun `skal returnere tom string for tomt resultat`() {
-        val csv = csvGenerator.genererCsv("[]")
+        val csv = csvGenerator.genererCsv(listOf(),"[]")
         assertThat(csv).isEqualTo("")
     }
 
@@ -114,7 +114,7 @@ class UttrekkCsvGeneratorTest {
             ]
         """.trimIndent()
 
-        val csv = csvGenerator.genererCsv(resultatJson)
+        val csv = csvGenerator.genererCsv(listOf(), resultatJson)
 
         val lines = csv.split("\n").filter { it.isNotEmpty() }
         assertThat(lines[0]).isEqualTo("behandlingTypekode,antall,sum_feilutbetaltBelop")

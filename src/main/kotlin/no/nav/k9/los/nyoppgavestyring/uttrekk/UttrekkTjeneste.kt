@@ -73,7 +73,7 @@ class UttrekkTjeneste(
             }
             is OppgaveQueryResultat.SelectResultat,
             is OppgaveQueryResultat.GruppertResultat -> {
-                val uttrekkRader = UttrekkResultatMapper.tilUttrekkRader(resultat)
+                val uttrekkRader = UttrekkResultatMapper.tilUttrekkRader(uttrekk.query.select, resultat)
                 antall = uttrekkRader.size
                 resultatJson = LosObjectMapper.instance.writeValueAsString(uttrekkRader)
             }

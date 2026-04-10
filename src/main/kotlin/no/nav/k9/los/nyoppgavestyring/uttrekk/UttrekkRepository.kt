@@ -10,7 +10,7 @@ import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
 import javax.sql.DataSource
 
 class UttrekkRepository(val dataSource: DataSource) {
-    private val transactionalManager = TransactionalManager(dataSource)
+    val transactionalManager = TransactionalManager(dataSource)
 
     fun hent(id: Long): Uttrekk? {
         return transactionalManager.transaction {

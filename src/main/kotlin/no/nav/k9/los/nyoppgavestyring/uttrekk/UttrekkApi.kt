@@ -11,8 +11,6 @@ import io.ktor.server.routing.*
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.RequestContextService
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.idToken
-import no.nav.k9.los.nyoppgavestyring.query.dto.query.AggregertSelectFelt
-import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelSelectFelt
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
 import org.koin.ktor.ext.inject
 
@@ -232,7 +230,7 @@ fun Route.UttrekkApi() {
                 )
 
                 call.respondText(ContentType.parse("text/csv"), HttpStatusCode.OK) {
-                    uttrekkCsvGenerator.genererCsv(resultat)
+                    uttrekkCsvGenerator.genererCsv(uttrekk.query.select,resultat)
                 }
             } else {
                 call.respond(HttpStatusCode.Forbidden)
@@ -286,18 +284,11 @@ fun Route.UttrekkApi() {
                     .drop(offset)
                     .let { if (limit != null) it.take(limit) else it }
 
-                val kolonner = when {
-                    alleRader.isNotEmpty() -> alleRader.first().kolonner.map { it.csvKolonnenavn() }
-                    else -> uttrekk.query.select.filterIsInstance<EnkelSelectFelt>().map { it.kode } +
-                        uttrekk.query.select.filterIsInstance<AggregertSelectFelt>().map { aggregert ->
-                            val funksjon = aggregert.funksjon.name.lowercase()
-                            if (aggregert.kode != null) "${funksjon}_${aggregert.kode}" else funksjon
-                        }
-                }
+                val kolonner = uttrekk.query.select
 
                 call.respond(
                     UttrekkResultatRespons(
-                        kolonner = kolonner, // TODO: bruke visningsnavn fra feltdefinisjon
+                        kolonner = kolonner,
                         rader = paginertRader,
                         totaltAntall = alleRader.size,
                         offset = offset,
