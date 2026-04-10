@@ -38,10 +38,9 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
             saksbehandlerRepository.addSaksbehandler(
                 Saksbehandler(
                     id = null,
-                    brukerIdent = "test",
+                    navident = "test",
                     navn = "Test Testersen",
                     epost = "test@nav.no",
-                    reservasjoner = mutableSetOf(),
                     enhet = null,
                 )
             )
@@ -179,10 +178,9 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
             saksbehandlerRepository.addSaksbehandler(
                 Saksbehandler(
                     id = null,
-                    brukerIdent = "test2",
+                    navident = "test2",
                     navn = "Test Testersen 2",
                     epost = "test2@nav.no",
-                    reservasjoner = mutableSetOf(),
                     enhet = null,
                 )
             )

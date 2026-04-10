@@ -103,7 +103,7 @@ class K9SakEventDtoBuilder(
             AksjonspunktTilstandBuilder.FORESLÅ_VEDTAK.medStatus(AksjonspunktStatus.UTFØRT),
             AksjonspunktTilstandBuilder.FATTER_VEDTAK.medStatus(AksjonspunktStatus.OPPRETTET)
         )
-        this.ansvarligSaksbehandlerIdent = ansvarligSaksbehandler?.brukerIdent
+        this.ansvarligSaksbehandlerIdent = ansvarligSaksbehandler?.navident
         return this
     }
 
@@ -146,7 +146,7 @@ class K9SakEventDtoBuilder(
             AksjonspunktTilstandBuilder.FATTER_VEDTAK.medStatus(AksjonspunktStatus.UTFØRT)
         )
         //FIXME: Ansvarlig saksbehandler og beslutter skal ikke være samme person
-        this.ansvarligSaksbehandlerForTotrinn = ansvarligBeslutter?.brukerIdent
+        this.ansvarligSaksbehandlerForTotrinn = ansvarligBeslutter?.navident
         return this
     }
 
@@ -160,7 +160,7 @@ class K9SakEventDtoBuilder(
             AksjonspunktTilstandBuilder.FATTER_VEDTAK.medStatus(AksjonspunktStatus.UTFØRT)
         )
         //FIXME: Ansvarlig saksbehandler og beslutter skal ikke være samme person
-        this.ansvarligSaksbehandlerForTotrinn = ansvarligBeslutter?.brukerIdent
+        this.ansvarligSaksbehandlerForTotrinn = ansvarligBeslutter?.navident
         return this
     }
 

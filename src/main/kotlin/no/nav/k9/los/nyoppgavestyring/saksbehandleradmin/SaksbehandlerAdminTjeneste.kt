@@ -22,7 +22,7 @@ class SaksbehandlerAdminTjeneste(
         var saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedEpost(epostDto.epost)
         if (saksbehandler == null) {
             saksbehandler = Saksbehandler(
-                null, null, null, epostDto.epost, mutableSetOf(), null
+                null, null, null, epostDto.epost, null
             )
             saksbehandlerRepository.addSaksbehandler(saksbehandler)
         }
@@ -34,7 +34,7 @@ class SaksbehandlerAdminTjeneste(
             throw IllegalStateException("Saksbehandler finnes fra før")
         }
         // lagrer med tomme verdier, disse blir populert etter at saksbehandleren har logget seg inn
-        val saksbehandler = Saksbehandler(null, null, null, epost, mutableSetOf(), null)
+        val saksbehandler = Saksbehandler(null, null, null, epost, null)
         saksbehandlerRepository.addSaksbehandler(saksbehandler)
     }
 
@@ -43,9 +43,9 @@ class SaksbehandlerAdminTjeneste(
 
         val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedId(id)
 
-        val lagredeSøk = lagretSøkTjeneste.hentAlle(saksbehandler!!.brukerIdent!!)
+        val lagredeSøk = lagretSøkTjeneste.hentAlle(saksbehandler!!.navident!!)
         lagredeSøk.forEach {
-            lagretSøkTjeneste.slett(saksbehandler.brukerIdent!!, it.id!!)
+            lagretSøkTjeneste.slett(saksbehandler.navident!!, it.id!!)
         }
 
         transactionalManager.transaction { tx ->
@@ -65,10 +65,10 @@ class SaksbehandlerAdminTjeneste(
         val skjermet = pepClient.harTilgangTilKode6()
 
         val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedEpost(epost) ?: throw IllegalStateException("Kunne ikke finne saksbehandler med epost")
-        if (saksbehandler.brukerIdent != null) {
-            val lagredeSøk = lagretSøkTjeneste.hentAlle(saksbehandler.brukerIdent!!)
+        if (saksbehandler.navident != null) {
+            val lagredeSøk = lagretSøkTjeneste.hentAlle(saksbehandler.navident!!)
             lagredeSøk.forEach {
-                lagretSøkTjeneste.slett(saksbehandler.brukerIdent!!, it.id!!)
+                lagretSøkTjeneste.slett(saksbehandler.navident!!, it.id!!)
             }
             val uttrekkeneTilSakbehandler = uttrekkTjeneste.hentForSaksbehandler(saksbehandler.id!!)
             uttrekkeneTilSakbehandler.forEach {
@@ -97,7 +97,7 @@ class SaksbehandlerAdminTjeneste(
             saksbehandlere.map {
                 SaksbehandlerDto(
                     id = it.id,
-                    brukerIdent = it.brukerIdent,
+                    brukerIdent = it.navident,
                     navn = it.navn,
                     epost = it.epost,
                     enhet = it.enhet,

@@ -2,7 +2,6 @@ package no.nav.k9.los.nyoppgavestyring.saksbehandleradmin
 
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.AbstractK9LosIntegrationTest
-import no.nav.k9.los.nyoppgavestyring.FeltType
 import no.nav.k9.los.nyoppgavestyring.OppgaveTestDataBuilder
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
@@ -52,7 +51,7 @@ class SaksbehandlerRepositoryTest : AbstractK9LosIntegrationTest() {
             saksbehandlerRepository.finnSaksbehandlerMedIdent(ident)
         }!!
 
-        assertThat(saksbehandler.brukerIdent, equalTo(ident))
+        assertThat(saksbehandler.navident, equalTo(ident))
 
         val builder = OppgaveTestDataBuilder()
         builder.lagOgLagre(Oppgavestatus.AAPEN)
