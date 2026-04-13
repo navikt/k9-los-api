@@ -19,19 +19,6 @@ class UttrekkJobb(
             val uttrekk = uttrekkTjeneste.startUttrekk(uttrekkId)
             var queryRequest = QueryRequest(uttrekk.query, avgrensning = uttrekk.avgrensning)
 
-            if (uttrekk.typeKjøring == TypeKjøring.ANTALL) {
-                // Overstyrer queryRequest for å kun få antallet, usikker på om dette er det peneste...
-                queryRequest = QueryRequest(
-                    queryRequest.oppgaveQuery.copy(
-                        select = listOf(
-                            AggregertSelectFelt(
-                                Aggregeringsfunksjon.ANTALL
-                            )
-                        )
-                    )
-                )
-            }
-
             val resultat = oppgaveQueryService.query(queryRequest)
 
             uttrekkTjeneste.fullførUttrekk(

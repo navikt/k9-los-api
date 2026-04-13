@@ -66,7 +66,6 @@ class UttrekkJobbTest : AbstractK9LosIntegrationTest() {
         // Opprett uttrekk med TypeKjøring.ANTALL
         val uttrekk = Uttrekk.opprettUttrekk(
             lagretSøk = testLagretSøk,
-            typeKjoring = TypeKjøring.ANTALL,
             lagetAv = saksbehandlerId,
         )
         val uttrekkId = uttrekkRepository.opprett(uttrekk)
@@ -88,7 +87,6 @@ class UttrekkJobbTest : AbstractK9LosIntegrationTest() {
         // Opprett uttrekk med TypeKjøring.OPPGAVER
         val uttrekk = Uttrekk.opprettUttrekk(
             lagretSøk = testLagretSøk,
-            typeKjoring = TypeKjøring.OPPGAVER,
             lagetAv = saksbehandlerId,
         )
         val uttrekkId = uttrekkRepository.opprett(uttrekk)

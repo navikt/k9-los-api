@@ -112,7 +112,6 @@ class MigrerUttrekkResultatJobbTest : AbstractK9LosIntegrationTest() {
     fun `skal ikke berøre uttrekk uten resultat`() {
         val uttrekk = Uttrekk.opprettUttrekk(
             lagretSøk = testLagretSøk,
-            typeKjoring = TypeKjøring.ANTALL,
             lagetAv = saksbehandlerId,
         )
         val uttrekkId = uttrekkRepository.opprett(uttrekk)
@@ -134,7 +133,6 @@ class MigrerUttrekkResultatJobbTest : AbstractK9LosIntegrationTest() {
     private fun opprettUttrekkMedResultat(resultatJson: String): Long {
         val uttrekk = Uttrekk.opprettUttrekk(
             lagretSøk = testLagretSøk,
-            typeKjoring = TypeKjøring.OPPGAVER,
             lagetAv = saksbehandlerId,
         )
         val uttrekkId = uttrekkRepository.opprett(uttrekk)

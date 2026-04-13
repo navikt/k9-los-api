@@ -51,14 +51,13 @@ class UttrekkRepository(val dataSource: DataSource) {
                 queryOf(
                     """
                     INSERT INTO uttrekk (opprettet_tidspunkt, status, tittel, query, type_kjoring, laget_av, lagret_sok_id, avgrensning_limit, avgrensning_offset)
-                    VALUES (:opprettetTidspunkt, :status, :tittel, :query::jsonb, :typeKjoring, :lagetAv, :lagretSokId, :limit, :offset)
+                    VALUES (:opprettetTidspunkt, :status, :tittel, :query::jsonb, 'NY', :lagetAv, :lagretSokId, :limit, :offset)
                     """.trimIndent(),
                     mapOf(
                         "opprettetTidspunkt" to uttrekk.opprettetTidspunkt,
                         "status" to uttrekk.status.name,
                         "tittel" to uttrekk.tittel,
                         "query" to LosObjectMapper.instance.writeValueAsString(uttrekk.query),
-                        "typeKjoring" to uttrekk.typeKjøring.name,
                         "lagetAv" to uttrekk.lagetAv,
                         "lagretSokId" to uttrekk.lagretSøkId,
                         "limit" to uttrekk.limit,
@@ -180,7 +179,6 @@ private fun Row.toUttrekk(): Uttrekk {
         status = UttrekkStatus.valueOf(string("status")),
         tittel = string("tittel"),
         query = LosObjectMapper.instance.readValue(string("query"), OppgaveQuery::class.java),
-        typeKjoring = TypeKjøring.valueOf(string("type_kjoring")),
         lagetAv = long("laget_av"),
         lagretSøkId = longOrNull("lagret_sok_id"),
         limit = intOrNull("avgrensning_limit"),
