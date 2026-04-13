@@ -436,6 +436,10 @@ class PartisjonertOppgaveQuerySqlBuilder(
         }
     }
 
+    private fun erListetype(feltområde: String, feltkode: String): Boolean {
+        return felter[OmrådeOgKode(feltområde, feltkode)]?.oppgavefelt?.listetype ?: false
+    }
+
     private data class Aggregeringsgrunnlag(
         val uttrykk: String,
         val datatype: Datatype,
@@ -600,16 +604,29 @@ class PartisjonertOppgaveQuerySqlBuilder(
                     selectFeltParams.putAll(sqlMedParams.queryParams)
                 } else {
                     val verdifelt = verdifelt(felt.område, felt.kode)
-                    selectDeler.add(
-                        """
-                        (SELECT $verdifelt
-                         FROM oppgavefelt_verdi_part ov
-                         WHERE ov.oppgave_id = o.id
-                           AND ov.oppgavestatus IN ($oppgavestatusPlaceholder) ${ferdigstiltDatoBetingelse("ov")}
-                           AND ov.feltdefinisjon_ekstern_id = :selectFeltkode$index
-                         LIMIT 1) AS $alias
-                    """.trimIndent()
-                    )
+                    if (erListetype(felt.område, felt.kode)) {
+                        selectDeler.add(
+                            """
+                            (SELECT string_agg($verdifelt::text, ', ' ORDER BY $verdifelt)
+                             FROM oppgavefelt_verdi_part ov
+                             WHERE ov.oppgave_id = o.id
+                               AND ov.oppgavestatus IN ($oppgavestatusPlaceholder) ${ferdigstiltDatoBetingelse("ov")}
+                               AND ov.feltdefinisjon_ekstern_id = :selectFeltkode$index
+                            ) AS $alias
+                        """.trimIndent()
+                        )
+                    } else {
+                        selectDeler.add(
+                            """
+                            (SELECT $verdifelt
+                             FROM oppgavefelt_verdi_part ov
+                             WHERE ov.oppgave_id = o.id
+                               AND ov.oppgavestatus IN ($oppgavestatusPlaceholder) ${ferdigstiltDatoBetingelse("ov")}
+                               AND ov.feltdefinisjon_ekstern_id = :selectFeltkode$index
+                             LIMIT 1) AS $alias
+                        """.trimIndent()
+                        )
+                    }
                     selectFeltParams["selectFeltkode$index"] = felt.kode
                 }
             } else {
@@ -665,16 +682,29 @@ class PartisjonertOppgaveQuerySqlBuilder(
                     grupperingParams.putAll(sqlMedParams.queryParams)
                 } else {
                     val verdifelt = verdifelt(felt.område, felt.kode)
-                    selectDeler.add(
-                        """
-                        (SELECT $verdifelt
-                         FROM oppgavefelt_verdi_part ov
-                         WHERE ov.oppgave_id = o.id
-                           AND ov.oppgavestatus IN ($oppgavestatusPlaceholder) ${ferdigstiltDatoBetingelse("ov")}
-                           AND ov.feltdefinisjon_ekstern_id = :grupperingFeltkode$index
-                         LIMIT 1) AS $alias
-                    """.trimIndent()
-                    )
+                    if (erListetype(felt.område, felt.kode)) {
+                        selectDeler.add(
+                            """
+                            (SELECT string_agg($verdifelt::text, ', ' ORDER BY $verdifelt)
+                             FROM oppgavefelt_verdi_part ov
+                             WHERE ov.oppgave_id = o.id
+                               AND ov.oppgavestatus IN ($oppgavestatusPlaceholder) ${ferdigstiltDatoBetingelse("ov")}
+                               AND ov.feltdefinisjon_ekstern_id = :grupperingFeltkode$index
+                            ) AS $alias
+                        """.trimIndent()
+                        )
+                    } else {
+                        selectDeler.add(
+                            """
+                            (SELECT $verdifelt
+                             FROM oppgavefelt_verdi_part ov
+                             WHERE ov.oppgave_id = o.id
+                               AND ov.oppgavestatus IN ($oppgavestatusPlaceholder) ${ferdigstiltDatoBetingelse("ov")}
+                               AND ov.feltdefinisjon_ekstern_id = :grupperingFeltkode$index
+                             LIMIT 1) AS $alias
+                        """.trimIndent()
+                        )
+                    }
                     grupperingParams["grupperingFeltkode$index"] = felt.kode
                 }
             } else {

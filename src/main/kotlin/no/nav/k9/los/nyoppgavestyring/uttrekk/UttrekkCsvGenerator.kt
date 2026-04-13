@@ -28,11 +28,19 @@ class UttrekkCsvGenerator {
 
             for (rad in rader) {
                 val values = rad.kolonner.map { kolonne ->
-                    kolonne?.toString() ?: ""
+                    csvEscape(kolonne?.toString() ?: "")
                 }
                 append(values.joinToString(","))
                 append("\n")
             }
+        }
+    }
+
+    private fun csvEscape(verdi: String): String {
+        return if (verdi.contains(',') || verdi.contains('"') || verdi.contains('\n')) {
+            "\"${verdi.replace("\"", "\"\"")}\""
+        } else {
+            verdi
         }
     }
 }
