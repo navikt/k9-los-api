@@ -51,7 +51,7 @@ class K9TilbakeEventDtoBuilder(
             AksjonspunktDefinisjonK9Tilbake.VENT_PÅ_BRUKERTILBAKEMELDING to AksjonspunktStatus.UTFØRT,
             AksjonspunktDefinisjonK9Tilbake.AVKLART_FAKTA_FEILUTBETALING to AksjonspunktStatus.UTFØRT,
         )
-        this.ansvarligSaksbehandlerIdent = ansvarligSaksbehandler?.brukerIdent
+        this.ansvarligSaksbehandlerIdent = ansvarligSaksbehandler?.navident
         return this
     }
 
@@ -66,7 +66,7 @@ class K9TilbakeEventDtoBuilder(
             AksjonspunktDefinisjonK9Tilbake.VENT_PÅ_BRUKERTILBAKEMELDING to AksjonspunktStatus.UTFØRT,
             AksjonspunktDefinisjonK9Tilbake.AVKLART_FAKTA_FEILUTBETALING to AksjonspunktStatus.UTFØRT,
         )
-        this.ansvarligSaksbehandlerIdent = ansvarligSaksbehandler?.brukerIdent
+        this.ansvarligSaksbehandlerIdent = ansvarligSaksbehandler?.navident
         return this
     }
 
@@ -96,7 +96,7 @@ class K9TilbakeEventDtoBuilder(
             AksjonspunktDefinisjonK9Tilbake.VENT_PÅ_TILBAKEKREVINGSGRUNNLAG to AksjonspunktStatus.UTFØRT,
             AksjonspunktDefinisjonK9Tilbake.AVKLART_FAKTA_FEILUTBETALING to AksjonspunktStatus.UTFØRT,
         )
-        this.ansvarligSaksbehandlerForTotrinn = ansvarligBeslutter?.brukerIdent
+        this.ansvarligSaksbehandlerForTotrinn = ansvarligBeslutter?.navident
         return this
     }
 

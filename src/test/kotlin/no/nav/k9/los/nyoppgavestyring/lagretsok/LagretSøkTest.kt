@@ -14,19 +14,17 @@ class LagretSøkTest {
 
     private val saksbehandler = Saksbehandler(
         id = 123L,
-        brukerIdent = "test",
+        navident = "test",
         navn = "Test Testersen",
         epost = "test@nav.no",
-        reservasjoner = mutableSetOf(),
         enhet = null
     )
 
     private val annenSaksbehandler = Saksbehandler(
         id = 456L,
-        brukerIdent = "annen",
+        navident = "annen",
         navn = "Annen Testersen",
         epost = "annen@nav.no",
-        reservasjoner = mutableSetOf(),
         enhet = null
     )
 
@@ -50,10 +48,9 @@ class LagretSøkTest {
     fun `opprettSøk skal kaste exception hvis saksbehandler mangler id`() {
         val saksbehandlerUtenId = Saksbehandler(
             id = null,
-            brukerIdent = "test",
+            navident = "test",
             navn = "Test Testersen",
             epost = "test@nav.no",
-            reservasjoner = mutableSetOf(),
             enhet = null
         )
 

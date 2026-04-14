@@ -33,52 +33,6 @@ class ReservasjonV3Tjeneste(
         private val log: Logger = LoggerFactory.getLogger("ReservasjonV3Tjeneste")
     }
 
-    fun forsøkReservasjonOgReturnerAktivMenSjekkLegacyFørst(
-        reservasjonsnøkkel: String,
-        reserverForId: Long,
-        gyldigFra: LocalDateTime,
-        gyldigTil: LocalDateTime,
-        kommentar: String?,
-        utføresAvId: Long
-    ): ReservasjonV3 {
-        return transactionalManager.transaction { tx ->
-            forsøkReservasjonOgReturnerAktivMenSjekkLegacyFørst(
-                reservasjonsnøkkel,
-                reserverForId,
-                gyldigFra,
-                gyldigTil,
-                kommentar,
-                utføresAvId,
-                tx
-            )
-        }
-    }
-
-    fun forsøkReservasjonOgReturnerAktivMenSjekkLegacyFørst(
-        reservasjonsnøkkel: String,
-        reserverForId: Long,
-        gyldigFra: LocalDateTime,
-        gyldigTil: LocalDateTime,
-        kommentar: String?,
-        utføresAvId: Long,
-        tx: TransactionalSession
-    ): ReservasjonV3 {
-        val legacyreservasjon = seEtterLegacyreservasjon(reservasjonsnøkkel, tx)
-        if (legacyreservasjon != null) {
-            return legacyreservasjon
-        }
-
-        return forsøkReservasjonOgReturnerAktiv(
-            reservasjonsnøkkel,
-            reserverForId,
-            gyldigFra,
-            gyldigTil,
-            kommentar,
-            utføresAvId,
-            tx
-        )
-    }
-
     fun forsøkReservasjonOgReturnerAktiv(
         reservasjonsnøkkel: String,
         reserverForId: Long,
@@ -151,20 +105,7 @@ class ReservasjonV3Tjeneste(
         }
     }
 
-    fun taReservasjonMenSjekkLegacyFørst(
-        reservasjonsnøkkel: String,
-        reserverForId: Long,
-        utføresAvId: Long,
-        gyldigFra: LocalDateTime,
-        gyldigTil: LocalDateTime,
-        kommentar: String?,
-        tx: TransactionalSession
-    ): ReservasjonV3 {
-        seEtterLegacyreservasjon(reservasjonsnøkkel, tx)?.let { return it }
-        return taReservasjon(reservasjonsnøkkel, reserverForId, utføresAvId, gyldigFra, gyldigTil, kommentar, tx)
-    }
-
-    private fun taReservasjon(
+    fun taReservasjon(
         reservasjonsnøkkel: String,
         reserverForId: Long,
         utføresAvId: Long,
@@ -208,27 +149,7 @@ class ReservasjonV3Tjeneste(
         reservasjonsnøkkel: String,
         tx: TransactionalSession
     ): ReservasjonV3? {
-        val legacyreservasjon = seEtterLegacyreservasjon(reservasjonsnøkkel, tx)
-        if (legacyreservasjon != null) {
-            return legacyreservasjon
-        }
-
         return reservasjonV3Repository.hentAktivReservasjonForReservasjonsnøkkel(reservasjonsnøkkel, tx)
-    }
-
-    private fun seEtterLegacyreservasjon(reservasjonsnøkkel: String, tx: TransactionalSession): ReservasjonV3? {
-        if (!reservasjonsnøkkel.startsWith("legacy_")) {
-            //konvertere reservasjonsnøkkel til legacy_eksternId
-            val oppgaver =
-                oppgaveV3Repository.hentAlleÅpneOppgaverForReservasjonsnøkkel(tx, reservasjonsnøkkel)
-            //sjekke om det finnes en legacy-reservasjon. Kan fjernes etter konvertering
-            if (oppgaver.isNotEmpty()) {
-                val legacyReservasjon =
-                    hentAktivReservasjonForReservasjonsnøkkel("legacy_" + oppgaver[0].eksternId, tx)
-                return legacyReservasjon
-            }
-        }
-        return null
     }
 
     fun tellReservasjonerForSaksbehandler(saksbehandlerId: Long, tx: TransactionalSession): Int {
@@ -398,7 +319,7 @@ class ReservasjonV3Tjeneste(
         if (!hosBeslutter) return false
         val ansvarligSaksbehandlerIdent = oppgave.hentVerdi("ansvarligSaksbehandler") //TODO gjøre oppgavetypeagnostisk
             ?: throw IllegalStateException("Kan ikke beslutte på oppgave uten ansvarlig saksbehandler")
-        val saksbehandlerIdentSomSkalHaReservasjon = saksbehandler.brukerIdent
+        val saksbehandlerIdentSomSkalHaReservasjon = saksbehandler.navident
 
         return ansvarligSaksbehandlerIdent == saksbehandlerIdentSomSkalHaReservasjon
     }
@@ -407,12 +328,7 @@ class ReservasjonV3Tjeneste(
         reservasjonsnøkkel: String,
     ): ReservasjonV3? {
         return transactionalManager.transaction { tx ->
-            val legacyreservasjon = seEtterLegacyreservasjon(reservasjonsnøkkel, tx)
-            if (legacyreservasjon != null) {
-                legacyreservasjon
-            } else {
                 reservasjonV3Repository.hentAktivReservasjonForReservasjonsnøkkel(reservasjonsnøkkel, tx)
-            }
         }
     }
 
@@ -420,18 +336,6 @@ class ReservasjonV3Tjeneste(
         reservasjonsnøkkel: String,
         tx: TransactionalSession
     ): ReservasjonV3 {
-        //konvertere reservasjonsnøkkel til legacy_eksternId
-        val oppgaver =
-            oppgaveV3Repository.hentAlleÅpneOppgaverForReservasjonsnøkkel(tx, reservasjonsnøkkel)
-        if (oppgaver.isNotEmpty()) {
-            //sjekke om det finnes en legacy-reservasjon. Kan fjernes etter konvertering
-            val legacyReservasjon =
-                hentAktivReservasjonForReservasjonsnøkkel("legacy_" + oppgaver[0].eksternId, tx)
-            if (legacyReservasjon != null) {
-                return legacyReservasjon
-            }
-        }
-
         val aktivReservasjon =
             reservasjonV3Repository.hentAktivReservasjonForReservasjonsnøkkel(reservasjonsnøkkel, tx)
                 ?: throw FinnerIkkeDataException(
@@ -442,6 +346,5 @@ class ReservasjonV3Tjeneste(
                     }"
                 )
         return aktivReservasjon
-
     }
 }

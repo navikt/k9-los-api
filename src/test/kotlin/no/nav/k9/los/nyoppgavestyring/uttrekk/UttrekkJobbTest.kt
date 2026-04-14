@@ -42,10 +42,9 @@ class UttrekkJobbTest : AbstractK9LosIntegrationTest() {
             saksbehandlerRepository.addSaksbehandler(
                 Saksbehandler(
                     id = null,
-                    brukerIdent = "test",
+                    navident = "test",
                     navn = "Test Testersen",
                     epost = "test@nav.no",
-                    reservasjoner = mutableSetOf(),
                     enhet = null,
                 )
             )

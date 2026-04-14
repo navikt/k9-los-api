@@ -274,7 +274,7 @@ class OppgaveKoTjeneste(
     ): OppgaveMuligReservert {
         for (kandidatoppgave in kandidatoppgaver) {
             try {
-                val reservasjon = reservasjonV3Tjeneste.taReservasjonMenSjekkLegacyFørst(
+                val reservasjon = reservasjonV3Tjeneste.taReservasjon(
                     reserverForId = innloggetBrukerId,
                     utføresAvId = innloggetBrukerId,
                     reservasjonsnøkkel = kandidatoppgave.reservasjonsnøkkel,

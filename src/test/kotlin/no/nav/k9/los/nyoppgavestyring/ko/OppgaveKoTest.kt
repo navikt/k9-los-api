@@ -107,7 +107,7 @@ class OppgaveKoTest : AbstractK9LosIntegrationTest() {
             saksbehandlerRepository.addSaksbehandler(
                 Saksbehandler(
                     id = null,
-                    brukerIdent = "Ident$saksbehandlerepost",
+                    navident = "Ident$saksbehandlerepost",
                     navn = "Navn for $saksbehandlerepost",
                     epost = saksbehandlerepost,
                     enhet = null

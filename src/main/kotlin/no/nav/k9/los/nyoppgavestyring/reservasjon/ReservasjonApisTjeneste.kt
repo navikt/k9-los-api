@@ -40,7 +40,7 @@ class ReservasjonApisTjeneste(
         val oppgaveNøkkel = oppgaveIdMedOverstyringDto.oppgaveNøkkel
 
         val reserverForSaksbehandler = saksbehandlerRepository.finnSaksbehandlerMedIdent(
-            oppgaveIdMedOverstyringDto.overstyrIdent ?: innloggetBruker.brukerIdent!!
+            oppgaveIdMedOverstyringDto.overstyrIdent ?: innloggetBruker.navident!!
         )!!
 
         val reservasjonV3 = transactionalManager.transaction { tx ->
@@ -50,7 +50,7 @@ class ReservasjonApisTjeneste(
                 oppgaveNøkkel.oppgaveEksternId
             )
 
-            reservasjonV3Tjeneste.forsøkReservasjonOgReturnerAktivMenSjekkLegacyFørst(
+            reservasjonV3Tjeneste.forsøkReservasjonOgReturnerAktiv(
                 reservasjonsnøkkel = oppgaveV3.reservasjonsnøkkel,
                 reserverForId = reserverForSaksbehandler.id!!,
                 gyldigFra = reserverFra,
@@ -228,7 +228,7 @@ class ReservasjonApisTjeneste(
         return reservasjonV3Tjeneste.hentAlleAktiveReservasjoner().flatMap { reservasjonMedOppgaver ->
             val saksbehandler =
                 saksbehandlerRepository.finnSaksbehandlerMedId(reservasjonMedOppgaver.reservasjonV3.reservertAv)!!
-            val saksbehandlerHarKode6Tilgang = pepClient.harTilgangTilKode6(saksbehandler.brukerIdent!!)
+            val saksbehandlerHarKode6Tilgang = pepClient.harTilgangTilKode6(saksbehandler.navident!!)
 
             if (innloggetBrukerHarKode6Tilgang != saksbehandlerHarKode6Tilgang) {
                 emptyList()
@@ -236,7 +236,7 @@ class ReservasjonApisTjeneste(
                 reservasjonMedOppgaver.oppgaverV3.map { oppgave ->
                     ReservasjonDto(
                         reservertAvEpost = saksbehandler.epost,
-                        reservertAvIdent = saksbehandler.brukerIdent!!,
+                        reservertAvIdent = saksbehandler.navident!!,
                         reservertAvId = saksbehandler.id!!,
                         reservertAvNavn = saksbehandler.navn,
                         saksnummer = oppgave.hentVerdi("saksnummer"), //TODO: Oppgaveagnostisk logikk. Løses antagelig ved å skrive om frontend i dette tilfellet
