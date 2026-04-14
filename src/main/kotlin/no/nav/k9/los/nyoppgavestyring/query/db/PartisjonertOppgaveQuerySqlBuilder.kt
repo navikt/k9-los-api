@@ -479,7 +479,7 @@ class PartisjonertOppgaveQuerySqlBuilder(
         }
     }
 
-    private fun kastOppgavefeltuttrykkTilDatatype(uttrykk: String, datatype: Datatype): String {
+    private fun castOppgavefeltuttrykkTilDatatype(uttrykk: String, datatype: Datatype): String {
         return when (datatype) {
             Datatype.INTEGER, Datatype.STRING -> uttrykk
             Datatype.TIMESTAMP -> "CAST($uttrykk AS timestamp)"
@@ -513,7 +513,7 @@ class PartisjonertOppgaveQuerySqlBuilder(
                 )
             )
             return Aggregeringsgrunnlag(
-                uttrykk = kastOppgavefeltuttrykkTilDatatype(sqlMedParams.query, datatype),
+                uttrykk = castOppgavefeltuttrykkTilDatatype(sqlMedParams.query, datatype),
                 datatype = datatype,
                 queryParams = sqlMedParams.queryParams
             )
@@ -530,7 +530,7 @@ class PartisjonertOppgaveQuerySqlBuilder(
         """.trimIndent()
 
         return Aggregeringsgrunnlag(
-            uttrykk = kastOppgavefeltuttrykkTilDatatype(baseUttrykk, datatype),
+            uttrykk = castOppgavefeltuttrykkTilDatatype(baseUttrykk, datatype),
             datatype = datatype,
             queryParams = mapOf("aggFeltkode$index" to feltKode)
         )
