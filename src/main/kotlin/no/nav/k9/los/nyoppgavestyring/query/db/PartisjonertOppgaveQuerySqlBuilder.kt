@@ -1,7 +1,9 @@
 package no.nav.k9.los.nyoppgavestyring.query.db
 
+import com.fasterxml.jackson.core.type.TypeReference
 import kotliquery.Row
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.util.InClauseHjelper
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.nyoppgavestyring.kodeverk.PersonBeskyttelseType
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Datatype
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveId
@@ -393,6 +395,10 @@ class PartisjonertOppgaveQuerySqlBuilder(
         }
     }
 
+    private fun erListetype(feltområde: String, feltkode: String): Boolean {
+        return felter[OmrådeOgKode(feltområde, feltkode)]?.oppgavefelt?.listetype ?: false
+    }
+
     // Select-felt støtte for effektive spørringer som returnerer OppgaveResultat
     private var selectFelter: List<EnkelSelectFelt> = emptyList()
     private val selectFeltParams: MutableMap<String, Any?> = mutableMapOf()
@@ -425,14 +431,25 @@ class PartisjonertOppgaveQuerySqlBuilder(
                     selectFeltParams.putAll(sqlMedParams.queryParams)
                 } else {
                     val verdifelt = verdifelt(felt.område, felt.kode)
-                    selectDeler.add("""
-                        (SELECT $verdifelt
-                         FROM oppgavefelt_verdi_part ov
-                         WHERE ov.oppgave_id = o.id
-                           AND ov.oppgavestatus IN ($oppgavestatusPlaceholder) ${ferdigstiltDatoBetingelse("ov")}
-                           AND ov.feltdefinisjon_ekstern_id = :selectFeltkode$index
-                         LIMIT 1) AS $alias
-                    """.trimIndent())
+                    if (erListetype(felt.område, felt.kode)) {
+                        selectDeler.add("""
+                            (SELECT json_agg(ov.verdi ORDER BY ov.verdi)
+                             FROM oppgavefelt_verdi_part ov
+                             WHERE ov.oppgave_id = o.id
+                               AND ov.oppgavestatus IN ($oppgavestatusPlaceholder) ${ferdigstiltDatoBetingelse("ov")}
+                               AND ov.feltdefinisjon_ekstern_id = :selectFeltkode$index
+                            ) AS $alias
+                        """.trimIndent())
+                    } else {
+                        selectDeler.add("""
+                            (SELECT $verdifelt
+                             FROM oppgavefelt_verdi_part ov
+                             WHERE ov.oppgave_id = o.id
+                               AND ov.oppgavestatus IN ($oppgavestatusPlaceholder) ${ferdigstiltDatoBetingelse("ov")}
+                               AND ov.feltdefinisjon_ekstern_id = :selectFeltkode$index
+                             LIMIT 1) AS $alias
+                        """.trimIndent())
+                    }
                     selectFeltParams["selectFeltkode$index"] = felt.kode
                 }
             } else {
@@ -468,7 +485,13 @@ class PartisjonertOppgaveQuerySqlBuilder(
 
         val feltverdier = selectFelter.mapIndexed { index, felt ->
             val alias = "felt_$index"
-            val verdi = row.stringOrNull(alias)
+            val verdi: Any? = if (felt.område != null && erListetype(felt.område, felt.kode)) {
+                row.stringOrNull(alias)?.let { jsonArray ->
+                    LosObjectMapper.instance.readValue(jsonArray, object : TypeReference<List<String>>() {})
+                } ?: emptyList<String>()
+            } else {
+                row.stringOrNull(alias)
+            }
 
             Oppgavefeltverdi(
                 område = felt.område,

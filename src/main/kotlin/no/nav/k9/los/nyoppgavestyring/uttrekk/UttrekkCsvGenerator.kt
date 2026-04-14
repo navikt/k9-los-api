@@ -31,11 +31,27 @@ class UttrekkCsvGenerator {
 
             for (rad in oppgaverader) {
                 val values = rad.map { feltverdi ->
-                    feltverdi.verdi?.toString() ?: ""
+                    csvEscape(tilCsvVerdi(feltverdi.verdi))
                 }
                 append(values.joinToString(","))
                 append("\n")
             }
+        }
+    }
+
+    private fun tilCsvVerdi(verdi: Any?): String {
+        return when (verdi) {
+            null -> ""
+            is List<*> -> verdi.joinToString(", ")
+            else -> verdi.toString()
+        }
+    }
+
+    private fun csvEscape(verdi: String): String {
+        return if (verdi.contains(',') || verdi.contains('"') || verdi.contains('\n')) {
+            "\"${verdi.replace("\"", "\"\"")}\""
+        } else {
+            verdi
         }
     }
 }
