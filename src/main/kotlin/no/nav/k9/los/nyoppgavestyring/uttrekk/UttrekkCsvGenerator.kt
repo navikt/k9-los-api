@@ -28,11 +28,19 @@ class UttrekkCsvGenerator {
 
             for (rad in rader) {
                 val values = rad.kolonner.map { kolonne ->
-                    csvEscape(kolonne?.toString() ?: "")
+                    csvEscape(tilCsvVerdi(kolonne))
                 }
                 append(values.joinToString(","))
                 append("\n")
             }
+        }
+    }
+
+    private fun tilCsvVerdi(verdi: Any?): String {
+        return when (verdi) {
+            null -> ""
+            is List<*> -> verdi.joinToString(", ")
+            else -> verdi.toString()
         }
     }
 
