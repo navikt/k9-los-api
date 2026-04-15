@@ -101,6 +101,7 @@ class OppgaveQueryRepository(
                       fd.visningsnavn as visningsnavn,
                       fd.tolkes_som as tolkes_som,
                       fd.kokriterie as kokriterie,
+                      fd.liste_type as liste_type,
                       fd.kodeverkreferanse as kodeverkreferanse,
                       fd.transient_feltutleder as transient_feltutleder
                     FROM Feltdefinisjon fd INNER JOIN Omrade fo ON (
@@ -123,6 +124,7 @@ class OppgaveQueryRepository(
                         visningsnavn = row.string("visningsnavn"),
                         tolkes_som = row.string("tolkes_som"),
                         kokriterie = row.boolean("kokriterie"),
+                        listetype = row.boolean("liste_type"),
                         verdiforklaringerErUttømmende = kodeverk?.uttømmende ?: false,
                         verdiforklaringer = kodeverk?.let {
                             it.verdier.map { kodeverkverdi ->
@@ -181,7 +183,7 @@ class OppgaveQueryRepository(
                 tolkes_som = "String",
                 kokriterie = false,
                 verdiforklaringerErUttømmende = true,
-                PersonBeskyttelseType.entries.map {
+                verdiforklaringer = PersonBeskyttelseType.entries.map {
                     Verdiforklaring(
                         verdi = it.kode,
                         visningsnavn = it.beskrivelse,
@@ -190,8 +192,14 @@ class OppgaveQueryRepository(
                     )
                 }
             ),
-            Oppgavefelt(null, "oppgavetype", "Oppgavetype", "String", true, false,
-                oppgavetypeNavn.map {
+            Oppgavefelt(
+                område = null,
+                kode = "oppgavetype",
+                visningsnavn = "Oppgavetype",
+                tolkes_som = "String",
+                kokriterie = true,
+                verdiforklaringerErUttømmende = false,
+                verdiforklaringer = oppgavetypeNavn.map {
                     Verdiforklaring(
                         verdi = it,
                         visningsnavn = it,
@@ -200,13 +208,29 @@ class OppgaveQueryRepository(
                     )
                 }
             ),
-            Oppgavefelt(null, "spørringstrategi", "Spørringstrategi", "String", false, true, Spørringstrategi.entries.map { Verdiforklaring(
-                it.name,
-                it.navn,
-                false,
-                null
-            ) }),
-            Oppgavefelt(null, "ferdigstiltDato", "Ferdigstilt dato", "Timestamp", false, false, emptyList()),
+            Oppgavefelt(
+                område = null,
+                kode = "spørringstrategi",
+                visningsnavn = "Spørringstrategi",
+                tolkes_som = "String",
+                kokriterie = false,
+                verdiforklaringerErUttømmende = true,
+                verdiforklaringer = Spørringstrategi.entries.map { Verdiforklaring(
+                    it.name,
+                    it.navn,
+                    false,
+                    null
+                ) }
+            ),
+            Oppgavefelt(
+                område = null,
+                kode = "ferdigstiltDato",
+                visningsnavn = "Ferdigstilt dato",
+                tolkes_som = "Timestamp",
+                kokriterie = false,
+                verdiforklaringerErUttømmende = false,
+                verdiforklaringer = emptyList()
+            ),
         ).map { OppgavefeltMedMer(it, null) }
 
         return (felterFraDatabase + standardfelter).sortedBy { it.oppgavefelt.visningsnavn }
