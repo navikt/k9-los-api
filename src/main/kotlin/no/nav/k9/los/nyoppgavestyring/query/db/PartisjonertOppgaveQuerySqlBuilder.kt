@@ -685,7 +685,7 @@ class PartisjonertOppgaveQuerySqlBuilder(
                         val joinAlias = "ov_gruppe_$index"
                         joinDeler.add(
                             """
-                            JOIN oppgavefelt_verdi_part $joinAlias
+                            LEFT JOIN oppgavefelt_verdi_part $joinAlias
                               ON $joinAlias.oppgave_id = o.id
                               AND $joinAlias.oppgavestatus IN ($oppgavestatusPlaceholder) ${ferdigstiltDatoBetingelse(joinAlias)}
                               AND $joinAlias.feltdefinisjon_ekstern_id = :grupperingFeltkode$index
