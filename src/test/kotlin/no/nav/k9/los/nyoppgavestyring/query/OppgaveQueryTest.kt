@@ -978,13 +978,13 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
         val queryService = get<OppgaveQueryService>()
         val resultat = queryService.query(QueryRequest(query))
 
-        assertThat(resultat).isInstanceOf(OppgaveQueryResultat.GruppertResultat::class.java)
-        val grupper = (resultat as OppgaveQueryResultat.GruppertResultat).rader
+        assertThat(resultat).isInstanceOf(OppgaveQueryResultat.AggregertResultat::class.java)
+        val grupper = (resultat as OppgaveQueryResultat.AggregertResultat).rader
         assertThat(grupper).hasSize(2)
-        val bt002 = grupper.first { it.grupperingsverdier.first().verdi == "BT-002" }
-        val bt004 = grupper.first { it.grupperingsverdier.first().verdi == "BT-004" }
-        assertThat(bt002.aggregeringer.first { it.type == Aggregeringsfunksjon.ANTALL }.verdi).isEqualTo("2")
-        assertThat(bt004.aggregeringer.first { it.type == Aggregeringsfunksjon.ANTALL }.verdi).isEqualTo("1")
+        val bt002 = grupper.first { it.feltverdier.first().verdi == "BT-002" }
+        val bt004 = grupper.first { it.feltverdier.first().verdi == "BT-004" }
+        assertThat(bt002.aggregeringer.first { it.type == Aggregeringsfunksjon.ANTALL }.verdi).isEqualTo(2L)
+        assertThat(bt004.aggregeringer.first { it.type == Aggregeringsfunksjon.ANTALL }.verdi).isEqualTo(1L)
     }
 
     @Test
@@ -1007,13 +1007,13 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
         val queryService = get<OppgaveQueryService>()
         val resultat = queryService.query(QueryRequest(query))
 
-        assertThat(resultat).isInstanceOf(OppgaveQueryResultat.GruppertResultat::class.java)
-        val grupper = (resultat as OppgaveQueryResultat.GruppertResultat).rader
+        assertThat(resultat).isInstanceOf(OppgaveQueryResultat.AggregertResultat::class.java)
+        val grupper = (resultat as OppgaveQueryResultat.AggregertResultat).rader
         assertThat(grupper).hasSize(2)
-        val aapen = grupper.first { it.grupperingsverdier.first().verdi == Oppgavestatus.AAPEN.kode }
-        val venter = grupper.first { it.grupperingsverdier.first().verdi == Oppgavestatus.VENTER.kode }
-        assertThat(aapen.aggregeringer.first { it.type == Aggregeringsfunksjon.ANTALL }.verdi).isEqualTo("2")
-        assertThat(venter.aggregeringer.first { it.type == Aggregeringsfunksjon.ANTALL }.verdi).isEqualTo("1")
+        val aapen = grupper.first { it.feltverdier.first().verdi == Oppgavestatus.AAPEN.kode }
+        val venter = grupper.first { it.feltverdier.first().verdi == Oppgavestatus.VENTER.kode }
+        assertThat(aapen.aggregeringer.first { it.type == Aggregeringsfunksjon.ANTALL }.verdi).isEqualTo(2L)
+        assertThat(venter.aggregeringer.first { it.type == Aggregeringsfunksjon.ANTALL }.verdi).isEqualTo(1L)
     }
 
     @Test
@@ -1063,9 +1063,9 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
         val queryService = get<OppgaveQueryService>()
         val resultat = queryService.query(QueryRequest(query))
 
-        assertThat(resultat).isInstanceOf(OppgaveQueryResultat.GruppertResultat::class.java)
-        val grupper = (resultat as OppgaveQueryResultat.GruppertResultat).rader
-        assertThat(grupper.map { it.grupperingsverdier.first().verdi }).containsExactly("BT-002", "BT-004")
+        assertThat(resultat).isInstanceOf(OppgaveQueryResultat.AggregertResultat::class.java)
+        val grupper = (resultat as OppgaveQueryResultat.AggregertResultat).rader
+        assertThat(grupper.map { it.feltverdier.first().verdi }).containsExactly("BT-002", "BT-004")
     }
 
     @Test
@@ -1093,10 +1093,10 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
 
         val resultat = get<OppgaveQueryService>().query(QueryRequest(query))
 
-        assertThat(resultat).isInstanceOf(OppgaveQueryResultat.GruppertResultat::class.java)
-        val grupper = (resultat as OppgaveQueryResultat.GruppertResultat).rader
-        assertThat(grupper.map { it.grupperingsverdier.first().verdi }).containsExactly("BT-001", "BT-002", "BT-003")
-        assertThat(grupper.map { it.aggregeringer.first { agg -> agg.type == Aggregeringsfunksjon.ANTALL }.verdi }).containsExactly("3", "2", "1")
+        assertThat(resultat).isInstanceOf(OppgaveQueryResultat.AggregertResultat::class.java)
+        val grupper = (resultat as OppgaveQueryResultat.AggregertResultat).rader
+        assertThat(grupper.map { it.feltverdier.first().verdi }).containsExactly("BT-001", "BT-002", "BT-003")
+        assertThat(grupper.map { it.aggregeringer.first { agg -> agg.type == Aggregeringsfunksjon.ANTALL }.verdi }).containsExactly(3L, 2L, 1L)
     }
 
     @Test
@@ -1124,9 +1124,9 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
 
         val resultat = get<OppgaveQueryService>().query(QueryRequest(query))
 
-        assertThat(resultat).isInstanceOf(OppgaveQueryResultat.GruppertResultat::class.java)
-        val grupper = (resultat as OppgaveQueryResultat.GruppertResultat).rader
-        assertThat(grupper.map { it.grupperingsverdier.first().verdi }).containsExactly("BT-001", "BT-003", "BT-002")
+        assertThat(resultat).isInstanceOf(OppgaveQueryResultat.AggregertResultat::class.java)
+        val grupper = (resultat as OppgaveQueryResultat.AggregertResultat).rader
+        assertThat(grupper.map { it.feltverdier.first().verdi }).containsExactly("BT-001", "BT-003", "BT-002")
     }
 
     @Test
@@ -1205,12 +1205,12 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
 
         val resultat = get<OppgaveQueryService>().query(QueryRequest(query))
 
-        assertThat(resultat).isInstanceOf(OppgaveQueryResultat.GruppertResultat::class.java)
-        val rad = (resultat as OppgaveQueryResultat.GruppertResultat).rader.single()
-        assertThat(rad.aggregeringer.first { it.type == Aggregeringsfunksjon.SUM }.verdi).isEqualTo("300")
-        assertThat(checkNotNull(rad.aggregeringer.first { it.type == Aggregeringsfunksjon.GJENNOMSNITT }.verdi)).startsWith("150")
-        assertThat(rad.aggregeringer.first { it.type == Aggregeringsfunksjon.MIN }.verdi).isEqualTo("100")
-        assertThat(rad.aggregeringer.first { it.type == Aggregeringsfunksjon.MAKS }.verdi).isEqualTo("200")
+        assertThat(resultat).isInstanceOf(OppgaveQueryResultat.AggregertResultat::class.java)
+        val rad = (resultat as OppgaveQueryResultat.AggregertResultat).rader.single()
+        assertThat(rad.aggregeringer.first { it.type == Aggregeringsfunksjon.SUM }.verdi).isEqualTo(300L)
+        assertThat(checkNotNull(rad.aggregeringer.first { it.type == Aggregeringsfunksjon.GJENNOMSNITT }.verdi)).isEqualTo(150L)
+        assertThat(rad.aggregeringer.first { it.type == Aggregeringsfunksjon.MIN }.verdi).isEqualTo(100L)
+        assertThat(rad.aggregeringer.first { it.type == Aggregeringsfunksjon.MAKS }.verdi).isEqualTo(200L)
     }
 
     @Test
@@ -1231,10 +1231,9 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
 
         val resultat = get<OppgaveQueryService>().query(QueryRequest(query))
 
-        assertThat(resultat).isInstanceOf(OppgaveQueryResultat.GruppertResultat::class.java)
-        val rad = (resultat as OppgaveQueryResultat.GruppertResultat).rader.single()
-        assertThat(checkNotNull(rad.aggregeringer.first { it.type == Aggregeringsfunksjon.MIN }.verdi)).startsWith("2023-05-14 08:15:00")
-        assertThat(checkNotNull(rad.aggregeringer.first { it.type == Aggregeringsfunksjon.MAKS }.verdi)).startsWith("2023-05-15 12:30:00")
+        val rad = (resultat as OppgaveQueryResultat.AggregertResultat).rader.single()
+        assertThat(checkNotNull(rad.aggregeringer.first { it.type == Aggregeringsfunksjon.MIN }.verdi)).isInstanceOf<String>().startsWith("2023-05-14 08:15:00")
+        assertThat(checkNotNull(rad.aggregeringer.first { it.type == Aggregeringsfunksjon.MAKS }.verdi)).isInstanceOf<String>().startsWith("2023-05-15 12:30:00")
     }
 
     @Test

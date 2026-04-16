@@ -9,7 +9,7 @@ import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Datatype
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.*
 import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.Aggregertverdi
-import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.GruppertOppgaveResultat
+import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.AggregertQueryResultat
 import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.OppgaveResultat
 import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.Oppgavefeltverdi
 import no.nav.k9.los.nyoppgavestyring.query.mapping.*
@@ -563,11 +563,11 @@ class PartisjonertOppgaveQuerySqlBuilder(
         felt: AggregertSelectFelt,
         aggregeringsuttrykk: String,
     ): String {
-        return when {
-            felt.funksjon in setOf(Aggregeringsfunksjon.ANTALL, Aggregeringsfunksjon.SUM, Aggregeringsfunksjon.GJENNOMSNITT) ->
+        return when (felt.funksjon) {
+            in setOf(Aggregeringsfunksjon.ANTALL, Aggregeringsfunksjon.SUM, Aggregeringsfunksjon.GJENNOMSNITT) ->
                 "CAST(($aggregeringsuttrykk) AS numeric)"
 
-            felt.funksjon in setOf(Aggregeringsfunksjon.MIN, Aggregeringsfunksjon.MAKS) && erNumeriskAggregering(felt) ->
+            in setOf(Aggregeringsfunksjon.MIN, Aggregeringsfunksjon.MAKS) if erNumeriskAggregering(felt) ->
                 "CAST(($aggregeringsuttrykk) AS numeric)"
 
             else -> "($aggregeringsuttrykk)"
@@ -731,7 +731,7 @@ class PartisjonertOppgaveQuerySqlBuilder(
             val alias = "agg_$index"
             val (uttrykk, params) = byggAggregeringsuttrykk(felt, index)
             grupperingParams.putAll(params)
-            selectDeler.add("($uttrykk)::text AS $alias")
+            selectDeler.add("($uttrykk) AS $alias")
             aggregeringsOrderByUttrykk[index] = lagAggregeringsOrderByUttrykk(felt, uttrykk)
         }
 
@@ -743,8 +743,8 @@ class PartisjonertOppgaveQuerySqlBuilder(
         orderByParams.clear()
     }
 
-    override fun mapRowTilGruppertResultat(row: Row): GruppertOppgaveResultat {
-        val grupperingsverdier = grupperingsFelter.mapIndexed { index, felt ->
+    override fun mapRowTilAggregertResultat(row: Row): AggregertQueryResultat {
+        val feltverdier = grupperingsFelter.mapIndexed { index, felt ->
             val alias = "gruppe_$index"
             Oppgavefeltverdi(
                 område = felt.område,
@@ -758,11 +758,11 @@ class PartisjonertOppgaveQuerySqlBuilder(
                 type = felt.funksjon,
                 område = felt.område,
                 kode = felt.kode,
-                verdi = row.stringOrNull(alias)
+                verdi = row.any(alias)
             )
         }
-        return GruppertOppgaveResultat(
-            grupperingsverdier = grupperingsverdier,
+        return AggregertQueryResultat(
+            feltverdier = feltverdier,
             aggregeringer = aggregeringer,
         )
     }

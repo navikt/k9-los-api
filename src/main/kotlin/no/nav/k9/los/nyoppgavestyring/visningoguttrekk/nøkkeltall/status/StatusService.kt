@@ -6,14 +6,10 @@ import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
 import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.*
 import no.nav.k9.los.nyoppgavestyring.query.mapping.EksternFeltverdiOperator
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 
 class StatusService(
     private val queryService: OppgaveQueryService,
 ) {
-    private val log: Logger = LoggerFactory.getLogger(StatusService::class.java)
-
     private val punsjtyper = setOf(
         BehandlingType.PAPIRSØKNAD,
         BehandlingType.DIGITAL_SØKNAD,
@@ -46,12 +42,12 @@ class StatusService(
             ),
         )
         val resultat = queryService.query(QueryRequest(oppgaveQuery))
-        val gruppert = (resultat as no.nav.k9.los.nyoppgavestyring.query.dto.resultat.OppgaveQueryResultat.GruppertResultat).rader
+        val gruppert = (resultat as no.nav.k9.los.nyoppgavestyring.query.dto.resultat.OppgaveQueryResultat.AggregertResultat).rader
 
         val alleGrupper = gruppert.mapNotNull { rad ->
-            val behandlingTypeKode = rad.grupperingsverdier.firstOrNull()?.verdi?.toString() ?: return@mapNotNull null
+            val behandlingTypeKode = rad.feltverdier.firstOrNull()?.verdi?.toString() ?: return@mapNotNull null
             val behandlingType = BehandlingType.fraKode(behandlingTypeKode)
-            val antall = checkNotNull(rad.aggregeringer.first { it.type == Aggregeringsfunksjon.ANTALL }.verdi).toLong()
+            val antall = checkNotNull(rad.aggregeringer.first { it.type == Aggregeringsfunksjon.ANTALL }.verdi) as Long
             behandlingType to antall.toInt()
         }
 

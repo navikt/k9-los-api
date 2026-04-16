@@ -124,15 +124,15 @@ class DagensTallService(
         }
         val query = OppgaveQuery(filtere = filtere, select = selectFelter)
         val resultat = queryService.query(QueryRequest(query))
-        if (resultat !is OppgaveQueryResultat.GruppertResultat) return emptyList()
+        if (resultat !is OppgaveQueryResultat.AggregertResultat) return emptyList()
 
         return resultat.rader.map { rad ->
             TelleRad(
-                ytelsestype = rad.grupperingsverdier.find { it.kode == "ytelsestype" }?.verdi?.toString(),
-                oppgavetype = rad.grupperingsverdier.find { it.kode == "oppgavetype" }?.verdi?.toString(),
-                behandlingTypekode = rad.grupperingsverdier.find { it.kode == "behandlingTypekode" }?.verdi?.toString(),
-                helautomatisk = if (medHelautomatisk) rad.grupperingsverdier.find { it.kode == "helautomatiskBehandlet" }?.verdi?.toString() else null,
-                antall = checkNotNull(rad.aggregeringer.first { it.type == Aggregeringsfunksjon.ANTALL }.verdi).toLong()
+                ytelsestype = rad.feltverdier.find { it.kode == "ytelsestype" }?.verdi?.toString(),
+                oppgavetype = rad.feltverdier.find { it.kode == "oppgavetype" }?.verdi?.toString(),
+                behandlingTypekode = rad.feltverdier.find { it.kode == "behandlingTypekode" }?.verdi?.toString(),
+                helautomatisk = if (medHelautomatisk) rad.feltverdier.find { it.kode == "helautomatiskBehandlet" }?.verdi?.toString() else null,
+                antall = checkNotNull(rad.aggregeringer.first { it.type == Aggregeringsfunksjon.ANTALL }.verdi) as Long
             )
         }
     }

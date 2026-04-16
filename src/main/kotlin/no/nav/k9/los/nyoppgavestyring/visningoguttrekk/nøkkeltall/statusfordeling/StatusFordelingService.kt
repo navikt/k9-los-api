@@ -88,11 +88,11 @@ class StatusFordelingService(val queryService: OppgaveQueryService) {
             ),
         )
         val resultat = queryService.query(QueryRequest(query))
-        if (resultat !is OppgaveQueryResultat.GruppertResultat) return emptyMap()
+        if (resultat !is OppgaveQueryResultat.AggregertResultat) return emptyMap()
 
         return resultat.rader.associate { rad ->
-            val status = rad.grupperingsverdier.first().verdi?.toString() ?: ""
-            val antall = checkNotNull(rad.aggregeringer.first { it.type == Aggregeringsfunksjon.ANTALL }.verdi).toLong()
+            val status = rad.feltverdier.first().verdi?.toString() ?: ""
+            val antall = checkNotNull(rad.aggregeringer.first { it.type == Aggregeringsfunksjon.ANTALL }.verdi) as Long
             status to antall
         }
     }

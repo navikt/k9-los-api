@@ -66,12 +66,8 @@ class UttrekkTjeneste(
         var resultatJson: String?
         var antall: Int
         when (resultat) {
-            is OppgaveQueryResultat.AntallResultat -> {
-                antall = resultat.antall.toInt()
-                resultatJson = null
-            }
             is OppgaveQueryResultat.SelectResultat,
-            is OppgaveQueryResultat.GruppertResultat -> {
+            is OppgaveQueryResultat.AggregertResultat -> {
                 val uttrekkRader = UttrekkResultatMapper.tilUttrekkRader(uttrekk.query.select, resultat)
                 antall = uttrekkRader.size
                 resultatJson = LosObjectMapper.instance.writeValueAsString(uttrekkRader)

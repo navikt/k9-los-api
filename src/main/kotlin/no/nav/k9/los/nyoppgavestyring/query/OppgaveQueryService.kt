@@ -14,6 +14,7 @@ import no.nav.k9.los.nyoppgavestyring.query.dto.query.Aggregeringsfunksjon
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.AggregertSelectFelt
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.EksternIdSelectFelt
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveIdSelectFelt
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
 import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.OppgaveQueryResultat
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
@@ -54,13 +55,14 @@ class OppgaveQueryService(
     @WithSpan
     fun queryForAntall(request: QueryRequest, now: LocalDateTime = LocalDateTime.now()): Long {
         val antallRequest = request.copy(
-            oppgaveQuery = request.oppgaveQuery.copy(
+            oppgaveQuery = OppgaveQuery(
+                filtere = request.oppgaveQuery.filtere,
                 select = listOf(AggregertSelectFelt(Aggregeringsfunksjon.ANTALL)),
                 order = emptyList(),
             )
         )
         val resultat = query(antallRequest, now)
-        return (resultat as OppgaveQueryResultat.AntallResultat).antall
+        return (resultat as OppgaveQueryResultat.AggregertResultat).rader.first().aggregeringer.first().verdi as Long
     }
 
     @WithSpan
