@@ -659,6 +659,7 @@ class PartisjonertOppgaveQuerySqlBuilder(
 
         val selectDeler = mutableListOf<String>()
         val groupByDeler = mutableListOf<String>()
+        val joinDeler = mutableListOf<String>()
 
         grupperingsFelter.forEachIndexed { index, felt ->
             val alias = "gruppe_$index"
@@ -681,16 +682,16 @@ class PartisjonertOppgaveQuerySqlBuilder(
                 } else {
                     val verdifelt = verdifelt(felt.område, felt.kode)
                     if (erListetype(felt.område, felt.kode)) {
-                        selectDeler.add(
+                        val joinAlias = "ov_gruppe_$index"
+                        joinDeler.add(
                             """
-                            (SELECT json_agg(ov.verdi ORDER BY ov.verdi)
-                             FROM oppgavefelt_verdi_part ov
-                             WHERE ov.oppgave_id = o.id
-                               AND ov.oppgavestatus IN ($oppgavestatusPlaceholder) ${ferdigstiltDatoBetingelse("ov")}
-                               AND ov.feltdefinisjon_ekstern_id = :grupperingFeltkode$index
-                            ) AS $alias
+                            JOIN oppgavefelt_verdi_part $joinAlias
+                              ON $joinAlias.oppgave_id = o.id
+                              AND $joinAlias.oppgavestatus IN ($oppgavestatusPlaceholder) ${ferdigstiltDatoBetingelse(joinAlias)}
+                              AND $joinAlias.feltdefinisjon_ekstern_id = :grupperingFeltkode$index
                         """.trimIndent()
                         )
+                        selectDeler.add("$joinAlias.verdi AS $alias")
                     } else {
                         selectDeler.add(
                             """
@@ -720,6 +721,10 @@ class PartisjonertOppgaveQuerySqlBuilder(
             }
             grupperingsAlias[OmrådeOgKode(felt.område, felt.kode)] = alias
             groupByDeler.add(alias)
+        }
+
+        if (joinDeler.isNotEmpty()) {
+            fromClause += " " + joinDeler.joinToString(" ")
         }
 
         aggregerteFelter.forEachIndexed { index, felt ->

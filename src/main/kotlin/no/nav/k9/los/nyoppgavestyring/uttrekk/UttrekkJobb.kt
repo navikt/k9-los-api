@@ -26,6 +26,7 @@ class UttrekkJobb(
                 resultat
             )
         } catch (e: Exception) {
+            log.warn("Kjøring av uttrekk med id {} feilet", uttrekkId, e)
             uttrekkTjeneste.feilUttrekk(uttrekkId, e.message)
         }
     }
