@@ -5,8 +5,7 @@ import no.nav.k9.los.nyoppgavestyring.query.dto.query.Aggregeringsfunksjon
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelSelectFelt
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.Oppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.AggregertSelectFelt
-import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.AggregertQueryResultat
-import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.OppgaveResultat
+import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.OppgaveQueryRad
 import no.nav.k9.los.nyoppgavestyring.query.mapping.CombineOperator
 import no.nav.k9.los.nyoppgavestyring.query.mapping.FeltverdiOperator
 
@@ -32,8 +31,7 @@ interface OppgaveQuerySqlBuilder {
 
     fun mapRowTilId(row: Row): OppgaveId
     fun mapRowTilEksternId(row: Row): EksternOppgaveId
-    fun mapRowTilOppgaveResultat(row: Row): OppgaveResultat
-    fun mapRowTilAggregertResultat(row: Row): AggregertQueryResultat
+    fun mapRowTilRad(row: Row): OppgaveQueryRad
 
     /** Skal bare brukes til debugging, siden parametrene settes inn ukritisk */
     fun unsafeDebug(): String {

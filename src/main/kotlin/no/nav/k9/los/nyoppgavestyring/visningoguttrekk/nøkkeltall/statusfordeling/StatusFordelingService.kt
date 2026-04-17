@@ -14,7 +14,6 @@ import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelSelectFelt
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.Oppgavefilter
-import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.OppgaveQueryResultat
 import no.nav.k9.los.nyoppgavestyring.query.mapping.EksternFeltverdiOperator
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.KodeOgNavn
 import org.slf4j.Logger
@@ -88,9 +87,8 @@ class StatusFordelingService(val queryService: OppgaveQueryService) {
             ),
         )
         val resultat = queryService.query(QueryRequest(query))
-        if (resultat !is OppgaveQueryResultat.AggregertResultat) return emptyMap()
 
-        return resultat.rader.associate { rad ->
+        return resultat.associate { rad ->
             val status = rad.feltverdier.first().verdi?.toString() ?: ""
             val antall = checkNotNull(rad.aggregeringer.first { it.type == Aggregeringsfunksjon.ANTALL }.verdi) as Long
             status to antall

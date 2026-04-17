@@ -2,7 +2,7 @@ package no.nav.k9.los.nyoppgavestyring.uttrekk
 
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.nyoppgavestyring.lagretsok.LagretSøkRepository
-import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.OppgaveQueryResultat
+import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.OppgaveQueryRad
 
 class UttrekkTjeneste(
     private val uttrekkRepository: UttrekkRepository,
@@ -59,26 +59,13 @@ class UttrekkTjeneste(
         return uttrekk
     }
 
-    fun fullførUttrekk(id: Long, resultat: OppgaveQueryResultat): Uttrekk {
+    fun fullførUttrekk(id: Long, resultat: List<OppgaveQueryRad>): Uttrekk {
         val uttrekk = uttrekkRepository.hent(id)
             ?: throw IllegalArgumentException("Uttrekk med id $id finnes ikke")
 
-        var resultatJson: String?
-        var antall: Int
-        when (resultat) {
-            is OppgaveQueryResultat.SelectResultat,
-            is OppgaveQueryResultat.AggregertResultat -> {
-                val uttrekkRader = UttrekkResultatMapper.tilUttrekkRader(uttrekk.query.select, resultat)
-                antall = uttrekkRader.size
-                resultatJson = LosObjectMapper.instance.writeValueAsString(uttrekkRader)
-            }
-            else -> {
-                uttrekk.markerSomFeilet("Ugyldig resultat")
-                uttrekkRepository.oppdater(uttrekk, null)
-                return uttrekk
-            }
-        }
-        uttrekk.markerSomFullført(antall)
+        val uttrekkRader = UttrekkResultatMapper.tilUttrekkRader(uttrekk.query.select, resultat)
+        val resultatJson = LosObjectMapper.instance.writeValueAsString(uttrekkRader)
+        uttrekk.markerSomFullført(uttrekkRader.size)
         uttrekkRepository.oppdater(uttrekk, resultatJson)
         return uttrekk
     }

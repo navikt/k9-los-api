@@ -14,7 +14,7 @@ import no.nav.k9.los.nyoppgavestyring.query.dto.felter.Oppgavefelt
 import no.nav.k9.los.nyoppgavestyring.query.dto.felter.Oppgavefelter
 import no.nav.k9.los.nyoppgavestyring.query.dto.felter.Verdiforklaring
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.*
-import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.OppgaveQueryResultat
+import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.OppgaveQueryRad
 import no.nav.k9.los.nyoppgavestyring.query.mapping.OppgaveQueryToSqlMapper
 import no.nav.k9.los.nyoppgavestyring.query.mapping.transientfeltutleder.GyldigeTransientFeltutleder
 import org.slf4j.Logger
@@ -212,10 +212,34 @@ class OppgaveQueryRepository(
     }
 
     @WithSpan
+    fun queryForOppgaveId(
+        tx: TransactionalSession,
+        request: QueryRequest,
+        now: LocalDateTime
+    ): List<OppgaveId> {
+        val felter = hentAlleFelterMedMer(tx, medKodeverk = false)
+            .associateBy { felt -> OmrådeOgKode(felt.oppgavefelt.område, felt.oppgavefelt.kode) }
+        val sqlBuilder = OppgaveQueryToSqlMapper.toSqlOppgaveQuery(request, felter, now)
+        return queryForOppgaveId(tx, sqlBuilder)
+    }
+
+    @WithSpan
+    fun queryForEksternId(
+        tx: TransactionalSession,
+        request: QueryRequest,
+        now: LocalDateTime
+    ): List<EksternOppgaveId> {
+        val felter = hentAlleFelterMedMer(tx, medKodeverk = false)
+            .associateBy { felt -> OmrådeOgKode(felt.oppgavefelt.område, felt.oppgavefelt.kode) }
+        val sqlBuilder = OppgaveQueryToSqlMapper.toSqlOppgaveQuery(request, felter, now)
+        return queryForEksternId(tx, sqlBuilder)
+    }
+
+    @WithSpan
     fun query(
         request: QueryRequest,
         now: LocalDateTime
-    ): OppgaveQueryResultat {
+    ): List<OppgaveQueryRad> {
         return using(sessionOf(datasource)) {
             it.transaction { tx -> query(tx, request, now) }
         }
@@ -226,43 +250,16 @@ class OppgaveQueryRepository(
         tx: TransactionalSession,
         request: QueryRequest,
         now: LocalDateTime
-    ): OppgaveQueryResultat {
+    ): List<OppgaveQueryRad> {
         val felter = hentAlleFelterMedMer(tx, medKodeverk = false)
             .associateBy { felt -> OmrådeOgKode(felt.oppgavefelt.område, felt.oppgavefelt.kode) }
 
-        val enkelSelectFelter = request.oppgaveQuery.select.filterIsInstance<EnkelSelectFelt>()
-        val aggregerteFelter = request.oppgaveQuery.select.filterIsInstance<AggregertSelectFelt>()
-        val oppgaveIdSelect = request.oppgaveQuery.select.singleOrNull() == OppgaveIdSelectFelt
-        val eksternIdSelect = request.oppgaveQuery.select.singleOrNull() == EksternIdSelectFelt
-
-        return when {
-            oppgaveIdSelect -> {
-                val sqlBuilder = OppgaveQueryToSqlMapper.toSqlOppgaveQuery(request, felter, now)
-                val ider = queryForOppgaveId(tx, sqlBuilder)
-                OppgaveQueryResultat.OppgaveIdResultat(ider)
-            }
-            eksternIdSelect -> {
-                val sqlBuilder = OppgaveQueryToSqlMapper.toSqlOppgaveQuery(request, felter, now)
-                val ider = queryForEksternId(tx, sqlBuilder)
-                OppgaveQueryResultat.EksternIdResultat(ider)
-            }
-            aggregerteFelter.isNotEmpty() -> {
-                val sqlBuilder = OppgaveQueryToSqlMapper.toSql(request, felter, now)
-                val rader = tx.run(
-                    queryOf(sqlBuilder.getQuery(), sqlBuilder.getParams())
-                        .map(sqlBuilder::mapRowTilAggregertResultat).asList
-                )
-                OppgaveQueryResultat.AggregertResultat(rader)
-            }
-            else -> {
-                val sqlBuilder = OppgaveQueryToSqlMapper.toSql(request, felter, now)
-                val rader = tx.run(
-                    queryOf(sqlBuilder.getQuery(), sqlBuilder.getParams())
-                        .map(sqlBuilder::mapRowTilOppgaveResultat).asList
-                )
-                OppgaveQueryResultat.SelectResultat(rader)
-            }
-        }
+        val sqlBuilder = OppgaveQueryToSqlMapper.toSql(request, felter, now)
+        loggSqlDebug(sqlBuilder)
+        return tx.run(
+            queryOf(sqlBuilder.getQuery(), sqlBuilder.getParams())
+                .map(sqlBuilder::mapRowTilRad).asList
+        )
     }
 
     private fun loggSqlDebug(oppgaveQuery: OppgaveQuerySqlBuilder) {

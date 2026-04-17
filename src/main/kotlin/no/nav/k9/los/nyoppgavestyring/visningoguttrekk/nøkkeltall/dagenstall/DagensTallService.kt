@@ -16,7 +16,6 @@ import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelSelectFelt
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.Oppgavefilter
-import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.OppgaveQueryResultat
 import no.nav.k9.los.nyoppgavestyring.query.mapping.EksternFeltverdiOperator
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.KodeOgNavn
 import org.slf4j.Logger
@@ -124,9 +123,8 @@ class DagensTallService(
         }
         val query = OppgaveQuery(filtere = filtere, select = selectFelter)
         val resultat = queryService.query(QueryRequest(query))
-        if (resultat !is OppgaveQueryResultat.AggregertResultat) return emptyList()
 
-        return resultat.rader.map { rad ->
+        return resultat.map { rad ->
             TelleRad(
                 ytelsestype = rad.feltverdier.find { it.kode == "ytelsestype" }?.verdi?.toString(),
                 oppgavetype = rad.feltverdier.find { it.kode == "oppgavetype" }?.verdi?.toString(),

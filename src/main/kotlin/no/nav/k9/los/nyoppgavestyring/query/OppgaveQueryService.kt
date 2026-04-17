@@ -12,10 +12,8 @@ import no.nav.k9.los.nyoppgavestyring.query.db.PartisjonertOppgaveId
 import no.nav.k9.los.nyoppgavestyring.query.dto.felter.Oppgavefelter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.Aggregeringsfunksjon
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.AggregertSelectFelt
-import no.nav.k9.los.nyoppgavestyring.query.dto.query.EksternIdSelectFelt
-import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveIdSelectFelt
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
-import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.OppgaveQueryResultat
+import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.OppgaveQueryRad
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import java.time.LocalDateTime
@@ -38,13 +36,8 @@ class OppgaveQueryService(
     @WithSpan
     fun queryForOppgave(tx: TransactionalSession, request: QueryRequest): List<Oppgave> {
         val now = LocalDateTime.now()
-        val oppgaveIdRequest = request.copy(
-            oppgaveQuery = request.oppgaveQuery.copy(
-                select = listOf(OppgaveIdSelectFelt),
-            )
-        )
-        val resultat = oppgaveQueryRepository.query(tx, oppgaveIdRequest, now) as OppgaveQueryResultat.OppgaveIdResultat
-        return resultat.ider.map { oppgaveId ->
+        val ider = oppgaveQueryRepository.queryForOppgaveId(tx, request, now)
+        return ider.map { oppgaveId ->
             when (oppgaveId) {
                 is OppgaveV3Id -> oppgaveRepository.hentOppgaveForId(tx, oppgaveId, now)
                 is PartisjonertOppgaveId -> partisjonertOppgaveRepository.hentOppgaveForId(oppgaveId, tx)
@@ -61,12 +54,12 @@ class OppgaveQueryService(
                 order = emptyList(),
             )
         )
-        val resultat = query(antallRequest, now)
-        return (resultat as OppgaveQueryResultat.AggregertResultat).rader.first().aggregeringer.first().verdi as Long
+        val rader = query(antallRequest, now)
+        return rader.first().aggregeringer.first().verdi as Long
     }
 
     @WithSpan
-    fun query(request: QueryRequest, now: LocalDateTime = LocalDateTime.now()): OppgaveQueryResultat {
+    fun query(request: QueryRequest, now: LocalDateTime = LocalDateTime.now()): List<OppgaveQueryRad> {
         return using(sessionOf(datasource)) {
             it.transaction { tx -> oppgaveQueryRepository.query(tx, request, now) }
         }
@@ -75,13 +68,9 @@ class OppgaveQueryService(
     @WithSpan
     fun queryForOppgaveEksternId(request: QueryRequest): List<EksternOppgaveId> {
         val now = LocalDateTime.now()
-        val eksternIdRequest = request.copy(
-            oppgaveQuery = request.oppgaveQuery.copy(
-                select = listOf(EksternIdSelectFelt),
-            )
-        )
-        val resultat = query(eksternIdRequest, now) as OppgaveQueryResultat.EksternIdResultat
-        return resultat.ider
+        return using(sessionOf(datasource)) {
+            it.transaction { tx -> oppgaveQueryRepository.queryForEksternId(tx, request, now) }
+        }
     }
 
     @WithSpan

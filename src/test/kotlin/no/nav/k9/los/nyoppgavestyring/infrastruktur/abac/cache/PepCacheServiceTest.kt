@@ -35,7 +35,6 @@ import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelSelectFelt
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
-import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.OppgaveQueryResultat
 import no.nav.k9.los.nyoppgavestyring.query.mapping.EksternFeltverdiOperator
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import no.nav.k9.sak.typer.AktørId
@@ -393,10 +392,7 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
             ),
         )
 
-        return when (resultat) {
-            is OppgaveQueryResultat.SelectResultat -> resultat.rader
-            else -> emptyList()
-        }
+        return resultat
     }
 
     private fun lagBehandlingprosessEventMedStatus(

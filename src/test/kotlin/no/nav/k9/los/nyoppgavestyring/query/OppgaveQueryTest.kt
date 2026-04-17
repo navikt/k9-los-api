@@ -18,7 +18,6 @@ import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.nyoppgavestyring.kodeverk.PersonBeskyttelseType
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.*
-import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.OppgaveQueryResultat
 import no.nav.k9.los.nyoppgavestyring.query.mapping.CombineOperator
 import no.nav.k9.los.nyoppgavestyring.query.mapping.EksternFeltverdiOperator
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
@@ -914,7 +913,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
                 endretTidspunkt = LocalDateTime.of(2025, 1, 1, 0, 0, 0)
             )
 
-        val resultat = executeQuery(
+        val resultat = get<OppgaveQueryService>().queryForOppgaveEksternId(
             QueryRequest(
                 OppgaveQuery(
                     filtere = listOf(
@@ -923,9 +922,8 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
                     ),
                     select = listOf(EksternIdSelectFelt),
                 )
-            ), LocalDateTime.now())
-        resultat as OppgaveQueryResultat.EksternIdResultat
-        assertThat(resultat.ider.map { it.eksternId }).containsOnly(oppgaveLukketFørsteJanuar.eksternId)
+            ))
+        assertThat(resultat.map { it.eksternId }).containsOnly(oppgaveLukketFørsteJanuar.eksternId)
     }
 
     @Test
@@ -950,9 +948,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
             )
         )
 
-        assertThat(resultat).isInstanceOf(OppgaveQueryResultat.SelectResultat::class.java)
-        resultat as OppgaveQueryResultat.SelectResultat
-        val ferdigstiltVerdi = resultat.rader.first().felter.first { it.kode == "ferdigstiltDato" }.verdi
+        val ferdigstiltVerdi = resultat.first().feltverdier.first { it.kode == "ferdigstiltDato" }.verdi
         assertThat(ferdigstiltVerdi).isNotNull()
         assertThat(ferdigstiltVerdi).isEqualTo("2025-03-15")
     }
@@ -978,8 +974,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
         val queryService = get<OppgaveQueryService>()
         val resultat = queryService.query(QueryRequest(query))
 
-        assertThat(resultat).isInstanceOf(OppgaveQueryResultat.AggregertResultat::class.java)
-        val grupper = (resultat as OppgaveQueryResultat.AggregertResultat).rader
+        val grupper = resultat
         assertThat(grupper).hasSize(2)
         val bt002 = grupper.first { it.feltverdier.first().verdi == "BT-002" }
         val bt004 = grupper.first { it.feltverdier.first().verdi == "BT-004" }
@@ -1007,8 +1002,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
         val queryService = get<OppgaveQueryService>()
         val resultat = queryService.query(QueryRequest(query))
 
-        assertThat(resultat).isInstanceOf(OppgaveQueryResultat.AggregertResultat::class.java)
-        val grupper = (resultat as OppgaveQueryResultat.AggregertResultat).rader
+        val grupper = resultat
         assertThat(grupper).hasSize(2)
         val aapen = grupper.first { it.feltverdier.first().verdi == Oppgavestatus.AAPEN.kode }
         val venter = grupper.first { it.feltverdier.first().verdi == Oppgavestatus.VENTER.kode }
@@ -1063,8 +1057,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
         val queryService = get<OppgaveQueryService>()
         val resultat = queryService.query(QueryRequest(query))
 
-        assertThat(resultat).isInstanceOf(OppgaveQueryResultat.AggregertResultat::class.java)
-        val grupper = (resultat as OppgaveQueryResultat.AggregertResultat).rader
+        val grupper = resultat
         assertThat(grupper.map { it.feltverdier.first().verdi }).containsExactly("BT-002", "BT-004")
     }
 
@@ -1093,8 +1086,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
 
         val resultat = get<OppgaveQueryService>().query(QueryRequest(query))
 
-        assertThat(resultat).isInstanceOf(OppgaveQueryResultat.AggregertResultat::class.java)
-        val grupper = (resultat as OppgaveQueryResultat.AggregertResultat).rader
+        val grupper = resultat
         assertThat(grupper.map { it.feltverdier.first().verdi }).containsExactly("BT-001", "BT-002", "BT-003")
         assertThat(grupper.map { it.aggregeringer.first { agg -> agg.type == Aggregeringsfunksjon.ANTALL }.verdi }).containsExactly(3L, 2L, 1L)
     }
@@ -1124,8 +1116,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
 
         val resultat = get<OppgaveQueryService>().query(QueryRequest(query))
 
-        assertThat(resultat).isInstanceOf(OppgaveQueryResultat.AggregertResultat::class.java)
-        val grupper = (resultat as OppgaveQueryResultat.AggregertResultat).rader
+        val grupper = resultat
         assertThat(grupper.map { it.feltverdier.first().verdi }).containsExactly("BT-001", "BT-003", "BT-002")
     }
 
@@ -1205,8 +1196,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
 
         val resultat = get<OppgaveQueryService>().query(QueryRequest(query))
 
-        assertThat(resultat).isInstanceOf(OppgaveQueryResultat.AggregertResultat::class.java)
-        val rad = (resultat as OppgaveQueryResultat.AggregertResultat).rader.single()
+        val rad = resultat.single()
         assertThat(rad.aggregeringer.first { it.type == Aggregeringsfunksjon.SUM }.verdi).isEqualTo(300L)
         assertThat(checkNotNull(rad.aggregeringer.first { it.type == Aggregeringsfunksjon.GJENNOMSNITT }.verdi)).isEqualTo(150.0)
         assertThat(rad.aggregeringer.first { it.type == Aggregeringsfunksjon.MIN }.verdi).isEqualTo(100L)
@@ -1231,7 +1221,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
 
         val resultat = get<OppgaveQueryService>().query(QueryRequest(query))
 
-        val rad = (resultat as OppgaveQueryResultat.AggregertResultat).rader.single()
+        val rad = resultat.single()
         assertThat(checkNotNull(rad.aggregeringer.first { it.type == Aggregeringsfunksjon.MIN }.verdi)).isInstanceOf<String>().startsWith("2023-05-14 08:15:00")
         assertThat(checkNotNull(rad.aggregeringer.first { it.type == Aggregeringsfunksjon.MAKS }.verdi)).isInstanceOf<String>().startsWith("2023-05-15 12:30:00")
     }

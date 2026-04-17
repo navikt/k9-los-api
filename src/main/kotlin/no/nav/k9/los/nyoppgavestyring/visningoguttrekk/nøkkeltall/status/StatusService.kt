@@ -42,9 +42,8 @@ class StatusService(
             ),
         )
         val resultat = queryService.query(QueryRequest(oppgaveQuery))
-        val gruppert = (resultat as no.nav.k9.los.nyoppgavestyring.query.dto.resultat.OppgaveQueryResultat.AggregertResultat).rader
 
-        val alleGrupper = gruppert.mapNotNull { rad ->
+        val alleGrupper = resultat.mapNotNull { rad ->
             val behandlingTypeKode = rad.feltverdier.firstOrNull()?.verdi?.toString() ?: return@mapNotNull null
             val behandlingType = BehandlingType.fraKode(behandlingTypeKode)
             val antall = checkNotNull(rad.aggregeringer.first { it.type == Aggregeringsfunksjon.ANTALL }.verdi) as Long

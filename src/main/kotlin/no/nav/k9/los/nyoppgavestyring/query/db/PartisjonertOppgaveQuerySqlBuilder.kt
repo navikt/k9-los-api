@@ -9,8 +9,7 @@ import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Datatype
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.*
 import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.Aggregertverdi
-import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.AggregertQueryResultat
-import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.OppgaveResultat
+import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.OppgaveQueryRad
 import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.Oppgavefeltverdi
 import no.nav.k9.los.nyoppgavestyring.query.mapping.*
 import no.nav.k9.los.nyoppgavestyring.spi.felter.*
@@ -568,7 +567,7 @@ class PartisjonertOppgaveQuerySqlBuilder(
         }
     }
 
-    // Select-felt støtte for effektive spørringer som returnerer OppgaveResultat
+    // Select-felt støtte for effektive spørringer som returnerer OppgaveQueryRad
     private var selectFelter: List<EnkelSelectFelt> = emptyList()
     private val selectFeltParams: MutableMap<String, Any?> = mutableMapOf()
 
@@ -737,28 +736,50 @@ class PartisjonertOppgaveQuerySqlBuilder(
         orderByParams.clear()
     }
 
-    override fun mapRowTilAggregertResultat(row: Row): AggregertQueryResultat {
-        val feltverdier = grupperingsFelter.mapIndexed { index, felt ->
-            val alias = "gruppe_$index"
+    override fun mapRowTilRad(row: Row): OppgaveQueryRad {
+        // Aggregert modus hvis medAggregering er brukt; ellers select-modus
+        if (grupperingsFelter.isNotEmpty() || aggregerteFelter.isNotEmpty()) {
+            val feltverdier = grupperingsFelter.mapIndexed { index, felt ->
+                val alias = "gruppe_$index"
+                Oppgavefeltverdi(
+                    område = felt.område,
+                    kode = felt.kode,
+                    verdi = row.stringOrNull(alias)
+                )
+            }
+            val aggregeringer = aggregerteFelter.mapIndexed { index, felt ->
+                val alias = "agg_$index"
+                Aggregertverdi(
+                    type = felt.funksjon,
+                    område = felt.område,
+                    kode = felt.kode,
+                    verdi = konverterAggregertVerdi(felt, row.any(alias))
+                )
+            }
+            return OppgaveQueryRad(
+                feltverdier = feltverdier,
+                aggregeringer = aggregeringer,
+            )
+        }
+
+        val feltverdier = selectFelter.mapIndexed { index, felt ->
+            val alias = "felt_$index"
+            val verdi: Any? = if (felt.område != null && erListetype(felt.område, felt.kode)) {
+                row.stringOrNull(alias)?.let { jsonArray ->
+                    LosObjectMapper.instance.readValue(jsonArray, object : TypeReference<List<String>>() {})
+                } ?: emptyList<String>()
+            } else {
+                row.stringOrNull(alias)
+            }
+
             Oppgavefeltverdi(
                 område = felt.område,
                 kode = felt.kode,
-                verdi = row.stringOrNull(alias)
+                verdi = verdi
             )
         }
-        val aggregeringer = aggregerteFelter.mapIndexed { index, felt ->
-            val alias = "agg_$index"
-            Aggregertverdi(
-                type = felt.funksjon,
-                område = felt.område,
-                kode = felt.kode,
-                verdi = konverterAggregertVerdi(felt, row.any(alias))
-            )
-        }
-        return AggregertQueryResultat(
-            feltverdier = feltverdier,
-            aggregeringer = aggregeringer,
-        )
+
+        return OppgaveQueryRad(feltverdier = feltverdier)
     }
 
     /**
@@ -799,28 +820,5 @@ class PartisjonertOppgaveQuerySqlBuilder(
             putAll(selectFeltParams)
             putAll(grupperingParams)
         }
-    }
-
-    override fun mapRowTilOppgaveResultat(row: Row): OppgaveResultat {
-        val eksternId = EksternOppgaveId("K9", row.string("oppgave_ekstern_id"))
-
-        val feltverdier = selectFelter.mapIndexed { index, felt ->
-            val alias = "felt_$index"
-            val verdi: Any? = if (felt.område != null && erListetype(felt.område, felt.kode)) {
-                row.stringOrNull(alias)?.let { jsonArray ->
-                    LosObjectMapper.instance.readValue(jsonArray, object : TypeReference<List<String>>() {})
-                } ?: emptyList<String>()
-            } else {
-                row.stringOrNull(alias)
-            }
-
-            Oppgavefeltverdi(
-                område = felt.område,
-                kode = felt.kode,
-                verdi = verdi
-            )
-        }
-
-        return OppgaveResultat(id = eksternId, felter = feltverdier)
     }
 }

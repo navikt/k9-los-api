@@ -16,7 +16,6 @@ import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelOrderFelt
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelSelectFelt
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
-import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.OppgaveQueryResultat
 import no.nav.k9.los.nyoppgavestyring.query.mapping.EksternFeltverdiOperator
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
@@ -140,14 +139,13 @@ class TransientFeltutlederTest : AbstractK9LosIntegrationTest() {
             )
         )
 
-        val queryResultat = transactionalManager.transaction { tx ->
+        val resultat = transactionalManager.transaction { tx ->
             oppgaveQueryRepository.query(tx, QueryRequest(oppgaveQuery), LocalDateTime.now())
         }
-        val resultat = (queryResultat as OppgaveQueryResultat.SelectResultat).rader
 
         assertThat(resultat.size).isEqualTo(2)
-        val dagerFørste = Duration.parse(resultat[0].felter.first { it.kode == "tidSidenMottattDato" }.verdi as String).toDays()
-        val dagerAndre = Duration.parse(resultat[1].felter.first { it.kode == "tidSidenMottattDato" }.verdi as String).toDays()
+        val dagerFørste = Duration.parse(resultat[0].feltverdier.first { it.kode == "tidSidenMottattDato" }.verdi as String).toDays()
+        val dagerAndre = Duration.parse(resultat[1].feltverdier.first { it.kode == "tidSidenMottattDato" }.verdi as String).toDays()
         assertThat(dagerFørste).isEqualTo(20)
         assertThat(dagerAndre).isEqualTo(10)
     }
