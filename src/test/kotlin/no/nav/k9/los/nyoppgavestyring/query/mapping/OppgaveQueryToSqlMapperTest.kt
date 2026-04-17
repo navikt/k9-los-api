@@ -65,7 +65,7 @@ class OppgaveQueryToSqlMapperTest {
                 byggFilter(FeltType.YTELSE_TYPE, EksternFeltverdiOperator.IN, "PSB", "OMP", "FOO", "BAR"),
             )
         )
-        val sqlBuilder = OppgaveQueryToSqlMapper.toSqlOppgaveQuery(
+        val sqlBuilder = OppgaveQueryToSqlMapper.toSql(
             QueryRequest(oppgaveQuery),
             felter,
             LocalDateTime.now()
@@ -93,7 +93,7 @@ class OppgaveQueryToSqlMapperTest {
                 byggFilter(FeltType.YTELSE_TYPE, EksternFeltverdiOperator.IN, "PSB", "OMP", "FOO", "BAR"),
             )
         )
-        val sqlBuilder = OppgaveQueryToSqlMapper.toSqlOppgaveQuery(
+        val sqlBuilder = OppgaveQueryToSqlMapper.toSql(
             QueryRequest(oppgaveQuery),
             felter,
             LocalDateTime.now()

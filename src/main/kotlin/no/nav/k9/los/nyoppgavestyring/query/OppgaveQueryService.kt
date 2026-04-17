@@ -36,8 +36,10 @@ class OppgaveQueryService(
     @WithSpan
     fun queryForOppgave(tx: TransactionalSession, request: QueryRequest): List<Oppgave> {
         val now = LocalDateTime.now()
-        val ider = oppgaveQueryRepository.queryForOppgaveId(tx, request, now)
-        return ider.map { oppgaveId ->
+        val rader = oppgaveQueryRepository.query(tx, request, now)
+        return rader.map { rad ->
+            val oppgaveId = rad.oppgaveId
+                ?: throw IllegalStateException("OppgaveQueryRad mangler oppgaveId. Dette kan skje for aggregerte spørringer.")
             when (oppgaveId) {
                 is OppgaveV3Id -> oppgaveRepository.hentOppgaveForId(tx, oppgaveId, now)
                 is PartisjonertOppgaveId -> partisjonertOppgaveRepository.hentOppgaveForId(oppgaveId, tx)
@@ -69,7 +71,12 @@ class OppgaveQueryService(
     fun queryForOppgaveEksternId(request: QueryRequest): List<EksternOppgaveId> {
         val now = LocalDateTime.now()
         return using(sessionOf(datasource)) {
-            it.transaction { tx -> oppgaveQueryRepository.queryForEksternId(tx, request, now) }
+            it.transaction { tx ->
+                oppgaveQueryRepository.query(tx, request, now).map { rad ->
+                    rad.eksternOppgaveId
+                        ?: throw IllegalStateException("OppgaveQueryRad mangler eksternOppgaveId. Dette kan skje for aggregerte spørringer.")
+                }
+            }
         }
     }
 

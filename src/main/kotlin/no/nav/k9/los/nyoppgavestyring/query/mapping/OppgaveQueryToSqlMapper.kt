@@ -18,45 +18,6 @@ object OppgaveQueryToSqlMapper {
         return PartisjonertOppgaveQuerySqlBuilder(felter, oppgavestatusFilter, now, ferdigstiltDatofilter)
     }
 
-    fun toSqlOppgaveQuery(
-        request: QueryRequest,
-        felter: Map<OmrådeOgKode, OppgavefeltMedMer>,
-        now: LocalDateTime
-    ): OppgaveQuerySqlBuilder {
-        val query = utledSqlBuilder(felter, request, now)
-        val combineOperator = CombineOperator.AND
-
-        håndterFiltere(query, felter, query.filterRens(felter, request.oppgaveQuery.filtere), combineOperator)
-        håndterOrder(query, request.oppgaveQuery.order)
-        if (request.fjernReserverte) {
-            query.utenReservasjoner()
-        }
-        request.avgrensning?.let { query.medPaging(it.limit, it.offset) }
-
-        return query
-    }
-
-    fun toSqlOppgaveQueryMedSelectFelter(
-        request: QueryRequest,
-        felter: Map<OmrådeOgKode, OppgavefeltMedMer>,
-        now: LocalDateTime
-    ): OppgaveQuerySqlBuilder {
-        val query = utledSqlBuilder(felter, request, now)
-        val combineOperator = CombineOperator.AND
-
-        val enkelSelectFelter = request.oppgaveQuery.select.filterIsInstance<EnkelSelectFelt>()
-        query.medSelectFelter(enkelSelectFelter)
-
-        håndterFiltere(query, felter, query.filterRens(felter, request.oppgaveQuery.filtere), combineOperator)
-        håndterOrder(query, request.oppgaveQuery.order)
-        if (request.fjernReserverte) {
-            query.utenReservasjoner()
-        }
-        request.avgrensning?.let { query.medPaging(it.limit, it.offset) }
-
-        return query
-    }
-
     fun toSql(
         request: QueryRequest,
         felter: Map<OmrådeOgKode, OppgavefeltMedMer>,
@@ -80,7 +41,9 @@ object OppgaveQueryToSqlMapper {
             query.medSelectFelter(enkelSelectFelter)
             håndterOrder(query, request.oppgaveQuery.order)
         } else {
-            throw IllegalArgumentException("OppgaveQuery.select kan ikke v\u00e6re tom for enhetlig query")
+            // Ingen eksplisitte select-felt: sqlBuilder beholder sin default SELECT
+            // med o.id og o.oppgave_ekstern_id, og OppgaveQueryRad populeres med oppgaveId/eksternOppgaveId.
+            håndterOrder(query, request.oppgaveQuery.order)
         }
 
         return query

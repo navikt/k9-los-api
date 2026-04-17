@@ -29,8 +29,6 @@ interface OppgaveQuerySqlBuilder {
     fun medSelectFelter(selectFelter: List<EnkelSelectFelt>)
     fun medAggregering(grupperingsFelter: List<EnkelSelectFelt>, aggregerteFelter: List<AggregertSelectFelt>)
 
-    fun mapRowTilId(row: Row): OppgaveId
-    fun mapRowTilEksternId(row: Row): EksternOppgaveId
     fun mapRowTilRad(row: Row): OppgaveQueryRad
 
     /** Skal bare brukes til debugging, siden parametrene settes inn ukritisk */

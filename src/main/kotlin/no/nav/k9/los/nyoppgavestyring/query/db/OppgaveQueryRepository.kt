@@ -186,55 +186,6 @@ class OppgaveQueryRepository(
         return (felterFraDatabase + standardfelter).sortedBy { it.oppgavefelt.visningsnavn }
     }
 
-    private fun queryForOppgaveId(tx: TransactionalSession, oppgaveQuery: OppgaveQuerySqlBuilder): List<OppgaveId> {
-        loggSqlDebug(oppgaveQuery)
-
-        return tx.run(
-            queryOf(
-                oppgaveQuery.getQuery(),
-                oppgaveQuery.getParams()
-            ).map(oppgaveQuery::mapRowTilId).asList
-        )
-    }
-
-    private fun queryForEksternId(
-        tx: TransactionalSession,
-        oppgaveQuery: OppgaveQuerySqlBuilder
-    ): List<EksternOppgaveId> {
-        loggSqlDebug(oppgaveQuery)
-
-        return tx.run(
-            queryOf(
-                oppgaveQuery.getQuery(),
-                oppgaveQuery.getParams()
-            ).map(oppgaveQuery::mapRowTilEksternId).asList
-        )
-    }
-
-    @WithSpan
-    fun queryForOppgaveId(
-        tx: TransactionalSession,
-        request: QueryRequest,
-        now: LocalDateTime
-    ): List<OppgaveId> {
-        val felter = hentAlleFelterMedMer(tx, medKodeverk = false)
-            .associateBy { felt -> OmrådeOgKode(felt.oppgavefelt.område, felt.oppgavefelt.kode) }
-        val sqlBuilder = OppgaveQueryToSqlMapper.toSqlOppgaveQuery(request, felter, now)
-        return queryForOppgaveId(tx, sqlBuilder)
-    }
-
-    @WithSpan
-    fun queryForEksternId(
-        tx: TransactionalSession,
-        request: QueryRequest,
-        now: LocalDateTime
-    ): List<EksternOppgaveId> {
-        val felter = hentAlleFelterMedMer(tx, medKodeverk = false)
-            .associateBy { felt -> OmrådeOgKode(felt.oppgavefelt.område, felt.oppgavefelt.kode) }
-        val sqlBuilder = OppgaveQueryToSqlMapper.toSqlOppgaveQuery(request, felter, now)
-        return queryForEksternId(tx, sqlBuilder)
-    }
-
     @WithSpan
     fun query(
         request: QueryRequest,
