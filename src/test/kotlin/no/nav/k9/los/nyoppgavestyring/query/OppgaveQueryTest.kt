@@ -1208,7 +1208,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
         assertThat(resultat).isInstanceOf(OppgaveQueryResultat.AggregertResultat::class.java)
         val rad = (resultat as OppgaveQueryResultat.AggregertResultat).rader.single()
         assertThat(rad.aggregeringer.first { it.type == Aggregeringsfunksjon.SUM }.verdi).isEqualTo(300L)
-        assertThat(checkNotNull(rad.aggregeringer.first { it.type == Aggregeringsfunksjon.GJENNOMSNITT }.verdi)).isEqualTo(150L)
+        assertThat(checkNotNull(rad.aggregeringer.first { it.type == Aggregeringsfunksjon.GJENNOMSNITT }.verdi)).isEqualTo(150.0)
         assertThat(rad.aggregeringer.first { it.type == Aggregeringsfunksjon.MIN }.verdi).isEqualTo(100L)
         assertThat(rad.aggregeringer.first { it.type == Aggregeringsfunksjon.MAKS }.verdi).isEqualTo(200L)
     }

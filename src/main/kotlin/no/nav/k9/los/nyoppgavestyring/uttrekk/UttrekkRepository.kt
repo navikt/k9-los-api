@@ -30,8 +30,8 @@ class UttrekkRepository(val dataSource: DataSource) {
     }
 
     fun hentResultat(id: Long): String? {
-        return transactionalManager.transaction {
-            it.run(
+        return transactionalManager.transaction { tx ->
+            tx.run(
                 queryOf(
                     """
                 SELECT resultat

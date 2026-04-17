@@ -129,12 +129,6 @@ class PartisjonertOppgaveQuerySqlBuilder(
         return "$selectClause $fromClause $whereClause $groupByClause $orderByClause $pagingClause"
     }
 
-    override fun medAntallSomResultat() {
-        selectClause = "SELECT COUNT(*) as antall"
-        orderByClauses.clear()
-        orderByParams.clear()
-    }
-
     override fun utenReservasjoner() {
         whereClause += " $utenReservasjonerBetingelse"
         queryParams["now"] = now
@@ -646,12 +640,12 @@ class PartisjonertOppgaveQuerySqlBuilder(
     }
 
 
-    // Gruppering-støtte for COUNT(*) ... GROUP BY queries
+    // Støtte for GROUP BY
     private var grupperingsFelter: List<EnkelSelectFelt> = emptyList()
     private var aggregerteFelter: List<AggregertSelectFelt> = emptyList()
     private val grupperingParams: MutableMap<String, Any?> = mutableMapOf()
 
-    override fun medGruppering(grupperingsFelter: List<EnkelSelectFelt>, aggregerteFelter: List<AggregertSelectFelt>) {
+    override fun medAggregering(grupperingsFelter: List<EnkelSelectFelt>, aggregerteFelter: List<AggregertSelectFelt>) {
         this.grupperingsFelter = grupperingsFelter
         this.aggregerteFelter = aggregerteFelter
         grupperingsAlias.clear()
@@ -758,13 +752,42 @@ class PartisjonertOppgaveQuerySqlBuilder(
                 type = felt.funksjon,
                 område = felt.område,
                 kode = felt.kode,
-                verdi = row.any(alias)
+                verdi = konverterAggregertVerdi(felt, row.any(alias))
             )
         }
         return AggregertQueryResultat(
             feltverdier = feltverdier,
             aggregeringer = aggregeringer,
         )
+    }
+
+    /**
+     * Konverterer rå JDBC-verdier til forutsigbare Kotlin-typer basert på aggregeringsfunksjon og feltets datatype.
+     *
+     * JDBC returnerer f.eks. BigDecimal for CAST(... AS numeric) og java.sql.Timestamp for timestamp-kolonner.
+     * Denne metoden normaliserer til:
+     * - ANTALL → Long
+     * - SUM (INTEGER) → Long
+     * - GJENNOMSNITT (INTEGER) → Double
+     * - MIN/MAKS (INTEGER) → Long
+     * - MIN/MAKS (TIMESTAMP, STRING, andre) → String
+     */
+    private fun konverterAggregertVerdi(felt: AggregertSelectFelt, rawVerdi: Any?): Any? {
+        if (rawVerdi == null) return null
+
+        return when (felt.funksjon) {
+            Aggregeringsfunksjon.ANTALL -> (rawVerdi as Number).toLong()
+            Aggregeringsfunksjon.SUM -> (rawVerdi as Number).toLong()
+            Aggregeringsfunksjon.GJENNOMSNITT -> (rawVerdi as Number).toDouble()
+            Aggregeringsfunksjon.MIN, Aggregeringsfunksjon.MAKS -> {
+                val feltKode = felt.kode
+                if (feltKode != null && datatypeForFelt(felt.område, feltKode) == Datatype.INTEGER) {
+                    (rawVerdi as Number).toLong()
+                } else {
+                    rawVerdi.toString()
+                }
+            }
+        }
     }
 
     override fun getParams(): Map<String, Any?> {

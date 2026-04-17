@@ -36,27 +36,6 @@ object OppgaveQueryToSqlMapper {
         return query
     }
 
-    fun toSqlOppgaveQueryForAntall(
-        request: QueryRequest,
-        felter: Map<OmrådeOgKode, OppgavefeltMedMer>,
-        now: LocalDateTime
-    ): OppgaveQuerySqlBuilder {
-        val queryBuilder = utledSqlBuilder(felter, request, now)
-        val combineOperator = CombineOperator.AND
-        håndterFiltere(
-            queryBuilder,
-            felter,
-            queryBuilder.filterRens(felter, request.oppgaveQuery.filtere),
-            combineOperator
-        )
-        if (request.fjernReserverte) {
-            queryBuilder.utenReservasjoner()
-        }
-        request.avgrensning?.let { queryBuilder.medPaging(it.limit, it.offset) }
-        queryBuilder.medAntallSomResultat()
-        return queryBuilder
-    }
-
     fun toSqlOppgaveQueryMedSelectFelter(
         request: QueryRequest,
         felter: Map<OmrådeOgKode, OppgavefeltMedMer>,
@@ -95,7 +74,7 @@ object OppgaveQueryToSqlMapper {
         val aggregerteFelter = request.oppgaveQuery.select.filterIsInstance<AggregertSelectFelt>()
 
         if (aggregerteFelter.isNotEmpty()) {
-            query.medGruppering(enkelSelectFelter, aggregerteFelter)
+            query.medAggregering(enkelSelectFelter, aggregerteFelter)
             håndterOrder(query, request.oppgaveQuery.order)
         } else if (enkelSelectFelter.isNotEmpty()) {
             query.medSelectFelter(enkelSelectFelter)

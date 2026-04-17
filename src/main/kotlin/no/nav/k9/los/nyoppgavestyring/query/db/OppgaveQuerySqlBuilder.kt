@@ -26,9 +26,9 @@ interface OppgaveQuerySqlBuilder {
 
     fun utenReservasjoner()
     fun medPaging(limit: Long, offset: Long)
-    fun medAntallSomResultat()
+
     fun medSelectFelter(selectFelter: List<EnkelSelectFelt>)
-    fun medGruppering(grupperingsFelter: List<EnkelSelectFelt>, aggregerteFelter: List<AggregertSelectFelt>)
+    fun medAggregering(grupperingsFelter: List<EnkelSelectFelt>, aggregerteFelter: List<AggregertSelectFelt>)
 
     fun mapRowTilId(row: Row): OppgaveId
     fun mapRowTilEksternId(row: Row): EksternOppgaveId

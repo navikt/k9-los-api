@@ -152,7 +152,7 @@ class StatusFordelingService(val queryService: OppgaveQueryService) {
             ),
             select = listOf(AggregertSelectFelt(Aggregeringsfunksjon.ANTALL)),
         )
-        val venterKabal = (queryService.query(QueryRequest(venterKabalQuery)) as OppgaveQueryResultat.AntallResultat).antall
+        val venterKabal = queryService.queryForAntall(QueryRequest(venterKabalQuery))
         val venterAnnet = (statusAntall[Oppgavestatus.VENTER.kode] ?: 0L) - venterKabal
 
         fun kildeQuery(vararg ekstraFiltre: Oppgavefilter) =
