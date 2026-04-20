@@ -744,8 +744,8 @@ class PartisjonertOppgaveQuerySqlBuilder(
             val alias = "agg_$index"
             val (uttrykk, params) = byggAggregeringsuttrykk(felt, index)
             grupperingParams.putAll(params)
-            selectDeler.add("($uttrykk) AS $alias")
-            aggregeringsOrderByUttrykk[index] = "($uttrykk)"
+            selectDeler.add("$uttrykk AS $alias")
+            aggregeringsOrderByUttrykk[index] = uttrykk
         }
 
         selectClause = "SELECT " + selectDeler.joinToString(", ")
