@@ -920,7 +920,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
                         byggFilter(FeltType.FERDIGSTILT_DATO, EksternFeltverdiOperator.EQUALS, "2025-01-01"),
                         byggFilter(FeltType.OPPGAVE_STATUS, EksternFeltverdiOperator.EQUALS, "LUKKET"),
                     ),
-                    select = listOf(EksternIdSelectFelt),
+                    select = listOf(),
                 )
             ))
         assertThat(resultat.map { it.eksternId }).containsOnly(oppgaveLukketFørsteJanuar.eksternId)

@@ -19,8 +19,6 @@ class UttrekkCsvGenerator {
                         val funksjonNavn = it.funksjon.name.lowercase()
                         if (it.kode != null) "${funksjonNavn}_${it.kode}" else funksjonNavn
                     }
-                    EksternIdSelectFelt -> "ekstern_id"
-                    OppgaveIdSelectFelt -> "oppgave_id"
                 }
             }
             append(headers.joinToString(","))
