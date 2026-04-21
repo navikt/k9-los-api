@@ -7,7 +7,8 @@ data class DagensTallDto(
     val hovedgruppe: DagensTallHovedgruppe,
     val undergruppe: DagensTallUndergruppe,
 
-    val serier: Map<String, Pair<DagensTallKortDto, DagensTallKortDto>>
+    val serier: Map<String, Pair<DagensTallKortDto, DagensTallKortDto>>,
+    val månedSerier: Map<String, Pair<DagensTallKortDto, DagensTallKortDto>>
 )
 
 data class DagensTallKortDto(

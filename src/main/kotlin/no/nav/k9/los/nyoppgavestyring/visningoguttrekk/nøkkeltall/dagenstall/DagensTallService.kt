@@ -10,19 +10,13 @@ import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
 import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
-import no.nav.k9.los.nyoppgavestyring.query.dto.query.Aggregeringsfunksjon
-import no.nav.k9.los.nyoppgavestyring.query.dto.query.AggregertSelectFelt
-import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelSelectFelt
-import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
-import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
-import no.nav.k9.los.nyoppgavestyring.query.dto.query.Oppgavefilter
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.*
 import no.nav.k9.los.nyoppgavestyring.query.mapping.EksternFeltverdiOperator
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.KodeOgNavn
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.time.YearMonth
 import kotlin.time.measureTime
 
 
@@ -162,31 +156,31 @@ class DagensTallService(
 
     private fun hentFraDatabase(): DagensTallResponse {
         val iDag = LocalDate.now()
-        val syvDagerSiden = iDag.minusWeeks(1)
-        val fjortenDagerSiden = iDag.minusWeeks(2)
-        val tjueåtteDagerSiden = iDag.minusWeeks(4)
+        val enUke = iDag.minusWeeks(1)
+        val toUkerSiden = iDag.minusWeeks(2)
+        val fireUkerSiden = iDag.minusWeeks(4)
 
         val inngangIdag = hentGrupperte(listOf(mottattDato(iDag)), medHelautomatisk = false)
-        val inngangSiste7 = hentGrupperte(listOf(mottattDato(syvDagerSiden)), medHelautomatisk = false)
-        val inngangSiste14 = hentGrupperte(listOf(mottattDato(fjortenDagerSiden)), medHelautomatisk = false)
-        val inngangSiste28 = hentGrupperte(listOf(mottattDato(tjueåtteDagerSiden)), medHelautomatisk = false)
+        val inngangSisteUke = hentGrupperte(listOf(mottattDato(enUke)), medHelautomatisk = false)
+        val inngangSiste2Uker = hentGrupperte(listOf(mottattDato(toUkerSiden)), medHelautomatisk = false)
+        val inngangSiste4Uker = hentGrupperte(listOf(mottattDato(fireUkerSiden)), medHelautomatisk = false)
         val ferdigstiltIdag = hentGrupperte(listOf(lukket, ferdigstiltDato(iDag)), medHelautomatisk = true)
-        val ferdigstiltSiste7 = hentGrupperte(listOf(lukket, ferdigstiltDato(syvDagerSiden)), medHelautomatisk = true)
-        val ferdigstiltSiste14 = hentGrupperte(listOf(lukket, ferdigstiltDato(fjortenDagerSiden)), medHelautomatisk = true)
-        val ferdigstiltSiste28 = hentGrupperte(listOf(lukket, ferdigstiltDato(tjueåtteDagerSiden)), medHelautomatisk = true)
+        val ferdigstiltSisteUke = hentGrupperte(listOf(lukket, ferdigstiltDato(enUke)), medHelautomatisk = true)
+        val ferdigstiltSiste2Uker = hentGrupperte(listOf(lukket, ferdigstiltDato(toUkerSiden)), medHelautomatisk = true)
+        val ferdigstiltSiste4Uker = hentGrupperte(listOf(lukket, ferdigstiltDato(fireUkerSiden)), medHelautomatisk = true)
 
         // Månedlige data for siste 6 måneder
-        val måneder = (1..12).map { i ->
-            val start = YearMonth.now().minusMonths(i.toLong()).atDay(1)
-            val slutt = start.plusMonths(1)
-            start to slutt
-        }
-        val månedligInngang = måneder.map { (start, slutt) ->
-            hentGrupperte(listOf(mottattDato(start), mottattDatoFør(slutt)), medHelautomatisk = false)
-        }
-        val månedligFerdigstilt = måneder.map { (start, slutt) ->
-            hentGrupperte(listOf(lukket, ferdigstiltDatoMellom(start, slutt)), medHelautomatisk = true)
-        }
+//        val måneder = (1..12).map { i ->
+//            val start = YearMonth.now().minusMonths(i.toLong()).atDay(1)
+//            val slutt = start.plusMonths(1)
+//            start to slutt
+//        }
+//        val månedligInngang = måneder.map { (start, slutt) ->
+//            hentGrupperte(listOf(mottattDato(start), mottattDatoFør(slutt)), medHelautomatisk = false)
+//        }
+//        val månedligFerdigstilt = måneder.map { (start, slutt) ->
+//            hentGrupperte(listOf(lukket, ferdigstiltDatoMellom(start, slutt)), medHelautomatisk = true)
+//        }
 
         val tall = DagensTallHovedgruppe.entries.flatMap { hovedgruppe ->
             val ytelser = hovedgruppeYtelser[hovedgruppe]
@@ -224,25 +218,26 @@ class DagensTallService(
                 }
 
                 val idag = dagenstallKort(inngangIdag, ferdigstiltIdag)
-                val siste7Dager = dagenstallKort(inngangSiste7, ferdigstiltSiste7)
-                val siste14Dager = dagenstallKort(inngangSiste14, ferdigstiltSiste14)
-                val siste28Dager = dagenstallKort(inngangSiste28, ferdigstiltSiste28)
+                val siste7Dager = dagenstallKort(inngangSisteUke, ferdigstiltSisteUke)
+                val siste14Dager = dagenstallKort(inngangSiste2Uker, ferdigstiltSiste2Uker)
+                val siste28Dager = dagenstallKort(inngangSiste4Uker, ferdigstiltSiste4Uker)
 
-                val månedSerier = måneder.mapIndexed { index, (start, _) ->
-                    YearMonth.from(start).toString() to dagenstallKort(
-                        månedligInngang[index], månedligFerdigstilt[index],
-                    )
-                }
+//                val månedSerier = måneder.mapIndexed { index, (start, _) ->
+//                    YearMonth.from(start).toString() to dagenstallKort(
+//                        månedligInngang[index], månedligFerdigstilt[index],
+//                    )
+//                }
 
                 DagensTallDto(
                     hovedgruppe = hovedgruppe,
                     undergruppe = undergruppe,
                     serier = mapOf(
                         "idag" to idag,
-                        "siste7Dager" to siste7Dager,
-                        "siste14Dager" to siste14Dager,
-                        "siste28Dager" to siste28Dager,
-                    ) + månedSerier
+                        "sisteUke" to siste7Dager,
+                        "siste2Uker" to siste14Dager,
+                        "siste4Uker" to siste28Dager,
+                    ),
+                    månedSerier = emptyMap() // Bytte til månedSerier
                 )
             }
         }
