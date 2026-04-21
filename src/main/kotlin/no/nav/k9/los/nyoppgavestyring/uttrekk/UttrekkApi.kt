@@ -1,6 +1,5 @@
 package no.nav.k9.los.nyoppgavestyring.uttrekk
 
-import com.fasterxml.jackson.core.type.TypeReference
 import io.github.smiley4.ktoropenapi.delete
 import io.github.smiley4.ktoropenapi.get
 import io.github.smiley4.ktoropenapi.post
@@ -12,9 +11,6 @@ import io.ktor.server.routing.*
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.RequestContextService
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.idToken
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
-import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelSelectFelt
-import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.OppgaveResultat
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
 import org.koin.ktor.ext.inject
 
@@ -61,7 +57,11 @@ fun Route.UttrekkApi() {
     }) {
         requestContextService.withRequestContext(call) {
             if (pepClient.harBasisTilgang()) {
-                val id = call.parameters["id"]!!.toLong()
+                val id = call.parameters["id"]?.toLongOrNull()
+                if (id == null) {
+                    call.respond(HttpStatusCode.BadRequest, "Ugyldig uttrekk-id")
+                    return@withRequestContext
+                }
                 val uttrekk = uttrekkTjeneste.hent(id)
                 if (uttrekk != null) {
                     call.respond(uttrekk)
@@ -114,7 +114,11 @@ fun Route.UttrekkApi() {
     }) {
         requestContextService.withRequestContext(call) {
             if (pepClient.harBasisTilgang()) {
-                val id = call.parameters["id"]!!.toLong()
+                val id = call.parameters["id"]?.toLongOrNull()
+                if (id == null) {
+                    call.respond(HttpStatusCode.BadRequest, "Ugyldig uttrekk-id")
+                    return@withRequestContext
+                }
                 val (tittel) = call.receive<EndreTittel>()
                 try {
                     uttrekkTjeneste.endreTittel(id, tittel)
@@ -143,7 +147,11 @@ fun Route.UttrekkApi() {
         requestContextService.withRequestContext(call) {
             if (pepClient.harBasisTilgang()) {
                 try {
-                    val id = call.parameters["id"]!!.toLong()
+                    val id = call.parameters["id"]?.toLongOrNull()
+                    if (id == null) {
+                        call.respond(HttpStatusCode.BadRequest, "Ugyldig uttrekk-id")
+                        return@withRequestContext
+                    }
                     uttrekkTjeneste.slett(id)
                     call.respond(HttpStatusCode.OK)
                 } catch (e: IllegalArgumentException) {
@@ -169,7 +177,11 @@ fun Route.UttrekkApi() {
     }) {
         requestContextService.withRequestContext(call) {
             if (pepClient.harBasisTilgang()) {
-                val lagretSokId = call.parameters["lagretSokId"]!!.toLong()
+                val lagretSokId = call.parameters["lagretSokId"]?.toLongOrNull()
+                if (lagretSokId == null) {
+                    call.respond(HttpStatusCode.BadRequest, "Ugyldig lagretSokId")
+                    return@withRequestContext
+                }
                 val antallSlettet = uttrekkTjeneste.slettForLagretSøk(lagretSokId)
                 call.respond(HttpStatusCode.OK, antallSlettet)
             } else {
@@ -191,7 +203,11 @@ fun Route.UttrekkApi() {
     }) {
         requestContextService.withRequestContext(call) {
             if (pepClient.harBasisTilgang()) {
-                val id = call.parameters["id"]!!.toLong()
+                val id = call.parameters["id"]?.toLongOrNull()
+                if (id == null) {
+                    call.respond(HttpStatusCode.BadRequest, "Ugyldig uttrekk-id")
+                    return@withRequestContext
+                }
                 val uttrekk = uttrekkTjeneste.hent(id)
 
                 if (uttrekk == null) {
@@ -214,7 +230,7 @@ fun Route.UttrekkApi() {
                 )
 
                 call.respondText(ContentType.parse("text/csv"), HttpStatusCode.OK) {
-                    uttrekkCsvGenerator.genererCsv(resultat)
+                    uttrekkCsvGenerator.genererCsv(uttrekk.query.select,resultat)
                 }
             } else {
                 call.respond(HttpStatusCode.Forbidden)
@@ -241,7 +257,11 @@ fun Route.UttrekkApi() {
     }) {
         requestContextService.withRequestContext(call) {
             if (pepClient.harBasisTilgang()) {
-                val id = call.parameters["id"]!!.toLong()
+                val id = call.parameters["id"]?.toLongOrNull()
+                if (id == null) {
+                    call.respond(HttpStatusCode.BadRequest, "Ugyldig uttrekk-id")
+                    return@withRequestContext
+                }
                 val offset = call.request.queryParameters["offset"]?.toIntOrNull() ?: 0
                 val limit = call.request.queryParameters["limit"]?.toIntOrNull()
 
@@ -258,18 +278,17 @@ fun Route.UttrekkApi() {
                     return@withRequestContext
                 }
 
-                val alleRader = LosObjectMapper.instance.readValue(
-                    resultatJson,
-                    object : TypeReference<List<OppgaveResultat>>() {}
-                )
+                val alleRader = UttrekkResultatMapper.fraLagretJson(resultatJson)
 
                 val paginertRader = alleRader
                     .drop(offset)
                     .let { if (limit != null) it.take(limit) else it }
 
+                val kolonner = uttrekk.query.select
+
                 call.respond(
                     UttrekkResultatRespons(
-                        kolonner = uttrekk.query.select.filterIsInstance<EnkelSelectFelt>().map { it.kode }, // TODO: bruke visningsnavn fra feltdefinisjon
+                        kolonner = kolonner,
                         rader = paginertRader,
                         totaltAntall = alleRader.size,
                         offset = offset,

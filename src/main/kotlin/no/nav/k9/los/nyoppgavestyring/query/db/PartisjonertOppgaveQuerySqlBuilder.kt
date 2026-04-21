@@ -6,13 +6,10 @@ import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.util.InClauseHjelper
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.nyoppgavestyring.kodeverk.PersonBeskyttelseType
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Datatype
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveId
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.PartisjonertOppgaveId
-import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelSelectFelt
-import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
-import no.nav.k9.los.nyoppgavestyring.query.dto.query.Oppgavefilter
-import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.OppgaveResultat
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.*
+import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.Aggregertverdi
+import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.OppgaveQueryRad
 import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.Oppgavefeltverdi
 import no.nav.k9.los.nyoppgavestyring.query.mapping.*
 import no.nav.k9.los.nyoppgavestyring.spi.felter.*
@@ -93,11 +90,14 @@ class PartisjonertOppgaveQuerySqlBuilder(
         FROM oppgave_v3_part o
         LEFT JOIN oppgave_pep_cache opc ON (opc.kildeomrade = 'K9' AND o.oppgave_ekstern_id = opc.ekstern_id)
     """.trimIndent()
-    
+
     private var whereClause = "WHERE o.oppgavestatus IN ($oppgavestatusPlaceholder) ${ferdigstiltDatoBetingelse("o")}"
     private val orderByClauses = mutableListOf<String>()
     private val orderByClause get() = if (orderByClauses.isNotEmpty()) "ORDER BY " + orderByClauses.joinToString(", ") else ""
+    private var groupByClause = ""
     private var pagingClause = ""
+    private val grupperingsAlias = mutableMapOf<OmrådeOgKode, String>()
+    private val aggregeringsOrderByUttrykk = mutableMapOf<Int, String>()
 
     private val utenReservasjonerBetingelse = """
         AND NOT EXISTS (
@@ -125,13 +125,7 @@ class PartisjonertOppgaveQuerySqlBuilder(
     }
 
     override fun getQuery(): String {
-        return "$selectClause $fromClause $whereClause $orderByClause $pagingClause"
-    }
-
-    override fun medAntallSomResultat() {
-        selectClause = "SELECT COUNT(*) as antall"
-        orderByClauses.clear()
-        orderByParams.clear()
+        return "$selectClause $fromClause $whereClause $groupByClause $orderByClause $pagingClause"
     }
 
     override fun utenReservasjoner() {
@@ -252,6 +246,14 @@ class PartisjonertOppgaveQuerySqlBuilder(
     }
 
     override fun medEnkelOrder(feltområde: String?, feltkode: String, økende: Boolean) {
+        if (aggregerteFelter.isNotEmpty()) {
+            val alias = grupperingsAlias[OmrådeOgKode(feltområde, feltkode)]
+                ?: throw IllegalStateException("Kan ikke sortere gruppert query på felt som ikke er en del av grupperingen: ${feltområde ?: "null"}.$feltkode")
+            val retning = if (økende) "ASC" else "DESC"
+            orderByClauses.add("$alias $retning")
+            return
+        }
+
         if (feltområde != null) {
             medEnkelOrderAvOppgavefelt(feltområde, feltkode, økende)
             return
@@ -269,13 +271,88 @@ class PartisjonertOppgaveQuerySqlBuilder(
         )
     }
 
-    override fun mapRowTilId(row: Row): OppgaveId {
-        return PartisjonertOppgaveId(row.long("id"))
+    override fun medAggregertOrder(
+        funksjon: Aggregeringsfunksjon,
+        feltområde: String?,
+        feltkode: String?,
+        økende: Boolean
+    ) {
+        if (aggregerteFelter.isEmpty()) {
+            throw IllegalStateException("Kan ikke sortere på aggregert felt uten aggregering.")
+        }
+
+        val matchendeAggregeringer = aggregerteFelter.mapIndexedNotNull { index, felt ->
+            if (felt.funksjon == funksjon && felt.område == feltområde && felt.kode == feltkode) index to felt else null
+        }
+
+        require(matchendeAggregeringer.isNotEmpty()) {
+            "Fant ingen aggregert felt for sortering: $funksjon ${feltkode ?: "(uten felt)"}"
+        }
+
+        require(matchendeAggregeringer.size == 1) {
+            "Aggregert sortering er tvetydig for: $funksjon ${feltkode ?: "(uten felt)"}"
+        }
+
+        val (index, felt) = matchendeAggregeringer.single()
+        val retning = if (økende) "ASC" else "DESC"
+
+        val orderByUttrykk = aggregeringsOrderByUttrykk[index] ?: run {
+            val (aggregeringsuttrykk, params) = byggAggregeringsuttrykk(felt, index)
+            orderByParams.putAll(params)
+            aggregeringsuttrykk
+        }
+
+        orderByClauses.add("$orderByUttrykk $retning")
     }
 
-    override fun mapRowTilEksternId(row: Row): EksternOppgaveId {
-        // område hardkodes siden det ikke er lagret
-        return EksternOppgaveId("K9", row.string("oppgave_ekstern_id"))
+    override fun mapRowTilRad(row: Row): OppgaveQueryRad {
+        // Aggregert modus hvis medAggregering er brukt; ellers select-modus
+        if (grupperingsFelter.isNotEmpty() || aggregerteFelter.isNotEmpty()) {
+            val feltverdier = grupperingsFelter.mapIndexed { index, felt ->
+                val alias = "gruppe_$index"
+                Oppgavefeltverdi(
+                    område = felt.område,
+                    kode = felt.kode,
+                    verdi = row.stringOrNull(alias)
+                )
+            }
+            val aggregeringer = aggregerteFelter.mapIndexed { index, felt ->
+                val alias = "agg_$index"
+                Aggregertverdi(
+                    type = felt.funksjon,
+                    område = felt.område,
+                    kode = felt.kode,
+                    verdi = konverterAggregertVerdi(felt, row.any(alias))
+                )
+            }
+            return OppgaveQueryRad(
+                feltverdier = feltverdier,
+                aggregeringer = aggregeringer,
+            )
+        }
+
+        val feltverdier = selectFelter.mapIndexed { index, felt ->
+            val alias = "felt_$index"
+            val verdi: Any? = if (felt.område != null && erListetype(felt.område, felt.kode)) {
+                row.stringOrNull(alias)?.let { jsonArray ->
+                    LosObjectMapper.instance.readValue(jsonArray, object : TypeReference<List<String>>() {})
+                } ?: emptyList<String>()
+            } else {
+                row.stringOrNull(alias)
+            }
+
+            Oppgavefeltverdi(
+                område = felt.område,
+                kode = felt.kode,
+                verdi = verdi
+            )
+        }
+
+        return OppgaveQueryRad(
+            oppgaveId = PartisjonertOppgaveId(row.long("id")),
+            eksternOppgaveId = EksternOppgaveId("K9", row.string("oppgave_ekstern_id")),
+            feltverdier = feltverdier,
+        )
     }
 
     private fun hentTransientFeltutleder(feltområde: String?, feltkode: String): TransientFeltutleder? {
@@ -399,7 +476,118 @@ class PartisjonertOppgaveQuerySqlBuilder(
         return felter[OmrådeOgKode(feltområde, feltkode)]?.oppgavefelt?.listetype ?: false
     }
 
-    // Select-felt støtte for effektive spørringer som returnerer OppgaveResultat
+    private data class Aggregeringsgrunnlag(
+        val uttrykk: String,
+        val datatype: Datatype,
+        val queryParams: Map<String, Any?> = emptyMap(),
+    )
+
+    private fun datatypeForFelt(feltområde: String?, feltkode: String): Datatype {
+        return oppgavefelterKodeOgType[OmrådeOgKode(feltområde, feltkode)]
+            ?: throw IllegalStateException("Fant ikke datatype for aggregeringsfelt ${feltområde ?: "null"}.$feltkode")
+    }
+
+    private fun validerStøttetAggregering(
+        funksjon: Aggregeringsfunksjon,
+        datatype: Datatype,
+        feltkode: String,
+    ) {
+        when (funksjon) {
+            Aggregeringsfunksjon.ANTALL -> Unit
+            Aggregeringsfunksjon.SUM, Aggregeringsfunksjon.GJENNOMSNITT -> require(datatype == Datatype.INTEGER) {
+                "Aggregeringsfunksjon $funksjon støttes kun for heltallsfelt. Felt $feltkode er ${datatype.kode}."
+            }
+
+            Aggregeringsfunksjon.MIN, Aggregeringsfunksjon.MAKS -> require(datatype != Datatype.DURATION) {
+                "Aggregeringsfunksjon $funksjon støttes ikke for Duration-felt ennå. Felt $feltkode er ${datatype.kode}."
+            }
+        }
+    }
+
+    private fun kolonneForAggregeringsfeltUtenOmråde(feltkode: String): String {
+        return when (feltkode) {
+            "oppgavestatus" -> "o.oppgavestatus"
+            "oppgavetype" -> "o.oppgavetype_ekstern_id"
+            "ferdigstiltDato" -> "o.ferdigstilt_dato"
+            "reservasjonsnokkel" -> "o.reservasjonsnokkel"
+            "sistEndret" -> "o.endret_tidspunkt"
+            else -> throw IllegalStateException("Ukjent aggregeringsfelt uten område: $feltkode")
+        }
+    }
+
+    private fun castOppgavefeltuttrykkTilDatatype(uttrykk: String, datatype: Datatype): String {
+        return when (datatype) {
+            Datatype.INTEGER, Datatype.STRING -> uttrykk
+            Datatype.TIMESTAMP -> "CAST($uttrykk AS timestamp)"
+            Datatype.BOOLEAN -> "CAST($uttrykk AS boolean)"
+            Datatype.DURATION -> throw IllegalArgumentException("Aggregering støttes ikke for Duration-felt ennå.")
+        }
+    }
+
+    private fun byggAggregeringsgrunnlag(felt: AggregertSelectFelt, index: Int): Aggregeringsgrunnlag {
+        val feltKode = requireNotNull(felt.kode) { "AggregertSelectFelt ${felt.funksjon} mangler kode" }
+        val datatype = datatypeForFelt(felt.område, feltKode)
+        validerStøttetAggregering(felt.funksjon, datatype, feltKode)
+
+        if (felt.område == null) {
+            return Aggregeringsgrunnlag(
+                uttrykk = kolonneForAggregeringsfeltUtenOmråde(feltKode),
+                datatype = datatype
+            )
+        }
+
+        val transientFeltutleder = hentTransientFeltutleder(felt.område, feltKode)
+        if (transientFeltutleder != null) {
+            val sqlMedParams = sikreUnikeParams(
+                transientFeltutleder.select(
+                    SelectInput(
+                        Spørringstrategi.PARTISJONERT,
+                        now,
+                        felt.område,
+                        feltKode
+                    )
+                )
+            )
+            return Aggregeringsgrunnlag(
+                uttrykk = castOppgavefeltuttrykkTilDatatype(sqlMedParams.query, datatype),
+                datatype = datatype,
+                queryParams = sqlMedParams.queryParams
+            )
+        }
+
+        val verdifelt = verdifelt(felt.område, feltKode)
+        val baseUttrykk = """
+            (SELECT $verdifelt
+             FROM oppgavefelt_verdi_part ov
+             WHERE ov.oppgave_id = o.id
+               AND ov.oppgavestatus IN ($oppgavestatusPlaceholder) ${ferdigstiltDatoBetingelse("ov")}
+               AND ov.feltdefinisjon_ekstern_id = :aggFeltkode$index
+             LIMIT 1)
+        """.trimIndent()
+
+        return Aggregeringsgrunnlag(
+            uttrykk = castOppgavefeltuttrykkTilDatatype(baseUttrykk, datatype),
+            datatype = datatype,
+            queryParams = mapOf("aggFeltkode$index" to feltKode)
+        )
+    }
+
+    private fun byggAggregeringsuttrykk(
+        felt: AggregertSelectFelt,
+        index: Int,
+    ): Pair<String, Map<String, Any?>> {
+        if (felt.funksjon == Aggregeringsfunksjon.ANTALL) return "COUNT(*)" to emptyMap()
+
+        val grunnlag = byggAggregeringsgrunnlag(felt, index)
+
+        return when (felt.funksjon) {
+            Aggregeringsfunksjon.GJENNOMSNITT -> "AVG(${grunnlag.uttrykk})"
+            Aggregeringsfunksjon.SUM -> "SUM(${grunnlag.uttrykk})"
+            Aggregeringsfunksjon.MIN -> "MIN(${grunnlag.uttrykk})"
+            Aggregeringsfunksjon.MAKS -> "MAX(${grunnlag.uttrykk})"
+        } to grunnlag.queryParams
+    }
+
     private var selectFelter: List<EnkelSelectFelt> = emptyList()
     private val selectFeltParams: MutableMap<String, Any?> = mutableMapOf()
 
@@ -470,6 +658,133 @@ class PartisjonertOppgaveQuerySqlBuilder(
         selectClause = "SELECT " + selectDeler.joinToString(", ")
     }
 
+
+    // Støtte for GROUP BY
+    private var grupperingsFelter: List<EnkelSelectFelt> = emptyList()
+    private var aggregerteFelter: List<AggregertSelectFelt> = emptyList()
+    private val grupperingParams: MutableMap<String, Any?> = mutableMapOf()
+
+    override fun medAggregering(grupperingsFelter: List<EnkelSelectFelt>, aggregerteFelter: List<AggregertSelectFelt>) {
+        this.grupperingsFelter = grupperingsFelter
+        this.aggregerteFelter = aggregerteFelter
+        grupperingsAlias.clear()
+        aggregeringsOrderByUttrykk.clear()
+
+        val selectDeler = mutableListOf<String>()
+        val groupByDeler = mutableListOf<String>()
+        val joinDeler = mutableListOf<String>()
+
+        grupperingsFelter.forEachIndexed { index, felt ->
+            val alias = "gruppe_$index"
+
+            if (felt.område != null) {
+                val transientFeltutleder = hentTransientFeltutleder(felt.område, felt.kode)
+                if (transientFeltutleder != null) {
+                    val sqlMedParams = sikreUnikeParams(
+                        transientFeltutleder.select(
+                            SelectInput(
+                                Spørringstrategi.PARTISJONERT,
+                                now,
+                                felt.område,
+                                felt.kode
+                            )
+                        )
+                    )
+                    selectDeler.add("${sqlMedParams.query} AS $alias")
+                    grupperingParams.putAll(sqlMedParams.queryParams)
+                } else {
+                    val verdifelt = verdifelt(felt.område, felt.kode)
+                    if (erListetype(felt.område, felt.kode)) {
+                        val joinAlias = "ov_gruppe_$index"
+                        joinDeler.add(
+                            """
+                            LEFT JOIN oppgavefelt_verdi_part $joinAlias
+                              ON $joinAlias.oppgave_id = o.id
+                              AND $joinAlias.oppgavestatus IN ($oppgavestatusPlaceholder) ${ferdigstiltDatoBetingelse(joinAlias)}
+                              AND $joinAlias.feltdefinisjon_ekstern_id = :grupperingFeltkode$index
+                        """.trimIndent()
+                        )
+                        selectDeler.add("$joinAlias.verdi AS $alias")
+                    } else {
+                        selectDeler.add(
+                            """
+                            (SELECT $verdifelt
+                             FROM oppgavefelt_verdi_part ov
+                             WHERE ov.oppgave_id = o.id
+                               AND ov.oppgavestatus IN ($oppgavestatusPlaceholder) ${ferdigstiltDatoBetingelse("ov")}
+                               AND ov.feltdefinisjon_ekstern_id = :grupperingFeltkode$index
+                             LIMIT 1) AS $alias
+                        """.trimIndent()
+                        )
+                    }
+                    grupperingParams["grupperingFeltkode$index"] = felt.kode
+                }
+            } else {
+                val kolonne = when (felt.kode) {
+                    "oppgavestatus" -> "o.oppgavestatus"
+                    "oppgavetype" -> "o.oppgavetype_ekstern_id"
+                    "ferdigstiltDato" -> "o.ferdigstilt_dato"
+                    "reservasjonsnokkel" -> "o.reservasjonsnokkel"
+                    else -> {
+                        log.warn("Ukjent grupperings-felt uten område: ${felt.kode}")
+                        "NULL"
+                    }
+                }
+                selectDeler.add("$kolonne AS $alias")
+            }
+            grupperingsAlias[OmrådeOgKode(felt.område, felt.kode)] = alias
+            groupByDeler.add(alias)
+        }
+
+        if (joinDeler.isNotEmpty()) {
+            fromClause += " " + joinDeler.joinToString(" ")
+        }
+
+        aggregerteFelter.forEachIndexed { index, felt ->
+            val alias = "agg_$index"
+            val (uttrykk, params) = byggAggregeringsuttrykk(felt, index)
+            grupperingParams.putAll(params)
+            selectDeler.add("$uttrykk AS $alias")
+            aggregeringsOrderByUttrykk[index] = uttrykk
+        }
+
+        selectClause = "SELECT " + selectDeler.joinToString(", ")
+        if (groupByDeler.isNotEmpty()) {
+            groupByClause = "GROUP BY " + groupByDeler.joinToString(", ")
+        }
+        orderByClauses.clear()
+        orderByParams.clear()
+    }
+
+    /**
+     * Konverterer rå JDBC-verdier til forutsigbare Kotlin-typer basert på aggregeringsfunksjon og feltets datatype.
+     *
+     * JDBC returnerer f.eks. BigDecimal for CAST(... AS numeric) og java.sql.Timestamp for timestamp-kolonner.
+     * Denne metoden normaliserer til:
+     * - ANTALL → Long
+     * - SUM (INTEGER) → Long
+     * - GJENNOMSNITT (INTEGER) → Double
+     * - MIN/MAKS (INTEGER) → Long
+     * - MIN/MAKS (TIMESTAMP, STRING, andre) → String
+     */
+    private fun konverterAggregertVerdi(felt: AggregertSelectFelt, rawVerdi: Any?): Any? {
+        if (rawVerdi == null) return null
+
+        return when (felt.funksjon) {
+            Aggregeringsfunksjon.ANTALL -> (rawVerdi as Number).toLong()
+            Aggregeringsfunksjon.SUM -> (rawVerdi as Number).toLong()
+            Aggregeringsfunksjon.GJENNOMSNITT -> (rawVerdi as Number).toDouble()
+            Aggregeringsfunksjon.MIN, Aggregeringsfunksjon.MAKS -> {
+                val feltKode = felt.kode
+                if (feltKode != null && datatypeForFelt(felt.område, feltKode) == Datatype.INTEGER) {
+                    (rawVerdi as Number).toLong()
+                } else {
+                    rawVerdi.toString()
+                }
+            }
+        }
+    }
+
     override fun getParams(): Map<String, Any?> {
         return buildMap {
             putAll(queryParams)
@@ -477,29 +792,7 @@ class PartisjonertOppgaveQuerySqlBuilder(
             putAll(oppgavestatusParams)
             putAll(ferdigstiltDatoParams)
             putAll(selectFeltParams)
+            putAll(grupperingParams)
         }
-    }
-
-    override fun mapRowTilOppgaveResultat(row: Row): OppgaveResultat {
-        val eksternId = EksternOppgaveId("K9", row.string("oppgave_ekstern_id"))
-
-        val feltverdier = selectFelter.mapIndexed { index, felt ->
-            val alias = "felt_$index"
-            val verdi: Any? = if (felt.område != null && erListetype(felt.område, felt.kode)) {
-                row.stringOrNull(alias)?.let { jsonArray ->
-                    LosObjectMapper.instance.readValue(jsonArray, object : TypeReference<List<String>>() {})
-                } ?: emptyList<String>()
-            } else {
-                row.stringOrNull(alias)
-            }
-
-            Oppgavefeltverdi(
-                område = felt.område,
-                kode = felt.kode,
-                verdi = verdi
-            )
-        }
-
-        return OppgaveResultat(id = eksternId, felter = feltverdier)
     }
 }

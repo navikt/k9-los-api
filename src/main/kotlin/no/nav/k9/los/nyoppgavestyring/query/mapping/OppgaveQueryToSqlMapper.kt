@@ -18,62 +18,33 @@ object OppgaveQueryToSqlMapper {
         return PartisjonertOppgaveQuerySqlBuilder(felter, oppgavestatusFilter, now, ferdigstiltDatofilter)
     }
 
-    fun toSqlOppgaveQuery(
+    fun toSql(
         request: QueryRequest,
         felter: Map<OmrådeOgKode, OppgavefeltMedMer>,
         now: LocalDateTime
     ): OppgaveQuerySqlBuilder {
         val query = utledSqlBuilder(felter, request, now)
         val combineOperator = CombineOperator.AND
-
         håndterFiltere(query, felter, query.filterRens(felter, request.oppgaveQuery.filtere), combineOperator)
-        håndterOrder(query, request.oppgaveQuery.order)
         if (request.fjernReserverte) {
             query.utenReservasjoner()
         }
         request.avgrensning?.let { query.medPaging(it.limit, it.offset) }
-
-        return query
-    }
-
-    fun toSqlOppgaveQueryForAntall(
-        request: QueryRequest,
-        felter: Map<OmrådeOgKode, OppgavefeltMedMer>,
-        now: LocalDateTime
-    ): OppgaveQuerySqlBuilder {
-        val queryBuilder = utledSqlBuilder(felter, request, now)
-        val combineOperator = CombineOperator.AND
-        håndterFiltere(
-            queryBuilder,
-            felter,
-            queryBuilder.filterRens(felter, request.oppgaveQuery.filtere),
-            combineOperator
-        )
-        if (request.fjernReserverte) {
-            queryBuilder.utenReservasjoner()
-        }
-        request.avgrensning?.let { queryBuilder.medPaging(it.limit, it.offset) }
-        queryBuilder.medAntallSomResultat()
-        return queryBuilder
-    }
-
-    fun toSqlOppgaveQueryMedSelectFelter(
-        request: QueryRequest,
-        felter: Map<OmrådeOgKode, OppgavefeltMedMer>,
-        now: LocalDateTime
-    ): OppgaveQuerySqlBuilder {
-        val query = utledSqlBuilder(felter, request, now)
-        val combineOperator = CombineOperator.AND
 
         val enkelSelectFelter = request.oppgaveQuery.select.filterIsInstance<EnkelSelectFelt>()
-        query.medSelectFelter(enkelSelectFelter)
+        val aggregerteFelter = request.oppgaveQuery.select.filterIsInstance<AggregertSelectFelt>()
 
-        håndterFiltere(query, felter, query.filterRens(felter, request.oppgaveQuery.filtere), combineOperator)
-        håndterOrder(query, request.oppgaveQuery.order)
-        if (request.fjernReserverte) {
-            query.utenReservasjoner()
+        if (aggregerteFelter.isNotEmpty()) {
+            query.medAggregering(enkelSelectFelter, aggregerteFelter)
+            håndterOrder(query, request.oppgaveQuery.order)
+        } else if (enkelSelectFelter.isNotEmpty()) {
+            query.medSelectFelter(enkelSelectFelter)
+            håndterOrder(query, request.oppgaveQuery.order)
+        } else {
+            // Ingen eksplisitte select-felt: sqlBuilder beholder sin default SELECT
+            // med o.id og o.oppgave_ekstern_id, og OppgaveQueryRad populeres med oppgaveId/eksternOppgaveId.
+            håndterOrder(query, request.oppgaveQuery.order)
         }
-        request.avgrensning?.let { query.medPaging(it.limit, it.offset) }
 
         return query
     }
@@ -161,6 +132,12 @@ object OppgaveQueryToSqlMapper {
         for (orderBy in orderBys) {
             when (orderBy) {
                 is EnkelOrderFelt -> query.medEnkelOrder(orderBy.område, orderBy.kode, orderBy.økende)
+                is AggregertOrderFelt -> query.medAggregertOrder(
+                    orderBy.funksjon,
+                    orderBy.område,
+                    orderBy.kode,
+                    orderBy.økende
+                )
             }
         }
     }

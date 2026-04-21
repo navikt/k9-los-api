@@ -23,7 +23,6 @@ class Uttrekk private constructor(
     status: UttrekkStatus,
     tittel: String,
     val query: OppgaveQuery,
-    val typeKjøring: TypeKjøring,
     val lagetAv: Long,
     val lagretSøkId: Long?,
     val limit: Int?,
@@ -92,7 +91,6 @@ class Uttrekk private constructor(
     companion object {
         fun opprettUttrekk(
             lagretSøk: LagretSøk,
-            typeKjoring: TypeKjøring,
             lagetAv: Long,
             tittel: String = "",
             limit: Int? = null,
@@ -104,7 +102,6 @@ class Uttrekk private constructor(
                 status = UttrekkStatus.OPPRETTET,
                 tittel = tittel,
                 query = lagretSøk.query,
-                typeKjøring = typeKjoring,
                 lagetAv = lagetAv,
                 lagretSøkId = lagretSøk.id,
                 limit = limit,
@@ -122,7 +119,6 @@ class Uttrekk private constructor(
             status: UttrekkStatus,
             tittel: String,
             query: OppgaveQuery,
-            typeKjoring: TypeKjøring,
             lagetAv: Long,
             lagretSøkId: Long?,
             limit: Int?,
@@ -133,8 +129,8 @@ class Uttrekk private constructor(
             antall: Int?
         ): Uttrekk {
             return Uttrekk(
-                id, opprettetTidspunkt, status, tittel, query, typeKjoring, lagetAv, lagretSøkId, limit, offset,
-                feilmelding, startetTidspunkt, fullførtTidspunkt, antall
+                id, opprettetTidspunkt, status, tittel, query, lagetAv, lagretSøkId, limit, offset, feilmelding,
+                startetTidspunkt, fullførtTidspunkt, antall
             )
         }
     }

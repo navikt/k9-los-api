@@ -7,10 +7,8 @@ data class DagensTallDto(
     val hovedgruppe: DagensTallHovedgruppe,
     val undergruppe: DagensTallUndergruppe,
 
-    @JsonFormat(shape = JsonFormat.Shape.ARRAY)
-    val idag: Pair<DagensTallKortDto, DagensTallKortDto>,
-    @JsonFormat(shape = JsonFormat.Shape.ARRAY)
-    val siste7Dager: Pair<DagensTallKortDto, DagensTallKortDto>
+    val serier: Map<String, Pair<DagensTallKortDto, DagensTallKortDto>>,
+    val månedSerier: Map<String, Pair<DagensTallKortDto, DagensTallKortDto>>
 )
 
 data class DagensTallKortDto(
@@ -21,5 +19,4 @@ data class DagensTallKortDto(
 data class DagensTallLinjeDto(
     val visningsnavn: String,
     val verdi: Long,
-    val kildespørring: OppgaveQuery,
 )

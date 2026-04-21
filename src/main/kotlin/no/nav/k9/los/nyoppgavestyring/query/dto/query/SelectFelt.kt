@@ -7,7 +7,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo
 
 @JsonSubTypes(value = [
     JsonSubTypes.Type(value = EnkelSelectFelt::class, name = "enkel"),
-    JsonSubTypes.Type(value = AggregertSelectFelt::class, name = "aggregert")
+    JsonSubTypes.Type(value = AggregertSelectFelt::class, name = "aggregert"),
 ])
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type", defaultImpl = SelectFelt::class)
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -16,4 +16,4 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo
     setterVisibility = JsonAutoDetect.Visibility.NONE,
     fieldVisibility = JsonAutoDetect.Visibility.ANY
 )
-open class SelectFelt()
+sealed class SelectFelt

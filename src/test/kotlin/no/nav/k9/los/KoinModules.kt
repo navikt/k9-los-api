@@ -71,7 +71,6 @@ import no.nav.k9.los.nyoppgavestyring.uttrekk.UttrekkRepository
 import no.nav.k9.los.nyoppgavestyring.uttrekk.UttrekkTjeneste
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepositoryTxWrapper
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.OppgaverGruppertRepository
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.dagenstall.DagensTallService
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.ferdigstilteperenhet.FerdigstiltePerEnhetService
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.status.StatusService
@@ -225,7 +224,14 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             config = get(),
         )
     }
-    single { OppgavetypeRepository(dataSource = get(), feltdefinisjonRepository = get(), områdeRepository = get(), gyldigeFeltutledere = get()) }
+    single {
+        OppgavetypeRepository(
+            dataSource = get(),
+            feltdefinisjonRepository = get(),
+            områdeRepository = get(),
+            gyldigeFeltutledere = get()
+        )
+    }
     single { OppgaveV3Repository(dataSource = get(), oppgavetypeRepository = get()) }
     single { PartisjonertOppgaveRepository(oppgavetypeRepository = get()) }
     single { K9SakOppgaveTilDVHMapper() }
@@ -237,8 +243,6 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             oppgavetypeRepository = get()
         )
     }
-
-    single { OppgaverGruppertRepository(dataSource = get()) }
 
     single { mockk<StatistikkPublisher>() }
 
@@ -409,7 +413,12 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     }
 
     single {
-        OppgaveQueryService()
+        OppgaveQueryService(
+            datasource = get(),
+            oppgaveQueryRepository = get(),
+            oppgaveRepository = get(),
+            partisjonertOppgaveRepository = get(),
+        )
     }
 
     single {
@@ -495,7 +504,6 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     single {
         StatusService(
             queryService = get(),
-            oppgaverGruppertRepository = get(),
         )
     }
 

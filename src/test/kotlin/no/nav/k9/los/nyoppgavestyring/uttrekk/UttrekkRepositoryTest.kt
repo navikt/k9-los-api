@@ -60,7 +60,6 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
     fun `skal opprette og hente uttrekk`() {
         val uttrekk = Uttrekk.opprettUttrekk(
             lagretSøk = testLagretSøk,
-            typeKjoring = TypeKjøring.OPPGAVER,
             lagetAv = saksbehandlerId,
         )
 
@@ -85,7 +84,6 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
     fun `skal oppdatere eksisterende uttrekk`() {
         val uttrekk = Uttrekk.opprettUttrekk(
             lagretSøk = testLagretSøk,
-            typeKjoring = TypeKjøring.OPPGAVER,
             lagetAv = saksbehandlerId,
         )
 
@@ -116,15 +114,14 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
             status = UttrekkStatus.KJØRER,
             tittel = "Test uttrekk",
             query = testQuery,
-            typeKjoring = TypeKjøring.OPPGAVER,
             lagetAv = saksbehandlerId,
+            lagretSøkId = null,
+            limit = null,
+            offset = null,
             feilmelding = null,
             startetTidspunkt = LocalDateTime.now(),
             fullførtTidspunkt = null,
-            antall = null,
-            limit = null,
-            offset = null,
-            lagretSøkId = null
+            antall = null
         )
 
         val exception = assertThrows<IllegalStateException> {
@@ -138,7 +135,6 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
     fun `skal slette uttrekk`() {
         val uttrekk = Uttrekk.opprettUttrekk(
             lagretSøk = testLagretSøk,
-            typeKjoring = TypeKjøring.OPPGAVER,
             lagetAv = saksbehandlerId,
         )
 
@@ -155,12 +151,10 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
     fun `skal hente alle uttrekk`() {
         val uttrekk1 = Uttrekk.opprettUttrekk(
             lagretSøk = testLagretSøk,
-            typeKjoring = TypeKjøring.OPPGAVER,
             lagetAv = saksbehandlerId,
         )
         val uttrekk2 = Uttrekk.opprettUttrekk(
             lagretSøk = testLagretSøk,
-            typeKjoring = TypeKjøring.OPPGAVER,
             lagetAv = saksbehandlerId,
         )
 
@@ -189,17 +183,14 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
 
         val uttrekk1 = Uttrekk.opprettUttrekk(
             lagretSøk = testLagretSøk,
-            typeKjoring = TypeKjøring.OPPGAVER,
             lagetAv = saksbehandlerId,
         )
         val uttrekk2 = Uttrekk.opprettUttrekk(
             lagretSøk = testLagretSøk,
-            typeKjoring = TypeKjøring.OPPGAVER,
             lagetAv = saksbehandlerId,
         )
         val uttrekk3 = Uttrekk.opprettUttrekk(
             lagretSøk = testLagretSøk,
-            typeKjoring = TypeKjøring.OPPGAVER,
             lagetAv = annenSaksbehandlerId,
         )
 
@@ -213,10 +204,9 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
     }
 
     @Test
-    fun `skal opprette uttrekk med TypeKjøring ANTALL`() {
+    fun `skal opprette uttrekk`() {
         val uttrekk = Uttrekk.opprettUttrekk(
             lagretSøk = testLagretSøk,
-            typeKjoring = TypeKjøring.ANTALL,
             lagetAv = saksbehandlerId,
         )
 
@@ -224,29 +214,12 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
         val hentetUttrekk = uttrekkRepository.hent(id)
 
         assertThat(hentetUttrekk).isNotNull()
-        assertThat(hentetUttrekk!!.typeKjøring).isEqualTo(TypeKjøring.ANTALL)
-    }
-
-    @Test
-    fun `skal opprette uttrekk med TypeKjøring OPPGAVER`() {
-        val uttrekk = Uttrekk.opprettUttrekk(
-            lagretSøk = testLagretSøk,
-            typeKjoring = TypeKjøring.OPPGAVER,
-            lagetAv = saksbehandlerId,
-        )
-
-        val id = uttrekkRepository.opprett(uttrekk)
-        val hentetUttrekk = uttrekkRepository.hent(id)
-
-        assertThat(hentetUttrekk).isNotNull()
-        assertThat(hentetUttrekk!!.typeKjøring).isEqualTo(TypeKjøring.OPPGAVER)
     }
 
     @Test
     fun `skal sette feilmelding når uttrekk feiler`() {
         val uttrekk = Uttrekk.opprettUttrekk(
             lagretSøk = testLagretSøk,
-            typeKjoring = TypeKjøring.OPPGAVER,
             lagetAv = saksbehandlerId,
         )
 

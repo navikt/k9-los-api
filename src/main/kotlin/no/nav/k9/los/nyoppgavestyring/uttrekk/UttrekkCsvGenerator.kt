@@ -1,37 +1,32 @@
 package no.nav.k9.los.nyoppgavestyring.uttrekk
 
-import com.fasterxml.jackson.core.type.TypeReference
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
-import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.OppgaveResultat
-import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.Oppgavefeltverdi
-import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.Oppgaverad
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.*
 
 class UttrekkCsvGenerator {
 
-    fun genererCsv(resultatJson: String): String {
-        val oppgaverader = LosObjectMapper.instance.readValue(
-            resultatJson,
-            object : TypeReference<List<OppgaveResultat>>() {}
-        )
+    fun genererCsv(select: List<SelectFelt>, resultatJson: String): String {
+        val rader = UttrekkResultatMapper.fraLagretJson(resultatJson)
 
-        return genererCsv(oppgaverader.map { it.felter })
-    }
-
-    private fun genererCsv(oppgaverader: List<Oppgaverad>): String {
-        if (oppgaverader.isEmpty()) {
+        if (rader.isEmpty()) {
             return ""
         }
 
         return buildString {
-            // Kode fra første rad som kolonnenavn
-            // Bruke feltdefinisjon for å hente visningsnavn er en mulig forbedring
-            val headers = oppgaverader.first().map { it.kode }
+            val headers = select.map {
+                when (it) {
+                    is EnkelSelectFelt -> it.kode
+                    is AggregertSelectFelt -> {
+                        val funksjonNavn = it.funksjon.name.lowercase()
+                        if (it.kode != null) "${funksjonNavn}_${it.kode}" else funksjonNavn
+                    }
+                }
+            }
             append(headers.joinToString(","))
             append("\n")
 
-            for (rad in oppgaverader) {
-                val values = rad.map { feltverdi ->
-                    csvEscape(tilCsvVerdi(feltverdi.verdi))
+            for (rad in rader) {
+                val values = rad.kolonner.map { kolonne ->
+                    csvEscape(tilCsvVerdi(kolonne))
                 }
                 append(values.joinToString(","))
                 append("\n")

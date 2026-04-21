@@ -86,7 +86,6 @@ import no.nav.k9.los.nyoppgavestyring.uttrekk.UttrekkRepository
 import no.nav.k9.los.nyoppgavestyring.uttrekk.UttrekkTjeneste
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepositoryTxWrapper
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.OppgaverGruppertRepository
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.dagenstall.DagensTallService
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.ferdigstilteperenhet.FerdigstiltePerEnhetService
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.status.StatusService
@@ -147,10 +146,6 @@ fun common(app: Application, config: Configuration) = module {
         DriftsmeldingRepository(
             dataSource = get()
         )
-    }
-
-    single {
-        OppgaverGruppertRepository(get())
     }
 
     single {
@@ -406,7 +401,12 @@ fun common(app: Application, config: Configuration) = module {
     }
 
     single {
-        OppgaveQueryService()
+        OppgaveQueryService(
+            datasource = get(),
+            oppgaveQueryRepository = get(),
+            oppgaveRepository = get(),
+            partisjonertOppgaveRepository = get(),
+        )
     }
 
     single {
@@ -533,7 +533,6 @@ fun common(app: Application, config: Configuration) = module {
     single {
         StatusService(
             queryService = get(),
-            oppgaverGruppertRepository = get(),
         )
     }
 

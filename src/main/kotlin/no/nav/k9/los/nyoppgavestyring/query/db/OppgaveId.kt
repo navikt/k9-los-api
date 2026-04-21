@@ -1,4 +1,4 @@
-package no.nav.k9.los.nyoppgavestyring.mottak.oppgave
+package no.nav.k9.los.nyoppgavestyring.query.db
 
 sealed class OppgaveId
 

@@ -8,13 +8,12 @@ import kotliquery.using
 import no.nav.k9.los.nyoppgavestyring.kodeverk.PersonBeskyttelseType
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Kodeverkreferanse
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveId
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
 import no.nav.k9.los.nyoppgavestyring.query.dto.felter.Oppgavefelt
 import no.nav.k9.los.nyoppgavestyring.query.dto.felter.Oppgavefelter
 import no.nav.k9.los.nyoppgavestyring.query.dto.felter.Verdiforklaring
-import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.OppgaveResultat
+import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.OppgaveQueryRad
 import no.nav.k9.los.nyoppgavestyring.query.mapping.OppgaveQueryToSqlMapper
 import no.nav.k9.los.nyoppgavestyring.query.mapping.transientfeltutleder.GyldigeTransientFeltutleder
 import org.slf4j.Logger
@@ -30,58 +29,8 @@ class OppgaveQueryRepository(
     private val log: Logger = LoggerFactory.getLogger("OppgaveQueryRepository")
 
     @WithSpan
-    fun query(request: QueryRequest): List<OppgaveId> {
-        return using(sessionOf(datasource)) {
-            it.transaction { tx -> query(tx, request, LocalDateTime.now()) }
-        }
-    }
-
-    @WithSpan
-    fun query(tx: TransactionalSession, request: QueryRequest, now: LocalDateTime): List<OppgaveId> {
-        val felter = hentAlleFelterMedMer(tx, medKodeverk = false)
-            .associateBy { felt -> OmrådeOgKode(felt.oppgavefelt.område, felt.oppgavefelt.kode) }
-
-        return query(tx, OppgaveQueryToSqlMapper.toSqlOppgaveQuery(request, felter, now))
-    }
-
-    @WithSpan
-    fun queryForEksternId(request: QueryRequest, now: LocalDateTime): List<EksternOppgaveId> {
-        return using(sessionOf(datasource)) {
-            it.transaction { tx -> queryForEksternId(tx, request, now) }
-        }
-    }
-
-    @WithSpan
-    fun queryForEksternId(tx: TransactionalSession, request: QueryRequest, now: LocalDateTime): List<EksternOppgaveId> {
-        val felter = hentAlleFelterMedMer(tx, medKodeverk = false)
-            .associate { felt -> OmrådeOgKode(felt.oppgavefelt.område, felt.oppgavefelt.kode) to felt }
-
-        return queryForEksternId(tx, OppgaveQueryToSqlMapper.toSqlOppgaveQuery(request, felter, now))
-    }
-
-    @WithSpan
-    fun queryForAntall(tx: TransactionalSession, oppgaveQuery: QueryRequest, now: LocalDateTime): Long {
-        val felter = hentAlleFelterMedMer(tx, medKodeverk = false)
-            .associate { felt -> OmrådeOgKode(felt.oppgavefelt.område, felt.oppgavefelt.kode) to felt }
-
-        return queryForAntall(tx, OppgaveQueryToSqlMapper.toSqlOppgaveQueryForAntall(oppgaveQuery, felter, now))
-
-    }
-
-    @WithSpan
-    private fun queryForAntall(tx: TransactionalSession, oppgaveQuery: OppgaveQuerySqlBuilder): Long {
-        loggSqlDebug(oppgaveQuery)
-        return tx.run(
-            queryOf(
-                oppgaveQuery.getQuery(),
-                oppgaveQuery.getParams()
-            ).map { row -> row.long("antall") }.asSingle
-        )!!
-    }
-
-    @WithSpan
     fun hentAlleFelter(): Oppgavefelter {
-        return using(sessionOf(datasource)) { it ->
+        return using(sessionOf(datasource)) {
             it.transaction { tx -> Oppgavefelter(hentAlleFelter(tx)) }
         }
     }
@@ -236,48 +185,30 @@ class OppgaveQueryRepository(
         return (felterFraDatabase + standardfelter).sortedBy { it.oppgavefelt.visningsnavn }
     }
 
-    private fun query(tx: TransactionalSession, oppgaveQuery: OppgaveQuerySqlBuilder): List<OppgaveId> {
-        loggSqlDebug(oppgaveQuery)
-
-        return tx.run(
-            queryOf(
-                oppgaveQuery.getQuery(),
-                oppgaveQuery.getParams()
-            ).map(oppgaveQuery::mapRowTilId).asList
-        )
-    }
-
-    private fun queryForEksternId(
-        tx: TransactionalSession,
-        oppgaveQuery: OppgaveQuerySqlBuilder
-    ): List<EksternOppgaveId> {
-        loggSqlDebug(oppgaveQuery)
-        return tx.run(
-            queryOf(
-                oppgaveQuery.getQuery(),
-                oppgaveQuery.getParams()
-            ).map(oppgaveQuery::mapRowTilEksternId).asList
-        )
+    @WithSpan
+    fun query(
+        request: QueryRequest,
+        now: LocalDateTime
+    ): List<OppgaveQueryRad> {
+        return using(sessionOf(datasource)) {
+            it.transaction { tx -> query(tx, request, now) }
+        }
     }
 
     @WithSpan
-    fun queryForOppgaveResultat(
+    fun query(
         tx: TransactionalSession,
         request: QueryRequest,
         now: LocalDateTime
-    ): List<OppgaveResultat> {
+    ): List<OppgaveQueryRad> {
         val felter = hentAlleFelterMedMer(tx, medKodeverk = false)
             .associateBy { felt -> OmrådeOgKode(felt.oppgavefelt.område, felt.oppgavefelt.kode) }
 
-        val oppgaveQuery = OppgaveQueryToSqlMapper.toSqlOppgaveQueryMedSelectFelter(request, felter, now)
-
-        loggSqlDebug(oppgaveQuery)
-
+        val sqlBuilder = OppgaveQueryToSqlMapper.toSql(request, felter, now)
+        loggSqlDebug(sqlBuilder)
         return tx.run(
-            queryOf(
-                oppgaveQuery.getQuery(),
-                oppgaveQuery.getParams()
-            ).map(oppgaveQuery::mapRowTilOppgaveResultat).asList
+            queryOf(sqlBuilder.getQuery(), sqlBuilder.getParams())
+                .map(sqlBuilder::mapRowTilRad).asList
         )
     }
 

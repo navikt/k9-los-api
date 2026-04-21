@@ -1,8 +1,9 @@
 package no.nav.k9.los.nyoppgavestyring.uttrekk
 
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
 import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.Aggregeringsfunksjon
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.AggregertSelectFelt
 import org.slf4j.LoggerFactory
 import kotlin.time.measureTime
 
@@ -16,21 +17,16 @@ class UttrekkJobb(
     fun kjørUttrekk(uttrekkId: Long) {
         try {
             val uttrekk = uttrekkTjeneste.startUttrekk(uttrekkId)
-            val queryRequest = QueryRequest(uttrekk.query, avgrensning = uttrekk.avgrensning)
+            var queryRequest = QueryRequest(uttrekk.query, avgrensning = uttrekk.avgrensning)
 
-            when (uttrekk.typeKjøring) {
-                TypeKjøring.ANTALL -> {
-                    val antall = oppgaveQueryService.queryForAntall(queryRequest)
-                    uttrekkTjeneste.fullførUttrekk(uttrekkId, antall.toInt())
-                }
+            val resultat = oppgaveQueryService.query(queryRequest)
 
-                TypeKjøring.OPPGAVER -> {
-                    val oppgaver = oppgaveQueryService.queryForOppgaveResultat(queryRequest)
-                    val resultatJson = LosObjectMapper.instance.writeValueAsString(oppgaver)
-                    uttrekkTjeneste.fullførUttrekk(uttrekkId, oppgaver.size, resultatJson)
-                }
-            }
+            uttrekkTjeneste.fullførUttrekk(
+                uttrekkId,
+                resultat
+            )
         } catch (e: Exception) {
+            log.warn("Kjøring av uttrekk med id {} feilet", uttrekkId, e)
             uttrekkTjeneste.feilUttrekk(uttrekkId, e.message)
         }
     }

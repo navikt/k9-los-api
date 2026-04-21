@@ -117,6 +117,7 @@ enum class FeltType(
     AVVENTER_SAKSBEHANDLER("avventerSaksbehandler", tolkesSom = "boolean"),
     AKKUMULERT_VENTETID_SAKSBEHANDLER("akkumulertVentetidSaksbehandler", tolkesSom = "Duration"),
     AKKUMULERT_VENTETID_SAKSBEHANDLER_TIDLIGERE("akkumulertVentetidSaksbehandlerForTidligereVersjoner", tolkesSom = "Duration"),
+    FEILUTBETALT_BELØP("feilutbetaltBeløp", tolkesSom = "Integer"),
 }
 
 val felter: Map<OmrådeOgKode, OppgavefeltMedMer> = mapOf(

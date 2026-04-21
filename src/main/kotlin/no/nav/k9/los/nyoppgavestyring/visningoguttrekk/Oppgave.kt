@@ -64,7 +64,7 @@ data class Oppgave(
         return oppgavefelt?.verdi
     }
 
-    fun hentVerdiEllerListe(område: String, feltnavn: String): Any? {
+    fun hentVerdiEllerListe(område: String?, feltnavn: String): Any? {
         val oppgavefelt = hentOppgavefelt(område, feltnavn)
         if (oppgavefelt == null) {
             return null
@@ -98,7 +98,7 @@ data class Oppgave(
         }
     }
 
-    private fun hentOppgavefelt(område: String, feltnavn: String): Oppgavefelt? {
+    private fun hentOppgavefelt(område: String?, feltnavn: String): Oppgavefelt? {
         return felter.find { oppgavefelt ->
             oppgavefelt.område == område && oppgavefelt.eksternId == feltnavn
         }
@@ -121,7 +121,7 @@ data class Oppgave(
                         listetype = oppgavefelt.feltDefinisjon.listetype,
                         påkrevd = false,
                         verdi = verdi,
-                        verdiBigInt = if (oppgavefelt.feltDefinisjon.tolkesSom === Datatype.INTEGER.kode) verdi.toLong() else null
+                        verdiBigInt = if (oppgavefelt.feltDefinisjon.tolkesSom == Datatype.INTEGER.kode) verdi.toLong() else null
                     )
                 }
             } ?: listOf()

@@ -1,10 +1,11 @@
 package no.nav.k9.los.nyoppgavestyring.query.db
 
 import kotliquery.Row
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveId
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.Aggregeringsfunksjon
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelSelectFelt
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.Oppgavefilter
-import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.OppgaveResultat
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.AggregertSelectFelt
+import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.OppgaveQueryRad
 import no.nav.k9.los.nyoppgavestyring.query.mapping.CombineOperator
 import no.nav.k9.los.nyoppgavestyring.query.mapping.FeltverdiOperator
 
@@ -20,15 +21,15 @@ interface OppgaveQuerySqlBuilder {
     )
     fun medBlokk(combineOperator: CombineOperator, defaultTrue: Boolean, blokk: () -> Unit)
     fun medEnkelOrder(feltområde: String?, feltkode: String, økende: Boolean)
+    fun medAggregertOrder(funksjon: Aggregeringsfunksjon, feltområde: String?, feltkode: String?, økende: Boolean)
 
     fun utenReservasjoner()
     fun medPaging(limit: Long, offset: Long)
-    fun medAntallSomResultat()
-    fun medSelectFelter(selectFelter: List<EnkelSelectFelt>)
 
-    fun mapRowTilId(row: Row): OppgaveId
-    fun mapRowTilEksternId(row: Row): EksternOppgaveId
-    fun mapRowTilOppgaveResultat(row: Row): OppgaveResultat
+    fun medSelectFelter(selectFelter: List<EnkelSelectFelt>)
+    fun medAggregering(grupperingsFelter: List<EnkelSelectFelt>, aggregerteFelter: List<AggregertSelectFelt>)
+
+    fun mapRowTilRad(row: Row): OppgaveQueryRad
 
     /** Skal bare brukes til debugging, siden parametrene settes inn ukritisk */
     fun unsafeDebug(): String {
