@@ -43,7 +43,7 @@ private fun getResponse(navIdent: String): String {
             etternavn = "TEST"
             foedselsdato = "1985-07-27"
         }
-        "25037139184" -> {
+        "24420167209" -> {
             fornavn = "ARNE"
             mellomnavn = "BJARNE"
             etternavn = "CARLSEN"
