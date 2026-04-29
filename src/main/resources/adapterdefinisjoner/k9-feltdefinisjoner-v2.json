@@ -233,6 +233,19 @@
       }
     },
     {
+      "id": "tidligereAksjonspunkt",
+      "visningsnavn": "Tidligere aksjonspunkt",
+      "beskrivelse": "Aksjonspunkter som er utført eller avbrutt",
+      "listetype": true,
+      "tolkesSom": "String",
+      "visTilBruker": true,
+      "kokriterie": false,
+      "kodeverkreferanse": {
+        "område": "K9",
+        "eksternId": "Aksjonspunkt"
+      }
+    },
+    {
       "id": "løsbartAksjonspunkt",
       "visningsnavn": "Aksjonspunkt som kan løses",
       "beskrivelse": "Åpne aksjonspunkt som er løsbart akkurat nå, fordi de hører til steget behandlingen står i",

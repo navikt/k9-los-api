@@ -58,13 +58,13 @@ class KlageEventTilOppgaveMapper(
             feltverdier = lagFeltverdier(eventBeriket, forrigeOppgave)
         )
 
-        if (event.eventHendelse == EventHendelse.VASKEEVENT) {
-            return VaskOppgaveversjon(
+        return if (event.eventHendelse == EventHendelse.VASKEEVENT) {
+            VaskOppgaveversjon(
                 dto = oppgaveDto,
                 eventNummer = eventnummer
             )
         } else {
-            return NyOppgaveversjon(
+            NyOppgaveversjon(
                 dto = oppgaveDto
             )
         }
@@ -78,11 +78,11 @@ class KlageEventTilOppgaveMapper(
         const val KLAGE_PREFIX = "KLAGE"
         const val KLAGE_PREFIX_VISNING = "Klage - "
 
-        private val MANUELLE_AKSJONSPUNKTER = AksjonspunktDefinisjon.values().filter { aksjonspunktDefinisjon ->
+        private val MANUELLE_AKSJONSPUNKTER = AksjonspunktDefinisjon.entries.filter { aksjonspunktDefinisjon ->
             aksjonspunktDefinisjon.aksjonspunktType == AksjonspunktType.MANUELL
         }.map { aksjonspunktDefinisjon -> aksjonspunktDefinisjon.kode }
 
-        private val AUTOPUNKTER = AksjonspunktDefinisjon.values().filter { aksjonspunktDefinisjon ->
+        private val AUTOPUNKTER = AksjonspunktDefinisjon.entries.filter { aksjonspunktDefinisjon ->
             aksjonspunktDefinisjon.aksjonspunktType == AksjonspunktType.AUTOPUNKT
         }.map { aksjonspunktDefinisjon -> aksjonspunktDefinisjon.kode }
 
@@ -140,27 +140,6 @@ class KlageEventTilOppgaveMapper(
             }
         }
 
-        private fun oppgaveSkalHaVentestatus(event: K9KlageEventDto): Boolean {
-            val oppgaveFeltverdiDtos = mutableListOf<OppgaveFeltverdiDto>()
-            val åpneAksjonspunkter = getåpneAksjonspunkter(event)
-
-            val harAutopunkt = åpneAksjonspunkter.any { aksjonspunktTilstandDto ->
-                AUTOPUNKTER.contains(aksjonspunktTilstandDto.aksjonspunktKode)
-            }
-
-            val harManueltAksjonspunkt = event.aksjonspunkttilstander
-                .filter { aksjonspunkttilstand -> aksjonspunkttilstand.status != AksjonspunktStatus.AVBRUTT }
-                .any { aksjonspunktTilstandDto -> MANUELLE_AKSJONSPUNKTER.contains(aksjonspunktTilstandDto.aksjonspunktKode) }
-
-            utledAvventerSaksbehandler(
-                harManueltAksjonspunkt = harManueltAksjonspunkt,
-                harAutopunkt = harAutopunkt,
-                oppgaveFeltverdiDtos = oppgaveFeltverdiDtos
-            )
-
-            return oppgaveFeltverdiDtos.first().nøkkel == "false"
-        }
-
         private fun erTilBeslutter(event: K9KlageEventDto): Boolean {
             return getåpneAksjonspunkter(event).firstOrNull { ap ->
                 ap.aksjonspunktKode.equals(AksjonspunktDefinisjon.FATTER_VEDTAK.kode)
@@ -187,6 +166,7 @@ class KlageEventTilOppgaveMapper(
 
             utledAksjonspunkter(event, oppgaveFeltverdiDtos)
             utledÅpneAksjonspunkter(åpneAksjonspunkter, oppgaveFeltverdiDtos)
+            utledTidligereAksjonspunkter(event, oppgaveFeltverdiDtos)
             utledLøsbartAksjonspunkt(event.behandlingSteg, åpneAksjonspunkter, oppgaveFeltverdiDtos)
 
             utledTidspunktOversendtKabal(event, oppgaveFeltverdiDtos)
@@ -232,7 +212,7 @@ class KlageEventTilOppgaveMapper(
             oppgaveFeltverdiDtos: MutableList<OppgaveFeltverdiDto>
         ) {
             if (åpneAksjonspunkter.isNotEmpty()) {
-                åpneAksjonspunkter.map { åpentAksjonspunkt ->
+                åpneAksjonspunkter.forEach { åpentAksjonspunkt ->
                     oppgaveFeltverdiDtos.add(
                         OppgaveFeltverdiDto(
                             nøkkel = "aktivtAksjonspunkt",
@@ -285,6 +265,30 @@ class KlageEventTilOppgaveMapper(
                 oppgaveFeltverdiDtos.add(
                     OppgaveFeltverdiDto(
                         nøkkel = "aksjonspunkt",
+                        verdi = null
+                    )
+                )
+            }
+        }
+
+        private fun utledTidligereAksjonspunkter(
+            event: K9KlageEventDto,
+            oppgaveFeltverdiDtos: MutableList<OppgaveFeltverdiDto>
+        ) {
+            val tidligereAksjonspunkter = event.aksjonspunkttilstander.filter { aksjonspunkttilstand ->
+                !aksjonspunkttilstand.status.erÅpentAksjonspunkt()
+            }
+            if (tidligereAksjonspunkter.isNotEmpty()) {
+                oppgaveFeltverdiDtos.addAll(tidligereAksjonspunkter.map { aksjonspunkttilstand ->
+                    OppgaveFeltverdiDto(
+                        nøkkel = "tidligereAksjonspunkt",
+                        verdi = KLAGE_PREFIX + aksjonspunkttilstand.aksjonspunktKode
+                    )
+                })
+            } else {
+                oppgaveFeltverdiDtos.add(
+                    OppgaveFeltverdiDto(
+                        nøkkel = "tidligereAksjonspunkt",
                         verdi = null
                     )
                 )
@@ -355,7 +359,7 @@ class KlageEventTilOppgaveMapper(
             ),
             OppgaveFeltverdiDto(
                 nøkkel = "behandlingsstatus",
-                verdi = event.behandlingStatus ?: BehandlingStatus.UTREDES.kode
+                verdi = event.behandlingStatus
             ),
             OppgaveFeltverdiDto(
                 nøkkel = "behandlingssteg",
@@ -391,11 +395,11 @@ class KlageEventTilOppgaveMapper(
             ),
             OppgaveFeltverdiDto(
                 nøkkel = "totrinnskontroll",
-                verdi = event.aksjonspunkttilstander.filter { aksjonspunktTilstandDto ->
+                verdi = event.aksjonspunkttilstander.any { aksjonspunktTilstandDto ->
                     aksjonspunktTilstandDto.aksjonspunktKode.equals("5015") && aksjonspunktTilstandDto.status.equals(
                         AksjonspunktStatus.AVBRUTT
                     ).not()
-                }.isNotEmpty().toString()
+                }.toString()
             ),
             utledTidFørsteGangHosBeslutter(forrigeOppgave, event),
             OppgaveFeltverdiDto(
