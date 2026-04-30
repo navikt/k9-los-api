@@ -6,10 +6,10 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer
-import no.nav.k9.kodeverk.produksjonsstyring.BehandlingMerknadType
-import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
+import no.nav.k9.kodeverk.produksjonsstyring.MerknadType
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.EventHendelse
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.KodeverkDeserializer
+import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
 import no.nav.k9.sak.kontrakt.aksjonspunkt.AksjonspunktTilstandDto
 import no.nav.k9.sak.typer.Periode
 import java.time.LocalDate
@@ -40,7 +40,7 @@ data class K9SakEventDto(
     @JsonDeserialize(using = LocalDateTimeDeserializer::class)
     val eventTid: LocalDateTime,
     val eventHendelse: EventHendelse,
-    val merknader: List<BehandlingMerknadType> = emptyList(),
+    val merknader: List<MerknadType> = emptyList(),
 
     @JsonAlias("behandlinStatus")
     val behandlingStatus: String?,
@@ -91,12 +91,14 @@ data class K9SakEventDto(
     val relatertPartAktørId: String? = null,
     val aksjonspunktTilstander: List<AksjonspunktTilstandDto> = emptyList(),
     val nyeKrav: Boolean? = null,
+    val kunNyePerioder: Boolean? = null,
     val fraEndringsdialog: Boolean? = null,
 
     @JsonDeserialize(using = KodeverkDeserializer::class)
     val søknadsårsaker : List<String> = emptyList(),
     @JsonDeserialize(using = KodeverkDeserializer::class)
-    val behandlingsårsaker: List<String> = emptyList()
+    val behandlingsårsaker: List<String> = emptyList(),
+    val relevanteSøknadsperioder: List<Periode> = emptyList()
 ) {
 
     // Denne skal ikke ha fnr, aktørider, orgnumre eller beløp som kan identifisere brukeren
