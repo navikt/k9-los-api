@@ -98,7 +98,7 @@ data class K9SakEventDto(
     val søknadsårsaker : List<String> = emptyList(),
     @JsonDeserialize(using = KodeverkDeserializer::class)
     val behandlingsårsaker: List<String> = emptyList(),
-    val relevanteSøknadsperioder: List<Periode> = emptyList()
+    val relevanteSøknadsperioder: List<Periode>? = emptyList()
 ) {
 
     // Denne skal ikke ha fnr, aktørider, orgnumre eller beløp som kan identifisere brukeren
