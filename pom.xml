@@ -31,7 +31,7 @@
         <koin.version>4.2.0</koin.version>
         <kotest.version>6.1.11</kotest.version>
         <kotliquery.version>1.9.1</kotliquery.version>
-        <k9-sak.version>6.0.13</k9-sak.version>
+        <k9-sak.version>7.0.6</k9-sak.version>
         <k9-klage.version>0.5.1</k9-klage.version>
         <jackson.version>2.21.2</jackson.version>
         <commons-text.version>1.15.0</commons-text.version>

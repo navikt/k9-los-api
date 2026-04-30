@@ -442,9 +442,25 @@
     },
     {
       "id": "nyeKrav",
-      "visningsnavn": "Søknad om nye perioder",
+      "visningsnavn": "Søknad inneholder nye perioder",
       "listetype": false,
       "tolkesSom": "boolean",
+      "visTilBruker": true,
+      "kokriterie": true
+    },
+    {
+      "id": "bareNyeKrav",
+      "visningsnavn": "Søknad inneholder bare nye perioder",
+      "listetype": false,
+      "tolkesSom": "boolean",
+      "visTilBruker": true,
+      "kokriterie": true
+    },
+    {
+      "id": "antallOmsøkteDager",
+      "visningsnavn": "Antall dager man har søkt om støtte for",
+      "listetype": false,
+      "tolkesSom": "Integer",
       "visTilBruker": true,
       "kokriterie": true
     },
@@ -466,7 +482,7 @@
     },
     {
       "id": "utenlandstilsnitt",
-      "visningsnavn": "Utenlandstilsnitt",
+      "visningsnavn": "Utenlandssak",
       "listetype": false,
       "tolkesSom": "boolean",
       "visTilBruker": true,
