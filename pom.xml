@@ -18,7 +18,7 @@
         <java.version>25</java.version>
         <maven.compiler.source>25</maven.compiler.source>
         <maven.compiler.target>25</maven.compiler.target>
-        <kotlin.version>2.3.20</kotlin.version>
+        <kotlin.version>2.3.21</kotlin.version>
         <kotlin.compiler.jvmTarget>25</kotlin.compiler.jvmTarget>
 
         <!-- Main Class -->
@@ -40,7 +40,7 @@
         <kafka.version>4.2.0</kafka.version>
         <nav-tilgangskontroll.version>3.2024.01.24_10.14-f70bae69bd65</nav-tilgangskontroll.version>
         <opentelemetry.version>1.61.0</opentelemetry.version>
-        <opentelemetry-instrumentation.version>2.26.1</opentelemetry-instrumentation.version>
+        <opentelemetry-instrumentation.version>2.27.0</opentelemetry-instrumentation.version>
 
         <!-- Test Dependency Versions -->
         <testcontainers.version>1.21.4</testcontainers.version>
