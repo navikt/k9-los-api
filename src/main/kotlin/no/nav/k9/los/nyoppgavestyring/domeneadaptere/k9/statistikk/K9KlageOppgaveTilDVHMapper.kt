@@ -75,7 +75,9 @@ class K9KlageOppgaveTilDVHMapper {
     }
 
     private fun utledBehandlingStatus(oppgave: Oppgave): String {
-        return if (oppgave.hentListeverdi("aktivtAksjonspunkt").contains(KlageEventTilOppgaveMapper.KLAGE_PREFIX + AksjonspunktDefinisjon.AUTO_OVERFØRT_NK.kode)) {
+        val åpneAksjonspunkter = oppgave.hentListeverdi("fremtidigAksjonspunkt") +
+            listOfNotNull(oppgave.hentVerdi("løsbartAksjonspunkt"))
+        return if (åpneAksjonspunkter.contains(KlageEventTilOppgaveMapper.KLAGE_PREFIX + AksjonspunktDefinisjon.AUTO_OVERFØRT_NK.kode)) {
             "OVERFORT_KLAGE_ANKE"
         } else {
             BehandlingStatus.fraKode(oppgave.hentVerdi("behandlingsstatus")).kode

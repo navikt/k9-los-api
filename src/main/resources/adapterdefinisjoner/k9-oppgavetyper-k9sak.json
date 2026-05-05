@@ -142,6 +142,21 @@
           "påkrevd": false
         },
         {
+          "id": "utførtAksjonspunkt",
+          "visPåOppgave": true,
+          "påkrevd": false
+        },
+        {
+          "id": "avbruttAksjonspunkt",
+          "visPåOppgave": true,
+          "påkrevd": false
+        },
+        {
+          "id": "fremtidigAksjonspunkt",
+          "visPåOppgave": true,
+          "påkrevd": false
+        },
+        {
           "id": "avventerSøker",
           "visPåOppgave": false,
           "påkrevd": true

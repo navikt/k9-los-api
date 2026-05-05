@@ -266,6 +266,46 @@ class TilbakeEventTilOppgaveMapper {
                     )
                 )
             }
+
+            val utførteAksjonspunkter = event.aksjonspunktKoderMedStatusListe
+                .filter { it.value == AksjonspunktStatus.UTFØRT.kode }
+                .map { AksjonspunktDefinisjonK9Tilbake.fraKode(it.key) }
+
+            if (utførteAksjonspunkter.isNotEmpty()) {
+                oppgaveFeltverdiDtos.addAll(utførteAksjonspunkter.map {
+                    OppgaveFeltverdiDto(
+                        nøkkel = "utførtAksjonspunkt",
+                        verdi = it.kode
+                    )
+                })
+            } else {
+                oppgaveFeltverdiDtos.add(
+                    OppgaveFeltverdiDto(
+                        nøkkel = "utførtAksjonspunkt",
+                        verdi = null
+                    )
+                )
+            }
+
+            val avbrutteAksjonspunkter = event.aksjonspunktKoderMedStatusListe
+                .filter { it.value == AksjonspunktStatus.AVBRUTT.kode }
+                .map { AksjonspunktDefinisjonK9Tilbake.fraKode(it.key) }
+
+            if (avbrutteAksjonspunkter.isNotEmpty()) {
+                oppgaveFeltverdiDtos.addAll(avbrutteAksjonspunkter.map {
+                    OppgaveFeltverdiDto(
+                        nøkkel = "avbruttAksjonspunkt",
+                        verdi = it.kode
+                    )
+                })
+            } else {
+                oppgaveFeltverdiDtos.add(
+                    OppgaveFeltverdiDto(
+                        nøkkel = "avbruttAksjonspunkt",
+                        verdi = null
+                    )
+                )
+            }
         }
     }
 }
