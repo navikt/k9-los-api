@@ -603,6 +603,25 @@
       "tolkesSom": "Integer",
       "visTilBruker": false,
       "kokriterie": false
+    },
+    {
+      "id": "relevanteSøknadsperioder",
+      "visningsnavn": "Relevante søknadsperioder",
+      "beskrivelse": "Liste over søknadsperioder i ISO 8601 intervallformat (YYYY-MM-DD/YYYY-MM-DD)",
+      "listetype": true,
+      "tolkesSom": "Periode",
+      "visTilBruker": true,
+      "kokriterie": false
+    },
+    {
+      "id": "antallOmsøkteDagerSomErPassert",
+      "visningsnavn": "Antall omsøkte dager som er passert",
+      "beskrivelse": "Antall dager fra relevante søknadsperioder som er før dagens dato",
+      "listetype": false,
+      "tolkesSom": "Integer",
+      "visTilBruker": true,
+      "kokriterie": true,
+      "transientFeltutleder": "no.nav.k9.los.nyoppgavestyring.query.mapping.transientfeltutleder.K9SakAntallOmsøkteDagerSomErPassertUtleder"
     }
   ]
 }
