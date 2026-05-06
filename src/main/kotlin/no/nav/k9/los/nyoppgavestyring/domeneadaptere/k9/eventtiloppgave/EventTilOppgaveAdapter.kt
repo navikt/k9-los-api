@@ -25,7 +25,6 @@ class EventTilOppgaveAdapter(
     private val ajourholdTjeneste: AktivOgPartisjonertOppgaveAjourholdTjeneste,
 ) {
     private val log: Logger = LoggerFactory.getLogger(EventTilOppgaveAdapter::class.java)
-    private val TRÅDNAVN = "event-til-oppgave"
 
     @WithSpan
     fun spillAvBehandlingProsessEventer() {
@@ -72,7 +71,7 @@ class EventTilOppgaveAdapter(
     ): Long {
         log.info("Nytt felles oppgaveadapter, oppdaterer oppgave for fagsystem: ${eventnøkkel.fagsystem}, eksternId: ${eventnøkkel.eksternId}")
         var statistikkteller = statistikktellerInn
-        var forrigeOppgaveversjon: OppgaveV3? = null
+        var forrigeOppgaveversjon: OppgaveV3?
         //låse alle eventer for denne eksternIden mens vi prosesserer dem
         val eventer = eventRepository.hentAlleEventerMedLås(eventnøkkel, tx)
         val eventerMedNummerering = vaskeeventSerieutleder.korrigerEventnummerForVaskeeventer(eventer)
@@ -95,8 +94,7 @@ class EventTilOppgaveAdapter(
 
             var sisteOppdaterteEvent: EventLagret? = null
 
-            for ((index, pair) in eventerMedNummerering.withIndex()) {
-                val (eventnummer, eventLagret) = pair
+            for ((eventnummer, eventLagret) in eventerMedNummerering) {
                 val nyOppgaveversjon =
                     eventTilOppgaveMapper.mapOppgave(eventLagret, forrigeOppgaveversjon, eventnummer)
                 val oppgave = oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(nyOppgaveversjon, tx)
