@@ -266,6 +266,20 @@ class EventRepository(
         )
     }
 
+    fun fjernAlleDirty(nøkkelId: Long, tx: TransactionalSession) {
+        tx.run(
+            queryOf(
+                """update event
+                set dirty = false 
+                where event_nokkel_id = :id
+                and dirty = true""",
+                mapOf(
+                    "id" to nøkkelId,
+                )
+            ).asUpdate
+        )
+    }
+
     fun settDirty(eventnøkkel: EventNøkkel, tx: TransactionalSession) {
         tx.run(
             queryOf(

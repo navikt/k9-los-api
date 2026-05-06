@@ -77,7 +77,7 @@ class EventTilOppgaveAdapter(
         val eventer = eventRepository.hentAlleEventerMedLås(eventnøkkel, tx)
         val eventerMedNummerering = vaskeeventSerieutleder.korrigerEventnummerForVaskeeventer(eventer)
 
-        if (!eventerMedNummerering.isEmpty()) {
+        if (eventerMedNummerering.isNotEmpty()) {
             sjekkMeldingIFeilRekkefølgeOgBestillVask(eventnøkkel, eventerMedNummerering, tx)
 
             forrigeOppgaveversjon =
@@ -93,7 +93,10 @@ class EventTilOppgaveAdapter(
                     null
                 }
 
-            for ((eventnummer, eventLagret) in eventerMedNummerering) {
+            var sisteOppdaterteEvent: EventLagret? = null
+
+            for ((index, pair) in eventerMedNummerering.withIndex()) {
+                val (eventnummer, eventLagret) = pair
                 val nyOppgaveversjon =
                     eventTilOppgaveMapper.mapOppgave(eventLagret, forrigeOppgaveversjon, eventnummer)
                 val oppgave = oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(nyOppgaveversjon, tx)
@@ -103,6 +106,7 @@ class EventTilOppgaveAdapter(
 
                     statistikkteller++
                     forrigeOppgaveversjon = oppgave
+                    sisteOppdaterteEvent = eventLagret
                 } else { // hvis oppgave == null ble ikke oppgaven oppdatert selv om eventet var dirty. Vi henter ut oppgaveversjonen vi forsøkte å oppdatere som kontekst for neste event
                     forrigeOppgaveversjon = oppgaveV3Tjeneste.hentOppgaveversjon(
                         "K9",
@@ -112,8 +116,13 @@ class EventTilOppgaveAdapter(
                         tx
                     )
                 }
-                eventRepository.fjernDirty(eventLagret, tx)
             }
+            // Oppdater PEP-cache én gang for siste tilstand, i stedet for per event (unngår gjentatte eksterne kall)
+            if (sisteOppdaterteEvent != null) {
+                oppgaveOppdatertHandler.oppdaterPepCache(forrigeOppgaveversjon!!, tx)
+            }
+            // Batch-oppdater alle dirty-flagg i én SQL-spørring i stedet for én pr event
+            eventRepository.fjernAlleDirty(eventer.first().nøkkelId, tx)
             ajourholdTjeneste.ajourholdOppgave(forrigeOppgaveversjon!!, eventerMedNummerering.last().first, tx)
         }
 
