@@ -69,13 +69,12 @@ class EventTilOppgaveAdapter(
         eventnøkkel: EventNøkkel,
         tx: TransactionalSession,
         statistikktellerInn: Long = 0,
-        nøkkelId: Long? = null
     ): Long {
         log.info("Nytt felles oppgaveadapter, oppdaterer oppgave for fagsystem: ${eventnøkkel.fagsystem}, eksternId: ${eventnøkkel.eksternId}")
         var statistikkteller = statistikktellerInn
         var forrigeOppgaveversjon: OppgaveV3? = null
         //låse alle eventer for denne eksternIden mens vi prosesserer dem
-        val eventer = eventRepository.hentAlleEventerMedLås(eventnøkkel.fagsystem, eventnøkkel.eksternId, tx, nøkkelId)
+        val eventer = eventRepository.hentAlleEventerMedLås(eventnøkkel, tx)
         val eventerMedNummerering = vaskeeventSerieutleder.korrigerEventnummerForVaskeeventer(eventer)
 
         if (!eventerMedNummerering.isEmpty()) {

@@ -79,8 +79,7 @@ class HistorikkvaskTjeneste(
         transactionalManager.transaction { tx ->
             val eventer =
                 eventRepository.hentAlleEventerMedLås(
-                    historikkvaskBestilling.fagsystem,
-                    historikkvaskBestilling.eksternId,
+                    EventNøkkel(historikkvaskBestilling.fagsystem, historikkvaskBestilling.eksternId),
                     tx
                 )
             if (eventer.any { it.dirty }) {

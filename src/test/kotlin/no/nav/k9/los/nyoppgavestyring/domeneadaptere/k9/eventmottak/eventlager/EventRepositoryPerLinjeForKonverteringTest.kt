@@ -57,7 +57,7 @@ class EventRepositoryPerLinjeForKonverteringTest() : AbstractK9LosIntegrationTes
         assertThat(K9PunsjEventDto.fraEventLagret(eventLagret).status).isEqualTo(Oppgavestatus.AAPEN)
 
         var alleEventer = transactionalManager.transaction { tx ->
-            eventRepository.hentAlleEventerMedLås(Fagsystem.PUNSJ, eksternId.toString(), tx)
+            eventRepository.hentAlleEventerMedLås(EventNøkkel(Fagsystem.PUNSJ, eksternId.toString()), tx)
         }
         assertThat(alleEventer.size).isEqualTo(1)
 
@@ -84,7 +84,7 @@ class EventRepositoryPerLinjeForKonverteringTest() : AbstractK9LosIntegrationTes
         assertThat(K9PunsjEventDto.fraEventLagret(eventLagret2).status).isEqualTo(Oppgavestatus.VENTER)
 
         alleEventer = transactionalManager.transaction { tx ->
-            eventRepository.hentAlleEventerMedLås(Fagsystem.PUNSJ, eksternId.toString(), tx)
+            eventRepository.hentAlleEventerMedLås(EventNøkkel(Fagsystem.PUNSJ, eksternId.toString()), tx)
         }
         assertThat(alleEventer.size).isEqualTo(2)
 
@@ -141,7 +141,7 @@ class EventRepositoryPerLinjeForKonverteringTest() : AbstractK9LosIntegrationTes
         }
 
         val retur = transactionalManager.transaction { tx ->
-            eventRepository.hentAlleEventerMedLås(Fagsystem.PUNSJ, eksternId.toString(), tx)
+            eventRepository.hentAlleEventerMedLås(EventNøkkel(Fagsystem.PUNSJ, eksternId.toString()), tx)
         }
 
         assertThat(retur.size).isEqualTo(1)
@@ -205,8 +205,7 @@ class EventRepositoryPerLinjeForKonverteringTest() : AbstractK9LosIntegrationTes
         assertThat(vaskeBestillinger.size).isEqualTo(1)
         val uvasketEventLagret = transactionalManager.transaction { tx ->
             eventRepository.hentAlleEventerMedLås(
-                Fagsystem.PUNSJ,
-                vaskeBestillinger.get(0).eksternId, tx
+                EventNøkkel(Fagsystem.PUNSJ, vaskeBestillinger.get(0).eksternId), tx
             )
                 .sortedBy { LocalDateTime.parse(it.eksternVersjon) }[0]
         }

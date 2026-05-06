@@ -2,7 +2,6 @@ package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak
 
 import io.opentelemetry.instrumentation.annotations.WithSpan
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.EventHandlerMetrics
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventNøkkel
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventRepository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.EventTilOppgaveAdapter
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
@@ -40,15 +39,11 @@ class K9SakEventHandler(
         val t0 = System.nanoTime()
 
         transactionalManager.transaction { tx ->
-            val nøkkelId = eventRepository.lagre(Fagsystem.K9SAK, eksternId, eksternVersjon, event, tx)
+            val eventnøkkel = eventRepository.lagre(Fagsystem.K9SAK, eksternId, eksternVersjon, event, tx)
 
             OpentelemetrySpanUtil.span("k9SakTilLosAdapterTjeneste.oppdaterOppgaveForBehandlingUuid") {
                 try {
-                    eventTilOppgaveAdapter.oppdaterOppgaveForEksternId(
-                        EventNøkkel(Fagsystem.K9SAK, eksternId),
-                        tx,
-                        nøkkelId = nøkkelId
-                    )
+                    eventTilOppgaveAdapter.oppdaterOppgaveForEksternId(eventnøkkel, tx)
                 } catch (e: Exception) {
                     log.error(
                         "Oppatering av k9-sak-oppgave feilet for ${eksternId}. Oppgaven er ikke oppdatert, men blir plukket av vaktmester",

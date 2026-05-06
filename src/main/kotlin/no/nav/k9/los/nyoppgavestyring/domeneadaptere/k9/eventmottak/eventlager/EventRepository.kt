@@ -71,7 +71,7 @@ class EventRepository(
     }
 
     /**
-     * Lagrer event og returnerer nøkkelId for bruk i videre prosessering i samme transaksjon.
+     * Lagrer event og returnerer [EventNøkkel] med id for bruk i videre prosessering i samme transaksjon.
      * Utfører upsert av eventnøkkel med FOR UPDATE-lås, og inserter eventet.
      */
     fun lagre(
@@ -80,7 +80,7 @@ class EventRepository(
         eksternVersjon: String,
         event: String,
         tx: TransactionalSession
-    ): Long {
+    ): EventNøkkel {
         val eventnøkkelId = upsertOgLåsEventnøkkel(fagsystem, eksternId, tx)
 
         tx.run(
@@ -102,7 +102,7 @@ class EventRepository(
             ).asUpdate
         )
 
-        return eventnøkkelId
+        return EventNøkkel(fagsystem, eksternId, eventnøkkelId)
     }
 
     fun hentAlleEventer(fagsystem: Fagsystem, eksternId: String): List<EventLagret> {
@@ -135,8 +135,8 @@ class EventRepository(
     }
 
 
-    fun hentAlleEventerMedLås(fagsystem: Fagsystem, eksternId: String, tx: TransactionalSession, nøkkelId: Long? = null): List<EventLagret> {
-        val eventId = nøkkelId ?: hentOgLåsEventnøkkel(fagsystem, eksternId, tx)
+    fun hentAlleEventerMedLås(eventnøkkel: EventNøkkel, tx: TransactionalSession): List<EventLagret> {
+        val eventId = eventnøkkel.id ?: hentOgLåsEventnøkkel(eventnøkkel.fagsystem, eventnøkkel.eksternId, tx)
         val eventer = tx.run(
             queryOf(
                 """
@@ -148,7 +148,7 @@ class EventRepository(
                     "nokkelId" to eventId,
                 )
             ).map { row ->
-                rowTilEvent(row, eksternId, fagsystem)
+                rowTilEvent(row, eventnøkkel.eksternId, eventnøkkel.fagsystem)
             }.asList
         )
 
@@ -189,7 +189,8 @@ class EventRepository(
                 ).map { row ->
                     EventNøkkel(
                         eksternId = row.string("ekstern_id"),
-                        fagsystem = Fagsystem.fraKode(row.string("fagsystem"))
+                        fagsystem = Fagsystem.fraKode(row.string("fagsystem")),
+                        id = row.long("id")
                     )
                 }.asList
             )
