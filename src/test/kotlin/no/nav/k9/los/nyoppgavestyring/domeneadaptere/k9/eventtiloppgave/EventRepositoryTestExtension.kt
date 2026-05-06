@@ -10,11 +10,11 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEve
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
 
-fun EventRepository.lagre(fagsystem: Fagsystem, event: K9PunsjEventDto, tx: TransactionalSession): EventLagret? {
+fun EventRepository.lagre(fagsystem: Fagsystem, event: K9PunsjEventDto, tx: TransactionalSession): Long {
     return this.lagre(fagsystem, event.eksternId.toString(), event.eventTid.toString(), LosObjectMapper.instance.writeValueAsString(event), tx)
 }
 
-fun EventRepository.lagre(fagsystem: Fagsystem, event: K9SakEventDto, tx: TransactionalSession): EventLagret? {
+fun EventRepository.lagre(fagsystem: Fagsystem, event: K9SakEventDto, tx: TransactionalSession): Long {
     return this.lagre(fagsystem, event.eksternId.toString(), event.eventTid.toString(), LosObjectMapper.instance.writeValueAsString(event), tx)
 }
 

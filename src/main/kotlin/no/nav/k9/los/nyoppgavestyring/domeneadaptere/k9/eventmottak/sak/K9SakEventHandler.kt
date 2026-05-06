@@ -40,23 +40,21 @@ class K9SakEventHandler(
         val t0 = System.nanoTime()
 
         transactionalManager.transaction { tx ->
-            eventRepository.upsertOgLåsEventnøkkel(Fagsystem.K9SAK, eksternId, tx)
-            eventRepository.lagre(Fagsystem.K9SAK, eksternId, eksternVersjon, event, tx)
-        }
+            val nøkkelId = eventRepository.lagre(Fagsystem.K9SAK, eksternId, eksternVersjon, event, tx)
 
-        OpentelemetrySpanUtil.span("k9SakTilLosAdapterTjeneste.oppdaterOppgaveForBehandlingUuid") {
-            try {
-                eventTilOppgaveAdapter.oppdaterOppgaveForEksternId( //TODO: kalle via channel, for å få ned kafka topic lag?
-                    EventNøkkel(
-                        Fagsystem.K9SAK,
-                        eksternId
+            OpentelemetrySpanUtil.span("k9SakTilLosAdapterTjeneste.oppdaterOppgaveForBehandlingUuid") {
+                try {
+                    eventTilOppgaveAdapter.oppdaterOppgaveForEksternId(
+                        EventNøkkel(Fagsystem.K9SAK, eksternId),
+                        tx,
+                        nøkkelId = nøkkelId
                     )
-                )
-            } catch (e: Exception) {
-                log.error(
-                    "Oppatering av k9-sak-oppgave feilet for ${eksternId}. Oppgaven er ikke oppdatert, men blir plukket av vaktmester",
-                    e
-                )
+                } catch (e: Exception) {
+                    log.error(
+                        "Oppatering av k9-sak-oppgave feilet for ${eksternId}. Oppgaven er ikke oppdatert, men blir plukket av vaktmester",
+                        e
+                    )
+                }
             }
         }
 

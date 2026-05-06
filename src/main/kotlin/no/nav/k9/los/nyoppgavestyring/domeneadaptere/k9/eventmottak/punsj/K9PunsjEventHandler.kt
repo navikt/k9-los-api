@@ -38,21 +38,18 @@ class K9PunsjEventHandler (
     fun prosesser(eksternId: String, eksternVersjon: String, event: String) {
         EventHandlerMetrics.time("k9punsj", "gjennomført") {
             transactionalManager.transaction { tx ->
-                val lås =
-                    eventRepository.upsertOgLåsEventnøkkel(Fagsystem.PUNSJ, eksternId, tx)
-                eventRepository.lagre(Fagsystem.PUNSJ, eksternId, eksternVersjon, event, tx)
-            }
+                val nøkkelId = eventRepository.lagre(Fagsystem.PUNSJ, eksternId, eksternVersjon, event, tx)
 
-            OpentelemetrySpanUtil.span("punsjTilLosAdapterTjeneste.oppdaterOppgaveForEksternId") {
-                try {
-                    oppgaveAdapter.oppdaterOppgaveForEksternId(
-                        EventNøkkel(
-                            Fagsystem.PUNSJ,
-                            eksternId
+                OpentelemetrySpanUtil.span("punsjTilLosAdapterTjeneste.oppdaterOppgaveForEksternId") {
+                    try {
+                        oppgaveAdapter.oppdaterOppgaveForEksternId(
+                            EventNøkkel(Fagsystem.PUNSJ, eksternId),
+                            tx,
+                            nøkkelId = nøkkelId
                         )
-                    )
-                } catch (e: Exception) {
-                    log.error("Oppatering av k9-punsj-oppgave feilet for ${eksternId}. Oppgaven er ikke oppdatert, men blir plukket av vaktmester", e)
+                    } catch (e: Exception) {
+                        log.error("Oppatering av k9-punsj-oppgave feilet for ${eksternId}. Oppgaven er ikke oppdatert, men blir plukket av vaktmester", e)
+                    }
                 }
             }
         }

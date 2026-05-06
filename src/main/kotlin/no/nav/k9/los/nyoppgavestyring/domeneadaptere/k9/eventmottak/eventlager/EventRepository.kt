@@ -70,13 +70,17 @@ class EventRepository(
         )!!
     }
 
+    /**
+     * Lagrer event og returnerer nøkkelId for bruk i videre prosessering i samme transaksjon.
+     * Utfører upsert av eventnøkkel med FOR UPDATE-lås, og inserter eventet.
+     */
     fun lagre(
         fagsystem: Fagsystem,
         eksternId: String,
         eksternVersjon: String,
         event: String,
         tx: TransactionalSession
-    ): EventLagret? {
+    ): Long {
         val eventnøkkelId = upsertOgLåsEventnøkkel(fagsystem, eksternId, tx)
 
         tx.run(
@@ -89,7 +93,7 @@ class EventRepository(
                         :data :: jsonb,
                         true)
                         on conflict do nothing 
-                     """, //TODO: on conflict update data? jfr vaskeevent
+                     """,
                 mapOf(
                     "event_nokkel_id" to eventnøkkelId,
                     "ekstern_versjon" to eksternVersjon,
@@ -98,7 +102,7 @@ class EventRepository(
             ).asUpdate
         )
 
-        return hent(fagsystem, eksternId, eksternVersjon, tx)
+        return eventnøkkelId
     }
 
     fun hentAlleEventer(fagsystem: Fagsystem, eksternId: String): List<EventLagret> {
@@ -131,8 +135,8 @@ class EventRepository(
     }
 
 
-    fun hentAlleEventerMedLås(fagsystem: Fagsystem, eksternId: String, tx: TransactionalSession): List<EventLagret> {
-        val eventId = hentOgLåsEventnøkkel(fagsystem, eksternId, tx)
+    fun hentAlleEventerMedLås(fagsystem: Fagsystem, eksternId: String, tx: TransactionalSession, nøkkelId: Long? = null): List<EventLagret> {
+        val eventId = nøkkelId ?: hentOgLåsEventnøkkel(fagsystem, eksternId, tx)
         val eventer = tx.run(
             queryOf(
                 """
