@@ -50,13 +50,14 @@ class EventRepositoryPerLinjeForKonverteringTest() : AbstractK9LosIntegrationTes
         val eventstring = LosObjectMapper.instance.writeValueAsString(event)
 
         val eventLagret = transactionalManager.transaction { tx ->
-            eventRepository.lagre(Fagsystem.PUNSJ, eksternId.toString(), event.eventTid.toString(), eventstring, tx)!!
+            eventRepository.lagre(Fagsystem.PUNSJ, eksternId.toString(), event.eventTid.toString(), eventstring, tx)
+            eventRepository.hent(Fagsystem.PUNSJ, eksternId.toString(), event.eventTid.toString(), tx)
         }
 
         assertThat(K9PunsjEventDto.fraEventLagret(eventLagret).status).isEqualTo(Oppgavestatus.AAPEN)
 
         var alleEventer = transactionalManager.transaction { tx ->
-            eventRepository.hentAlleEventerMedLås(Fagsystem.PUNSJ, eksternId.toString(), tx)
+            eventRepository.hentAlleEventerMedLås(EventNøkkel(Fagsystem.PUNSJ, eksternId.toString()), tx)
         }
         assertThat(alleEventer.size).isEqualTo(1)
 
@@ -77,12 +78,13 @@ class EventRepositoryPerLinjeForKonverteringTest() : AbstractK9LosIntegrationTes
         val eventstring2 = LosObjectMapper.instance.writeValueAsString(event2)
 
         val eventLagret2 = transactionalManager.transaction { tx ->
-            eventRepository.lagre(Fagsystem.PUNSJ, event2.eksternId.toString(), event2.eventTid.toString(), eventstring2, tx)!!
+            eventRepository.lagre(Fagsystem.PUNSJ, event2.eksternId.toString(), event2.eventTid.toString(), eventstring2, tx)
+            eventRepository.hent(Fagsystem.PUNSJ, event2.eksternId.toString(), event2.eventTid.toString(), tx)
         }
         assertThat(K9PunsjEventDto.fraEventLagret(eventLagret2).status).isEqualTo(Oppgavestatus.VENTER)
 
         alleEventer = transactionalManager.transaction { tx ->
-            eventRepository.hentAlleEventerMedLås(Fagsystem.PUNSJ, eksternId.toString(), tx)
+            eventRepository.hentAlleEventerMedLås(EventNøkkel(Fagsystem.PUNSJ, eksternId.toString()), tx)
         }
         assertThat(alleEventer.size).isEqualTo(2)
 
@@ -139,7 +141,7 @@ class EventRepositoryPerLinjeForKonverteringTest() : AbstractK9LosIntegrationTes
         }
 
         val retur = transactionalManager.transaction { tx ->
-            eventRepository.hentAlleEventerMedLås(Fagsystem.PUNSJ, eksternId.toString(), tx)
+            eventRepository.hentAlleEventerMedLås(EventNøkkel(Fagsystem.PUNSJ, eksternId.toString()), tx)
         }
 
         assertThat(retur.size).isEqualTo(1)
@@ -169,8 +171,8 @@ class EventRepositoryPerLinjeForKonverteringTest() : AbstractK9LosIntegrationTes
         )
         val eventString = LosObjectMapper.instance.writeValueAsString(event)
 
-        val eventLagret = transactionalManager.transaction { tx ->
-            eventRepository.lagre(Fagsystem.PUNSJ, event.eksternId.toString(), event.eventTid.toString(), eventString, tx)!!
+        transactionalManager.transaction { tx ->
+            eventRepository.lagre(Fagsystem.PUNSJ, event.eksternId.toString(), event.eventTid.toString(), eventString, tx)
         }
 
         val event2 = K9PunsjEventDto(
@@ -197,14 +199,13 @@ class EventRepositoryPerLinjeForKonverteringTest() : AbstractK9LosIntegrationTes
         assertThat(vaskeBestillinger.size).isEqualTo(2)
 
         transactionalManager.transaction { tx ->
-            eventRepository.settHistorikkvaskFerdig(Fagsystem.PUNSJ, eventLagret.eksternId, tx)
+            eventRepository.settHistorikkvaskFerdig(Fagsystem.PUNSJ, event.eksternId.toString(), tx)
         }
         vaskeBestillinger = eventRepository.hentAlleHistorikkvaskbestillinger()
         assertThat(vaskeBestillinger.size).isEqualTo(1)
         val uvasketEventLagret = transactionalManager.transaction { tx ->
             eventRepository.hentAlleEventerMedLås(
-                Fagsystem.PUNSJ,
-                vaskeBestillinger.get(0).eksternId, tx
+                EventNøkkel(Fagsystem.PUNSJ, vaskeBestillinger.get(0).eksternId), tx
             )
                 .sortedBy { LocalDateTime.parse(it.eksternVersjon) }[0]
         }

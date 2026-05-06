@@ -70,13 +70,17 @@ class EventRepository(
         )!!
     }
 
+    /**
+     * Lagrer event og returnerer [EventNøkkel] med id for bruk i videre prosessering i samme transaksjon.
+     * Utfører upsert av eventnøkkel med FOR UPDATE-lås, og inserter eventet.
+     */
     fun lagre(
         fagsystem: Fagsystem,
         eksternId: String,
         eksternVersjon: String,
         event: String,
         tx: TransactionalSession
-    ): EventLagret? {
+    ): EventNøkkel {
         val eventnøkkelId = upsertOgLåsEventnøkkel(fagsystem, eksternId, tx)
 
         tx.run(
@@ -89,7 +93,7 @@ class EventRepository(
                         :data :: jsonb,
                         true)
                         on conflict do nothing 
-                     """, //TODO: on conflict update data? jfr vaskeevent
+                     """,
                 mapOf(
                     "event_nokkel_id" to eventnøkkelId,
                     "ekstern_versjon" to eksternVersjon,
@@ -98,7 +102,7 @@ class EventRepository(
             ).asUpdate
         )
 
-        return hent(fagsystem, eksternId, eksternVersjon, tx)
+        return EventNøkkel(fagsystem, eksternId, eventnøkkelId)
     }
 
     fun hentAlleEventer(fagsystem: Fagsystem, eksternId: String): List<EventLagret> {
@@ -131,8 +135,8 @@ class EventRepository(
     }
 
 
-    fun hentAlleEventerMedLås(fagsystem: Fagsystem, eksternId: String, tx: TransactionalSession): List<EventLagret> {
-        val eventId = hentOgLåsEventnøkkel(fagsystem, eksternId, tx)
+    fun hentAlleEventerMedLås(eventnøkkel: EventNøkkel, tx: TransactionalSession): List<EventLagret> {
+        val eventId = eventnøkkel.id ?: hentOgLåsEventnøkkel(eventnøkkel.fagsystem, eventnøkkel.eksternId, tx)
         val eventer = tx.run(
             queryOf(
                 """
@@ -144,7 +148,7 @@ class EventRepository(
                     "nokkelId" to eventId,
                 )
             ).map { row ->
-                rowTilEvent(row, eksternId, fagsystem)
+                rowTilEvent(row, eventnøkkel.eksternId, eventnøkkel.fagsystem)
             }.asList
         )
 
@@ -185,7 +189,8 @@ class EventRepository(
                 ).map { row ->
                     EventNøkkel(
                         eksternId = row.string("ekstern_id"),
-                        fagsystem = Fagsystem.fraKode(row.string("fagsystem"))
+                        fagsystem = Fagsystem.fraKode(row.string("fagsystem")),
+                        id = row.long("id")
                     )
                 }.asList
             )
