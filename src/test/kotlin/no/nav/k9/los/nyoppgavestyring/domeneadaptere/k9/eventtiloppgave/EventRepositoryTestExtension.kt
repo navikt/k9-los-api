@@ -10,15 +10,15 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEve
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
 
-fun EventRepository.lagre(fagsystem: Fagsystem, event: K9PunsjEventDto, tx: TransactionalSession): EventLagret? {
+fun EventRepository.lagre(fagsystem: Fagsystem, event: K9PunsjEventDto, tx: TransactionalSession): EventNøkkel {
     return this.lagre(fagsystem, event.eksternId.toString(), event.eventTid.toString(), LosObjectMapper.instance.writeValueAsString(event), tx)
 }
 
-fun EventRepository.lagre(fagsystem: Fagsystem, event: K9SakEventDto, tx: TransactionalSession): EventLagret? {
+fun EventRepository.lagre(fagsystem: Fagsystem, event: K9SakEventDto, tx: TransactionalSession): EventNøkkel {
     return this.lagre(fagsystem, event.eksternId.toString(), event.eventTid.toString(), LosObjectMapper.instance.writeValueAsString(event), tx)
 }
 
-fun EventRepository.endreEvent(nøkkelId: Long, eventNøkkel: EventNøkkel, event: String, tx: TransactionalSession): EventLagret? {
+fun EventRepository.endreEvent(eventnøkkel: EventNøkkel, event: String, tx: TransactionalSession): EventLagret? {
     val tree = LosObjectMapper.instance.readTree(event)
     val eksternVersjon = tree.findValue("eventTid").asText()
 
@@ -29,11 +29,11 @@ fun EventRepository.endreEvent(nøkkelId: Long, eventNøkkel: EventNøkkel, even
                         where event_nokkel_id = :event_nokkel_id 
                      """,
             mapOf(
-                "event_nokkel_id" to nøkkelId,
+                "event_nokkel_id" to eventnøkkel.id,
                 "data" to event
             )
         ).asUpdate
     )
 
-    return hent(eventNøkkel.fagsystem, eventNøkkel.eksternId, eksternVersjon, tx)
+    return hent(eventnøkkel.fagsystem, eventnøkkel.eksternId, eksternVersjon, tx)
 }

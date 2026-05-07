@@ -23,10 +23,11 @@ class PartisjonertOppgaveRepository(val oppgavetypeRepository: OppgavetypeReposi
         val partisjonertOppgave = hentOppgave(partisjonertOppgaveId, oppgave.oppgavetype, tx)
         if (partisjonertOppgave == null) {
             nyOppgave(partisjonertOppgaveId, oppgave, tx)
+            nyeOppgavefeltverdier(partisjonertOppgaveId, oppgave, tx)
         } else {
             oppdaterOppgave(partisjonertOppgaveId, oppgave, tx)
+            oppdaterOppgavefeltverdier(partisjonertOppgaveId, oppgave, tx, eksisterendeFelter = partisjonertOppgave.felter)
         }
-        oppdaterOppgavefeltverdier(partisjonertOppgaveId, oppgave, tx)
     }
 
     private fun hentPartisjonertOppgaveId(oppgave: OppgaveV3, tx: TransactionalSession): PartisjonertOppgaveId? {
@@ -61,9 +62,9 @@ class PartisjonertOppgaveRepository(val oppgavetypeRepository: OppgavetypeReposi
     private fun oppdaterOppgavefeltverdier(
         oppgaveId: PartisjonertOppgaveId,
         oppgave: OppgaveV3,
-        tx: TransactionalSession
+        tx: TransactionalSession,
+        eksisterendeFelter: List<OppgaveFeltverdi>
     ) {
-        val eksisterendeFelter = hentFeltverdier(oppgaveId, oppgave.oppgavetype, tx)
         val nyeFelter = oppgave.felter
 
         if (erForskjellige(eksisterendeFelter, nyeFelter)) {
