@@ -9,7 +9,7 @@ import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.Ventekategori
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.Venteårsak
-import no.nav.k9.kodeverk.produksjonsstyring.BehandlingMerknadType
+import no.nav.k9.kodeverk.produksjonsstyring.MerknadType
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.EventHendelse
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventLagret
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventDto
@@ -307,6 +307,12 @@ class SakEventTilOppgaveMapper(
                     verdi = forrigeOppgave?.hentVerdi("fraEndringsdialog") ?: it.toString()
                 )
             },
+            event.relevanteSøknadsperioder?.let {
+                OppgaveFeltverdiDto(
+                    nøkkel = "antallOmsøkteDager",
+                    verdi = event.relevanteSøknadsperioder.sumOf { periode -> ChronoUnit.DAYS.between(periode.fom, periode.tom) + 1 }.toString()
+                )
+            },
             OppgaveFeltverdiDto(
                 nøkkel = "totrinnskontroll",
                 verdi = event.aksjonspunktTilstander.any { aksjonspunktTilstandDto ->
@@ -317,13 +323,13 @@ class SakEventTilOppgaveMapper(
             ),
             OppgaveFeltverdiDto(
                 nøkkel = "utenlandstilsnitt",
-                verdi = event.merknader.contains(BehandlingMerknadType.UTENLANDSTILSNITT).toString()
+                verdi = event.merknader.contains(MerknadType.UTENLANDSSAK).toString()
             ),
             OppgaveFeltverdiDto(
                 nøkkel = "direkteutbetaling",
-                verdi = event.merknader.contains(BehandlingMerknadType.DIREKTEUTBETALING).toString()
+                verdi = event.merknader.contains(MerknadType.DIREKTEUTBETALING).toString()
             ),
-            if (event.merknader.contains(BehandlingMerknadType.HASTESAK)) {
+            if (event.merknader.contains(MerknadType.HASTESAK)) {
                 OppgaveFeltverdiDto(
                     nøkkel = "hastesak",
                     verdi = "true"

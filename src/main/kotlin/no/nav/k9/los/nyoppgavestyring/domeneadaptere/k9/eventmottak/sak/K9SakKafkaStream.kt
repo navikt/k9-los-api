@@ -13,6 +13,7 @@ import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.TransientFeilHåndtere
 import org.apache.kafka.clients.consumer.OffsetResetStrategy
 import org.apache.kafka.common.serialization.Serdes
 import org.apache.kafka.streams.StreamsBuilder
+import org.apache.kafka.streams.StreamsConfig
 import org.apache.kafka.streams.Topology
 import org.apache.kafka.streams.kstream.Consumed
 import org.slf4j.LoggerFactory
@@ -28,7 +29,9 @@ internal class K9SakKafkaStream constructor(
 
     private val stream = ManagedKafkaStreams(
         name = NAME,
-        properties = kafkaConfig.stream(NAME, OffsetResetStrategy.EARLIEST),
+        properties = kafkaConfig.stream(NAME, OffsetResetStrategy.EARLIEST).apply {
+            put(StreamsConfig.NUM_STREAM_THREADS_CONFIG, 3) // topic har 3 partisjoner
+        },
         topology = topology(
             configuration = configuration,
             k9sakEventHandler = k9sakEventHandler
