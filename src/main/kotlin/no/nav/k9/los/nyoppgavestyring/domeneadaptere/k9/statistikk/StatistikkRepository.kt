@@ -63,7 +63,7 @@ class StatistikkRepository(
                     queryOf(
                         """
                             insert into OPPGAVE_V3_SENDT_DVH_EKSTERN(ekstern_id, ekstern_versjon)
-                            select ov.ekstern_id, ov.ekstern_versjon
+                            select distinct ov.ekstern_id, ov.ekstern_versjon
                             from OPPGAVE_V3_SENDT_DVH os
                             join oppgave_v3 ov on ov.id = os.id
                             where not exists (
