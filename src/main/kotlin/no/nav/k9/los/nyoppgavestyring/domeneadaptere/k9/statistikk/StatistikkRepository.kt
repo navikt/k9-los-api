@@ -42,6 +42,62 @@ class StatistikkRepository(
                     mapOf("id" to id)
                 ).asUpdate
             )
+            it.run(
+                queryOf(
+                    """
+                        insert into OPPGAVE_V3_SENDT_DVH_EKSTERN(ekstern_id, ekstern_versjon)
+                        select ov.ekstern_id, ov.ekstern_versjon from oppgave_v3 ov where ov.id = :id
+                        on conflict (ekstern_id, ekstern_versjon) do nothing
+                    """.trimIndent(),
+                    mapOf("id" to id)
+                ).asUpdate
+            )
+        }
+    }
+
+    fun backfillSendtDvhEkstern(batchSize: Int = 50000): Int {
+        var totalInserted = 0
+        while (true) {
+            val inserted = using(sessionOf(dataSource)) {
+                it.run(
+                    queryOf(
+                        """
+                            insert into OPPGAVE_V3_SENDT_DVH_EKSTERN(ekstern_id, ekstern_versjon)
+                            select ov.ekstern_id, ov.ekstern_versjon
+                            from OPPGAVE_V3_SENDT_DVH os
+                            join oppgave_v3 ov on ov.id = os.id
+                            where not exists (
+                                select 1 from OPPGAVE_V3_SENDT_DVH_EKSTERN e 
+                                where e.ekstern_id = ov.ekstern_id and e.ekstern_versjon = ov.ekstern_versjon
+                            )
+                            limit :batchSize
+                        """.trimIndent(),
+                        mapOf("batchSize" to batchSize)
+                    ).asUpdate
+                )
+            }
+            totalInserted += inserted
+            if (inserted < batchSize) break
+        }
+        return totalInserted
+    }
+
+    fun hentOppgaverSomIkkeErSendtEkstern(): List<Long> {
+        return using(sessionOf(dataSource)) {
+            it.run(
+                queryOf(
+                    """
+                        select ov.id
+                        from oppgave_v3 ov
+                        join oppgavetype o ON ov.oppgavetype_id = o.id 
+                        where o.ekstern_id in ('k9sak', 'k9klage')
+                          and not exists (select * from OPPGAVE_V3_SENDT_DVH_EKSTERN os where os.ekstern_id = ov.ekstern_id and os.ekstern_versjon = ov.ekstern_versjon)
+                    """.trimIndent()
+                )
+                    .map { row ->
+                        row.long("id")
+                    }.asList
+            )
         }
     }
 
