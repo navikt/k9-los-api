@@ -20,7 +20,6 @@ class OppgavefilterDatatypeMapperTest {
                 visningsnavn = "Testet felt",
                 tolkes_som = "boolean",
                 kokriterie = true,
-                verdiforklaringerErUttømmende = false,
                 verdiforklaringer = null
             ),
             transientFeltutleder = null
@@ -32,7 +31,6 @@ class OppgavefilterDatatypeMapperTest {
                 visningsnavn = "Testet felt",
                 tolkes_som = "Timestamp",
                 kokriterie = true,
-                verdiforklaringerErUttømmende = false,
                 verdiforklaringer = null
             ),
             transientFeltutleder = null
@@ -44,7 +42,6 @@ class OppgavefilterDatatypeMapperTest {
                 visningsnavn = "Testet felt",
                 tolkes_som = "Integer",
                 kokriterie = true,
-                verdiforklaringerErUttømmende = false,
                 verdiforklaringer = null
             ),
             transientFeltutleder = null

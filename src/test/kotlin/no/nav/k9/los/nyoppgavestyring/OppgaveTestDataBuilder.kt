@@ -123,42 +123,38 @@ enum class FeltType(
 val felter: Map<OmrådeOgKode, OppgavefeltMedMer> = mapOf(
     OmrådeOgKode("K9", FeltType.OPPGAVE_STATUS.eksternId) to OppgavefeltMedMer(
         Oppgavefelt(
-        område = "K9",
-        kode = FeltType.OPPGAVE_STATUS.eksternId,
-        visningsnavn = FeltType.OPPGAVE_STATUS.name,
-        tolkes_som = FeltType.OPPGAVE_STATUS.tolkesSom,
-        kokriterie = true,
-        verdiforklaringerErUttømmende = false,
-        verdiforklaringer = emptyList()
-    ), null),
+            område = "K9",
+            kode = FeltType.OPPGAVE_STATUS.eksternId,
+            visningsnavn = FeltType.OPPGAVE_STATUS.name,
+            tolkes_som = FeltType.OPPGAVE_STATUS.tolkesSom,
+            kokriterie = true,
+            verdiforklaringer = emptyList()
+        ), null),
     OmrådeOgKode("K9", FeltType.FAGSYSTEM.eksternId) to OppgavefeltMedMer(
         Oppgavefelt(
-        område = "K9",
-        kode = FeltType.FAGSYSTEM.eksternId,
-        visningsnavn = FeltType.FAGSYSTEM.name,
-        tolkes_som = FeltType.FAGSYSTEM.tolkesSom,
-        kokriterie = true,
-        verdiforklaringerErUttømmende = false,
-        verdiforklaringer = emptyList()
-    ), null),
+            område = "K9",
+            kode = FeltType.FAGSYSTEM.eksternId,
+            visningsnavn = FeltType.FAGSYSTEM.name,
+            tolkes_som = FeltType.FAGSYSTEM.tolkesSom,
+            kokriterie = true,
+            verdiforklaringer = emptyList()
+        ), null),
     OmrådeOgKode("K9", FeltType.MOTTATT_DATO.eksternId) to OppgavefeltMedMer(
         Oppgavefelt(
-        område = "K9",
-        kode = FeltType.MOTTATT_DATO.eksternId,
-        visningsnavn = FeltType.MOTTATT_DATO.name,
-        tolkes_som = FeltType.MOTTATT_DATO.tolkesSom,
-        kokriterie = true,
-        verdiforklaringerErUttømmende = false,
-        verdiforklaringer = emptyList()
-    ), null),
+            område = "K9",
+            kode = FeltType.MOTTATT_DATO.eksternId,
+            visningsnavn = FeltType.MOTTATT_DATO.name,
+            tolkes_som = FeltType.MOTTATT_DATO.tolkesSom,
+            kokriterie = true,
+            verdiforklaringer = emptyList()
+        ), null),
     OmrådeOgKode("K9", FeltType.LIGGER_HOS_BESLUTTER.eksternId) to OppgavefeltMedMer(
         Oppgavefelt(
-        område = "K9",
-        kode = FeltType.LIGGER_HOS_BESLUTTER.eksternId,
-        visningsnavn = FeltType.LIGGER_HOS_BESLUTTER.name,
-        tolkes_som = FeltType.LIGGER_HOS_BESLUTTER.tolkesSom,
-        kokriterie = true,
-        verdiforklaringerErUttømmende = false,
-        verdiforklaringer = emptyList()
-    ), null),
+            område = "K9",
+            kode = FeltType.LIGGER_HOS_BESLUTTER.eksternId,
+            visningsnavn = FeltType.LIGGER_HOS_BESLUTTER.name,
+            tolkes_som = FeltType.LIGGER_HOS_BESLUTTER.tolkesSom,
+            kokriterie = true,
+            verdiforklaringer = emptyList()
+        ), null),
 )

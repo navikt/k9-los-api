@@ -22,7 +22,6 @@ class PartisjonertOppgaveQuerySqlBuilderTest {
                 visningsnavn = "Test Felt",
                 tolkes_som = "String",
                 kokriterie = false,
-                verdiforklaringerErUttømmende = false,
                 verdiforklaringer = emptyList()
             ),
             null

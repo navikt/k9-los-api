@@ -50,6 +50,7 @@ class OppgaveQueryRepository(
                       fd.visningsnavn as visningsnavn,
                       fd.tolkes_som as tolkes_som,
                       fd.kokriterie as kokriterie,
+                      fd.skjult as skjult,
                       fd.liste_type as liste_type,
                       fd.kodeverkreferanse as kodeverkreferanse,
                       fd.transient_feltutleder as transient_feltutleder
@@ -73,6 +74,7 @@ class OppgaveQueryRepository(
                         visningsnavn = row.string("visningsnavn"),
                         tolkes_som = row.string("tolkes_som"),
                         kokriterie = row.boolean("kokriterie"),
+                        skjult = row.boolean("skjult"),
                         listetype = row.boolean("liste_type"),
                         verdiforklaringerErUttømmende = kodeverk?.uttømmende ?: false,
                         verdiforklaringer = kodeverk?.let {
@@ -122,7 +124,6 @@ class OppgaveQueryRepository(
                 "Tidspunkt siste endring",
                 "Timestamp",
                 kokriterie = false,
-                verdiforklaringerErUttømmende = false,
                 verdiforklaringer = listOf(),
             ),
             Oppgavefelt(
@@ -147,7 +148,6 @@ class OppgaveQueryRepository(
                 visningsnavn = "Oppgavetype",
                 tolkes_som = "String",
                 kokriterie = true,
-                verdiforklaringerErUttømmende = false,
                 verdiforklaringer = oppgavetypeNavn.map {
                     Verdiforklaring(
                         verdi = it,
@@ -163,6 +163,7 @@ class OppgaveQueryRepository(
                 visningsnavn = "Spørringstrategi",
                 tolkes_som = "String",
                 kokriterie = false,
+                skjult = true,
                 verdiforklaringerErUttømmende = true,
                 verdiforklaringer = Spørringstrategi.entries.map { Verdiforklaring(
                     it.name,
@@ -177,7 +178,6 @@ class OppgaveQueryRepository(
                 visningsnavn = "Ferdigstilt dato",
                 tolkes_som = "Timestamp",
                 kokriterie = false,
-                verdiforklaringerErUttømmende = false,
                 verdiforklaringer = emptyList()
             ),
         ).map { OppgavefeltMedMer(it, null) }
