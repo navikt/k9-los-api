@@ -71,6 +71,7 @@ class StatistikkRepository(
                                 where e.ekstern_id = ov.ekstern_id and e.ekstern_versjon = ov.ekstern_versjon
                             )
                             limit :batchSize
+                            on conflict (ekstern_id, ekstern_versjon) do nothing
                         """.trimIndent(),
                         mapOf("batchSize" to batchSize)
                     ).asUpdate
