@@ -57,7 +57,7 @@ class OppgaveQueryRepository(
                     FROM Feltdefinisjon fd INNER JOIN Omrade fo ON (
                       fo.id = fd.omrade_id
                     )
-                    WHERE fd.vis_til_bruker
+                    WHERE fd.synlighet != 'INTERNT'
                 """.trimIndent()
             ).map { row ->
                 val kodeverk = if (medKodeverk) {

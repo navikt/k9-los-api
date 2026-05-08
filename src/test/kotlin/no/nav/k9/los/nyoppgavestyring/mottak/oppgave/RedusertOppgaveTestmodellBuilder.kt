@@ -46,7 +46,7 @@ class RedusertOppgaveTestmodellBuilder(
                     beskrivelse = null,
                     listetype = true,
                     tolkesSom = "String",
-                    visTilBruker = true,
+
                     synlighet = Synlighet.UNDER_STREKEN,
                     kodeverkreferanse = null,
                     transientFeltutleder = null,
@@ -57,7 +57,7 @@ class RedusertOppgaveTestmodellBuilder(
                     beskrivelse = null,
                     listetype = false,
                     tolkesSom = "Date",
-                    visTilBruker = true,
+
                     synlighet = Synlighet.UNDER_STREKEN,
                     kodeverkreferanse = null,
                     transientFeltutleder = null,
@@ -68,7 +68,7 @@ class RedusertOppgaveTestmodellBuilder(
                     beskrivelse = null,
                     listetype = false,
                     tolkesSom = "String",
-                    visTilBruker = true,
+
                     synlighet = Synlighet.UNDER_STREKEN,
                     kodeverkreferanse = null,
                     transientFeltutleder = null,
@@ -79,8 +79,7 @@ class RedusertOppgaveTestmodellBuilder(
                     beskrivelse = null,
                     listetype = false,
                     tolkesSom = "Duration",
-                    visTilBruker = false,
-                    synlighet = Synlighet.UNDER_STREKEN,
+                    synlighet = Synlighet.INTERNT,
                     kodeverkreferanse = null,
                     transientFeltutleder = null,
                 ),
@@ -90,8 +89,7 @@ class RedusertOppgaveTestmodellBuilder(
                     beskrivelse = null,
                     listetype = false,
                     tolkesSom = "boolean",
-                    visTilBruker = false,
-                    synlighet = Synlighet.UNDER_STREKEN,
+                    synlighet = Synlighet.INTERNT,
                     kodeverkreferanse = null,
                     transientFeltutleder = null,
                 )

@@ -78,7 +78,7 @@ class KodeverkTest : AbstractK9LosIntegrationTest() {
              område = område,
              listetype = false,
              tolkesSom = "String",
-             visTilBruker = true,
+
              synlighet = Synlighet.UNDER_STREKEN,
              kodeverkreferanse = kodeverkreferanse,
              transientFeltutleder = null,

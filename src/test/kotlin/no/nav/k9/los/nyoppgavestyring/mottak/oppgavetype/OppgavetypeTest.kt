@@ -85,7 +85,7 @@ class OppgavetypeTest {
                                 beskrivelse = null,
                                 listetype = false,
                                 tolkesSom = "String",
-                                visTilBruker = true,
+
                                 synlighet = Synlighet.UNDER_STREKEN,
                                 kodeverkreferanse = null,
                                 transientFeltutleder = null,
@@ -103,7 +103,7 @@ class OppgavetypeTest {
                                 beskrivelse = null,
                                 listetype = false,
                                 tolkesSom = "String",
-                                visTilBruker = true,
+
                                 synlighet = Synlighet.UNDER_STREKEN,
                                 kodeverkreferanse = null,
                                 transientFeltutleder = null,
@@ -143,7 +143,7 @@ class OppgavetypeTest {
                                 beskrivelse = null,
                                 listetype = false,
                                 tolkesSom = "String",
-                                visTilBruker = true,
+
                                 synlighet = Synlighet.UNDER_STREKEN,
                                 kodeverkreferanse = null,
                                 transientFeltutleder = null,
@@ -161,7 +161,7 @@ class OppgavetypeTest {
                                 beskrivelse = null,
                                 listetype = false,
                                 tolkesSom = "String",
-                                visTilBruker = true,
+
                                 synlighet = Synlighet.UNDER_STREKEN,
                                 kodeverkreferanse = null,
                                 transientFeltutleder = null,
@@ -179,7 +179,7 @@ class OppgavetypeTest {
                                 beskrivelse = null,
                                 listetype = false,
                                 tolkesSom = "String",
-                                visTilBruker = true,
+
                                 synlighet = Synlighet.UNDER_STREKEN,
                                 kodeverkreferanse = null,
                                 transientFeltutleder = null,
@@ -205,7 +205,7 @@ class OppgavetypeTest {
                                 beskrivelse = null,
                                 listetype = false,
                                 tolkesSom = "String",
-                                visTilBruker = true,
+
                                 synlighet = Synlighet.UNDER_STREKEN,
                                 kodeverkreferanse = null,
                                 transientFeltutleder = null,
@@ -245,7 +245,7 @@ class OppgavetypeTest {
                                 beskrivelse = null,
                                 listetype = false,
                                 tolkesSom = "String",
-                                visTilBruker = true,
+
                                 synlighet = Synlighet.UNDER_STREKEN,
                                 kodeverkreferanse = null,
                                 transientFeltutleder = null,
@@ -263,7 +263,7 @@ class OppgavetypeTest {
                                 beskrivelse = null,
                                 listetype = false,
                                 tolkesSom = "String",
-                                visTilBruker = true,
+
                                 synlighet = Synlighet.UNDER_STREKEN,
                                 kodeverkreferanse = null,
                                 transientFeltutleder = null,
@@ -281,7 +281,7 @@ class OppgavetypeTest {
                                 beskrivelse = null,
                                 listetype = false,
                                 tolkesSom = "String",
-                                visTilBruker = true,
+
                                 synlighet = Synlighet.UNDER_STREKEN,
                                 kodeverkreferanse = null,
                                 transientFeltutleder = null,
@@ -307,7 +307,7 @@ class OppgavetypeTest {
                                 beskrivelse = null,
                                 listetype = false,
                                 tolkesSom = "String",
-                                visTilBruker = true,
+
                                 synlighet = Synlighet.UNDER_STREKEN,
                                 kodeverkreferanse = null,
                                 transientFeltutleder = null,

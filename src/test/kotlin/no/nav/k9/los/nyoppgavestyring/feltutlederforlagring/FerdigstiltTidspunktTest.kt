@@ -35,7 +35,7 @@ internal class FerdigstiltTidspunktTest {
                         beskrivelse = null,
                         listetype = false,
                         tolkesSom = "string",
-                        visTilBruker = true,
+
                         synlighet = Synlighet.OVER_STREKEN,
                         kodeverkreferanse = null,
                         transientFeltutleder = null,
@@ -99,7 +99,7 @@ internal class FerdigstiltTidspunktTest {
                         beskrivelse = null,
                         listetype = false,
                         tolkesSom = "string",
-                        visTilBruker = true,
+
                         synlighet = Synlighet.OVER_STREKEN,
                         kodeverkreferanse = null,
                         transientFeltutleder = null,

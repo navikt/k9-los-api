@@ -137,7 +137,7 @@ internal class AkkumulertVentetidTest {
             beskrivelse = null,
             listetype = false,
             tolkesSom = "boolean",
-            visTilBruker = true,
+
             synlighet = Synlighet.OVER_STREKEN,
             kodeverkreferanse = null,
             transientFeltutleder = null,
