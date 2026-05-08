@@ -2,6 +2,7 @@ package no.nav.k9.los.nyoppgavestyring.query.db
 
 import no.nav.k9.los.nyoppgavestyring.kodeverk.PersonBeskyttelseType
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
+import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Synlighet
 import no.nav.k9.los.nyoppgavestyring.query.dto.felter.Oppgavefelt
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.Aggregeringsfunksjon
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.AggregertSelectFelt
@@ -21,7 +22,7 @@ class PartisjonertOppgaveQuerySqlBuilderTest {
                 kode = "testfelt",
                 visningsnavn = "Test Felt",
                 tolkes_som = "String",
-                kokriterie = false,
+                synlighet = Synlighet.UNDER_STREKEN,
                 verdiforklaringer = emptyList()
             ),
             null

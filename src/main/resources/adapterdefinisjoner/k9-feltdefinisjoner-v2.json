@@ -7,7 +7,7 @@
       "listetype": false,
       "tolkesSom": "String",
       "visTilBruker": false,
-      "kokriterie": false
+      "synlighet": "UNDER_STREKEN"
     },
     {
       "id": "påklagdBehandlingUuid",
@@ -15,7 +15,7 @@
       "listetype": false,
       "tolkesSom": "String",
       "visTilBruker": false,
-      "kokriterie": false
+      "synlighet": "UNDER_STREKEN"
     },
     {
       "id": "påklagdBehandlingtype",
@@ -23,7 +23,7 @@
       "listetype": false,
       "tolkesSom": "String",
       "visTilBruker": true,
-      "kokriterie": false
+      "synlighet": "UNDER_STREKEN"
     },
     {
       "id": "aktorId",
@@ -31,7 +31,7 @@
       "listetype": false,
       "tolkesSom": "String",
       "visTilBruker": false,
-      "kokriterie": false
+      "synlighet": "UNDER_STREKEN"
     },
     {
       "id": "fagsystem",
@@ -39,7 +39,7 @@
       "listetype": false,
       "tolkesSom": "String",
       "visTilBruker": true,
-      "kokriterie": false,
+      "synlighet": "UNDER_STREKEN",
       "kodeverkreferanse": {
         "område": "K9",
         "eksternId": "Fagsystem"
@@ -51,7 +51,7 @@
       "listetype": false,
       "tolkesSom": "String",
       "visTilBruker": true,
-      "kokriterie": false
+      "synlighet": "UNDER_STREKEN"
     },
     {
       "id": "resultattype",
@@ -59,7 +59,7 @@
       "listetype": false,
       "tolkesSom": "String",
       "visTilBruker": true,
-      "kokriterie": false,
+      "synlighet": "UNDER_STREKEN",
       "kodeverkreferanse": {
         "område": "K9",
         "eksternId": "Resultattype"
@@ -71,7 +71,7 @@
       "listetype": false,
       "tolkesSom": "String",
       "visTilBruker": true,
-      "kokriterie": false,
+      "synlighet": "UNDER_STREKEN",
       "kodeverkreferanse": {
         "område": "K9",
         "eksternId": "Behandlingssteg"
@@ -83,7 +83,7 @@
       "listetype": false,
       "tolkesSom": "String",
       "visTilBruker": true,
-      "kokriterie": true,
+      "synlighet": "OVER_STREKEN",
       "kodeverkreferanse": {
         "område": "K9",
         "eksternId": "Ytelsetype"
@@ -95,7 +95,7 @@
       "listetype": false,
       "tolkesSom": "String",
       "visTilBruker": true,
-      "kokriterie": false,
+      "synlighet": "UNDER_STREKEN",
       "kodeverkreferanse": {
         "område": "K9",
         "eksternId": "Behandlingsstatus"
@@ -107,7 +107,7 @@
       "listetype": false,
       "tolkesSom": "Timestamp",
       "visTilBruker": true,
-      "kokriterie": false
+      "synlighet": "UNDER_STREKEN"
     },
     {
       "id": "tidSidenMottattDato",
@@ -115,7 +115,7 @@
       "listetype": false,
       "tolkesSom": "Duration",
       "visTilBruker": true,
-      "kokriterie": true,
+      "synlighet": "OVER_STREKEN",
       "transientFeltutleder": "no.nav.k9.los.nyoppgavestyring.query.mapping.transientfeltutleder.K9SakTidSidenMottattDatoUtleder"
     },
     {
@@ -124,7 +124,7 @@
       "listetype": false,
       "tolkesSom": "Timestamp",
       "visTilBruker": true,
-      "kokriterie": false
+      "synlighet": "UNDER_STREKEN"
     },
     {
       "id": "behandlingTypekode",
@@ -132,7 +132,7 @@
       "listetype": false,
       "tolkesSom": "String",
       "visTilBruker": true,
-      "kokriterie": true,
+      "synlighet": "OVER_STREKEN",
       "kodeverkreferanse": {
         "område": "K9",
         "eksternId": "Behandlingtype"
@@ -144,7 +144,7 @@
       "listetype": false,
       "tolkesSom": "String",
       "visTilBruker": false,
-      "kokriterie": false
+      "synlighet": "UNDER_STREKEN"
     },
     {
       "id": "pleietrengendeAktorId",
@@ -152,7 +152,7 @@
       "listetype": false,
       "tolkesSom": "String",
       "visTilBruker": false,
-      "kokriterie": false
+      "synlighet": "UNDER_STREKEN"
     },
     {
       "id": "behandlendeEnhet",
@@ -160,7 +160,7 @@
       "listetype": false,
       "tolkesSom": "String",
       "visTilBruker": true,
-      "kokriterie": false,
+      "synlighet": "UNDER_STREKEN",
       "kodeverkreferanse": {
         "område": "K9",
         "eksternId": "behandlendeEnhet"
@@ -172,7 +172,7 @@
       "listetype": false,
       "tolkesSom": "String",
       "visTilBruker": true,
-      "kokriterie": false
+      "synlighet": "UNDER_STREKEN"
     },
     {
       "id": "ansvarligBeslutter",
@@ -180,7 +180,7 @@
       "listetype": false,
       "tolkesSom": "String",
       "visTilBruker": true,
-      "kokriterie": false
+      "synlighet": "UNDER_STREKEN"
     },
     {
       "id": "liggerHosBeslutter",
@@ -188,7 +188,7 @@
       "listetype": false,
       "tolkesSom": "boolean",
       "visTilBruker": true,
-      "kokriterie": true
+      "synlighet": "OVER_STREKEN"
     },
     {
       "id": "tidFørsteGangHosBeslutter",
@@ -196,7 +196,7 @@
       "listetype": false,
       "tolkesSom": "Timestamp",
       "visTilBruker": true,
-      "kokriterie": true
+      "synlighet": "OVER_STREKEN"
     },
     {
       "id": "totrinnskontroll",
@@ -204,7 +204,7 @@
       "listetype": false,
       "tolkesSom": "boolean",
       "visTilBruker": true,
-      "kokriterie": false
+      "synlighet": "UNDER_STREKEN"
     },
     {
       "id": "aksjonspunkt",
@@ -213,7 +213,7 @@
       "listetype": true,
       "tolkesSom": "String",
       "visTilBruker": true,
-      "kokriterie": false,
+      "synlighet": "UNDER_STREKEN",
       "kodeverkreferanse": {
         "område": "K9",
         "eksternId": "Aksjonspunkt"
@@ -226,7 +226,7 @@
       "listetype": true,
       "tolkesSom": "String",
       "visTilBruker": true,
-      "kokriterie": false,
+      "synlighet": "UNDER_STREKEN",
       "kodeverkreferanse": {
         "område": "K9",
         "eksternId": "Aksjonspunkt"
@@ -239,7 +239,7 @@
       "listetype": false,
       "tolkesSom": "String",
       "visTilBruker": true,
-      "kokriterie": true,
+      "synlighet": "OVER_STREKEN",
       "kodeverkreferanse": {
         "område": "K9",
         "eksternId": "Aksjonspunkt"
@@ -251,7 +251,7 @@
       "listetype": false,
       "tolkesSom": "boolean",
       "visTilBruker": true,
-      "kokriterie": false
+      "synlighet": "UNDER_STREKEN"
     },
     {
       "id": "avventerSøker",
@@ -259,7 +259,7 @@
       "listetype": false,
       "tolkesSom": "boolean",
       "visTilBruker": true,
-      "kokriterie": false
+      "synlighet": "UNDER_STREKEN"
     },
     {
       "id": "avventerArbeidsgiver",
@@ -267,7 +267,7 @@
       "listetype": false,
       "tolkesSom": "boolean",
       "visTilBruker": true,
-      "kokriterie": false
+      "synlighet": "UNDER_STREKEN"
     },
     {
       "id": "avventerTekniskFeil",
@@ -275,7 +275,7 @@
       "listetype": false,
       "tolkesSom": "boolean",
       "visTilBruker": true,
-      "kokriterie": false
+      "synlighet": "UNDER_STREKEN"
     },
     {
       "id": "avventerAnnet",
@@ -283,7 +283,7 @@
       "listetype": false,
       "tolkesSom": "boolean",
       "visTilBruker": true,
-      "kokriterie": false
+      "synlighet": "UNDER_STREKEN"
     },
     {
       "id": "avventerAnnetIkkeSaksbehandlingstid",
@@ -291,7 +291,7 @@
       "listetype": false,
       "tolkesSom": "boolean",
       "visTilBruker": true,
-      "kokriterie": false
+      "synlighet": "UNDER_STREKEN"
     },
     {
       "id": "akkumulertVentetidSaksbehandlerForTidligereVersjoner",
@@ -299,7 +299,7 @@
       "listetype": false,
       "tolkesSom": "Duration",
       "visTilBruker": false,
-      "kokriterie": false
+      "synlighet": "UNDER_STREKEN"
     },
     {
       "id": "akkumulertVentetidSøkerForTidligereVersjoner",
@@ -307,7 +307,7 @@
       "listetype": false,
       "tolkesSom": "Duration",
       "visTilBruker": false,
-      "kokriterie": false
+      "synlighet": "UNDER_STREKEN"
     },
     {
       "id": "akkumulertVentetidTekniskFeilForTidligereVersjoner",
@@ -315,7 +315,7 @@
       "listetype": false,
       "tolkesSom": "Duration",
       "visTilBruker": false,
-      "kokriterie": false
+      "synlighet": "UNDER_STREKEN"
     },
     {
       "id": "akkumulertVentetidArbeidsgiverForTidligereVersjoner",
@@ -323,7 +323,7 @@
       "listetype": false,
       "tolkesSom": "Duration",
       "visTilBruker": false,
-      "kokriterie": false
+      "synlighet": "UNDER_STREKEN"
     },
     {
       "id": "akkumulertVentetidAnnetForTidligereVersjoner",
@@ -331,7 +331,7 @@
       "listetype": false,
       "tolkesSom": "Duration",
       "visTilBruker": false,
-      "kokriterie": false
+      "synlighet": "UNDER_STREKEN"
     },
     {
       "id": "akkumulertVentetidAnnetIkkeSaksbehandlingstidForTidligereVersjoner",
@@ -339,7 +339,7 @@
       "listetype": false,
       "tolkesSom": "Duration",
       "visTilBruker": false,
-      "kokriterie": false
+      "synlighet": "UNDER_STREKEN"
     },
     {
       "id": "akkumulertVentetidAnnetIkkeSaksbehandlingstid",
@@ -347,7 +347,7 @@
       "listetype": false,
       "tolkesSom": "Duration",
       "visTilBruker": true,
-      "kokriterie": false,
+      "synlighet": "UNDER_STREKEN",
       "transientFeltutleder": "no.nav.k9.los.nyoppgavestyring.query.mapping.transientfeltutleder.K9SakVentetPåAnnetIkkeSaksbehandlingstidUtleder"
     },
     {
@@ -356,7 +356,7 @@
       "listetype": false,
       "tolkesSom": "Duration",
       "visTilBruker": true,
-      "kokriterie": false,
+      "synlighet": "UNDER_STREKEN",
       "transientFeltutleder": "no.nav.k9.los.nyoppgavestyring.query.mapping.transientfeltutleder.K9SakVentetPåAnnetUtleder"
     },
     {
@@ -365,7 +365,7 @@
       "listetype": false,
       "tolkesSom": "Duration",
       "visTilBruker": true,
-      "kokriterie": false,
+      "synlighet": "UNDER_STREKEN",
       "transientFeltutleder": "no.nav.k9.los.nyoppgavestyring.query.mapping.transientfeltutleder.K9SakVentetPåArbeidsgiverUtleder"
     },
     {
@@ -374,7 +374,7 @@
       "listetype": false,
       "tolkesSom": "Duration",
       "visTilBruker": true,
-      "kokriterie": false,
+      "synlighet": "UNDER_STREKEN",
       "transientFeltutleder": "no.nav.k9.los.nyoppgavestyring.query.mapping.transientfeltutleder.K9SakVentetPåSaksbehandlerUtleder"
     },
     {
@@ -383,7 +383,7 @@
       "listetype": false,
       "tolkesSom": "Duration",
       "visTilBruker": true,
-      "kokriterie": false,
+      "synlighet": "UNDER_STREKEN",
       "transientFeltutleder": "no.nav.k9.los.nyoppgavestyring.query.mapping.transientfeltutleder.K9SakVentetPåSøkerUtleder"
     },
     {
@@ -392,7 +392,7 @@
       "listetype": false,
       "tolkesSom": "Duration",
       "visTilBruker": true,
-      "kokriterie": false,
+      "synlighet": "UNDER_STREKEN",
       "transientFeltutleder": "no.nav.k9.los.nyoppgavestyring.query.mapping.transientfeltutleder.K9SakVentetPåTekniskFeilUtleder"
     },
     {
@@ -401,7 +401,7 @@
       "listetype": false,
       "tolkesSom": "Duration",
       "visTilBruker": true,
-      "kokriterie": false,
+      "synlighet": "UNDER_STREKEN",
       "transientFeltutleder": "no.nav.k9.los.nyoppgavestyring.query.mapping.transientfeltutleder.K9SakOppgavesaksbehandlingstidUtleder"
     },
     {
@@ -410,7 +410,7 @@
       "listetype": false,
       "tolkesSom": "String",
       "visTilBruker": true,
-      "kokriterie": false,
+      "synlighet": "UNDER_STREKEN",
       "kodeverkreferanse": {
         "område": "K9",
         "eksternId": "Venteårsak"
@@ -422,7 +422,7 @@
       "listetype": false,
       "tolkesSom": "Timestamp",
       "visTilBruker": true,
-      "kokriterie": false
+      "synlighet": "UNDER_STREKEN"
     },
     {
       "id": "helautomatiskBehandlet",
@@ -430,7 +430,7 @@
       "listetype": false,
       "tolkesSom": "boolean",
       "visTilBruker": true,
-      "kokriterie": false
+      "synlighet": "UNDER_STREKEN"
     },
     {
       "id": "vedtaksdato",
@@ -438,7 +438,7 @@
       "listetype": false,
       "tolkesSom": "Timestamp",
       "visTilBruker": true,
-      "kokriterie": false
+      "synlighet": "UNDER_STREKEN"
     },
     {
       "id": "nyeKrav",
@@ -446,7 +446,7 @@
       "listetype": false,
       "tolkesSom": "boolean",
       "visTilBruker": true,
-      "kokriterie": true
+      "synlighet": "OVER_STREKEN"
     },
     {
       "id": "bareNyeKrav",
@@ -454,7 +454,7 @@
       "listetype": false,
       "tolkesSom": "boolean",
       "visTilBruker": true,
-      "kokriterie": true
+      "synlighet": "OVER_STREKEN"
     },
     {
       "id": "antallOmsøkteDager",
@@ -462,7 +462,7 @@
       "listetype": false,
       "tolkesSom": "Integer",
       "visTilBruker": true,
-      "kokriterie": true
+      "synlighet": "OVER_STREKEN"
     },
     {
       "id": "fraEndringsdialog",
@@ -470,7 +470,7 @@
       "listetype": false,
       "tolkesSom": "boolean",
       "visTilBruker": true,
-      "kokriterie": true
+      "synlighet": "OVER_STREKEN"
     },
     {
       "id": "hastesak",
@@ -478,7 +478,7 @@
       "listetype": false,
       "tolkesSom": "boolean",
       "visTilBruker": true,
-      "kokriterie": true
+      "synlighet": "OVER_STREKEN"
     },
     {
       "id": "utenlandstilsnitt",
@@ -486,7 +486,7 @@
       "listetype": false,
       "tolkesSom": "boolean",
       "visTilBruker": true,
-      "kokriterie": true
+      "synlighet": "OVER_STREKEN"
     },
     {
       "id": "direkteutbetaling",
@@ -494,7 +494,7 @@
       "listetype": false,
       "tolkesSom": "boolean",
       "visTilBruker": true,
-      "kokriterie": true
+      "synlighet": "OVER_STREKEN"
     },
     {
       "id": "søknadsårsak",
@@ -502,7 +502,7 @@
       "listetype": true,
       "tolkesSom": "String",
       "visTilBruker": true,
-      "kokriterie": true,
+      "synlighet": "OVER_STREKEN",
       "kodeverkreferanse": {
         "område": "K9",
         "eksternId": "søknadsårsak"
@@ -514,7 +514,7 @@
       "listetype": true,
       "tolkesSom": "String",
       "visTilBruker": true,
-      "kokriterie": true,
+      "synlighet": "OVER_STREKEN",
       "kodeverkreferanse": {
         "område": "K9",
         "eksternId": "behandlingsårsak"
@@ -526,7 +526,7 @@
       "listetype": false,
       "tolkesSom": "boolean",
       "visTilBruker": true,
-      "kokriterie": true
+      "synlighet": "OVER_STREKEN"
     },
     {
       "id": "journalfortTidspunkt",
@@ -534,7 +534,7 @@
       "listetype": false,
       "tolkesSom": "Timestamp",
       "visTilBruker": true,
-      "kokriterie": false
+      "synlighet": "UNDER_STREKEN"
     },
     {
       "id": "journalpostId",
@@ -542,7 +542,7 @@
       "listetype": false,
       "tolkesSom": "String",
       "visTilBruker": true,
-      "kokriterie": false
+      "synlighet": "UNDER_STREKEN"
     },
     {
       "id": "oversendtKabalTidspunkt",
@@ -550,7 +550,7 @@
       "listetype": false,
       "tolkesSom": "Timestamp",
       "visTilBruker": false,
-      "kokriterie": false
+      "synlighet": "UNDER_STREKEN"
     },
     {
       "id": "oversendtKlageinstansTidspunkt",
@@ -558,7 +558,7 @@
       "listetype": false,
       "tolkesSom": "Timestamp",
       "visTilBruker": false,
-      "kokriterie": false
+      "synlighet": "UNDER_STREKEN"
     },
     {
       "id": "førsteFeilutbetalingDato",
@@ -566,7 +566,7 @@
       "listetype": false,
       "tolkesSom": "Timestamp",
       "visTilBruker": true,
-      "kokriterie": false
+      "synlighet": "UNDER_STREKEN"
     },
     {
       "id": "feilutbetaltBeløp",
@@ -574,7 +574,7 @@
       "listetype": false,
       "tolkesSom": "Integer",
       "visTilBruker": true,
-      "kokriterie": true
+      "synlighet": "OVER_STREKEN"
     },
     {
       "id": "ferdigstiltTidspunkt",
@@ -582,7 +582,7 @@
       "listetype": false,
       "tolkesSom": "Timestamp",
       "visTilBruker": false,
-      "kokriterie": false
+      "synlighet": "UNDER_STREKEN"
     },
     {
       "id": "ferdigstiltEnhet",
@@ -590,7 +590,7 @@
       "listetype": false,
       "tolkesSom": "String",
       "visTilBruker": true,
-      "kokriterie": false,
+      "synlighet": "UNDER_STREKEN",
       "kodeverkreferanse": {
         "område": "K9",
         "eksternId": "behandlendeEnhet"
@@ -602,7 +602,7 @@
       "listetype": false,
       "tolkesSom": "Integer",
       "visTilBruker": false,
-      "kokriterie": false
+      "synlighet": "UNDER_STREKEN"
     }
   ]
 }

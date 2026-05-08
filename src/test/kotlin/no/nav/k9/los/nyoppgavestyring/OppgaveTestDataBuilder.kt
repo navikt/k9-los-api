@@ -13,6 +13,7 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
 import no.nav.k9.los.nyoppgavestyring.query.db.OmrådeOgKode
 import no.nav.k9.los.nyoppgavestyring.query.db.OppgavefeltMedMer
+import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Synlighet
 import no.nav.k9.los.nyoppgavestyring.query.dto.felter.Oppgavefelt
 import org.koin.test.KoinTest
 import org.koin.test.get
@@ -127,7 +128,7 @@ val felter: Map<OmrådeOgKode, OppgavefeltMedMer> = mapOf(
             kode = FeltType.OPPGAVE_STATUS.eksternId,
             visningsnavn = FeltType.OPPGAVE_STATUS.name,
             tolkes_som = FeltType.OPPGAVE_STATUS.tolkesSom,
-            kokriterie = true,
+            synlighet = Synlighet.OVER_STREKEN,
             verdiforklaringer = emptyList()
         ), null),
     OmrådeOgKode("K9", FeltType.FAGSYSTEM.eksternId) to OppgavefeltMedMer(
@@ -136,7 +137,7 @@ val felter: Map<OmrådeOgKode, OppgavefeltMedMer> = mapOf(
             kode = FeltType.FAGSYSTEM.eksternId,
             visningsnavn = FeltType.FAGSYSTEM.name,
             tolkes_som = FeltType.FAGSYSTEM.tolkesSom,
-            kokriterie = true,
+            synlighet = Synlighet.OVER_STREKEN,
             verdiforklaringer = emptyList()
         ), null),
     OmrådeOgKode("K9", FeltType.MOTTATT_DATO.eksternId) to OppgavefeltMedMer(
@@ -145,7 +146,7 @@ val felter: Map<OmrådeOgKode, OppgavefeltMedMer> = mapOf(
             kode = FeltType.MOTTATT_DATO.eksternId,
             visningsnavn = FeltType.MOTTATT_DATO.name,
             tolkes_som = FeltType.MOTTATT_DATO.tolkesSom,
-            kokriterie = true,
+            synlighet = Synlighet.OVER_STREKEN,
             verdiforklaringer = emptyList()
         ), null),
     OmrådeOgKode("K9", FeltType.LIGGER_HOS_BESLUTTER.eksternId) to OppgavefeltMedMer(
@@ -154,7 +155,7 @@ val felter: Map<OmrådeOgKode, OppgavefeltMedMer> = mapOf(
             kode = FeltType.LIGGER_HOS_BESLUTTER.eksternId,
             visningsnavn = FeltType.LIGGER_HOS_BESLUTTER.name,
             tolkes_som = FeltType.LIGGER_HOS_BESLUTTER.tolkesSom,
-            kokriterie = true,
+            synlighet = Synlighet.OVER_STREKEN,
             verdiforklaringer = emptyList()
         ), null),
 )

@@ -3,6 +3,7 @@ package no.nav.k9.los.nyoppgavestyring.query.mapping
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import assertk.assertions.isNull
+import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Synlighet
 import no.nav.k9.los.nyoppgavestyring.query.db.OmrådeOgKode
 import no.nav.k9.los.nyoppgavestyring.query.db.OppgavefeltMedMer
 import no.nav.k9.los.nyoppgavestyring.query.dto.felter.Oppgavefelt
@@ -19,7 +20,7 @@ class OppgavefilterDatatypeMapperTest {
                 kode = "testfeltBoolean",
                 visningsnavn = "Testet felt",
                 tolkes_som = "boolean",
-                kokriterie = true,
+                synlighet = Synlighet.OVER_STREKEN,
                 verdiforklaringer = null
             ),
             transientFeltutleder = null
@@ -30,7 +31,7 @@ class OppgavefilterDatatypeMapperTest {
                 kode = "testfeltLDT",
                 visningsnavn = "Testet felt",
                 tolkes_som = "Timestamp",
-                kokriterie = true,
+                synlighet = Synlighet.OVER_STREKEN,
                 verdiforklaringer = null
             ),
             transientFeltutleder = null
@@ -41,7 +42,7 @@ class OppgavefilterDatatypeMapperTest {
                 kode = "testfeltInteger",
                 visningsnavn = "Testet felt",
                 tolkes_som = "Integer",
-                kokriterie = true,
+                synlighet = Synlighet.OVER_STREKEN,
                 verdiforklaringer = null
             ),
             transientFeltutleder = null

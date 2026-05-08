@@ -33,7 +33,7 @@ class FeltdefinisjonRepositoryTest: AbstractK9LosIntegrationTest() {
                 listetype = false,
                 tolkesSom = "string",
                 visTilBruker = true,
-                kokriterie = true,
+                synlighet = Synlighet.OVER_STREKEN,
                 kodeverkreferanse = null,
                 transientFeltutleder = null,
             ))
@@ -58,7 +58,7 @@ class FeltdefinisjonRepositoryTest: AbstractK9LosIntegrationTest() {
             listetype = true,
             tolkesSom = "string",
             visTilBruker = false,
-            kokriterie = false,
+            synlighet = Synlighet.UNDER_STREKEN,
             kodeverkreferanse = null,
             transientFeltutleder = null,
         ))
@@ -141,7 +141,7 @@ class FeltdefinisjonRepositoryTest: AbstractK9LosIntegrationTest() {
                 listetype = false,
                 tolkesSom = "string",
                 visTilBruker = true,
-                kokriterie = true,
+                synlighet = Synlighet.OVER_STREKEN,
                 kodeverkreferanse = null,
                 transientFeltutleder = null,
                 id = null

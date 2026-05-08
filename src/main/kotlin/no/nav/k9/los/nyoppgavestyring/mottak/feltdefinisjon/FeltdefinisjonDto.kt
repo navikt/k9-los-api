@@ -7,7 +7,7 @@ data class FeltdefinisjonDto(
     val listetype: Boolean,
     val tolkesSom: String,
     val visTilBruker: Boolean,
-    val kokriterie: Boolean,
+    val synlighet: Synlighet,
     val kodeverkreferanse: KodeverkReferanseDto?,
     val transientFeltutleder: String?
 )
