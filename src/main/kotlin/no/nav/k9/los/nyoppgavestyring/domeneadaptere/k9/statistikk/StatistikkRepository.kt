@@ -22,7 +22,7 @@ class StatistikkRepository(
                         from oppgave_v3 ov
                         join oppgavetype o ON ov.oppgavetype_id = o.id 
                         where o.ekstern_id in ('k9sak', 'k9klage')
-                          and not exists (select * from OPPGAVE_V3_SENDT_DVH os where os.id = ov.id)
+                          and not exists (select * from OPPGAVE_V3_SENDT_DVH_EKSTERN os where os.ekstern_id = ov.ekstern_id and os.ekstern_versjon = ov.ekstern_versjon)
                     """.trimIndent()
                 )
                     .map { row ->
@@ -37,14 +37,6 @@ class StatistikkRepository(
             it.run(
                 queryOf(
                     """
-                        insert into OPPGAVE_V3_SENDT_DVH(id) values (:id)
-                    """.trimIndent(),
-                    mapOf("id" to id)
-                ).asUpdate
-            )
-            it.run(
-                queryOf(
-                    """
                         insert into OPPGAVE_V3_SENDT_DVH_EKSTERN(ekstern_id, ekstern_versjon)
                         select ov.ekstern_id, ov.ekstern_versjon from oppgave_v3 ov where ov.id = :id
                         on conflict (ekstern_id, ekstern_versjon) do nothing
@@ -55,71 +47,14 @@ class StatistikkRepository(
         }
     }
 
-    fun backfillSendtDvhEkstern(batchSize: Int = 50000): Int {
-        var totalInserted = 0
-        while (true) {
-            val inserted = using(sessionOf(dataSource)) {
-                it.run(
-                    queryOf(
-                        """
-                            insert into OPPGAVE_V3_SENDT_DVH_EKSTERN(ekstern_id, ekstern_versjon)
-                            select distinct ov.ekstern_id, ov.ekstern_versjon
-                            from OPPGAVE_V3_SENDT_DVH os
-                            join oppgave_v3 ov on ov.id = os.id
-                            where not exists (
-                                select 1 from OPPGAVE_V3_SENDT_DVH_EKSTERN e 
-                                where e.ekstern_id = ov.ekstern_id and e.ekstern_versjon = ov.ekstern_versjon
-                            )
-                            limit :batchSize
-                            on conflict (ekstern_id, ekstern_versjon) do nothing
-                        """.trimIndent(),
-                        mapOf("batchSize" to batchSize)
-                    ).asUpdate
-                )
-            }
-            totalInserted += inserted
-            if (inserted < batchSize) break
-        }
-        return totalInserted
-    }
-
-    fun hentOppgaverSomIkkeErSendtEkstern(): List<Long> {
-        return using(sessionOf(dataSource)) {
-            it.run(
-                queryOf(
-                    """
-                        select ov.id
-                        from oppgave_v3 ov
-                        join oppgavetype o ON ov.oppgavetype_id = o.id 
-                        where o.ekstern_id in ('k9sak', 'k9klage')
-                          and not exists (select * from OPPGAVE_V3_SENDT_DVH_EKSTERN os where os.ekstern_id = ov.ekstern_id and os.ekstern_versjon = ov.ekstern_versjon)
-                    """.trimIndent()
-                )
-                    .map { row ->
-                        row.long("id")
-                    }.asList
-            )
-        }
-    }
 
     fun fjernSendtMarkering(oppgave: OppgaveNøkkelDto, tx: TransactionalSession) {
         tx.run(
             queryOf("""
-                delete from oppgave_v3_sendt_dvh ov3sd 
-                where ov3sd.id IN (
-                    SELECT ov3.id 
-                    FROM oppgave_v3 ov3 
-                    join oppgavetype ot ON ov3.oppgavetype_id = ot.id 
-                    join omrade o ON ot.omrade_id = o.id 
-                    WHERE ov3.ekstern_id = :id 
-                      AND ot.ekstern_id = :type 
-                      AND o.ekstern_id = :omrade
-                )
+                delete from OPPGAVE_V3_SENDT_DVH_EKSTERN
+                where ekstern_id = :id
             """.trimIndent()
-                , mapOf(
-                    "id" to oppgave.oppgaveEksternId,
-                    "type" to oppgave.oppgaveTypeEksternId,
-                    "omrade" to oppgave.områdeEksternId)
+                , mapOf("id" to oppgave.oppgaveEksternId)
             ).asUpdate
         )
     }
@@ -129,14 +64,21 @@ class StatistikkRepository(
             if (oppgavetype != null) {
                 it.run(
                     queryOf(
-                        """delete from oppgave_v3_sendt_dvh ov3sd where ov3sd.id IN (SELECT ov3.id FROM oppgave_v3 ov3 join oppgavetype ot ON ov3.oppgavetype_id = ot.id WHERE ot.ekstern_id = :oppgavetype)"""
+                        """
+                        delete from OPPGAVE_V3_SENDT_DVH_EKSTERN e
+                        where e.ekstern_id IN (
+                            SELECT ov3.ekstern_id FROM oppgave_v3 ov3
+                            join oppgavetype ot ON ov3.oppgavetype_id = ot.id
+                            WHERE ot.ekstern_id = :oppgavetype
+                        )
+                        """.trimIndent()
                     , mapOf("oppgavetype" to oppgavetype)
                     ).asUpdate
                 )
             } else {
                 it.run(
                     queryOf(
-                        """delete from oppgave_v3_sendt_dvh"""
+                        """delete from OPPGAVE_V3_SENDT_DVH_EKSTERN"""
                     ).asUpdate
                 )
             }
