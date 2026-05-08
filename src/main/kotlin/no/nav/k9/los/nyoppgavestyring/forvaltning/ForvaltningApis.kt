@@ -7,6 +7,8 @@ import io.ktor.server.routing.*
 import kotliquery.queryOf
 import no.nav.k9.kodeverk.behandling.FagsakYtelseType
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.AvstemmingsTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.StatistikkRepository
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventRepository
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.RequestContextService
@@ -36,6 +38,7 @@ fun Route.forvaltningApis() {
     val transactionalManager by inject<TransactionalManager>()
     val forvaltningRepository by inject<ForvaltningRepository>()
     val avstemmingsTjeneste by inject<AvstemmingsTjeneste>()
+    val statistikkRepository by inject<StatistikkRepository>()
 
     val pepClient by inject<IPepClient>()
     val requestContextService by inject<RequestContextService>()
@@ -478,6 +481,20 @@ fun Route.forvaltningApis() {
                 }.sortedWith(compareBy({ it.område ?: "" }, { it.kode }))
 
                 call.respond(resultat)
+            } else {
+                call.respond(HttpStatusCode.Forbidden)
+            }
+        }
+    }
+
+    get("/backfill-sendt-dvh-ekstern", {
+        tags("Forvaltning")
+        description = "Engangs-backfill: Populerer OPPGAVE_V3_SENDT_DVH_EKSTERN basert på eksisterende data i OPPGAVE_V3_SENDT_DVH. Kan trygt kjøres flere ganger."
+    }) {
+        requestContextService.withRequestContext(call) {
+            if (pepClient.kanLeggeUtDriftsmelding()) {
+                val antallBackfilled = statistikkRepository.backfillSendtDvhEkstern()
+                call.respond("Backfill ferdig. $antallBackfilled rader lagt til i OPPGAVE_V3_SENDT_DVH_EKSTERN.")
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
