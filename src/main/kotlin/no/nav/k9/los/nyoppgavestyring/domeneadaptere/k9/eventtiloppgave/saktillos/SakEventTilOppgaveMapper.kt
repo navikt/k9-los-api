@@ -26,7 +26,7 @@ class SakEventTilOppgaveMapper(
         if (eventLagret.fagsystem != Fagsystem.K9SAK) {
             throw IllegalArgumentException("Fagsystem er ikke SAK")
         }
-        val event = LosObjectMapper.instance.readValue<K9SakEventDto>(eventLagret.eventJson)
+        val event = eventLagret.eventDto
         var oppgaveDto = OppgaveDto(
             eksternId = event.eksternId.toString(),
             eksternVersjon = event.eventTid.toString(),

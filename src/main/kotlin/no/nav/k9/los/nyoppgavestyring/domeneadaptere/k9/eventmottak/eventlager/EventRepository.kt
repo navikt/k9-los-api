@@ -115,7 +115,7 @@ class EventRepository(
 
     fun hentAlleEventer(fagsystem: Fagsystem, eksternId: String, tx: TransactionalSession): List<EventLagret> {
         val eventId = hentOgLåsEventnøkkel(fagsystem, eksternId, tx)
-        val eventer = tx.run(
+        return tx.run(
             queryOf(
                 """
                     select e.* 
@@ -130,19 +130,18 @@ class EventRepository(
                 rowTilEvent(row, eksternId, fagsystem)
             }.asList
         )
-
-        return eventer.sortedBy { LocalDateTime.parse(it.eksternVersjon) }
     }
 
 
     fun hentAlleEventerMedLås(eventnøkkel: EventNøkkel, tx: TransactionalSession): List<EventLagret> {
         val eventId = eventnøkkel.id ?: hentOgLåsEventnøkkel(eventnøkkel.fagsystem, eventnøkkel.eksternId, tx)
-        val eventer = tx.run(
+        return tx.run(
             queryOf(
                 """
                     select e.* 
                     from event e 
                     where event_nokkel_id = :nokkelId
+                    order by ekstern_versjon :: timestamp
                 """.trimIndent(),
                 mapOf(
                     "nokkelId" to eventId,
@@ -151,8 +150,6 @@ class EventRepository(
                 rowTilEvent(row, eventnøkkel.eksternId, eventnøkkel.fagsystem)
             }.asList
         )
-
-        return eventer.sortedBy { LocalDateTime.parse(it.eksternVersjon) }
     }
 
     @VisibleForTesting
@@ -215,6 +212,7 @@ class EventRepository(
                 select *
                 from oppgaveversjoner
                 where dirty = true
+                order by ekstern_versjon :: timestamp
                 for update
                 """.trimIndent(), //select for update ikke lov med distinct, derfor CTE
                 mapOf(
@@ -224,7 +222,7 @@ class EventRepository(
             ).map { row ->
                 Pair(row.int("nummer"), rowTilEvent(row, eksternId, fagsystem))
             }.asList
-        ).sortedBy { LocalDateTime.parse(it.second.eksternVersjon) }
+        )
     }
 
     private fun rowTilEvent(row: Row): EventLagret? {

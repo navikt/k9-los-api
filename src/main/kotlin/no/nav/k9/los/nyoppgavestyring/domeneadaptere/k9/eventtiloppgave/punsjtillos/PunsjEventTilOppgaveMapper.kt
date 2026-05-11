@@ -20,7 +20,7 @@ class PunsjEventTilOppgaveMapper {
         if (eventLagret.fagsystem != Fagsystem.PUNSJ) {
             throw IllegalStateException()
         }
-        val event = LosObjectMapper.instance.readValue<K9PunsjEventDto>(eventLagret.eventJson)
+        val event = eventLagret.eventDto
 
         return NyOppgaveversjon(
             dto = OppgaveDto(

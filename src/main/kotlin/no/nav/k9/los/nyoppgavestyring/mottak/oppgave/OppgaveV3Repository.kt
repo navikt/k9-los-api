@@ -293,9 +293,7 @@ class OppgaveV3Repository(
             ).map { row ->
                 OppgaveFeltverdi(
                     id = row.long("id"),
-                    oppgavefelt = oppgavetype.oppgavefelter.first { oppgavefelt ->
-                        oppgavefelt.id == row.long("oppgavefelt_id")
-                    },
+                    oppgavefelt = oppgavetype.hentFeltById(row.long("oppgavefelt_id")),
                     verdi = row.string("verdi"),
                     verdiBigInt = row.longOrNull("verdi_bigint")
                 )
