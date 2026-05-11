@@ -5,7 +5,6 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.K9Oppgavetypenavn
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventNøkkel
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventRepository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.HistorikkvaskBestilling
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.StatistikkRepository
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveNøkkelDto
@@ -16,11 +15,15 @@ import kotlin.time.measureTime
 class HistorikkvaskTjeneste(
     private val eventRepository: EventRepository,
     private val oppgaveV3Tjeneste: OppgaveV3Tjeneste,
-    private val statistikkRepository: StatistikkRepository,
     private val transactionalManager: TransactionalManager,
     private val eventTilOppgaveAdapter: EventTilOppgaveAdapter,
 ) {
     private val log: Logger = LoggerFactory.getLogger(HistorikkvaskTjeneste::class.java)
+
+    companion object {
+        private const val PARALLELLE_VASKERE = 8
+        private const val BATCH_STORRELSE = 2000
+    }
 
     fun kjørHistorikkvask() {
         val antallBestillinger = eventRepository.hentAntallHistorikkvaskbestillinger()
@@ -29,18 +32,26 @@ class HistorikkvaskTjeneste(
         }
 
         log.info("Fant totalt $antallBestillinger historikkvaskbestillinger")
-        val dispatcher = newFixedThreadPoolContext(5, "Historikkvask")
+        val dispatcher = newFixedThreadPoolContext(PARALLELLE_VASKERE, "Historikkvask")
         dispatcher.use { dispatcher ->
+            // Cursor over event_nokkel_id, slik at en bestilling som feiler ikke fanger
+            // den ytre løkka i en evig retry innenfor samme kjøring. Bestillinger som lykkes
+            // blir uansett slettet fra event_historikkvask_bestilt.
+            var sisteSetteEventNokkelId = 0L
             var vasketeller = 0L
             val tidsbruk = measureTime {
                 while (true) {
                     val historikkvaskbestillinger =
-                        eventRepository.hentAlleHistorikkvaskbestillinger(antall = 2000)
+                        eventRepository.hentAlleHistorikkvaskbestillinger(
+                            antall = BATCH_STORRELSE,
+                            etterEventNokkelId = sisteSetteEventNokkelId,
+                        )
                     if (historikkvaskbestillinger.isEmpty()) break
 
                     log.info("Starter vaskeiterasjon på ${historikkvaskbestillinger.size} oppgaver")
                     vaskBestillinger(historikkvaskbestillinger, dispatcher)
                     vasketeller += historikkvaskbestillinger.size
+                    sisteSetteEventNokkelId = historikkvaskbestillinger.maxOf { it.eventlagerNøkkel ?: 0L }
                     log.info("Vasket iterasjon med ${historikkvaskbestillinger.size} oppgaver. Har vasket totalt $vasketeller oppgaver")
                 }
             }
@@ -52,51 +63,45 @@ class HistorikkvaskTjeneste(
         vaskebestillinger: List<HistorikkvaskBestilling>,
         dispatcher: ExecutorCoroutineDispatcher,
     ): Int {
-        val scope = CoroutineScope(dispatcher)
-
-        val jobber = vaskebestillinger.map { historikkvaskBestilling ->
-            scope.async {
-                runBlocking {
+        return runBlocking(dispatcher) {
+            val jobber = vaskebestillinger.map { historikkvaskBestilling ->
+                async {
                     try {
                         vaskBestilling(historikkvaskBestilling)
                     } catch (e: Exception) {
-                        log.error("HistorikkvaskVaktmester: Feil ved historikkvask for ${historikkvaskBestilling.eksternId} for fagsystem: ${historikkvaskBestilling.fagsystem}", e)
+                        log.error(
+                            "HistorikkvaskVaktmester: Feil ved historikkvask for ${historikkvaskBestilling.eksternId} for fagsystem: ${historikkvaskBestilling.fagsystem}",
+                            e
+                        )
                         0
                     }
                 }
             }
-        }.toList()
-
-        val eventTeller = runBlocking {
-            jobber.sumOf { it.await() }
+            jobber.awaitAll().sum()
         }
-
-        return eventTeller
     }
 
     fun vaskBestilling(historikkvaskBestilling: HistorikkvaskBestilling): Int {
+        val eventNøkkel = EventNøkkel(
+            historikkvaskBestilling.fagsystem,
+            historikkvaskBestilling.eksternId,
+            historikkvaskBestilling.eventlagerNøkkel
+        )
+        val oppgavenøkkel = OppgaveNøkkelDto(
+            historikkvaskBestilling.eksternId,
+            K9Oppgavetypenavn.fraFagsystem(historikkvaskBestilling.fagsystem).kode,
+            "K9"
+        )
+
         var eventNrForBehandling = 0
         transactionalManager.transaction { tx ->
-            val eventer =
-                eventRepository.hentAlleEventerMedLås(
-                    EventNøkkel(historikkvaskBestilling.fagsystem, historikkvaskBestilling.eksternId),
-                    tx
-                )
-            if (eventer.any { it.dirty }) {
-                log.info("Avbryter historikkvask for ${historikkvaskBestilling.eksternId} for fagsystem: ${historikkvaskBestilling.fagsystem}. Historikkvasken har funnet eventer som ennå ikke er lastet inn med normalflyt. Dirty eventer skal håndteres av vanlig adaptertjeneste.")
+            oppgaveV3Tjeneste.slettOppgave(oppgavenøkkel, tx)
+            eventRepository.settDirty(eventNøkkel, tx)
+            eventNrForBehandling = eventTilOppgaveAdapter.oppdaterOppgaveForEksternId(eventNøkkel, tx).toInt()
+
+            if (historikkvaskBestilling.eventlagerNøkkel != null) {
+                eventRepository.settHistorikkvaskFerdig(historikkvaskBestilling.eventlagerNøkkel, tx)
             } else {
-                val oppgavenøkkel = OppgaveNøkkelDto(
-                    historikkvaskBestilling.eksternId,
-                    K9Oppgavetypenavn.fraFagsystem(historikkvaskBestilling.fagsystem).kode,
-                    "K9"
-                )
-
-                statistikkRepository.fjernSendtMarkering(oppgavenøkkel, tx)
-                oppgaveV3Tjeneste.slettOppgave(oppgavenøkkel, tx)
-                val eventNøkkel = EventNøkkel(historikkvaskBestilling.fagsystem, historikkvaskBestilling.eksternId)
-                eventRepository.settDirty(eventNøkkel, tx)
-                eventNrForBehandling = eventTilOppgaveAdapter.oppdaterOppgaveForEksternId(eventNøkkel, tx).toInt()
-
                 eventRepository.settHistorikkvaskFerdig(
                     historikkvaskBestilling.fagsystem,
                     historikkvaskBestilling.eksternId,

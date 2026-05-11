@@ -281,6 +281,10 @@ class EventRepository(
     }
 
     fun settDirty(eventnøkkel: EventNøkkel, tx: TransactionalSession) {
+        if (eventnøkkel.id != null) {
+            settDirty(eventnøkkel.id, tx)
+            return
+        }
         tx.run(
             queryOf(
                 """
@@ -295,6 +299,15 @@ class EventRepository(
                     "fagsystem" to eventnøkkel.fagsystem.kode,
                     "ekstern_id" to eventnøkkel.eksternId,
                 )
+            ).asUpdate
+        )
+    }
+
+    fun settDirty(eventNokkelId: Long, tx: TransactionalSession) {
+        tx.run(
+            queryOf(
+                """update event set dirty = true where event_nokkel_id = :id""",
+                mapOf("id" to eventNokkelId)
             ).asUpdate
         )
     }
@@ -363,6 +376,15 @@ class EventRepository(
         )
     }
 
+    fun settHistorikkvaskFerdig(eventNokkelId: Long, tx: TransactionalSession) {
+        tx.run(
+            queryOf(
+                """delete from event_historikkvask_bestilt where event_nokkel_id = :id""",
+                mapOf("id" to eventNokkelId)
+            ).asUpdate
+        )
+    }
+
     fun hentAntallHistorikkvaskbestillinger(): Long {
         return using(sessionOf(dataSource)) {
             it.transaction { tx ->
@@ -379,6 +401,13 @@ class EventRepository(
     }
 
     fun hentAlleHistorikkvaskbestillinger(antall: Int = 10000): List<HistorikkvaskBestilling> {
+        return hentAlleHistorikkvaskbestillinger(antall, etterEventNokkelId = 0L)
+    }
+
+    fun hentAlleHistorikkvaskbestillinger(
+        antall: Int,
+        etterEventNokkelId: Long,
+    ): List<HistorikkvaskBestilling> {
         return using(sessionOf(dataSource)) {
             it.transaction { tx ->
                 tx.run(
@@ -387,9 +416,14 @@ class EventRepository(
                             select en.*
                             from event_historikkvask_bestilt hb
                                 join event_nokkel en on hb.event_nokkel_id = en.id
+                            where hb.event_nokkel_id > :etter
+                            order by hb.event_nokkel_id
                             LIMIT :antall
                         """.trimIndent(),
-                        mapOf("antall" to antall)
+                        mapOf(
+                            "antall" to antall,
+                            "etter" to etterEventNokkelId,
+                        )
                     ).map { row ->
                         HistorikkvaskBestilling(
                             row.long("id"),
