@@ -1,17 +1,15 @@
 package no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.status
 
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.OppgaverGruppertRepository
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
+import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.*
+import no.nav.k9.los.nyoppgavestyring.query.mapping.EksternFeltverdiOperator
 
 class StatusService(
     private val queryService: OppgaveQueryService,
-    private val oppgaverGruppertRepository: OppgaverGruppertRepository,
 ) {
-    private val log: Logger = LoggerFactory.getLogger(StatusService::class.java)
-
     private val punsjtyper = setOf(
         BehandlingType.PAPIRSØKNAD,
         BehandlingType.DIGITAL_SØKNAD,
@@ -30,16 +28,35 @@ class StatusService(
     )
 
     fun hentStatus(harTilgangTilKode6: Boolean): List<StatusDto> {
-        val alleGrupper =
-            oppgaverGruppertRepository.hentAntallÅpneOppgaverPrOppgavetypeBehandlingstype(harTilgangTilKode6)
+        val filtere = buildList {
+            add(FeltverdiOppgavefilter(null, "oppgavestatus", EksternFeltverdiOperator.IN, listOf(Oppgavestatus.AAPEN.kode, Oppgavestatus.VENTER.kode)))
+            if (!harTilgangTilKode6) {
+                add(FeltverdiOppgavefilter(null, "personbeskyttelse", EksternFeltverdiOperator.EQUALS, listOf("UTEN_KODE6")))
+            }
+        }
+        val oppgaveQuery = OppgaveQuery(
+            filtere = filtere,
+            select = listOf(
+                EnkelSelectFelt("K9", "behandlingTypekode"),
+                AggregertSelectFelt(Aggregeringsfunksjon.ANTALL),
+            ),
+        )
+        val resultat = queryService.query(QueryRequest(oppgaveQuery))
 
-        val (punsjGrupper, andreGrupper) = alleGrupper.partition { it.behandlingstype in punsjtyper }
+        val alleGrupper = resultat.mapNotNull { rad ->
+            val behandlingTypeKode = rad.feltverdier.firstOrNull()?.verdi?.toString() ?: return@mapNotNull null
+            val behandlingType = BehandlingType.fraKode(behandlingTypeKode)
+            val antall = checkNotNull(rad.aggregeringer.first { it.type == Aggregeringsfunksjon.ANTALL }.verdi) as Long
+            behandlingType to antall.toInt()
+        }
+
+        val (punsjGrupper, andreGrupper) = alleGrupper.partition { it.first in punsjtyper }
 
         return buildList {
-            add(StatusDto("Åpne behandlinger", andreGrupper.sumOf { it.antall }))
-            addAll(andreGrupper.map { StatusDto(it.behandlingstype.navn, it.antall) })
+            add(StatusDto("Åpne behandlinger", andreGrupper.sumOf { it.second }))
+            addAll(andreGrupper.map { StatusDto(it.first.navn, it.second) })
             if (punsjGrupper.isNotEmpty()) {
-                add(StatusDto("Punsj", punsjGrupper.sumOf { it.antall }))
+                add(StatusDto("Punsj", punsjGrupper.sumOf { it.second }))
             }
         }
     }

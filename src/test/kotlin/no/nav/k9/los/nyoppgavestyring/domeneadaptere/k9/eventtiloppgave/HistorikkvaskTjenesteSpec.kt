@@ -37,14 +37,14 @@ class HistorikkvaskTjenesteSpec: FreeSpec(), KoinTest {
         "En oppgaveversjon innlest i oppgavemodellen" - {
             val eksternId = UUID.randomUUID()
             val event = punsjEvent(eksternId, LocalDateTime.now().minusHours(2))
-            val eventLagret = transactionalManager.transaction { tx ->
+            val eventnøkkel = transactionalManager.transaction { tx ->
                 eventRepository.lagre(Fagsystem.PUNSJ, event, tx)
             }
             oppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(Fagsystem.PUNSJ, eksternId.toString()))
             "med feil i oppgavefeltverdier" - {
                 val eventKorrigert = LosObjectMapper.instance.writeValueAsString(event.copy(ytelse = "ytelsekorrigert"))
                 transactionalManager.transaction { tx ->
-                    eventRepository.endreEvent(eventLagret!!.nøkkelId, EventNøkkel(Fagsystem.PUNSJ, eksternId.toString()), eventKorrigert, tx)
+                    eventRepository.endreEvent(eventnøkkel, eventKorrigert, tx)
                 }
                 "skal få korrigerte verdier av historikkvasker" {
                     val oppgaveUvasket = transactionalManager.transaction { tx ->

@@ -4,6 +4,7 @@ import assertk.assertThat
 import assertk.assertions.hasSize
 import assertk.assertions.isEmpty
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Feltdefinisjon
+import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Synlighet
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.Område
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -84,8 +85,8 @@ class OppgavetypeTest {
                                 beskrivelse = null,
                                 listetype = false,
                                 tolkesSom = "String",
-                                visTilBruker = true,
-                                kokriterie = false,
+
+                                synlighet = Synlighet.UNDER_STREKEN,
                                 kodeverkreferanse = null,
                                 transientFeltutleder = null,
                             ),
@@ -102,8 +103,8 @@ class OppgavetypeTest {
                                 beskrivelse = null,
                                 listetype = false,
                                 tolkesSom = "String",
-                                visTilBruker = true,
-                                kokriterie = false,
+
+                                synlighet = Synlighet.UNDER_STREKEN,
                                 kodeverkreferanse = null,
                                 transientFeltutleder = null,
                             ),
@@ -142,8 +143,8 @@ class OppgavetypeTest {
                                 beskrivelse = null,
                                 listetype = false,
                                 tolkesSom = "String",
-                                visTilBruker = true,
-                                kokriterie = false,
+
+                                synlighet = Synlighet.UNDER_STREKEN,
                                 kodeverkreferanse = null,
                                 transientFeltutleder = null,
                             ),
@@ -160,8 +161,8 @@ class OppgavetypeTest {
                                 beskrivelse = null,
                                 listetype = false,
                                 tolkesSom = "String",
-                                visTilBruker = true,
-                                kokriterie = false,
+
+                                synlighet = Synlighet.UNDER_STREKEN,
                                 kodeverkreferanse = null,
                                 transientFeltutleder = null,
                             ),
@@ -178,8 +179,8 @@ class OppgavetypeTest {
                                 beskrivelse = null,
                                 listetype = false,
                                 tolkesSom = "String",
-                                visTilBruker = true,
-                                kokriterie = false,
+
+                                synlighet = Synlighet.UNDER_STREKEN,
                                 kodeverkreferanse = null,
                                 transientFeltutleder = null,
                             ),
@@ -204,8 +205,8 @@ class OppgavetypeTest {
                                 beskrivelse = null,
                                 listetype = false,
                                 tolkesSom = "String",
-                                visTilBruker = true,
-                                kokriterie = false,
+
+                                synlighet = Synlighet.UNDER_STREKEN,
                                 kodeverkreferanse = null,
                                 transientFeltutleder = null,
                             ),
@@ -244,8 +245,8 @@ class OppgavetypeTest {
                                 beskrivelse = null,
                                 listetype = false,
                                 tolkesSom = "String",
-                                visTilBruker = true,
-                                kokriterie = false,
+
+                                synlighet = Synlighet.UNDER_STREKEN,
                                 kodeverkreferanse = null,
                                 transientFeltutleder = null,
                             ),
@@ -262,8 +263,8 @@ class OppgavetypeTest {
                                 beskrivelse = null,
                                 listetype = false,
                                 tolkesSom = "String",
-                                visTilBruker = true,
-                                kokriterie = false,
+
+                                synlighet = Synlighet.UNDER_STREKEN,
                                 kodeverkreferanse = null,
                                 transientFeltutleder = null,
                             ),
@@ -280,8 +281,8 @@ class OppgavetypeTest {
                                 beskrivelse = null,
                                 listetype = false,
                                 tolkesSom = "String",
-                                visTilBruker = true,
-                                kokriterie = false,
+
+                                synlighet = Synlighet.UNDER_STREKEN,
                                 kodeverkreferanse = null,
                                 transientFeltutleder = null,
                             ),
@@ -306,8 +307,8 @@ class OppgavetypeTest {
                                 beskrivelse = null,
                                 listetype = false,
                                 tolkesSom = "String",
-                                visTilBruker = true,
-                                kokriterie = false,
+
+                                synlighet = Synlighet.UNDER_STREKEN,
                                 kodeverkreferanse = null,
                                 transientFeltutleder = null,
                             ),

@@ -11,6 +11,7 @@ data class ReservasjonV3FraKøDto (
     val reservasjonsnøkkel: String,
     val oppgavebehandlingsUrl: String?,
     val reservertAv: String,
+    val reservertAvId: Long,
     val reservertFra: LocalDateTime,
     val reservertTil: LocalDateTime?,
 ) {
@@ -19,6 +20,7 @@ data class ReservasjonV3FraKøDto (
         reservasjonsnøkkel = reservasjonV3.reservasjonsnøkkel,
         oppgavebehandlingsUrl = oppgave.getOppgaveBehandlingsurl(),
         reservertAv = reservertAv.epost,
+        reservertAvId = reservertAv.id!!,
         reservertFra = reservasjonV3.gyldigFra,
         reservertTil = reservasjonV3.gyldigTil
     )

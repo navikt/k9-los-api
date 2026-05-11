@@ -67,6 +67,7 @@ import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonApis
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerAdminApis
 import no.nav.k9.los.nyoppgavestyring.sisteoppgaver.SisteOppgaverApi
 import no.nav.k9.los.nyoppgavestyring.søkeboks.SøkeboksApi
+import no.nav.k9.los.nyoppgavestyring.uttrekk.MigrerUttrekkResultatJobb
 import no.nav.k9.los.nyoppgavestyring.uttrekk.UttrekkApi
 import no.nav.k9.los.nyoppgavestyring.uttrekk.UttrekkJobb
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.NøkkeltallV3Apis
@@ -129,12 +130,7 @@ fun Application.k9Los() {
         )
     ) { start(koin.get<Channel<KøpåvirkendeHendelse>>(named("KøpåvirkendeHendelseChannel"))) }
 
-    K9sakBehandlingsoppfriskingJobb(
-        reservasjonRepository = koin.get(),
-        refreshK9v3Tjeneste = koin.get(),
-        refreshOppgaveChannel = koin.get<Channel<UUID>>(named("oppgaveRefreshChannel")),
-        configuration = koin.get()
-    ).run { start() }
+
 
     val asynkronProsesseringV1Service = koin.get<AsynkronProsesseringV1Service>()
 
@@ -281,6 +277,13 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
     val perEnhetService = koin.get<FerdigstiltePerEnhetService>()
     val nyeOgFerdigstilteService = koin.get<NyeOgFerdigstilteService>()
     val uttrekkJobb = koin.get<UttrekkJobb>()
+    val migrerUttrekkResultatJobb = MigrerUttrekkResultatJobb(koin.get())
+
+    val k9sakBehandlingsoppfriskingJobb = K9sakBehandlingsoppfriskingJobb(
+        reservasjonRepository = koin.get(),
+        refreshK9v3Tjeneste = koin.get(),
+        refreshOppgaveChannel = koin.get<Channel<UUID>>(named("oppgaveRefreshChannel")),
+    )
 
     val høyPrioritet = 0
     val mediumPrioritet = 5
@@ -428,6 +431,26 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
                 minutter = listOf(0, 10, 20, 30, 40, 50),
             ) {
                 nyeOgFerdigstilteService.oppdaterCache(this)
+            }
+        )
+
+        add(
+            PlanlagtJobb.TimeJobb(
+                navn = "K9sakBehandlingsoppfriskingJobb",
+                prioritet = lavPrioritet,
+                tidsvindu = Tidsvindu.hverdagerOgLørdag(5, 6),
+                minutter = listOf(3), // vilkårlig valgt minutt tidlig i timen 5-6
+            ) {
+                k9sakBehandlingsoppfriskingJobb.utfør()
+            }
+        )
+
+        add(
+            PlanlagtJobb.Oppstart(
+                navn = "MigrerUttrekkResultatFormat",
+                prioritet = lavPrioritet,
+            ) {
+                migrerUttrekkResultatJobb.kjør()
             }
         )
 

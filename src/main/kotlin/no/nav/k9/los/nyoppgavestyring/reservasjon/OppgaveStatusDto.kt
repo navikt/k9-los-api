@@ -19,7 +19,7 @@ class OppgaveStatusDto(
     erReservert = true,
     reservertTilTidspunkt = reservasjonV3.gyldigTil,
     erReservertAvInnloggetBruker = reservasjonV3.reservertAv == innloggetBruker.id!!,
-    reservertAv = saksbehandlerSomHarReservasjon.brukerIdent,
+    reservertAv = saksbehandlerSomHarReservasjon.navident,
     reservertAvNavn = saksbehandlerSomHarReservasjon.navn,
     flyttetReservasjon = null,
     kanOverstyres = reservasjonV3.reservertAv != innloggetBruker.id!!

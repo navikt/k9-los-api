@@ -25,7 +25,6 @@ import org.slf4j.LoggerFactory
 import no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon as KlageAksjonspunktDefinisjon
 import no.nav.k9.kodeverk.api.Kodeverdi as KodeverdiK9Sak
 
-//TODO håndtere kodeverksynlighet.skjult
 class OmrådeSetup(
     private val områdeRepository: OmrådeRepository,
     private val feltdefinisjonTjeneste: FeltdefinisjonTjeneste,
@@ -147,6 +146,7 @@ class OmrådeSetup(
             BehandlingStegType.KONTROLLER_LØPENDE_MEDLEMSKAP,
             BehandlingStegType.KONTROLLERER_SØKERS_OPPLYSNINGSPLIKT,
             BehandlingStegType.VURDER_KOMPLETTHET,
+            BehandlingStegType.VURDER_KOMPLETTHET_ETTERSENDELSER,
             BehandlingStegType.POSTCONDITION_KOMPLETTHET,
             BehandlingStegType.KONTROLLER_FAKTA_ARBEIDSFORHOLD -> Triple(
                 "Kompletthet",
@@ -170,7 +170,9 @@ class OmrådeSetup(
             BehandlingStegType.VURDER_OPPTJENING_FAKTA,
             BehandlingStegType.VURDER_OPPTJENINGSVILKÅR,
             BehandlingStegType.VURDER_UTLAND,
-            BehandlingStegType.VURDER_SØKNADSFRIST -> Triple("Inngangsvilkår", KodeverkSynlighet.OVER_STREKEN, 2)
+            BehandlingStegType.VURDER_UTLAND_V2,
+            BehandlingStegType.VURDER_SØKNADSFRIST,
+            BehandlingStegType.VURDER_RETT_FRA_DAG_1 -> Triple("Inngangsvilkår", KodeverkSynlighet.OVER_STREKEN, 2)
 
             BehandlingStegType.VURDER_UTTAK,
             BehandlingStegType.VURDER_UTTAK_V2,

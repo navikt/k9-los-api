@@ -36,8 +36,7 @@ class FeltdefinisjonRepository(val områdeRepository: OmrådeRepository) {
                         beskrivelse = row.stringOrNull("beskrivelse"),
                         listetype = row.boolean("liste_type"),
                         tolkesSom = row.string("tolkes_som"),
-                        visTilBruker = row.boolean("vis_til_bruker"),
-                        kokriterie = row.boolean("kokriterie"),
+                        synlighet = Synlighet.valueOf(row.string("synlighet")),
                         kodeverkreferanse = row.stringOrNull("kodeverkreferanse")?.let { Kodeverkreferanse(it) },
                         transientFeltutleder = row.stringOrNull("transient_feltutleder")?.let { GyldigeTransientFeltutleder.hentFeltutleder(it) }
                     )
@@ -83,8 +82,7 @@ class FeltdefinisjonRepository(val områdeRepository: OmrådeRepository) {
                       beskrivelse = :beskrivelse,
                       liste_type = :listeType,
                       tolkes_som = :tolkesSom,
-                      vis_til_bruker = :visTilBruker,
-                      kokriterie = :kokriterie,
+                      synlighet = :synlighet,
                       kodeverkreferanse = :kodeverkreferanse,
                       transient_feltutleder = :transientFeltutleder
                     WHERE omrade_id = :omradeId AND ekstern_id = :eksternId""",
@@ -95,8 +93,7 @@ class FeltdefinisjonRepository(val områdeRepository: OmrådeRepository) {
                         "beskrivelse" to feltdefinisjon.beskrivelse,
                         "listeType" to feltdefinisjon.listetype,
                         "tolkesSom" to feltdefinisjon.tolkesSom,
-                        "visTilBruker" to feltdefinisjon.visTilBruker,
-                        "kokriterie" to feltdefinisjon.kokriterie,
+                        "synlighet" to feltdefinisjon.synlighet.name,
                         "kodeverkreferanse" to feltdefinisjon.kodeverkreferanse?.toDatabasestreng(),
                         "transientFeltutleder" to feltdefinisjon.transientFeltutleder?.let { TransientFeltutleder.hentId(it) }
                     )
@@ -118,8 +115,7 @@ class FeltdefinisjonRepository(val områdeRepository: OmrådeRepository) {
                       beskrivelse,
                       liste_type,
                       tolkes_som,
-                      vis_til_bruker,
-                      kokriterie,
+                      synlighet,
                       kodeverkreferanse,
                       transient_feltutleder
                     ) 
@@ -130,8 +126,7 @@ class FeltdefinisjonRepository(val områdeRepository: OmrådeRepository) {
                       :beskrivelse,
                       :listeType,
                       :tolkesSom,
-                      :visTilBruker,
-                      :kokriterie,
+                      :synlighet,
                       :kodeverkreferanse,
                       :transientFeltutleder
                     )""",
@@ -142,8 +137,7 @@ class FeltdefinisjonRepository(val områdeRepository: OmrådeRepository) {
                         "beskrivelse" to feltdefinisjon.beskrivelse,
                         "listeType" to feltdefinisjon.listetype,
                         "tolkesSom" to feltdefinisjon.tolkesSom,
-                        "visTilBruker" to feltdefinisjon.visTilBruker,
-                        "kokriterie" to feltdefinisjon.kokriterie,
+                        "synlighet" to feltdefinisjon.synlighet.name,
                         "kodeverkreferanse" to feltdefinisjon.kodeverkreferanse?.toDatabasestreng(),
                         "transientFeltutleder" to feltdefinisjon.transientFeltutleder?.let { TransientFeltutleder.hentId(it) }
                     )

@@ -13,8 +13,8 @@ import no.nav.k9.los.KoinProfile
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.EventHendelse
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.klage.K9KlageEventDto
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.klage.K9KlageEventHandler
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventHandler
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventDto
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventHandler
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventDto
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventHandler
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.AksjonspunktDefinisjonK9Tilbake
@@ -41,26 +41,23 @@ import kotlin.random.Random
 val saksbehandlere = listOf(
     Saksbehandler(
         id = null,
-        brukerIdent = "Z123456",
+        navident = "Z123456",
         navn = "Saksbehandler Sara",
         epost = "saksbehandler@nav.no",
-        reservasjoner = mutableSetOf(),
         enhet = "2830 NAV DRIFT"
     ),
     Saksbehandler(
         id = null,
-        brukerIdent = "Z167457",
+        navident = "Z167457",
         navn = "Lars Pokèmonsen",
         epost = "lars.monsen@nav.no",
-        reservasjoner = mutableSetOf(),
         enhet = "2830 NAV DRIFT"
     ),
     Saksbehandler(
         id = null,
-        brukerIdent = "Z321457",
+        navident = "Z321457",
         navn = "Lord Edgar Hansen",
         epost = "the.lord@nav.no",
-        reservasjoner = mutableSetOf(),
         enhet = "2830 NAV DRIFT"
     )
 )
@@ -110,17 +107,20 @@ object localSetup : KoinComponent {
                         fraEndringsdialog = false,
                         resultatType = BehandlingResultatType.IKKE_FASTSATT.kode,
                         behandlendeEnhet = null,
-                        aksjonspunktTilstander = if (Random.nextBoolean()) listOf(AksjonspunktTilstandDto(
-                            AksjonspunktKodeDefinisjon.VENT_PGA_FOR_TIDLIG_SØKNAD_KODE,
-                            AksjonspunktStatus.OPPRETTET,
-                            Venteårsak.AVV_IM_MOT_SØKNAD_AT,
-                            null,
-                            LocalDateTime.now(),
-                            LocalDateTime.now(),
-                            LocalDateTime.now(),
-                        )) else emptyList(),
+                        aksjonspunktTilstander = if (Random.nextBoolean()) listOf(
+                            AksjonspunktTilstandDto(
+                                AksjonspunktKodeDefinisjon.VENT_PGA_FOR_TIDLIG_SØKNAD_KODE,
+                                AksjonspunktStatus.OPPRETTET,
+                                Venteårsak.AVV_IM_MOT_SØKNAD_AT,
+                                null,
+                                LocalDateTime.now(),
+                                LocalDateTime.now(),
+                                LocalDateTime.now(),
+                            )
+                        ) else emptyList(),
                         søknadsårsaker = mutableListOf<SøknadÅrsak>().map { it.kode },
-                        behandlingsårsaker = mutableListOf<BehandlingÅrsakType>().map { it.kode },
+                        behandlingsårsaker = BehandlingÅrsakType.entries.shuffled().subList(0, Random.nextInt(5))
+                            .map { it.kode },
                         ansvarligSaksbehandlerIdent = null as String?,
                         ansvarligBeslutterForTotrinn = null as String?,
                         ansvarligSaksbehandlerForTotrinn = null as String?,
@@ -204,14 +204,16 @@ object localSetup : KoinComponent {
                     fagsakPeriode = null,
                     pleietrengendeAktørId = null,
                     relatertPartAktørId = null,
-                    aksjonspunkttilstander = listOf(Aksjonspunkttilstand(
-                        "7100",
-                        no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus.OPPRETTET,
-                        no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.Venteårsak.OVERSENDT_KABAL,
-                        LocalDateTime.now(),
-                        LocalDateTime.now(),
-                        LocalDateTime.now()
-                    )),
+                    aksjonspunkttilstander = listOf(
+                        Aksjonspunkttilstand(
+                            "7100",
+                            no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus.OPPRETTET,
+                            no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.Venteårsak.OVERSENDT_KABAL,
+                            LocalDateTime.now(),
+                            LocalDateTime.now(),
+                            LocalDateTime.now()
+                        )
+                    ),
                     vedtaksdato = null,
                     behandlingsårsaker = null,
                 )
@@ -264,7 +266,8 @@ object localSetup : KoinComponent {
                         aktørId = AktørId(Random.nextLong(1_000_000_000_000, 9_000_000_000_000).toString()),
                         aksjonspunktKoderMedStatusListe = mutableMapOf("PUNSJ" to "OPPR"),
                         pleietrengendeAktørId = null,
-                        type = BehandlingType.entries.filter { it.kodeverk == "PUNSJ_INNSENDING_TYPE"    }.shuffled().first().kode,
+                        type = BehandlingType.entries.filter { it.kodeverk == "PUNSJ_INNSENDING_TYPE" }.shuffled()
+                            .first().kode,
                         ytelse = FagsakYtelseType.entries.shuffled().first().kode,
                         sendtInn = null,
                         ferdigstiltAv = null,

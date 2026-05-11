@@ -5,6 +5,7 @@ import kotliquery.*
 import no.nav.k9.los.nyoppgavestyring.ko.dto.OppgaveKo
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
+import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 import javax.sql.DataSource
 
@@ -14,6 +15,7 @@ class OppgaveKoRepository(
 
     companion object {
         val objectMapper = LosObjectMapper.instance
+        private val log = LoggerFactory.getLogger(OppgaveKoRepository::class.java)
     }
 
     private val standardOppgaveString: String by lazy {
@@ -94,6 +96,7 @@ class OppgaveKoRepository(
             beskrivelse = string("beskrivelse"),
             oppgaveQuery = objectMapper.readValue(string("query"), OppgaveQuery::class.java),
             frittValgAvOppgave = boolean("fritt_valg_av_oppgave"),
+            saksbehandlerIds = if (medSaksbehandlere) hentKoSaksbehandlerIds(tx, long("id")) else emptyList(),
             saksbehandlere = if (medSaksbehandlere) hentKoSaksbehandlere(tx, long("id")) else emptyList(),
             endretTidspunkt = localDateTimeOrNull("endret_tidspunkt"),
             skjermet = boolean("skjermet")
@@ -158,40 +161,25 @@ class OppgaveKoRepository(
         )
 
         if (rows != 1) {
-            throw IllegalStateException("Feil ved oppdatering av oppgavekø: ${oppgaveKo.id}, rows: $rows")
+            val dbRow = tx.run(
+                queryOf(
+                    "SELECT versjon, skjermet FROM OPPGAVEKO_V3 WHERE id = :id",
+                    mapOf("id" to oppgaveKo.id)
+                ).map { row -> row.long("versjon") to row.boolean("skjermet") }.asSingle
+            )
+            val feilmelding = when {
+                dbRow == null -> "Oppgavekø ${oppgaveKo.id} finnes ikke i databasen"
+                dbRow.second != skjermet -> "Skjermet-mismatch for oppgavekø ${oppgaveKo.id}: kø har skjermet=${dbRow.second}, men innlogget bruker har skjermet=$skjermet"
+                dbRow.first != oppgaveKo.versjon -> "Optimistisk låsing feilet for oppgavekø ${oppgaveKo.id}: kø har versjon=${dbRow.first}, men mottok versjon=${oppgaveKo.versjon}"
+                else -> "Ukjent feil ved oppdatering av oppgavekø ${oppgaveKo.id}, rows: $rows"
+            }
+            log.warn(feilmelding)
+            throw IllegalStateException(feilmelding)
         }
 
         lagreKoSaksbehandlere(tx, oppgaveKo)
 
         return hent(tx, oppgaveKo.id, skjermet)
-    }
-
-    fun hentKoerMedOppgittSaksbehandler(
-        tx: TransactionalSession,
-        saksbehandlerEpost: String,
-        skjermet: Boolean,
-        medSaksbehandlere: Boolean = true
-    ): List<OppgaveKo> {
-        return tx.run(
-            queryOf(
-                """
-                    select id, versjon, tittel, beskrivelse, query, fritt_valg_av_oppgave, endret_tidspunkt, skjermet
-                    from OPPGAVEKO_V3 ko
-                    where skjermet = :skjermet AND
-                    exists (
-                        select *
-                        from oppgaveko_saksbehandler s
-                        where s.oppgaveko_v3_id = ko.id
-                        and s.saksbehandler_epost = lower(:saksbehandler_epost)
-                        )""",
-                mapOf(
-                    "saksbehandler_epost" to saksbehandlerEpost,
-                    "skjermet" to skjermet
-                )
-            ).map { row ->
-                row.tilOppgaveKo(objectMapper, medSaksbehandlere, tx)
-            }.asList
-        )
     }
 
     fun hentKoerMedOppgittSaksbehandler(
@@ -234,18 +222,35 @@ class OppgaveKoRepository(
         )
     }
 
+    private fun hentKoSaksbehandlerIds(tx: TransactionalSession, oppgavekoV3Id: Long): List<Long> {
+        return tx.run(
+            queryOf(
+                "SELECT saksbehandler_id FROM OPPGAVEKO_SAKSBEHANDLER WHERE oppgaveko_v3_id = :oppgavekoV3Id",
+                mapOf(
+                    "oppgavekoV3Id" to oppgavekoV3Id
+                )
+            ).map { row -> row.long("saksbehandler_id") }.asList
+        )
+    }
+
     private fun lagreKoSaksbehandlere(tx: TransactionalSession, oppgaveKo: OppgaveKo) {
         fjernAlleSaksbehandlereFraOppgaveKo(tx, oppgaveKo.id)
-        oppgaveKo.saksbehandlere.forEach {
-            tx.run(
+        oppgaveKo.saksbehandlerIds.forEach { id ->
+            val insertedRows = tx.run(
                 queryOf(
-                    "INSERT INTO OPPGAVEKO_SAKSBEHANDLER (oppgaveko_v3_id, saksbehandler_epost) VALUES (:oppgavekoV3Id, :epost)",
+                    """
+                    INSERT INTO OPPGAVEKO_SAKSBEHANDLER (oppgaveko_v3_id, saksbehandler_id, saksbehandler_epost) 
+                    SELECT :oppgavekoV3Id, :saksbehandlerId, epost FROM saksbehandler WHERE id = :saksbehandlerId
+                    """,
                     mapOf(
                         "oppgavekoV3Id" to oppgaveKo.id,
-                        "epost" to it
+                        "saksbehandlerId" to id
                     )
                 ).asUpdate
             )
+            if (insertedRows == 0) {
+                log.warn("Kunne ikke knytte saksbehandler med id=$id til oppgavekø ${oppgaveKo.id}: saksbehandler finnes ikke i databasen")
+            }
         }
     }
 
@@ -298,6 +303,7 @@ class OppgaveKoRepository(
         val oppdatertNyOppgaveko = nyOppgaveKo.copy(
             oppgaveQuery = if (taMedQuery) gammelOppgaveKo.oppgaveQuery else nyOppgaveKo.oppgaveQuery,
             saksbehandlere = if (taMedSaksbehandlere) gammelOppgaveKo.saksbehandlere else nyOppgaveKo.saksbehandlere,
+            saksbehandlerIds = if (taMedSaksbehandlere) gammelOppgaveKo.saksbehandlerIds else nyOppgaveKo.saksbehandlerIds,
             beskrivelse = gammelOppgaveKo.beskrivelse,
             frittValgAvOppgave = gammelOppgaveKo.frittValgAvOppgave
         )

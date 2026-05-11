@@ -5,6 +5,7 @@ import io.mockk.mockk
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Feltdefinisjon
+import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Synlighet
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.Område
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdi
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
@@ -48,7 +49,7 @@ internal class FerdigstiltEnhetTest {
         every {
             saksbehandlerRepository.finnSaksbehandlerMedIdentEkskluderKode6(saksbehandlerId)
         } returns Saksbehandler(
-            id = 0, brukerIdent = saksbehandlerId, navn = "Navn Navnesen", epost = "", enhet = forventetEnhet,
+            id = 0, navident = saksbehandlerId, navn = "Navn Navnesen", epost = "", enhet = forventetEnhet,
         )
 
         val oppgave = lagOppgave(
@@ -78,7 +79,7 @@ internal class FerdigstiltEnhetTest {
 
         every {
             saksbehandlerRepository.finnSaksbehandlerMedIdentEkskluderKode6(saksbehandlerId)
-        } returns Saksbehandler(id = 0, brukerIdent = saksbehandlerId, navn = "Navn Navnesen", epost = "", enhet = null)
+        } returns Saksbehandler(id = 0, navident = saksbehandlerId, navn = "Navn Navnesen", epost = "", enhet = null)
 
         val oppgave = lagOppgave(
             status = Oppgavestatus.LUKKET,
@@ -133,8 +134,8 @@ internal class FerdigstiltEnhetTest {
             beskrivelse = null,
             listetype = false,
             tolkesSom = "string",
-            visTilBruker = true,
-            kokriterie = true,
+
+            synlighet = Synlighet.OVER_STREKEN,
             kodeverkreferanse = null,
             transientFeltutleder = null,
         ),

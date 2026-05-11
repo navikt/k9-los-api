@@ -10,6 +10,7 @@ data class ReservasjonV3Dto(
     val reservertAvNavn: String?,
     val reservertAvIdent: String,
     val reservertAvEpost: String,
+    val reservertAvId: Long,
     val kommentar: String,
     val reservertFra: LocalDateTime,
     val reservertTil: LocalDateTime,
@@ -23,8 +24,9 @@ data class ReservasjonV3Dto(
     ) : this(
         reserverteV3Oppgaver = oppgaver,
         reservasjonsnøkkel = reservasjonV3.reservasjonsnøkkel,
-        reservertAvIdent = reservertAv.brukerIdent!!,
+        reservertAvIdent = reservertAv.navident!!,
         reservertAvEpost = reservertAv.epost,
+        reservertAvId = reservertAv.id!!,
         reservertAvNavn = reservertAv.navn,
         kommentar = reservasjonV3.kommentar ?: "",
         reservertFra = reservasjonV3.gyldigFra,

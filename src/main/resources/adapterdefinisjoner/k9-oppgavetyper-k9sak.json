@@ -244,7 +244,17 @@
         },
         {
           "id": "nyeKrav",
-          "visPåOppgave": false,
+          "visPåOppgave": true,
+          "påkrevd": false
+        },
+        {
+          "id": "bareNyeKrav",
+          "visPåOppgave": true,
+          "påkrevd": false
+        },
+        {
+          "id": "antallOmsøkteDager",
+          "visPåOppgave": true,
           "påkrevd": false
         },
         {
@@ -260,6 +270,12 @@
         },
         {
           "id": "utenlandstilsnitt",
+          "visPåOppgave": true,
+          "påkrevd": true,
+          "defaultverdi": false
+        },
+        {
+          "id": "direkteutbetaling",
           "visPåOppgave": true,
           "påkrevd": true,
           "defaultverdi": false

@@ -10,6 +10,7 @@ import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonReposi
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.Oppgavetype
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
+import no.nav.k9.los.nyoppgavestyring.query.db.OppgaveV3Id
 import javax.sql.DataSource
 
 /**
@@ -24,11 +25,12 @@ class TestOppgaveV3Repository(
         val feltdefinisjonRepository = FeltdefinisjonRepository(
             områdeRepository
         )
+        val transactionalManager = TransactionalManager(dataSource)
         val oppgavetypeRepository = OppgavetypeRepository(
             dataSource,
             feltdefinisjonRepository,
             områdeRepository,
-            GyldigeFeltutledere(SaksbehandlerRepository(dataSource, pepClient))
+            GyldigeFeltutledere(SaksbehandlerRepository(dataSource, pepClient, transactionalManager))
         )
         return TransactionalManager(dataSource).transaction { tx ->
             tx.run(

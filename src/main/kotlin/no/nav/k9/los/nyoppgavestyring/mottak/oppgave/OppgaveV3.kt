@@ -3,6 +3,7 @@ package no.nav.k9.los.nyoppgavestyring.mottak.oppgave
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Datatype
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.Oppgavefelt
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.Oppgavetype
+import no.nav.k9.los.nyoppgavestyring.query.db.OppgaveId
 import java.time.LocalDateTime
 
 class OppgaveV3(

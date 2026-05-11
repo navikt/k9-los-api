@@ -26,10 +26,9 @@ class ReservasjonV3TjenesteTest : AbstractK9LosIntegrationTest() {
             saksbehandlerRepository.addSaksbehandler(
                 Saksbehandler(
                     id = null,
-                    brukerIdent = "saksbehandler@nav.no",
+                    navident = "saksbehandler@nav.no",
                     navn = null,
                     epost = "saksbehandler@nav.no",
-                    reservasjoner = mutableSetOf(),
                     enhet = null,
                 )
             )
@@ -40,10 +39,9 @@ class ReservasjonV3TjenesteTest : AbstractK9LosIntegrationTest() {
             saksbehandlerRepository.addSaksbehandler(
                 Saksbehandler(
                     id = null,
-                    brukerIdent = null,
+                    navident = null,
                     navn = null,
                     epost = "test1@test.no",
-                    reservasjoner = mutableSetOf(),
                     enhet = null,
                 )
             )
@@ -123,10 +121,9 @@ class ReservasjonV3TjenesteTest : AbstractK9LosIntegrationTest() {
             saksbehandlerRepository.addSaksbehandler(
                 Saksbehandler(
                     id = null,
-                    brukerIdent = null,
+                    navident = null,
                     navn = null,
                     epost = "test2@test.no",
-                    reservasjoner = mutableSetOf(),
                     enhet = null,
                 )
             )

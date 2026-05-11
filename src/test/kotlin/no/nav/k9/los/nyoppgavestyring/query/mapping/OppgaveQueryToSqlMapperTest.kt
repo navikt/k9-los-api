@@ -49,7 +49,7 @@ class OppgaveQueryToSqlMapperTest {
     }
 
     @Test
-    fun `skal traversere hele treet med filtre og sette alle som betingelser, for aktiv-tabell`() {
+    fun `skal traversere hele treet med filtre og sette alle som betingelser, for ikke-lukkede oppgaver`() {
         val oppgaveQuery = OppgaveQuery(
             listOf(
                 // 2 betingelser
@@ -59,20 +59,20 @@ class OppgaveQueryToSqlMapperTest {
                     Oppgavestatus.AAPEN.kode,
                     Oppgavestatus.VENTER.kode
                 ),
-                // 2 betingelser (starten og slutten på dagen) med feltkode, område og verdi
+                // 2 betingelser (starten og slutten på dagen) med feltkode og verdi
                 byggFilter(FeltType.MOTTATT_DATO, EksternFeltverdiOperator.EQUALS, "2024-12-24"),
-                // 4 betingelser med feltkode, område og verdi
+                // feltkode, 4 verdier
                 byggFilter(FeltType.YTELSE_TYPE, EksternFeltverdiOperator.IN, "PSB", "OMP", "FOO", "BAR"),
             )
         )
-        val sqlBuilder = OppgaveQueryToSqlMapper.toSqlOppgaveQuery(
+        val sqlBuilder = OppgaveQueryToSqlMapper.toSql(
             QueryRequest(oppgaveQuery),
             felter,
             LocalDateTime.now()
         )
 
         assertThat(sqlBuilder.getQuery()).contains(sqlBuilder.getParams().keys)
-        assertThat(sqlBuilder.getParams()).hasSize(20)
+        assertThat(sqlBuilder.getParams()).hasSize(11) // Antallet er spesifikt for partisjonerte tabeller
     }
 
     @Test
@@ -93,7 +93,7 @@ class OppgaveQueryToSqlMapperTest {
                 byggFilter(FeltType.YTELSE_TYPE, EksternFeltverdiOperator.IN, "PSB", "OMP", "FOO", "BAR"),
             )
         )
-        val sqlBuilder = OppgaveQueryToSqlMapper.toSqlOppgaveQuery(
+        val sqlBuilder = OppgaveQueryToSqlMapper.toSql(
             QueryRequest(oppgaveQuery),
             felter,
             LocalDateTime.now()

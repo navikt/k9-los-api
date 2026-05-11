@@ -1,7 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.ko
 
 import io.ktor.http.*
-import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
@@ -58,6 +57,20 @@ fun Route.OppgaveKoApis() {
         }
     }
 
+    get("/saksbehandlere") {
+        requestContextService.withRequestContext(call) {
+            if (pepClient.erOppgaveStyrer()) {
+                val alleSaksbehandlere = saksbehandlerRepository.hentAlleSaksbehandlere()
+                    .map { saksbehandler ->
+                        SaksbehandlerForKolisteDto(saksbehandler)
+                    }
+                call.respond(alleSaksbehandlere)
+            } else {
+                call.respond(HttpStatusCode.Forbidden)
+            }
+        }
+    }
+
     post("/opprett") {
         requestContextService.withRequestContext(call) {
             if (pepClient.erOppgaveStyrer()) {
@@ -95,9 +108,12 @@ fun Route.OppgaveKoApis() {
     get("/saksbehandlerskoer") {
         requestContextService.withRequestContext(call) {
             if (pepClient.harBasisTilgang()) {
+                val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedIdent(
+                    kotlin.coroutines.coroutineContext.idToken().getNavIdent()
+                )!!
                 call.respond(
                     oppgaveKoTjeneste.hentKøerForSaksbehandler(
-                        kotlin.coroutines.coroutineContext.idToken().getUsername(),
+                        saksbehandler.id!!,
                         pepClient.harTilgangTilKode6()
                     )
                 )
@@ -135,10 +151,9 @@ fun Route.OppgaveKoApis() {
                     oppgaveKoTjeneste.hentOppgaverFraKø(
                         oppgavekøId.toLong(),
                         10,
-                        fjernReserverte = true,
-                        kotlin.coroutines.coroutineContext.idToken()
+                        fjernReserverte = true
                     )
-                ) //Finn et fornuftig antall?
+                )
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
@@ -194,8 +209,8 @@ fun Route.OppgaveKoApis() {
         requestContextService.withRequestContext(call) {
             if (pepClient.harTilgangTilReserveringAvOppgaver()) {
                 val oppgavekøId = call.parameters["id"]!!
-                val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedEpost(
-                    kotlin.coroutines.coroutineContext.idToken().getUsername()
+                val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedIdent(
+                    kotlin.coroutines.coroutineContext.idToken().getNavIdent()
                 )!!
                 val oppgaveMuligReservert = oppgaveKoTjeneste.taReservasjonFraKø(
                     innloggetBrukerId = innloggetBruker.id!!,

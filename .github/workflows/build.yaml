@@ -24,8 +24,7 @@ jobs:
       java-version: 25
       build-image: ${{ github.ref_name == github.event.repository.default_branch}}
       push-image: ${{ github.ref_name == github.event.repository.default_branch}}
-      #bruk upload-image om skal trigge k9-verdikjede
-      #upload-image: ${{ github.ref_name != github.event.repository.default_branch }}
+      upload-image: ${{ github.ref_name != github.event.repository.default_branch }}
       t-2c: "-T1C"
     secrets: inherit
 

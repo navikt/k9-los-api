@@ -5,11 +5,6 @@ enum class Spørringstrategi(val navn: String, val beskrivelse: String, val verd
         "Partisjonert",
         "Partisjonerte tabeller for alle oppgaver. Tabeller: oppgave_v3_part og oppgavefelt_verdi_part.",
         "oppgavefelt_verdi_part",
-    ),
-    AKTIV(
-        "Aktiv",
-        "Aktivtabeller for åpne/ventende oppgaver. Tabeller: oppgave_v3_aktiv og oppgavefelt_verdi_aktiv.",
-        "oppgavefelt_verdi_aktiv",
     );
 
     companion object {

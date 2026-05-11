@@ -8,17 +8,18 @@ import kotliquery.using
 import no.nav.k9.los.nyoppgavestyring.kodeverk.PersonBeskyttelseType
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Kodeverkreferanse
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveId
+import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Synlighet
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
 import no.nav.k9.los.nyoppgavestyring.query.dto.felter.Oppgavefelt
 import no.nav.k9.los.nyoppgavestyring.query.dto.felter.Oppgavefelter
 import no.nav.k9.los.nyoppgavestyring.query.dto.felter.Verdiforklaring
-import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.OppgaveResultat
+import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.OppgaveQueryRad
 import no.nav.k9.los.nyoppgavestyring.query.mapping.OppgaveQueryToSqlMapper
 import no.nav.k9.los.nyoppgavestyring.query.mapping.transientfeltutleder.GyldigeTransientFeltutleder
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.slf4j.event.Level
 import java.time.LocalDateTime
 import javax.sql.DataSource
 
@@ -29,57 +30,8 @@ class OppgaveQueryRepository(
     private val log: Logger = LoggerFactory.getLogger("OppgaveQueryRepository")
 
     @WithSpan
-    fun query(request: QueryRequest): List<OppgaveId> {
-        return using(sessionOf(datasource)) {
-            it.transaction { tx -> query(tx, request, LocalDateTime.now()) }
-        }
-    }
-
-    @WithSpan
-    fun query(tx: TransactionalSession, request: QueryRequest, now: LocalDateTime): List<OppgaveId> {
-        val felter = hentAlleFelterMedMer(tx, medKodeverk = false)
-            .associateBy { felt -> OmrådeOgKode(felt.oppgavefelt.område, felt.oppgavefelt.kode) }
-
-        return query(tx, OppgaveQueryToSqlMapper.toSqlOppgaveQuery(request, felter, now))
-    }
-
-    @WithSpan
-    fun queryForEksternId(request: QueryRequest, now: LocalDateTime): List<EksternOppgaveId> {
-        return using(sessionOf(datasource)) {
-            it.transaction { tx -> queryForEksternId(tx, request, now) }
-        }
-    }
-
-    @WithSpan
-    fun queryForEksternId(tx: TransactionalSession, request: QueryRequest, now: LocalDateTime): List<EksternOppgaveId> {
-        val felter = hentAlleFelterMedMer(tx, medKodeverk = false)
-            .associate { felt -> OmrådeOgKode(felt.oppgavefelt.område, felt.oppgavefelt.kode) to felt }
-
-        return queryForEksternId(tx, OppgaveQueryToSqlMapper.toSqlOppgaveQuery(request, felter, now))
-    }
-
-    @WithSpan
-    fun queryForAntall(tx: TransactionalSession, oppgaveQuery: QueryRequest, now: LocalDateTime): Long {
-        val felter = hentAlleFelterMedMer(tx, medKodeverk = false)
-            .associate { felt -> OmrådeOgKode(felt.oppgavefelt.område, felt.oppgavefelt.kode) to felt }
-
-        return queryForAntall(tx, OppgaveQueryToSqlMapper.toSqlOppgaveQueryForAntall(oppgaveQuery, felter, now))
-
-    }
-
-    @WithSpan
-    private fun queryForAntall(tx: TransactionalSession, oppgaveQuery: OppgaveQuerySqlBuilder): Long {
-        return tx.run(
-            queryOf(
-                oppgaveQuery.getQuery(),
-                oppgaveQuery.getParams()
-            ).map { row -> row.long("antall") }.asSingle
-        )!!
-    }
-
-    @WithSpan
     fun hentAlleFelter(): Oppgavefelter {
-        return using(sessionOf(datasource)) { it ->
+        return using(sessionOf(datasource)) {
             it.transaction { tx -> Oppgavefelter(hentAlleFelter(tx)) }
         }
     }
@@ -98,13 +50,14 @@ class OppgaveQueryRepository(
                       fd.ekstern_id as kode,
                       fd.visningsnavn as visningsnavn,
                       fd.tolkes_som as tolkes_som,
-                      fd.kokriterie as kokriterie,
+                      fd.synlighet as synlighet,
+                      fd.liste_type as liste_type,
                       fd.kodeverkreferanse as kodeverkreferanse,
                       fd.transient_feltutleder as transient_feltutleder
                     FROM Feltdefinisjon fd INNER JOIN Omrade fo ON (
                       fo.id = fd.omrade_id
                     )
-                    WHERE fd.vis_til_bruker
+                    WHERE fd.synlighet != 'INTERNT'
                 """.trimIndent()
             ).map { row ->
                 val kodeverk = if (medKodeverk) {
@@ -120,7 +73,8 @@ class OppgaveQueryRepository(
                         kode = row.string("kode"),
                         visningsnavn = row.string("visningsnavn"),
                         tolkes_som = row.string("tolkes_som"),
-                        kokriterie = row.boolean("kokriterie"),
+                        synlighet = Synlighet.valueOf(row.string("synlighet")),
+                        listetype = row.boolean("liste_type"),
                         verdiforklaringerErUttømmende = kodeverk?.uttømmende ?: false,
                         verdiforklaringer = kodeverk?.let {
                             it.verdier.map { kodeverkverdi ->
@@ -152,7 +106,7 @@ class OppgaveQueryRepository(
                 "oppgavestatus",
                 "Oppgavestatus",
                 "String",
-                kokriterie = false,
+                synlighet = Synlighet.UNDER_STREKEN,
                 verdiforklaringerErUttømmende = true,
                 verdiforklaringer = Oppgavestatus.entries.map { oppgavestatus ->
                     Verdiforklaring(
@@ -168,8 +122,7 @@ class OppgaveQueryRepository(
                 "sistEndret",
                 "Tidspunkt siste endring",
                 "Timestamp",
-                kokriterie = false,
-                verdiforklaringerErUttømmende = false,
+                synlighet = Synlighet.UNDER_STREKEN,
                 verdiforklaringer = listOf(),
             ),
             Oppgavefelt(
@@ -177,9 +130,9 @@ class OppgaveQueryRepository(
                 kode = "personbeskyttelse",
                 visningsnavn = "Kode 7 eller egen ansatt",
                 tolkes_som = "String",
-                kokriterie = false,
+                synlighet = Synlighet.UNDER_STREKEN,
                 verdiforklaringerErUttømmende = true,
-                PersonBeskyttelseType.entries.map {
+                verdiforklaringer = PersonBeskyttelseType.entries.map {
                     Verdiforklaring(
                         verdi = it.kode,
                         visningsnavn = it.beskrivelse,
@@ -188,8 +141,13 @@ class OppgaveQueryRepository(
                     )
                 }
             ),
-            Oppgavefelt(null, "oppgavetype", "Oppgavetype", "String", true, false,
-                oppgavetypeNavn.map {
+            Oppgavefelt(
+                område = null,
+                kode = "oppgavetype",
+                visningsnavn = "Oppgavetype",
+                tolkes_som = "String",
+                synlighet = Synlighet.OVER_STREKEN,
+                verdiforklaringer = oppgavetypeNavn.map {
                     Verdiforklaring(
                         verdi = it,
                         visningsnavn = it,
@@ -198,55 +156,64 @@ class OppgaveQueryRepository(
                     )
                 }
             ),
-            Oppgavefelt(null, "spørringstrategi", "Spørringstrategi", "String", false, true, Spørringstrategi.entries.map { Verdiforklaring(
-                it.name,
-                it.navn,
-                false,
-                null
-            ) }),
-            Oppgavefelt(null, "ferdigstiltDato", "Ferdigstilt dato", "Timestamp", false, false, emptyList()),
+            Oppgavefelt(
+                område = null,
+                kode = "spørringstrategi",
+                visningsnavn = "Spørringstrategi",
+                tolkes_som = "String",
+                synlighet = Synlighet.SKJULT,
+                verdiforklaringerErUttømmende = true,
+                verdiforklaringer = Spørringstrategi.entries.map { Verdiforklaring(
+                    it.name,
+                    it.navn,
+                    false,
+                    null
+                ) }
+            ),
+            Oppgavefelt(
+                område = null,
+                kode = "ferdigstiltDato",
+                visningsnavn = "Ferdigstilt dato",
+                tolkes_som = "Timestamp",
+                synlighet = Synlighet.UNDER_STREKEN,
+                verdiforklaringer = emptyList()
+            ),
         ).map { OppgavefeltMedMer(it, null) }
 
         return (felterFraDatabase + standardfelter).sortedBy { it.oppgavefelt.visningsnavn }
     }
 
-    private fun query(tx: TransactionalSession, oppgaveQuery: OppgaveQuerySqlBuilder): List<OppgaveId> {
-        return tx.run(
-            queryOf(
-                oppgaveQuery.getQuery(),
-                oppgaveQuery.getParams()
-            ).map(oppgaveQuery::mapRowTilId).asList
-        )
-    }
-
-    private fun queryForEksternId(
-        tx: TransactionalSession,
-        oppgaveQuery: OppgaveQuerySqlBuilder
-    ): List<EksternOppgaveId> {
-        return tx.run(
-            queryOf(
-                oppgaveQuery.getQuery(),
-                oppgaveQuery.getParams()
-            ).map(oppgaveQuery::mapRowTilEksternId).asList
-        )
+    @WithSpan
+    fun query(
+        request: QueryRequest,
+        now: LocalDateTime
+    ): List<OppgaveQueryRad> {
+        return using(sessionOf(datasource)) {
+            it.transaction { tx -> query(tx, request, now) }
+        }
     }
 
     @WithSpan
-    fun queryForOppgaveResultat(
+    fun query(
         tx: TransactionalSession,
         request: QueryRequest,
         now: LocalDateTime
-    ): List<OppgaveResultat> {
+    ): List<OppgaveQueryRad> {
         val felter = hentAlleFelterMedMer(tx, medKodeverk = false)
             .associateBy { felt -> OmrådeOgKode(felt.oppgavefelt.område, felt.oppgavefelt.kode) }
 
-        val oppgaveQuery = OppgaveQueryToSqlMapper.toSqlOppgaveQueryMedSelectFelter(request, felter, now)
-
+        val sqlBuilder = OppgaveQueryToSqlMapper.toSql(request, felter, now)
+        loggSqlDebug(sqlBuilder)
         return tx.run(
-            queryOf(
-                oppgaveQuery.getQuery(),
-                oppgaveQuery.getParams()
-            ).map(oppgaveQuery::mapRowTilOppgaveResultat).asList
+            queryOf(sqlBuilder.getQuery(), sqlBuilder.getParams())
+                .map(sqlBuilder::mapRowTilRad).asList
         )
+    }
+
+    private fun loggSqlDebug(oppgaveQuery: OppgaveQuerySqlBuilder) {
+        log.atLevel(Level.DEBUG)
+            .setMessage("Kjører følgende intrapolerte SQL: \n{}")
+            .addArgument { oppgaveQuery.unsafeDebug() }
+            .log()
     }
 }

@@ -6,5 +6,5 @@ data class SaksbehandlerDto(
     val navn: String?,
     val epost: String,
     val enhet: String?,
-    val oppgavekoer: List<String>
+    val antallAktiveReservasjoner: Int?,
 )

@@ -117,10 +117,7 @@ abstract class LøpendeDurationTransientFeltutleder(
     }
 
     private fun områdeOgKodeSql(områdeOgKode: OmrådeOgKode, spørringstrategi: Spørringstrategi) =
-        when (spørringstrategi) {
-            Spørringstrategi.PARTISJONERT -> "ov.feltdefinisjon_ekstern_id = '${områdeOgKode.kode}'"
-            Spørringstrategi.AKTIV -> "ov.omrade_ekstern_id = '${områdeOgKode.område}' AND ov.feltdefinisjon_ekstern_id = '${områdeOgKode.kode}'"
-        }
+        "ov.feltdefinisjon_ekstern_id = '${områdeOgKode.kode}'"
 
     override fun hentVerdi(input: HentVerdiInput): List<String> {
         var løpendeDuration = Duration.ZERO
@@ -145,7 +142,7 @@ abstract class LøpendeDurationTransientFeltutleder(
             }.reduce { d1, d2 -> d1 + d2 }
         }
 
-        return listOf(løpendeDuration.toString())
+        return listOf(formatDurationMedDager(løpendeDuration))
     }
 
     override fun where(input: WhereInput): SqlMedParams {
@@ -171,6 +168,27 @@ abstract class LøpendeDurationTransientFeltutleder(
     }
 
     override fun select(input: SelectInput): SqlMedParams {
-        return sumLøpendeDuration(input.spørringstrategi, input.now)
+        val sumDuration = sumLøpendeDuration(input.spørringstrategi, input.now)
+        val interval = sumDuration.query
+        val query = """
+            'P' 
+            || EXTRACT(EPOCH FROM $interval)::bigint / 86400 || 'D'
+            || 'T'
+            || (EXTRACT(EPOCH FROM $interval)::bigint % 86400) / 3600 || 'H'
+            || (EXTRACT(EPOCH FROM $interval)::bigint % 3600) / 60 || 'M'
+            || EXTRACT(EPOCH FROM $interval)::bigint % 60 || 'S'
+        """.trimIndent()
+        return SqlMedParams(query, sumDuration.queryParams)
+    }
+
+    companion object {
+        fun formatDurationMedDager(duration: Duration): String {
+            val totalSeconds = duration.seconds
+            val days = totalSeconds / 86400
+            val hours = (totalSeconds % 86400) / 3600
+            val minutes = (totalSeconds % 3600) / 60
+            val seconds = totalSeconds % 60
+            return "P${days}DT${hours}H${minutes}M${seconds}S"
+        }
     }
 }

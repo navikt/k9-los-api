@@ -9,7 +9,7 @@ import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.nyoppgavestyring.lagretsok.LagretSøk
 import no.nav.k9.los.nyoppgavestyring.lagretsok.LagretSøkRepository
-import no.nav.k9.los.nyoppgavestyring.lagretsok.OpprettLagretSøk
+import no.nav.k9.los.nyoppgavestyring.lagretsok.NyttLagretSøkRequest
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
@@ -38,19 +38,17 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
             saksbehandlerRepository.addSaksbehandler(
                 Saksbehandler(
                     id = null,
-                    brukerIdent = "test",
+                    navident = "test",
                     navn = "Test Testersen",
                     epost = "test@nav.no",
-                    reservasjoner = mutableSetOf(),
                     enhet = null,
                 )
             )
             val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedEpost("test@nav.no")!!
             saksbehandlerId = saksbehandler.id!!
-            val lagretSøk = LagretSøk.opprettSøk(
-                OpprettLagretSøk(tittel = "Test søk"),
+            val lagretSøk = LagretSøk.nyttSøk(
+                NyttLagretSøkRequest(tittel = "Test søk", query = LagretSøk.defaultQuery(false)),
                 saksbehandler,
-                false
             )
             lagretSøkRepository.opprett(lagretSøk)
             testQuery = lagretSøk.query
@@ -62,7 +60,6 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
     fun `skal opprette og hente uttrekk`() {
         val uttrekk = Uttrekk.opprettUttrekk(
             lagretSøk = testLagretSøk,
-            typeKjoring = TypeKjøring.OPPGAVER,
             lagetAv = saksbehandlerId,
         )
 
@@ -87,7 +84,6 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
     fun `skal oppdatere eksisterende uttrekk`() {
         val uttrekk = Uttrekk.opprettUttrekk(
             lagretSøk = testLagretSøk,
-            typeKjoring = TypeKjøring.OPPGAVER,
             lagetAv = saksbehandlerId,
         )
 
@@ -118,15 +114,14 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
             status = UttrekkStatus.KJØRER,
             tittel = "Test uttrekk",
             query = testQuery,
-            typeKjoring = TypeKjøring.OPPGAVER,
             lagetAv = saksbehandlerId,
+            lagretSøkId = null,
+            limit = null,
+            offset = null,
             feilmelding = null,
             startetTidspunkt = LocalDateTime.now(),
             fullførtTidspunkt = null,
-            antall = null,
-            limit = null,
-            offset = null,
-            lagretSøkId = null
+            antall = null
         )
 
         val exception = assertThrows<IllegalStateException> {
@@ -140,7 +135,6 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
     fun `skal slette uttrekk`() {
         val uttrekk = Uttrekk.opprettUttrekk(
             lagretSøk = testLagretSøk,
-            typeKjoring = TypeKjøring.OPPGAVER,
             lagetAv = saksbehandlerId,
         )
 
@@ -157,12 +151,10 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
     fun `skal hente alle uttrekk`() {
         val uttrekk1 = Uttrekk.opprettUttrekk(
             lagretSøk = testLagretSøk,
-            typeKjoring = TypeKjøring.OPPGAVER,
             lagetAv = saksbehandlerId,
         )
         val uttrekk2 = Uttrekk.opprettUttrekk(
             lagretSøk = testLagretSøk,
-            typeKjoring = TypeKjøring.OPPGAVER,
             lagetAv = saksbehandlerId,
         )
 
@@ -180,10 +172,9 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
             saksbehandlerRepository.addSaksbehandler(
                 Saksbehandler(
                     id = null,
-                    brukerIdent = "test2",
+                    navident = "test2",
                     navn = "Test Testersen 2",
                     epost = "test2@nav.no",
-                    reservasjoner = mutableSetOf(),
                     enhet = null,
                 )
             )
@@ -192,17 +183,14 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
 
         val uttrekk1 = Uttrekk.opprettUttrekk(
             lagretSøk = testLagretSøk,
-            typeKjoring = TypeKjøring.OPPGAVER,
             lagetAv = saksbehandlerId,
         )
         val uttrekk2 = Uttrekk.opprettUttrekk(
             lagretSøk = testLagretSøk,
-            typeKjoring = TypeKjøring.OPPGAVER,
             lagetAv = saksbehandlerId,
         )
         val uttrekk3 = Uttrekk.opprettUttrekk(
             lagretSøk = testLagretSøk,
-            typeKjoring = TypeKjøring.OPPGAVER,
             lagetAv = annenSaksbehandlerId,
         )
 
@@ -216,10 +204,9 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
     }
 
     @Test
-    fun `skal opprette uttrekk med TypeKjøring ANTALL`() {
+    fun `skal opprette uttrekk`() {
         val uttrekk = Uttrekk.opprettUttrekk(
             lagretSøk = testLagretSøk,
-            typeKjoring = TypeKjøring.ANTALL,
             lagetAv = saksbehandlerId,
         )
 
@@ -227,29 +214,12 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
         val hentetUttrekk = uttrekkRepository.hent(id)
 
         assertThat(hentetUttrekk).isNotNull()
-        assertThat(hentetUttrekk!!.typeKjøring).isEqualTo(TypeKjøring.ANTALL)
-    }
-
-    @Test
-    fun `skal opprette uttrekk med TypeKjøring OPPGAVER`() {
-        val uttrekk = Uttrekk.opprettUttrekk(
-            lagretSøk = testLagretSøk,
-            typeKjoring = TypeKjøring.OPPGAVER,
-            lagetAv = saksbehandlerId,
-        )
-
-        val id = uttrekkRepository.opprett(uttrekk)
-        val hentetUttrekk = uttrekkRepository.hent(id)
-
-        assertThat(hentetUttrekk).isNotNull()
-        assertThat(hentetUttrekk!!.typeKjøring).isEqualTo(TypeKjøring.OPPGAVER)
     }
 
     @Test
     fun `skal sette feilmelding når uttrekk feiler`() {
         val uttrekk = Uttrekk.opprettUttrekk(
             lagretSøk = testLagretSøk,
-            typeKjoring = TypeKjøring.OPPGAVER,
             lagetAv = saksbehandlerId,
         )
 

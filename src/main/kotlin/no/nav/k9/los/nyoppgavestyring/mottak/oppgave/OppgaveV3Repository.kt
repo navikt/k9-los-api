@@ -7,6 +7,8 @@ import kotliquery.using
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.Område
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.Oppgavetype
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
+import no.nav.k9.los.nyoppgavestyring.query.db.OppgaveId
+import no.nav.k9.los.nyoppgavestyring.query.db.OppgaveV3Id
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveNøkkelDto
 import org.jetbrains.annotations.VisibleForTesting
 import org.slf4j.LoggerFactory

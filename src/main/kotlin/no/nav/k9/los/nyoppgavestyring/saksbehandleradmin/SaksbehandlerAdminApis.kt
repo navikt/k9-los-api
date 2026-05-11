@@ -43,7 +43,7 @@ internal fun Route.SaksbehandlerAdminApis() {
         requestContextService.withRequestContext(call) {
             if (pepClient.erOppgaveStyrer()) {
                 val epost = call.receive<EpostDto>()
-                call.respond(saksbehandlerAdminTjeneste.leggTilSaksbehandler(epost.epost))
+                call.respond(saksbehandlerAdminTjeneste.leggTilSaksbehandlerForEpost(epost.epost))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
@@ -55,6 +55,17 @@ internal fun Route.SaksbehandlerAdminApis() {
             if (pepClient.erOppgaveStyrer()) {
                 val epost = call.receive<EpostDto>()
                 call.respond(saksbehandlerAdminTjeneste.slettSaksbehandler(epost.epost))
+            } else {
+                call.respond(HttpStatusCode.Forbidden)
+            }
+        }
+    }
+
+    post("/saksbehandlere/slettForId") {
+        requestContextService.withRequestContext(call) {
+            if (pepClient.erOppgaveStyrer()) {
+                val id = call.receive<Long>()
+                call.respond(saksbehandlerAdminTjeneste.slettSaksbehandlerForId(id))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }

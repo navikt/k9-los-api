@@ -1,6 +1,7 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.punsjtillos
 
 import assertk.assertThat
+import assertk.assertions.isEqualTo
 import assertk.assertions.isNull
 import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
@@ -14,9 +15,8 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.EventTil
 import no.nav.k9.los.nyoppgavestyring.ko.OppgaveKoTjeneste
 import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
 import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.AktivOppgaveRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
-import no.nav.k9.los.nyoppgavestyring.query.db.EksternOppgaveId
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonApisTjeneste
 import no.nav.k9.sak.typer.AktørId
 import no.nav.k9.sak.typer.JournalpostId
@@ -34,7 +34,7 @@ class K9PunsjTilLosIT : AbstractK9LosIntegrationTest() {
 
     lateinit var reservasjonApisTjeneste: ReservasjonApisTjeneste
     lateinit var transactionalManager: TransactionalManager
-    lateinit var aktivOppgaveRepository: AktivOppgaveRepository
+    lateinit var oppgaveRepository: OppgaveRepository
     lateinit var eventTilOppgaveAdapter: EventTilOppgaveAdapter
 
     @BeforeEach
@@ -43,7 +43,7 @@ class K9PunsjTilLosIT : AbstractK9LosIntegrationTest() {
         oppgaveKøTjeneste = get<OppgaveKoTjeneste>()
         reservasjonApisTjeneste = get<ReservasjonApisTjeneste>()
         transactionalManager = get<TransactionalManager>()
-        aktivOppgaveRepository = get<AktivOppgaveRepository>()
+        oppgaveRepository = get<OppgaveRepository>()
         eventTilOppgaveAdapter = get<EventTilOppgaveAdapter>()
 
         TestSaksbehandler().init()
@@ -105,8 +105,8 @@ class K9PunsjTilLosIT : AbstractK9LosIntegrationTest() {
 
         eventTilOppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(Fagsystem.PUNSJ, punsjId.toString()))
 
-        val aktivOppgave = transactionalManager.transaction { tx -> aktivOppgaveRepository.hentOppgaveForEksternId(tx, EksternOppgaveId("K9", punsjId.toString())) }
-        assertThat(aktivOppgave).isNull() //når oppgaven lukkes fjernes den også fra aktiv-tabellene
+        val oppgave = transactionalManager.transaction { tx -> oppgaveRepository.hentNyesteOppgaveForEksternIdHvisFinnes(tx, "K9", punsjId.toString()) }
+        assertThat(oppgave!!.status).isEqualTo(Oppgavestatus.LUKKET.kode)
 
     }
 }

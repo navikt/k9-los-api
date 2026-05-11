@@ -6,6 +6,7 @@ import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.Oppgavetype
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
+import no.nav.k9.los.nyoppgavestyring.query.db.PartisjonertOppgaveId
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgavefelt
 import org.slf4j.LoggerFactory
@@ -22,10 +23,11 @@ class PartisjonertOppgaveRepository(val oppgavetypeRepository: OppgavetypeReposi
         val partisjonertOppgave = hentOppgave(partisjonertOppgaveId, oppgave.oppgavetype, tx)
         if (partisjonertOppgave == null) {
             nyOppgave(partisjonertOppgaveId, oppgave, tx)
+            nyeOppgavefeltverdier(partisjonertOppgaveId, oppgave, tx)
         } else {
             oppdaterOppgave(partisjonertOppgaveId, oppgave, tx)
+            oppdaterOppgavefeltverdier(partisjonertOppgaveId, oppgave, tx, eksisterendeFelter = partisjonertOppgave.felter)
         }
-        oppdaterOppgavefeltverdier(partisjonertOppgaveId, oppgave, tx)
     }
 
     private fun hentPartisjonertOppgaveId(oppgave: OppgaveV3, tx: TransactionalSession): PartisjonertOppgaveId? {
@@ -60,9 +62,9 @@ class PartisjonertOppgaveRepository(val oppgavetypeRepository: OppgavetypeReposi
     private fun oppdaterOppgavefeltverdier(
         oppgaveId: PartisjonertOppgaveId,
         oppgave: OppgaveV3,
-        tx: TransactionalSession
+        tx: TransactionalSession,
+        eksisterendeFelter: List<OppgaveFeltverdi>
     ) {
-        val eksisterendeFelter = hentFeltverdier(oppgaveId, oppgave.oppgavetype, tx)
         val nyeFelter = oppgave.felter
 
         if (erForskjellige(eksisterendeFelter, nyeFelter)) {

@@ -173,6 +173,10 @@ class OppgaveV3TjenesteTest : AbstractK9LosIntegrationTest() {
                     nøkkel = "avventerSøker",
                     verdi = "false"
                 ),
+                OppgaveFeltverdiDto(
+                    nøkkel = "direkteutbetaling",
+                    verdi = "false"
+                ),
             )
         )
     }

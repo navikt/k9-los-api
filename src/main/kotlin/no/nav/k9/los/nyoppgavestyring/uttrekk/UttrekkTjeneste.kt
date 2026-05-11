@@ -1,6 +1,8 @@
 package no.nav.k9.los.nyoppgavestyring.uttrekk
 
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.nyoppgavestyring.lagretsok.LagretSøkRepository
+import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.OppgaveQueryRad
 
 class UttrekkTjeneste(
     private val uttrekkRepository: UttrekkRepository,
@@ -12,7 +14,6 @@ class UttrekkTjeneste(
 
         val uttrekk = Uttrekk.opprettUttrekk(
             lagretSøk = lagretSøk,
-            typeKjoring = opprettUttrekk.typeKjoring,
             lagetAv = saksbehandlerId,
             tittel = opprettUttrekk.tittel,
             limit = opprettUttrekk.limit,
@@ -58,12 +59,14 @@ class UttrekkTjeneste(
         return uttrekk
     }
 
-    fun fullførUttrekk(id: Long, antall: Int, resultat: String? = null): Uttrekk {
+    fun fullførUttrekk(id: Long, resultat: List<OppgaveQueryRad>): Uttrekk {
         val uttrekk = uttrekkRepository.hent(id)
             ?: throw IllegalArgumentException("Uttrekk med id $id finnes ikke")
 
-        uttrekk.markerSomFullført(antall)
-        uttrekkRepository.oppdater(uttrekk, resultat)
+        val uttrekkRader = UttrekkResultatMapper.tilUttrekkRader(uttrekk.query.select, resultat)
+        val resultatJson = LosObjectMapper.instance.writeValueAsString(uttrekkRader)
+        uttrekk.markerSomFullført(uttrekkRader.size)
+        uttrekkRepository.oppdater(uttrekk, resultatJson)
         return uttrekk
     }
 

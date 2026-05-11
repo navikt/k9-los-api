@@ -51,7 +51,7 @@ data class PunsjEventDtoBuilder(
     fun sendtInn(ansvarligBeslutter: Saksbehandler? = TestSaksbehandler.Companion.BIRGER_BESLUTTER): PunsjEventDtoBuilder {
         return this.copy(
             aksjonspunkter = mutableMapOf(),
-            ferdigstiltAv = ansvarligBeslutter?.brukerIdent,
+            ferdigstiltAv = ansvarligBeslutter?.navident,
             sendtInn = true,
         )
     }

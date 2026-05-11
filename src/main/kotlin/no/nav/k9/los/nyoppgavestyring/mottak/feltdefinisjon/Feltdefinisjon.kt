@@ -12,8 +12,7 @@ class Feltdefinisjon(
     val beskrivelse: String?,
     val listetype: Boolean,
     val tolkesSom: String,
-    val visTilBruker: Boolean,
-    val kokriterie: Boolean,
+    val synlighet: Synlighet,
     val kodeverkreferanse: Kodeverkreferanse?,
     val transientFeltutleder: TransientFeltutleder?
 ) {
@@ -29,8 +28,7 @@ class Feltdefinisjon(
         if (beskrivelse != other.beskrivelse) return false
         if (listetype != other.listetype) return false
         if (tolkesSom != other.tolkesSom) return false
-        if (visTilBruker != other.visTilBruker) return false
-        if (kokriterie != other.kokriterie) return false
+        if (synlighet != other.synlighet) return false
         if (kodeverkreferanse != other.kodeverkreferanse) return false
         if (transientFeltutleder != other.transientFeltutleder) return false
 
@@ -44,8 +42,7 @@ class Feltdefinisjon(
         result = 31 * result + (beskrivelse?.hashCode() ?: 0)
         result = 31 * result + listetype.hashCode()
         result = 31 * result + tolkesSom.hashCode()
-        result = 31 * result + visTilBruker.hashCode()
-        result = 31 * result + kokriterie.hashCode()
+        result = 31 * result + synlighet.hashCode()
         result = 31 * result + kodeverkreferanse.hashCode()
         return result
     }

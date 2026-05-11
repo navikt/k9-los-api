@@ -2,7 +2,10 @@ package no.nav.k9.los.nyoppgavestyring.query.db
 
 import no.nav.k9.los.nyoppgavestyring.kodeverk.PersonBeskyttelseType
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
+import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Synlighet
 import no.nav.k9.los.nyoppgavestyring.query.dto.felter.Oppgavefelt
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.Aggregeringsfunksjon
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.AggregertSelectFelt
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelSelectFelt
 import no.nav.k9.los.nyoppgavestyring.query.mapping.CombineOperator
 import no.nav.k9.los.nyoppgavestyring.query.mapping.FeltverdiOperator
@@ -19,8 +22,7 @@ class PartisjonertOppgaveQuerySqlBuilderTest {
                 kode = "testfelt",
                 visningsnavn = "Test Felt",
                 tolkes_som = "String",
-                kokriterie = false,
-                verdiforklaringerErUttømmende = false,
+                synlighet = Synlighet.UNDER_STREKEN,
                 verdiforklaringer = emptyList()
             ),
             null
@@ -151,7 +153,7 @@ class PartisjonertOppgaveQuerySqlBuilderTest {
             ferdigstiltDatoFilter = null
         )
         
-        builder.medAntallSomResultat()
+        builder.medAggregering(emptyList(), listOf(AggregertSelectFelt(Aggregeringsfunksjon.ANTALL)))
         builder.medFeltverdi(
             CombineOperator.AND,
             "TEST",
@@ -162,7 +164,7 @@ class PartisjonertOppgaveQuerySqlBuilderTest {
         
         val sql = builder.getQuery()
         
-        assertTrue(sql.contains("SELECT COUNT(*) as antall"), "SQL burde telle rader")
+        assertTrue(sql.contains("COUNT(*)"), "SQL burde telle rader")
     }
 
     @Test

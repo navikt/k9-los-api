@@ -4,7 +4,7 @@ import kotliquery.Row
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.util.InClauseHjelper
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Id
+import no.nav.k9.los.nyoppgavestyring.query.db.OppgaveV3Id
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
 import org.slf4j.Logger

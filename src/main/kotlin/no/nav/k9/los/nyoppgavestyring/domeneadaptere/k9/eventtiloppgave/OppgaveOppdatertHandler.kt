@@ -34,6 +34,10 @@ class OppgaveOppdatertHandler(
 ) {
     private val log: Logger = LoggerFactory.getLogger(OppgaveOppdatertHandler::class.java)
 
+    internal fun oppdaterPepCache(oppgave: OppgaveV3, tx: TransactionalSession) {
+        pepCacheService.oppdater(tx, oppgave.kildeområde, oppgave.eksternId)
+    }
+
     internal fun håndterOppgaveOppdatert(eventLagret: EventLagret, oppgave: OppgaveV3, tx: TransactionalSession) {
         runBlocking {
             køpåvirkendeHendelseChannel.send(
@@ -43,7 +47,6 @@ class OppgaveOppdatertHandler(
                 )
             )
         }
-        pepCacheService.oppdater(tx, oppgave.kildeområde, oppgave.eksternId)
         when (eventLagret.fagsystem) {
             Fagsystem.K9SAK -> {
                 håndterSakOppdatert(eventLagret, oppgave, tx)
