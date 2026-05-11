@@ -1,6 +1,5 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetillos
 
-import com.fasterxml.jackson.module.kotlin.readValue
 import no.nav.k9.klage.kodeverk.behandling.BehandlingResultatType
 import no.nav.k9.klage.kodeverk.behandling.BehandlingStatus
 import no.nav.k9.klage.kodeverk.behandling.BehandlingStegType
@@ -15,7 +14,6 @@ import no.nav.k9.klage.typer.AktørId
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventLagret
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.klage.K9KlageEventDto
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetillos.beriker.K9KlageBerikerInterfaceKludge
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.*
 import org.jetbrains.annotations.VisibleForTesting

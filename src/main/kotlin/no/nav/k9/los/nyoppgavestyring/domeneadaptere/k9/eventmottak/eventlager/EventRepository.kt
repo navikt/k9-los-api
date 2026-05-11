@@ -3,7 +3,6 @@ package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager
 import kotliquery.*
 import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
 import org.jetbrains.annotations.VisibleForTesting
-import java.time.LocalDateTime
 import javax.sql.DataSource
 
 

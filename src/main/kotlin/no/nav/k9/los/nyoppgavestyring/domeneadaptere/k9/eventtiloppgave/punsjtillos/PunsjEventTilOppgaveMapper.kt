@@ -1,19 +1,12 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.punsjtillos
 
-import com.fasterxml.jackson.module.kotlin.readValue
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventLagret
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventDto
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
 import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventDto
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.NyOppgaveVersjonInnsending
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.NyOppgaveversjon
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveDto
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdiDto
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.*
 
 class PunsjEventTilOppgaveMapper {
     fun lagOppgaveDto(eventLagret: EventLagret.K9Punsj, forrigeOppgave: OppgaveV3?): NyOppgaveVersjonInnsending {
