@@ -115,7 +115,7 @@ class HistorikkvaskTjenesteSpec: FreeSpec(), KoinTest {
                 
                 val bestillinger = eventRepository.hentAlleHistorikkvaskbestillinger(antall = 10)
                 bestillinger shouldHaveSize 2
-                bestillinger.forEach { it.eventlagerNøkkel shouldNotBeEqual null }
+                bestillinger.forEach { it.eventlagerNøkkel shouldNotBe null }
                 
                 // Vask første bestilling med eventlagerNøkkel
                 val førsteBestilling = bestillinger.first()
