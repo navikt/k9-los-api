@@ -81,8 +81,9 @@ class OppgaveQueryRepository(
                                 Verdiforklaring(
                                     verdi = kodeverkverdi.verdi,
                                     visningsnavn = kodeverkverdi.visningsnavn,
-                                    sekundærvalg = !kodeverkverdi.favoritt,
-                                    gruppering = kodeverkverdi.gruppering
+                                    synlighet = kodeverkverdi.synlighet,
+                                    gruppering = kodeverkverdi.gruppering,
+                                    rekkefølge = kodeverkverdi.rekkefølge
                                 )
                             }
                         }
@@ -112,7 +113,7 @@ class OppgaveQueryRepository(
                     Verdiforklaring(
                         verdi = oppgavestatus.kode,
                         visningsnavn = oppgavestatus.visningsnavn,
-                        sekundærvalg = false,
+                        synlighet = Synlighet.OVER_STREKEN,
                         gruppering = null
                     )
                 }
@@ -136,7 +137,7 @@ class OppgaveQueryRepository(
                     Verdiforklaring(
                         verdi = it.kode,
                         visningsnavn = it.beskrivelse,
-                        sekundærvalg = false,
+                        synlighet = Synlighet.OVER_STREKEN,
                         gruppering = null
                     )
                 }
@@ -151,7 +152,7 @@ class OppgaveQueryRepository(
                     Verdiforklaring(
                         verdi = it,
                         visningsnavn = it,
-                        sekundærvalg = false,
+                        synlighet = Synlighet.OVER_STREKEN,
                         gruppering = null
                     )
                 }
@@ -166,7 +167,7 @@ class OppgaveQueryRepository(
                 verdiforklaringer = Spørringstrategi.entries.map { Verdiforklaring(
                     it.name,
                     it.navn,
-                    false,
+                    Synlighet.OVER_STREKEN,
                     null
                 ) }
             ),
