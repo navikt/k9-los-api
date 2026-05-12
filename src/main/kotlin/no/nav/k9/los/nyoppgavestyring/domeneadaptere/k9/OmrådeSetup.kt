@@ -358,12 +358,13 @@ class OmrådeSetup(
     }
 
     private fun kodeverkYtelsetype() {
+        val verdier = FagsakYtelseType.entries.lagDto(null) { KodeverkSynlighetRegler.ytelseType(it) }
         val kodeverkDto = KodeverkDto(
             område = område,
             eksternId = "Ytelsetype",
             beskrivelse = null,
             uttømmende = true,
-            verdier = FagsakYtelseType.entries.lagDto(null, KodeverkSynlighetRegler::ytelseType)
+            verdier = verdier
         )
         feltdefinisjonTjeneste.oppdater(kodeverkDto)
     }
@@ -666,15 +667,16 @@ class OmrådeSetup(
 
     fun <T : Kodeverdi> Collection<T>.lagDto(
         beskrivelse: String?,
-        synlighet: (T) -> Synlighet = { Synlighet.OVER_STREKEN }
+        finnSynlighetOgRekkefølge: (T) -> Pair<Synlighet, Int?> = { Synlighet.OVER_STREKEN to null }
     ): List<KodeverkVerdiDto> {
-        return associateWith { synlighet(it) }
-            .filter { (_, synlighet) -> synlighet != Synlighet.SKJULT }
-            .map { (kodeverdi, synlighet) ->
+        return associateWith { finnSynlighetOgRekkefølge(it) }
+            .filter { (_, synlighetOgRekkefølge) -> synlighetOgRekkefølge.first != Synlighet.SKJULT }
+            .map { (kodeverdi, synlighetOgRekkefølge) ->
                 KodeverkVerdiDto(
                     verdi = kodeverdi.kode,
                     visningsnavn = kodeverdi.navn,
-                    synlighet = synlighet,
+                    synlighet = synlighetOgRekkefølge.first,
+                    rekkefølge = synlighetOgRekkefølge.second,
                     beskrivelse = beskrivelse
                 )
             }.sortedBy { it.visningsnavn }
@@ -733,15 +735,15 @@ object KodeverkSynlighetRegler {
     }
 
 
-    fun ytelseType(ytelseType: FagsakYtelseType): Synlighet {
+    fun ytelseType(ytelseType: FagsakYtelseType): Pair<Synlighet, Int?> {
         return when (ytelseType) {
             FagsakYtelseType.FRISINN,
             FagsakYtelseType.UNGDOMSYTELSE,
-            FagsakYtelseType.OMSORGSDAGER -> Synlighet.SKJULT
+            FagsakYtelseType.OMSORGSDAGER -> Synlighet.SKJULT to null
 
-            FagsakYtelseType.UKJENT -> Synlighet.UNDER_STREKEN
+            FagsakYtelseType.UKJENT -> Synlighet.OVER_STREKEN to -1
 
-            else -> Synlighet.OVER_STREKEN
+            else -> Synlighet.OVER_STREKEN to null
         }
     }
 }
