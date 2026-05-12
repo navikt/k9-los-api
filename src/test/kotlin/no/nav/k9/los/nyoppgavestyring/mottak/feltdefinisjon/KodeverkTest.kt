@@ -97,14 +97,14 @@ class KodeverkTest : AbstractK9LosIntegrationTest() {
                     verdi = "verdi1",
                     visningsnavn = "navn1",
                     beskrivelse = "beskrivelse1",
-                    favoritt = false,
+                    synlighet = Synlighet.OVER_STREKEN,
                     gruppering = "gruppering1"
                 ),
                 Kodeverkverdi(
                     verdi = "verdi2",
                     visningsnavn = "navn2",
                     beskrivelse = "beskrivelse2",
-                    favoritt = false,
+                    synlighet = Synlighet.OVER_STREKEN,
                     gruppering = "gruppering2"
                 )
             )

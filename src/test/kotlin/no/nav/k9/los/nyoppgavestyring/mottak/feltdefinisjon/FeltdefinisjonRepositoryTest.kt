@@ -105,7 +105,7 @@ class FeltdefinisjonRepositoryTest: AbstractK9LosIntegrationTest() {
                     verdi = "testverdi",
                     visningsnavn = "testverdivisningsnavn",
                     beskrivelse = "testverdiBeskrivelse",
-                    favoritt = true,
+                    synlighet = Synlighet.UNDER_STREKEN,
                     gruppering = "testgruppering",
                 )
             )
