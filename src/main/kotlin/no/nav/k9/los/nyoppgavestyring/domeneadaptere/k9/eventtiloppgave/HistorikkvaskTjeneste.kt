@@ -1,9 +1,11 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave
 
+import kotlinx.coroutines.*
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.K9Oppgavetypenavn
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventNøkkel
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventRepository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.HistorikkvaskBestilling
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.DB_AWARE_PARALLELISM
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveNøkkelDto
@@ -20,6 +22,9 @@ class HistorikkvaskTjeneste(
     private val log: Logger = LoggerFactory.getLogger(HistorikkvaskTjeneste::class.java)
 
     companion object {
+        // Historikkvask kjører inne i Jobbplanleggeren som allerede bruker én coroutine-slot.
+        // Vi reserverer ytterligere 1 slot for andre korte jobber som kan kjøre samtidig.
+        private val PARALLELLE_VASKERE = (DB_AWARE_PARALLELISM - 1).coerceAtLeast(1)
         private const val BATCH_STORRELSE = 2000
     }
 
@@ -30,6 +35,7 @@ class HistorikkvaskTjeneste(
         }
 
         log.info("Fant totalt $antallBestillinger historikkvaskbestillinger")
+        val dispatcher = Dispatchers.IO.limitedParallelism(PARALLELLE_VASKERE)
         // Cursor over event_nokkel_id, slik at en bestilling som feiler ikke fanger
         // den ytre løkka i en evig retry innenfor samme kjøring. Bestillinger som lykkes
         // blir uansett slettet fra event_historikkvask_bestilt.
@@ -45,7 +51,7 @@ class HistorikkvaskTjeneste(
                 if (historikkvaskbestillinger.isEmpty()) break
 
                 log.info("Starter vaskeiterasjon på ${historikkvaskbestillinger.size} oppgaver")
-                vasketeller += vaskBestillinger(historikkvaskbestillinger)
+                vasketeller += vaskBestillinger(historikkvaskbestillinger, dispatcher)
                 sisteSetteEventNokkelId = historikkvaskbestillinger.maxOf { it.eventlagerNøkkel ?: 0L }
                 log.info("Vasket iterasjon med ${historikkvaskbestillinger.size} oppgaver. Har vasket totalt $vasketeller oppgaver")
             }
@@ -53,18 +59,25 @@ class HistorikkvaskTjeneste(
         log.info("Historikkvask ferdig på ${tidsbruk}. Vasket totalt $vasketeller oppgaver")
     }
 
-    private fun vaskBestillinger(vaskebestillinger: List<HistorikkvaskBestilling>): Int {
-        // Kjøres sekvensielt – parallelitet styres av Jobbplanlegger som eier tråden vi kjører på.
-        return vaskebestillinger.sumOf { historikkvaskBestilling ->
-            try {
-                vaskBestilling(historikkvaskBestilling)
-            } catch (e: Exception) {
-                log.error(
-                    "HistorikkvaskVaktmester: Feil ved historikkvask for ${historikkvaskBestilling.eksternId} for fagsystem: ${historikkvaskBestilling.fagsystem}",
-                    e
-                )
-                0
+    private fun vaskBestillinger(
+        vaskebestillinger: List<HistorikkvaskBestilling>,
+        dispatcher: CoroutineDispatcher,
+    ): Int {
+        return runBlocking(dispatcher) {
+            val jobber = vaskebestillinger.map { historikkvaskBestilling ->
+                async {
+                    try {
+                        vaskBestilling(historikkvaskBestilling)
+                    } catch (e: Exception) {
+                        log.error(
+                            "HistorikkvaskVaktmester: Feil ved historikkvask for ${historikkvaskBestilling.eksternId} for fagsystem: ${historikkvaskBestilling.fagsystem}",
+                            e
+                        )
+                        0
+                    }
+                }
             }
+            jobber.awaitAll().sum()
         }
     }
 
