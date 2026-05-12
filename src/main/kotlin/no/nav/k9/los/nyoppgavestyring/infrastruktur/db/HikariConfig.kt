@@ -7,10 +7,19 @@ import com.zaxxer.hikari.metrics.prometheus.PrometheusMetricsTrackerFactory
 import io.ktor.server.application.*
 import no.nav.k9.los.Configuration
 
+const val DB_POOL_SIZE = 6
+
+/**
+ * Maks antall parallelle coroutines/tråder som bruker DB-tilkoblinger.
+ * Satt til [DB_POOL_SIZE] - 2 for å alltid ha ledig kapasitet til
+ * ad-hoc-spørringer og andre deler av applikasjonen.
+ */
+val DB_AWARE_PARALLELISM = (DB_POOL_SIZE - 2).coerceAtLeast(1)
+
 fun createHikariConfig(jdbcUrl: String, username: String? = null, password: String? = null) =
     HikariConfig().apply {
         this.jdbcUrl = jdbcUrl
-        maximumPoolSize = 6
+        maximumPoolSize = DB_POOL_SIZE
         minimumIdle = 1
         idleTimeout = 10001
         connectionTimeout = 10000
