@@ -133,25 +133,27 @@ class EventTilOppgaveAdapter(
                 }
             }
             if (sisteOppdaterteEvent != null) {
-                // Oppdater PEP-cache én gang for siste tilstand, i stedet for per event
-                oppgaveOppdatertHandler.oppdaterPepCache(forrigeOppgaveversjon!!, tx)
-
-                // Under historikkvask: kjør reservasjons-/sluttilstandshåndtering for siste event
-                // (men hopp over køpåvirkende hendelse – disse skal ikke trigge under vask).
-                if (kontekst == Kontekst.HISTORIKKVASK) {
-                    oppgaveOppdatertHandler.håndterOppgaveOppdatert(
-                        sisteOppdaterteEvent!!, forrigeOppgaveversjon!!, tx, kontekst
-                    )
+                when (kontekst) {
+                    Kontekst.NORMAL -> {
+                        // Oppdater PEP-cache én gang for siste tilstand, i stedet for per event
+                        oppgaveOppdatertHandler.oppdaterPepCache(forrigeOppgaveversjon!!, tx)
+                    }
+                    Kontekst.HISTORIKKVASK -> {
+                        // Under historikkvask hopper vi over PEP-cache (staten er per definisjon
+                        // identisk med før vasken). Vi kjører kun reservasjons-/sluttilstands-
+                        // håndtering for siste event – køpåvirkende hendelser er gatet bort i
+                        // handleren under HISTORIKKVASK.
+                        oppgaveOppdatertHandler.håndterOppgaveOppdatert(
+                            sisteOppdaterteEvent, forrigeOppgaveversjon!!, tx, kontekst
+                        )
+                    }
                 }
             }
             // Batch-oppdater alle dirty-flagg i én SQL-spørring i stedet for én pr event
             eventRepository.fjernAlleDirty(eventer.first().nøkkelId, tx)
-            // Hopper over ajourhold når ingenting faktisk endret seg (alle eventer var duplikater).
-            // ajourholdOppgave skriver om oppgave_v3_part / oppgavefelt_verdi_part, ingen vits hvis
-            // staten er identisk.
-            if (sisteOppdaterteEvent != null) {
-                ajourholdTjeneste.ajourholdOppgave(forrigeOppgaveversjon!!, eventerMedNummerering.last().first, tx)
-            }
+            // Kjøres alltid som sikkerhetsnett: ajourhold er også del av vanlig event-ingest, og
+            // koster lite hvis staten faktisk er uendret.
+            ajourholdTjeneste.ajourholdOppgave(forrigeOppgaveversjon!!, eventerMedNummerering.last().first, tx)
         }
 
         return statistikkteller
