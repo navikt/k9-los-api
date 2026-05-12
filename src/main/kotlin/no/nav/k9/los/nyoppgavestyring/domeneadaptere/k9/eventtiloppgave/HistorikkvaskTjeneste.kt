@@ -97,8 +97,8 @@ class HistorikkvaskTjeneste(
         transactionalManager.transaction { tx ->
             oppgaveV3Tjeneste.slettOppgave(oppgavenøkkel, tx)
             eventRepository.settDirty(eventNøkkel, tx)
-            eventNrForBehandling = eventTilOppgaveAdapter.oppdaterOppgaveForEksternId(
-                eventNøkkel, tx, kontekst = Kontekst.HISTORIKKVASK
+            eventNrForBehandling = eventTilOppgaveAdapter.oppdaterOppgaveForEksternIdUnderHistorikkvask(
+                eventNøkkel, tx
             ).toInt()
 
             if (historikkvaskBestilling.eventlagerNøkkel != null) {
