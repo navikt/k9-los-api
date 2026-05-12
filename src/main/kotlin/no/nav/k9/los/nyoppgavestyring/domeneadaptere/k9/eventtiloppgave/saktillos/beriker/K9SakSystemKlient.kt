@@ -1,6 +1,7 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.beriker
 
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.github.benmanes.caffeine.cache.Caffeine
 import io.ktor.client.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
@@ -32,9 +33,21 @@ class K9SakSystemKlient(
     private val url = configuration.k9Url()
     private val scopes = setOf(scope)
 
+    /**
+     * Cache for hentBehandling-resultater. Nyttig under historikkvask der mange eventer for
+     * samme behandling prosesseres i rask rekkefølge. Bruker Optional som wrapper for å
+     * kunne cache null-resultater (behandling som ikke finnes i k9-sak).
+     */
+    private val behandlingCache = Caffeine.newBuilder()
+        .maximumSize(200)
+        .expireAfterWrite(Duration.ofMinutes(10))
+        .build<UUID, Optional<BehandlingMedFagsakDto>>()
+
     @WithSpan
     override fun hentBehandling(behandlingUUID: UUID, antallForsøk: Int): BehandlingMedFagsakDto? {
-        return runBlocking { hent(behandlingUUID, antallForsøk) }
+        return behandlingCache.get(behandlingUUID) {
+            Optional.ofNullable(runBlocking { hent(it, antallForsøk) })
+        }.orElse(null)
     }
 
     private suspend fun hent(behandlingUUID: UUID, antallForsøk: Int = 3): BehandlingMedFagsakDto? {
