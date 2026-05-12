@@ -341,14 +341,11 @@ class EventTilOppgaveAdapterSpec : KoinTest, FreeSpec() {
                 eventRepository.lagre(Fagsystem.PUNSJ, event3, tx)
             }
             "med tre eventer" - {
-                "handleren skal kun kalles én gang for siste event med HISTORIKKVASK-kontekst, og PEP-cache skal ikke oppdateres" {
+                "oppgaveOppdatertHandler skal ikke kalles under historikkvask" {
                     transactionalManager.transaction { tx ->
                         oppgaveAdapter.oppdaterOppgaveForEksternIdUnderHistorikkvask(
                             EventNøkkel(Fagsystem.PUNSJ, eksternId.toString()), tx
                         )
-                    }
-                    verify(exactly = 1) {
-                        oppgaveOppdatertHandler.håndterOppgaveOppdatert(any(), any(), any(), Kontekst.HISTORIKKVASK)
                     }
                     verify(exactly = 0) {
                         oppgaveOppdatertHandler.håndterOppgaveOppdatert(any(), any(), any())

@@ -36,20 +36,16 @@ class OppgaveOppdatertHandler(
         eventLagret: EventLagret,
         oppgave: OppgaveV3,
         tx: TransactionalSession,
-        kontekst: Kontekst = Kontekst.NORMAL,
     ) {
-        // Køpåvirkende hendelser skal ikke trigge under historikkvask – vask er en stille rebuild
-        // av tilstanden, ikke en faktisk endring vi vil varsle om på køene.
-        if (kontekst == Kontekst.NORMAL) {
-            runBlocking {
-                køpåvirkendeHendelseChannel.send(
-                    OppgaveHendelseMottatt(
-                        eventLagret.fagsystem,
-                        EksternOppgaveId("K9", oppgave.eksternId)
-                    )
+        runBlocking {
+            køpåvirkendeHendelseChannel.send(
+                OppgaveHendelseMottatt(
+                    eventLagret.fagsystem,
+                    EksternOppgaveId("K9", oppgave.eksternId)
                 )
-            }
+            )
         }
+
         when (eventLagret) {
             is EventLagret.K9Sak -> håndterSakOppdatert(eventLagret, oppgave, tx)
             is EventLagret.K9Tilbake -> håndterTilbakeOppdatert(eventLagret, oppgave, tx)
@@ -74,18 +70,25 @@ class OppgaveOppdatertHandler(
 
     private fun håndterKlageOppdatert(eventLagret: EventLagret.K9Klage, oppgave: OppgaveV3, tx: TransactionalSession) {
         val event = eventLagret.eventDto
-        val erPåVent  = event.aksjonspunkttilstander.any {
+        val erPåVent = event.aksjonspunkttilstander.any {
             it.status.erÅpentAksjonspunkt()
-                    && no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon.fraKode(it.aksjonspunktKode).erAutopunkt()
+                    && no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon.fraKode(it.aksjonspunktKode)
+                .erAutopunkt()
         }
         if (erPåVent || BehandlingStatus.AVSLUTTET.kode == event.behandlingStatus || oppgave.status == Oppgavestatus.LUKKET) {
             annullerReservasjonerHvisAlleOppgaverPåVentEllerAvsluttet(eventLagret, oppgave, tx)
         }
     }
 
-    private fun håndterTilbakeOppdatert(eventLagret: EventLagret.K9Tilbake, oppgave: OppgaveV3, tx: TransactionalSession) {
+    private fun håndterTilbakeOppdatert(
+        eventLagret: EventLagret.K9Tilbake,
+        oppgave: OppgaveV3,
+        tx: TransactionalSession
+    ) {
         val event = eventLagret.eventDto
-        val erPåVent = event.aksjonspunktKoderMedStatusListe.any { it.value == AksjonspunktStatus.OPPRETTET.kode && AksjonspunktDefinisjonK9Tilbake.fraKode(it.key).erAutopunkt }
+        val erPåVent = event.aksjonspunktKoderMedStatusListe.any {
+            it.value == AksjonspunktStatus.OPPRETTET.kode && AksjonspunktDefinisjonK9Tilbake.fraKode(it.key).erAutopunkt
+        }
         if (erPåVent || BehandlingStatus.AVSLUTTET.kode == event.behandlingStatus || oppgave.status == Oppgavestatus.LUKKET) {
             annullerReservasjonerHvisAlleOppgaverPåVentEllerAvsluttet(eventLagret, oppgave, tx)
         }

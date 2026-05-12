@@ -15,7 +15,6 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 
-enum class Kontekst { NORMAL, HISTORIKKVASK }
 
 class EventTilOppgaveAdapter(
     private val eventRepository: EventRepository,
@@ -107,12 +106,10 @@ class EventTilOppgaveAdapter(
 
     /**
      * Variant for historikkvask. Forutsetter at kaller har slettet oppgave_v3 og satt eventene
-     * dirty først. Skiller seg fra normalflyt på tre punkter:
+     * dirty først. Skiller seg fra normalflyt på to punkter:
      *  - Hopper over rekkefølge-sjekk (oppgave_v3 er per definisjon tom).
-     *  - Kjører ikke per-event side-effekter (PEP-cache, køpåvirkende hendelser, reservasjons-
+     *  - Kjører ikke side-effekter (PEP-cache, køpåvirkende hendelser, reservasjons-
      *    håndtering) – vask skal være en stille rebuild.
-     *  - Kjører reservasjons-/sluttilstandshåndtering bare for siste event, uten å trigge
-     *    køpåvirkende hendelse (gatet via Kontekst.HISTORIKKVASK i handleren).
      */
     fun oppdaterOppgaveForEksternIdUnderHistorikkvask(
         eventnøkkel: EventNøkkel,
@@ -124,27 +121,15 @@ class EventTilOppgaveAdapter(
 
         var statistikkteller = 0L
         var forrigeOppgaveversjon = hentStartversjon(eventnøkkel, eventerMedNummerering, tx)
-        var sisteOppdaterteEvent: EventLagret? = null
-        var sisteOppgaveversjon: OppgaveV3? = null
 
         for ((eventnummer, eventLagret) in eventerMedNummerering) {
             val oppgave = mapOgLagre(eventLagret, eventnummer, forrigeOppgaveversjon, tx)
             if (oppgave != null) {
                 statistikkteller++
                 forrigeOppgaveversjon = oppgave
-                sisteOppdaterteEvent = eventLagret
-                sisteOppgaveversjon = oppgave
             } else {
                 forrigeOppgaveversjon = hentEksisterendeVersjon(eventnøkkel, eventnummer, tx)
             }
-        }
-
-        // Sluttilstandshåndtering for siste event. Køpåvirkende hendelse gates bort i handleren
-        // under HISTORIKKVASK. PEP-cache er ikke påvirket (staten er identisk med før vasken).
-        if (sisteOppdaterteEvent != null) {
-            oppgaveOppdatertHandler.håndterOppgaveOppdatert(
-                sisteOppdaterteEvent, sisteOppgaveversjon!!, tx, Kontekst.HISTORIKKVASK,
-            )
         }
 
         fjernDirtyOgAjourhold(eventerMedNummerering, forrigeOppgaveversjon!!, tx)

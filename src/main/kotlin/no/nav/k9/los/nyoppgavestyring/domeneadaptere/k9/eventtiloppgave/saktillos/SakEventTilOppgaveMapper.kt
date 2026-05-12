@@ -82,6 +82,7 @@ class SakEventTilOppgaveMapper(
         return ryddOppMedBehandlingsopplysninger(event, oppgaveDto, nyeBehandlingsopplysningerFraK9Sak)
     }
 
+
     private fun ryddOppMedBehandlingsopplysninger(
         event: K9SakEventDto,
         oppgaveDto: OppgaveDto,
