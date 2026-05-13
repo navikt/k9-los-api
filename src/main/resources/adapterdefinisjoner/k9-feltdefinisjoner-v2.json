@@ -210,11 +210,47 @@
     },
     {
       "id": "løsbartAksjonspunkt",
-      "visningsnavn": "Aksjonspunkt som kan løses",
+      "visningsnavn": "Aksjonspunkt: løsbart",
       "beskrivelse": "Åpne aksjonspunkt som er løsbart akkurat nå, fordi de hører til steget behandlingen står i",
       "listetype": false,
       "tolkesSom": "String",
       "synlighet": "OVER_STREKEN",
+      "kodeverkreferanse": {
+        "område": "K9",
+        "eksternId": "Aksjonspunkt"
+      }
+    },
+    {
+      "id": "utførtAksjonspunkt",
+      "visningsnavn": "Aksjonspunkt: utførte",
+      "beskrivelse": "Aksjonspunkter som er utført",
+      "listetype": true,
+      "tolkesSom": "String",
+      "synlighet": "SKJULT",
+      "kodeverkreferanse": {
+        "område": "K9",
+        "eksternId": "Aksjonspunkt"
+      }
+    },
+    {
+      "id": "avbruttAksjonspunkt",
+      "visningsnavn": "Aksjonspunkt: avbrutte",
+      "beskrivelse": "Aksjonspunkter som er avbrutt",
+      "listetype": true,
+      "tolkesSom": "String",
+      "synlighet": "SKJULT",
+      "kodeverkreferanse": {
+        "område": "K9",
+        "eksternId": "Aksjonspunkt"
+      }
+    },
+    {
+      "id": "fremtidigAksjonspunkt",
+      "visningsnavn": "Aksjonspunkt: fremtidige",
+      "beskrivelse": "Åpne aksjonspunkter som ikke kan løses i steget behandlingen står i nå",
+      "listetype": true,
+      "tolkesSom": "String",
+      "synlighet": "SKJULT",
       "kodeverkreferanse": {
         "område": "K9",
         "eksternId": "Aksjonspunkt"

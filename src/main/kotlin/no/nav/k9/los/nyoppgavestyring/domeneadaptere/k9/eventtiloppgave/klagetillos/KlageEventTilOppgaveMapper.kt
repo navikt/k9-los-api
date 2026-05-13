@@ -186,6 +186,9 @@ class KlageEventTilOppgaveMapper(
             utledAksjonspunkter(event, oppgaveFeltverdiDtos)
             utledÅpneAksjonspunkter(åpneAksjonspunkter, oppgaveFeltverdiDtos)
             utledLøsbartAksjonspunkt(event.behandlingSteg, åpneAksjonspunkter, oppgaveFeltverdiDtos)
+            utledUtførteAksjonspunkter(event, oppgaveFeltverdiDtos)
+            utledAvbrutteAksjonspunkter(event, oppgaveFeltverdiDtos)
+            utledFremtidigeAksjonspunkter(event.behandlingSteg, åpneAksjonspunkter, oppgaveFeltverdiDtos)
 
             utledTidspunktOversendtKabal(event, oppgaveFeltverdiDtos)
 
@@ -283,6 +286,78 @@ class KlageEventTilOppgaveMapper(
                 oppgaveFeltverdiDtos.add(
                     OppgaveFeltverdiDto(
                         nøkkel = "aksjonspunkt",
+                        verdi = null
+                    )
+                )
+            }
+        }
+
+        private fun utledUtførteAksjonspunkter(
+            event: K9KlageEventDto,
+            oppgaveFeltverdiDtos: MutableList<OppgaveFeltverdiDto>
+        ) {
+            val utførte = event.aksjonspunkttilstander.filter { it.status == AksjonspunktStatus.UTFØRT }
+            if (utførte.isNotEmpty()) {
+                oppgaveFeltverdiDtos.addAll(utførte.map { aksjonspunkttilstand ->
+                    OppgaveFeltverdiDto(
+                        nøkkel = "utførtAksjonspunkt",
+                        verdi = KLAGE_PREFIX + aksjonspunkttilstand.aksjonspunktKode
+                    )
+                })
+            } else {
+                oppgaveFeltverdiDtos.add(
+                    OppgaveFeltverdiDto(
+                        nøkkel = "utførtAksjonspunkt",
+                        verdi = null
+                    )
+                )
+            }
+        }
+
+        private fun utledAvbrutteAksjonspunkter(
+            event: K9KlageEventDto,
+            oppgaveFeltverdiDtos: MutableList<OppgaveFeltverdiDto>
+        ) {
+            val avbrutte = event.aksjonspunkttilstander.filter { it.status == AksjonspunktStatus.AVBRUTT }
+            if (avbrutte.isNotEmpty()) {
+                oppgaveFeltverdiDtos.addAll(avbrutte.map { aksjonspunkttilstand ->
+                    OppgaveFeltverdiDto(
+                        nøkkel = "avbruttAksjonspunkt",
+                        verdi = KLAGE_PREFIX + aksjonspunkttilstand.aksjonspunktKode
+                    )
+                })
+            } else {
+                oppgaveFeltverdiDtos.add(
+                    OppgaveFeltverdiDto(
+                        nøkkel = "avbruttAksjonspunkt",
+                        verdi = null
+                    )
+                )
+            }
+        }
+
+        private fun utledFremtidigeAksjonspunkter(
+            behandlingSteg: String?,
+            åpneAksjonspunkter: List<Aksjonspunkttilstand>,
+            oppgaveFeltverdiDtos: MutableList<OppgaveFeltverdiDto>
+        ) {
+            val fremtidige = åpneAksjonspunkter.filter { åpentAksjonspunkt ->
+                val aksjonspunktDefinisjon = AksjonspunktDefinisjon.fraKode(åpentAksjonspunkt.aksjonspunktKode)
+                aksjonspunktDefinisjon.erAutopunkt()
+                    || aksjonspunktDefinisjon.behandlingSteg == null
+                    || aksjonspunktDefinisjon.behandlingSteg.kode != behandlingSteg
+            }
+            if (fremtidige.isNotEmpty()) {
+                oppgaveFeltverdiDtos.addAll(fremtidige.map { aksjonspunkttilstand ->
+                    OppgaveFeltverdiDto(
+                        nøkkel = "fremtidigAksjonspunkt",
+                        verdi = KLAGE_PREFIX + aksjonspunkttilstand.aksjonspunktKode
+                    )
+                })
+            } else {
+                oppgaveFeltverdiDtos.add(
+                    OppgaveFeltverdiDto(
+                        nøkkel = "fremtidigAksjonspunkt",
                         verdi = null
                     )
                 )

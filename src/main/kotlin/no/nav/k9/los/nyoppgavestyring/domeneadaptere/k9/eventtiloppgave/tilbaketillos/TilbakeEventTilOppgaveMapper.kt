@@ -129,6 +129,8 @@ class TilbakeEventTilOppgaveMapper {
             val oppgaveFeltverdiDtos = mapEnkeltverdier(event, forrigeOppgave)
 
             utledAksjonspunkter(event, oppgaveFeltverdiDtos)
+            utledUtførteAksjonspunkter(event, oppgaveFeltverdiDtos)
+            utledAvbrutteAksjonspunkter(event, oppgaveFeltverdiDtos)
             utledAutomatiskBehandletFlagg(event, forrigeOppgave, oppgaveFeltverdiDtos)
             return oppgaveFeltverdiDtos
         }
@@ -262,6 +264,54 @@ class TilbakeEventTilOppgaveMapper {
                 oppgaveFeltverdiDtos.add(
                     OppgaveFeltverdiDto(
                         nøkkel = "løsbartAksjonspunkt",
+                        verdi = null
+                    )
+                )
+            }
+        }
+
+        private fun utledUtførteAksjonspunkter(
+            event: K9TilbakeEventDto,
+            oppgaveFeltverdiDtos: MutableList<OppgaveFeltverdiDto>
+        ) {
+            val utførte = event.aksjonspunktKoderMedStatusListe
+                .filter { it.value == AksjonspunktStatus.UTFØRT.kode }
+
+            if (utførte.isNotEmpty()) {
+                oppgaveFeltverdiDtos.addAll(utførte.map {
+                    OppgaveFeltverdiDto(
+                        nøkkel = "utførtAksjonspunkt",
+                        verdi = it.key
+                    )
+                })
+            } else {
+                oppgaveFeltverdiDtos.add(
+                    OppgaveFeltverdiDto(
+                        nøkkel = "utførtAksjonspunkt",
+                        verdi = null
+                    )
+                )
+            }
+        }
+
+        private fun utledAvbrutteAksjonspunkter(
+            event: K9TilbakeEventDto,
+            oppgaveFeltverdiDtos: MutableList<OppgaveFeltverdiDto>
+        ) {
+            val avbrutte = event.aksjonspunktKoderMedStatusListe
+                .filter { it.value == AksjonspunktStatus.AVBRUTT.kode }
+
+            if (avbrutte.isNotEmpty()) {
+                oppgaveFeltverdiDtos.addAll(avbrutte.map {
+                    OppgaveFeltverdiDto(
+                        nøkkel = "avbruttAksjonspunkt",
+                        verdi = it.key
+                    )
+                })
+            } else {
+                oppgaveFeltverdiDtos.add(
+                    OppgaveFeltverdiDto(
+                        nøkkel = "avbruttAksjonspunkt",
                         verdi = null
                     )
                 )
