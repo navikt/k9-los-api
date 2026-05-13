@@ -3,7 +3,6 @@ package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager
 import kotliquery.*
 import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
 import org.jetbrains.annotations.VisibleForTesting
-import java.time.LocalDateTime
 import javax.sql.DataSource
 
 
@@ -115,7 +114,7 @@ class EventRepository(
 
     fun hentAlleEventer(fagsystem: Fagsystem, eksternId: String, tx: TransactionalSession): List<EventLagret> {
         val eventId = hentOgLåsEventnøkkel(fagsystem, eksternId, tx)
-        val eventer = tx.run(
+        return tx.run(
             queryOf(
                 """
                     select e.* 
@@ -130,19 +129,18 @@ class EventRepository(
                 rowTilEvent(row, eksternId, fagsystem)
             }.asList
         )
-
-        return eventer.sortedBy { LocalDateTime.parse(it.eksternVersjon) }
     }
 
 
     fun hentAlleEventerMedLås(eventnøkkel: EventNøkkel, tx: TransactionalSession): List<EventLagret> {
         val eventId = eventnøkkel.id ?: hentOgLåsEventnøkkel(eventnøkkel.fagsystem, eventnøkkel.eksternId, tx)
-        val eventer = tx.run(
+        return tx.run(
             queryOf(
                 """
                     select e.* 
                     from event e 
                     where event_nokkel_id = :nokkelId
+                    order by ekstern_versjon :: timestamp
                 """.trimIndent(),
                 mapOf(
                     "nokkelId" to eventId,
@@ -151,8 +149,6 @@ class EventRepository(
                 rowTilEvent(row, eventnøkkel.eksternId, eventnøkkel.fagsystem)
             }.asList
         )
-
-        return eventer.sortedBy { LocalDateTime.parse(it.eksternVersjon) }
     }
 
     @VisibleForTesting
@@ -215,6 +211,7 @@ class EventRepository(
                 select *
                 from oppgaveversjoner
                 where dirty = true
+                order by ekstern_versjon :: timestamp
                 for update
                 """.trimIndent(), //select for update ikke lov med distinct, derfor CTE
                 mapOf(
@@ -224,7 +221,7 @@ class EventRepository(
             ).map { row ->
                 Pair(row.int("nummer"), rowTilEvent(row, eksternId, fagsystem))
             }.asList
-        ).sortedBy { LocalDateTime.parse(it.second.eksternVersjon) }
+        )
     }
 
     private fun rowTilEvent(row: Row): EventLagret? {
@@ -281,6 +278,10 @@ class EventRepository(
     }
 
     fun settDirty(eventnøkkel: EventNøkkel, tx: TransactionalSession) {
+        if (eventnøkkel.id != null) {
+            settDirty(eventnøkkel.id, tx)
+            return
+        }
         tx.run(
             queryOf(
                 """
@@ -295,6 +296,15 @@ class EventRepository(
                     "fagsystem" to eventnøkkel.fagsystem.kode,
                     "ekstern_id" to eventnøkkel.eksternId,
                 )
+            ).asUpdate
+        )
+    }
+
+    fun settDirty(eventNokkelId: Long, tx: TransactionalSession) {
+        tx.run(
+            queryOf(
+                """update event set dirty = true where event_nokkel_id = :id""",
+                mapOf("id" to eventNokkelId)
             ).asUpdate
         )
     }
@@ -363,6 +373,15 @@ class EventRepository(
         )
     }
 
+    fun settHistorikkvaskFerdig(eventNokkelId: Long, tx: TransactionalSession) {
+        tx.run(
+            queryOf(
+                """delete from event_historikkvask_bestilt where event_nokkel_id = :id""",
+                mapOf("id" to eventNokkelId)
+            ).asUpdate
+        )
+    }
+
     fun hentAntallHistorikkvaskbestillinger(): Long {
         return using(sessionOf(dataSource)) {
             it.transaction { tx ->
@@ -379,6 +398,13 @@ class EventRepository(
     }
 
     fun hentAlleHistorikkvaskbestillinger(antall: Int = 10000): List<HistorikkvaskBestilling> {
+        return hentAlleHistorikkvaskbestillinger(antall, etterEventNokkelId = 0L)
+    }
+
+    fun hentAlleHistorikkvaskbestillinger(
+        antall: Int,
+        etterEventNokkelId: Long,
+    ): List<HistorikkvaskBestilling> {
         return using(sessionOf(dataSource)) {
             it.transaction { tx ->
                 tx.run(
@@ -387,9 +413,14 @@ class EventRepository(
                             select en.*
                             from event_historikkvask_bestilt hb
                                 join event_nokkel en on hb.event_nokkel_id = en.id
+                            where hb.event_nokkel_id > :etter
+                            order by hb.event_nokkel_id
                             LIMIT :antall
                         """.trimIndent(),
-                        mapOf("antall" to antall)
+                        mapOf(
+                            "antall" to antall,
+                            "etter" to etterEventNokkelId,
+                        )
                     ).map { row ->
                         HistorikkvaskBestilling(
                             row.long("id"),

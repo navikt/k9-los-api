@@ -433,7 +433,6 @@ fun common(app: Application, config: Configuration) = module {
         HistorikkvaskTjeneste(
             eventRepository = get(),
             oppgaveV3Tjeneste = get(),
-            statistikkRepository = get(),
             eventTilOppgaveAdapter = get(),
             transactionalManager = get()
         )
