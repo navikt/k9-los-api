@@ -6,6 +6,7 @@ import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.equals.shouldBeEqual
 import io.kotest.matchers.equals.shouldNotBeEqual
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import kotliquery.queryOf
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.K9Oppgavetypenavn
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventNøkkel
@@ -94,6 +95,62 @@ class HistorikkvaskTjenesteSpec: FreeSpec(), KoinTest {
                         vasketHistorikk.sortedBy { it.second } shouldBeEqual vasketHistorikk.sortedBy { it.third }
                     }
                 }
+            }
+        }
+        "Historikkvaskbestillinger hentet via EventRepository" - {
+            val eksternId1 = UUID.randomUUID()
+            val eksternId2 = UUID.randomUUID()
+            val event1 = punsjEvent(eksternId1, LocalDateTime.now().minusHours(2))
+            val event2 = punsjEvent(eksternId2, LocalDateTime.now().minusHours(1))
+            
+            transactionalManager.transaction { tx ->
+                eventRepository.lagre(Fagsystem.PUNSJ, event1, tx)
+                eventRepository.lagre(Fagsystem.PUNSJ, event2, tx)
+            }
+            oppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(Fagsystem.PUNSJ, eksternId1.toString()))
+            oppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(Fagsystem.PUNSJ, eksternId2.toString()))
+            
+            "skal kunne vaskes med eventlagerNøkkel fra bestillingen" {
+                eventRepository.bestillHistorikkvask(Fagsystem.PUNSJ)
+                eventRepository.hentAntallHistorikkvaskbestillinger() shouldBe 2
+                
+                val bestillinger = eventRepository.hentAlleHistorikkvaskbestillinger(antall = 10)
+                bestillinger shouldHaveSize 2
+                bestillinger.forEach { it.eventlagerNøkkel shouldNotBe null }
+                
+                // Vask første bestilling med eventlagerNøkkel
+                val førsteBestilling = bestillinger.first()
+                historikkvaskTjeneste.vaskBestilling(førsteBestilling)
+                
+                // Verifiser at kun én bestilling er fjernet
+                eventRepository.hentAntallHistorikkvaskbestillinger() shouldBe 1
+                
+                // Vask andre bestilling
+                val andreBestilling = bestillinger.last()
+                historikkvaskTjeneste.vaskBestilling(andreBestilling)
+                
+                // Verifiser at alle bestillinger er fjernet
+                eventRepository.hentAntallHistorikkvaskbestillinger() shouldBe 0
+            }
+        }
+        "Cursor-basert batch-prosessering i kjørHistorikkvask" - {
+            val eksternIder = (1..5).map { UUID.randomUUID() }
+            val eventer = eksternIder.map { punsjEvent(it, LocalDateTime.now().minusHours(1)) }
+            
+            transactionalManager.transaction { tx ->
+                eventer.forEach { eventRepository.lagre(Fagsystem.PUNSJ, it, tx) }
+            }
+            eksternIder.forEach { oppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(Fagsystem.PUNSJ, it.toString())) }
+            
+            "skal kunne prosessere alle bestillinger" {
+                eventRepository.bestillHistorikkvask(Fagsystem.PUNSJ)
+                val antallFør = eventRepository.hentAntallHistorikkvaskbestillinger()
+                antallFør shouldBe 5
+                
+                historikkvaskTjeneste.kjørHistorikkvask()
+                
+                val antallEtter = eventRepository.hentAntallHistorikkvaskbestillinger()
+                antallEtter shouldBe 0
             }
         }
     }

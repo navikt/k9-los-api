@@ -8,6 +8,7 @@ import kotliquery.using
 import no.nav.k9.los.nyoppgavestyring.kodeverk.PersonBeskyttelseType
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Kodeverkreferanse
+import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Synlighet
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
 import no.nav.k9.los.nyoppgavestyring.query.dto.felter.Oppgavefelt
@@ -49,14 +50,14 @@ class OppgaveQueryRepository(
                       fd.ekstern_id as kode,
                       fd.visningsnavn as visningsnavn,
                       fd.tolkes_som as tolkes_som,
-                      fd.kokriterie as kokriterie,
+                      fd.synlighet as synlighet,
                       fd.liste_type as liste_type,
                       fd.kodeverkreferanse as kodeverkreferanse,
                       fd.transient_feltutleder as transient_feltutleder
                     FROM Feltdefinisjon fd INNER JOIN Omrade fo ON (
                       fo.id = fd.omrade_id
                     )
-                    WHERE fd.vis_til_bruker
+                    WHERE fd.synlighet != 'INTERNT'
                 """.trimIndent()
             ).map { row ->
                 val kodeverk = if (medKodeverk) {
@@ -72,7 +73,7 @@ class OppgaveQueryRepository(
                         kode = row.string("kode"),
                         visningsnavn = row.string("visningsnavn"),
                         tolkes_som = row.string("tolkes_som"),
-                        kokriterie = row.boolean("kokriterie"),
+                        synlighet = Synlighet.valueOf(row.string("synlighet")),
                         listetype = row.boolean("liste_type"),
                         verdiforklaringerErUttømmende = kodeverk?.uttømmende ?: false,
                         verdiforklaringer = kodeverk?.let {
@@ -80,8 +81,9 @@ class OppgaveQueryRepository(
                                 Verdiforklaring(
                                     verdi = kodeverkverdi.verdi,
                                     visningsnavn = kodeverkverdi.visningsnavn,
-                                    sekundærvalg = !kodeverkverdi.favoritt,
-                                    gruppering = kodeverkverdi.gruppering
+                                    synlighet = kodeverkverdi.synlighet,
+                                    gruppering = kodeverkverdi.gruppering,
+                                    rekkefølge = kodeverkverdi.rekkefølge
                                 )
                             }
                         }
@@ -105,13 +107,13 @@ class OppgaveQueryRepository(
                 "oppgavestatus",
                 "Oppgavestatus",
                 "String",
-                kokriterie = false,
+                synlighet = Synlighet.UNDER_STREKEN,
                 verdiforklaringerErUttømmende = true,
                 verdiforklaringer = Oppgavestatus.entries.map { oppgavestatus ->
                     Verdiforklaring(
                         verdi = oppgavestatus.kode,
                         visningsnavn = oppgavestatus.visningsnavn,
-                        sekundærvalg = false,
+                        synlighet = Synlighet.OVER_STREKEN,
                         gruppering = null
                     )
                 }
@@ -121,8 +123,7 @@ class OppgaveQueryRepository(
                 "sistEndret",
                 "Tidspunkt siste endring",
                 "Timestamp",
-                kokriterie = false,
-                verdiforklaringerErUttømmende = false,
+                synlighet = Synlighet.UNDER_STREKEN,
                 verdiforklaringer = listOf(),
             ),
             Oppgavefelt(
@@ -130,13 +131,13 @@ class OppgaveQueryRepository(
                 kode = "personbeskyttelse",
                 visningsnavn = "Kode 7 eller egen ansatt",
                 tolkes_som = "String",
-                kokriterie = false,
+                synlighet = Synlighet.UNDER_STREKEN,
                 verdiforklaringerErUttømmende = true,
                 verdiforklaringer = PersonBeskyttelseType.entries.map {
                     Verdiforklaring(
                         verdi = it.kode,
                         visningsnavn = it.beskrivelse,
-                        sekundærvalg = false,
+                        synlighet = Synlighet.OVER_STREKEN,
                         gruppering = null
                     )
                 }
@@ -146,13 +147,12 @@ class OppgaveQueryRepository(
                 kode = "oppgavetype",
                 visningsnavn = "Oppgavetype",
                 tolkes_som = "String",
-                kokriterie = true,
-                verdiforklaringerErUttømmende = false,
+                synlighet = Synlighet.OVER_STREKEN,
                 verdiforklaringer = oppgavetypeNavn.map {
                     Verdiforklaring(
                         verdi = it,
                         visningsnavn = it,
-                        sekundærvalg = false,
+                        synlighet = Synlighet.OVER_STREKEN,
                         gruppering = null
                     )
                 }
@@ -162,12 +162,12 @@ class OppgaveQueryRepository(
                 kode = "spørringstrategi",
                 visningsnavn = "Spørringstrategi",
                 tolkes_som = "String",
-                kokriterie = false,
+                synlighet = Synlighet.SKJULT,
                 verdiforklaringerErUttømmende = true,
                 verdiforklaringer = Spørringstrategi.entries.map { Verdiforklaring(
                     it.name,
                     it.navn,
-                    false,
+                    Synlighet.OVER_STREKEN,
                     null
                 ) }
             ),
@@ -176,8 +176,7 @@ class OppgaveQueryRepository(
                 kode = "ferdigstiltDato",
                 visningsnavn = "Ferdigstilt dato",
                 tolkes_som = "Timestamp",
-                kokriterie = false,
-                verdiforklaringerErUttømmende = false,
+                synlighet = Synlighet.UNDER_STREKEN,
                 verdiforklaringer = emptyList()
             ),
         ).map { OppgavefeltMedMer(it, null) }

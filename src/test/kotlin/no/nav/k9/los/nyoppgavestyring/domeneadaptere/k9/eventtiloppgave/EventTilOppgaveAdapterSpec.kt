@@ -330,6 +330,33 @@ class EventTilOppgaveAdapterSpec : KoinTest, FreeSpec() {
             }
         }
 
+        "Historikkvask-kontekst" - {
+            val eksternId = UUID.randomUUID()
+            val event1 = punsjEvent(eksternId, LocalDateTime.now().minusHours(2))
+            val event2 = punsjEvent(eksternId, LocalDateTime.now().minusHours(1))
+            val event3 = punsjEvent(eksternId, LocalDateTime.now())
+            transactionalManager.transaction { tx ->
+                eventRepository.lagre(Fagsystem.PUNSJ, event1, tx)
+                eventRepository.lagre(Fagsystem.PUNSJ, event2, tx)
+                eventRepository.lagre(Fagsystem.PUNSJ, event3, tx)
+            }
+            "med tre eventer" - {
+                "oppgaveOppdatertHandler skal ikke kalles under historikkvask" {
+                    transactionalManager.transaction { tx ->
+                        oppgaveAdapter.oppdaterOppgaveForEksternIdUnderHistorikkvask(
+                            EventNøkkel(Fagsystem.PUNSJ, eksternId.toString()), tx
+                        )
+                    }
+                    verify(exactly = 0) {
+                        oppgaveOppdatertHandler.håndterOppgaveOppdatert(any(), any(), any())
+                    }
+                    verify(exactly = 0) {
+                        oppgaveOppdatertHandler.oppdaterPepCache(any(), any())
+                    }
+                }
+            }
+        }
+
     }
 
     private fun k9SakEvent(eksternId: UUID = UUID.randomUUID(), eventTid: LocalDateTime = LocalDateTime.now(), eventHendelse: EventHendelse, saksnummerSomTeller: Int? = null,) : K9SakEventDto {

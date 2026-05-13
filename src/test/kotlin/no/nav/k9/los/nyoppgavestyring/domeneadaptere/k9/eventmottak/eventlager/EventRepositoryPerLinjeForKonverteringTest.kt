@@ -19,6 +19,11 @@ import org.koin.test.get
 import java.time.LocalDateTime
 import java.util.*
 
+// Test-lokal helper: gjør K9Punsj-spesifikk eventDto-aksess konsis uten å holde liv i
+// en produksjonsmetode kun brukt fra tester.
+private val EventLagret.punsjEventDto: K9PunsjEventDto
+    get() = (this as EventLagret.K9Punsj).eventDto
+
 class EventRepositoryPerLinjeForKonverteringTest() : AbstractK9LosIntegrationTest() {
 
     @BeforeEach
@@ -54,7 +59,7 @@ class EventRepositoryPerLinjeForKonverteringTest() : AbstractK9LosIntegrationTes
             eventRepository.hent(Fagsystem.PUNSJ, eksternId.toString(), event.eventTid.toString(), tx)
         }
 
-        assertThat(K9PunsjEventDto.fraEventLagret(eventLagret).status).isEqualTo(Oppgavestatus.AAPEN)
+        assertThat(eventLagret.punsjEventDto.status).isEqualTo(Oppgavestatus.AAPEN)
 
         var alleEventer = transactionalManager.transaction { tx ->
             eventRepository.hentAlleEventerMedLås(EventNøkkel(Fagsystem.PUNSJ, eksternId.toString()), tx)
@@ -81,7 +86,7 @@ class EventRepositoryPerLinjeForKonverteringTest() : AbstractK9LosIntegrationTes
             eventRepository.lagre(Fagsystem.PUNSJ, event2.eksternId.toString(), event2.eventTid.toString(), eventstring2, tx)
             eventRepository.hent(Fagsystem.PUNSJ, event2.eksternId.toString(), event2.eventTid.toString(), tx)
         }
-        assertThat(K9PunsjEventDto.fraEventLagret(eventLagret2).status).isEqualTo(Oppgavestatus.VENTER)
+        assertThat(eventLagret2.punsjEventDto.status).isEqualTo(Oppgavestatus.VENTER)
 
         alleEventer = transactionalManager.transaction { tx ->
             eventRepository.hentAlleEventerMedLås(EventNøkkel(Fagsystem.PUNSJ, eksternId.toString()), tx)
@@ -98,7 +103,7 @@ class EventRepositoryPerLinjeForKonverteringTest() : AbstractK9LosIntegrationTes
             eventRepository.hentAlleDirtyEventerNummerertMedLås(Fagsystem.PUNSJ, eksternId.toString(), tx)
         }
         assertThat(alleDirtyEventerNummerert.size).isEqualTo(1)
-        assertThat(K9PunsjEventDto.fraEventLagret(alleDirtyEventerNummerert[0].second).status).isEqualTo(Oppgavestatus.VENTER)
+        assertThat(alleDirtyEventerNummerert[0].second.punsjEventDto.status).isEqualTo(Oppgavestatus.VENTER)
 
         val førsteLagredeEvent = transactionalManager.transaction { tx ->
             eventRepository.hent(
@@ -108,7 +113,7 @@ class EventRepositoryPerLinjeForKonverteringTest() : AbstractK9LosIntegrationTes
                 tx
             )
         }
-        assertThat(K9PunsjEventDto.fraEventLagret(førsteLagredeEvent).status).isEqualTo(Oppgavestatus.AAPEN)
+        assertThat(førsteLagredeEvent.punsjEventDto.status).isEqualTo(Oppgavestatus.AAPEN)
     }
 
     @Test
@@ -209,7 +214,7 @@ class EventRepositoryPerLinjeForKonverteringTest() : AbstractK9LosIntegrationTes
             )
                 .sortedBy { LocalDateTime.parse(it.eksternVersjon) }[0]
         }
-        assertThat(K9PunsjEventDto.fraEventLagret(uvasketEventLagret).status).isEqualTo(Oppgavestatus.VENTER)
+        assertThat(uvasketEventLagret.punsjEventDto.status).isEqualTo(Oppgavestatus.VENTER)
 
         transactionalManager.transaction { tx ->
             eventRepository.settHistorikkvaskFerdig(Fagsystem.PUNSJ, uvasketEventLagret.eksternId, tx)

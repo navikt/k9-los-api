@@ -28,6 +28,7 @@ import io.prometheus.client.CollectorRegistry
 import io.prometheus.client.exporter.common.TextFormat
 import io.prometheus.client.hotspot.DefaultExports
 import kotlinx.coroutines.Dispatchers
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.DB_AWARE_PARALLELISM
 import kotlinx.coroutines.channels.Channel
 import no.nav.helse.dusseldorf.ktor.auth.AuthStatusPages
 import no.nav.helse.dusseldorf.ktor.auth.allIssuers
@@ -480,7 +481,7 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
 
     val jobbplanlegger = Jobbplanlegger(
         innkommendeJobber = planlagteJobber,
-        coroutineContext = Dispatchers.IO.limitedParallelism(4) + Span.current().asContextElement(),
+        coroutineContext = Dispatchers.IO.limitedParallelism(DB_AWARE_PARALLELISM) + Span.current().asContextElement(),
     )
 
     monitor.subscribe(ApplicationStarted) {

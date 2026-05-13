@@ -81,7 +81,7 @@ private const val KOTEST_TØM_DATA_SQL = """
                 OPPGAVEKO_V3,
                 RESERVASJON_V3,
                 RESERVASJON_V3_ENDRING,
-                oppgave_v3_sendt_dvh,
+                oppgave_v3_sendt_dvh_ekstern,
                 OPPGAVE_PEP_CACHE,
                 oppgavefelt_verdi_part,
                 oppgavefelt_verdi,

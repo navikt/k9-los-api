@@ -7,7 +7,6 @@ import io.ktor.server.routing.*
 import kotliquery.queryOf
 import no.nav.k9.kodeverk.behandling.FagsakYtelseType
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.AvstemmingsTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventRepository
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.RequestContextService
@@ -20,15 +19,11 @@ import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelOrderFelt
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
-import no.nav.k9.los.nyoppgavestyring.query.dto.query.OrderFelt
 import no.nav.k9.los.nyoppgavestyring.query.mapping.EksternFeltverdiOperator
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Repository
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepositoryTxWrapper
 import org.koin.ktor.ext.inject
-import org.slf4j.LoggerFactory
-import java.util.*
-import kotlin.getValue
 
 
 fun Route.forvaltningApis() {
@@ -405,6 +400,90 @@ fun Route.forvaltningApis() {
             }
         }
     }
+
+    get("/feltdefinisjon/{omrade}/{kode}/bruk", {
+        tags("Forvaltning")
+        description = "Hent oppgavekøer og lagrede søk som bruker et spesifikt felt som kriterie"
+        request {
+            pathParameter<String>("omrade") {
+                description = "Området feltdefinisjonen tilhører"
+                example("K9") { value = "K9" }
+            }
+            pathParameter<String>("kode") {
+                description = "Feltdefinisjonens kode (eksternId)"
+                example("ytelsestype") { value = "ytelsestype" }
+            }
+        }
+    }) {
+        requestContextService.withRequestContext(call) {
+            if (pepClient.kanLeggeUtDriftsmelding()) {
+                val område = call.parameters["omrade"].let { if (it == "null" || it == null) null else it }
+                val kode = call.parameters["kode"]!!
+
+                val (køer, lagredeSøk) = transactionalManager.transaction { tx ->
+                    val alleKøer = forvaltningRepository.hentAlleOppgavekoerMedQuery(tx)
+                    val alleLagredeSøk = forvaltningRepository.hentAlleLagredeSøkMedQuery(tx)
+                    alleKøer to alleLagredeSøk
+                }
+
+                val matchendeKøer = køer
+                    .filter { it.oppgaveQuery.inneholderFelt(område, kode) }
+                    .map { OppgavekøFeltbrukDto(id = it.id, tittel = it.tittel) }
+
+                val matchendeSøk = lagredeSøk
+                    .filter { it.oppgaveQuery.inneholderFelt(område, kode) }
+                    .map { LagretSøkFeltbrukDto(id = it.id, tittel = it.tittel, saksbehandlerEpost = it.saksbehandlerEpost) }
+
+                call.respond(FeltbrukDetaljerDto(oppgavekøer = matchendeKøer, lagredeSøk = matchendeSøk))
+            } else {
+                call.respond(HttpStatusCode.Forbidden)
+            }
+        }
+    }
+
+    get("/feltdefinisjon/bruk", {
+        tags("Forvaltning")
+        description = "Hent oversikt over alle feltdefinisjoner som er brukt som kriterie i oppgavekøer og lagrede søk, med antall for hver"
+    }) {
+        requestContextService.withRequestContext(call) {
+            if (pepClient.kanLeggeUtDriftsmelding()) {
+                val (køer, lagredeSøk) = transactionalManager.transaction { tx ->
+                    val alleKøer = forvaltningRepository.hentAlleOppgavekoerMedQuery(tx)
+                    val alleLagredeSøk = forvaltningRepository.hentAlleLagredeSøkMedQuery(tx)
+                    alleKøer to alleLagredeSøk
+                }
+
+                val køTelling = mutableMapOf<Feltreferanse, Int>()
+                for (kø in køer) {
+                    for (ref in kø.oppgaveQuery.hentAlleFeltreferanser()) {
+                        køTelling[ref] = (køTelling[ref] ?: 0) + 1
+                    }
+                }
+
+                val søkTelling = mutableMapOf<Feltreferanse, Int>()
+                for (søk in lagredeSøk) {
+                    for (ref in søk.oppgaveQuery.hentAlleFeltreferanser()) {
+                        søkTelling[ref] = (søkTelling[ref] ?: 0) + 1
+                    }
+                }
+
+                val alleReferanser = køTelling.keys + søkTelling.keys
+                val resultat = alleReferanser.map { ref ->
+                    FeltbrukOversiktDto(
+                        område = ref.område,
+                        kode = ref.kode,
+                        antallOppgavekøer = køTelling[ref] ?: 0,
+                        antallLagredeSøk = søkTelling[ref] ?: 0
+                    )
+                }.sortedWith(compareBy({ it.område ?: "" }, { it.kode }))
+
+                call.respond(resultat)
+            } else {
+                call.respond(HttpStatusCode.Forbidden)
+            }
+        }
+    }
+
 
 }
 
