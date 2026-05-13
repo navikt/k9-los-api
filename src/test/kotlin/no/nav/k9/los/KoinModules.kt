@@ -314,7 +314,6 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
         HistorikkvaskTjeneste(
             eventRepository = get(),
             oppgaveV3Tjeneste = get(),
-            statistikkRepository = get(),
             eventTilOppgaveAdapter = get(),
             transactionalManager = get()
         )

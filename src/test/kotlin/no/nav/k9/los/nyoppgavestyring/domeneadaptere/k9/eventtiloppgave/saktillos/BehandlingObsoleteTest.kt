@@ -18,8 +18,6 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.sak.kontrakt.produksjonsstyring.los.BehandlingMedFagsakDto
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.koin.core.qualifier.named
-import org.koin.test.get
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
@@ -27,26 +25,21 @@ import kotlin.test.assertEquals
 
 class BehandlingObsoleteTest : AbstractK9LosIntegrationTest() {
     private lateinit var eventMapper: SakEventTilOppgaveMapper
-    private val k9SakBerikerKlientLocal: K9SakSystemKlientLocal = mockk<K9SakSystemKlientLocal>()
+    private val k9SakBerikerKlientLocal = mockk<K9SakSystemKlientLocal>()
 
     @BeforeEach
     fun setUp() {
         eventMapper = SakEventTilOppgaveMapper(
-            k9SakBerikerKlient = get()
+            k9SakBerikerKlient = k9SakBerikerKlientLocal
         )
     }
 
     @Test
     fun `Obsolete ytelse på event gir henlagt resultat`() {
-        every { k9SakBerikerKlientLocal.hentBehandling(any()) } returns opprettBehandlingMedFagsakDto(
-            FagsakYtelseType.PLEIEPENGER_SYKT_BARN,
-            BehandlingResultatType.DELVIS_INNVILGET
-        )
-
+        // k9-sak skal ikke kalles for OBSOLETE ytelsestype
         val oppgaveDto = eventMapper.ryddOppObsoleteOgResultatfeilFra2020(
             opprettEvent(FagsakYtelseType.OBSOLETE, BehandlingStatus.UTREDES),
             opprettOppgaveDto(BehandlingResultatType.IKKE_FASTSATT),
-            k9SakBerikerKlientLocal.hentBehandling(UUID.randomUUID())
         )
 
         assertEquals(BehandlingResultatType.HENLAGT_FEILOPPRETTET.kode, oppgaveDto.feltverdier.filter{ it.nøkkel == "resultattype"}.first().verdi)
@@ -62,7 +55,6 @@ class BehandlingObsoleteTest : AbstractK9LosIntegrationTest() {
         val oppgaveDto = eventMapper.ryddOppObsoleteOgResultatfeilFra2020(
             opprettEvent(FagsakYtelseType.PLEIEPENGER_SYKT_BARN, BehandlingStatus.AVSLUTTET),
             opprettOppgaveDto(BehandlingResultatType.IKKE_FASTSATT),
-            k9SakBerikerKlientLocal.hentBehandling(UUID.randomUUID())
         )
 
         assertEquals(BehandlingResultatType.DELVIS_INNVILGET.kode, oppgaveDto.feltverdier.filter{ it.nøkkel == "resultattype"}.first().verdi)
@@ -75,7 +67,6 @@ class BehandlingObsoleteTest : AbstractK9LosIntegrationTest() {
         val oppgaveDto = eventMapper.ryddOppObsoleteOgResultatfeilFra2020(
             opprettEvent(FagsakYtelseType.PLEIEPENGER_SYKT_BARN, BehandlingStatus.AVSLUTTET),
             opprettOppgaveDto(BehandlingResultatType.IKKE_FASTSATT),
-            k9SakBerikerKlientLocal.hentBehandling(UUID.randomUUID())
         )
 
         assertEquals(BehandlingResultatType.HENLAGT_FEILOPPRETTET.kode, oppgaveDto.feltverdier.filter{ it.nøkkel == "resultattype"}.first().verdi)
@@ -91,7 +82,6 @@ class BehandlingObsoleteTest : AbstractK9LosIntegrationTest() {
         val oppgaveDto = eventMapper.ryddOppObsoleteOgResultatfeilFra2020(
             opprettEvent(FagsakYtelseType.PLEIEPENGER_SYKT_BARN, BehandlingStatus.AVSLUTTET),
             opprettOppgaveDto(BehandlingResultatType.IKKE_FASTSATT),
-            k9SakBerikerKlientLocal.hentBehandling(UUID.randomUUID())
         )
 
         assertEquals(BehandlingResultatType.HENLAGT_FEILOPPRETTET.kode, oppgaveDto.feltverdier.filter{ it.nøkkel == "resultattype"}.first().verdi)

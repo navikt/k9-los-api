@@ -12,8 +12,22 @@ class Oppgavetype(
     val oppgavebehandlingsUrlTemplate: String?,
     val oppgavefelter: Set<Oppgavefelt>,
 ) {
+    // Indekserte oppslag, slik at vi unngår O(felter) lineærsøk pr feltverdi-rad ved load.
+    private val feltByEksternId: Map<String, Oppgavefelt> by lazy {
+        oppgavefelter.associateBy { it.feltDefinisjon.eksternId }
+    }
+    private val feltById: Map<Long, Oppgavefelt> by lazy {
+        oppgavefelter.mapNotNull { felt -> felt.id?.let { id -> id to felt } }.toMap()
+    }
+
     fun hentFelt(feltdefinisjonId: String): Oppgavefelt {
-        return oppgavefelter.first { it.feltDefinisjon.eksternId == feltdefinisjonId }
+        return feltByEksternId[feltdefinisjonId]
+            ?: throw NoSuchElementException("Fant ikke oppgavefelt med feltdefinisjon eksternId=$feltdefinisjonId")
+    }
+
+    fun hentFeltById(oppgavefeltId: Long): Oppgavefelt {
+        return feltById[oppgavefeltId]
+            ?: throw NoSuchElementException("Fant ikke oppgavefelt med id=$oppgavefeltId")
     }
 
     constructor(

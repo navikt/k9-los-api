@@ -1,6 +1,5 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos
 
-import com.fasterxml.jackson.module.kotlin.readValue
 import no.nav.k9.kodeverk.behandling.BehandlingResultatType
 import no.nav.k9.kodeverk.behandling.BehandlingStatus
 import no.nav.k9.kodeverk.behandling.BehandlingÅrsakType
@@ -11,7 +10,6 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.EventHendels
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventLagret
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventDto
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.beriker.K9SakSystemKlientInterfaceKludge
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.*
 import no.nav.k9.sak.kontrakt.aksjonspunkt.AksjonspunktTilstandDto
@@ -26,7 +24,7 @@ class SakEventTilOppgaveMapper(
         if (eventLagret.fagsystem != Fagsystem.K9SAK) {
             throw IllegalArgumentException("Fagsystem er ikke SAK")
         }
-        val event = LosObjectMapper.instance.readValue<K9SakEventDto>(eventLagret.eventJson)
+        val event = eventLagret.eventDto
         var oppgaveDto = OppgaveDto(
             eksternId = event.eksternId.toString(),
             eksternVersjon = event.eventTid.toString(),
@@ -39,9 +37,8 @@ class SakEventTilOppgaveMapper(
             feltverdier = lagFeltverdier(event, forrigeOppgave)
         )
 
-        val nyeBehandlingsopplysningerFraK9Sak = k9SakBerikerKlient.hentBehandling(event.eksternId!!) //TODO: Denne kalles mer enn nødvendig. Cache?
-        oppgaveDto = ryddOppObsoleteOgResultatfeilFra2020(event, oppgaveDto, nyeBehandlingsopplysningerFraK9Sak)
-        
+        oppgaveDto = ryddOppObsoleteOgResultatfeilFra2020(event, oppgaveDto)
+
         if (event.eventHendelse == EventHendelse.VASKEEVENT) {
             return VaskOppgaveversjon(
                 dto = oppgaveDto,
@@ -56,7 +53,37 @@ class SakEventTilOppgaveMapper(
         return eventLagret.eventDto.eventHendelse == EventHendelse.VASKEEVENT
     }
 
+    /**
+     * Rydder opp i obsolete ytelsestyper og resultatfeil fra 2020.
+     * Kaller k9-sak kun når det faktisk trengs (AVSLU + IKKE_FASTSATT).
+     */
     internal fun ryddOppObsoleteOgResultatfeilFra2020(
+        event: K9SakEventDto,
+        oppgaveDto: OppgaveDto,
+    ): OppgaveDto {
+        // OBSOLETE ytelsetype kan avgjøres uten k9-sak-kall
+        if (event.ytelseTypeKode == FagsakYtelseType.OBSOLETE.kode) {
+            return oppgaveDto.copy(status = "LUKKET").erstattFeltverdi(
+                OppgaveFeltverdiDto(
+                    "resultattype", BehandlingResultatType.HENLAGT_FEILOPPRETTET.kode
+                )
+            )
+        }
+
+        // Kun AVSLU-behandlinger med IKKE_FASTSATT resultat trenger oppslag
+        val trengerOppslag = event.behandlingStatus == "AVSLU"
+                && oppgaveDto.feltverdier.filter { it.nøkkel == "resultattype" }.first().verdi == "IKKE_FASTSATT"
+
+        if (!trengerOppslag) {
+            return oppgaveDto
+        }
+
+        val nyeBehandlingsopplysningerFraK9Sak = k9SakBerikerKlient.hentBehandling(event.eksternId!!)
+        return ryddOppMedBehandlingsopplysninger(event, oppgaveDto, nyeBehandlingsopplysningerFraK9Sak)
+    }
+
+
+    private fun ryddOppMedBehandlingsopplysninger(
         event: K9SakEventDto,
         oppgaveDto: OppgaveDto,
         nyeBehandlingsopplysningerFraK9Sak: BehandlingMedFagsakDto?,
@@ -69,33 +96,18 @@ class SakEventTilOppgaveMapper(
                 )
             )
         }
-        if (event.ytelseTypeKode == FagsakYtelseType.OBSOLETE.kode) {
+        if (nyeBehandlingsopplysningerFraK9Sak.sakstype == FagsakYtelseType.OBSOLETE) {
             return oppgaveDto.copy(status = "LUKKET").erstattFeltverdi(
                 OppgaveFeltverdiDto(
                     "resultattype", BehandlingResultatType.HENLAGT_FEILOPPRETTET.kode
                 )
             )
         }
-
-        if (event.behandlingStatus == "AVSLU"
-            && oppgaveDto.feltverdier.filter { it.nøkkel == "resultattype" }.first().verdi == "IKKE_FASTSATT"
-        ) {
-            if (nyeBehandlingsopplysningerFraK9Sak.sakstype == FagsakYtelseType.OBSOLETE) {
-                return oppgaveDto.copy(status = "LUKKET").erstattFeltverdi(
-                    OppgaveFeltverdiDto(
-                        "resultattype", BehandlingResultatType.HENLAGT_FEILOPPRETTET.kode
-                    )
-                )
-            } else {
-                return oppgaveDto.erstattFeltverdi(
-                    OppgaveFeltverdiDto(
-                        "resultattype", nyeBehandlingsopplysningerFraK9Sak.behandlingResultatType.kode
-                    )
-                )
-            }
-        }
-
-        return oppgaveDto
+        return oppgaveDto.erstattFeltverdi(
+            OppgaveFeltverdiDto(
+                "resultattype", nyeBehandlingsopplysningerFraK9Sak.behandlingResultatType.kode
+            )
+        )
     }
 
     companion object {
