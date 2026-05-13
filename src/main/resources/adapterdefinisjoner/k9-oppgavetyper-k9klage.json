@@ -127,11 +127,6 @@
           "påkrevd": false
         },
         {
-          "id": "tidligereAksjonspunkt",
-          "visPåOppgave": true,
-          "påkrevd": false
-        },
-        {
           "id": "aktivVenteårsak",
           "visPåOppgave": true,
           "påkrevd": false

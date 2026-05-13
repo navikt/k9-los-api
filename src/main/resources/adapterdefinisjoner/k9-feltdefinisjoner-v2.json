@@ -190,7 +190,7 @@
       "beskrivelse": "Løsbare- (se aksjonspunkt som kan løses), fremtidige- (se Løsbare og fremtidige aksjonspunkt) og løste aksjonspunkt",
       "listetype": true,
       "tolkesSom": "String",
-      "synlighet": "UNDER_STREKEN",
+      "synlighet": "SKJULT",
       "kodeverkreferanse": {
         "område": "K9",
         "eksternId": "Aksjonspunkt"
@@ -202,20 +202,7 @@
       "beskrivelse": "Løsbare aksjonspunkt (se aksjonspunkt som kan løses) og åpne aksjonspunkter som kan løses først når behandlingen når riktig steg",
       "listetype": true,
       "tolkesSom": "String",
-      "synlighet": "UNDER_STREKEN",
-      "kodeverkreferanse": {
-        "område": "K9",
-        "eksternId": "Aksjonspunkt"
-      }
-    },
-    {
-      "id": "tidligereAksjonspunkt",
-      "visningsnavn": "Tidligere aksjonspunkt",
-      "beskrivelse": "Aksjonspunkter som er utført eller avbrutt",
-      "listetype": true,
-      "tolkesSom": "String",
-      "visTilBruker": true,
-      "kokriterie": false,
+      "synlighet": "SKJULT",
       "kodeverkreferanse": {
         "område": "K9",
         "eksternId": "Aksjonspunkt"
@@ -223,8 +210,8 @@
     },
     {
       "id": "løsbartAksjonspunkt",
-      "visningsnavn": "Aksjonspunkt: løsbare",
-      "beskrivelse": "Åpne aksjonspunkt som er løsbart akkurat nå, fordi de hører til steget behandlingen står i",
+      "visningsnavn": "Aksjonspunkt: løsbart",
+      "beskrivelse": "Åpent aksjonspunkt som er løsbart akkurat nå, fordi det hører til steget behandlingen står i",
       "listetype": false,
       "tolkesSom": "String",
       "synlighet": "OVER_STREKEN",
@@ -239,8 +226,7 @@
       "beskrivelse": "Aksjonspunkter som er utført",
       "listetype": true,
       "tolkesSom": "String",
-      "visTilBruker": true,
-      "kokriterie": false,
+      "synlighet": "OVER_STREKEN",
       "kodeverkreferanse": {
         "område": "K9",
         "eksternId": "Aksjonspunkt"
@@ -252,8 +238,7 @@
       "beskrivelse": "Aksjonspunkter som er avbrutt",
       "listetype": true,
       "tolkesSom": "String",
-      "visTilBruker": true,
-      "kokriterie": false,
+      "synlighet": "OVER_STREKEN",
       "kodeverkreferanse": {
         "område": "K9",
         "eksternId": "Aksjonspunkt"
@@ -265,8 +250,7 @@
       "beskrivelse": "Åpne aksjonspunkter som ikke kan løses i steget behandlingen står i nå",
       "listetype": true,
       "tolkesSom": "String",
-      "visTilBruker": true,
-      "kokriterie": false,
+      "synlighet": "OVER_STREKEN",
       "kodeverkreferanse": {
         "område": "K9",
         "eksternId": "Aksjonspunkt"
