@@ -226,7 +226,7 @@
       "beskrivelse": "Aksjonspunkter som er utført",
       "listetype": true,
       "tolkesSom": "String",
-      "synlighet": "UNDER_STREKEN",
+      "synlighet": "SKJULT",
       "kodeverkreferanse": {
         "område": "K9",
         "eksternId": "Aksjonspunkt"
@@ -238,7 +238,7 @@
       "beskrivelse": "Aksjonspunkter som er avbrutt",
       "listetype": true,
       "tolkesSom": "String",
-      "synlighet": "UNDER_STREKEN",
+      "synlighet": "SKJULT",
       "kodeverkreferanse": {
         "område": "K9",
         "eksternId": "Aksjonspunkt"
@@ -250,7 +250,7 @@
       "beskrivelse": "Åpne aksjonspunkter som ikke kan løses i steget behandlingen står i nå",
       "listetype": true,
       "tolkesSom": "String",
-      "synlighet": "UNDER_STREKEN",
+      "synlighet": "SKJULT",
       "kodeverkreferanse": {
         "område": "K9",
         "eksternId": "Aksjonspunkt"
