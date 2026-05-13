@@ -22,7 +22,7 @@ class StatistikkRepository(
                         from oppgave_v3 ov
                         join oppgavetype o ON ov.oppgavetype_id = o.id 
                         where o.ekstern_id in ('k9sak', 'k9klage')
-                          and not exists (select * from OPPGAVE_V3_SENDT_DVH os where os.id = ov.id)
+                          and not exists (select * from OPPGAVE_V3_SENDT_DVH_EKSTERN os where os.ekstern_id = ov.ekstern_id and os.ekstern_versjon = ov.ekstern_versjon)
                     """.trimIndent()
                 )
                     .map { row ->
@@ -37,7 +37,9 @@ class StatistikkRepository(
             it.run(
                 queryOf(
                     """
-                        insert into OPPGAVE_V3_SENDT_DVH(id) values (:id)
+                        insert into OPPGAVE_V3_SENDT_DVH_EKSTERN(ekstern_id, ekstern_versjon)
+                        select ov.ekstern_id, ov.ekstern_versjon from oppgave_v3 ov where ov.id = :id
+                        on conflict (ekstern_id, ekstern_versjon) do nothing
                     """.trimIndent(),
                     mapOf("id" to id)
                 ).asUpdate
@@ -45,24 +47,14 @@ class StatistikkRepository(
         }
     }
 
+
     fun fjernSendtMarkering(oppgave: OppgaveNøkkelDto, tx: TransactionalSession) {
         tx.run(
             queryOf("""
-                delete from oppgave_v3_sendt_dvh ov3sd 
-                where ov3sd.id IN (
-                    SELECT ov3.id 
-                    FROM oppgave_v3 ov3 
-                    join oppgavetype ot ON ov3.oppgavetype_id = ot.id 
-                    join omrade o ON ot.omrade_id = o.id 
-                    WHERE ov3.ekstern_id = :id 
-                      AND ot.ekstern_id = :type 
-                      AND o.ekstern_id = :omrade
-                )
+                delete from OPPGAVE_V3_SENDT_DVH_EKSTERN
+                where ekstern_id = :id
             """.trimIndent()
-                , mapOf(
-                    "id" to oppgave.oppgaveEksternId,
-                    "type" to oppgave.oppgaveTypeEksternId,
-                    "omrade" to oppgave.områdeEksternId)
+                , mapOf("id" to oppgave.oppgaveEksternId)
             ).asUpdate
         )
     }
@@ -72,14 +64,21 @@ class StatistikkRepository(
             if (oppgavetype != null) {
                 it.run(
                     queryOf(
-                        """delete from oppgave_v3_sendt_dvh ov3sd where ov3sd.id IN (SELECT ov3.id FROM oppgave_v3 ov3 join oppgavetype ot ON ov3.oppgavetype_id = ot.id WHERE ot.ekstern_id = :oppgavetype)"""
+                        """
+                        delete from OPPGAVE_V3_SENDT_DVH_EKSTERN e
+                        where e.ekstern_id IN (
+                            SELECT ov3.ekstern_id FROM oppgave_v3 ov3
+                            join oppgavetype ot ON ov3.oppgavetype_id = ot.id
+                            WHERE ot.ekstern_id = :oppgavetype
+                        )
+                        """.trimIndent()
                     , mapOf("oppgavetype" to oppgavetype)
                     ).asUpdate
                 )
             } else {
                 it.run(
                     queryOf(
-                        """delete from oppgave_v3_sendt_dvh"""
+                        """delete from OPPGAVE_V3_SENDT_DVH_EKSTERN"""
                     ).asUpdate
                 )
             }
