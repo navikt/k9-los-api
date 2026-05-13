@@ -1,8 +1,9 @@
 package no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype
 
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.feltutlederforlagring.GyldigeFeltutledere
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonRepository
+import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Feltdefinisjoner
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.Område
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
 import org.slf4j.Logger
@@ -18,27 +19,20 @@ class OppgavetypeTjeneste(
 
     private val log: Logger = LoggerFactory.getLogger(OppgavetypeTjeneste::class.java)
 
-    fun oppdater(innkommendeOppgavetyperDto: OppgavetyperDto) {
-        if (innkommendeOppgavetyperDto.oppgavetyper.isNotEmpty()) {
-            log.info("mottatt oppgavetypeDto, med behandlingsurlTemplate: ${innkommendeOppgavetyperDto.oppgavetyper.elementAt(0).oppgavebehandlingsUrlTemplate}")
-        } else {
-            log.info("OppgavetypeTjeneste.oppdater -- innkommendeOppgavetyperDto.oppgavetyper er tom!")
-        }
+    fun oppdater(
+        områdeNavn: String,
+        definisjonskilde: String,
+        lagOppgavetyper: (Område, Feltdefinisjoner, GyldigeFeltutledere) -> Oppgavetyper
+    ) {
         transactionalManager.transaction { tx ->
-            val område = områdeRepository.hentOmråde(innkommendeOppgavetyperDto.område, tx)
-            // lås feltdefinisjoner for område og hent opp
+            val område = områdeRepository.hentOmråde(områdeNavn, tx)
             val eksisterendeFeltdefinisjoner = feltdefinisjonRepository.hent(område, tx)
-            val innkommendeOppgavetyper = Oppgavetyper(
-                innkommendeOppgavetyperDto,
-                område,
-                eksisterendeFeltdefinisjoner,
-                gyldigeFeltutledere
-            )
+            val innkommendeOppgavetyper = lagOppgavetyper(område, eksisterendeFeltdefinisjoner, gyldigeFeltutledere)
 
-            val eksisterendeOppgavetyper = oppgavetypeRepository.hent(område, innkommendeOppgavetyperDto.definisjonskilde, tx)
+            val eksisterendeOppgavetyper = oppgavetypeRepository.hent(område, definisjonskilde, tx)
             val (sletteListe, leggtilListe, oppdaterListe) = eksisterendeOppgavetyper.finnForskjell(innkommendeOppgavetyper)
-            log.info("antall sletteliste oppgavetypedto: ${sletteListe.oppgavetyper.size}")
-            log.info("antall leggtilListe oppgavetypedto: ${leggtilListe.oppgavetyper.size}")
+            log.info("antall sletteliste oppgavetype: ${sletteListe.oppgavetyper.size}")
+            log.info("antall leggtilListe oppgavetype: ${leggtilListe.oppgavetyper.size}")
             if (oppdaterListe.isNotEmpty()) {
                 log.info("urltemplate i oppdaterListe: ${oppdaterListe[0].oppgavetype.oppgavebehandlingsUrlTemplate}")
             } else {

@@ -1,5 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.lagretsok
 
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.K9FeltIder
 import no.nav.k9.los.nyoppgavestyring.kodeverk.PersonBeskyttelseType
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
@@ -103,7 +104,7 @@ class LagretSøk private constructor(
                 ),
                 FeltverdiOppgavefilter(
                     område = "K9",
-                    kode = "ytelsestype",
+                    kode = K9FeltIder.YTELSESTYPE,
                     operator = EksternFeltverdiOperator.IN,
                     verdi = emptyList()
                 )

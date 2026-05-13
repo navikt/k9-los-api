@@ -3,6 +3,7 @@ package no.nav.k9.los.nyoppgavestyring.sisteoppgaver
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.extension.kotlin.asContextElement
 import kotlinx.coroutines.*
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.K9FeltIder
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.azuregraph.IAzureGraphService
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
@@ -53,7 +54,7 @@ class SisteOppgaverTjeneste(
                                     oppgave,
                                     grupperForSaksbehandler = grupperForSaksbehandler
                                 )
-                                val personPdl = oppgave.hentVerdi("aktorId")?.let {
+                                val personPdl = oppgave.hentVerdi(K9FeltIder.AKTOR_ID)?.let {
                                     pdlService.person(it)
                                 }
                                 Triple(harTilgang, personPdl, oppgave)

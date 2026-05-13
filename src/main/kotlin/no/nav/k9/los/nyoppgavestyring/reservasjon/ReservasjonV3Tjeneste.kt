@@ -3,6 +3,7 @@ package no.nav.k9.los.nyoppgavestyring.reservasjon
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
 import kotliquery.TransactionalSession
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.K9FeltIder
 import no.nav.k9.los.nyoppgavestyring.feilhandtering.FinnerIkkeDataException
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.Action
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
@@ -315,9 +316,9 @@ class ReservasjonV3Tjeneste(
         saksbehandler: Saksbehandler
     ): Boolean {
         val hosBeslutter =
-            oppgave.hentVerdi("liggerHosBeslutter")?.toBoolean() ?: false //TODO gjøre oppgavetypeagnostisk
+            oppgave.hentVerdi(K9FeltIder.LIGGER_HOS_BESLUTTER)?.toBoolean() ?: false //TODO gjøre oppgavetypeagnostisk
         if (!hosBeslutter) return false
-        val ansvarligSaksbehandlerIdent = oppgave.hentVerdi("ansvarligSaksbehandler") //TODO gjøre oppgavetypeagnostisk
+        val ansvarligSaksbehandlerIdent = oppgave.hentVerdi(K9FeltIder.ANSVARLIG_SAKSBEHANDLER) //TODO gjøre oppgavetypeagnostisk
             ?: throw IllegalStateException("Kan ikke beslutte på oppgave uten ansvarlig saksbehandler")
         val saksbehandlerIdentSomSkalHaReservasjon = saksbehandler.navident
 

@@ -1,6 +1,7 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.punsjtillos
 
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.K9FeltIder
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventLagret
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventDto
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
@@ -73,57 +74,57 @@ class PunsjEventTilOppgaveMapper {
             event: K9PunsjEventDto,
             forrigeOppgave: OppgaveV3?
         ): List<OppgaveFeltverdiDto> {
-            val journalførtTidspunkt = forrigeOppgave?.hentVerdi("journalfortTidspunkt") ?: event.journalførtTidspunkt?.toString()
+            val journalførtTidspunkt = forrigeOppgave?.hentVerdi(K9FeltIder.JOURNALFORT_TIDSPUNKT) ?: event.journalførtTidspunkt?.toString()
 
             return listOfNotNull(
                 event.aktørId?.let {
                     OppgaveFeltverdiDto(
-                        nøkkel = "aktorId",
+                        nøkkel = K9FeltIder.AKTOR_ID,
                         verdi = it.aktørId,
                     )
                 },
                 event.pleietrengendeAktørId?.let {
                     OppgaveFeltverdiDto(
-                        nøkkel = "pleietrengendeAktorId",
+                        nøkkel = K9FeltIder.PLEIETRENGENDE_AKTOR_ID,
                         verdi = it,
                     )
                 },
                 OppgaveFeltverdiDto(
-                    nøkkel = "behandlingTypekode",
-                    verdi = event.type ?: forrigeOppgave?.hentVerdi("behandlingTypekode") ?: BehandlingType.UKJENT.kode,
+                    nøkkel = K9FeltIder.BEHANDLING_TYPEKODE,
+                    verdi = event.type ?: forrigeOppgave?.hentVerdi(K9FeltIder.BEHANDLING_TYPEKODE) ?: BehandlingType.UKJENT.kode,
                 ),
                 OppgaveFeltverdiDto(
-                    nøkkel = "ytelsestype",
-                    verdi = event.ytelse ?: forrigeOppgave?.hentVerdi("ytelsestype") ?: FagsakYtelseType.UKJENT.kode,
+                    nøkkel = K9FeltIder.YTELSESTYPE,
+                    verdi = event.ytelse ?: forrigeOppgave?.hentVerdi(K9FeltIder.YTELSESTYPE) ?: FagsakYtelseType.UKJENT.kode,
                 ),
                 event.ferdigstiltAv?.let {
                     OppgaveFeltverdiDto(
-                        nøkkel = "ansvarligSaksbehandler",
+                        nøkkel = K9FeltIder.ANSVARLIG_SAKSBEHANDLER,
                         verdi = it,
                     )
                 },
                 OppgaveFeltverdiDto(
-                    nøkkel = "journalpostId",
+                    nøkkel = K9FeltIder.JOURNALPOST_ID,
                     verdi = event.journalpostId.verdi.toString(),
                 ),
                 OppgaveFeltverdiDto(
-                    nøkkel = "journalfortTidspunkt",
+                    nøkkel = K9FeltIder.JOURNALFORT_TIDSPUNKT,
                     verdi = journalførtTidspunkt,
                 ),
                 OppgaveFeltverdiDto(
-                    nøkkel = "journalfort",
+                    nøkkel = K9FeltIder.JOURNALFORT,
                     verdi = (journalførtTidspunkt != null).toString(),
                 ),
                 OppgaveFeltverdiDto(
-                    nøkkel = "registrertDato",
-                    verdi = forrigeOppgave?.hentVerdi("registrertDato") ?: event.eventTid.toString(),
+                    nøkkel = K9FeltIder.REGISTRERT_DATO,
+                    verdi = forrigeOppgave?.hentVerdi(K9FeltIder.REGISTRERT_DATO) ?: event.eventTid.toString(),
                 ),
                 OppgaveFeltverdiDto(
-                    nøkkel = "mottattDato",
-                    verdi = forrigeOppgave?.hentVerdi("mottattDato") ?: event.eventTid.toString(),
+                    nøkkel = K9FeltIder.MOTTATT_DATO,
+                    verdi = forrigeOppgave?.hentVerdi(K9FeltIder.MOTTATT_DATO) ?: event.eventTid.toString(),
                 ),
                 OppgaveFeltverdiDto(
-                    nøkkel = "helautomatiskBehandlet",
+                    nøkkel = K9FeltIder.HELAUTOMATISK_BEHANDLET,
                     verdi = "false"
                 )
             )

@@ -1,29 +1,11 @@
 package no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon
 
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.Område
-import no.nav.k9.los.nyoppgavestyring.query.mapping.transientfeltutleder.GyldigeTransientFeltutleder
 
 class Feltdefinisjoner(
     val område: Område,
     val feltdefinisjoner: Set<Feltdefinisjon>
 ) {
-
-    constructor(feltdefinisjonerDto: FeltdefinisjonerDto, område: Område) : this(
-        område = område,
-        feltdefinisjoner = feltdefinisjonerDto.feltdefinisjoner.map { feltdefinisjonDto ->
-            Feltdefinisjon(
-                eksternId = feltdefinisjonDto.id,
-                område = område,
-                visningsnavn = feltdefinisjonDto.visningsnavn,
-                beskrivelse = feltdefinisjonDto.beskrivelse,
-                listetype = feltdefinisjonDto.listetype,
-                tolkesSom = feltdefinisjonDto.tolkesSom,
-                synlighet = feltdefinisjonDto.synlighet,
-                kodeverkreferanse = feltdefinisjonDto.kodeverkreferanse?.let { kodeverkreferanseDto -> Kodeverkreferanse(kodeverkreferanseDto) },
-                transientFeltutleder = feltdefinisjonDto.transientFeltutleder?.let { GyldigeTransientFeltutleder.hentFeltutleder(it) }
-            )
-        }.toSet()
-    )
 
     fun hentFeltdefinisjon(eksternId: String) : Feltdefinisjon {
         return feltdefinisjoner.firstOrNull { feltdefinisjon -> feltdefinisjon.eksternId == eksternId }

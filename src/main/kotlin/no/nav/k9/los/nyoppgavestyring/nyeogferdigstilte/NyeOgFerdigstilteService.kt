@@ -3,6 +3,7 @@ package no.nav.k9.los.nyoppgavestyring.nyeogferdigstilte
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.K9FeltIder
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.Cache
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.CacheObject
 import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
@@ -84,7 +85,7 @@ class NyeOgFerdigstilteService(
                     leggTilKriterier(gruppe)
                     add(
                         FeltverdiOppgavefilter(
-                            "K9", "mottattDato", EksternFeltverdiOperator.EQUALS, listOf(dato.toString())
+                            "K9", K9FeltIder.MOTTATT_DATO, EksternFeltverdiOperator.EQUALS, listOf(dato.toString())
                         )
                     )
                     add(
@@ -109,7 +110,7 @@ class NyeOgFerdigstilteService(
                     leggTilKriterier(gruppe)
                     add(
                         FeltverdiOppgavefilter(
-                            "K9", "mottattDato", EksternFeltverdiOperator.EQUALS, listOf(dato.toString())
+                            "K9", K9FeltIder.MOTTATT_DATO, EksternFeltverdiOperator.EQUALS, listOf(dato.toString())
                         )
                     )
                     add(
@@ -161,7 +162,7 @@ class NyeOgFerdigstilteService(
                 add(
                     FeltverdiOppgavefilter(
                         "K9",
-                        "ytelsestype",
+                        K9FeltIder.YTELSESTYPE,
                         EksternFeltverdiOperator.EQUALS,
                         listOf(FagsakYtelseType.OMSORGSPENGER.kode)
                     )
@@ -172,7 +173,7 @@ class NyeOgFerdigstilteService(
                 add(
                     FeltverdiOppgavefilter(
                         "K9",
-                        "ytelsestype",
+                        K9FeltIder.YTELSESTYPE,
                         EksternFeltverdiOperator.IN,
                         listOf(
                             FagsakYtelseType.OMSORGSDAGER.kode,
@@ -188,7 +189,7 @@ class NyeOgFerdigstilteService(
                 add(
                     FeltverdiOppgavefilter(
                         "K9",
-                        "ytelsestype",
+                        K9FeltIder.YTELSESTYPE,
                         EksternFeltverdiOperator.EQUALS,
                         listOf(FagsakYtelseType.OLP.kode)
                     )
@@ -199,7 +200,7 @@ class NyeOgFerdigstilteService(
                 add(
                     FeltverdiOppgavefilter(
                         "K9",
-                        "ytelsestype",
+                        K9FeltIder.YTELSESTYPE,
                         EksternFeltverdiOperator.EQUALS,
                         listOf(FagsakYtelseType.PLEIEPENGER_SYKT_BARN.kode)
                     )
@@ -209,7 +210,7 @@ class NyeOgFerdigstilteService(
             NyeOgFerdigstilteGruppe.PPN -> {
                 add(
                     FeltverdiOppgavefilter(
-                        "K9", "ytelsestype", EksternFeltverdiOperator.EQUALS, listOf(FagsakYtelseType.PPN.kode)
+                        "K9", K9FeltIder.YTELSESTYPE, EksternFeltverdiOperator.EQUALS, listOf(FagsakYtelseType.PPN.kode)
                     )
                 )
             }

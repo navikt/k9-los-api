@@ -1,15 +1,17 @@
 package no.nav.k9.los.nyoppgavestyring.mottak.oppgave
 
-import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonDto
+import no.nav.k9.los.nyoppgavestyring.feltutlederforlagring.AkkumulertVentetidSaksbehandler
+import no.nav.k9.los.nyoppgavestyring.feltutlederforlagring.GyldigeFeltutledere
+import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Feltdefinisjon
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonTjeneste
-import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonerDto
+import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Feltdefinisjoner
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Synlighet
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.Område
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavefeltDto
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeDto
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.Oppgavefelt
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.Oppgavetype
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeTjeneste
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetyperDto
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.Oppgavetyper
 import org.koin.test.KoinTest
 import org.koin.test.get
 import java.time.LocalDateTime
@@ -25,56 +27,55 @@ class RedusertOppgaveTestmodellBuilder(
 
     fun byggOppgavemodell() {
         områdeRepository.lagre(eksternId = område.eksternId)
-        oppgavetypeTjeneste.oppdater(
-            OppgavetyperDto(
-                område.eksternId,
-                definisjonskilde = "unittest",
-                oppgavetyper = emptySet()
-            )
-        )
-        feltdefinisjonTjeneste.oppdater(lagFeltdefinisjonDto())
-        oppgavetypeTjeneste.oppdater(lagOppgavetypeDto())
+        oppgavetypeTjeneste.oppdater(område.eksternId, "unittest") { o, _, _ ->
+            Oppgavetyper(område = o, oppgavetyper = emptySet())
+        }
+        feltdefinisjonTjeneste.oppdater(område.eksternId) { o -> lagFeltdefinisjoner(o) }
+        oppgavetypeTjeneste.oppdater(område.eksternId, "k9-sak-til-los") { o, fd, gfu ->
+            lagOppgavetyper(o, fd, gfu)
+        }
     }
 
-    fun lagFeltdefinisjonDto(): FeltdefinisjonerDto {
-        return FeltdefinisjonerDto(
-            område = område.eksternId,
+    fun lagFeltdefinisjoner(område: Område): Feltdefinisjoner {
+        return Feltdefinisjoner(
+            område = område,
             feltdefinisjoner = setOf(
-                FeltdefinisjonDto(
-                    id = "aksjonspunkt",
+                Feltdefinisjon(
+                    eksternId = "aksjonspunkt",
+                    område = område,
                     visningsnavn = "Test",
                     beskrivelse = null,
                     listetype = true,
                     tolkesSom = "String",
-
                     synlighet = Synlighet.UNDER_STREKEN,
                     kodeverkreferanse = null,
                     transientFeltutleder = null,
                 ),
-                FeltdefinisjonDto(
-                    id = "opprettet",
+                Feltdefinisjon(
+                    eksternId = "opprettet",
+                    område = område,
                     visningsnavn = "Test",
                     beskrivelse = null,
                     listetype = false,
                     tolkesSom = "Date",
-
                     synlighet = Synlighet.UNDER_STREKEN,
                     kodeverkreferanse = null,
                     transientFeltutleder = null,
                 ),
-                FeltdefinisjonDto(
-                    id = "aktorId",
+                Feltdefinisjon(
+                    eksternId = "aktorId",
+                    område = område,
                     visningsnavn = "Test",
                     beskrivelse = null,
                     listetype = false,
                     tolkesSom = "String",
-
                     synlighet = Synlighet.UNDER_STREKEN,
                     kodeverkreferanse = null,
                     transientFeltutleder = null,
                 ),
-                FeltdefinisjonDto(
-                    id = "akkumulertVentetidSaksbehandler",
+                Feltdefinisjon(
+                    eksternId = "akkumulertVentetidSaksbehandler",
+                    område = område,
                     visningsnavn = "Test",
                     beskrivelse = null,
                     listetype = false,
@@ -83,8 +84,9 @@ class RedusertOppgaveTestmodellBuilder(
                     kodeverkreferanse = null,
                     transientFeltutleder = null,
                 ),
-                FeltdefinisjonDto(
-                    id = "avventerSaksbehandler",
+                Feltdefinisjon(
+                    eksternId = "avventerSaksbehandler",
+                    område = område,
                     visningsnavn = "Test",
                     beskrivelse = null,
                     listetype = false,
@@ -97,40 +99,46 @@ class RedusertOppgaveTestmodellBuilder(
         )
     }
 
-    fun lagOppgavetypeDto(): OppgavetyperDto {
-        return OppgavetyperDto(
-            område = område.eksternId,
-            definisjonskilde = "k9-sak-til-los",
+    fun lagOppgavetyper(område: Område, feltdefinisjoner: Feltdefinisjoner, gyldigeFeltutledere: GyldigeFeltutledere): Oppgavetyper {
+        return Oppgavetyper(
+            område = område,
             oppgavetyper = setOf(
-                OppgavetypeDto(
-                    id = "aksjonspunkt",
+                Oppgavetype(
+                    eksternId = "aksjonspunkt",
+                    område = område,
+                    definisjonskilde = "k9-sak-til-los",
                     oppgavebehandlingsUrlTemplate = "\${baseUrl}/fagsak/\${K9.saksnummer}/behandling/\${K9.behandlingUuid}?fakta=default&punkt=default",
                     oppgavefelter = setOf(
-                        OppgavefeltDto(
-                            id = "aksjonspunkt",
+                        Oppgavefelt(
+                            feltDefinisjon = feltdefinisjoner.hentFeltdefinisjon("aksjonspunkt"),
                             visPåOppgave = true,
-                            påkrevd = true
+                            påkrevd = true,
+                            defaultverdi = null
                         ),
-                        OppgavefeltDto(
-                            id = "opprettet",
+                        Oppgavefelt(
+                            feltDefinisjon = feltdefinisjoner.hentFeltdefinisjon("opprettet"),
                             visPåOppgave = true,
-                            påkrevd = true
+                            påkrevd = true,
+                            defaultverdi = null
                         ),
-                        OppgavefeltDto(
-                            id = "aktorId",
+                        Oppgavefelt(
+                            feltDefinisjon = feltdefinisjoner.hentFeltdefinisjon("aktorId"),
                             visPåOppgave = true,
-                            påkrevd = true
+                            påkrevd = true,
+                            defaultverdi = null
                         ),
-                        OppgavefeltDto(
-                            id = "akkumulertVentetidSaksbehandler",
+                        Oppgavefelt(
+                            feltDefinisjon = feltdefinisjoner.hentFeltdefinisjon("akkumulertVentetidSaksbehandler"),
                             visPåOppgave = false,
                             påkrevd = false,
-                            feltutleder = "no.nav.k9.los.nyoppgavestyring.feltutlederforlagring.AkkumulertVentetidSaksbehandler",
+                            defaultverdi = null,
+                            feltutleder = gyldigeFeltutledere.hentFeltutleder(AkkumulertVentetidSaksbehandler::class.java.canonicalName)
                         ),
-                        OppgavefeltDto(
-                            id = "avventerSaksbehandler",
+                        Oppgavefelt(
+                            feltDefinisjon = feltdefinisjoner.hentFeltdefinisjon("avventerSaksbehandler"),
                             visPåOppgave = false,
-                            påkrevd = true
+                            påkrevd = true,
+                            defaultverdi = null
                         )
                     )
                 )

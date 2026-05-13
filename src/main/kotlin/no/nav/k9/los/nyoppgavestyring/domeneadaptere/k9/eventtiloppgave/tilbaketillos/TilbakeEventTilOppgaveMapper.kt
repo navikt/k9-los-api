@@ -1,12 +1,11 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.tilbaketillos
 
-import com.fasterxml.jackson.module.kotlin.readValue
 import no.nav.k9.kodeverk.behandling.BehandlingResultatType
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.K9FeltIder
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.EventHendelse
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventLagret
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.AksjonspunktDefinisjonK9Tilbake
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.K9TilbakeEventDto
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.nyoppgavestyring.kodeverk.AksjonspunktStatus
 import no.nav.k9.los.nyoppgavestyring.kodeverk.AksjonspunktStatus.OPPRETTET
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingStatus
@@ -140,71 +139,71 @@ class TilbakeEventTilOppgaveMapper {
             forrigeOppgave: OppgaveV3?
         ) = mutableListOf(
             OppgaveFeltverdiDto(
-                nøkkel = "liggerHosBeslutter",
+                nøkkel = K9FeltIder.LIGGER_HOS_BESLUTTER,
                 verdi = erTilBeslutter(event).toString()
             ),
             OppgaveFeltverdiDto(
-                nøkkel = "behandlingUuid",
+                nøkkel = K9FeltIder.BEHANDLING_UUID,
                 verdi = event.eksternId.toString()
             ),
             OppgaveFeltverdiDto(
-                nøkkel = "aktorId",
+                nøkkel = K9FeltIder.AKTOR_ID,
                 verdi = event.aktørId
             ),
             OppgaveFeltverdiDto(
-                nøkkel = "fagsystem",
+                nøkkel = K9FeltIder.FAGSYSTEM,
                 verdi = event.fagsystem
             ),
             OppgaveFeltverdiDto(
-                nøkkel = "saksnummer",
+                nøkkel = K9FeltIder.SAKSNUMMER,
                 verdi = event.saksnummer
             ),
             OppgaveFeltverdiDto(
-                nøkkel = "resultattype",
+                nøkkel = K9FeltIder.RESULTATTYPE,
                 verdi = event.resultatType ?: BehandlingResultatType.IKKE_FASTSATT.kode
             ),
             OppgaveFeltverdiDto(
-                nøkkel = "ytelsestype",
+                nøkkel = K9FeltIder.YTELSESTYPE,
                 verdi = event.ytelseTypeKode
             ),
             OppgaveFeltverdiDto(
-                nøkkel = "behandlingsstatus",
+                nøkkel = K9FeltIder.BEHANDLINGSSTATUS,
                 verdi = event.behandlingStatus ?: BehandlingStatus.UTREDES.kode
             ),
             OppgaveFeltverdiDto(
-                nøkkel = "behandlingssteg",
+                nøkkel = K9FeltIder.BEHANDLINGSSTEG,
                 verdi = event.behandlingSteg
             ),
             OppgaveFeltverdiDto(
-                nøkkel = "behandlingTypekode",
+                nøkkel = K9FeltIder.BEHANDLING_TYPEKODE,
                 verdi = event.behandlingTypeKode
             ),
 
             OppgaveFeltverdiDto(
-                nøkkel = "ansvarligBeslutter",
-                verdi = event.ansvarligBeslutterIdent ?: forrigeOppgave?.hentVerdi("ansvarligBeslutter")
+                nøkkel = K9FeltIder.ANSVARLIG_BESLUTTER,
+                verdi = event.ansvarligBeslutterIdent ?: forrigeOppgave?.hentVerdi(K9FeltIder.ANSVARLIG_BESLUTTER)
             ),
             OppgaveFeltverdiDto(
-                nøkkel = "ansvarligSaksbehandler",
-                verdi = event.ansvarligSaksbehandlerIdent ?: forrigeOppgave?.hentVerdi("ansvarligSaksbehandler")
+                nøkkel = K9FeltIder.ANSVARLIG_SAKSBEHANDLER,
+                verdi = event.ansvarligSaksbehandlerIdent ?: forrigeOppgave?.hentVerdi(K9FeltIder.ANSVARLIG_SAKSBEHANDLER)
             ),
             OppgaveFeltverdiDto(
-                nøkkel = "registrertDato",
-                verdi = forrigeOppgave?.hentVerdi("registrertDato")
+                nøkkel = K9FeltIder.REGISTRERT_DATO,
+                verdi = forrigeOppgave?.hentVerdi(K9FeltIder.REGISTRERT_DATO)
                     ?: event.opprettetBehandling.truncatedTo(ChronoUnit.SECONDS).toString()
             ),
             OppgaveFeltverdiDto(
-                nøkkel = "mottattDato",
-                verdi = forrigeOppgave?.hentVerdi("mottattDato")
+                nøkkel = K9FeltIder.MOTTATT_DATO,
+                verdi = forrigeOppgave?.hentVerdi(K9FeltIder.MOTTATT_DATO)
                     ?: event.opprettetBehandling.truncatedTo(ChronoUnit.SECONDS).toString()
             ),
             OppgaveFeltverdiDto(
-                nøkkel = "feilutbetaltBeløp",
-                verdi = event.feilutbetaltBeløp?.toString() ?: forrigeOppgave?.hentVerdi("feilutbetaltBeløp")
+                nøkkel = K9FeltIder.FEILUTBETALT_BELOP,
+                verdi = event.feilutbetaltBeløp?.toString() ?: forrigeOppgave?.hentVerdi(K9FeltIder.FEILUTBETALT_BELOP)
             ),
             OppgaveFeltverdiDto(
-                nøkkel = "førsteFeilutbetalingDato",
-                verdi = event.førsteFeilutbetaling ?: forrigeOppgave?.hentVerdi("førsteFeilutbetalingDato")
+                nøkkel = K9FeltIder.FORSTE_FEILUTBETALING_DATO,
+                verdi = event.førsteFeilutbetaling ?: forrigeOppgave?.hentVerdi(K9FeltIder.FORSTE_FEILUTBETALING_DATO)
             ),
             utledTidFørsteGangHosBeslutter(forrigeOppgave, event),
         ).filterNotNull().toMutableList()
@@ -213,14 +212,14 @@ class TilbakeEventTilOppgaveMapper {
         fun utledTidFørsteGangHosBeslutter(
             forrigeOppgave: OppgaveV3?,
             event: K9TilbakeEventDto
-        ) = forrigeOppgave?.hentVerdi("tidFørsteGangHosBeslutter")?.let {
+        ) = forrigeOppgave?.hentVerdi(K9FeltIder.TID_FORSTE_GANG_HOS_BESLUTTER)?.let {
             OppgaveFeltverdiDto(
-                nøkkel = "tidFørsteGangHosBeslutter",
-                verdi = forrigeOppgave.hentVerdi("tidFørsteGangHosBeslutter")
+                nøkkel = K9FeltIder.TID_FORSTE_GANG_HOS_BESLUTTER,
+                verdi = forrigeOppgave.hentVerdi(K9FeltIder.TID_FORSTE_GANG_HOS_BESLUTTER)
             )
         } ?: if (erTilBeslutter(event)) {
             OppgaveFeltverdiDto(
-                nøkkel = "tidFørsteGangHosBeslutter",
+                nøkkel = K9FeltIder.TID_FORSTE_GANG_HOS_BESLUTTER,
                 verdi = event.eventTid.toString()
             )
         } else {
@@ -238,7 +237,7 @@ class TilbakeEventTilOppgaveMapper {
 
             oppgaveFeltverdiDtos.add(
                 OppgaveFeltverdiDto(
-                    nøkkel = "helautomatiskBehandlet",
+                    nøkkel = K9FeltIder.HELAUTOMATISK_BEHANDLET,
                     verdi = if (harUtførtManueltAksjonspunkt) false.toString() else true.toString()
                 )
             )
@@ -256,14 +255,14 @@ class TilbakeEventTilOppgaveMapper {
             if (løsbareAksjonspunkter.isNotEmpty()) {
                 oppgaveFeltverdiDtos.addAll(løsbareAksjonspunkter.map {
                     OppgaveFeltverdiDto(
-                        nøkkel = "løsbartAksjonspunkt",
+                        nøkkel = K9FeltIder.LOSBART_AKSJONSPUNKT,
                         verdi = it.kode
                     )
                 })
             } else {
                 oppgaveFeltverdiDtos.add(
                     OppgaveFeltverdiDto(
-                        nøkkel = "løsbartAksjonspunkt",
+                        nøkkel = K9FeltIder.LOSBART_AKSJONSPUNKT,
                         verdi = null
                     )
                 )
@@ -280,14 +279,14 @@ class TilbakeEventTilOppgaveMapper {
             if (utførte.isNotEmpty()) {
                 oppgaveFeltverdiDtos.addAll(utførte.map {
                     OppgaveFeltverdiDto(
-                        nøkkel = "utførtAksjonspunkt",
+                        nøkkel = K9FeltIder.UTFORT_AKSJONSPUNKT,
                         verdi = it.key
                     )
                 })
             } else {
                 oppgaveFeltverdiDtos.add(
                     OppgaveFeltverdiDto(
-                        nøkkel = "utførtAksjonspunkt",
+                        nøkkel = K9FeltIder.UTFORT_AKSJONSPUNKT,
                         verdi = null
                     )
                 )
@@ -304,14 +303,14 @@ class TilbakeEventTilOppgaveMapper {
             if (avbrutte.isNotEmpty()) {
                 oppgaveFeltverdiDtos.addAll(avbrutte.map {
                     OppgaveFeltverdiDto(
-                        nøkkel = "avbruttAksjonspunkt",
+                        nøkkel = K9FeltIder.AVBRUTT_AKSJONSPUNKT,
                         verdi = it.key
                     )
                 })
             } else {
                 oppgaveFeltverdiDtos.add(
                     OppgaveFeltverdiDto(
-                        nøkkel = "avbruttAksjonspunkt",
+                        nøkkel = K9FeltIder.AVBRUTT_AKSJONSPUNKT,
                         verdi = null
                     )
                 )

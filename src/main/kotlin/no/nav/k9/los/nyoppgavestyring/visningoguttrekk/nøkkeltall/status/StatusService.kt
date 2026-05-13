@@ -1,5 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.status
 
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.K9FeltIder
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
@@ -37,7 +38,7 @@ class StatusService(
         val oppgaveQuery = OppgaveQuery(
             filtere = filtere,
             select = listOf(
-                EnkelSelectFelt("K9", "behandlingTypekode"),
+                EnkelSelectFelt("K9", K9FeltIder.BEHANDLING_TYPEKODE),
                 AggregertSelectFelt(Aggregeringsfunksjon.ANTALL),
             ),
         )

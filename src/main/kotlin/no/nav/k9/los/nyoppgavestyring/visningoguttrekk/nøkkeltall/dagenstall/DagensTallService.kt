@@ -3,6 +3,7 @@ package no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.dagenstall
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.K9FeltIder
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.Cache
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.CacheObject
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
@@ -27,29 +28,29 @@ class DagensTallService(
     private val log: Logger = LoggerFactory.getLogger(DagensTallService::class.java)
 
     companion object {
-        val omsorgspenger = FeltverdiOppgavefilter("K9", "ytelsestype", EksternFeltverdiOperator.IN, listOf(FagsakYtelseType.OMSORGSPENGER.kode))
-        val omsorgsdager = FeltverdiOppgavefilter("K9", "ytelsestype", EksternFeltverdiOperator.IN,
+        val omsorgspenger = FeltverdiOppgavefilter("K9", K9FeltIder.YTELSESTYPE, EksternFeltverdiOperator.IN, listOf(FagsakYtelseType.OMSORGSPENGER.kode))
+        val omsorgsdager = FeltverdiOppgavefilter("K9", K9FeltIder.YTELSESTYPE, EksternFeltverdiOperator.IN,
             listOf(FagsakYtelseType.OMSORGSDAGER, FagsakYtelseType.OMSORGSPENGER_KS, FagsakYtelseType.OMSORGSPENGER_AO, FagsakYtelseType.OMSORGSPENGER_MA).map { it.kode })
-        val opplæringspenger = FeltverdiOppgavefilter("K9", "ytelsestype", EksternFeltverdiOperator.IN, listOf(FagsakYtelseType.OLP.kode))
-        val psb = FeltverdiOppgavefilter("K9", "ytelsestype", EksternFeltverdiOperator.IN, listOf(FagsakYtelseType.PLEIEPENGER_SYKT_BARN.kode))
-        val ppn = FeltverdiOppgavefilter("K9", "ytelsestype", EksternFeltverdiOperator.IN, listOf(FagsakYtelseType.PPN.kode))
+        val opplæringspenger = FeltverdiOppgavefilter("K9", K9FeltIder.YTELSESTYPE, EksternFeltverdiOperator.IN, listOf(FagsakYtelseType.OLP.kode))
+        val psb = FeltverdiOppgavefilter("K9", K9FeltIder.YTELSESTYPE, EksternFeltverdiOperator.IN, listOf(FagsakYtelseType.PLEIEPENGER_SYKT_BARN.kode))
+        val ppn = FeltverdiOppgavefilter("K9", K9FeltIder.YTELSESTYPE, EksternFeltverdiOperator.IN, listOf(FagsakYtelseType.PPN.kode))
 
-        val mottattDato = { dato: LocalDate -> FeltverdiOppgavefilter("K9", "mottattDato", EksternFeltverdiOperator.GREATER_THAN_OR_EQUALS, listOf(dato.toString())) }
+        val mottattDato = { dato: LocalDate -> FeltverdiOppgavefilter("K9", K9FeltIder.MOTTATT_DATO, EksternFeltverdiOperator.GREATER_THAN_OR_EQUALS, listOf(dato.toString())) }
         val ferdigstiltDato = { dato: LocalDate -> FeltverdiOppgavefilter(null, "ferdigstiltDato", EksternFeltverdiOperator.GREATER_THAN_OR_EQUALS, listOf(dato.toString())) }
-        val mottattDatoFør = { dato: LocalDate -> FeltverdiOppgavefilter("K9", "mottattDato", EksternFeltverdiOperator.LESS_THAN, listOf(dato.toString())) }
+        val mottattDatoFør = { dato: LocalDate -> FeltverdiOppgavefilter("K9", K9FeltIder.MOTTATT_DATO, EksternFeltverdiOperator.LESS_THAN, listOf(dato.toString())) }
         val ferdigstiltDatoMellom = { fra: LocalDate, tilEksklusive: LocalDate ->
             FeltverdiOppgavefilter(null, "ferdigstiltDato", EksternFeltverdiOperator.INTERVAL, listOf(fra.toString(), tilEksklusive.minusDays(1).toString()))
         }
         val lukket = FeltverdiOppgavefilter(null, "oppgavestatus", EksternFeltverdiOperator.EQUALS, listOf(Oppgavestatus.LUKKET.kode))
 
-        val førstegang = FeltverdiOppgavefilter("K9", "behandlingTypekode", EksternFeltverdiOperator.EQUALS, listOf(BehandlingType.FORSTEGANGSSOKNAD.kode))
-        val revurdering = FeltverdiOppgavefilter("K9", "behandlingTypekode", EksternFeltverdiOperator.IN, listOf(BehandlingType.REVURDERING.kode, BehandlingType.REVURDERING_TILBAKEKREVING.kode))
+        val førstegang = FeltverdiOppgavefilter("K9", K9FeltIder.BEHANDLING_TYPEKODE, EksternFeltverdiOperator.EQUALS, listOf(BehandlingType.FORSTEGANGSSOKNAD.kode))
+        val revurdering = FeltverdiOppgavefilter("K9", K9FeltIder.BEHANDLING_TYPEKODE, EksternFeltverdiOperator.IN, listOf(BehandlingType.REVURDERING.kode, BehandlingType.REVURDERING_TILBAKEKREVING.kode))
         val klage = FeltverdiOppgavefilter(null, "oppgavetype", EksternFeltverdiOperator.EQUALS, listOf("k9klage"))
         val punsj = FeltverdiOppgavefilter(null, "oppgavetype", EksternFeltverdiOperator.EQUALS, listOf("k9punsj"))
         val feilutbetaling = FeltverdiOppgavefilter(null, "oppgavetype", EksternFeltverdiOperator.EQUALS, listOf("k9tilbake"))
-        val unntaksbehandling = FeltverdiOppgavefilter("K9", "behandlingTypekode", EksternFeltverdiOperator.EQUALS, listOf(BehandlingType.UNNTAKSBEHANDLING.kode))
-        val helautomatisk = FeltverdiOppgavefilter("K9", "helautomatiskBehandlet", EksternFeltverdiOperator.EQUALS, listOf(true.toString()))
-        val ikkeHelautomatisk = FeltverdiOppgavefilter("K9", "helautomatiskBehandlet", EksternFeltverdiOperator.EQUALS, listOf(false.toString()))
+        val unntaksbehandling = FeltverdiOppgavefilter("K9", K9FeltIder.BEHANDLING_TYPEKODE, EksternFeltverdiOperator.EQUALS, listOf(BehandlingType.UNNTAKSBEHANDLING.kode))
+        val helautomatisk = FeltverdiOppgavefilter("K9", K9FeltIder.HELAUTOMATISK_BEHANDLET, EksternFeltverdiOperator.EQUALS, listOf(true.toString()))
+        val ikkeHelautomatisk = FeltverdiOppgavefilter("K9", K9FeltIder.HELAUTOMATISK_BEHANDLET, EksternFeltverdiOperator.EQUALS, listOf(false.toString()))
 
         private val hovedgruppeYtelser: Map<DagensTallHovedgruppe, Set<String>?> = mapOf(
             DagensTallHovedgruppe.ALLE to null,
@@ -109,10 +110,10 @@ class DagensTallService(
 
     private fun hentGrupperte(filtere: List<Oppgavefilter>, medHelautomatisk: Boolean): List<TelleRad> {
         val selectFelter = buildList {
-            add(EnkelSelectFelt("K9", "ytelsestype"))
+            add(EnkelSelectFelt("K9", K9FeltIder.YTELSESTYPE))
             add(EnkelSelectFelt(null, "oppgavetype"))
-            add(EnkelSelectFelt("K9", "behandlingTypekode"))
-            if (medHelautomatisk) add(EnkelSelectFelt("K9", "helautomatiskBehandlet"))
+            add(EnkelSelectFelt("K9", K9FeltIder.BEHANDLING_TYPEKODE))
+            if (medHelautomatisk) add(EnkelSelectFelt("K9", K9FeltIder.HELAUTOMATISK_BEHANDLET))
             add(AggregertSelectFelt(Aggregeringsfunksjon.ANTALL))
         }
         val query = OppgaveQuery(filtere = filtere, select = selectFelter)
@@ -120,10 +121,10 @@ class DagensTallService(
 
         return resultat.map { rad ->
             TelleRad(
-                ytelsestype = rad.feltverdier.find { it.kode == "ytelsestype" }?.verdi?.toString(),
+                ytelsestype = rad.feltverdier.find { it.kode == K9FeltIder.YTELSESTYPE }?.verdi?.toString(),
                 oppgavetype = rad.feltverdier.find { it.kode == "oppgavetype" }?.verdi?.toString(),
-                behandlingTypekode = rad.feltverdier.find { it.kode == "behandlingTypekode" }?.verdi?.toString(),
-                helautomatisk = if (medHelautomatisk) rad.feltverdier.find { it.kode == "helautomatiskBehandlet" }?.verdi?.toString() else null,
+                behandlingTypekode = rad.feltverdier.find { it.kode == K9FeltIder.BEHANDLING_TYPEKODE }?.verdi?.toString(),
+                helautomatisk = if (medHelautomatisk) rad.feltverdier.find { it.kode == K9FeltIder.HELAUTOMATISK_BEHANDLET }?.verdi?.toString() else null,
                 antall = checkNotNull(rad.aggregeringer.first { it.type == Aggregeringsfunksjon.ANTALL }.verdi) as Long
             )
         }

@@ -1,10 +1,8 @@
 package no.nav.k9.los.nyoppgavestyring.mottak.oppgave
 
 import no.nav.k9.los.AbstractK9LosIntegrationTest
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.feltutlederforlagring.GyldigeFeltutledere
-import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Feltdefinisjoner
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.*
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -80,23 +78,13 @@ class OppgaveV3Test : AbstractK9LosIntegrationTest() {
     fun `test at vi ikke logger aktørid`() {
         val område = oppgavemodellBuilder.område
         val oppgaveDto = oppgavemodellBuilder.lagOppgaveDtoMedManglendeVerdiIObligFelt()
-        val oppgaveTypeDto = oppgavemodellBuilder.lagOppgavetypeDto()
-        val feltdefinisjonDto = oppgavemodellBuilder.lagFeltdefinisjonDto()
+        val feltdefinisjoner = oppgavemodellBuilder.lagFeltdefinisjoner(område)
+        val oppgavetyper = oppgavemodellBuilder.lagOppgavetyper(område, feltdefinisjoner, gyldigeFeltutledere)
 
         assertThrows<IllegalArgumentException> {
             OppgaveV3(
                 oppgaveDto = oppgaveDto,
-                oppgavetype = Oppgavetype(
-                    dto = oppgaveTypeDto.oppgavetyper.first(),
-                    definisjonskilde = "k9-sak-til-los",
-                    område = område,
-                    oppgavebehandlingsUrlTemplate = "\${baseUrl}/fagsak/\${K9.saksnummer}/behandling/\${K9.behandlingUuid}?fakta=default&punkt=default",
-                    feltdefinisjoner = Feltdefinisjoner(
-                        feltdefinisjonerDto = feltdefinisjonDto,
-                        område = område
-                    ),
-                    gyldigeFeltutledere = gyldigeFeltutledere
-                )
+                oppgavetype = oppgavetyper.oppgavetyper.first()
             )
         }
     }

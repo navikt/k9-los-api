@@ -4,11 +4,6 @@ class Kodeverkreferanse(
     val område: String,
     val eksternId: String
 ) {
-    constructor(kodeverkReferanseDto: KodeverkReferanseDto): this(
-        område = kodeverkReferanseDto.område,
-        eksternId = kodeverkReferanseDto.eksternId
-    )
-
     constructor(kodeverk: Kodeverk): this (
         område = kodeverk.område.eksternId,
         eksternId = kodeverk.eksternId

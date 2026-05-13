@@ -6,6 +6,7 @@ import no.nav.k9.kodeverk.behandling.BehandlingÅrsakType
 import no.nav.k9.kodeverk.behandling.FagsakYtelseType
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.*
 import no.nav.k9.kodeverk.produksjonsstyring.MerknadType
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.K9FeltIder
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.EventHendelse
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventLagret
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventDto
@@ -65,14 +66,14 @@ class SakEventTilOppgaveMapper(
         if (event.ytelseTypeKode == FagsakYtelseType.OBSOLETE.kode) {
             return oppgaveDto.copy(status = "LUKKET").erstattFeltverdi(
                 OppgaveFeltverdiDto(
-                    "resultattype", BehandlingResultatType.HENLAGT_FEILOPPRETTET.kode
+                    K9FeltIder.RESULTATTYPE, BehandlingResultatType.HENLAGT_FEILOPPRETTET.kode
                 )
             )
         }
 
         // Kun AVSLU-behandlinger med IKKE_FASTSATT resultat trenger oppslag
         val trengerOppslag = event.behandlingStatus == "AVSLU"
-                && oppgaveDto.feltverdier.filter { it.nøkkel == "resultattype" }.first().verdi == "IKKE_FASTSATT"
+                && oppgaveDto.feltverdier.filter { it.nøkkel == K9FeltIder.RESULTATTYPE }.first().verdi == "IKKE_FASTSATT"
 
         if (!trengerOppslag) {
             return oppgaveDto
@@ -92,20 +93,20 @@ class SakEventTilOppgaveMapper(
         if (nyeBehandlingsopplysningerFraK9Sak == null) {
             return oppgaveDto.copy(status = "LUKKET").erstattFeltverdi(
                 OppgaveFeltverdiDto(
-                    "resultattype", BehandlingResultatType.HENLAGT_FEILOPPRETTET.kode
+                    K9FeltIder.RESULTATTYPE, BehandlingResultatType.HENLAGT_FEILOPPRETTET.kode
                 )
             )
         }
         if (nyeBehandlingsopplysningerFraK9Sak.sakstype == FagsakYtelseType.OBSOLETE) {
             return oppgaveDto.copy(status = "LUKKET").erstattFeltverdi(
                 OppgaveFeltverdiDto(
-                    "resultattype", BehandlingResultatType.HENLAGT_FEILOPPRETTET.kode
+                    K9FeltIder.RESULTATTYPE, BehandlingResultatType.HENLAGT_FEILOPPRETTET.kode
                 )
             )
         }
         return oppgaveDto.erstattFeltverdi(
             OppgaveFeltverdiDto(
-                "resultattype", nyeBehandlingsopplysningerFraK9Sak.behandlingResultatType.kode
+                K9FeltIder.RESULTATTYPE, nyeBehandlingsopplysningerFraK9Sak.behandlingResultatType.kode
             )
         )
     }
@@ -244,110 +245,110 @@ class SakEventTilOppgaveMapper(
             forrigeOppgave: OppgaveV3?
         ): MutableList<OppgaveFeltverdiDto> = mutableListOf(
             OppgaveFeltverdiDto(
-                nøkkel = "liggerHosBeslutter",
+                nøkkel = K9FeltIder.LIGGER_HOS_BESLUTTER,
                 verdi = erTilBeslutter(event).toString()
             ),
             OppgaveFeltverdiDto(
-                nøkkel = "behandlingUuid",
+                nøkkel = K9FeltIder.BEHANDLING_UUID,
                 verdi = event.eksternId.toString()
             ),
             OppgaveFeltverdiDto(
-                nøkkel = "aktorId",
+                nøkkel = K9FeltIder.AKTOR_ID,
                 verdi = event.aktørId
             ),
             OppgaveFeltverdiDto(
-                nøkkel = "fagsystem",
+                nøkkel = K9FeltIder.FAGSYSTEM,
                 verdi = event.fagsystem.kode
             ),
             OppgaveFeltverdiDto(
-                nøkkel = "saksnummer",
+                nøkkel = K9FeltIder.SAKSNUMMER,
                 verdi = event.saksnummer
             ),
             OppgaveFeltverdiDto(
-                nøkkel = "resultattype",
+                nøkkel = K9FeltIder.RESULTATTYPE,
                 verdi = event.resultatType ?: BehandlingResultatType.IKKE_FASTSATT.kode
             ),
             OppgaveFeltverdiDto(
-                nøkkel = "ytelsestype",
+                nøkkel = K9FeltIder.YTELSESTYPE,
                 verdi = event.ytelseTypeKode
             ),
             OppgaveFeltverdiDto(
-                nøkkel = "behandlingsstatus",
+                nøkkel = K9FeltIder.BEHANDLINGSSTATUS,
                 verdi = event.behandlingStatus ?: BehandlingStatus.UTREDES.kode
             ),
             OppgaveFeltverdiDto(
-                nøkkel = "behandlingssteg",
+                nøkkel = K9FeltIder.BEHANDLINGSSTEG,
                 verdi = event.behandlingSteg
             ),
             OppgaveFeltverdiDto(
-                nøkkel = "behandlendeEnhet",
+                nøkkel = K9FeltIder.BEHANDLENDE_ENHET,
                 verdi = event.behandlendeEnhet
             ),
             OppgaveFeltverdiDto(
-                nøkkel = "behandlingTypekode",
+                nøkkel = K9FeltIder.BEHANDLING_TYPEKODE,
                 verdi = event.behandlingTypeKode
             ),
             OppgaveFeltverdiDto(
-                nøkkel = "relatertPartAktorid",
+                nøkkel = K9FeltIder.RELATERT_PART_AKTORID,
                 verdi = event.relatertPartAktørId
             ),
             OppgaveFeltverdiDto(
-                nøkkel = "pleietrengendeAktorId",
+                nøkkel = K9FeltIder.PLEIETRENGENDE_AKTOR_ID,
                 verdi = event.pleietrengendeAktørId
             ),
             OppgaveFeltverdiDto(
-                nøkkel = "ansvarligBeslutter",
-                verdi = event.ansvarligBeslutterForTotrinn ?: forrigeOppgave?.hentVerdi("ansvarligBeslutter")
+                nøkkel = K9FeltIder.ANSVARLIG_BESLUTTER,
+                verdi = event.ansvarligBeslutterForTotrinn ?: forrigeOppgave?.hentVerdi(K9FeltIder.ANSVARLIG_BESLUTTER)
             ),
             utledTidFørsteGangHosBeslutter(forrigeOppgave, event),
             OppgaveFeltverdiDto(
-                nøkkel = "ansvarligSaksbehandler",
+                nøkkel = K9FeltIder.ANSVARLIG_SAKSBEHANDLER,
                 verdi = event.ansvarligSaksbehandlerForTotrinn
                     ?: event.ansvarligSaksbehandlerIdent
-                    ?: forrigeOppgave?.hentVerdi("ansvarligSaksbehandler")
+                    ?: forrigeOppgave?.hentVerdi(K9FeltIder.ANSVARLIG_SAKSBEHANDLER)
             ),
             OppgaveFeltverdiDto(
-                nøkkel = "mottattDato",
+                nøkkel = K9FeltIder.MOTTATT_DATO,
                 verdi = event.eldsteDatoMedEndringFraSøker?.truncatedTo(ChronoUnit.SECONDS)?.toString() //TODO feltet heter *dato, avrunde til dato?
-                    ?: forrigeOppgave?.hentVerdi("mottattDato")
-                    ?: forrigeOppgave?.hentVerdi("registrertDato")
+                    ?: forrigeOppgave?.hentVerdi(K9FeltIder.MOTTATT_DATO)
+                    ?: forrigeOppgave?.hentVerdi(K9FeltIder.REGISTRERT_DATO)
                     ?: event.opprettetBehandling.truncatedTo(ChronoUnit.SECONDS).toString() //TODO feltet heter *dato, avrunde til dato?
             ),
             OppgaveFeltverdiDto(
-                nøkkel = "registrertDato",
-                verdi = forrigeOppgave?.hentVerdi("registrertDato") ?: event.opprettetBehandling.truncatedTo(ChronoUnit.SECONDS).toString() //TODO feltet heter *dato, avrunde til dato?
+                nøkkel = K9FeltIder.REGISTRERT_DATO,
+                verdi = forrigeOppgave?.hentVerdi(K9FeltIder.REGISTRERT_DATO) ?: event.opprettetBehandling.truncatedTo(ChronoUnit.SECONDS).toString() //TODO feltet heter *dato, avrunde til dato?
             ),
             OppgaveFeltverdiDto(
-                nøkkel = "vedtaksdato",
-                verdi = event.vedtaksdato?.toString() ?: forrigeOppgave?.hentVerdi("vedtaksdato")
+                nøkkel = K9FeltIder.VEDTAKSDATO,
+                verdi = event.vedtaksdato?.toString() ?: forrigeOppgave?.hentVerdi(K9FeltIder.VEDTAKSDATO)
             ),
             event.nyeKrav?.let {
                 OppgaveFeltverdiDto(
-                    nøkkel = "nyeKrav",
+                    nøkkel = K9FeltIder.NYE_KRAV,
                     verdi = event.nyeKrav.toString()
                 )
             },
             event.kunNyePerioder?.let {
                 OppgaveFeltverdiDto(
-                    nøkkel = "bareNyeKrav",
+                    nøkkel = K9FeltIder.BARE_NYE_KRAV,
                     verdi = event.kunNyePerioder.toString()
                 )
             },
             event.fraEndringsdialog?.let {
                 OppgaveFeltverdiDto(
-                    nøkkel = "fraEndringsdialog",
+                    nøkkel = K9FeltIder.FRA_ENDRINGSDIALOG,
                     // verdien er 'sticky': dersom satt fra før skal den ikke endres
-                    verdi = forrigeOppgave?.hentVerdi("fraEndringsdialog") ?: it.toString()
+                    verdi = forrigeOppgave?.hentVerdi(K9FeltIder.FRA_ENDRINGSDIALOG) ?: it.toString()
                 )
             },
             event.relevanteSøknadsperioder?.let {
                 OppgaveFeltverdiDto(
-                    nøkkel = "antallOmsøkteDager",
+                    nøkkel = K9FeltIder.ANTALL_OMSOKTE_DAGER,
                     verdi = event.relevanteSøknadsperioder.sumOf { periode -> ChronoUnit.DAYS.between(periode.fom, periode.tom) + 1 }.toString()
                 )
             },
             OppgaveFeltverdiDto(
-                nøkkel = "totrinnskontroll",
+                nøkkel = K9FeltIder.TOTRINNSKONTROLL,
                 verdi = event.aksjonspunktTilstander.filter { aksjonspunktTilstandDto ->
                     aksjonspunktTilstandDto.aksjonspunktKode.equals("5015") && aksjonspunktTilstandDto.status !in (listOf(
                         AksjonspunktStatus.AVBRUTT
@@ -355,16 +356,16 @@ class SakEventTilOppgaveMapper(
                 }.isNotEmpty().toString()
             ),
             OppgaveFeltverdiDto(
-                nøkkel = "utenlandstilsnitt",
+                nøkkel = K9FeltIder.UTENLANDSTILSNITT,
                 verdi = event.merknader.contains(MerknadType.UTENLANDSSAK).toString()
             ),
             OppgaveFeltverdiDto(
-                nøkkel = "direkteutbetaling",
+                nøkkel = K9FeltIder.DIREKTEUTBETALING,
                 verdi = event.merknader.contains(MerknadType.DIREKTEUTBETALING).toString()
             ),
             if (event.merknader.contains(MerknadType.HASTESAK)) {
                 OppgaveFeltverdiDto(
-                    nøkkel = "hastesak",
+                    nøkkel = K9FeltIder.HASTESAK,
                     verdi = "true"
                 )
             } else {
@@ -373,7 +374,7 @@ class SakEventTilOppgaveMapper(
             event.fagsakPeriode?.fom?.year?.takeIf { it in 2000..2100 }?.toString()?.let { fagsakÅr ->
                 // Hvis årstallet er utenfor rimelig område settes ikke fagsakÅr
                 OppgaveFeltverdiDto(
-                    nøkkel = "fagsakÅr",
+                    nøkkel = K9FeltIder.FAGSAK_AR,
                     verdi = fagsakÅr,
                 )
             },
@@ -383,14 +384,14 @@ class SakEventTilOppgaveMapper(
         fun utledTidFørsteGangHosBeslutter(
             forrigeOppgave: OppgaveV3?,
             event: K9SakEventDto
-        ) = forrigeOppgave?.hentVerdi("tidFørsteGangHosBeslutter")?.let {
+        ) = forrigeOppgave?.hentVerdi(K9FeltIder.TID_FORSTE_GANG_HOS_BESLUTTER)?.let {
             OppgaveFeltverdiDto(
-                nøkkel = "tidFørsteGangHosBeslutter",
-                verdi = forrigeOppgave.hentVerdi("tidFørsteGangHosBeslutter")
+                nøkkel = K9FeltIder.TID_FORSTE_GANG_HOS_BESLUTTER,
+                verdi = forrigeOppgave.hentVerdi(K9FeltIder.TID_FORSTE_GANG_HOS_BESLUTTER)
             )
         } ?: if (erTilBeslutter(event)) {
             OppgaveFeltverdiDto(
-                nøkkel = "tidFørsteGangHosBeslutter",
+                nøkkel = K9FeltIder.TID_FORSTE_GANG_HOS_BESLUTTER,
                 verdi = event.eventTid.toString()
             )
         } else {
@@ -459,12 +460,12 @@ class SakEventTilOppgaveMapper(
                 return avventerflagg("")
             }
             return when (ventekategori) {
-                Ventekategori.AVVENTER_SØKER -> avventerflagg("avventerSøker")
-                Ventekategori.AVVENTER_ARBEIDSGIVER -> avventerflagg("avventerArbeidsgiver")
-                Ventekategori.AVVENTER_SAKSBEHANDLER -> avventerflagg("avventerSaksbehandler")
-                Ventekategori.AVVENTER_TEKNISK_FEIL -> avventerflagg("avventerTekniskFeil")
-                Ventekategori.AVVENTER_ANNET -> avventerflagg("avventerAnnet")
-                Ventekategori.AVVENTER_ANNET_IKKE_SAKSBEHANDLINGSTID -> avventerflagg("avventerAnnetIkkeSaksbehandlingstid")
+                Ventekategori.AVVENTER_SØKER -> avventerflagg(K9FeltIder.AVVENTER_SOKER)
+                Ventekategori.AVVENTER_ARBEIDSGIVER -> avventerflagg(K9FeltIder.AVVENTER_ARBEIDSGIVER)
+                Ventekategori.AVVENTER_SAKSBEHANDLER -> avventerflagg(K9FeltIder.AVVENTER_SAKSBEHANDLER)
+                Ventekategori.AVVENTER_TEKNISK_FEIL -> avventerflagg(K9FeltIder.AVVENTER_TEKNISK_FEIL)
+                Ventekategori.AVVENTER_ANNET -> avventerflagg(K9FeltIder.AVVENTER_ANNET)
+                Ventekategori.AVVENTER_ANNET_IKKE_SAKSBEHANDLINGSTID -> avventerflagg(K9FeltIder.AVVENTER_ANNET_IKKE_SAKSBEHANDLINGSTID)
                 else -> throw IllegalArgumentException("Ukjent ventekategori: ${ventekategori}")
             }
         }
@@ -481,12 +482,12 @@ class SakEventTilOppgaveMapper(
         private fun avventerflagg(skalSettesTrue: String): List<OppgaveFeltverdiDto> {
             val oppgavefelter = mutableListOf<OppgaveFeltverdiDto>()
             listOf(
-                "avventerSøker",
-                "avventerArbeidsgiver",
-                "avventerSaksbehandler",
-                "avventerTekniskFeil",
-                "avventerAnnet",
-                "avventerAnnetIkkeSaksbehandlingstid"
+                K9FeltIder.AVVENTER_SOKER,
+                K9FeltIder.AVVENTER_ARBEIDSGIVER,
+                K9FeltIder.AVVENTER_SAKSBEHANDLER,
+                K9FeltIder.AVVENTER_TEKNISK_FEIL,
+                K9FeltIder.AVVENTER_ANNET,
+                K9FeltIder.AVVENTER_ANNET_IKKE_SAKSBEHANDLINGSTID
             ).forEach {
                 if (skalSettesTrue == it) {
                     oppgavefelter.add(
@@ -520,7 +521,7 @@ class SakEventTilOppgaveMapper(
 
             oppgaveFeltverdiDtos.add(
                 OppgaveFeltverdiDto(
-                    nøkkel = "helautomatiskBehandlet",
+                    nøkkel = K9FeltIder.HELAUTOMATISK_BEHANDLET,
                     verdi = if (harUtførtManueltAksjonspunkt) false.toString() else true.toString()
                 )
             )
@@ -535,7 +536,7 @@ class SakEventTilOppgaveMapper(
                 åpneAksjonspunkter.map { åpentAksjonspunkt ->
                     oppgaveFeltverdiDtos.add(
                         OppgaveFeltverdiDto(
-                            nøkkel = "aktivtAksjonspunkt",
+                            nøkkel = K9FeltIder.AKTIVT_AKSJONSPUNKT,
                             verdi = åpentAksjonspunkt.aksjonspunktKode
                         )
                     )
@@ -547,7 +548,7 @@ class SakEventTilOppgaveMapper(
                     }?.let {
                         oppgaveFeltverdiDtos.add(
                             OppgaveFeltverdiDto(
-                                nøkkel = "løsbartAksjonspunkt",
+                                nøkkel = K9FeltIder.LOSBART_AKSJONSPUNKT,
                                 verdi = it.aksjonspunktKode
                             )
                         )
@@ -556,7 +557,7 @@ class SakEventTilOppgaveMapper(
             } else {
                 oppgaveFeltverdiDtos.add(
                     OppgaveFeltverdiDto(
-                        nøkkel = "aktivtAksjonspunkt",
+                        nøkkel = K9FeltIder.AKTIVT_AKSJONSPUNKT,
                         verdi = null
                     )
                 )
@@ -577,13 +578,13 @@ class SakEventTilOppgaveMapper(
                     .singleOrNull()?.let { aksjonspunktTilstandDto ->
                         oppgaveFeltverdiDtos.add(
                             OppgaveFeltverdiDto(
-                                nøkkel = "aktivVenteårsak",
+                                nøkkel = K9FeltIder.AKTIV_VENTEARSAK,
                                 verdi = aksjonspunktTilstandDto.venteårsak.kode.toString()
                             )
                         )
                         oppgaveFeltverdiDtos.add(
                             OppgaveFeltverdiDto(
-                                nøkkel = "aktivVentefrist",
+                                nøkkel = K9FeltIder.AKTIV_VENTEFRIST,
                                 verdi = aksjonspunktTilstandDto.fristTid.toString()
                             )
                         )
@@ -598,14 +599,14 @@ class SakEventTilOppgaveMapper(
             if (event.søknadsårsaker.isNotEmpty()) {
                 oppgaveFeltverdiDtos.addAll(event.søknadsårsaker.map { søknadsårsak ->
                     OppgaveFeltverdiDto(
-                        nøkkel = "søknadsårsak",
+                        nøkkel = K9FeltIder.SOKNADSARSAK,
                         verdi = søknadsårsak
                     )
                 })
             } else {
                 oppgaveFeltverdiDtos.add(
                     OppgaveFeltverdiDto(
-                        nøkkel = "søknadsårsak",
+                        nøkkel = K9FeltIder.SOKNADSARSAK,
                         verdi = null
                     )
                 )
@@ -622,14 +623,14 @@ class SakEventTilOppgaveMapper(
             if (filtrert.isNotEmpty()) {
                 oppgaveFeltverdiDtos.addAll(filtrert.map { behandlingsårsak ->
                     OppgaveFeltverdiDto(
-                        nøkkel = "behandlingsårsak",
+                        nøkkel = K9FeltIder.BEHANDLINGSARSAK,
                         verdi = behandlingsårsak
                     )
                 })
             } else {
                 oppgaveFeltverdiDtos.add(
                     OppgaveFeltverdiDto(
-                        nøkkel = "behandlingsårsak",
+                        nøkkel = K9FeltIder.BEHANDLINGSARSAK,
                         verdi = null
                     )
                 )
@@ -643,14 +644,14 @@ class SakEventTilOppgaveMapper(
             if (event.aksjonspunktTilstander.isNotEmpty()) {
                 oppgaveFeltverdiDtos.addAll(event.aksjonspunktTilstander.map { aksjonspunktTilstand ->
                     OppgaveFeltverdiDto(
-                        nøkkel = "aksjonspunkt",
+                        nøkkel = K9FeltIder.AKSJONSPUNKT,
                         verdi = aksjonspunktTilstand.aksjonspunktKode
                     )
                 })
             } else {
                 oppgaveFeltverdiDtos.add(
                     OppgaveFeltverdiDto(
-                        nøkkel = "aksjonspunkt",
+                        nøkkel = K9FeltIder.AKSJONSPUNKT,
                         verdi = null
                     )
                 )
@@ -665,14 +666,14 @@ class SakEventTilOppgaveMapper(
             if (utførte.isNotEmpty()) {
                 oppgaveFeltverdiDtos.addAll(utførte.map { aksjonspunktTilstand ->
                     OppgaveFeltverdiDto(
-                        nøkkel = "utførtAksjonspunkt",
+                        nøkkel = K9FeltIder.UTFORT_AKSJONSPUNKT,
                         verdi = aksjonspunktTilstand.aksjonspunktKode
                     )
                 })
             } else {
                 oppgaveFeltverdiDtos.add(
                     OppgaveFeltverdiDto(
-                        nøkkel = "utførtAksjonspunkt",
+                        nøkkel = K9FeltIder.UTFORT_AKSJONSPUNKT,
                         verdi = null
                     )
                 )
@@ -687,14 +688,14 @@ class SakEventTilOppgaveMapper(
             if (avbrutte.isNotEmpty()) {
                 oppgaveFeltverdiDtos.addAll(avbrutte.map { aksjonspunktTilstand ->
                     OppgaveFeltverdiDto(
-                        nøkkel = "avbruttAksjonspunkt",
+                        nøkkel = K9FeltIder.AVBRUTT_AKSJONSPUNKT,
                         verdi = aksjonspunktTilstand.aksjonspunktKode
                     )
                 })
             } else {
                 oppgaveFeltverdiDtos.add(
                     OppgaveFeltverdiDto(
-                        nøkkel = "avbruttAksjonspunkt",
+                        nøkkel = K9FeltIder.AVBRUTT_AKSJONSPUNKT,
                         verdi = null
                     )
                 )
@@ -715,14 +716,14 @@ class SakEventTilOppgaveMapper(
             if (fremtidige.isNotEmpty()) {
                 oppgaveFeltverdiDtos.addAll(fremtidige.map { aksjonspunktTilstand ->
                     OppgaveFeltverdiDto(
-                        nøkkel = "fremtidigAksjonspunkt",
+                        nøkkel = K9FeltIder.FREMTIDIG_AKSJONSPUNKT,
                         verdi = aksjonspunktTilstand.aksjonspunktKode
                     )
                 })
             } else {
                 oppgaveFeltverdiDtos.add(
                     OppgaveFeltverdiDto(
-                        nøkkel = "fremtidigAksjonspunkt",
+                        nøkkel = K9FeltIder.FREMTIDIG_AKSJONSPUNKT,
                         verdi = null
                     )
                 )

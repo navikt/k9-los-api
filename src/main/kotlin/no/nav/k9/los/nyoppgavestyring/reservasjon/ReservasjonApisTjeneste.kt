@@ -1,5 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.reservasjon
 
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.K9FeltIder
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.adhocjobber.reservasjonkonvertering.ReservasjonOversetter
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.azuregraph.IAzureGraphService
@@ -239,14 +240,14 @@ class ReservasjonApisTjeneste(
                         reservertAvIdent = saksbehandler.navident!!,
                         reservertAvId = saksbehandler.id!!,
                         reservertAvNavn = saksbehandler.navn,
-                        saksnummer = oppgave.hentVerdi("saksnummer"), //TODO: Oppgaveagnostisk logikk. Løses antagelig ved å skrive om frontend i dette tilfellet
-                        journalpostId = oppgave.hentVerdi("journalpostId"),
-                        ytelse = oppgave.hentVerdi("ytelsestype")?.let { FagsakYtelseType.fraKode(it).navn }
+                        saksnummer = oppgave.hentVerdi(K9FeltIder.SAKSNUMMER), //TODO: Oppgaveagnostisk logikk. Løses antagelig ved å skrive om frontend i dette tilfellet
+                        journalpostId = oppgave.hentVerdi(K9FeltIder.JOURNALPOST_ID),
+                        ytelse = oppgave.hentVerdi(K9FeltIder.YTELSESTYPE)?.let { FagsakYtelseType.fraKode(it).navn }
                             ?: FagsakYtelseType.UKJENT.navn,
-                        behandlingType = BehandlingType.fraKode(oppgave.hentVerdi("behandlingTypekode")!!),
+                        behandlingType = BehandlingType.fraKode(oppgave.hentVerdi(K9FeltIder.BEHANDLING_TYPEKODE)!!),
                         reservertTilTidspunkt = reservasjonMedOppgaver.reservasjonV3.gyldigTil,
                         kommentar = reservasjonMedOppgaver.reservasjonV3.kommentar ?: "",
-                        tilBeslutter = oppgave.hentVerdi("liggerHosBeslutter").toBoolean(),
+                        tilBeslutter = oppgave.hentVerdi(K9FeltIder.LIGGER_HOS_BESLUTTER).toBoolean(),
                         oppgavenøkkel = OppgaveNøkkelDto(oppgave),
                     )
                 }.toList()

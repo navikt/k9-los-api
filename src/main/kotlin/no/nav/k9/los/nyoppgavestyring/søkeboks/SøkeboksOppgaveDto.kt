@@ -1,12 +1,13 @@
 package no.nav.k9.los.nyoppgavestyring.søkeboks
 
 import com.fasterxml.jackson.annotation.JsonFormat
-import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.Saksbehandler
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.K9FeltIder
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.*
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingStatus
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
 import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3
+import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveNøkkelDto
 import java.time.LocalDate
@@ -44,15 +45,15 @@ data class SøkeboksOppgaveDto(
         fnr = person?.fnr() ?: "Ukjent fnummer",
         kjønn = person?.kjoenn() ?: "Ukjent kjønn",
         dødsdato = person?.doedsdato(),
-        ytelsestype = oppgaveV3.hentVerdi("ytelsestype")?.let { FagsakYtelseType.fraKode(it) } ?: FagsakYtelseType.UKJENT,
-        behandlingstype = BehandlingType.fraKode(oppgaveV3.hentVerdi("behandlingTypekode")!!),
-        saksnummer = oppgaveV3.hentVerdi("saksnummer"),
-        hastesak = oppgaveV3.hentVerdi("hastesak") == "true",
+        ytelsestype = oppgaveV3.hentVerdi(K9FeltIder.YTELSESTYPE)?.let { FagsakYtelseType.fraKode(it) } ?: FagsakYtelseType.UKJENT,
+        behandlingstype = BehandlingType.fraKode(oppgaveV3.hentVerdi(K9FeltIder.BEHANDLING_TYPEKODE)!!),
+        saksnummer = oppgaveV3.hentVerdi(K9FeltIder.SAKSNUMMER),
+        hastesak = oppgaveV3.hentVerdi(K9FeltIder.HASTESAK) == "true",
         oppgaveNøkkel = OppgaveNøkkelDto(oppgaveV3),
-        journalpostId = oppgaveV3.hentVerdi("journalpostId"),
-        opprettetTidspunkt = oppgaveV3.hentVerdi("registrertDato")?.let { LocalDateTime.parse(it) },
+        journalpostId = oppgaveV3.hentVerdi(K9FeltIder.JOURNALPOST_ID),
+        opprettetTidspunkt = oppgaveV3.hentVerdi(K9FeltIder.REGISTRERT_DATO)?.let { LocalDateTime.parse(it) },
         oppgavestatus = OppgavestatusMedNavn.valueOf(oppgaveV3.status),
-        behandlingsstatus = oppgaveV3.hentVerdi("behandlingsstatus")?.let { BehandlingStatus.fraKode(it) },
+        behandlingsstatus = oppgaveV3.hentVerdi(K9FeltIder.BEHANDLINGSSTATUS)?.let { BehandlingStatus.fraKode(it) },
         oppgavebehandlingsUrl = oppgaveV3.getOppgaveBehandlingsurl(),
         reservasjonsnøkkel = oppgaveV3.reservasjonsnøkkel,
         reservertAvSaksbehandlerNavn = reservertAv?.navn,

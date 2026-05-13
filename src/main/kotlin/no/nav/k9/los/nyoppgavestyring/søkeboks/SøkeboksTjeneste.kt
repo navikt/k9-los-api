@@ -1,5 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.søkeboks
 
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.K9FeltIder
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.IPdlService
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.navn
@@ -48,11 +49,11 @@ class SøkeboksTjeneste(
             filtere = listOf(
                 FeltverdiOppgavefilter(
                     område = "K9",
-                    kode = "journalpostId",
+                    kode = K9FeltIder.JOURNALPOST_ID,
                     operator = EksternFeltverdiOperator.EQUALS,
                     verdi = listOf(journalpostId)
                 )
-            ), order = listOf(EnkelOrderFelt("K9", "mottattDato", false))
+            ), order = listOf(EnkelOrderFelt("K9", K9FeltIder.MOTTATT_DATO, false))
         )
         return queryService.queryForOppgave(QueryRequest(oppgaveQuery = query))
     }
@@ -64,11 +65,11 @@ class SøkeboksTjeneste(
             filtere = listOf(
                 FeltverdiOppgavefilter(
                     område = "K9",
-                    kode = "aktorId",
+                    kode = K9FeltIder.AKTOR_ID,
                     operator = EksternFeltverdiOperator.IN,
                     verdi = listOf(aktørId, fnr)
                 )
-            ), order = listOf(EnkelOrderFelt("K9", "mottattDato", false))
+            ), order = listOf(EnkelOrderFelt("K9", K9FeltIder.MOTTATT_DATO, false))
         )
         return queryService.queryForOppgave(QueryRequest(oppgaveQuery = query))
     }
@@ -78,11 +79,11 @@ class SøkeboksTjeneste(
             filtere = listOf(
                 FeltverdiOppgavefilter(
                     område = "K9",
-                    kode = "aktorId",
+                    kode = K9FeltIder.AKTOR_ID,
                     operator = EksternFeltverdiOperator.IN,
                     verdi = aktørIder
                 )
-            ), order = listOf(EnkelOrderFelt("K9", "mottattDato", false))
+            ), order = listOf(EnkelOrderFelt("K9", K9FeltIder.MOTTATT_DATO, false))
         )
         return queryService.queryForOppgave(QueryRequest(oppgaveQuery = query))
     }
@@ -92,11 +93,11 @@ class SøkeboksTjeneste(
             filtere = listOf(
                 FeltverdiOppgavefilter(
                     område = "K9",
-                    kode = "saksnummer",
+                    kode = K9FeltIder.SAKSNUMMER,
                     operator = EksternFeltverdiOperator.EQUALS,
                     verdi = listOf(saksnummer.uppercase().replace("O", "o").replace("I", "i"))
                 )
-            ), order = listOf(EnkelOrderFelt("K9", "mottattDato", false))
+            ), order = listOf(EnkelOrderFelt("K9", K9FeltIder.MOTTATT_DATO, false))
         )
         return queryService.queryForOppgave(QueryRequest(oppgaveQuery = query))
     }
@@ -108,7 +109,7 @@ class SøkeboksTjeneste(
             return Søkeresultat.TomtResultat
         }
 
-        val aktørId = oppgaver.first().hentVerdi("aktorId")
+        val aktørId = oppgaver.first().hentVerdi(K9FeltIder.AKTOR_ID)
             ?: return Søkeresultat.TomtResultat
 
         val (ikkeTilgang, person) = pdlService.person(aktørId)
@@ -137,9 +138,9 @@ class SøkeboksTjeneste(
 
     private fun filtrerOppgaverBasertPåSaksnummer(oppgaver: List<Oppgave>): List<Oppgave> {
         val (oppgaverMedSaksnummer, oppgaverUtenSaksnummer) =
-            oppgaver.partition { it.hentVerdi("saksnummer") != null }
+            oppgaver.partition { it.hentVerdi(K9FeltIder.SAKSNUMMER) != null }
 
-        val gruppertPåSaksnummer = oppgaverMedSaksnummer.groupBy { it.hentVerdi("saksnummer")!! }
+        val gruppertPåSaksnummer = oppgaverMedSaksnummer.groupBy { it.hentVerdi(K9FeltIder.SAKSNUMMER)!! }
 
         val filtrerteMedSaksnummer = gruppertPåSaksnummer.values.map { oppgaverISak ->
             // Finn den ene oppgaven som ikke er lukket (hvis den finnes)
@@ -150,24 +151,24 @@ class SøkeboksTjeneste(
     }
 
     private fun transformerOppgave(oppgave: Oppgave, navn: String): SøkeresultatOppgaveDto? {
-        if (oppgave.hentVerdi("ytelsestype") == "OBSOLETE") {
+        if (oppgave.hentVerdi(K9FeltIder.YTELSESTYPE) == "OBSOLETE") {
             return null
         }
         return SøkeresultatOppgaveDto(
             navn = navn,
             oppgaveNøkkel = OppgaveNøkkelDto(oppgave),
-            ytelsestype = oppgave.hentVerdi("ytelsestype")?.let { FagsakYtelseType.fraKode(it).navn }
+            ytelsestype = oppgave.hentVerdi(K9FeltIder.YTELSESTYPE)?.let { FagsakYtelseType.fraKode(it).navn }
                 ?: FagsakYtelseType.UKJENT.navn,
-            saksnummer = oppgave.hentVerdi("saksnummer"),
-            hastesak = oppgave.hentVerdi("hastesak") == "true",
-            journalpostId = oppgave.hentVerdi("journalpostId"),
-            opprettetTidspunkt = oppgave.hentVerdi("registrertDato")?.let { dato -> LocalDateTime.parse(dato) },
-            status = oppgave.hentVerdi("behandlingsstatus")
+            saksnummer = oppgave.hentVerdi(K9FeltIder.SAKSNUMMER),
+            hastesak = oppgave.hentVerdi(K9FeltIder.HASTESAK) == "true",
+            journalpostId = oppgave.hentVerdi(K9FeltIder.JOURNALPOST_ID),
+            opprettetTidspunkt = oppgave.hentVerdi(K9FeltIder.REGISTRERT_DATO)?.let { dato -> LocalDateTime.parse(dato) },
+            status = oppgave.hentVerdi(K9FeltIder.BEHANDLINGSSTATUS)
                 ?.let { kode -> BehandlingStatus.fraKode(kode).navn }
                 ?: Oppgavestatus.fraKode(oppgave.status).visningsnavn,
             oppgavebehandlingsUrl = oppgave.getOppgaveBehandlingsurl(),
             reservasjonsnøkkel = oppgave.reservasjonsnøkkel,
-            fagsakÅr = oppgave.hentVerdi("fagsakÅr")?.toIntOrNull()
+            fagsakÅr = oppgave.hentVerdi(K9FeltIder.FAGSAK_AR)?.toIntOrNull()
         )
     }
 }

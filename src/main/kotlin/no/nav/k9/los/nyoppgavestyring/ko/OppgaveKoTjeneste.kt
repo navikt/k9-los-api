@@ -9,6 +9,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.runBlocking
 import kotliquery.TransactionalSession
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.K9FeltIder
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.metrikker.DetaljerMetrikker
@@ -118,15 +119,15 @@ class OppgaveKoTjeneste(
 
         val rader: List<Map<String, String>> = oppgaver.map { oppgave ->
             buildMap {
-                oppgave.hentVerdi("aktorId")?.let { aktørId ->
+                oppgave.hentVerdi(K9FeltIder.AKTOR_ID)?.let { aktørId ->
                     put(
                         "søker", pdlService.person(aktørId).person
                             ?.let { "${it.navn()} ${it.fnr()}" }
                             ?: "Ukjent navn Ukjent fnummer")
                 }
-                oppgave.hentVerdi("journalpostId")?.let { put("id", it) }
-                    ?: oppgave.hentVerdi("saksnummer")?.let { put("id", it) }
-                oppgave.hentVerdi("behandlingTypekode")?.let {
+                oppgave.hentVerdi(K9FeltIder.JOURNALPOST_ID)?.let { put("id", it) }
+                    ?: oppgave.hentVerdi(K9FeltIder.SAKSNUMMER)?.let { put("id", it) }
+                oppgave.hentVerdi(K9FeltIder.BEHANDLING_TYPEKODE)?.let {
                     put("behandlingType", BehandlingType.fraKode(it).navn)
                 }
                 for ((kolonne, _) in visningskolonner) {

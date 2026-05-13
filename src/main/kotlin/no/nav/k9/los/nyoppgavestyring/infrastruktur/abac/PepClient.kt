@@ -1,6 +1,7 @@
 package no.nav.k9.los.nyoppgavestyring.infrastruktur.abac
 
 import kotlinx.coroutines.runBlocking
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.K9FeltIder
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.azuregraph.IAzureGraphService
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.idToken
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.Saksbehandler
@@ -89,9 +90,9 @@ class PepClient(
             oppgavetype = oppgave.oppgavetype.eksternId,
             identTilInnloggetBruker = azureGraphService.hentIdentTilInnloggetBruker(),
             action = action,
-            saksnummer = oppgave.hentVerdi("saksnummer"),
-            aktørIdSøker = oppgave.hentVerdi("aktorId"),
-            aktørIdPleietrengende = oppgave.hentVerdi("pleietrengendeAktorId"),
+            saksnummer = oppgave.hentVerdi(K9FeltIder.SAKSNUMMER),
+            aktørIdSøker = oppgave.hentVerdi(K9FeltIder.AKTOR_ID),
+            aktørIdPleietrengende = oppgave.hentVerdi(K9FeltIder.PLEIETRENGENDE_AKTOR_ID),
             grupperForSaksbehandler = grupperForSaksbehandler
         )
     }
@@ -106,9 +107,9 @@ class PepClient(
                 oppgavetype = oppgave.oppgavetype.eksternId,
                 identTilInnloggetBruker = saksbehandler.navident!!,
                 action = action,
-                saksnummer = oppgave.hentVerdi("saksnummer"),
-                aktørIdSøker = oppgave.hentVerdi("aktorId"),
-                aktørIdPleietrengende = oppgave.hentVerdi("pleietrengendeAktorId"),
+                saksnummer = oppgave.hentVerdi(K9FeltIder.SAKSNUMMER),
+                aktørIdSøker = oppgave.hentVerdi(K9FeltIder.AKTOR_ID),
+                aktørIdPleietrengende = oppgave.hentVerdi(K9FeltIder.PLEIETRENGENDE_AKTOR_ID),
             )
         }
     }

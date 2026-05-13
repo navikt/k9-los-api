@@ -6,6 +6,7 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotliquery.queryOf
 import no.nav.k9.kodeverk.behandling.FagsakYtelseType
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.K9FeltIder
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.AvstemmingsTjeneste
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
@@ -130,10 +131,10 @@ fun Route.forvaltningApis() {
                             oppgaveQuery = OppgaveQuery(
                                 filtere = listOf(
                                     FeltverdiOppgavefilter(
-                                        "K9",
-                                        "saksnummer",
-                                        operator = EksternFeltverdiOperator.EQUALS,
-                                        verdi = listOf(saksnummer)
+                        "K9",
+                        K9FeltIder.SAKSNUMMER,
+                        operator = EksternFeltverdiOperator.EQUALS,
+                        verdi = listOf(saksnummer)
                                     )
                                 ),
                                 order = listOf(
@@ -157,10 +158,10 @@ fun Route.forvaltningApis() {
                             oppgaveQuery = OppgaveQuery(
                                 filtere = listOf(
                                     FeltverdiOppgavefilter(
-                                        "K9",
-                                        "journalpostId",
-                                        operator = EksternFeltverdiOperator.EQUALS,
-                                        verdi = listOf(saksnummer)
+                        "K9",
+                        K9FeltIder.JOURNALPOST_ID,
+                        operator = EksternFeltverdiOperator.EQUALS,
+                        verdi = listOf(saksnummer)
                                     )
                                 )
                             ),
@@ -488,7 +489,7 @@ fun Route.forvaltningApis() {
 }
 
 fun utledReservasjonsnøkkel(oppgave: Oppgave, erTilBeslutter: Boolean): String {
-    return when (FagsakYtelseType.fraKode(oppgave.hentVerdi("ytelsestype"))) {
+    return when (FagsakYtelseType.fraKode(oppgave.hentVerdi(K9FeltIder.YTELSESTYPE))) {
         FagsakYtelseType.PLEIEPENGER_SYKT_BARN,
         FagsakYtelseType.PLEIEPENGER_NÆRSTÅENDE,
         FagsakYtelseType.OMSORGSPENGER_KS,
@@ -501,16 +502,16 @@ fun utledReservasjonsnøkkel(oppgave: Oppgave, erTilBeslutter: Boolean): String 
 
 fun lagNøkkelPleietrengendeAktør(oppgave: Oppgave, tilBeslutter: Boolean): String {
     return if (tilBeslutter)
-        "K9_b_${oppgave.hentVerdi("ytelsestype")}_${oppgave.hentVerdi("pleietrengendeAktorId")}_beslutter"
+        "K9_b_${oppgave.hentVerdi(K9FeltIder.YTELSESTYPE)}_${oppgave.hentVerdi(K9FeltIder.PLEIETRENGENDE_AKTOR_ID)}_beslutter"
     else {
-        "K9_b_${oppgave.hentVerdi("ytelsestype")}_${oppgave.hentVerdi("pleietrengendeAktorId")}"
+        "K9_b_${oppgave.hentVerdi(K9FeltIder.YTELSESTYPE)}_${oppgave.hentVerdi(K9FeltIder.PLEIETRENGENDE_AKTOR_ID)}"
     }
 }
 
 fun lagNøkkelAktør(oppgave: Oppgave, tilBeslutter: Boolean): String {
     return if (tilBeslutter) {
-        "K9_b_${oppgave.hentVerdi("ytelsestype")}_${oppgave.hentVerdi("aktorId")}_beslutter"
+        "K9_b_${oppgave.hentVerdi(K9FeltIder.YTELSESTYPE)}_${oppgave.hentVerdi(K9FeltIder.AKTOR_ID)}_beslutter"
     } else {
-        "K9_b_${oppgave.hentVerdi("ytelsestype")}_${oppgave.hentVerdi("aktorId")}"
+        "K9_b_${oppgave.hentVerdi(K9FeltIder.YTELSESTYPE)}_${oppgave.hentVerdi(K9FeltIder.AKTOR_ID)}"
     }
 }

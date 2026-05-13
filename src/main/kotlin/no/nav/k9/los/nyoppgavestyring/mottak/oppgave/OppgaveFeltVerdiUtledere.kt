@@ -1,7 +1,8 @@
 package no.nav.k9.los.nyoppgavestyring.mottak.oppgave
 
-import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.K9FeltIder
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.Cache
+import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
 import java.time.Duration
 import java.time.LocalDateTime
 
@@ -15,8 +16,8 @@ class OppgaveFeltVerdiUtledere(private val saksbehandlerRepository: Saksbehandle
         eventTid: LocalDateTime?
     ): OppgaveFeltverdiDto =
         OppgaveFeltverdiDto(
-            nøkkel = "ferdigstiltTidspunkt",
-            verdi = if (oppgavestatus == Oppgavestatus.LUKKET) forrigeOppgave?.hentVerdi("ferdigstiltTidspunkt")
+            nøkkel = K9FeltIder.FERDIGSTILT_TIDSPUNKT,
+            verdi = if (oppgavestatus == Oppgavestatus.LUKKET) forrigeOppgave?.hentVerdi(K9FeltIder.FERDIGSTILT_TIDSPUNKT)
                 ?: eventTid?.toString() else null
         )
 
@@ -26,8 +27,8 @@ class OppgaveFeltVerdiUtledere(private val saksbehandlerRepository: Saksbehandle
         ansvarligSaksbehandler: String?
     ): OppgaveFeltverdiDto =
         OppgaveFeltverdiDto(
-            nøkkel = "ferdigstiltEnhet",
-            verdi = if (oppgavestatus == Oppgavestatus.LUKKET) forrigeOppgave?.hentVerdi("ferdigstiltEnhet")
+            nøkkel = K9FeltIder.FERDIGSTILT_ENHET,
+            verdi = if (oppgavestatus == Oppgavestatus.LUKKET) forrigeOppgave?.hentVerdi(K9FeltIder.FERDIGSTILT_ENHET)
                 ?: ansvarligSaksbehandler?.let { finnSaksbehandlersEnhet(it) } else null
         )
 

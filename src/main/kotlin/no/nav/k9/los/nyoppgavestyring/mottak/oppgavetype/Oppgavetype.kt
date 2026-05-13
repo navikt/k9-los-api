@@ -1,7 +1,5 @@
 package no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype
 
-import no.nav.k9.los.nyoppgavestyring.feltutlederforlagring.GyldigeFeltutledere
-import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Feltdefinisjoner
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.Område
 
 class Oppgavetype(
@@ -29,29 +27,4 @@ class Oppgavetype(
         return feltById[oppgavefeltId]
             ?: throw NoSuchElementException("Fant ikke oppgavefelt med id=$oppgavefeltId")
     }
-
-    constructor(
-        dto: OppgavetypeDto,
-        definisjonskilde: String,
-        område: Område,
-        oppgavebehandlingsUrlTemplate: String,
-        feltdefinisjoner: Feltdefinisjoner,
-        gyldigeFeltutledere: GyldigeFeltutledere
-    ) : this(
-        eksternId = dto.id,
-        område = område,
-        definisjonskilde = definisjonskilde,
-        oppgavebehandlingsUrlTemplate = oppgavebehandlingsUrlTemplate,
-        oppgavefelter = dto.oppgavefelter.map { innkommendeFeltdefinisjon ->
-            Oppgavefelt(
-                feltDefinisjon = feltdefinisjoner.feltdefinisjoner.find { eksisterendeFeltdefinisjon ->
-                    eksisterendeFeltdefinisjon.eksternId == innkommendeFeltdefinisjon.id
-                } ?: throw IllegalStateException("Omsøkt feltdefinisjon finnes ikke: ${innkommendeFeltdefinisjon.id}"),
-                visPåOppgave = innkommendeFeltdefinisjon.visPåOppgave,
-                påkrevd = innkommendeFeltdefinisjon.påkrevd,
-                defaultverdi = innkommendeFeltdefinisjon.defaultverdi,
-                feltutleder = innkommendeFeltdefinisjon.feltutleder?.let { gyldigeFeltutledere.hentFeltutleder(innkommendeFeltdefinisjon.feltutleder) }
-            )
-        }.toSet()
-    )
 }

@@ -1,6 +1,7 @@
 package no.nav.k9.los.nyoppgavestyring.mottak.oppgave
 
 import kotliquery.TransactionalSession
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.K9FeltIder
 import org.slf4j.LoggerFactory
 
 class AktivOgPartisjonertOppgaveAjourholdTjeneste(
@@ -19,7 +20,7 @@ class AktivOgPartisjonertOppgaveAjourholdTjeneste(
 
     // Det har aldri vært produksjonsstyring i k9-los for FRISINN, så den skal ignoreres for produksjonsstyringsformål inntil alle hendelser på ytelsen er fjernet fra k9-los
     private fun gjelderFRISINN(oppgave: OppgaveV3): Boolean {
-        return oppgave.felter.any { it.oppgavefelt.feltDefinisjon.eksternId == "ytelsestype" && it.verdi == "FRISINN" }
+        return oppgave.felter.any { it.oppgavefelt.feltDefinisjon.eksternId == K9FeltIder.YTELSESTYPE && it.verdi == "FRISINN" }
     }
 
 }

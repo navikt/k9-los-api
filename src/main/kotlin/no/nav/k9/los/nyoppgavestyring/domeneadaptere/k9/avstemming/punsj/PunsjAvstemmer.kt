@@ -1,5 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.punsj
 
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.K9FeltIder
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.Avstemmingsrapport
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.Oppgavetilstand
 import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
@@ -17,7 +18,7 @@ object PunsjAvstemmer {
         val forekomsterSomGranskesManuelt = mutableListOf<Pair<Journalposttilstand, Oppgavetilstand>>()
         val åpneForekomsterIFagsystemSomManglerILos = mutableListOf<Journalposttilstand>()
         k9PunsjRapport.forEach { journalpost ->
-            val oppgave = åpneLosOppgaver.find { it.hentVerdi("journalpostId") == journalpost.journalpostId }
+            val oppgave = åpneLosOppgaver.find { it.hentVerdi(K9FeltIder.JOURNALPOST_ID) == journalpost.journalpostId }
             if (oppgave == null) {
                 åpneForekomsterIFagsystemSomManglerILos.add(journalpost)
             } else {
@@ -33,7 +34,7 @@ object PunsjAvstemmer {
 
         val åpneForekomsterILosSomManglerIFagsystem = mutableListOf<Oppgavetilstand>()
         åpneLosOppgaver.forEach { oppgave ->
-            val overlapp = k9PunsjRapport.find { it.journalpostId == oppgave.hentVerdi("journalpostId") }
+            val overlapp = k9PunsjRapport.find { it.journalpostId == oppgave.hentVerdi(K9FeltIder.JOURNALPOST_ID) }
             if (overlapp == null) {
                 åpneForekomsterILosSomManglerIFagsystem.add(Oppgavetilstand(oppgave))
             }
@@ -69,7 +70,7 @@ enum class FuzzySammenligningsresultat {
                 return ULIK
             }
             journalposttilstand.ytelseType?.let {
-                val ytelseType = FagsakYtelseType.fraKode(oppgave.hentVerdi("ytelsestype")!!)
+                val ytelseType = FagsakYtelseType.fraKode(oppgave.hentVerdi(K9FeltIder.YTELSESTYPE)!!)
                 if (FagsakYtelseType.fraKode(journalposttilstand.ytelseType) != ytelseType) {
                     return ULIK
                 }

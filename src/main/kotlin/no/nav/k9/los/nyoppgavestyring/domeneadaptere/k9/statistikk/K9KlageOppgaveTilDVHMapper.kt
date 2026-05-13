@@ -4,8 +4,9 @@ import no.nav.k9.klage.kodeverk.behandling.BehandlingResultatType
 import no.nav.k9.klage.kodeverk.behandling.BehandlingStatus
 import no.nav.k9.klage.kodeverk.behandling.FagsakYtelseType
 import no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
-import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.K9FeltIder
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetillos.KlageEventTilOppgaveMapper
+import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -20,31 +21,31 @@ class K9KlageOppgaveTilDVHMapper {
 
     fun lagBehandling(oppgave: Oppgave): Behandling {
         return Behandling(
-            sakId = oppgave.hentVerdi("saksnummer"),
+            sakId = oppgave.hentVerdi(K9FeltIder.SAKSNUMMER),
             behandlingId = oppgave.eksternId,
             funksjonellTid = LocalDateTime.parse(oppgave.eksternVersjon).atZone(zoneId).toOffsetDateTime(),
             tekniskTid = OffsetDateTime.now(zoneId),
-            mottattDato = LocalDateTime.parse(oppgave.hentVerdi("mottattDato")).toLocalDate(),
-            registrertDato = LocalDateTime.parse(oppgave.hentVerdi("registrertDato")).toLocalDate(),
-            vedtaksDato = oppgave.hentVerdi("vedtaksdato")
+            mottattDato = LocalDateTime.parse(oppgave.hentVerdi(K9FeltIder.MOTTATT_DATO)).toLocalDate(),
+            registrertDato = LocalDateTime.parse(oppgave.hentVerdi(K9FeltIder.REGISTRERT_DATO)).toLocalDate(),
+            vedtaksDato = oppgave.hentVerdi(K9FeltIder.VEDTAKSDATO)
                 ?.let { LocalDate.parse(it) },
-            relatertBehandlingId = oppgave.hentVerdi("påklagdBehandlingUuid"),
+            relatertBehandlingId = oppgave.hentVerdi(K9FeltIder.PAKLAGET_BEHANDLING_UUID),
             relatertBehandlingFagsystem = utledRelatertBehandlingFagsystem(oppgave),
             vedtakId = oppgave.hentVerdi("vedtakId"),
-            saksnummer = oppgave.hentVerdi("saksnummer"),
-            behandlingType = oppgave.hentVerdi("behandlingTypekode")
+            saksnummer = oppgave.hentVerdi(K9FeltIder.SAKSNUMMER),
+            behandlingType = oppgave.hentVerdi(K9FeltIder.BEHANDLING_TYPEKODE)
                 ?.let { BehandlingType.fraKode(it).kode },
             behandlingStatus = utledBehandlingStatus(oppgave),
-            resultat = oppgave.hentVerdi("resultattype"),
+            resultat = oppgave.hentVerdi(K9FeltIder.RESULTATTYPE),
             resultatBegrunnelse = null, //TODO: callback mot K9?
             utenlandstilsnitt = oppgave.hentVerdi("utenlandstilsnitt")?.let { it.toBoolean() },
-            behandlingTypeBeskrivelse = BehandlingType.fraKode(oppgave.hentVerdi("behandlingTypekode")!!).navn,
-            behandlingStatusBeskrivelse = BehandlingStatus.fraKode(oppgave.hentVerdi("behandlingsstatus")).navn,
-            resultatBeskrivelse = BehandlingResultatType.fraKode(oppgave.hentVerdi("resultattype")).navn,
+            behandlingTypeBeskrivelse = BehandlingType.fraKode(oppgave.hentVerdi(K9FeltIder.BEHANDLING_TYPEKODE)!!).navn,
+            behandlingStatusBeskrivelse = BehandlingStatus.fraKode(oppgave.hentVerdi(K9FeltIder.BEHANDLINGSSTATUS)).navn,
+            resultatBeskrivelse = BehandlingResultatType.fraKode(oppgave.hentVerdi(K9FeltIder.RESULTATTYPE)).navn,
             resultatBegrunnelseBeskrivelse = null,
             utenlandstilsnittBeskrivelse = null,
-            beslutter = oppgave.hentVerdi("ansvarligBeslutter"),
-            saksbehandler = oppgave.hentVerdi("ansvarligSaksbehandler"),
+            beslutter = oppgave.hentVerdi(K9FeltIder.ANSVARLIG_BESLUTTER),
+            saksbehandler = oppgave.hentVerdi(K9FeltIder.ANSVARLIG_SAKSBEHANDLER),
             behandlingOpprettetAv = "system",
             behandlingOpprettetType = null,
             behandlingOpprettetTypeBeskrivelse = null,
@@ -52,9 +53,9 @@ class K9KlageOppgaveTilDVHMapper {
             ansvarligEnhetType = "NORG",
             datoForUttak = null, // TODO: mappes fra YtelseV1.anvist.firstOrNull()?.periode?.fom, men trengs ikke?
             datoForUtbetaling = null, //TODO: trengs ikke?
-            totrinnsbehandling = oppgave.hentVerdi("totrinnskontroll").toBoolean(),
-            helautomatiskBehandlet = oppgave.hentVerdi("helautomatiskBehandlet").toBoolean(),
-            oversendtKlageinstans = oppgave.hentVerdi("oversendtKlageinstansTidspunkt")?.run(LocalDateTime::parse),
+            totrinnsbehandling = oppgave.hentVerdi(K9FeltIder.TOTRINNSKONTROLL).toBoolean(),
+            helautomatiskBehandlet = oppgave.hentVerdi(K9FeltIder.HELAUTOMATISK_BEHANDLET).toBoolean(),
+            oversendtKlageinstans = oppgave.hentVerdi(K9FeltIder.OVERSENDT_KLAGEINSTANS_TIDSPUNKT)?.run(LocalDateTime::parse),
             avsender = "K9klage",
             versjon = 1, //TODO: Ikke i bruk?
         )
@@ -62,7 +63,7 @@ class K9KlageOppgaveTilDVHMapper {
 
     private fun utledRelatertBehandlingFagsystem(oppgave: Oppgave) : String? {
         val verdi = oppgave.hentVerdi(
-            "påklagdBehandlingtype")
+            K9FeltIder.PAKLAGET_BEHANDLINGTYPE)
 
         return verdi?.let {
             val påklagdBehandlingType = no.nav.k9.klage.kodeverk.behandling.BehandlingType.fraKode(it)
@@ -75,35 +76,35 @@ class K9KlageOppgaveTilDVHMapper {
     }
 
     private fun utledBehandlingStatus(oppgave: Oppgave): String {
-        return if (oppgave.hentListeverdi("aktivtAksjonspunkt").contains(KlageEventTilOppgaveMapper.KLAGE_PREFIX + AksjonspunktDefinisjon.AUTO_OVERFØRT_NK.kode)) {
+        return if (oppgave.hentListeverdi(K9FeltIder.AKTIVT_AKSJONSPUNKT).contains(KlageEventTilOppgaveMapper.KLAGE_PREFIX + AksjonspunktDefinisjon.AUTO_OVERFØRT_NK.kode)) {
             "OVERFORT_KLAGE_ANKE"
         } else {
-            BehandlingStatus.fraKode(oppgave.hentVerdi("behandlingsstatus")).kode
+            BehandlingStatus.fraKode(oppgave.hentVerdi(K9FeltIder.BEHANDLINGSSTATUS)).kode
         }
     }
 
     fun lagSak(oppgave: Oppgave): Sak {
         return Sak(
-            saksnummer = oppgave.hentVerdi("saksnummer")!!,
+            saksnummer = oppgave.hentVerdi(K9FeltIder.SAKSNUMMER)!!,
             sakId = oppgave.eksternId,
             funksjonellTid = LocalDateTime.parse(oppgave.eksternVersjon).atZone(K9SakOppgaveTilDVHMapper.zoneId).toOffsetDateTime(),
             tekniskTid = OffsetDateTime.now(zoneId),
-            opprettetDato = LocalDateTime.parse(oppgave.hentVerdi("mottattDato")).toLocalDate(), // TODO må finne ut om dette er riktig
-            aktorId = utledAktørId(oppgave.hentVerdi("aktorId")),
-            aktorer = utledAktører(oppgave.hentVerdi("aktorId")),
-            ytelseType = oppgave.hentVerdi("ytelsestype"),
+            opprettetDato = LocalDateTime.parse(oppgave.hentVerdi(K9FeltIder.MOTTATT_DATO)).toLocalDate(), // TODO må finne ut om dette er riktig
+            aktorId = utledAktørId(oppgave.hentVerdi(K9FeltIder.AKTOR_ID)),
+            aktorer = utledAktører(oppgave.hentVerdi(K9FeltIder.AKTOR_ID)),
+            ytelseType = oppgave.hentVerdi(K9FeltIder.YTELSESTYPE),
             underType = null,
-            sakStatus = oppgave.hentVerdi("behandlingsstatus"),
-            ytelseTypeBeskrivelse = FagsakYtelseType.fraKode(oppgave.hentVerdi("ytelsestype")).navn,
+            sakStatus = oppgave.hentVerdi(K9FeltIder.BEHANDLINGSSTATUS),
+            ytelseTypeBeskrivelse = FagsakYtelseType.fraKode(oppgave.hentVerdi(K9FeltIder.YTELSESTYPE)).navn,
             underTypeBeskrivelse = null,
-            sakStatusBeskrivelse = BehandlingStatus.fraKode(oppgave.hentVerdi("behandlingsstatus")).navn,
+            sakStatusBeskrivelse = BehandlingStatus.fraKode(oppgave.hentVerdi(K9FeltIder.BEHANDLINGSSTATUS)).navn,
             avsender = "K9los",
             versjon = 1 // TODO blir dette riktig?
         )
     }
 
     private fun utledEnhetskode(oppgave: Oppgave) =
-        when (FagsakYtelseType.fraKode(oppgave.hentVerdi("ytelsestype"))) {
+        when (FagsakYtelseType.fraKode(oppgave.hentVerdi(K9FeltIder.YTELSESTYPE))) {
             FagsakYtelseType.FRISINN -> "4863"
             FagsakYtelseType.PLEIEPENGER_SYKT_BARN -> "4487"
             FagsakYtelseType.PLEIEPENGER_NÆRSTÅENDE -> "4487"
@@ -116,7 +117,7 @@ class K9KlageOppgaveTilDVHMapper {
             FagsakYtelseType.SVANGERSKAPSPENGER -> "4487"
             FagsakYtelseType.OBSOLETE -> "4487"
             FagsakYtelseType.UDEFINERT -> "4487"
-            else -> throw IllegalStateException("Ukjent ytelsestype: ${oppgave.hentVerdi("ytelsestype")}")
+            else -> throw IllegalStateException("Ukjent ytelsestype: ${oppgave.hentVerdi(K9FeltIder.YTELSESTYPE)}")
         }
 
     private fun utledAktørId(aktørId: String?): Long? {

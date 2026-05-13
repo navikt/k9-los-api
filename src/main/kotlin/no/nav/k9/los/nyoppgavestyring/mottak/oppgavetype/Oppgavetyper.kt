@@ -1,7 +1,5 @@
 package no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype
 
-import no.nav.k9.los.nyoppgavestyring.feltutlederforlagring.GyldigeFeltutledere
-import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Feltdefinisjoner
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.Område
 
 class Oppgavetyper(
@@ -9,24 +7,6 @@ class Oppgavetyper(
     val oppgavetyper: Set<Oppgavetype>
 ) {
 
-    constructor(
-        dto: OppgavetyperDto,
-        område: Område,
-        feltdefinisjoner: Feltdefinisjoner,
-        gyldigeFeltutledere: GyldigeFeltutledere
-    ) : this(
-        område = område,
-        oppgavetyper = dto.oppgavetyper.map { oppgavetypeDto ->
-            Oppgavetype(
-                dto = oppgavetypeDto,
-                definisjonskilde = dto.definisjonskilde,
-                område = område,
-                oppgavebehandlingsUrlTemplate = oppgavetypeDto.oppgavebehandlingsUrlTemplate,
-                feltdefinisjoner = feltdefinisjoner,
-                gyldigeFeltutledere = gyldigeFeltutledere
-            )
-        }.toSet()
-    )
     fun finnForskjell(innkommendeOppgavetyper: Oppgavetyper): Triple<Oppgavetyper, Oppgavetyper, List<OppgavetypeEndring>> {
         if (innkommendeOppgavetyper.område != this.område) {
             throw IllegalStateException("Kan ikke sammenligne oppgavetyper på tvers av områder")

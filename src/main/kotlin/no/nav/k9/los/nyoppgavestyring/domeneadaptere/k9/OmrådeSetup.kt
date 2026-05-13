@@ -1,7 +1,5 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9
 
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import io.opentelemetry.instrumentation.annotations.WithSpan
 import no.nav.k9.kodeverk.behandling.BehandlingResultatType
 import no.nav.k9.kodeverk.behandling.BehandlingStegType
 import no.nav.k9.kodeverk.behandling.BehandlingÅrsakType
@@ -11,12 +9,13 @@ import no.nav.k9.kodeverk.behandling.aksjonspunkt.Venteårsak
 import no.nav.k9.kodeverk.produksjonsstyring.UtvidetSøknadÅrsak
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetillos.KlageEventTilOppgaveMapper
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.nyoppgavestyring.kodeverk.*
-import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.*
+import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonTjeneste
+import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.KodeverkDto
+import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.KodeverkVerdiDto
+import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Synlighet
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeTjeneste
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetyperDto
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon as KlageAksjonspunktDefinisjon
@@ -36,10 +35,18 @@ class OmrådeSetup(
         oppdaterKodeverk()
         oppdaterFeltdefinisjoner()
 
-        ajourholdOppgavetype("/adapterdefinisjoner/k9-oppgavetyper-k9sak.json", config.k9FrontendUrl())
-        ajourholdOppgavetype("/adapterdefinisjoner/k9-oppgavetyper-k9klage.json", config.k9FrontendUrl())
-        ajourholdOppgavetype("/adapterdefinisjoner/k9-oppgavetyper-k9tilbake.json", config.k9FrontendUrl())
-        ajourholdOppgavetype("/adapterdefinisjoner/k9-oppgavetyper-k9punsj.json", config.k9PunsjFrontendUrl())
+        oppgavetypeTjeneste.oppdater("K9", K9SakOppgavetypeDefinisjon.DEFINISJONSKILDE) { område, feltdefinisjoner, gyldigeFeltutledere ->
+            K9SakOppgavetypeDefinisjon.lagOppgavetyper(config.k9FrontendUrl(), område, feltdefinisjoner, gyldigeFeltutledere)
+        }
+        oppgavetypeTjeneste.oppdater("K9", K9KlageOppgavetypeDefinisjon.DEFINISJONSKILDE) { område, feltdefinisjoner, gyldigeFeltutledere ->
+            K9KlageOppgavetypeDefinisjon.lagOppgavetyper(config.k9FrontendUrl(), område, feltdefinisjoner, gyldigeFeltutledere)
+        }
+        oppgavetypeTjeneste.oppdater("K9", K9TilbakeOppgavetypeDefinisjon.DEFINISJONSKILDE) { område, feltdefinisjoner, gyldigeFeltutledere ->
+            K9TilbakeOppgavetypeDefinisjon.lagOppgavetyper(config.k9FrontendUrl(), område, feltdefinisjoner, gyldigeFeltutledere)
+        }
+        oppgavetypeTjeneste.oppdater("K9", K9PunsjOppgavetypeDefinisjon.DEFINISJONSKILDE) { område, feltdefinisjoner, gyldigeFeltutledere ->
+            K9PunsjOppgavetypeDefinisjon.lagOppgavetyper(config.k9PunsjFrontendUrl(), område, feltdefinisjoner, gyldigeFeltutledere)
+        }
     }
 
     private fun opprettOmråde() {
@@ -48,36 +55,10 @@ class OmrådeSetup(
     }
 
     private fun oppdaterFeltdefinisjoner() {
-        val objectMapper = jacksonObjectMapper()
-        val feltdefinisjonerDto = objectMapper.readValue(
-            OmrådeSetup::class.java.getResource("/adapterdefinisjoner/k9-feltdefinisjoner-v2.json")!!
-                .readText(),
-            FeltdefinisjonerDto::class.java
-        )
         log.info("Oppretter/oppdaterer feltdefinisjoner for område $område")
-        feltdefinisjonTjeneste.oppdater(feltdefinisjonerDto)
-    }
-
-    @WithSpan
-    private fun ajourholdOppgavetype(oppgavedefinisjon: String, frontendUrl: String) {
-        val oppgavetyperDto = LosObjectMapper.instance.readValue(
-            OmrådeSetup::class.java.getResource(oppgavedefinisjon)!!
-                .readText(),
-            OppgavetyperDto::class.java
-        )
-        oppgavetypeTjeneste.oppdater(
-            oppgavetyperDto.copy(
-                oppgavetyper = oppgavetyperDto.oppgavetyper.map { oppgavetypeDto ->
-                    oppgavetypeDto.copy(
-                        oppgavebehandlingsUrlTemplate = oppgavetypeDto.oppgavebehandlingsUrlTemplate.replace(
-                            "{baseUrl}",
-                            frontendUrl
-                        )
-                    )
-                }.toSet()
-            )
-        )
-        log.info("opprettet oppgavetype: $oppgavedefinisjon")
+        feltdefinisjonTjeneste.oppdater(område) { områdeObj ->
+            K9Feltdefinisjoner.lagFeltdefinisjoner(områdeObj)
+        }
     }
 
     private fun oppdaterKodeverk() {

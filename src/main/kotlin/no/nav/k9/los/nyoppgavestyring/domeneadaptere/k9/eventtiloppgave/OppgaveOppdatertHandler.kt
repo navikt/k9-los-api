@@ -4,6 +4,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
 import kotliquery.TransactionalSession
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.K9FeltIder
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventLagret
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.AksjonspunktDefinisjonK9Tilbake
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.cache.PepCacheService
@@ -115,9 +116,9 @@ class OppgaveOppdatertHandler(
         val antallAnnullert =
             annullerReservasjonHvisAlleOppgaverPåVentEllerAvsluttet(listOf(saksbehandlerNøkkel, beslutterNøkkel), tx)
         if (antallAnnullert > 0) {
-            log.info("Annullerte $antallAnnullert reservasjoner maskinelt på oppgave ${oppgave.hentVerdi("saksnummer")} som følge av status på innkommende event")
+            log.info("Annullerte $antallAnnullert reservasjoner maskinelt på oppgave ${oppgave.hentVerdi(K9FeltIder.SAKSNUMMER)} som følge av status på innkommende event")
         } else {
-            log.info("Annullerte ingen reservasjoner på oppgave ${oppgave.hentVerdi("saksnummer")} som følge av status på innkommende event")
+            log.info("Annullerte ingen reservasjoner på oppgave ${oppgave.hentVerdi(K9FeltIder.SAKSNUMMER)} som følge av status på innkommende event")
         }
     }
 

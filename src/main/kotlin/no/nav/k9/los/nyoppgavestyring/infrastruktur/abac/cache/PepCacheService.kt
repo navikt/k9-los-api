@@ -8,6 +8,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.runBlocking
 import kotliquery.TransactionalSession
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.K9FeltIder
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
@@ -71,7 +72,7 @@ class PepCacheService(
             oppdatert = LocalDateTime.now()
         )
 
-        val saksnummer = oppgave.hentVerdi("saksnummer")
+        val saksnummer = oppgave.hentVerdi(K9FeltIder.SAKSNUMMER)
         return if (saksnummer != null) {
             pep.oppdater(saksnummer)
         } else {
@@ -119,9 +120,9 @@ class PepCacheService(
 
     private fun hentAktører(oppgave: Oppgave): List<AktørId> {
         return listOfNotNull(
-            oppgave.hentVerdi("aktorId"),
-            oppgave.hentVerdi("pleietrengendeAktorId"),
-            oppgave.hentVerdi("relatertPartAktorid")
+            oppgave.hentVerdi(K9FeltIder.AKTOR_ID),
+            oppgave.hentVerdi(K9FeltIder.PLEIETRENGENDE_AKTOR_ID),
+            oppgave.hentVerdi(K9FeltIder.RELATERT_PART_AKTORID)
         ).map { AktørId(it) }
     }
 

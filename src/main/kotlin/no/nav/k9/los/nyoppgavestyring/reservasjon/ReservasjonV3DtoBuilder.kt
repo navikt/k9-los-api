@@ -1,5 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.reservasjon
 
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.K9FeltIder
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.IPdlService
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
@@ -28,7 +29,7 @@ class ReservasjonV3DtoBuilder(
         }
 
         val oppgaveV3Dtos = reservasjonMedOppgaver.oppgaverV3.map {
-            val person = it.hentVerdi("aktorId")?.let {
+            val person = it.hentVerdi(K9FeltIder.AKTOR_ID)?.let {
                 aktørId -> pdlService.person(aktørId).person
             }
             GenerellOppgaveV3Dto(it, person)

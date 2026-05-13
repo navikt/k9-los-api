@@ -1,5 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming
 
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.K9FeltIder
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 
 data class Oppgavetilstand(
@@ -11,11 +12,11 @@ data class Oppgavetilstand(
     val frist: String?,
 ) {
     constructor(oppgave: Oppgave) : this(
-        saksnummer = oppgave.hentVerdi("saksnummer"),
-        journalpostId = oppgave.hentVerdi("journalpostId"),
+        saksnummer = oppgave.hentVerdi(K9FeltIder.SAKSNUMMER),
+        journalpostId = oppgave.hentVerdi(K9FeltIder.JOURNALPOST_ID),
         eksternId = oppgave.eksternId,
         status = oppgave.status,
-        ytelseType = oppgave.hentVerdi("ytelsestype")!!,
-        frist = oppgave.hentVerdi("aktivVentefrist"),
+        ytelseType = oppgave.hentVerdi(K9FeltIder.YTELSESTYPE)!!,
+        frist = oppgave.hentVerdi(K9FeltIder.AKTIV_VENTEFRIST),
     )
 }

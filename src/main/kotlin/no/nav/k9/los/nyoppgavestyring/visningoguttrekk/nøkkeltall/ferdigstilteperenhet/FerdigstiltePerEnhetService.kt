@@ -3,6 +3,7 @@ package no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.ferdigstilte
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.K9FeltIder
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.Cache
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.CacheObject
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlendeEnhet
@@ -153,7 +154,7 @@ class FerdigstiltePerEnhetService(
                             add(
                                 FeltverdiOppgavefilter(
                                     "K9",
-                                    "ferdigstiltEnhet",
+                                    K9FeltIder.FERDIGSTILT_ENHET,
                                     EksternFeltverdiOperator.EQUALS,
                                     listOf(parameter.enhet.kode)
                                 )
@@ -163,7 +164,7 @@ class FerdigstiltePerEnhetService(
                             add(
                                 FeltverdiOppgavefilter(
                                     "K9",
-                                    "helautomatiskBehandlet",
+                                    K9FeltIder.HELAUTOMATISK_BEHANDLET,
                                     EksternFeltverdiOperator.EQUALS,
                                     listOf(true.toString())
                                 )
@@ -174,7 +175,7 @@ class FerdigstiltePerEnhetService(
                             add(
                                 FeltverdiOppgavefilter(
                                     "K9",
-                                    "ferdigstiltEnhet",
+                                    K9FeltIder.FERDIGSTILT_ENHET,
                                     EksternFeltverdiOperator.NOT_IN,
                                     enheter.map { it.kode }
                                 )
@@ -182,7 +183,7 @@ class FerdigstiltePerEnhetService(
                             add(
                                 FeltverdiOppgavefilter(
                                     "K9",
-                                    "helautomatiskBehandlet",
+                                    K9FeltIder.HELAUTOMATISK_BEHANDLET,
                                     EksternFeltverdiOperator.NOT_EQUALS,
                                     listOf(true.toString())
                                 )
@@ -195,7 +196,7 @@ class FerdigstiltePerEnhetService(
                         add(
                             FeltverdiOppgavefilter(
                                 "K9",
-                                "ytelsestype",
+                                K9FeltIder.YTELSESTYPE,
                                 EksternFeltverdiOperator.IN,
                                 ytelser.map { it.kode }
                             )

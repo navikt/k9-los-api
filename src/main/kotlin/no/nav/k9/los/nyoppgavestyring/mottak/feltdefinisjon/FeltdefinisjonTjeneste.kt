@@ -10,11 +10,11 @@ class FeltdefinisjonTjeneste(
     private val transactionalManager: TransactionalManager
 ) {
 
-    fun oppdater(innkommendeFeltdefinisjonerDto: FeltdefinisjonerDto) {
+    fun oppdater(områdeNavn: String, lagFeltdefinisjoner: (Område) -> Feltdefinisjoner) {
         transactionalManager.transaction { tx ->
-            val område = områdeRepository.hentOmråde(innkommendeFeltdefinisjonerDto.område, tx)
+            val område = områdeRepository.hentOmråde(områdeNavn, tx)
             val eksisterendeFeltdefinisjoner = feltdefinisjonRepository.hent(område, tx)
-            val innkommendeFeltdefinisjoner = Feltdefinisjoner(innkommendeFeltdefinisjonerDto, område)
+            val innkommendeFeltdefinisjoner = lagFeltdefinisjoner(område)
 
             val (sletteListe, oppdaterListe, leggTilListe) = eksisterendeFeltdefinisjoner.finnForskjeller(innkommendeFeltdefinisjoner)
             feltdefinisjonRepository.fjern(sletteListe, tx)
