@@ -221,6 +221,7 @@ class SakEventTilOppgaveMapper(
             utledAutomatiskBehandletFlagg(oppgaveFeltverdiDtos, event)
             utledSøknadsårsaker(event, oppgaveFeltverdiDtos)
             utledBehandlingsårsaker(event, oppgaveFeltverdiDtos)
+            utledRelevanteSøknadsperioder(event, oppgaveFeltverdiDtos)
             oppgaveFeltverdiDtos.addAll(
                 ventekategoriTilFlagg(
                     utledVentetype(
@@ -656,6 +657,27 @@ class SakEventTilOppgaveMapper(
                 )
             }
         }
+        private fun utledRelevanteSøknadsperioder(
+            event: K9SakEventDto,
+            oppgaveFeltverdiDtos: MutableList<OppgaveFeltverdiDto>
+        ) {
+            val perioder = event.relevanteSøknadsperioder
+            if (!perioder.isNullOrEmpty()) {
+                oppgaveFeltverdiDtos.addAll(perioder.map { periode ->
+                    OppgaveFeltverdiDto(
+                        nøkkel = "relevanteSøknadsperioder",
+                        verdi = "${periode.fom}/${periode.tom}"
+                    )
+                })
+            } else {
+                oppgaveFeltverdiDtos.add(
+                    OppgaveFeltverdiDto(
+                        nøkkel = "relevanteSøknadsperioder",
+                        verdi = null
+                    )
+                )
+            }
+        }
 
         private fun utledUtførteAksjonspunkter(
             event: K9SakEventDto,
@@ -708,9 +730,9 @@ class SakEventTilOppgaveMapper(
         ) {
             val fremtidige = åpneAksjonspunkter.filter { åpentAksjonspunkt ->
                 val aksjonspunktDefinisjon = AksjonspunktDefinisjon.fraKode(åpentAksjonspunkt.aksjonspunktKode)
-                aksjonspunktDefinisjon.erAutopunkt()
-                    || aksjonspunktDefinisjon.behandlingSteg == null
-                    || aksjonspunktDefinisjon.behandlingSteg.kode != behandlingSteg
+                !aksjonspunktDefinisjon.erAutopunkt()
+                    && (aksjonspunktDefinisjon.behandlingSteg == null
+                    || aksjonspunktDefinisjon.behandlingSteg.kode != behandlingSteg)
             }
             if (fremtidige.isNotEmpty()) {
                 oppgaveFeltverdiDtos.addAll(fremtidige.map { aksjonspunktTilstand ->

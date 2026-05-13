@@ -5,7 +5,8 @@ enum class Datatype(val kode: String) {
     DURATION("Duration"),
     TIMESTAMP("Timestamp"),
     BOOLEAN("boolean"),
-    STRING("String");
+    STRING("String"),
+    PERIODE("Periode");
 
     companion object {
         fun fraKode(kode: String): Datatype {

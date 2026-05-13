@@ -521,6 +521,7 @@ class PartisjonertOppgaveQuerySqlBuilder(
             Datatype.TIMESTAMP -> "CAST($uttrykk AS timestamp)"
             Datatype.BOOLEAN -> "CAST($uttrykk AS boolean)"
             Datatype.DURATION -> throw IllegalArgumentException("Aggregering støttes ikke for Duration-felt ennå.")
+            Datatype.PERIODE -> throw IllegalArgumentException("Aggregering støttes ikke for Periode-felt.")
         }
     }
 

@@ -38,6 +38,7 @@ object OppgavefilterDatatypeMapper {
                     verdi == null || verdi !is String -> verdi
                     datatype == Datatype.INTEGER -> verdi.toLong()
                     datatype == Datatype.DURATION -> iso8601TilPGInterval(verdi)
+                    datatype == Datatype.PERIODE -> verdi // ISO 8601 intervall: YYYY-MM-DD/YYYY-MM-DD
                     // Datatype.TIMESTAMP -> filter.copy(verdi = listOf(LocalDateTime.parse(verdi)))
                     // Datatype.BOOLEAN -> filter.copy(verdi = listOf(verdi.toBoolean()))
                     else -> verdi

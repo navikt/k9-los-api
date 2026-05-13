@@ -343,9 +343,9 @@ class KlageEventTilOppgaveMapper(
         ) {
             val fremtidige = åpneAksjonspunkter.filter { åpentAksjonspunkt ->
                 val aksjonspunktDefinisjon = AksjonspunktDefinisjon.fraKode(åpentAksjonspunkt.aksjonspunktKode)
-                aksjonspunktDefinisjon.erAutopunkt()
-                    || aksjonspunktDefinisjon.behandlingSteg == null
-                    || aksjonspunktDefinisjon.behandlingSteg.kode != behandlingSteg
+                !aksjonspunktDefinisjon.erAutopunkt()
+                    && (aksjonspunktDefinisjon.behandlingSteg == null
+                    || aksjonspunktDefinisjon.behandlingSteg.kode != behandlingSteg)
             }
             if (fremtidige.isNotEmpty()) {
                 oppgaveFeltverdiDtos.addAll(fremtidige.map { aksjonspunkttilstand ->

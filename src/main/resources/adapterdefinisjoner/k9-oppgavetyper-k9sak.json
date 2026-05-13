@@ -321,6 +321,16 @@
           "id": "fagsakÅr",
           "visPåOppgave": true,
           "påkrevd": false
+        },
+        {
+          "id": "relevanteSøknadsperioder",
+          "visPåOppgave": true,
+          "påkrevd": false
+        },
+        {
+          "id": "antallOmsøkteDagerSomErPassert",
+          "visPåOppgave": true,
+          "påkrevd": false
         }
       ]
     }
