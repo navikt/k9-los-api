@@ -185,9 +185,9 @@ class FeltdefinisjonRepository(val områdeRepository: OmrådeRepository) {
             )
         )
         tx.batchPreparedNamedStatement("""
-            insert into kodeverk_verdi(kodeverk_id, verdi, visningsnavn, gruppering, beskrivelse, favoritt)
-            VALUES (:kodeverkId, :verdi, :visningsnavn, :gruppering, :beskrivelse, :favoritt)
-            on conflict(kodeverk_id, verdi) do update set visningsnavn = :visningsnavn, gruppering = :gruppering, beskrivelse = :beskrivelse, favoritt = :favoritt
+            insert into kodeverk_verdi(kodeverk_id, verdi, visningsnavn, gruppering, beskrivelse, synlighet, rekkefolge)
+            VALUES (:kodeverkId, :verdi, :visningsnavn, :gruppering, :beskrivelse, :synlighet, :rekkefolge)
+            on conflict(kodeverk_id, verdi) do update set visningsnavn = :visningsnavn, gruppering = :gruppering, beskrivelse = :beskrivelse, synlighet = :synlighet, rekkefolge = :rekkefolge
         """.trimIndent(),
             kodeverk.verdier.map { verdi ->
                 mapOf(
@@ -196,7 +196,8 @@ class FeltdefinisjonRepository(val områdeRepository: OmrådeRepository) {
                     "visningsnavn" to verdi.visningsnavn,
                     "gruppering" to verdi.gruppering,
                     "beskrivelse" to verdi.beskrivelse,
-                    "favoritt" to verdi.favoritt
+                    "synlighet" to verdi.synlighet.name,
+                    "rekkefolge" to verdi.rekkefølge
                 )
             }
         )
@@ -253,8 +254,9 @@ class FeltdefinisjonRepository(val områdeRepository: OmrådeRepository) {
                 verdi = kodeverkverdiRow.string("verdi"),
                 visningsnavn = kodeverkverdiRow.string("visningsnavn"),
                 beskrivelse = kodeverkverdiRow.stringOrNull("beskrivelse"),
-                favoritt = kodeverkverdiRow.boolean("favoritt"),
-                gruppering = kodeverkverdiRow.stringOrNull("gruppering")
+                synlighet = Synlighet.valueOf(kodeverkverdiRow.string("synlighet")),
+                gruppering = kodeverkverdiRow.stringOrNull("gruppering"),
+                rekkefølge = kodeverkverdiRow.intOrNull("rekkefolge")
             )
         }.asList
     )
