@@ -58,9 +58,6 @@ import no.nav.k9.los.nyoppgavestyring.innloggetbruker.InnloggetBrukerApi
 import no.nav.k9.los.nyoppgavestyring.ko.KøpåvirkendeHendelse
 import no.nav.k9.los.nyoppgavestyring.ko.OppgaveKoApis
 import no.nav.k9.los.nyoppgavestyring.lagretsok.LagretSøkApi
-import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonApi
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Api
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeApi
 import no.nav.k9.los.nyoppgavestyring.nyeogferdigstilte.NyeOgFerdigstilteApi
 import no.nav.k9.los.nyoppgavestyring.nyeogferdigstilte.NyeOgFerdigstilteService
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryApis
@@ -241,21 +238,6 @@ private fun Route.api() {
         route("ny-oppgavestyring") {
             route("ko") { OppgaveKoApis() }
             route("oppgave") { OppgaveQueryApis() }
-            route(
-                "feltdefinisjon",
-                {
-                    hidden = true
-                }) { FeltdefinisjonApi() } // Må legge til tilgangskontroll dersom disse endepunktene aktiveres
-            route(
-                "oppgavetype",
-                {
-                    hidden = true
-                }) { OppgavetypeApi() } // Må legge til tilgangskontroll dersom disse endepunktene aktiveres
-            route(
-                "oppgave-v3",
-                {
-                    hidden = true
-                }) { OppgaveV3Api() } // Må legge til tilgangskontroll dersom disse endepunktene aktiveres
             route("sok") { SøkeboksApi() }
             route("nokkeltall") { NøkkeltallV3Apis() }
             route("siste-oppgaver") { SisteOppgaverApi() }

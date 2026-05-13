@@ -15,20 +15,20 @@ internal fun Route.StatistikkApi() {
     val config by inject<Configuration>()
 
     put {
-        if (config.nyOppgavestyringRestAktivert()) {
-            requestContextService.withRequestContext(call) {
-                thread(
-                    start = true,
-                    isDaemon = true,
-                    name = "Oppgavestatistikksender"
-                ) {
-                    oppgavestatistikkTjeneste.spillAvUsendtStatistikk()
-                }
-                call.respond(HttpStatusCode.NoContent)
-            }
-        } else {
+//        if (config.nyOppgavestyringRestAktivert()) {
+//            requestContextService.withRequestContext(call) {
+//                thread(
+//                    start = true,
+//                    isDaemon = true,
+//                    name = "Oppgavestatistikksender"
+//                ) {
+//                    oppgavestatistikkTjeneste.spillAvUsendtStatistikk()
+//                }
+//                call.respond(HttpStatusCode.NoContent)
+//            }
+//        } else {
             call.respond(HttpStatusCode.Locked)
-        }
+//        }
     }
 
 
