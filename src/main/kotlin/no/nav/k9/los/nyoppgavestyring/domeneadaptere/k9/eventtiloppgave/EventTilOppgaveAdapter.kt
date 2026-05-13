@@ -25,7 +25,6 @@ class EventTilOppgaveAdapter(
     private val ajourholdTjeneste: AktivOgPartisjonertOppgaveAjourholdTjeneste,
 ) {
     private val log: Logger = LoggerFactory.getLogger(EventTilOppgaveAdapter::class.java)
-    private val TRÅDNAVN = "event-til-oppgave"
 
     @WithSpan
     fun spillAvBehandlingProsessEventer() {
@@ -61,37 +60,39 @@ class EventTilOppgaveAdapter(
     @WithSpan
     fun oppdaterOppgaveForEksternId(@SpanAttribute eventnøkkel: EventNøkkel, statistikktellerInn: Long = 0): Long {
         return transactionalManager.transaction { tx ->
-            oppdaterOppgaveForEksternId(eventnøkkel, tx, statistikktellerInn,)
+            oppdaterOppgaveForEksternId(eventnøkkel, tx, statistikktellerInn)
         }
     }
 
     fun oppdaterOppgaveForEksternId(
         eventnøkkel: EventNøkkel,
         tx: TransactionalSession,
-        statistikktellerInn: Long = 0
+        statistikktellerInn: Long = 0,
     ): Long {
-        log.info("Nytt felles oppgaveadapter, oppdaterer oppgave for fagsystem: ${`eventnøkkel`.fagsystem}, eksternId: ${`eventnøkkel`.eksternId}")
+        log.info("Nytt felles oppgaveadapter, oppdaterer oppgave for fagsystem: ${eventnøkkel.fagsystem}, eksternId: ${eventnøkkel.eksternId}")
         var statistikkteller = statistikktellerInn
-        var forrigeOppgaveversjon: OppgaveV3? = null
+        var forrigeOppgaveversjon: OppgaveV3?
         //låse alle eventer for denne eksternIden mens vi prosesserer dem
-        val eventer = eventRepository.hentAlleEventerMedLås(`eventnøkkel`.fagsystem, `eventnøkkel`.eksternId, tx)
+        val eventer = eventRepository.hentAlleEventerMedLås(eventnøkkel, tx)
         val eventerMedNummerering = vaskeeventSerieutleder.korrigerEventnummerForVaskeeventer(eventer)
 
-        if (!eventerMedNummerering.isEmpty()) {
-            sjekkMeldingIFeilRekkefølgeOgBestillVask(`eventnøkkel`, eventerMedNummerering, tx)
+        if (eventerMedNummerering.isNotEmpty()) {
+            sjekkMeldingIFeilRekkefølgeOgBestillVask(eventnøkkel, eventerMedNummerering, tx)
 
             forrigeOppgaveversjon =
-                if (eventerMedNummerering.first().first > 0) { //Firsty dirty melding er ikke første for oppgaven
+                if (eventerMedNummerering.first().first > 0) { //Første dirty melding er ikke første for oppgaven
                     oppgaveV3Tjeneste.hentOppgaveversjon(
                         "K9",
-                        K9Oppgavetypenavn.fraFagsystem(`eventnøkkel`.fagsystem).kode,
-                        `eventnøkkel`.eksternId,
+                        K9Oppgavetypenavn.fraFagsystem(eventnøkkel.fagsystem).kode,
+                        eventnøkkel.eksternId,
                         eventerMedNummerering.first().first - 1,
                         tx
                     )
                 } else {
                     null
                 }
+
+            var sisteOppdaterteEvent: EventLagret? = null
 
             for ((eventnummer, eventLagret) in eventerMedNummerering) {
                 val nyOppgaveversjon =
@@ -103,17 +104,23 @@ class EventTilOppgaveAdapter(
 
                     statistikkteller++
                     forrigeOppgaveversjon = oppgave
+                    sisteOppdaterteEvent = eventLagret
                 } else { // hvis oppgave == null ble ikke oppgaven oppdatert selv om eventet var dirty. Vi henter ut oppgaveversjonen vi forsøkte å oppdatere som kontekst for neste event
                     forrigeOppgaveversjon = oppgaveV3Tjeneste.hentOppgaveversjon(
                         "K9",
-                        K9Oppgavetypenavn.fraFagsystem(`eventnøkkel`.fagsystem).kode,
-                        `eventnøkkel`.eksternId,
+                        K9Oppgavetypenavn.fraFagsystem(eventnøkkel.fagsystem).kode,
+                        eventnøkkel.eksternId,
                         eventnummer,
                         tx
                     )
                 }
-                eventRepository.fjernDirty(eventLagret, tx)
             }
+            // Oppdater PEP-cache én gang for siste tilstand, i stedet for per event (unngår gjentatte eksterne kall)
+            if (sisteOppdaterteEvent != null) {
+                oppgaveOppdatertHandler.oppdaterPepCache(forrigeOppgaveversjon!!, tx)
+            }
+            // Batch-oppdater alle dirty-flagg i én SQL-spørring i stedet for én pr event
+            eventRepository.fjernAlleDirty(eventer.first().nøkkelId, tx)
             ajourholdTjeneste.ajourholdOppgave(forrigeOppgaveversjon!!, eventerMedNummerering.last().first, tx)
         }
 

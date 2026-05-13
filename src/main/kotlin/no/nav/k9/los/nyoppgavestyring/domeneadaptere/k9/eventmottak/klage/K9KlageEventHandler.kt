@@ -2,7 +2,6 @@ package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.klage
 
 import io.opentelemetry.instrumentation.annotations.WithSpan
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.EventHandlerMetrics
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventNøkkel
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventRepository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.EventTilOppgaveAdapter
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
@@ -40,15 +39,14 @@ class K9KlageEventHandler (
         val t0 = System.nanoTime()
 
         transactionalManager.transaction { tx ->
-            eventRepository.upsertOgLåsEventnøkkel(Fagsystem.K9KLAGE, eksternId, tx)
-            eventRepository.lagre(Fagsystem.K9KLAGE, eksternId, eksternVersjon, event, tx)
-        }
+            val eventnøkkel = eventRepository.lagre(Fagsystem.K9KLAGE, eksternId, eksternVersjon, event, tx)
 
-        OpentelemetrySpanUtil.span("k9KlageTilLosAdapterTjeneste.oppdaterOppgaveForBehandlingUuid") {
-            try {
-                oppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(Fagsystem.K9KLAGE, eksternId))
-            } catch (e: Exception) {
-                log.error("Oppatering av k9-klage-oppgave feilet for ${eksternId}. Oppgaven er ikke oppdatert, men blir plukket av vaktmester", e)
+            OpentelemetrySpanUtil.span("k9KlageTilLosAdapterTjeneste.oppdaterOppgaveForBehandlingUuid") {
+                try {
+                    oppgaveAdapter.oppdaterOppgaveForEksternId(eventnøkkel, tx)
+                } catch (e: Exception) {
+                    log.error("Oppatering av k9-klage-oppgave feilet for ${eksternId}. Oppgaven er ikke oppdatert, men blir plukket av vaktmester", e)
+                }
             }
         }
 

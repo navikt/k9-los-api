@@ -29,8 +29,8 @@ class FeltdefinisjonTest {
                     beskrivelse = null,
                     listetype = false,
                     tolkesSom = "String",
-                    visTilBruker = true,
-                    kokriterie = false,
+
+                    synlighet = Synlighet.UNDER_STREKEN,
                     kodeverkreferanse = null,
                     transientFeltutleder = null,
                 )
@@ -53,8 +53,8 @@ class FeltdefinisjonTest {
                     beskrivelse = null,
                     listetype = true,
                     tolkesSom = "String",
-                    visTilBruker = true,
-                    kokriterie = false,
+
+                    synlighet = Synlighet.UNDER_STREKEN,
                     kodeverkreferanse = null,
                     transientFeltutleder = null
                 ),
@@ -65,8 +65,8 @@ class FeltdefinisjonTest {
                     beskrivelse = null,
                     listetype = true,
                     tolkesSom = "Date",
-                    visTilBruker = true,
-                    kokriterie = false,
+
+                    synlighet = Synlighet.UNDER_STREKEN,
                     kodeverkreferanse = null,
                     transientFeltutleder = null
                 )
@@ -99,8 +99,8 @@ class FeltdefinisjonTest {
                     beskrivelse = null,
                     listetype = true,
                     tolkesSom = "String",
-                    visTilBruker = true,
-                    kokriterie = false,
+
+                    synlighet = Synlighet.UNDER_STREKEN,
                     kodeverkreferanse = null,
                     transientFeltutleder = null
                 ),
@@ -111,8 +111,8 @@ class FeltdefinisjonTest {
                     beskrivelse = null,
                     listetype = true,
                     tolkesSom = "Date",
-                    visTilBruker = true,
-                    kokriterie = false,
+
+                    synlighet = Synlighet.UNDER_STREKEN,
                     kodeverkreferanse = null,
                     transientFeltutleder = null
                 )
@@ -135,8 +135,8 @@ class FeltdefinisjonTest {
                     beskrivelse = null,
                     listetype = false,
                     tolkesSom = "String",
-                    visTilBruker = true,
-                    kokriterie = false,
+
+                    synlighet = Synlighet.UNDER_STREKEN,
                     kodeverkreferanse = null,
                     transientFeltutleder = null,
                 ),
@@ -147,8 +147,8 @@ class FeltdefinisjonTest {
                     beskrivelse = null,
                     listetype = false,
                     tolkesSom = "Date",
-                    visTilBruker = true,
-                    kokriterie = false,
+
+                    synlighet = Synlighet.UNDER_STREKEN,
                     kodeverkreferanse = null,
                     transientFeltutleder = null,
                 )
