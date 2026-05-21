@@ -7,6 +7,7 @@ import io.ktor.server.routing.*
 import kotliquery.queryOf
 import no.nav.k9.kodeverk.behandling.FagsakYtelseType
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.AvstemmingsTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.K9Oppgavetypenavn
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.RequestContextService
@@ -101,14 +102,14 @@ fun Route.forvaltningApis() {
         tags("Forvaltning")
         description = "Søk opp eksternId for saksnummer eller journalpostId"
         request {
-            pathParameter<String>("system") {
+            pathParameter<Fagsystem>("system") {
                 description = "Kildesystem som har sendt inn oppgaven"
                 example("k9sak") {
-                    value = "K9SAK"
+                    value = Fagsystem.K9SAK
                     description = "K9sak"
                 }
                 example("k9punsj") {
-                    value = "PUNSJ"
+                    value = Fagsystem.PUNSJ
                     description = "K9punsj"
                 }
             }
@@ -189,10 +190,10 @@ fun Route.forvaltningApis() {
                     description = "Oppgaver definert innenfor K9"
                 }
             }
-            pathParameter<String>("oppgavetype") {
+            pathParameter<K9Oppgavetypenavn>("oppgavetype") {
                 description = "Navnet på oppgavetypen."
                 example("k9sak") {
-                    value = "k9sak"
+                    value = K9Oppgavetypenavn.SAK
                     description = "Oppgaver som kommer fra k9sak"
                 }
             }
@@ -235,10 +236,10 @@ fun Route.forvaltningApis() {
                     description = "Oppgaver definert innenfor K9"
                 }
             }
-            pathParameter<String>("oppgavetype") {
+            pathParameter<K9Oppgavetypenavn>("oppgavetype") {
                 description = "Navnet på oppgavetypen."
                 example("k9sak") {
-                    value = "k9sak"
+                    value = K9Oppgavetypenavn.SAK
                     description = "Oppgaver som kommer fra k9sak"
                 }
             }
@@ -285,10 +286,10 @@ fun Route.forvaltningApis() {
                     description = "Oppgaver definert innenfor K9"
                 }
             }
-            pathParameter<String>("oppgavetype") {
+            pathParameter<K9Oppgavetypenavn>("oppgavetype") {
                 description = "Navnet på oppgavetypen."
                 example("k9sak") {
-                    value = "k9sak"
+                    value = K9Oppgavetypenavn.SAK
                     description = "Oppgaver som kommer fra k9sak"
                 }
             }
