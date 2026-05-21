@@ -146,21 +146,4 @@ internal fun Route.EventlagerApi() {
         }
     }
 
-    get("nokkeltall/dirty-eventer/per-fagsystem", {
-        tags("Forvaltning")
-        description = "Antall dirty eventer gruppert per fagsystem"
-    }) {
-        requestContextService.withRequestContext(call) {
-            call.respond(eventRepository.hentAntallDirtyEventerPerFagsystem())
-        }
-    }
-
-    get("nokkeltall/historikkvaskbestillinger/per-fagsystem", {
-        tags("Forvaltning")
-        description = "Antall ubehandlede historikkvaskbestillinger gruppert per fagsystem"
-    }) {
-        requestContextService.withRequestContext(call) {
-            call.respond(eventRepository.hentAntallHistorikkvaskbestillingerPerFagsystem())
-        }
-    }
 }

@@ -8,6 +8,7 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventDto
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.PunsjId
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.metrikker.EventlagerNokkeltallPrometheusCollector
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
@@ -257,7 +258,44 @@ class EventRepositoryPerLinjeForKonverteringTest() : AbstractK9LosIntegrationTes
         val dirtyPerFagsystem = eventRepository.hentAntallDirtyEventerPerFagsystem().associate { it.fagsystem to it.antall }
         assertThat(dirtyPerFagsystem).isEqualTo(mapOf("K9KLAGE" to 1L, "PUNSJ" to 2L))
 
+        val dirtyEventnoklerPerFagsystem = eventRepository.hentAntallDirtyEventnoklerPerFagsystem().associate { it.fagsystem to it.antall }
+        assertThat(dirtyEventnoklerPerFagsystem).isEqualTo(mapOf("K9KLAGE" to 1L, "PUNSJ" to 1L))
+
         val historikkvaskPerFagsystem = eventRepository.hentAntallHistorikkvaskbestillingerPerFagsystem().associate { it.fagsystem to it.antall }
         assertThat(historikkvaskPerFagsystem).isEqualTo(mapOf("K9KLAGE" to 1L, "PUNSJ" to 1L))
+    }
+
+    @Test
+    fun `eksponerer prometheus metrikker for eventlager per fagsystem`() {
+        val eventRepository = get<EventRepository>()
+        val transactionalManager = get<TransactionalManager>()
+
+        val punsjEksternId = UUID.randomUUID().toString()
+        val klageEksternId = UUID.randomUUID().toString()
+
+        transactionalManager.transaction { tx ->
+            eventRepository.lagre(Fagsystem.PUNSJ, punsjEksternId, LocalDateTime.now().minusMinutes(1).toString(), "{}", tx)
+            eventRepository.lagre(Fagsystem.PUNSJ, punsjEksternId, LocalDateTime.now().toString(), "{}", tx)
+            eventRepository.lagre(Fagsystem.K9KLAGE, klageEksternId, LocalDateTime.now().toString(), "{}", tx)
+            eventRepository.bestillHistorikkvask(Fagsystem.PUNSJ, punsjEksternId, tx)
+        }
+
+        val collector = EventlagerNokkeltallPrometheusCollector(eventRepository, registerCollector = false)
+        val metrics = collector.collect().associateBy { it.name }
+
+        val dirtySamples = metrics.getValue("k9los_eventlager_dirty_eventer").samples
+        val dirtyEventnokkelSamples = metrics.getValue("k9los_eventlager_dirty_eventnokler").samples
+        val historikkvaskSamples = metrics.getValue("k9los_eventlager_historikkvask_bestillinger").samples
+
+        fun sampleValue(samples: List<io.prometheus.client.Collector.MetricFamilySamples.Sample>, fagsystem: String): Double {
+            return samples.first { it.labelValues == listOf(fagsystem) }.value
+        }
+
+        assertThat(sampleValue(dirtySamples, "PUNSJ")).isEqualTo(2.0)
+        assertThat(sampleValue(dirtySamples, "K9KLAGE")).isEqualTo(1.0)
+        assertThat(sampleValue(dirtyEventnokkelSamples, "PUNSJ")).isEqualTo(1.0)
+        assertThat(sampleValue(dirtyEventnokkelSamples, "K9KLAGE")).isEqualTo(1.0)
+        assertThat(sampleValue(historikkvaskSamples, "PUNSJ")).isEqualTo(1.0)
+        assertThat(sampleValue(historikkvaskSamples, "K9KLAGE")).isEqualTo(0.0)
     }
 }

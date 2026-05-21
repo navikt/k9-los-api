@@ -6,6 +6,7 @@ import org.jetbrains.annotations.VisibleForTesting
 import javax.sql.DataSource
 
 data class DirtyEventerPerFagsystem(val fagsystem: String, val antall: Long)
+data class DirtyEventnoklerPerFagsystem(val fagsystem: String, val antall: Long)
 data class HistorikkvaskbestillingerPerFagsystem(val fagsystem: String, val antall: Long)
 
 
@@ -180,10 +181,14 @@ class EventRepository(
             it.run(
                 queryOf(
                     """
-                    select distinct en.*
-                    from event e
-                        join event_nokkel en on e.event_nokkel_id = en.id
-                    where e.dirty = true
+                    select en.*
+                    from event_nokkel en
+                    where exists (
+                        select 1
+                        from event e
+                        where e.event_nokkel_id = en.id
+                        and e.dirty = true
+                    )
                 """.trimIndent()
                 ).map { row ->
                     EventNøkkel(
@@ -210,6 +215,32 @@ class EventRepository(
                     """.trimIndent()
                 ).map { row ->
                     DirtyEventerPerFagsystem(
+                        fagsystem = row.string("fagsystem"),
+                        antall = row.long("antall")
+                    )
+                }.asList
+            )
+        }
+    }
+
+    fun hentAntallDirtyEventnoklerPerFagsystem(): List<DirtyEventnoklerPerFagsystem> {
+        return using(sessionOf(dataSource)) {
+            it.run(
+                queryOf(
+                    """
+                    select en.fagsystem, count(*) as antall
+                    from event_nokkel en
+                    where exists (
+                        select 1
+                        from event e
+                        where e.event_nokkel_id = en.id
+                        and e.dirty = true
+                    )
+                    group by en.fagsystem
+                    order by en.fagsystem
+                    """.trimIndent()
+                ).map { row ->
+                    DirtyEventnoklerPerFagsystem(
                         fagsystem = row.string("fagsystem"),
                         antall = row.long("antall")
                     )
