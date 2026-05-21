@@ -1,0 +1,19 @@
+name: Check Outdated Docs
+
+on:
+  schedule:
+    - cron: "0 0 * * *"
+
+jobs:
+  check-docs:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up bash script permissions
+      run: chmod +x ./find_outdated_docs.sh
+
+    - name: Run outdated docs checker
+      run: ./find_outdated_docs.sh
