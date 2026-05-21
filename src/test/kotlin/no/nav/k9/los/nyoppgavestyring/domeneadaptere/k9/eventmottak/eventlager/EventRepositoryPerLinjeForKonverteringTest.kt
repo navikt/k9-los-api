@@ -230,4 +230,34 @@ class EventRepositoryPerLinjeForKonverteringTest() : AbstractK9LosIntegrationTes
         vaskeBestillinger = eventRepository.hentAlleHistorikkvaskbestillinger()
         assertThat(vaskeBestillinger.size).isEqualTo(1)
     }
+
+    @Test
+    fun `henter nøkkeltall per fagsystem for dirty eventer og historikkvaskbestillinger`() {
+        val eventRepository = get<EventRepository>()
+        val transactionalManager = get<TransactionalManager>()
+
+        val punsjEksternId = UUID.randomUUID().toString()
+        val sakEksternId = UUID.randomUUID().toString()
+        val klageEksternId = UUID.randomUUID().toString()
+
+        transactionalManager.transaction { tx ->
+            eventRepository.lagre(Fagsystem.PUNSJ, punsjEksternId, LocalDateTime.now().minusMinutes(2).toString(), "{}", tx)
+            eventRepository.lagre(Fagsystem.PUNSJ, punsjEksternId, LocalDateTime.now().minusMinutes(1).toString(), "{}", tx)
+            val sakNøkkel = eventRepository.lagre(Fagsystem.K9SAK, sakEksternId, LocalDateTime.now().toString(), "{}", tx)
+            eventRepository.lagre(Fagsystem.K9KLAGE, klageEksternId, LocalDateTime.now().plusMinutes(1).toString(), "{}", tx)
+
+            eventRepository.fjernAlleDirty(sakNøkkel.id!!, tx)
+
+            eventRepository.bestillHistorikkvask(Fagsystem.PUNSJ, punsjEksternId, tx)
+            eventRepository.bestillHistorikkvask(Fagsystem.K9KLAGE, klageEksternId, tx)
+            eventRepository.bestillHistorikkvask(Fagsystem.K9SAK, sakEksternId, tx)
+            eventRepository.settHistorikkvaskFerdig(Fagsystem.K9SAK, sakEksternId, tx)
+        }
+
+        val dirtyPerFagsystem = eventRepository.hentAntallDirtyEventerPerFagsystem().associate { it.fagsystem to it.antall }
+        assertThat(dirtyPerFagsystem).isEqualTo(mapOf("K9KLAGE" to 1L, "PUNSJ" to 2L))
+
+        val historikkvaskPerFagsystem = eventRepository.hentAntallHistorikkvaskbestillingerPerFagsystem().associate { it.fagsystem to it.antall }
+        assertThat(historikkvaskPerFagsystem).isEqualTo(mapOf("K9KLAGE" to 1L, "PUNSJ" to 1L))
+    }
 }
