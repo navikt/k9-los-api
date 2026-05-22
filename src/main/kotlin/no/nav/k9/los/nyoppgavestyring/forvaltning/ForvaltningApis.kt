@@ -18,6 +18,7 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
 import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelOrderFelt
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelSelectFelt
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
 import no.nav.k9.los.nyoppgavestyring.query.mapping.EksternFeltverdiOperator
@@ -122,57 +123,63 @@ fun Route.forvaltningApis() {
             if (pepClient.kanLeggeUtDriftsmelding()) {
                 val fagsystem = Fagsystem.fraKode(call.parameters["system"]!!)
                 val saksnummer = call.parameters["saksnummer"]!!
+                val oppgavetypeKode = K9Oppgavetypenavn.fraFagsystem(fagsystem).kode
 
-                when (fagsystem) {
+                val sokefelt = when (fagsystem) {
                     Fagsystem.K9SAK,
                     Fagsystem.K9TILBAKE,
-                    Fagsystem.K9KLAGE -> {
-                        val query = QueryRequest(
-                            oppgaveQuery = OppgaveQuery(
-                                filtere = listOf(
-                                    FeltverdiOppgavefilter(
-                                        "K9",
-                                        "saksnummer",
-                                        operator = EksternFeltverdiOperator.EQUALS,
-                                        verdi = listOf(saksnummer)
-                                    )
-                                ),
-                                order = listOf(
-                                    EnkelOrderFelt(
-                                        område = "K9",
-                                        kode = "opprettetTidspunkt",
-                                        økende = true
-                                    )
-                                )
-                            ),
-                            fjernReserverte = false,
-                            avgrensning = null
-                        )
+                    Fagsystem.K9KLAGE -> "saksnummer"
 
-                        val eksternIds = oppgaveQueryService.queryForOppgaveEksternId(query)
-                        call.respond(eksternIds)
-                    }
-
-                    Fagsystem.PUNSJ -> {
-                        val query = QueryRequest(
-                            oppgaveQuery = OppgaveQuery(
-                                filtere = listOf(
-                                    FeltverdiOppgavefilter(
-                                        "K9",
-                                        "journalpostId",
-                                        operator = EksternFeltverdiOperator.EQUALS,
-                                        verdi = listOf(saksnummer)
-                                    )
-                                )
-                            ),
-                            fjernReserverte = false,
-                            avgrensning = null
-                        )
-
-                        val eksternIds = oppgaveQueryService.queryForOppgaveEksternId(query)
-                        call.respond(eksternIds)
-                    }
+                    Fagsystem.PUNSJ -> "journalpostId"
                 }
+
+                val query = QueryRequest(
+                    oppgaveQuery = OppgaveQuery(
+                        filtere = listOf(
+                            FeltverdiOppgavefilter(
+                                område = null,
+                                kode = "oppgavetype",
+                                operator = EksternFeltverdiOperator.EQUALS,
+                                verdi = listOf(oppgavetypeKode)
+                            ),
+                            FeltverdiOppgavefilter(
+                                område = "K9",
+                                kode = sokefelt,
+                                operator = EksternFeltverdiOperator.EQUALS,
+                                verdi = listOf(saksnummer)
+                            )
+                        ),
+                        select = listOf(
+                            EnkelSelectFelt(
+                                område = "K9",
+                                kode = "opprettetTidspunkt"
+                            )
+                        ),
+                        order = listOf(
+                            EnkelOrderFelt(
+                                område = "K9",
+                                kode = "opprettetTidspunkt",
+                                økende = true
+                            )
+                        )
+                    ),
+                    fjernReserverte = false,
+                    avgrensning = null
+                )
+
+                val eksternIds = oppgaveQueryService.query(query).map { rad ->
+                    val eksternOppgaveId = rad.eksternOppgaveId
+                        ?: throw IllegalStateException("OppgaveQueryRad mangler eksternOppgaveId")
+                    FinnEksternIdResponse(
+                        område = eksternOppgaveId.område,
+                        eksternId = eksternOppgaveId.eksternId,
+                        opprettetTidspunkt = rad.feltverdier
+                            .firstOrNull { it.område == "K9" && it.kode == "opprettetTidspunkt" }
+                            ?.verdi
+                            ?.toString()
+                    )
+                }
+                call.respond(eksternIds)
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
@@ -515,3 +522,10 @@ fun lagNøkkelAktør(oppgave: Oppgave, tilBeslutter: Boolean): String {
         "K9_b_${oppgave.hentVerdi("ytelsestype")}_${oppgave.hentVerdi("aktorId")}"
     }
 }
+
+data class FinnEksternIdResponse(
+    val område: String,
+    val eksternId: String,
+    val opprettetTidspunkt: String?,
+)
+
