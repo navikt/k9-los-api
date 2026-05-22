@@ -51,7 +51,12 @@ internal fun Route.EventlagerApi() {
                 val fagsystem = Fagsystem.fraKode(call.parameters["fagsystem"]!!)
                 val eksternId = call.parameters["eksternId"]!!
 
-                val eventStrenger = eventRepository.hentAlleEventer(fagsystem, eksternId).map { it.eventJson }
+                val eventStrenger = try {
+                    eventRepository.hentAlleEventer(fagsystem, eksternId).map { it.eventJson }
+                } catch (e: NullPointerException) {
+                    call.respond(HttpStatusCode.NotFound)
+                    return@withRequestContext
+                }
 
                 val eventerIkkeSensitive = when (fagsystem) {
                     Fagsystem.K9SAK -> {
