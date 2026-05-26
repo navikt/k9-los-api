@@ -62,7 +62,7 @@ class EventRepositoryPerLinjeForKonverteringTest() : AbstractK9LosIntegrationTes
                     :ekstern_versjon,
                     :oppgavetype_id,
                     'AAPEN',
-                    'k9',
+                    'K9',
                     1,
                     :endret_tidspunkt,
                     :reservasjonsnokkel,
