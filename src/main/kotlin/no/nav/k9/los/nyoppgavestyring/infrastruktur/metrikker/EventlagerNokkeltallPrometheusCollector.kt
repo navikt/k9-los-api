@@ -2,11 +2,10 @@ package no.nav.k9.los.nyoppgavestyring.infrastruktur.metrikker
 
 import io.prometheus.client.Collector
 import io.prometheus.client.GaugeMetricFamily
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventRepository
 import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
 
 class EventlagerNokkeltallPrometheusCollector(
-    private val eventRepository: EventRepository,
+    private val nokkeltallRepository: EventlagerNokkeltallRepository,
     registerCollector: Boolean = true,
 ) : Collector() {
 
@@ -17,10 +16,11 @@ class EventlagerNokkeltallPrometheusCollector(
     }
 
     override fun collect(): MutableList<MetricFamilySamples> {
-        val dirtyPerFagsystem = eventRepository.hentAntallDirtyEventerPerFagsystem().associate { it.fagsystem to it.antall }
-        val dirtyEventnoklerPerFagsystem = eventRepository.hentAntallDirtyEventnoklerPerFagsystem().associate { it.fagsystem to it.antall }
-        val historikkvaskPerFagsystem = eventRepository.hentAntallHistorikkvaskbestillingerPerFagsystem().associate { it.fagsystem to it.antall }
-        val usendtOppgavestatistikkPerFagsystem = eventRepository.hentAntallUsendtOppgavestatistikkPerFagsystem().associate { it.fagsystem to it.antall }
+        val dirtyPerFagsystem = nokkeltallRepository.hentAntallDirtyEventerPerFagsystem().associate { it.fagsystem to it.antall }
+        val dirtyEventnoklerPerFagsystem = nokkeltallRepository.hentAntallDirtyEventnoklerPerFagsystem().associate { it.fagsystem to it.antall }
+        val historikkvaskPerFagsystem = nokkeltallRepository.hentAntallHistorikkvaskbestillingerPerFagsystem().associate { it.fagsystem to it.antall }
+        val usendtOppgavestatistikkPerFagsystem = nokkeltallRepository.hentUsendtOppgavestatistikkPerOppgavetype()
+            .associate { it.oppgavetypeEksternId.uppercase() to it.antall }
 
         val dirtyGauge = GaugeMetricFamily(
             "k9los_eventlager_dirty_eventer",
@@ -57,5 +57,3 @@ class EventlagerNokkeltallPrometheusCollector(
         return mutableListOf(dirtyGauge, dirtyEventnokkelGauge, historikkvaskGauge, usendtOppgavestatistikkGauge)
     }
 }
-
-
