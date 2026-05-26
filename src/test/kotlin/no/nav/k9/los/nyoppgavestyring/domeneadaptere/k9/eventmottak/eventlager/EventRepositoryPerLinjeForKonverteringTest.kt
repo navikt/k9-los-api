@@ -3,12 +3,15 @@ package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager
 import assertk.assertThat
 import assertk.assertions.isEmpty
 import assertk.assertions.isEqualTo
+import kotliquery.TransactionalSession
+import kotliquery.queryOf
 import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventDto
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.PunsjId
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.metrikker.EventlagerNokkeltallPrometheusCollector
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.metrikker.EventlagerNokkeltallRepository
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
@@ -26,6 +29,74 @@ private val EventLagret.punsjEventDto: K9PunsjEventDto
     get() = (this as EventLagret.K9Punsj).eventDto
 
 class EventRepositoryPerLinjeForKonverteringTest() : AbstractK9LosIntegrationTest() {
+
+    private fun leggTilOppgaveversjonForStatistikk(
+        tx: TransactionalSession,
+        oppgavetypeEksternId: String,
+        eksternId: String,
+        eksternVersjon: String,
+        markertSomSendt: Boolean = false,
+    ) {
+        val oppgavetypeId = tx.run(
+            queryOf(
+                "select id from oppgavetype where ekstern_id = :ekstern_id",
+                mapOf("ekstern_id" to oppgavetypeEksternId),
+            ).map { row -> row.long("id") }.asSingle
+        ) ?: error("Mangler oppgavetype $oppgavetypeEksternId i testgrunnlaget")
+
+        tx.run(
+            queryOf(
+                """
+                insert into oppgave_v3(
+                    ekstern_id,
+                    ekstern_versjon,
+                    oppgavetype_id,
+                    status,
+                    kildeomrade,
+                    versjon,
+                    endret_tidspunkt,
+                    reservasjonsnokkel,
+                    oppgavetype_ekstern_id,
+                    omrade_ekstern_id
+                ) values (
+                    :ekstern_id,
+                    :ekstern_versjon,
+                    :oppgavetype_id,
+                    'AAPEN',
+                    'K9',
+                    1,
+                    :endret_tidspunkt,
+                    :reservasjonsnokkel,
+                    :oppgavetype_ekstern_id,
+                    'k9'
+                )
+                """.trimIndent(),
+                mapOf(
+                    "ekstern_id" to eksternId,
+                    "ekstern_versjon" to eksternVersjon,
+                    "oppgavetype_id" to oppgavetypeId,
+                    "endret_tidspunkt" to LocalDateTime.now(),
+                    "reservasjonsnokkel" to eksternId,
+                    "oppgavetype_ekstern_id" to oppgavetypeEksternId,
+                )
+            ).asUpdate
+        )
+
+        if (markertSomSendt) {
+            tx.run(
+                queryOf(
+                    """
+                    insert into oppgave_v3_sendt_dvh_ekstern(ekstern_id, ekstern_versjon)
+                    values (:ekstern_id, :ekstern_versjon)
+                    """.trimIndent(),
+                    mapOf(
+                        "ekstern_id" to eksternId,
+                        "ekstern_versjon" to eksternVersjon,
+                    )
+                ).asUpdate
+            )
+        }
+    }
 
     @BeforeEach
     fun setup() {
@@ -235,6 +306,7 @@ class EventRepositoryPerLinjeForKonverteringTest() : AbstractK9LosIntegrationTes
     @Test
     fun `henter nøkkeltall per fagsystem for dirty eventer og historikkvaskbestillinger`() {
         val eventRepository = get<EventRepository>()
+        val nokkeltallRepository = get<EventlagerNokkeltallRepository>()
         val transactionalManager = get<TransactionalManager>()
 
         val punsjEksternId = UUID.randomUUID().toString()
@@ -253,21 +325,29 @@ class EventRepositoryPerLinjeForKonverteringTest() : AbstractK9LosIntegrationTes
             eventRepository.bestillHistorikkvask(Fagsystem.K9KLAGE, klageEksternId, tx)
             eventRepository.bestillHistorikkvask(Fagsystem.K9SAK, sakEksternId, tx)
             eventRepository.settHistorikkvaskFerdig(Fagsystem.K9SAK, sakEksternId, tx)
+
+            leggTilOppgaveversjonForStatistikk(tx, "k9sak", UUID.randomUUID().toString(), "1")
+            leggTilOppgaveversjonForStatistikk(tx, "k9sak", UUID.randomUUID().toString(), "2", markertSomSendt = true)
+            leggTilOppgaveversjonForStatistikk(tx, "k9klage", UUID.randomUUID().toString(), "1")
         }
 
-        val dirtyPerFagsystem = eventRepository.hentAntallDirtyEventerPerFagsystem().associate { it.fagsystem to it.antall }
+        val dirtyPerFagsystem = nokkeltallRepository.hentAntallDirtyEventerPerFagsystem().associate { it.fagsystem to it.antall }
         assertThat(dirtyPerFagsystem).isEqualTo(mapOf("K9KLAGE" to 1L, "PUNSJ" to 2L))
 
-        val dirtyEventnoklerPerFagsystem = eventRepository.hentAntallDirtyEventnoklerPerFagsystem().associate { it.fagsystem to it.antall }
+        val dirtyEventnoklerPerFagsystem = nokkeltallRepository.hentAntallDirtyEventnoklerPerFagsystem().associate { it.fagsystem to it.antall }
         assertThat(dirtyEventnoklerPerFagsystem).isEqualTo(mapOf("K9KLAGE" to 1L, "PUNSJ" to 1L))
 
-        val historikkvaskPerFagsystem = eventRepository.hentAntallHistorikkvaskbestillingerPerFagsystem().associate { it.fagsystem to it.antall }
+        val historikkvaskPerFagsystem = nokkeltallRepository.hentAntallHistorikkvaskbestillingerPerFagsystem().associate { it.fagsystem to it.antall }
         assertThat(historikkvaskPerFagsystem).isEqualTo(mapOf("K9KLAGE" to 1L, "PUNSJ" to 1L))
+
+        val usendtOppgavestatistikkPerFagsystem = nokkeltallRepository.hentUsendtOppgavestatistikkPerOppgavetype().associate { it.oppgavetypeEksternId.uppercase() to it.antall }
+        assertThat(usendtOppgavestatistikkPerFagsystem).isEqualTo(mapOf("K9KLAGE" to 1L, "K9SAK" to 1L))
     }
 
     @Test
     fun `eksponerer prometheus metrikker for eventlager per fagsystem`() {
         val eventRepository = get<EventRepository>()
+        val nokkeltallRepository = get<EventlagerNokkeltallRepository>()
         val transactionalManager = get<TransactionalManager>()
 
         val punsjEksternId = UUID.randomUUID().toString()
@@ -278,14 +358,19 @@ class EventRepositoryPerLinjeForKonverteringTest() : AbstractK9LosIntegrationTes
             eventRepository.lagre(Fagsystem.PUNSJ, punsjEksternId, LocalDateTime.now().toString(), "{}", tx)
             eventRepository.lagre(Fagsystem.K9KLAGE, klageEksternId, LocalDateTime.now().toString(), "{}", tx)
             eventRepository.bestillHistorikkvask(Fagsystem.PUNSJ, punsjEksternId, tx)
+
+            leggTilOppgaveversjonForStatistikk(tx, "k9sak", UUID.randomUUID().toString(), "1")
+            leggTilOppgaveversjonForStatistikk(tx, "k9sak", UUID.randomUUID().toString(), "2", markertSomSendt = true)
+            leggTilOppgaveversjonForStatistikk(tx, "k9klage", UUID.randomUUID().toString(), "1")
         }
 
-        val collector = EventlagerNokkeltallPrometheusCollector(eventRepository, registerCollector = false)
+        val collector = EventlagerNokkeltallPrometheusCollector(nokkeltallRepository, registerCollector = false)
         val metrics = collector.collect().associateBy { it.name }
 
         val dirtySamples = metrics.getValue("k9los_eventlager_dirty_eventer").samples
         val dirtyEventnokkelSamples = metrics.getValue("k9los_eventlager_dirty_eventnokler").samples
         val historikkvaskSamples = metrics.getValue("k9los_eventlager_historikkvask_bestillinger").samples
+        val usendtOppgavestatistikkSamples = metrics.getValue("k9los_eventlager_oppgavestatistikk_usendt").samples
 
         fun sampleValue(samples: List<io.prometheus.client.Collector.MetricFamilySamples.Sample>, fagsystem: String): Double {
             return samples.first { it.labelValues == listOf(fagsystem) }.value
@@ -297,5 +382,8 @@ class EventRepositoryPerLinjeForKonverteringTest() : AbstractK9LosIntegrationTes
         assertThat(sampleValue(dirtyEventnokkelSamples, "K9KLAGE")).isEqualTo(1.0)
         assertThat(sampleValue(historikkvaskSamples, "PUNSJ")).isEqualTo(1.0)
         assertThat(sampleValue(historikkvaskSamples, "K9KLAGE")).isEqualTo(0.0)
+        assertThat(sampleValue(usendtOppgavestatistikkSamples, "K9SAK")).isEqualTo(1.0)
+        assertThat(sampleValue(usendtOppgavestatistikkSamples, "K9KLAGE")).isEqualTo(1.0)
+        assertThat(sampleValue(usendtOppgavestatistikkSamples, "PUNSJ")).isEqualTo(0.0)
     }
 }

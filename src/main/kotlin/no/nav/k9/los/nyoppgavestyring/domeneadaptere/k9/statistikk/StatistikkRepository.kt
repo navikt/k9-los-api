@@ -8,6 +8,7 @@ import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgavefelt
 import java.time.LocalDateTime
 import javax.sql.DataSource
 
+
 class StatistikkRepository(
     private val dataSource: DataSource,
     private val oppgavetypeRepository: OppgavetypeRepository
@@ -20,14 +21,11 @@ class StatistikkRepository(
                     """
                         select ov.id
                         from oppgave_v3 ov
-                        join oppgavetype o ON ov.oppgavetype_id = o.id 
+                        join oppgavetype o ON ov.oppgavetype_id = o.id
                         where o.ekstern_id in ('k9sak', 'k9klage')
                           and not exists (select * from OPPGAVE_V3_SENDT_DVH_EKSTERN os where os.ekstern_id = ov.ekstern_id and os.ekstern_versjon = ov.ekstern_versjon)
                     """.trimIndent()
-                )
-                    .map { row ->
-                        row.long("id")
-                    }.asList
+                ).map { row -> row.long("id") }.asList
             )
         }
     }
