@@ -8,6 +8,7 @@ import javax.sql.DataSource
 data class DirtyEventerPerFagsystem(val fagsystem: String, val antall: Long)
 data class DirtyEventnoklerPerFagsystem(val fagsystem: String, val antall: Long)
 data class HistorikkvaskbestillingerPerFagsystem(val fagsystem: String, val antall: Long)
+data class UsendtOppgavestatistikkPerFagsystem(val fagsystem: String, val antall: Long)
 
 
 class EventRepository(
@@ -262,6 +263,34 @@ class EventRepository(
                     """.trimIndent()
                 ).map { row ->
                     HistorikkvaskbestillingerPerFagsystem(
+                        fagsystem = row.string("fagsystem"),
+                        antall = row.long("antall")
+                    )
+                }.asList
+            )
+        }
+    }
+
+    fun hentAntallUsendtOppgavestatistikkPerFagsystem(): List<UsendtOppgavestatistikkPerFagsystem> {
+        return using(sessionOf(dataSource)) {
+            it.run(
+                queryOf(
+                    """
+                    select upper(o.ekstern_id) as fagsystem, count(*) as antall
+                    from oppgave_v3 ov
+                        join oppgavetype o on ov.oppgavetype_id = o.id
+                    where o.ekstern_id in ('k9sak', 'k9klage')
+                      and not exists (
+                          select 1
+                          from oppgave_v3_sendt_dvh_ekstern os
+                          where os.ekstern_id = ov.ekstern_id
+                            and os.ekstern_versjon = ov.ekstern_versjon
+                      )
+                    group by upper(o.ekstern_id)
+                    order by upper(o.ekstern_id)
+                    """.trimIndent()
+                ).map { row ->
+                    UsendtOppgavestatistikkPerFagsystem(
                         fagsystem = row.string("fagsystem"),
                         antall = row.long("antall")
                     )

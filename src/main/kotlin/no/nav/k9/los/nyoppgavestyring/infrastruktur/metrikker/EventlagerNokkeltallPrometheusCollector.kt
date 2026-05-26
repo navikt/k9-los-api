@@ -20,6 +20,7 @@ class EventlagerNokkeltallPrometheusCollector(
         val dirtyPerFagsystem = eventRepository.hentAntallDirtyEventerPerFagsystem().associate { it.fagsystem to it.antall }
         val dirtyEventnoklerPerFagsystem = eventRepository.hentAntallDirtyEventnoklerPerFagsystem().associate { it.fagsystem to it.antall }
         val historikkvaskPerFagsystem = eventRepository.hentAntallHistorikkvaskbestillingerPerFagsystem().associate { it.fagsystem to it.antall }
+        val usendtOppgavestatistikkPerFagsystem = eventRepository.hentAntallUsendtOppgavestatistikkPerFagsystem().associate { it.fagsystem to it.antall }
 
         val dirtyGauge = GaugeMetricFamily(
             "k9los_eventlager_dirty_eventer",
@@ -39,14 +40,21 @@ class EventlagerNokkeltallPrometheusCollector(
             listOf("fagsystem")
         )
 
+        val usendtOppgavestatistikkGauge = GaugeMetricFamily(
+            "k9los_eventlager_oppgavestatistikk_usendt",
+            "Antall oppgaveversjoner som ikke er sendt til DVH gruppert per fagsystem.",
+            listOf("fagsystem")
+        )
+
         Fagsystem.entries.forEach { fagsystem ->
             val label = fagsystem.kode
             dirtyGauge.addMetric(listOf(label), (dirtyPerFagsystem[label] ?: 0L).toDouble())
             dirtyEventnokkelGauge.addMetric(listOf(label), (dirtyEventnoklerPerFagsystem[label] ?: 0L).toDouble())
             historikkvaskGauge.addMetric(listOf(label), (historikkvaskPerFagsystem[label] ?: 0L).toDouble())
+            usendtOppgavestatistikkGauge.addMetric(listOf(label), (usendtOppgavestatistikkPerFagsystem[label] ?: 0L).toDouble())
         }
 
-        return mutableListOf(dirtyGauge, dirtyEventnokkelGauge, historikkvaskGauge)
+        return mutableListOf(dirtyGauge, dirtyEventnokkelGauge, historikkvaskGauge, usendtOppgavestatistikkGauge)
     }
 }
 
