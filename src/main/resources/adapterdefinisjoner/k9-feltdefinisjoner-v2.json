@@ -9,6 +9,13 @@
       "synlighet": "INTERNT"
     },
     {
+      "id": "historisk",
+      "visningsnavn": "Historisk behandling (skjult)",
+      "listetype": false,
+      "tolkesSom": "boolean",
+      "synlighet": "INTERNT"
+    },
+    {
       "id": "påklagdBehandlingUuid",
       "visningsnavn": "Påklaget behandling",
       "listetype": false,
