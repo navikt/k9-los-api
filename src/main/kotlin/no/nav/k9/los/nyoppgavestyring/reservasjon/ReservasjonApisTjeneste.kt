@@ -1,6 +1,5 @@
 package no.nav.k9.los.nyoppgavestyring.reservasjon
 
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.adhocjobber.reservasjonkonvertering.ReservasjonOversetter
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.azuregraph.IAzureGraphService
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
@@ -9,6 +8,7 @@ import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
 import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.AktivOppgaveOppslagTjeneste
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveNøkkelDto
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import org.slf4j.Logger
@@ -23,7 +23,7 @@ class ReservasjonApisTjeneste(
     private val oppgaveV3Repository: OppgaveRepository,
     private val transactionalManager: TransactionalManager,
     private val reservasjonV3DtoBuilder: ReservasjonV3DtoBuilder,
-    private val reservasjonOversetter: ReservasjonOversetter,
+    private val aktivOppgaveOppslagTjeneste: AktivOppgaveOppslagTjeneste,
     private val pepClient: IPepClient,
     private val azureGraphService: IAzureGraphService,
 ) {
@@ -91,7 +91,10 @@ class ReservasjonApisTjeneste(
         val tilSaksbehandler =
             tilBrukerIdent?.let { saksbehandlerRepository.finnSaksbehandlerMedIdent(it) }
 
-        val reservasjonsnøkkel = reservasjonOversetter.hentReservasjonsnøkkelForOppgavenøkkel(oppgaveNøkkel)
+        val reservasjonsnøkkel = aktivOppgaveOppslagTjeneste.hentAktivOppgave(
+            oppgaveNøkkel.oppgaveEksternId,
+            oppgaveNøkkel.oppgaveTypeEksternId
+        ).reservasjonsnøkkel
         val nyReservasjon = reservasjonV3Tjeneste.endreReservasjon(
             reservasjonsnøkkel = reservasjonsnøkkel,
             endretAvBrukerId = innloggetBruker.id!!,
@@ -116,7 +119,10 @@ class ReservasjonApisTjeneste(
         innloggetBruker: Saksbehandler
     ): ReservasjonV3Dto {
         val reservasjonsnøkkel =
-            reservasjonOversetter.hentReservasjonsnøkkelForOppgavenøkkel(forlengReservasjonDto.oppgaveNøkkel)
+            aktivOppgaveOppslagTjeneste.hentAktivOppgave(
+                forlengReservasjonDto.oppgaveNøkkel.oppgaveEksternId,
+                forlengReservasjonDto.oppgaveNøkkel.oppgaveTypeEksternId
+            ).reservasjonsnøkkel
 
         val forlengetReservasjon =
             reservasjonV3Tjeneste.forlengReservasjon(
@@ -141,7 +147,10 @@ class ReservasjonApisTjeneste(
             params.brukerIdent
         )!!
 
-        val reservasjonsnøkkel = reservasjonOversetter.hentReservasjonsnøkkelForOppgavenøkkel(params.oppgaveNøkkel)
+        val reservasjonsnøkkel = aktivOppgaveOppslagTjeneste.hentAktivOppgave(
+            params.oppgaveNøkkel.oppgaveEksternId,
+            params.oppgaveNøkkel.oppgaveTypeEksternId
+        ).reservasjonsnøkkel
 
         val nyReservasjon = reservasjonV3Tjeneste.overførReservasjon(
             reservasjonsnøkkel = reservasjonsnøkkel,
@@ -159,7 +168,10 @@ class ReservasjonApisTjeneste(
         innloggetBruker: Saksbehandler,
         oppgaveNøkkelDto: OppgaveNøkkelDto,
     ) {
-        val reservasjonsnøkkel = reservasjonOversetter.hentReservasjonsnøkkelForOppgavenøkkel(oppgaveNøkkelDto)
+        val reservasjonsnøkkel = aktivOppgaveOppslagTjeneste.hentAktivOppgave(
+            oppgaveNøkkelDto.oppgaveEksternId,
+            oppgaveNøkkelDto.oppgaveTypeEksternId
+        ).reservasjonsnøkkel
 
         val annulleringUtført = reservasjonV3Tjeneste.annullerReservasjonHvisFinnes(
             reservasjonsnøkkel = reservasjonsnøkkel,

@@ -7,10 +7,8 @@ import io.mockk.mockk
 import kotlinx.coroutines.channels.Channel
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.adhocjobber.reservasjonkonvertering.ReservasjonKonverteringJobb
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.adhocjobber.reservasjonkonvertering.ReservasjonOversetter
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.AvstemmingsTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventRepository
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.metrikker.EventlagerNokkeltallRepository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.klage.K9KlageEventHandler
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventHandler
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventHandler
@@ -38,6 +36,7 @@ import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.cache.PepCacheService
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.azuregraph.AzureGraphServiceLocal
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.azuregraph.IAzureGraphService
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.metrikker.EventlagerNokkeltallRepository
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.IPdlService
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.PdlServiceLocal
 import no.nav.k9.los.nyoppgavestyring.ko.KøpåvirkendeHendelse
@@ -70,8 +69,7 @@ import no.nav.k9.los.nyoppgavestyring.uttrekk.UttrekkCsvGenerator
 import no.nav.k9.los.nyoppgavestyring.uttrekk.UttrekkJobb
 import no.nav.k9.los.nyoppgavestyring.uttrekk.UttrekkRepository
 import no.nav.k9.los.nyoppgavestyring.uttrekk.UttrekkTjeneste
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepositoryTxWrapper
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.*
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.dagenstall.DagensTallService
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.ferdigstilteperenhet.FerdigstiltePerEnhetService
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.status.StatusService
@@ -154,12 +152,6 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             reservasjonV3Tjeneste = get(),
             transactionalManager = get(),
             oppgaveRepository = get(),
-        )
-    }
-
-    single {
-        ReservasjonOversetter(
-            oppgaveV3RepositoryMedTxWrapper = get(),
         )
     }
 
@@ -438,7 +430,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             oppgaveV3Repository = get(),
             transactionalManager = get(),
             reservasjonV3DtoBuilder = get(),
-            reservasjonOversetter = get(),
+            aktivOppgaveOppslagTjeneste = get(),
             pepClient = get(),
             azureGraphService = get(),
         )
@@ -451,6 +443,19 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     single {
         OppgaveRepositoryTxWrapper(
             oppgaveRepository = get(),
+            transactionalManager = get(),
+        )
+    }
+
+    single<AktivOppgaveOppslagTjeneste> {
+        AktivOppgaveOppslagTjenestePartisjonert(
+            oppgavetypeRepository = get(),
+            transactionalManager = get(),
+        )
+    }
+    single<ReservasjonsnøkkelOppgaveTjeneste> {
+        PartisjonertReservasjonsnøkkelOppgaveTjeneste(
+            oppgavetypeRepository = get(),
             transactionalManager = get(),
         )
     }
@@ -483,7 +488,6 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     single {
         SøkeboksTjeneste(
             queryService = get(),
-            oppgaveRepository = get(),
             pdlService = get(),
             saksbehandlerRepository = get(),
             pepClient = get(),

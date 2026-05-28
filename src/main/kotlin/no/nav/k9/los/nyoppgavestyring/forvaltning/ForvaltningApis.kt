@@ -24,12 +24,12 @@ import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
 import no.nav.k9.los.nyoppgavestyring.query.mapping.EksternFeltverdiOperator
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Repository
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepositoryTxWrapper
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.AktivOppgaveOppslagTjeneste
 import org.koin.ktor.ext.inject
 
 
 fun Route.forvaltningApis() {
-    val oppgaveRepositoryTxWrapper by inject<OppgaveRepositoryTxWrapper>()
+    val oppgaveOppslagTjeneste by inject<AktivOppgaveOppslagTjeneste>()
     val oppgaveTypeRepository by inject<OppgavetypeRepository>()
     val oppgaveKoTjeneste by inject<OppgaveKoTjeneste>()
     val oppgaveQueryService by inject<OppgaveQueryService>()
@@ -186,17 +186,10 @@ fun Route.forvaltningApis() {
         }
     }
 
-    get("/oppgaveV3/{omrade}/{oppgavetype}/{oppgaveEksternId}/aktiv", {
+    get("/oppgaveV3/{oppgavetype}/{oppgaveEksternId}/aktiv", {
         tags("Forvaltning")
         description = "Hent ut nåtilstand for en oppgave"
         request {
-            pathParameter<String>("omrade") {
-                description = "Området oppgavetypen er definert i. Pr i dag er kun K9 implementert"
-                example("K9") {
-                    value = "K9"
-                    description = "Oppgaver definert innenfor K9"
-                }
-            }
             pathParameter<K9Oppgavetypenavn>("oppgavetype") {
                 description = "Navnet på oppgavetypen."
                 example("k9sak") {
@@ -211,13 +204,12 @@ fun Route.forvaltningApis() {
     }) {
         requestContextService.withRequestContext(call) {
             if (pepClient.kanLeggeUtDriftsmelding()) {
-                val område = call.parameters["omrade"]!!
                 val oppgavetype = call.parameters["oppgavetype"]!!
                 val oppgaveEksternId = call.parameters["oppgaveEksternId"]!!
 
                 try {
                     val oppgave =
-                        oppgaveRepositoryTxWrapper.hentOppgave(område, oppgaveEksternId)
+                        oppgaveOppslagTjeneste.hentAktivOppgave(oppgaveEksternId, oppgavetype)
                     call.respond(objectMapper.writeValueAsString(OppgaveIkkeSensitiv(oppgave)))
                 } catch (e: IllegalStateException) {
                     if (e.message != null && e.message!!.startsWith("")) {
@@ -318,7 +310,7 @@ fun Route.forvaltningApis() {
                     return@withRequestContext
                 }
 
-                val oppgave = oppgaveRepositoryTxWrapper.hentOppgave(område, oppgaveEksternId)
+                val oppgave = oppgaveOppslagTjeneste.hentAktivOppgave(oppgaveEksternId, oppgavetypeEksternId)
                 val reservasjonsnøkkel = utledReservasjonsnøkkel(oppgave, false)
                 val reservasjonsnøkkel_beslutter = utledReservasjonsnøkkel(oppgave, true)
                 val reservasjonerOrdinær = transactionalManager.transaction { tx ->

@@ -9,7 +9,6 @@ import no.nav.helse.dusseldorf.ktor.health.HealthService
 import no.nav.k9.los.KoinProfile.*
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.adhocjobber.reservasjonkonvertering.ReservasjonKonverteringJobb
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.adhocjobber.reservasjonkonvertering.ReservasjonOversetter
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.AvstemmingsTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.punsj.systemklient.LocalPunsjAvstemmingsklient
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.punsj.systemklient.RestPunsjAvstemmingsklient
@@ -86,8 +85,12 @@ import no.nav.k9.los.nyoppgavestyring.uttrekk.UttrekkCsvGenerator
 import no.nav.k9.los.nyoppgavestyring.uttrekk.UttrekkJobb
 import no.nav.k9.los.nyoppgavestyring.uttrekk.UttrekkRepository
 import no.nav.k9.los.nyoppgavestyring.uttrekk.UttrekkTjeneste
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.AktivOppgaveOppslagTjeneste
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepositoryTxWrapper
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.AktivOppgaveOppslagTjenestePartisjonert
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.PartisjonertReservasjonsnøkkelOppgaveTjeneste
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.ReservasjonsnøkkelOppgaveTjeneste
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.dagenstall.DagensTallService
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.ferdigstilteperenhet.FerdigstiltePerEnhetService
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.status.StatusService
@@ -223,12 +226,6 @@ fun common(app: Application, config: Configuration) = module {
             k9TilbakeEventHandler = get(),
             k9PunsjEventHandler = get(),
             k9KlageEventHandler = get(),
-        )
-    }
-
-    single {
-        ReservasjonOversetter(
-            oppgaveV3RepositoryMedTxWrapper = get(),
         )
     }
 
@@ -474,6 +471,19 @@ fun common(app: Application, config: Configuration) = module {
         )
     }
 
+    single<AktivOppgaveOppslagTjeneste> {
+        AktivOppgaveOppslagTjenestePartisjonert(
+            oppgavetypeRepository = get(),
+            transactionalManager = get(),
+        )
+    }
+    single<ReservasjonsnøkkelOppgaveTjeneste> {
+        PartisjonertReservasjonsnøkkelOppgaveTjeneste(
+            oppgavetypeRepository = get(),
+            transactionalManager = get(),
+        )
+    }
+
     single {
         ReservasjonApisTjeneste(
             saksbehandlerRepository = get(),
@@ -481,7 +491,7 @@ fun common(app: Application, config: Configuration) = module {
             oppgaveV3Repository = get(),
             transactionalManager = get(),
             reservasjonV3DtoBuilder = get(),
-            reservasjonOversetter = get(),
+            aktivOppgaveOppslagTjeneste = get(),
             pepClient = get(),
             azureGraphService = get(),
         )
@@ -523,7 +533,6 @@ fun common(app: Application, config: Configuration) = module {
     single {
         SøkeboksTjeneste(
             queryService = get(),
-            oppgaveRepository = get(),
             pdlService = get(),
             saksbehandlerRepository = get(),
             pepClient = get(),

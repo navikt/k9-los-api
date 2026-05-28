@@ -15,12 +15,10 @@ import no.nav.k9.los.nyoppgavestyring.query.mapping.EksternFeltverdiOperator
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveNøkkelDto
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepositoryTxWrapper
 import java.time.LocalDateTime
 
 class SøkeboksTjeneste(
     private val queryService: OppgaveQueryService,
-    private val oppgaveRepository: OppgaveRepositoryTxWrapper,
     private val pdlService: IPdlService,
     private val saksbehandlerRepository: SaksbehandlerRepository,
     private val pepClient: IPepClient,
