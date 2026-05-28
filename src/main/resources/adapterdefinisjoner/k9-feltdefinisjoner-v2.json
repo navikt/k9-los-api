@@ -12,7 +12,7 @@
       "id": "historisk",
       "visningsnavn": "Historisk behandling (skjult)",
       "listetype": false,
-      "tolkesSom": "Boolean",
+      "tolkesSom": "boolean",
       "synlighet": "INTERNT"
     },
     {
