@@ -97,6 +97,11 @@
           "påkrevd": false
         },
         {
+          "id": "historisk",
+          "visPåOppgave": true,
+          "påkrevd": false
+        },
+        {
           "id": "liggerHosBeslutter",
           "visPåOppgave": true,
           "påkrevd": false

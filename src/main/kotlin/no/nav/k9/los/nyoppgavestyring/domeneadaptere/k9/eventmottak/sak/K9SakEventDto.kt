@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer
+import no.nav.k9.kodeverk.behandling.FagsakStatus
 import no.nav.k9.kodeverk.produksjonsstyring.MerknadType
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.EventHendelse
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.KodeverkDeserializer
@@ -42,6 +43,7 @@ data class K9SakEventDto(
     val eventHendelse: EventHendelse,
     val merknader: List<MerknadType> = emptyList(),
 
+    val fagsakStatus: FagsakStatus,
     @JsonAlias("behandlinStatus")
     val behandlingStatus: String?,
     val behandlingSteg: String?,
