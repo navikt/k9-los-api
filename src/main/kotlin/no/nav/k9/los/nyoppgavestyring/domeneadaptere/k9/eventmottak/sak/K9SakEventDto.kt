@@ -43,7 +43,7 @@ data class K9SakEventDto(
     val eventHendelse: EventHendelse,
     val merknader: List<MerknadType> = emptyList(),
 
-    val fagsakStatus: FagsakStatus,
+    val fagsakStatus: FagsakStatus?,
     @JsonAlias("behandlinStatus")
     val behandlingStatus: String?,
     val behandlingSteg: String?,
