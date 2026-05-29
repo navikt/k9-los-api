@@ -82,16 +82,16 @@ class OppgavestatistikkTjeneste(
         val kvitteringStats = TimingStats("kvittering")
         val totalPerOppgaveStats = TimingStats("total-per-oppgave")
         val kafkaFlushStats = TimingStats("kafka-flush")
+        val oppgaveIderTilKvittering = mutableListOf<Long>()
 
         oppgaverSomIkkeErSendt.forEachIndexed { index, oppgaveId ->
             val oppgaveStart = System.nanoTime()
-            sendStatistikkAsynkront(oppgaveId, pepCacheState, dbFetchStats, pepCacheStats, kvitteringStats)
+            sendStatistikkAsynkront(oppgaveId, pepCacheState, dbFetchStats, pepCacheStats)
+            oppgaveIderTilKvittering.add(oppgaveId)
             totalPerOppgaveStats.record(System.nanoTime() - oppgaveStart)
 
             if ((index + 1).mod(FLUSH_INTERVAL) == 0) {
-                val flushStart = System.nanoTime()
-                statistikkPublisher.flushOgValider()
-                kafkaFlushStats.record(System.nanoTime() - flushStart)
+                flushOgKvitter(oppgaveIderTilKvittering, kafkaFlushStats, kvitteringStats)
 
                 log.info("Sendt ${index + 1} eventer. Timing siste $FLUSH_INTERVAL: ${dbFetchStats.summary()}, ${pepCacheStats.summary()}, ${kvitteringStats.summary()}, ${totalPerOppgaveStats.summary()}, ${kafkaFlushStats.summary()}")
                 dbFetchStats.reset()
@@ -102,9 +102,7 @@ class OppgavestatistikkTjeneste(
             }
         }
         // Flush og logg resterende
-        val flushStart = System.nanoTime()
-        statistikkPublisher.flushOgValider()
-        kafkaFlushStats.record(System.nanoTime() - flushStart)
+        flushOgKvitter(oppgaveIderTilKvittering, kafkaFlushStats, kvitteringStats)
         if (oppgaverSomIkkeErSendt.size.mod(FLUSH_INTERVAL) != 0) {
             log.info("Siste batch timing: ${dbFetchStats.summary()}, ${pepCacheStats.summary()}, ${kvitteringStats.summary()}, ${totalPerOppgaveStats.summary()}, ${kafkaFlushStats.summary()}")
         }
@@ -123,7 +121,6 @@ class OppgavestatistikkTjeneste(
         pepCacheState: PepCachePerSaksnummerState,
         dbFetchStats: TimingStats,
         pepCacheStats: TimingStats,
-        kvitteringStats: TimingStats,
     ) {
         transactionalManager.transaction { tx ->
             val dbStart = System.nanoTime()
@@ -146,11 +143,24 @@ class OppgavestatistikkTjeneste(
                 }
                 statistikkPublisher.publiserAsynkront(sakTilSending, behandlingTilSending)
             }
+        }
+    }
 
+    private fun flushOgKvitter(
+        oppgaveIderTilKvittering: MutableList<Long>,
+        kafkaFlushStats: TimingStats,
+        kvitteringStats: TimingStats,
+    ) {
+        val flushStart = System.nanoTime()
+        statistikkPublisher.flushOgValider()
+        kafkaFlushStats.record(System.nanoTime() - flushStart)
+
+        oppgaveIderTilKvittering.forEach { oppgaveId ->
             val kvitteringStart = System.nanoTime()
-            statistikkRepository.kvitterSending(tx, oppgaveId)
+            statistikkRepository.kvitterSending(oppgaveId)
             kvitteringStats.record(System.nanoTime() - kvitteringStart)
         }
+        oppgaveIderTilKvittering.clear()
     }
 
     private fun nullUtEventuelleSensitiveFelter(sak: Sak): Sak {
