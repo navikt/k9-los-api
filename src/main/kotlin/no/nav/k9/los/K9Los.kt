@@ -150,7 +150,7 @@ fun Application.k9Los() {
         statistikkPublisher = koin.get(),
         transactionalManager = koin.get(),
         statistikkRepository = koin.get(),
-        pepClient = koin.get(),
+        pepCacheRepository = koin.get(),
     )
 
     install(CallLogging) {
