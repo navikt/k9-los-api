@@ -5,6 +5,7 @@ import kotliquery.queryOf
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.Oppgavetype
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRad.Companion.tilOppgaveRad
 import java.time.LocalDateTime
 
 class OppgaveOppslagTjenestePartisjonert(
@@ -30,16 +31,6 @@ class OppgaveOppslagTjenestePartisjonert(
     override fun hentAktivOppgaveHvisFinnes(eksternId: String, oppgavetypeEksternId: String, tx: TransactionalSession): Oppgave? {
         val now = LocalDateTime.now()
 
-        data class OppgaveRad(
-            val id: Long,
-            val oppgavetypeEksternId: String,
-            val oppgaveEksternId: String,
-            val oppgaveEksternVersjon: String,
-            val oppgavestatus: String,
-            val endretTidspunkt: LocalDateTime,
-            val reservasjonsnokkel: String,
-        )
-
         val rad = tx.run(
             queryOf(
                 """
@@ -50,17 +41,7 @@ class OppgaveOppslagTjenestePartisjonert(
                       AND ip.oppgavetype_ekstern_id = :oppgavetype
                     """.trimIndent(),
                 mapOf("eksternId" to eksternId, "oppgavetype" to oppgavetypeEksternId)
-            ).map { row ->
-                OppgaveRad(
-                    id = row.long("id"),
-                    oppgavetypeEksternId = row.string("oppgavetype_ekstern_id"),
-                    oppgaveEksternId = row.string("oppgave_ekstern_id"),
-                    oppgaveEksternVersjon = row.string("oppgave_ekstern_versjon"),
-                    oppgavestatus = row.string("oppgavestatus"),
-                    endretTidspunkt = row.localDateTime("endret_tidspunkt"),
-                    reservasjonsnokkel = row.string("reservasjonsnokkel"),
-                )
-            }.asSingle
+            ).map { it.tilOppgaveRad() }.asSingle
         ) ?: return null
 
         val oppgavetypeObj = oppgavetypeRepository.hentOppgavetype("K9", rad.oppgavetypeEksternId, tx)

@@ -1,5 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.visningoguttrekk
 
+import kotliquery.Row
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
@@ -33,9 +34,7 @@ class PartisjonertReservasjonsnøkkelOppgaveTjeneste(
                       AND oppgavestatus IN ('AAPEN', 'VENTER', 'UAVKLART')
                     """.trimIndent(),
                 mapOf("reservasjonsnokkel" to reservasjonsnøkkel)
-            ).map { row ->
-                OppgaveRad(row)
-            }.asList
+            ).map { it.tilOppgaveRad() }.asList
         )
         return rader.map { rad ->
             val oppgavetypeObj = oppgavetypeRepository.hentOppgavetype("K9", rad.oppgavetypeEksternId, tx)

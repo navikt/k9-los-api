@@ -21,7 +21,7 @@ class ReservasjonApisTjeneste(
     private val reservasjonV3Tjeneste: ReservasjonV3Tjeneste,
     private val transactionalManager: TransactionalManager,
     private val reservasjonV3DtoBuilder: ReservasjonV3DtoBuilder,
-    private val aktivOppgaveOppslagTjeneste: OppgaveOppslagTjeneste,
+    private val oppgaveOppslagTjeneste: OppgaveOppslagTjeneste,
     private val pepClient: IPepClient,
     private val azureGraphService: IAzureGraphService,
 ) {
@@ -42,7 +42,7 @@ class ReservasjonApisTjeneste(
         )!!
 
         val reservasjonV3 = transactionalManager.transaction { tx ->
-            val oppgaveV3 = aktivOppgaveOppslagTjeneste.hentAktivOppgave(
+            val oppgaveV3 = oppgaveOppslagTjeneste.hentAktivOppgave(
                 oppgaveNøkkel.oppgaveEksternId,
                 oppgaveNøkkel.oppgaveTypeEksternId,
                 tx
@@ -89,7 +89,7 @@ class ReservasjonApisTjeneste(
         val tilSaksbehandler =
             tilBrukerIdent?.let { saksbehandlerRepository.finnSaksbehandlerMedIdent(it) }
 
-        val reservasjonsnøkkel = aktivOppgaveOppslagTjeneste.hentAktivOppgave(
+        val reservasjonsnøkkel = oppgaveOppslagTjeneste.hentAktivOppgave(
             oppgaveNøkkel.oppgaveEksternId,
             oppgaveNøkkel.oppgaveTypeEksternId
         ).reservasjonsnøkkel
@@ -117,7 +117,7 @@ class ReservasjonApisTjeneste(
         innloggetBruker: Saksbehandler
     ): ReservasjonV3Dto {
         val reservasjonsnøkkel =
-            aktivOppgaveOppslagTjeneste.hentAktivOppgave(
+            oppgaveOppslagTjeneste.hentAktivOppgave(
                 forlengReservasjonDto.oppgaveNøkkel.oppgaveEksternId,
                 forlengReservasjonDto.oppgaveNøkkel.oppgaveTypeEksternId
             ).reservasjonsnøkkel
@@ -145,7 +145,7 @@ class ReservasjonApisTjeneste(
             params.brukerIdent
         )!!
 
-        val reservasjonsnøkkel = aktivOppgaveOppslagTjeneste.hentAktivOppgave(
+        val reservasjonsnøkkel = oppgaveOppslagTjeneste.hentAktivOppgave(
             params.oppgaveNøkkel.oppgaveEksternId,
             params.oppgaveNøkkel.oppgaveTypeEksternId
         ).reservasjonsnøkkel
@@ -166,7 +166,7 @@ class ReservasjonApisTjeneste(
         innloggetBruker: Saksbehandler,
         oppgaveNøkkelDto: OppgaveNøkkelDto,
     ) {
-        val reservasjonsnøkkel = aktivOppgaveOppslagTjeneste.hentAktivOppgave(
+        val reservasjonsnøkkel = oppgaveOppslagTjeneste.hentAktivOppgave(
             oppgaveNøkkelDto.oppgaveEksternId,
             oppgaveNøkkelDto.oppgaveTypeEksternId
         ).reservasjonsnøkkel
@@ -207,7 +207,7 @@ class ReservasjonApisTjeneste(
 
     suspend fun hentAktivReservasjon(oppgaveNøkkel: OppgaveNøkkelDto): ReservasjonV3Dto? {
         val oppgave = transactionalManager.transaction { tx ->
-            aktivOppgaveOppslagTjeneste.hentAktivOppgave(
+            oppgaveOppslagTjeneste.hentAktivOppgave(
                 oppgaveNøkkel.oppgaveEksternId,
                 oppgaveNøkkel.oppgaveTypeEksternId,
                 tx

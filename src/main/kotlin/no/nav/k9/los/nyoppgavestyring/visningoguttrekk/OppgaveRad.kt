@@ -12,13 +12,15 @@ internal data class OppgaveRad(
     val endretTidspunkt: LocalDateTime,
     val reservasjonsnokkel: String,
 ) {
-    constructor(row: Row) : this(
-        id = row.long("id"),
-        oppgavetypeEksternId = row.string("oppgavetype_ekstern_id"),
-        oppgaveEksternId = row.string("oppgave_ekstern_id"),
-        oppgaveEksternVersjon = row.string("oppgave_ekstern_versjon"),
-        oppgavestatus = row.string("oppgavestatus"),
-        endretTidspunkt = row.localDateTime("endret_tidspunkt"),
-        reservasjonsnokkel = row.string("reservasjonsnokkel"),
-    )
+    companion object {
+        internal fun Row.tilOppgaveRad() = OppgaveRad(
+            id = this.long("id"),
+            oppgavetypeEksternId = this.string("oppgavetype_ekstern_id"),
+            oppgaveEksternId = this.string("oppgave_ekstern_id"),
+            oppgaveEksternVersjon = this.string("oppgave_ekstern_versjon"),
+            oppgavestatus = this.string("oppgavestatus"),
+            endretTidspunkt = this.localDateTime("endret_tidspunkt"),
+            reservasjonsnokkel = this.string("reservasjonsnokkel"),
+        )
+    }
 }

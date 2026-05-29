@@ -490,7 +490,7 @@ fun common(app: Application, config: Configuration) = module {
             reservasjonV3Tjeneste = get(),
             transactionalManager = get(),
             reservasjonV3DtoBuilder = get(),
-            aktivOppgaveOppslagTjeneste = get(),
+            oppgaveOppslagTjeneste = get(),
             pepClient = get(),
             azureGraphService = get(),
         )
