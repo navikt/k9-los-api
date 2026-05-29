@@ -66,6 +66,10 @@ class OppgavestatistikkTjeneste(
         fun reset() { samples.clear() }
     }
 
+    companion object {
+        private const val FLUSH_INTERVAL = 100
+    }
+
     fun spillAvUsendtStatistikk() {
         log.info("Starter sending av saks- og behandlingsstatistikk til DVH")
         val tidStatistikksendingStartet = System.currentTimeMillis()
@@ -75,86 +79,88 @@ class OppgavestatistikkTjeneste(
 
         val dbFetchStats = TimingStats("db-fetch")
         val pepCacheStats = TimingStats("pep-cache")
-        val kafkaSendStats = TimingStats("kafka-send")
         val kvitteringStats = TimingStats("kvittering")
         val totalPerOppgaveStats = TimingStats("total-per-oppgave")
+        val kafkaFlushStats = TimingStats("kafka-flush")
+        val oppgaveIderTilKvittering = mutableListOf<Long>()
 
         oppgaverSomIkkeErSendt.forEachIndexed { index, oppgaveId ->
             val oppgaveStart = System.nanoTime()
-            sendStatistikk(oppgaveId, pepCacheState, dbFetchStats, pepCacheStats, kafkaSendStats, kvitteringStats)
+            sendStatistikkAsynkront(oppgaveId, pepCacheState, dbFetchStats, pepCacheStats)
+            oppgaveIderTilKvittering.add(oppgaveId)
             totalPerOppgaveStats.record(System.nanoTime() - oppgaveStart)
 
-            if ((index + 1).mod(100) == 0) {
-                log.info("Sendt ${index + 1} eventer. Timing siste 100: ${dbFetchStats.summary()}, ${pepCacheStats.summary()}, ${kafkaSendStats.summary()}, ${kvitteringStats.summary()}, ${totalPerOppgaveStats.summary()}")
+            if ((index + 1).mod(FLUSH_INTERVAL) == 0) {
+                flushOgKvitter(oppgaveIderTilKvittering, kafkaFlushStats, kvitteringStats)
+
+                log.info("Sendt ${index + 1} eventer. Timing siste $FLUSH_INTERVAL: ${dbFetchStats.summary()}, ${pepCacheStats.summary()}, ${kvitteringStats.summary()}, ${totalPerOppgaveStats.summary()}, ${kafkaFlushStats.summary()}")
                 dbFetchStats.reset()
                 pepCacheStats.reset()
-                kafkaSendStats.reset()
                 kvitteringStats.reset()
                 totalPerOppgaveStats.reset()
+                kafkaFlushStats.reset()
             }
         }
-        // Logg resterende
-        if (oppgaverSomIkkeErSendt.size.mod(100) != 0) {
-            log.info("Siste batch timing: ${dbFetchStats.summary()}, ${pepCacheStats.summary()}, ${kafkaSendStats.summary()}, ${kvitteringStats.summary()}, ${totalPerOppgaveStats.summary()}")
+        // Flush og logg resterende
+        flushOgKvitter(oppgaveIderTilKvittering, kafkaFlushStats, kvitteringStats)
+        if (oppgaverSomIkkeErSendt.size.mod(FLUSH_INTERVAL) != 0) {
+            log.info("Siste batch timing: ${dbFetchStats.summary()}, ${pepCacheStats.summary()}, ${kvitteringStats.summary()}, ${totalPerOppgaveStats.summary()}, ${kafkaFlushStats.summary()}")
         }
 
-        val tidStatistikksendingFerdig = System.currentTimeMillis()
-        val kjoretid = tidStatistikksendingFerdig - tidStatistikksendingStartet
-        log.info("Sending av saks- og behanlingsstatistikk ferdig")
-        log.info("Sendt ${oppgaverSomIkkeErSendt.size} oppgaversjoner. Totalt tidsbruk: ${kjoretid} ms")
+        val kjoretid = System.currentTimeMillis() - tidStatistikksendingStartet
+        log.info("Sending av saks- og behandlingsstatistikk ferdig")
+        log.info("Sendt ${oppgaverSomIkkeErSendt.size} oppgaveversjoner. Totalt tidsbruk: ${kjoretid} ms")
         if (oppgaverSomIkkeErSendt.isNotEmpty()) {
             log.info("Gjennomsnitt tidsbruk: ${kjoretid / oppgaverSomIkkeErSendt.size} ms pr oppgaveversjon")
         }
     }
 
     @WithSpan
-    private fun sendStatistikk(
+    private fun sendStatistikkAsynkront(
         @SpanAttribute oppgaveId: Long,
         pepCacheState: PepCachePerSaksnummerState,
         dbFetchStats: TimingStats,
         pepCacheStats: TimingStats,
-        kafkaSendStats: TimingStats,
-        kvitteringStats: TimingStats,
     ) {
         transactionalManager.transaction { tx ->
-            val kafkaNanos = sendStatistikk(oppgaveId, tx, pepCacheState, dbFetchStats, pepCacheStats)
-            kafkaSendStats.record(kafkaNanos)
+            val dbStart = System.nanoTime()
+            val oppgavestatistikkgrunnlag = byggOppgavestatistikk(oppgaveId, tx)
+            dbFetchStats.record(System.nanoTime() - dbStart)
 
-            val kvitteringStart = System.nanoTime()
-            statistikkRepository.kvitterSending(tx, oppgaveId)
-            kvitteringStats.record(System.nanoTime() - kvitteringStart)
+            val pepStart = System.nanoTime()
+            val erKode6 = pepCacheState.hentEllerOppdater(
+                saksnummer = oppgavestatistikkgrunnlag.sak.saksnummer,
+                oppgaveEksternId = oppgavestatistikkgrunnlag.oppgaveEksternId,
+                tx = tx,
+            )
+            pepCacheStats.record(System.nanoTime() - pepStart)
+
+            val sakTilSending = if (erKode6) nullUtEventuelleSensitiveFelter(oppgavestatistikkgrunnlag.sak) else oppgavestatistikkgrunnlag.sak
+            oppgavestatistikkgrunnlag.behandlinger.forEach {
+                val behandlingTilSending = if (erKode6) nullUtEventuelleSensitiveFelter(it) else it
+                if (log.isDebugEnabled) {
+                    log.debug("Utgående DvhBehandling: {}", behandlingTilSending.tryggToString())
+                }
+                statistikkPublisher.publiserAsynkront(sakTilSending, behandlingTilSending)
+            }
         }
     }
 
-    private fun sendStatistikk(
-        id: Long,
-        tx: TransactionalSession,
-        pepCacheState: PepCachePerSaksnummerState,
-        dbFetchStats: TimingStats,
-        pepCacheStats: TimingStats,
-    ): Long {
-        val dbStart = System.nanoTime()
-        val oppgavestatistikkgrunnlag = byggOppgavestatistikk(id, tx)
-        dbFetchStats.record(System.nanoTime() - dbStart)
+    private fun flushOgKvitter(
+        oppgaveIderTilKvittering: MutableList<Long>,
+        kafkaFlushStats: TimingStats,
+        kvitteringStats: TimingStats,
+    ) {
+        val flushStart = System.nanoTime()
+        statistikkPublisher.flushOgValider()
+        kafkaFlushStats.record(System.nanoTime() - flushStart)
 
-        val pepStart = System.nanoTime()
-        val erKode6 = pepCacheState.hentEllerOppdater(
-            saksnummer = oppgavestatistikkgrunnlag.sak.saksnummer,
-            oppgaveEksternId = oppgavestatistikkgrunnlag.oppgaveEksternId,
-            tx = tx,
-        )
-        pepCacheStats.record(System.nanoTime() - pepStart)
-
-        val sakTilSending = if (erKode6) nullUtEventuelleSensitiveFelter(oppgavestatistikkgrunnlag.sak) else oppgavestatistikkgrunnlag.sak
-        var totalKafkaNanos = 0L
-        oppgavestatistikkgrunnlag.behandlinger.forEach {
-            val behandlingTilSending = if (erKode6) nullUtEventuelleSensitiveFelter(it) else it
-            if (log.isDebugEnabled) {
-                log.debug("Utgående DvhBehandling: {}", behandlingTilSending.tryggToString())
-            }
-            totalKafkaNanos += statistikkPublisher.publiser(sakTilSending, behandlingTilSending)
+        oppgaveIderTilKvittering.forEach { oppgaveId ->
+            val kvitteringStart = System.nanoTime()
+            statistikkRepository.kvitterSending(oppgaveId)
+            kvitteringStats.record(System.nanoTime() - kvitteringStart)
         }
-        return totalKafkaNanos
+        oppgaveIderTilKvittering.clear()
     }
 
     private fun nullUtEventuelleSensitiveFelter(sak: Sak): Sak {

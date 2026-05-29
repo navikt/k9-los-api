@@ -14,6 +14,7 @@ import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.common.serialization.StringSerializer
 import org.json.JSONObject
 import org.slf4j.LoggerFactory
+import java.util.concurrent.atomic.AtomicReference
 
 class StatistikkPublisher(
     val kafkaConfig: IKafkaConfig,
@@ -42,23 +43,37 @@ class StatistikkPublisher(
         StringSerializer()
     )
 
-    /** @return total Kafka send time in nanoseconds (sak + behandling) */
-    fun publiser(sak: Sak, behandling: Behandling): Long {
-        val sakNanos = send(sak, sak.saksnummer, TOPIC_USE_STATISTIKK_SAK.name)
-        val behandlingNanos = send(behandling, behandling.behandlingId, TOPIC_USE_STATISTIKK_BEHANDLING.name)
-        return sakNanos + behandlingNanos
+    private val asyncError = AtomicReference<Exception>(null)
+
+    /**
+     * Legger meldinger i producer-bufferen uten å blokkere.
+     * Kall [flushOgValider] periodisk for å sikre levering og oppdage feil.
+     */
+    fun publiserAsynkront(sak: Sak, behandling: Behandling) {
+        sendAsync(sak, sak.saksnummer, TOPIC_USE_STATISTIKK_SAK.name)
+        sendAsync(behandling, behandling.behandlingId, TOPIC_USE_STATISTIKK_BEHANDLING.name)
     }
 
+    /**
+     * Blokkerer til alle buffrede meldinger er sendt og bekreftet.
+     * Kaster exception hvis noen av de asynkrone sendingene feilet.
+     */
+    fun flushOgValider() {
+        producer.flush()
+        val feil = asyncError.getAndSet(null)
+        if (feil != null) {
+            throw feil
+        }
+    }
 
-    private fun send(melding: Any, key: String, topic: String): Long {
+    private fun sendAsync(melding: Any, key: String, topic: String) {
         val meldingJson = LosObjectMapper.instance.writeValueAsString(melding)
-        val startNanos = System.nanoTime()
         producer.send(ProducerRecord(topic, key, meldingJson)) { _, exception ->
             if (exception != null) {
-                log.error("", exception)
+                log.error("Feil ved asynkron sending til Kafka topic={} key={}", topic, key, exception)
+                asyncError.compareAndSet(null, exception)
             }
-        }.get()
-        return System.nanoTime() - startNanos
+        }
     }
 
     internal fun stop() = producer.close()
