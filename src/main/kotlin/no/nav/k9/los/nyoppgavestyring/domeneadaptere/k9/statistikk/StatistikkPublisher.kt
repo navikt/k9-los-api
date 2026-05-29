@@ -77,7 +77,7 @@ class StatistikkPublisher(
         val meldingJson = LosObjectMapper.instance.writeValueAsString(melding)
         producer.send(ProducerRecord(topic, key, meldingJson)) { _, exception ->
             if (exception != null) {
-                log.error("Feil ved asynkron sending til Kafka topic $topic", exception)
+                log.error("Feil ved asynkron sending til Kafka topic={} key={}", topic, key, exception)
                 asyncError.compareAndSet(null, exception)
             }
         }
