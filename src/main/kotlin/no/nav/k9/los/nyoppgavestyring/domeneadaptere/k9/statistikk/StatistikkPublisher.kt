@@ -42,30 +42,23 @@ class StatistikkPublisher(
         StringSerializer()
     )
 
-    fun publiser(sak: Sak, behandling: Behandling) {
-        /*
-        if (config.koinProfile() == KoinProfile.LOCAL) {
-            return
-        }
-        */
-        send(sak, sak.saksnummer, TOPIC_USE_STATISTIKK_SAK.name)
-        send(behandling, behandling.behandlingId, TOPIC_USE_STATISTIKK_BEHANDLING.name)
+    /** @return total Kafka send time in nanoseconds (sak + behandling) */
+    fun publiser(sak: Sak, behandling: Behandling): Long {
+        val sakNanos = send(sak, sak.saksnummer, TOPIC_USE_STATISTIKK_SAK.name)
+        val behandlingNanos = send(behandling, behandling.behandlingId, TOPIC_USE_STATISTIKK_BEHANDLING.name)
+        return sakNanos + behandlingNanos
     }
 
 
-    private fun send(melding: Any, key: String, topic: String) {
-        /*if (config.koinProfile() == KoinProfile.LOCAL) {
-            log.info("Lokal kjøring, sender ikke melding til statistikk")
-            return
-        }
-*/
-        val publiserStatistikk = System.currentTimeMillis()
+    private fun send(melding: Any, key: String, topic: String): Long {
         val meldingJson = LosObjectMapper.instance.writeValueAsString(melding)
+        val startNanos = System.nanoTime()
         producer.send(ProducerRecord(topic, key, meldingJson)) { _, exception ->
             if (exception != null) {
                 log.error("", exception)
             }
         }.get()
+        return System.nanoTime() - startNanos
     }
 
     internal fun stop() = producer.close()
