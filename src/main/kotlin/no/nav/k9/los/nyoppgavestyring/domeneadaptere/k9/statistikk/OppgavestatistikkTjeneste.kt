@@ -66,7 +66,7 @@ class OppgavestatistikkTjeneste(
 
             if ((index + 1).mod(FLUSH_INTERVAL) == 0) {
                 flushOgKvitter(oppgaveIderTilKvittering)
-                log.info("Sendt ${index + 1} av ${oppgaverSomIkkeErSendt.size} eventer")
+                log.info("Sendt ${index + 1} av ${oppgaverSomIkkeErSendt.size} oppgaveversjoner")
             }
         }
         // Flush og kvitter resterende
