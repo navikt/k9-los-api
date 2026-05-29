@@ -52,6 +52,7 @@ class StatistikkPublisher(
         send(behandling, behandling.behandlingId, TOPIC_USE_STATISTIKK_BEHANDLING.name)
     }
 
+
     private fun send(melding: Any, key: String, topic: String) {
         /*if (config.koinProfile() == KoinProfile.LOCAL) {
             log.info("Lokal kjøring, sender ikke melding til statistikk")

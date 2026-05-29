@@ -39,6 +39,9 @@ class KafkaAivenConfig(
 
     override fun producer(name: String) = properties.apply {
         put(ProducerConfig.CLIENT_ID_CONFIG, "$ID_PREFIX$name")
+        put(ProducerConfig.LINGER_MS_CONFIG, 50)
+        put(ProducerConfig.BATCH_SIZE_CONFIG, 128 * 1024) // 128 KB
+        put(ProducerConfig.COMPRESSION_TYPE_CONFIG, "lz4")
     }
 
     private val streams = properties.apply {

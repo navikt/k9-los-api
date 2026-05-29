@@ -67,6 +67,7 @@ class PepCacheRepository(
         )
     }
 
+
     private fun Row.tilPepCache() = PepCache(
         kildeområde = string("kildeomrade"),
         eksternId = string("ekstern_id"),
