@@ -14,7 +14,10 @@ class OppgavestatistikkTjeneste(
     private val pepCacheRepository: PepCacheRepository
 ) {
 
-    private class PepCachePerSaksnummerState(private val maksAntallEksternIdPerSaksnummer: Int = 32) {
+    private class PepCachePerSaksnummerState(
+        private val pepCacheRepository: PepCacheRepository,
+        private val maksAntallEksternIdPerSaksnummer: Int = 32,
+    ) {
         private var gjeldendeSaksnummer: String? = null
         private val kode6PerOppgaveEksternId = object : LinkedHashMap<String, Boolean>(maksAntallEksternIdPerSaksnummer, 0.75f, true) {
             override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, Boolean>?): Boolean {
@@ -22,13 +25,15 @@ class OppgavestatistikkTjeneste(
             }
         }
 
-        fun hentEllerOppdater(saksnummer: String, oppgaveEksternId: String, lookup: () -> Boolean): Boolean {
+        fun hentEllerOppdater(saksnummer: String, oppgaveEksternId: String, tx: TransactionalSession): Boolean {
             if (gjeldendeSaksnummer != saksnummer) {
                 gjeldendeSaksnummer = saksnummer
                 kode6PerOppgaveEksternId.clear()
             }
 
-            return kode6PerOppgaveEksternId.getOrPut(oppgaveEksternId, lookup)
+            return kode6PerOppgaveEksternId.getOrPut(oppgaveEksternId) {
+                pepCacheRepository.hent("K9", oppgaveEksternId, tx)?.kode6 ?: false
+            }
         }
     }
 
@@ -46,7 +51,7 @@ class OppgavestatistikkTjeneste(
         log.info("Starter sending av saks- og behandlingsstatistikk til DVH")
         val tidStatistikksendingStartet = System.currentTimeMillis()
         val oppgaverSomIkkeErSendt = statistikkRepository.hentOppgaverSomIkkeErSendt()
-        val pepCacheState = PepCachePerSaksnummerState()
+        val pepCacheState = PepCachePerSaksnummerState(pepCacheRepository)
         log.info("Fant ${oppgaverSomIkkeErSendt.size} oppgaveversjoner som ikke er sendt til DVH")
         oppgaverSomIkkeErSendt.forEachIndexed { index, oppgaveId ->
             sendStatistikk(oppgaveId, pepCacheState)
@@ -55,11 +60,11 @@ class OppgavestatistikkTjeneste(
             }
         }
         val tidStatistikksendingFerdig = System.currentTimeMillis()
-        val kjøretid = tidStatistikksendingFerdig - tidStatistikksendingStartet
+        val kjoretid = tidStatistikksendingFerdig - tidStatistikksendingStartet
         log.info("Sending av saks- og behanlingsstatistikk ferdig")
-        log.info("Sendt ${oppgaverSomIkkeErSendt.size} oppgaversjoner. Totalt tidsbruk: ${kjøretid} ms")
+        log.info("Sendt ${oppgaverSomIkkeErSendt.size} oppgaversjoner. Totalt tidsbruk: ${kjoretid} ms")
         if (oppgaverSomIkkeErSendt.isNotEmpty()) {
-            log.info("Gjennomsnitt tidsbruk: ${kjøretid / oppgaverSomIkkeErSendt.size} ms pr oppgaveversjon")
+            log.info("Gjennomsnitt tidsbruk: ${kjoretid / oppgaverSomIkkeErSendt.size} ms pr oppgaveversjon")
         }
     }
 
@@ -79,9 +84,8 @@ class OppgavestatistikkTjeneste(
         val erKode6 = pepCacheState.hentEllerOppdater(
             saksnummer = oppgavestatistikkgrunnlag.sak.saksnummer,
             oppgaveEksternId = oppgavestatistikkgrunnlag.oppgaveEksternId,
-        ) {
-            pepCacheRepository.hent("K9", oppgavestatistikkgrunnlag.oppgaveEksternId, tx)?.kode6 ?: false
-        }
+            tx = tx,
+        )
 
         val sakTilSending = if (erKode6) nullUtEventuelleSensitiveFelter(oppgavestatistikkgrunnlag.sak) else oppgavestatistikkgrunnlag.sak
         oppgavestatistikkgrunnlag.behandlinger.forEach {
