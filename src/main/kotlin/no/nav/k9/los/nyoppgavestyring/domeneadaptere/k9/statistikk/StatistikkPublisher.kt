@@ -43,13 +43,6 @@ class StatistikkPublisher(
         StringSerializer()
     )
 
-    /** @return total Kafka send time in nanoseconds (sak + behandling) */
-    fun publiser(sak: Sak, behandling: Behandling): Long {
-        val sakNanos = send(sak, sak.saksnummer, TOPIC_USE_STATISTIKK_SAK.name)
-        val behandlingNanos = send(behandling, behandling.behandlingId, TOPIC_USE_STATISTIKK_BEHANDLING.name)
-        return sakNanos + behandlingNanos
-    }
-
     private val asyncError = AtomicReference<Exception>(null)
 
     /**
@@ -81,17 +74,6 @@ class StatistikkPublisher(
                 asyncError.compareAndSet(null, exception)
             }
         }
-    }
-
-    private fun send(melding: Any, key: String, topic: String): Long {
-        val meldingJson = LosObjectMapper.instance.writeValueAsString(melding)
-        val startNanos = System.nanoTime()
-        producer.send(ProducerRecord(topic, key, meldingJson)) { _, exception ->
-            if (exception != null) {
-                log.error("", exception)
-            }
-        }.get()
-        return System.nanoTime() - startNanos
     }
 
     internal fun stop() = producer.close()
