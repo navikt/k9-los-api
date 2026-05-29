@@ -2,9 +2,9 @@ package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk
 
 import io.opentelemetry.instrumentation.annotations.SpanAttribute
 import io.opentelemetry.instrumentation.annotations.WithSpan
-import kotliquery.TransactionalSession
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.cache.PepCacheRepository
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import org.slf4j.LoggerFactory
 
 class OppgavestatistikkTjeneste(
@@ -13,29 +13,6 @@ class OppgavestatistikkTjeneste(
     private val statistikkRepository: StatistikkRepository,
     private val pepCacheRepository: PepCacheRepository
 ) {
-
-    private class PepCachePerSaksnummerState(
-        private val pepCacheRepository: PepCacheRepository,
-        private val maksAntallEksternIdPerSaksnummer: Int = 32,
-    ) {
-        private var gjeldendeSaksnummer: String? = null
-        private val kode6PerOppgaveEksternId = object : LinkedHashMap<String, Boolean>(maksAntallEksternIdPerSaksnummer, 0.75f, true) {
-            override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, Boolean>?): Boolean {
-                return size > maksAntallEksternIdPerSaksnummer
-            }
-        }
-
-        fun hentEllerOppdater(saksnummer: String, oppgaveEksternId: String, tx: TransactionalSession): Boolean {
-            if (gjeldendeSaksnummer != saksnummer) {
-                gjeldendeSaksnummer = saksnummer
-                kode6PerOppgaveEksternId.clear()
-            }
-
-            return kode6PerOppgaveEksternId.getOrPut(oppgaveEksternId) {
-                pepCacheRepository.hent("K9", oppgaveEksternId, tx)?.kode6 ?: false
-            }
-        }
-    }
 
     private data class Oppgavestatistikkgrunnlag(
         val sak: Sak,
@@ -47,53 +24,71 @@ class OppgavestatistikkTjeneste(
     private val k9SakMapper = K9SakOppgaveTilDVHMapper()
     private val k9KlageMapper = K9KlageOppgaveTilDVHMapper()
 
+    companion object {
+        private const val BATCH_SIZE = 200
+    }
+
     fun spillAvUsendtStatistikk() {
         log.info("Starter sending av saks- og behandlingsstatistikk til DVH")
         val tidStatistikksendingStartet = System.currentTimeMillis()
         val oppgaverSomIkkeErSendt = statistikkRepository.hentOppgaverSomIkkeErSendt()
-        val pepCacheState = PepCachePerSaksnummerState(pepCacheRepository)
         log.info("Fant ${oppgaverSomIkkeErSendt.size} oppgaveversjoner som ikke er sendt til DVH")
-        oppgaverSomIkkeErSendt.forEachIndexed { index, oppgaveId ->
-            sendStatistikk(oppgaveId, pepCacheState)
-            if (index.mod(100) == 0) {
-                log.info("Sendt $index eventer")
-            }
+
+        var antallSendt = 0
+        oppgaverSomIkkeErSendt.chunked(BATCH_SIZE).forEach { batch ->
+            sendStatistikkBatch(batch)
+            antallSendt += batch.size
+            log.info("Sendt $antallSendt av ${oppgaverSomIkkeErSendt.size} eventer")
         }
-        val tidStatistikksendingFerdig = System.currentTimeMillis()
-        val kjoretid = tidStatistikksendingFerdig - tidStatistikksendingStartet
-        log.info("Sending av saks- og behanlingsstatistikk ferdig")
-        log.info("Sendt ${oppgaverSomIkkeErSendt.size} oppgaversjoner. Totalt tidsbruk: ${kjoretid} ms")
+
+        val kjoretid = System.currentTimeMillis() - tidStatistikksendingStartet
+        log.info("Sending av saks- og behandlingsstatistikk ferdig")
+        log.info("Sendt ${oppgaverSomIkkeErSendt.size} oppgaveversjoner. Totalt tidsbruk: ${kjoretid} ms")
         if (oppgaverSomIkkeErSendt.isNotEmpty()) {
             log.info("Gjennomsnitt tidsbruk: ${kjoretid / oppgaverSomIkkeErSendt.size} ms pr oppgaveversjon")
         }
     }
 
     @WithSpan
-    private fun sendStatistikk(
-        @SpanAttribute oppgaveId: Long,
-        pepCacheState: PepCachePerSaksnummerState,
+    private fun sendStatistikkBatch(
+        @SpanAttribute oppgaveIder: List<Long>,
     ) {
-        transactionalManager.transaction { tx ->
-            sendStatistikk(oppgaveId, tx, pepCacheState)
-            statistikkRepository.kvitterSending(tx, oppgaveId)
-        }
-    }
+        // Hent alle oppgaver og felter i bulk innenfor én transaksjon
+        val oppgaveData = transactionalManager.transaction { tx ->
+            val oppgaverMedVersjon = statistikkRepository.hentOppgaverForIder(tx, oppgaveIder)
 
-    private fun sendStatistikk(id: Long, tx: TransactionalSession, pepCacheState: PepCachePerSaksnummerState) {
-        val oppgavestatistikkgrunnlag = byggOppgavestatistikk(id, tx)
-        val erKode6 = pepCacheState.hentEllerOppdater(
-            saksnummer = oppgavestatistikkgrunnlag.sak.saksnummer,
-            oppgaveEksternId = oppgavestatistikkgrunnlag.oppgaveEksternId,
-            tx = tx,
-        )
-
-        val sakTilSending = if (erKode6) nullUtEventuelleSensitiveFelter(oppgavestatistikkgrunnlag.sak) else oppgavestatistikkgrunnlag.sak
-        oppgavestatistikkgrunnlag.behandlinger.forEach {
-            val behandlingTilSending = if (erKode6) nullUtEventuelleSensitiveFelter(it) else it
-            if (log.isDebugEnabled) {
-                log.debug("Utgående DvhBehandling: {}", behandlingTilSending.tryggToString())
+            // Bygg alle oppgavestatistikkgrunnlag
+            val grunnlagPerOppgaveId = oppgaverMedVersjon.map { (oppgaveId, oppgaveOgVersjon) ->
+                oppgaveId to byggOppgavestatistikk(oppgaveOgVersjon)
             }
-            statistikkPublisher.publiser(sakTilSending, behandlingTilSending)
+
+            // Batch-hent kode6-status for alle unike eksternIder
+            val alleEksternIder = grunnlagPerOppgaveId.map { it.second.oppgaveEksternId }.toSet()
+            val pepCacheBatch = pepCacheRepository.hentBatch("K9", alleEksternIder, tx)
+
+            // Bygg meldinger for sending
+            val meldingerTilSending = mutableListOf<Pair<Sak, Behandling>>()
+            for ((_, grunnlag) in grunnlagPerOppgaveId) {
+                val erKode6 = pepCacheBatch[grunnlag.oppgaveEksternId]?.kode6 ?: false
+                val sakTilSending = if (erKode6) nullUtEventuelleSensitiveFelter(grunnlag.sak) else grunnlag.sak
+                for (behandling in grunnlag.behandlinger) {
+                    val behandlingTilSending = if (erKode6) nullUtEventuelleSensitiveFelter(behandling) else behandling
+                    if (log.isDebugEnabled) {
+                        log.debug("Utgående DvhBehandling: {}", behandlingTilSending.tryggToString())
+                    }
+                    meldingerTilSending.add(sakTilSending to behandlingTilSending)
+                }
+            }
+
+            meldingerTilSending
+        }
+
+        // Send alle Kafka-meldinger i batch (asynkront med samlet flush)
+        statistikkPublisher.publiserBatch(oppgaveData)
+
+        // Kvitter alle i én transaksjon
+        transactionalManager.transaction { tx ->
+            statistikkRepository.kvitterSendingBatch(tx, oppgaveIder)
         }
     }
 
@@ -110,8 +105,8 @@ class OppgavestatistikkTjeneste(
         )
     }
 
-    private fun byggOppgavestatistikk(oppgaveId: Long, tx: TransactionalSession): Oppgavestatistikkgrunnlag {
-        val (oppgave, versjon) = statistikkRepository.hentOppgaveForId(tx, oppgaveId)
+    private fun byggOppgavestatistikk(oppgaveOgVersjon: Pair<Oppgave, Int>): Oppgavestatistikkgrunnlag {
+        val (oppgave, versjon) = oppgaveOgVersjon
 
         return when (oppgave.oppgavetype.eksternId) {
             "k9sak" -> Oppgavestatistikkgrunnlag(

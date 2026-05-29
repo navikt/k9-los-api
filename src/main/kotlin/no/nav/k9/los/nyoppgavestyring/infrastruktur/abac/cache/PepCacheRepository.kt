@@ -67,6 +67,20 @@ class PepCacheRepository(
         )
     }
 
+    fun hentBatch(kildeområde: String, eksternIder: Set<String>, tx: TransactionalSession): Map<String, PepCache> {
+        if (eksternIder.isEmpty()) return emptyMap()
+
+        val params = eksternIder.mapIndexed { index, id -> "id${index + 1}" to id }.toMap() + ("kildeomrade" to kildeområde)
+        val placeholders = eksternIder.indices.joinToString(",") { ":id${it + 1}" }
+
+        return tx.run(
+            queryOf("""
+                    SELECT * FROM OPPGAVE_PEP_CACHE WHERE kildeomrade = :kildeomrade AND ekstern_id IN ($placeholders) 
+                """, params
+            ).map { it.tilPepCache() }.asList
+        ).associateBy { it.eksternId }
+    }
+
     private fun Row.tilPepCache() = PepCache(
         kildeområde = string("kildeomrade"),
         eksternId = string("ekstern_id"),

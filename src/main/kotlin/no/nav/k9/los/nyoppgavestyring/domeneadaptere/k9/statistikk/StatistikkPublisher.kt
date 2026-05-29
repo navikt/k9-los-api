@@ -43,13 +43,34 @@ class StatistikkPublisher(
     )
 
     fun publiser(sak: Sak, behandling: Behandling) {
-        /*
-        if (config.koinProfile() == KoinProfile.LOCAL) {
-            return
-        }
-        */
         send(sak, sak.saksnummer, TOPIC_USE_STATISTIKK_SAK.name)
         send(behandling, behandling.behandlingId, TOPIC_USE_STATISTIKK_BEHANDLING.name)
+    }
+
+    fun publiserBatch(meldinger: List<Pair<Sak, Behandling>>) {
+        val errors = mutableListOf<Exception>()
+        for ((sak, behandling) in meldinger) {
+            sendAsync(sak, sak.saksnummer, TOPIC_USE_STATISTIKK_SAK.name, errors)
+            sendAsync(behandling, behandling.behandlingId, TOPIC_USE_STATISTIKK_BEHANDLING.name, errors)
+        }
+        // flush blokkerer til alle buffrede meldinger er sendt og bekreftet,
+        // og lar producer-internals batche meldinger i færre nettverksrequester (styrt av linger.ms/batch.size)
+        producer.flush()
+        if (errors.isNotEmpty()) {
+            throw errors.first().also { first ->
+                errors.drop(1).forEach { first.addSuppressed(it) }
+            }
+        }
+    }
+
+    private fun sendAsync(melding: Any, key: String, topic: String, errors: MutableList<Exception>) {
+        val meldingJson = LosObjectMapper.instance.writeValueAsString(melding)
+        producer.send(ProducerRecord(topic, key, meldingJson)) { _, exception ->
+            if (exception != null) {
+                log.error("Feil ved sending av melding til Kafka topic $topic", exception)
+                synchronized(errors) { errors.add(exception) }
+            }
+        }
     }
 
     private fun send(melding: Any, key: String, topic: String) {
