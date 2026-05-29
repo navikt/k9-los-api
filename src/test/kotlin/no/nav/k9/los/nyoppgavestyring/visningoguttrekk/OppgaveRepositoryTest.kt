@@ -15,7 +15,7 @@ class OppgaveRepositoryTest : AbstractK9LosIntegrationTest() {
 
     @Test
     fun hentNyesteOppgaveForEksternId() {
-        val oppgaveOppslagTjeneste = get<AktivOppgaveOppslagTjeneste>()
+        val oppgaveOppslagTjeneste = get<OppgaveOppslagTjeneste>()
         val forvaltningRepository = get<ForvaltningRepository>()
         val transactionalManager = get<TransactionalManager>()
         val behandlingUuid = UUID.randomUUID().toString()

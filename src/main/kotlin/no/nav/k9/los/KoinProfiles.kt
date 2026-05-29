@@ -85,10 +85,10 @@ import no.nav.k9.los.nyoppgavestyring.uttrekk.UttrekkCsvGenerator
 import no.nav.k9.los.nyoppgavestyring.uttrekk.UttrekkJobb
 import no.nav.k9.los.nyoppgavestyring.uttrekk.UttrekkRepository
 import no.nav.k9.los.nyoppgavestyring.uttrekk.UttrekkTjeneste
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.AktivOppgaveOppslagTjeneste
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveOppslagTjeneste
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepositoryTxWrapper
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.AktivOppgaveOppslagTjenestePartisjonert
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveOppslagTjenestePartisjonert
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.PartisjonertReservasjonsnøkkelOppgaveTjeneste
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.ReservasjonsnøkkelOppgaveTjeneste
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.dagenstall.DagensTallService
@@ -471,8 +471,8 @@ fun common(app: Application, config: Configuration) = module {
         )
     }
 
-    single<AktivOppgaveOppslagTjeneste> {
-        AktivOppgaveOppslagTjenestePartisjonert(
+    single<OppgaveOppslagTjeneste> {
+        OppgaveOppslagTjenestePartisjonert(
             oppgavetypeRepository = get(),
             transactionalManager = get(),
         )

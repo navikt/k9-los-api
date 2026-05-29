@@ -8,7 +8,7 @@ import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
 import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.AktivOppgaveOppslagTjeneste
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveOppslagTjeneste
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveNøkkelDto
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -21,7 +21,7 @@ class ReservasjonApisTjeneste(
     private val reservasjonV3Tjeneste: ReservasjonV3Tjeneste,
     private val transactionalManager: TransactionalManager,
     private val reservasjonV3DtoBuilder: ReservasjonV3DtoBuilder,
-    private val aktivOppgaveOppslagTjeneste: AktivOppgaveOppslagTjeneste,
+    private val aktivOppgaveOppslagTjeneste: OppgaveOppslagTjeneste,
     private val pepClient: IPepClient,
     private val azureGraphService: IAzureGraphService,
 ) {

@@ -446,8 +446,8 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
         )
     }
 
-    single<AktivOppgaveOppslagTjeneste> {
-        AktivOppgaveOppslagTjenestePartisjonert(
+    single<OppgaveOppslagTjeneste> {
+        OppgaveOppslagTjenestePartisjonert(
             oppgavetypeRepository = get(),
             transactionalManager = get(),
         )

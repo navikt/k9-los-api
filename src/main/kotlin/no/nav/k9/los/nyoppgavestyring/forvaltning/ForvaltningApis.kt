@@ -24,12 +24,12 @@ import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
 import no.nav.k9.los.nyoppgavestyring.query.mapping.EksternFeltverdiOperator
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Repository
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.AktivOppgaveOppslagTjeneste
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveOppslagTjeneste
 import org.koin.ktor.ext.inject
 
 
 fun Route.forvaltningApis() {
-    val oppgaveOppslagTjeneste by inject<AktivOppgaveOppslagTjeneste>()
+    val oppgaveOppslagTjeneste by inject<OppgaveOppslagTjeneste>()
     val oppgaveTypeRepository by inject<OppgavetypeRepository>()
     val oppgaveKoTjeneste by inject<OppgaveKoTjeneste>()
     val oppgaveQueryService by inject<OppgaveQueryService>()
