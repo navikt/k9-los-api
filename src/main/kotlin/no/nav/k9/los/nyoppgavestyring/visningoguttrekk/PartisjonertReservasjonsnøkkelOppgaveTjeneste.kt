@@ -14,56 +14,49 @@ class PartisjonertReservasjonsnøkkelOppgaveTjeneste(
 
     override fun hentÅpneOppgaverForReservasjonsnøkkel(reservasjonsnøkkel: String): List<Oppgave> {
         return transactionalManager.transaction { tx ->
-            val now = LocalDateTime.now()
+            hentÅpneOppgaverForReservasjonsnøkkel(reservasjonsnøkkel, tx)
+        }
+    }
 
-            data class OppgaveRad(
-                val id: Long,
-                val oppgavetypeEksternId: String,
-                val oppgaveEksternId: String,
-                val oppgaveEksternVersjon: String,
-                val oppgavestatus: String,
-                val endretTidspunkt: LocalDateTime,
-                val reservasjonsnokkel: String,
-            )
+    override fun hentÅpneOppgaverForReservasjonsnøkkel(
+        reservasjonsnøkkel: String,
+        tx: TransactionalSession
+    ): List<Oppgave> {
+        val now = LocalDateTime.now()
 
-            val rader = tx.run(
-                queryOf(
-                    """
+        val rader = tx.run(
+            queryOf(
+                """
                     SELECT *
                     FROM oppgave_v3_part
                     WHERE reservasjonsnokkel = :reservasjonsnokkel
                       AND oppgavestatus IN ('AAPEN', 'VENTER', 'UAVKLART')
                     """.trimIndent(),
-                    mapOf("reservasjonsnokkel" to reservasjonsnøkkel)
-                ).map { row ->
-                    OppgaveRad(
-                        id = row.long("id"),
-                        oppgavetypeEksternId = row.string("oppgavetype_ekstern_id"),
-                        oppgaveEksternId = row.string("oppgave_ekstern_id"),
-                        oppgaveEksternVersjon = row.string("oppgave_ekstern_versjon"),
-                        oppgavestatus = row.string("oppgavestatus"),
-                        endretTidspunkt = row.localDateTime("endret_tidspunkt"),
-                        reservasjonsnokkel = row.string("reservasjonsnokkel"),
-                    )
-                }.asList
-            )
-            rader.map { rad ->
-                val oppgavetypeObj = oppgavetypeRepository.hentOppgavetype("K9", rad.oppgavetypeEksternId, tx)
-                val oppgavefelter = hentOppgavefelter(tx, rad.id, oppgavetypeObj)
-                Oppgave(
-                    eksternId = rad.oppgaveEksternId,
-                    eksternVersjon = rad.oppgaveEksternVersjon,
-                    oppgavetype = oppgavetypeObj,
-                    status = rad.oppgavestatus,
-                    endretTidspunkt = rad.endretTidspunkt,
-                    felter = oppgavefelter,
-                    reservasjonsnøkkel = rad.reservasjonsnokkel,
-                ).fyllDefaultverdier().utledTransienteFelter(now)
-            }
+                mapOf("reservasjonsnokkel" to reservasjonsnøkkel)
+            ).map { row ->
+                OppgaveRad(row)
+            }.asList
+        )
+        return rader.map { rad ->
+            val oppgavetypeObj = oppgavetypeRepository.hentOppgavetype("K9", rad.oppgavetypeEksternId, tx)
+            val oppgavefelter = hentOppgavefelter(tx, rad.id, oppgavetypeObj)
+            Oppgave(
+                eksternId = rad.oppgaveEksternId,
+                eksternVersjon = rad.oppgaveEksternVersjon,
+                oppgavetype = oppgavetypeObj,
+                status = rad.oppgavestatus,
+                endretTidspunkt = rad.endretTidspunkt,
+                felter = oppgavefelter,
+                reservasjonsnøkkel = rad.reservasjonsnokkel,
+            ).fyllDefaultverdier().utledTransienteFelter(now)
         }
     }
 
-    private fun hentOppgavefelter(tx: TransactionalSession, oppgaveId: Long, oppgavetype: Oppgavetype): List<Oppgavefelt> {
+    private fun hentOppgavefelter(
+        tx: TransactionalSession,
+        oppgaveId: Long,
+        oppgavetype: Oppgavetype
+    ): List<Oppgavefelt> {
         return tx.run(
             queryOf(
                 """

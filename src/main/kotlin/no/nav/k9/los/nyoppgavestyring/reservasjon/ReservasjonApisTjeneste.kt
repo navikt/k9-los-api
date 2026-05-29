@@ -10,7 +10,6 @@ import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.AktivOppgaveOppslagTjeneste
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveNøkkelDto
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
@@ -20,7 +19,6 @@ import java.time.LocalTime
 class ReservasjonApisTjeneste(
     private val saksbehandlerRepository: SaksbehandlerRepository,
     private val reservasjonV3Tjeneste: ReservasjonV3Tjeneste,
-    private val oppgaveV3Repository: OppgaveRepository,
     private val transactionalManager: TransactionalManager,
     private val reservasjonV3DtoBuilder: ReservasjonV3DtoBuilder,
     private val aktivOppgaveOppslagTjeneste: AktivOppgaveOppslagTjeneste,
@@ -44,10 +42,10 @@ class ReservasjonApisTjeneste(
         )!!
 
         val reservasjonV3 = transactionalManager.transaction { tx ->
-            val oppgaveV3 = oppgaveV3Repository.hentNyesteOppgaveForEksternId(
-                tx,
-                oppgaveNøkkel.områdeEksternId,
-                oppgaveNøkkel.oppgaveEksternId
+            val oppgaveV3 = aktivOppgaveOppslagTjeneste.hentAktivOppgave(
+                oppgaveNøkkel.oppgaveEksternId,
+                oppgaveNøkkel.oppgaveTypeEksternId,
+                tx
             )
 
             reservasjonV3Tjeneste.forsøkReservasjonOgReturnerAktiv(
@@ -209,10 +207,10 @@ class ReservasjonApisTjeneste(
 
     suspend fun hentAktivReservasjon(oppgaveNøkkel: OppgaveNøkkelDto): ReservasjonV3Dto? {
         val oppgave = transactionalManager.transaction { tx ->
-            oppgaveV3Repository.hentNyesteOppgaveForEksternId(
-                tx,
-                oppgaveNøkkel.områdeEksternId,
-                oppgaveNøkkel.oppgaveEksternId
+            aktivOppgaveOppslagTjeneste.hentAktivOppgave(
+                oppgaveNøkkel.oppgaveEksternId,
+                oppgaveNøkkel.oppgaveTypeEksternId,
+                tx
             )
         }
         if (!pepClient.harTilgangTilOppgaveV3(

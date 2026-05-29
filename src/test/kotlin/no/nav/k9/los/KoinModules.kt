@@ -373,7 +373,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
         ReservasjonV3Tjeneste(
             transactionalManager = get(),
             reservasjonV3Repository = get(),
-            oppgaveV3Repository = get(),
+            reservasjonsnøkkelOppgaveTjeneste = get(),
             pepClient = get(),
             saksbehandlerRepository = get(),
             køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
@@ -427,7 +427,6 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
         ReservasjonApisTjeneste(
             saksbehandlerRepository = get(),
             reservasjonV3Tjeneste = get(),
-            oppgaveV3Repository = get(),
             transactionalManager = get(),
             reservasjonV3DtoBuilder = get(),
             aktivOppgaveOppslagTjeneste = get(),

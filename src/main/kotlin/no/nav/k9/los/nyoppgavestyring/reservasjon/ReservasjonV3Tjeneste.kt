@@ -15,7 +15,7 @@ import no.nav.k9.los.nyoppgavestyring.ko.ReservasjonTatt
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.ReservasjonsnøkkelOppgaveTjeneste
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
@@ -25,7 +25,7 @@ class ReservasjonV3Tjeneste(
     private val reservasjonV3Repository: ReservasjonV3Repository,
     private val pepClient: IPepClient,
     private val saksbehandlerRepository: SaksbehandlerRepository,
-    private val oppgaveV3Repository: OppgaveRepository,
+    private val reservasjonsnøkkelOppgaveTjeneste: ReservasjonsnøkkelOppgaveTjeneste,
     private val køpåvirkendeHendelseChannel: Channel<KøpåvirkendeHendelse>,
 ) {
 
@@ -116,7 +116,7 @@ class ReservasjonV3Tjeneste(
     ): ReservasjonV3 {
         //sjekke tilgang på alle oppgaver tilknyttet nøkkel
         val oppgaverForReservasjonsnøkkel =
-            oppgaveV3Repository.hentAlleÅpneOppgaverForReservasjonsnøkkel(tx, reservasjonsnøkkel)
+            reservasjonsnøkkelOppgaveTjeneste.hentÅpneOppgaverForReservasjonsnøkkel(reservasjonsnøkkel, tx)
         if (!sjekkTilganger(oppgaverForReservasjonsnøkkel, reserverForId)) {
             val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedId(reserverForId)!!
             throw ManglerTilgangException("Saksbehandler ${saksbehandler.navn} mangler tilgang til å reservere nøkkel $reservasjonsnøkkel")
@@ -174,7 +174,7 @@ class ReservasjonV3Tjeneste(
     ): ReservasjonV3MedOppgaver {
         return ReservasjonV3MedOppgaver(
             reservasjon,
-            oppgaveV3Repository.hentAlleÅpneOppgaverForReservasjonsnøkkel(tx, reservasjon.reservasjonsnøkkel)
+            reservasjonsnøkkelOppgaveTjeneste.hentÅpneOppgaverForReservasjonsnøkkel(reservasjon.reservasjonsnøkkel, tx)
         )
     }
 
