@@ -125,65 +125,22 @@ class StatistikkRepository(
             """.trimIndent(),
                 mapOf("id" to id)
             ).map { row ->
-                mapOppgave(row, now, tx, hentOppgavefelter(tx, row.long("id")))
+                mapOppgave(row, now, tx)
             }.asSingle
         ) ?: throw IllegalStateException("Fant ikke oppgave med id $id")
 
         return oppgave
     }
 
-    fun hentOppgaverForIder(tx: TransactionalSession, ider: List<Long>, now: LocalDateTime = LocalDateTime.now()): List<Pair<Long, Pair<Oppgave, Int>>> {
-        if (ider.isEmpty()) return emptyList()
-
-        val params = ider.mapIndexed { index, id -> "id${index + 1}" to id }.toMap()
-        val placeholders = ider.indices.joinToString(",") { ":id${it + 1}" }
-
-        // Batch-hent alle oppgavefelter for alle oppgave-IDer i én spørring
-        val alleOppgavefelter = hentOppgavefelterBatch(tx, ider)
-
-        return tx.run(
-            queryOf(
-                """
-                select * 
-                from oppgave_v3 ov
-                where ov.id IN ($placeholders)
-            """.trimIndent(),
-                params
-            ).map { row ->
-                val oppgaveId = row.long("id")
-                val felter = alleOppgavefelter[oppgaveId] ?: emptyList()
-                oppgaveId to mapOppgave(row, now, tx, felter)
-            }.asList
-        )
-    }
-
-    fun kvitterSendingBatch(tx: TransactionalSession, ider: List<Long>) {
-        if (ider.isEmpty()) return
-
-        val params = ider.mapIndexed { index, id -> "id${index + 1}" to id }.toMap()
-        val placeholders = ider.indices.joinToString(",") { ":id${it + 1}" }
-
-        tx.run(
-            queryOf(
-                """
-                    insert into OPPGAVE_V3_SENDT_DVH_EKSTERN(ekstern_id, ekstern_versjon)
-                    select ov.ekstern_id, ov.ekstern_versjon from oppgave_v3 ov where ov.id IN ($placeholders)
-                    on conflict (ekstern_id, ekstern_versjon) do nothing
-                """.trimIndent(),
-                params
-            ).asUpdate
-        )
-    }
-
     private fun mapOppgave(
         row: Row,
         now: LocalDateTime,
-        tx: TransactionalSession,
-        oppgavefelter: List<Oppgavefelt>,
+        tx: TransactionalSession
     ): Pair<Oppgave, Int> {
         val kildeområde = row.string("kildeomrade")
         val oppgaveTypeId = row.long("oppgavetype_id")
         val oppgavetype = oppgavetypeRepository.hentOppgavetype(kildeområde, oppgaveTypeId, tx)
+        val oppgavefelter = hentOppgavefelter(tx, row.long("id"))
         return Oppgave(
             eksternId = row.string("ekstern_id"),
             eksternVersjon = row.string("ekstern_versjon"),
@@ -209,41 +166,15 @@ class StatistikkRepository(
                 """.trimIndent(),
                 mapOf("oppgaveId" to oppgaveId)
             ).map { row ->
-                mapOppgavefelt(row)
+                Oppgavefelt(
+                    eksternId = row.string("ekstern_id"),
+                    område = row.string("omrade"),
+                    listetype = row.boolean("liste_type"),
+                    påkrevd = row.boolean("pakrevd"),
+                    verdi = row.string("verdi"),
+                    verdiBigInt = row.longOrNull("verdi_bigint"),
+                )
             }.asList
         )
     }
-
-    private fun hentOppgavefelterBatch(tx: TransactionalSession, oppgaveIder: List<Long>): Map<Long, List<Oppgavefelt>> {
-        if (oppgaveIder.isEmpty()) return emptyMap()
-
-        val params = oppgaveIder.mapIndexed { index, id -> "id${index + 1}" to id }.toMap()
-        val placeholders = oppgaveIder.indices.joinToString(",") { ":id${it + 1}" }
-
-        return tx.run(
-            queryOf(
-                """
-                select ov.oppgave_id, fd.ekstern_id as ekstern_id, o.ekstern_id as omrade, fd.liste_type, f.pakrevd, ov.verdi, ov.verdi_bigint
-                from oppgavefelt_verdi ov 
-                inner join oppgavefelt f on ov.oppgavefelt_id = f.id 
-                inner join feltdefinisjon fd on f.feltdefinisjon_id = fd.id 
-                inner join omrade o on fd.omrade_id = o.id 
-                where ov.oppgave_id IN ($placeholders)
-                order by ov.oppgave_id, fd.ekstern_id
-                """.trimIndent(),
-                params
-            ).map { row ->
-                row.long("oppgave_id") to mapOppgavefelt(row)
-            }.asList
-        ).groupBy({ it.first }, { it.second })
-    }
-
-    private fun mapOppgavefelt(row: Row) = Oppgavefelt(
-        eksternId = row.string("ekstern_id"),
-        område = row.string("omrade"),
-        listetype = row.boolean("liste_type"),
-        påkrevd = row.boolean("pakrevd"),
-        verdi = row.string("verdi"),
-        verdiBigInt = row.longOrNull("verdi_bigint"),
-    )
 }
