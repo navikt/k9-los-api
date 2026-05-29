@@ -9,6 +9,17 @@ class EventlagerNokkeltallPrometheusCollector(
     registerCollector: Boolean = true,
 ) : Collector() {
 
+    private data class CachedUsendtOppgavestatistikk(
+        val hentetTidspunktMs: Long,
+        val verdier: Map<String, Long>
+    )
+
+    private val usendtOppgavestatistikkCacheTtlMs = 60_000L
+    private val usendtOppgavestatistikkLock = Any()
+
+    @Volatile
+    private var cachedUsendtOppgavestatistikk: CachedUsendtOppgavestatistikk? = null
+
     init {
         if (registerCollector) {
             this.register<EventlagerNokkeltallPrometheusCollector>()
@@ -19,8 +30,7 @@ class EventlagerNokkeltallPrometheusCollector(
         val dirtyPerFagsystem = nokkeltallRepository.hentAntallDirtyEventerPerFagsystem().associate { it.fagsystem to it.antall }
         val dirtyEventnoklerPerFagsystem = nokkeltallRepository.hentAntallDirtyEventnoklerPerFagsystem().associate { it.fagsystem to it.antall }
         val historikkvaskPerFagsystem = nokkeltallRepository.hentAntallHistorikkvaskbestillingerPerFagsystem().associate { it.fagsystem to it.antall }
-        val usendtOppgavestatistikkPerFagsystem = nokkeltallRepository.hentUsendtOppgavestatistikkPerOppgavetype()
-            .associate { it.oppgavetypeEksternId.uppercase() to it.antall }
+        val usendtOppgavestatistikkPerFagsystem = hentUsendtOppgavestatistikkPerFagsystemCached()
 
         val dirtyGauge = GaugeMetricFamily(
             "k9los_eventlager_dirty_eventer",
@@ -55,5 +65,26 @@ class EventlagerNokkeltallPrometheusCollector(
         }
 
         return mutableListOf(dirtyGauge, dirtyEventnokkelGauge, historikkvaskGauge, usendtOppgavestatistikkGauge)
+    }
+
+    private fun hentUsendtOppgavestatistikkPerFagsystemCached(): Map<String, Long> {
+        val now = System.currentTimeMillis()
+        cachedUsendtOppgavestatistikk?.let {
+            if (now - it.hentetTidspunktMs < usendtOppgavestatistikkCacheTtlMs) {
+                return it.verdier
+            }
+        }
+
+        synchronized(usendtOppgavestatistikkLock) {
+            val cacheEtterLock = cachedUsendtOppgavestatistikk
+            if (cacheEtterLock != null && now - cacheEtterLock.hentetTidspunktMs < usendtOppgavestatistikkCacheTtlMs) {
+                return cacheEtterLock.verdier
+            }
+
+            val oppdatert = nokkeltallRepository.hentUsendtOppgavestatistikkPerOppgavetype()
+                .associate { it.oppgavetypeEksternId.uppercase() to it.antall }
+            cachedUsendtOppgavestatistikk = CachedUsendtOppgavestatistikk(now, oppdatert)
+            return oppdatert
+        }
     }
 }

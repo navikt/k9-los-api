@@ -15,15 +15,23 @@ class OppgavestatistikkTjeneste(
     private val pepClient: IPepClient
 ) {
 
+    private data class Kode6State(
+        var saksnummer: String? = null,
+        var erKode6: Boolean? = null
+    )
+
     private val log = LoggerFactory.getLogger(OppgavestatistikkTjeneste::class.java)
+    private val k9SakMapper = K9SakOppgaveTilDVHMapper()
+    private val k9KlageMapper = K9KlageOppgaveTilDVHMapper()
 
     fun spillAvUsendtStatistikk() {
         log.info("Starter sending av saks- og behandlingsstatistikk til DVH")
         val tidStatistikksendingStartet = System.currentTimeMillis()
+        val kode6State = Kode6State()
         val oppgaverSomIkkeErSendt = statistikkRepository.hentOppgaverSomIkkeErSendt()
         log.info("Fant ${oppgaverSomIkkeErSendt.size} oppgaveversjoner som ikke er sendt til DVH")
         oppgaverSomIkkeErSendt.forEachIndexed { index, oppgaveId ->
-            sendStatistikk(oppgaveId)
+            sendStatistikk(oppgaveId, kode6State)
             if (index.mod(100) == 0) {
                 log.info("Sendt $index eventer")
             }
@@ -38,27 +46,34 @@ class OppgavestatistikkTjeneste(
     }
 
     @WithSpan
-    private fun sendStatistikk(@SpanAttribute oppgaveId : Long){
+    private fun sendStatistikk(@SpanAttribute oppgaveId : Long, kode6State: Kode6State) {
         transactionalManager.transaction { tx ->
-            sendStatistikk(oppgaveId, tx)
-            statistikkRepository.kvitterSending(oppgaveId)
+            sendStatistikk(oppgaveId, tx, kode6State)
+            statistikkRepository.kvitterSending(tx, oppgaveId)
         }
     }
 
-    private fun sendStatistikk(id: Long, tx: TransactionalSession) {
+    private fun sendStatistikk(id: Long, tx: TransactionalSession, kode6State: Kode6State) {
         var (sak, behandling) = byggOppgavestatistikk(id, tx)
-        val erKode6 = runBlocking { pepClient.erSakKode6(sak.saksnummer) }
+        val erKode6 = if (kode6State.saksnummer == sak.saksnummer && kode6State.erKode6 != null) {
+            kode6State.erKode6!!
+        } else {
+            runBlocking { pepClient.erSakKode6(sak.saksnummer) }.also {
+                kode6State.saksnummer = sak.saksnummer
+                kode6State.erKode6 = it
+            }
+        }
         if (erKode6) {
             sak = nullUtEventuelleSensitiveFelter(sak)
         }
 
-        behandling.map {
-            if (erKode6) {
-                nullUtEventuelleSensitiveFelter(it)
-            } else it
+        behandling.forEach {
+            val behandlingTilSending = if (erKode6) nullUtEventuelleSensitiveFelter(it) else it
+            if (log.isDebugEnabled) {
+                log.debug("Utgående DvhBehandling: {}", behandlingTilSending.tryggToString())
+            }
+            statistikkPublisher.publiser(sak, behandlingTilSending)
         }
-            .onEach { log.info("Utgående DvhBehandling: "+ it.tryggToString()) }
-            .forEach { statistikkPublisher.publiser(sak, it) }
     }
 
     private fun nullUtEventuelleSensitiveFelter(sak: Sak): Sak {
@@ -79,12 +94,12 @@ class OppgavestatistikkTjeneste(
 
         return when (oppgave.oppgavetype.eksternId) {
             "k9sak" -> Pair(
-                    K9SakOppgaveTilDVHMapper().lagSak(oppgave),
-                    K9SakOppgaveTilDVHMapper().lagBehandlinger(oppgave, versjon)
+                    k9SakMapper.lagSak(oppgave),
+                    k9SakMapper.lagBehandlinger(oppgave, versjon)
                 )
             "k9klage" -> Pair(
-                    K9KlageOppgaveTilDVHMapper().lagSak(oppgave),
-                    listOf(K9KlageOppgaveTilDVHMapper().lagBehandling(oppgave))
+                    k9KlageMapper.lagSak(oppgave),
+                    listOf(k9KlageMapper.lagBehandling(oppgave))
                 )
             else -> throw IllegalStateException("Ukjent oppgavetype for sending til DVH: ${oppgave.oppgavetype.eksternId}")
         }
