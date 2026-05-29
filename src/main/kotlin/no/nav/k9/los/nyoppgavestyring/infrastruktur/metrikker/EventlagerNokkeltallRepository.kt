@@ -94,7 +94,6 @@ class EventlagerNokkeltallRepository(private val dataSource: DataSource) {
                     where o.ekstern_id in ('k9sak', 'k9klage')
                         and os.ekstern_id is null
                     group by o.ekstern_id
-                    order by o.ekstern_id
                     """.trimIndent()
                 ).map { row ->
                     UsendtStatistikkPerOppgavetype(

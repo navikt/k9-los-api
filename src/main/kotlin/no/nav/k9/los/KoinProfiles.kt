@@ -304,7 +304,7 @@ fun common(app: Application, config: Configuration) = module {
             statistikkPublisher = get(),
             transactionalManager = get(),
             statistikkRepository = get(),
-            pepClient = get(),
+            pepCacheRepository = get(),
         )
     }
 
