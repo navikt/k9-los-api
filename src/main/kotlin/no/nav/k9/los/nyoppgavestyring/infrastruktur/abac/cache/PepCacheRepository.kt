@@ -87,10 +87,6 @@ data class PepCache(
     val egenAnsatt: Boolean,
     val oppdatert: LocalDateTime
 ) {
-    fun erGyldig(maksimalAlder: Duration): Boolean {
-        return oppdatert < (LocalDateTime.now() - maksimalAlder)
-    }
-
     fun oppdater(kode6: Boolean, kode7: Boolean, egenAnsatt: Boolean): PepCache {
         return copy(
             kode6 = kode6,
@@ -98,9 +94,5 @@ data class PepCache(
             egenAnsatt = egenAnsatt,
             oppdatert = LocalDateTime.now()
         )
-    }
-
-    fun måSjekkes(): Boolean {
-        return kode6 || kode7 || egenAnsatt
     }
 }

@@ -228,7 +228,6 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
         val pepCacheService = PepCacheService(
             pepCacheRepository = pepRepository,
             pepClient = pepClient,
-            oppgaveRepository = get(),
             transactionalManager = get()
         )
 
@@ -258,7 +257,6 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
         val pepCacheService = PepCacheService(
             pepCacheRepository = pepRepository,
             pepClient = pepClient,
-            oppgaveRepository = get(),
             transactionalManager = get()
         )
 

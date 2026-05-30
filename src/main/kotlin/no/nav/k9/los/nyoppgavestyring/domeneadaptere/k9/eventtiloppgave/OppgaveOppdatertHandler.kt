@@ -1,11 +1,13 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave
 
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
 import kotliquery.TransactionalSession
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventLagret
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.AksjonspunktDefinisjonK9Tilbake
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.cache.PepCacheInput
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.cache.PepCacheService
 import no.nav.k9.los.nyoppgavestyring.ko.KøpåvirkendeHendelse
 import no.nav.k9.los.nyoppgavestyring.ko.OppgaveHendelseMottatt
@@ -29,7 +31,20 @@ class OppgaveOppdatertHandler(
     private val log: Logger = LoggerFactory.getLogger(OppgaveOppdatertHandler::class.java)
 
     internal fun oppdaterPepCache(oppgave: OppgaveV3, tx: TransactionalSession) {
-        pepCacheService.oppdater(tx, oppgave.kildeområde, oppgave.eksternId)
+        runBlocking(Dispatchers.IO) {
+            pepCacheService.oppdater(
+                tx,
+                PepCacheInput(
+                    oppgave.eksternId,
+                    oppgave.hentVerdi("saksnummer"),
+                    listOfNotNull(
+                        oppgave.hentVerdi("aktorId"),
+                        oppgave.hentVerdi("pleietrengendeAktorId"),
+                        oppgave.hentVerdi("relatertPartAktorid")
+                    )
+                )
+            )
+        }
     }
 
     internal fun håndterOppgaveOppdatert(
