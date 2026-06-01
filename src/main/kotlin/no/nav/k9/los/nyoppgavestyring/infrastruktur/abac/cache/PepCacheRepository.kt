@@ -5,13 +5,55 @@ import kotliquery.Row
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import kotliquery.sessionOf
-import java.time.Duration
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.util.InClauseHjelper
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import java.time.LocalDateTime
 import javax.sql.DataSource
 
 class PepCacheRepository(
     val dataSource: DataSource
 ) {
+    fun hentOppgaverMedStatusOgPepCacheEldreEnn(
+        tidspunkt: LocalDateTime = LocalDateTime.now(),
+        antall: Int = 1,
+        status: Set<Oppgavestatus>,
+        tx: TransactionalSession
+    ): List<PepCacheInput> {
+        val statusParametre = InClauseHjelper.tilParameternavn(status, "status")
+        val query = """
+                    SELECT o.oppgave_ekstern_id, 
+                    (select ov.verdi from oppgavefelt_verdi_part ov where ov.oppgave_id = o.id AND ov.feltdefinisjon_ekstern_id = 'saksnummer' AND ov.oppgavestatus IN ($statusParametre)) as saksnummer,
+                    (select ov.verdi from oppgavefelt_verdi_part ov where ov.oppgave_id = o.id AND ov.feltdefinisjon_ekstern_id = 'aktorId' AND ov.oppgavestatus IN ($statusParametre)) as aktor_id,
+                    (select ov.verdi from oppgavefelt_verdi_part ov where ov.oppgave_id = o.id AND ov.feltdefinisjon_ekstern_id = 'pleietrengendeAktorId' AND ov.oppgavestatus IN ($statusParametre)) as pleietrengende_aktor_id,
+                    (select ov.verdi from oppgavefelt_verdi_part ov where ov.oppgave_id = o.id AND ov.feltdefinisjon_ekstern_id = 'relatertPartAktorid' AND ov.oppgavestatus IN ($statusParametre)) as relatert_part_aktor_id
+                    FROM oppgave_v3_part o 
+                    LEFT JOIN OPPGAVE_PEP_CACHE opc ON o.oppgave_ekstern_id = opc.ekstern_id
+                    WHERE o.oppgavestatus IN ($statusParametre)
+                    AND (opc.oppdatert is null OR opc.oppdatert < :grense)
+                    ORDER BY opc.oppdatert NULLS FIRST
+                    LIMIT :limit
+                """.trimIndent()
+        return tx.run(
+            queryOf(
+                query,
+                buildMap {
+                    put("grense", tidspunkt)
+                    put("limit", antall)
+                    putAll(InClauseHjelper.parameternavnTilVerdierMap(status.map { it.kode }, "status"))
+                }
+            ).map { row ->
+                PepCacheInput(
+                    row.string("oppgave_ekstern_id"),
+                    row.stringOrNull("saksnummer"),
+                    listOfNotNull(
+                        row.stringOrNull("aktor_id"),
+                        row.stringOrNull("pleietrengende_aktor_id"),
+                        row.stringOrNull("relatert_part_aktor_id")
+                    )
+                )
+            }.asList
+        )
+    }
 
     fun lagre(cache: PepCache, tx: TransactionalSession) {
         tx.run(
