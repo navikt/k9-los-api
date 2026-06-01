@@ -33,8 +33,8 @@ class PepCacheService(
             runBlocking(Dispatchers.IO) {
                 val oppgaverSomMåOppdateres = hentOppgaverMedStatusOgPepCacheEldreEnn(
                     tidspunkt = LocalDateTime.now() - gyldighet,
-                    status = status,
                     antall = 1,
+                    status = status,
                     tx
                 )
                 oppgaverSomMåOppdateres.forEach { oppgave -> oppdater(tx, oppgave) }
@@ -44,8 +44,8 @@ class PepCacheService(
 
     private fun hentOppgaverMedStatusOgPepCacheEldreEnn(
         tidspunkt: LocalDateTime = LocalDateTime.now(),
-        status: Set<Oppgavestatus>,
         antall: Int = 1,
+        status: Set<Oppgavestatus>,
         tx: TransactionalSession
     ): List<PepCacheInput> {
         val statusParametre = InClauseHjelper.tilParameternavn(status, "status")
