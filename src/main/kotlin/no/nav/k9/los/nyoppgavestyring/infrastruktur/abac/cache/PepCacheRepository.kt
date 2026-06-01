@@ -27,7 +27,7 @@ class PepCacheRepository(
                     (select ov.verdi from oppgavefelt_verdi_part ov where ov.oppgave_id = o.id AND ov.feltdefinisjon_ekstern_id = 'pleietrengendeAktorId' AND ov.oppgavestatus IN ($statusParametre)) as pleietrengende_aktor_id,
                     (select ov.verdi from oppgavefelt_verdi_part ov where ov.oppgave_id = o.id AND ov.feltdefinisjon_ekstern_id = 'relatertPartAktorid' AND ov.oppgavestatus IN ($statusParametre)) as relatert_part_aktor_id
                     FROM oppgave_v3_part o 
-                    LEFT JOIN OPPGAVE_PEP_CACHE opc ON o.oppgave_ekstern_id = opc.ekstern_id
+                    LEFT JOIN OPPGAVE_PEP_CACHE opc ON (o.oppgave_ekstern_id = opc.ekstern_id AND opc.kildeomrade = 'K9')
                     WHERE o.oppgavestatus IN ($statusParametre)
                     AND (opc.oppdatert is null OR opc.oppdatert < :grense)
                     ORDER BY opc.oppdatert NULLS FIRST
