@@ -1,7 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.infrastruktur.db.util
 
 object InClauseHjelper {
-
     fun <T> tilParameternavnMedCast(input: Collection<T>, prefix: String, castTilType: String): String {
         return tilParameternavnListe(input, "cast(:$prefix", " as $castTilType)").joinToString(",")
     }
@@ -17,6 +16,5 @@ object InClauseHjelper {
     private fun <T> tilParameternavnListe(input: Collection<T>, prefix: String, postfix: String = ""): List<String> {
         check(input.isNotEmpty())
         return IntRange(1, input.size).map { "$prefix$it$postfix" }
-
     }
 }

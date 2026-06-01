@@ -108,7 +108,6 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
         PepCacheService(
             pepClient = get(),
             pepCacheRepository = get(),
-            oppgaveRepository = get(),
             transactionalManager = get()
         )
     }

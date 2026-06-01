@@ -500,7 +500,6 @@ fun common(app: Application, config: Configuration) = module {
         PepCacheService(
             pepClient = get(),
             pepCacheRepository = get(),
-            oppgaveRepository = get(),
             transactionalManager = get()
         )
     }
