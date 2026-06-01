@@ -514,11 +514,22 @@ fun Route.forvaltningApis() {
     }) {
         requestContextService.withRequestContext(call) {
             if (pepClient.kanLeggeUtDriftsmelding()) {
-                val appLog = call.application.log
                 Thread.ofVirtual().name("dvh-pending-populate").start {
                     val t0 = System.nanoTime()
-                    val antall = statistikkRepository.populerPendingFraAntijoin()
-                    appLog.info("dvh-pending populate: la til {} rader på {}ms", antall, (System.nanoTime() - t0) / 1_000_000)
+                    try {
+                        val antall = statistikkRepository.populerPendingFraAntijoin()
+                        appLog.info(
+                            "dvh-pending populate: la til {} rader på {}ms",
+                            antall,
+                            (System.nanoTime() - t0) / 1_000_000,
+                        )
+                    } catch (e: Exception) {
+                        appLog.error(
+                            "dvh-pending populate feilet etter {}ms",
+                            (System.nanoTime() - t0) / 1_000_000,
+                            e,
+                        )
+                    }
                 }
                 call.respond(HttpStatusCode.Accepted)
             } else {
