@@ -3,6 +3,7 @@ package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktill
 import no.nav.k9.kodeverk.behandling.BehandlingResultatType
 import no.nav.k9.kodeverk.behandling.BehandlingStatus
 import no.nav.k9.kodeverk.behandling.BehandlingÅrsakType
+import no.nav.k9.kodeverk.behandling.FagsakStatus
 import no.nav.k9.kodeverk.behandling.FagsakYtelseType
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.*
 import no.nav.k9.kodeverk.produksjonsstyring.MerknadType
@@ -251,6 +252,10 @@ class SakEventTilOppgaveMapper(
             OppgaveFeltverdiDto(
                 nøkkel = "behandlingUuid",
                 verdi = event.eksternId.toString()
+            ),
+            OppgaveFeltverdiDto(
+                nøkkel = "historisk",
+                verdi = (event.fagsakStatus == FagsakStatus.HISTORISK).toString()
             ),
             OppgaveFeltverdiDto(
                 nøkkel = "aktorId",

@@ -50,6 +50,8 @@ import no.nav.k9.los.nyoppgavestyring.infrastruktur.azuregraph.AzureGraphService
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.azuregraph.IAzureGraphService
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.hikariConfig
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.metrikker.EventlagerNokkeltallPrometheusCollector
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.metrikker.EventlagerNokkeltallRepository
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.IPdlService
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.PdlService
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.PdlServiceLocal
@@ -197,6 +199,16 @@ fun common(app: Application, config: Configuration) = module {
     }
 
     single {
+        EventlagerNokkeltallRepository(dataSource = get())
+    }
+
+    single {
+        EventlagerNokkeltallPrometheusCollector(
+            nokkeltallRepository = get(),
+        )
+    }
+
+    single {
         EventRepository(
             dataSource = get(),
         )
@@ -292,7 +304,7 @@ fun common(app: Application, config: Configuration) = module {
             statistikkPublisher = get(),
             transactionalManager = get(),
             statistikkRepository = get(),
-            pepClient = get(),
+            pepCacheRepository = get(),
         )
     }
 

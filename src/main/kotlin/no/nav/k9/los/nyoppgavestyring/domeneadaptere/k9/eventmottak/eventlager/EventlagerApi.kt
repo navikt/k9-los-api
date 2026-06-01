@@ -16,7 +16,6 @@ import no.nav.k9.los.nyoppgavestyring.forvaltning.K9PunsjEventIkkeSensitiv
 import no.nav.k9.los.nyoppgavestyring.forvaltning.K9SakEventIkkeSensitiv
 import no.nav.k9.los.nyoppgavestyring.forvaltning.K9TilbakeEventIkkeSensitiv
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.RequestContextService
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
@@ -28,18 +27,17 @@ internal fun Route.EventlagerApi() {
     val requestContextService by inject<RequestContextService>()
     val eventRepository by inject<EventRepository>()
     val oppgaveAdapter by inject<EventTilOppgaveAdapter>()
-    val transactionalManager by inject<TransactionalManager>()
     val pepClient by inject<IPepClient>()
 
     get("/eventer/{fagsystem}/{eksternId}", {
         tags("Forvaltning")
         description = "Hent ut eventhistorikk for en oppgave, nytt eventlager"
         request {
-            pathParameter<String>("fagsystem") {
+            pathParameter<Fagsystem>("fagsystem") {
                 description = "Fagsystemet man vil ha eventkonvertering for"
                 required = true
                 example("K9SAK") {
-                    value = "K9SAK"
+                    value = Fagsystem.K9SAK
                     description = "K9 Sak"
                 }
             }
@@ -53,9 +51,11 @@ internal fun Route.EventlagerApi() {
                 val fagsystem = Fagsystem.fraKode(call.parameters["fagsystem"]!!)
                 val eksternId = call.parameters["eksternId"]!!
 
-                val eventStrenger =
-                    transactionalManager.transaction { tx ->
-                    eventRepository.hentAlleEventer(fagsystem, eksternId, tx).map { it.eventJson }
+                val eventStrenger = try {
+                    eventRepository.hentAlleEventer(fagsystem, eksternId).map { it.eventJson }
+                } catch (e: NullPointerException) {
+                    call.respond(HttpStatusCode.NotFound)
+                    return@withRequestContext
                 }
 
                 val eventerIkkeSensitive = when (fagsystem) {
@@ -102,11 +102,11 @@ internal fun Route.EventlagerApi() {
     put("/{fagsystem}/bestillHistorikkvask", {
         tags("Forvaltning")
         request {
-            pathParameter<String>("fagsystem") {
+            pathParameter<Fagsystem>("fagsystem") {
                 description = "Fagsystemet man vil ha eventkonvertering for"
                 required = true
                 example("K9SAK") {
-                    value = "K9SAK"
+                    value = Fagsystem.K9SAK
                     description = "K9 Sak"
                 }
             }
@@ -145,4 +145,5 @@ internal fun Route.EventlagerApi() {
             call.respond(HttpStatusCode.NoContent)
         }
     }
+
 }

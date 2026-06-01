@@ -6,6 +6,7 @@ import org.jetbrains.annotations.VisibleForTesting
 import javax.sql.DataSource
 
 
+
 class EventRepository(
     private val dataSource: DataSource,
 ) {
@@ -177,10 +178,14 @@ class EventRepository(
             it.run(
                 queryOf(
                     """
-                    select distinct en.*
-                    from event e
-                        join event_nokkel en on e.event_nokkel_id = en.id
-                    where e.dirty = true
+                    select en.*
+                    from event_nokkel en
+                    where exists (
+                        select 1
+                        from event e
+                        where e.event_nokkel_id = en.id
+                        and e.dirty = true
+                    )
                 """.trimIndent()
                 ).map { row ->
                     EventNøkkel(
