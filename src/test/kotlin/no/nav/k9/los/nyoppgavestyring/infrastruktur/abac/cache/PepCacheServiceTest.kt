@@ -4,10 +4,7 @@ import assertk.assertThat
 import assertk.assertions.*
 import com.fasterxml.jackson.databind.PropertyNamingStrategies
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import io.mockk.coEvery
-import io.mockk.mockk
-import io.mockk.slot
-import io.mockk.verify
+import io.mockk.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
@@ -220,7 +217,7 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
     @Test
     fun `oppdaterCacheForOppgaverEldreEnn skal oppdatere alle oppgaver eldre enn oppgitt alder`() {
         val k9sakEventHandler = get<K9SakEventHandler>()
-        val pepRepository = mockk<PepCacheRepository>(relaxed = true)
+        val pepRepository = spyk(get<PepCacheRepository>())
 
         val saksnummer = "TEST3"
         gjørSakOrdinær(saksnummer)
