@@ -46,3 +46,5 @@ buildNumber.properties
 
 # Maven local settings (contains credentials)
 settings.xml
+
+.DS_Store
