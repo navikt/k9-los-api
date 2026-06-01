@@ -27,7 +27,6 @@ import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
 import no.nav.k9.los.nyoppgavestyring.query.mapping.EksternFeltverdiOperator
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepositoryTxWrapper
 import no.nav.k9.sak.typer.AktørId
 import no.nav.k9.sak.typer.JournalpostId
 import org.koin.core.qualifier.named
@@ -43,7 +42,6 @@ class EventTilOppgaveAdapterSpec : KoinTest, FreeSpec() {
     private lateinit var eventRepository: EventRepository
     private lateinit var oppgaveOppdatertHandler: OppgaveOppdatertHandler
     private lateinit var oppgaveAdapter: EventTilOppgaveAdapter
-    private lateinit var oppgaveRepositoryTxWrapper: OppgaveRepositoryTxWrapper
     private lateinit var oppgaveQueryService: OppgaveQueryService
     private val historikkvaskTjeneste = get<HistorikkvaskTjeneste>()
 
@@ -73,7 +71,6 @@ class EventTilOppgaveAdapterSpec : KoinTest, FreeSpec() {
             statistikkRepository = get(),
         )
 
-        oppgaveRepositoryTxWrapper = get()
         oppgaveQueryService = get()
 
         clearAllMocks()

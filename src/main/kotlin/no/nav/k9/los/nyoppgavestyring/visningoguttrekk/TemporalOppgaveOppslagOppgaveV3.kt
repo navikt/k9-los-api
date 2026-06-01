@@ -7,10 +7,10 @@ import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
 import java.time.LocalDateTime
 
-class TemporalOppgaveOppslagTjenesteOppgaveV3(
+class TemporalOppgaveOppslagOppgaveV3(
     val oppgavetypeRepository: OppgavetypeRepository,
     val transactionalManager: TransactionalManager
-) : TemporalOppgaveOppslagTjeneste {
+) : TemporalOppgaveOppslag {
 
     private fun mapOppgave(
         row: Row, now: LocalDateTime, tx: TransactionalSession
@@ -58,10 +58,10 @@ class TemporalOppgaveOppslagTjenesteOppgaveV3(
 
     override fun hentTidsserie(
         oppgavetypeEksternId: String,
-        eksternId: String,
+        oppgaveEksternId: String,
     ): List<Oppgave> {
         return transactionalManager.transaction { tx ->
-            hentTidsserie(oppgavetypeEksternId, eksternId, tx)
+            hentTidsserie(oppgavetypeEksternId, oppgaveEksternId, tx)
         }
     }
 

@@ -8,10 +8,10 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRad.Companion.tilOppgaveRad
 import java.time.LocalDateTime
 
-class OppgaveOppslagTjenestePartisjonert(
+class AktivOppgaveOppslagPartisjonert(
     private val oppgavetypeRepository: OppgavetypeRepository,
     private val transactionalManager: TransactionalManager,
-) : OppgaveOppslagTjeneste {
+) : AktivOppgaveOppslag {
 
     override fun hentAktivOppgave(eksternId: String, oppgavetypeEksternId: String): Oppgave {
         return transactionalManager.transaction { tx -> hentAktivOppgave(eksternId, oppgavetypeEksternId, tx) }

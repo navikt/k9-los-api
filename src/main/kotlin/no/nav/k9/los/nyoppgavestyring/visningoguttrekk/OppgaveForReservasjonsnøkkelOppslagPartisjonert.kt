@@ -1,17 +1,17 @@
 package no.nav.k9.los.nyoppgavestyring.visningoguttrekk
 
-import kotliquery.Row
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.Oppgavetype
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRad.Companion.tilOppgaveRad
 import java.time.LocalDateTime
 
-class PartisjonertReservasjonsnøkkelOppgaveTjeneste(
+class OppgaveForReservasjonsnøkkelOppslagPartisjonert(
     private val oppgavetypeRepository: OppgavetypeRepository,
     private val transactionalManager: TransactionalManager,
-) : ReservasjonsnøkkelOppgaveTjeneste {
+) : OppgaveForReservasjonsnøkkelOppslag {
 
     override fun hentÅpneOppgaverForReservasjonsnøkkel(reservasjonsnøkkel: String): List<Oppgave> {
         return transactionalManager.transaction { tx ->

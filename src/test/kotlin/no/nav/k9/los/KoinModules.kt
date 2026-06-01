@@ -439,24 +439,20 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
         PepCacheRepository(dataSource = get())
     }
 
-    single {
-        OppgaveRepositoryTxWrapper(
-            oppgaveRepository = get(),
-            transactionalManager = get(),
-        )
-    }
-
-    single<OppgaveOppslagTjeneste> {
-        OppgaveOppslagTjenestePartisjonert(
+    single<AktivOppgaveOppslag> {
+        AktivOppgaveOppslagPartisjonert(
             oppgavetypeRepository = get(),
             transactionalManager = get(),
         )
     }
-    single<ReservasjonsnøkkelOppgaveTjeneste> {
-        PartisjonertReservasjonsnøkkelOppgaveTjeneste(
+    single<OppgaveForReservasjonsnøkkelOppslag> {
+        OppgaveForReservasjonsnøkkelOppslagPartisjonert(
             oppgavetypeRepository = get(),
             transactionalManager = get(),
         )
+    }
+    single<TemporalOppgaveOppslag> {
+        TemporalOppgaveOppslagOppgaveV3(get(), get())
     }
 
     single<ForvaltningRepository> {

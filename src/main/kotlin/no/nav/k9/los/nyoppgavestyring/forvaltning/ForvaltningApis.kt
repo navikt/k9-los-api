@@ -7,8 +7,8 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotliquery.queryOf
 import no.nav.k9.kodeverk.behandling.FagsakYtelseType
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.AvstemmingsTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.K9Oppgavetypenavn
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.AvstemmingsTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.StatistikkRepository
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
@@ -26,23 +26,25 @@ import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
 import no.nav.k9.los.nyoppgavestyring.query.mapping.EksternFeltverdiOperator
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Repository
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveOppslagTjeneste
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.AktivOppgaveOppslag
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.TemporalOppgaveOppslag
 import org.koin.ktor.ext.inject
 import org.slf4j.LoggerFactory
 
 
 fun Route.forvaltningApis() {
     val log = LoggerFactory.getLogger("ForvaltningApis")
-    val oppgaveOppslagTjeneste by inject<OppgaveOppslagTjeneste>()
+    val oppgaveOppslagTjeneste by inject<AktivOppgaveOppslag>()
     val oppgaveTypeRepository by inject<OppgavetypeRepository>()
     val oppgaveKoTjeneste by inject<OppgaveKoTjeneste>()
     val oppgaveQueryService by inject<OppgaveQueryService>()
     val reservasjonV3Repository by inject<ReservasjonV3Repository>()
     val objectMapper = LosObjectMapper.prettyInstance
     val transactionalManager by inject<TransactionalManager>()
-    val forvaltningRepository by inject<ForvaltningRepository>()
     val avstemmingsTjeneste by inject<AvstemmingsTjeneste>()
     val statistikkRepository by inject<StatistikkRepository>()
+    val temporalOppslagTjeneste by inject<TemporalOppgaveOppslag>()
+    val forvaltningRepository by inject<ForvaltningRepository>()
 
     val pepClient by inject<IPepClient>()
     val requestContextService by inject<RequestContextService>()
@@ -233,13 +235,6 @@ fun Route.forvaltningApis() {
         tags("Forvaltning")
         description = "Hent ut oppgavehistorikk for en oppgave"
         request {
-            pathParameter<String>("omrade") {
-                description = "Området oppgavetypen er definert i. Pr i dag er kun K9 implementert"
-                example("K9") {
-                    value = "K9"
-                    description = "Oppgaver definert innenfor K9"
-                }
-            }
             pathParameter<K9Oppgavetypenavn>("oppgavetype") {
                 description = "Navnet på oppgavetypen."
                 example("k9sak") {
@@ -254,19 +249,13 @@ fun Route.forvaltningApis() {
     }) {
         requestContextService.withRequestContext(call) {
             if (pepClient.kanLeggeUtDriftsmelding()) {
-                val område = call.parameters["omrade"]!!
-                val oppgavetype = call.parameters["oppgavetype"]!!
+                val oppgavetypeEksternId = call.parameters["oppgavetype"]!!
                 val oppgaveEksternId = call.parameters["oppgaveEksternId"]!!
 
-                val oppgaveTidsserie =
-                    transactionalManager.transaction { tx ->
-                        forvaltningRepository.hentOppgaveTidsserie(
-                            områdeEksternId = område,
-                            oppgaveTypeEksternId = oppgavetype,
-                            oppgaveEksternId = oppgaveEksternId,
-                            tx = tx
-                        )
-                    }
+                val oppgaveTidsserie = temporalOppslagTjeneste.hentTidsserie(
+                    oppgavetypeEksternId = oppgavetypeEksternId,
+                    oppgaveEksternId = oppgaveEksternId,
+                )
                 if (oppgaveTidsserie.isEmpty()) {
                     call.respond(HttpStatusCode.NotFound)
                 } else {

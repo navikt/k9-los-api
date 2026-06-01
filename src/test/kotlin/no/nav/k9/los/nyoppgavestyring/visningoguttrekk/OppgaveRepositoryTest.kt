@@ -3,10 +3,8 @@ package no.nav.k9.los.nyoppgavestyring.visningoguttrekk
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import no.nav.k9.los.AbstractK9LosIntegrationTest
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.FeltType
 import no.nav.k9.los.nyoppgavestyring.OppgaveTestDataBuilder
-import no.nav.k9.los.nyoppgavestyring.forvaltning.ForvaltningRepository
 import org.junit.jupiter.api.Test
 import org.koin.test.get
 import java.util.*
@@ -15,9 +13,8 @@ class OppgaveRepositoryTest : AbstractK9LosIntegrationTest() {
 
     @Test
     fun hentNyesteOppgaveForEksternId() {
-        val oppgaveOppslagTjeneste = get<OppgaveOppslagTjeneste>()
-        val forvaltningRepository = get<ForvaltningRepository>()
-        val transactionalManager = get<TransactionalManager>()
+        val oppgaveOppslagTjeneste = get<AktivOppgaveOppslag>()
+        val temporalOppgaveTjeneste = get<TemporalOppgaveOppslag>()
         val behandlingUuid = UUID.randomUUID().toString()
         OppgaveTestDataBuilder()
             .medOppgaveFeltVerdi(FeltType.BEHANDLINGUUID, behandlingUuid)
@@ -29,13 +26,11 @@ class OppgaveRepositoryTest : AbstractK9LosIntegrationTest() {
             .medOppgaveFeltVerdi(FeltType.AKSJONSPUNKT, "2345")
             .lagOgLagre()
 
-        val oppgaveTidsserie = transactionalManager.transaction { tx ->
-            forvaltningRepository.hentOppgaveTidsserie(
-                områdeEksternId = "K9",
-                oppgaveTypeEksternId = "k9sak",
-                oppgaveEksternId = behandlingUuid,
-                tx = tx)
-        }
+        val oppgaveTidsserie =
+            temporalOppgaveTjeneste.hentTidsserie(
+                oppgavetypeEksternId = "k9sak",
+                oppgaveEksternId = behandlingUuid
+            )
 
         assertThat(oppgaveTidsserie.size).isEqualTo(2)
         assertThat(oppgaveTidsserie[0].hentListeverdi(FeltType.AKSJONSPUNKT.eksternId)[0]).isEqualTo("1234")

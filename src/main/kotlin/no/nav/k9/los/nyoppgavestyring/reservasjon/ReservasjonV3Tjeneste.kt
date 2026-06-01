@@ -15,7 +15,7 @@ import no.nav.k9.los.nyoppgavestyring.ko.ReservasjonTatt
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.ReservasjonsnøkkelOppgaveTjeneste
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveForReservasjonsnøkkelOppslag
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
@@ -25,7 +25,7 @@ class ReservasjonV3Tjeneste(
     private val reservasjonV3Repository: ReservasjonV3Repository,
     private val pepClient: IPepClient,
     private val saksbehandlerRepository: SaksbehandlerRepository,
-    private val reservasjonsnøkkelOppgaveTjeneste: ReservasjonsnøkkelOppgaveTjeneste,
+    private val reservasjonsnøkkelOppgaveTjeneste: OppgaveForReservasjonsnøkkelOppslag,
     private val køpåvirkendeHendelseChannel: Channel<KøpåvirkendeHendelse>,
 ) {
 
