@@ -4,9 +4,8 @@ import kotliquery.Row
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.util.InClauseHjelper
-import no.nav.k9.los.nyoppgavestyring.query.db.OppgaveV3Id
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
+import no.nav.k9.los.nyoppgavestyring.query.db.OppgaveV3Id
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
@@ -147,34 +146,6 @@ class OppgaveRepository(
                     verdiBigInt = row.longOrNull("verdi_bigint"),
                 )
             }.asList
-        )
-    }
-
-    fun hentOppgaverMedStatusOgPepCacheEldreEnn(
-        tidspunkt: LocalDateTime = LocalDateTime.now(),
-        antall: Int = 1,
-        status: Set<Oppgavestatus>,
-        tx: TransactionalSession
-    ): List<Oppgave> {
-        val query = """
-                    SELECT o.*
-                    FROM oppgave_v3 o 
-                    LEFT JOIN OPPGAVE_PEP_CACHE opc ON (
-                        o.kildeomrade = opc.kildeomrade AND o.ekstern_id = opc.ekstern_id
-                    )
-                    WHERE o.aktiv is true AND o.status IN ('${status.joinToString("','")}')
-                    AND (opc.oppdatert is null OR opc.oppdatert < :grense)
-                    ORDER BY opc.oppdatert NULLS FIRST
-                    LIMIT :limit
-                """.trimIndent()
-        return tx.run(
-            queryOf(
-                query,
-                mapOf(
-                    "grense" to tidspunkt,
-                    "limit" to antall
-                )
-            ).map { row -> mapOppgave(row, tidspunkt, tx) }.asList
         )
     }
 }

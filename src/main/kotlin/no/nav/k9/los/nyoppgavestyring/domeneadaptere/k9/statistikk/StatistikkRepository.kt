@@ -8,6 +8,14 @@ import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgavefelt
 import java.time.LocalDateTime
 import javax.sql.DataSource
 
+data class DvhPendingSammenlignDto(
+    val oppgavetype: String,
+    val antijoinAntall: Long,
+    val pendingAntall: Long,
+    /** antijoinAntall - pendingAntall. > 0 = rader i anti-join men ikke i pending; < 0 = ghost rows i pending */
+    val differanse: Long,
+)
+
 
 class StatistikkRepository(
     private val dataSource: DataSource,
@@ -61,6 +69,18 @@ class StatistikkRepository(
                     mapOf("id" to id)
                 ).asUpdate
             )
+            // Dual-write: fjern fra pending-tabell nå som raden er sendt
+            it.run(
+                queryOf(
+                    """
+                        delete from oppgave_v3_dvh_pending
+                        where (ekstern_id, ekstern_versjon) in (
+                            select ekstern_id, ekstern_versjon from oppgave_v3 where id = :id
+                        )
+                    """.trimIndent(),
+                    mapOf("id" to id)
+                ).asUpdate
+            )
         }
     }
 
@@ -75,6 +95,18 @@ class StatistikkRepository(
                 mapOf("id" to id)
             ).asUpdate
         )
+        // Dual-write: fjern fra pending-tabell nå som raden er sendt
+        tx.run(
+            queryOf(
+                """
+                    delete from oppgave_v3_dvh_pending
+                    where (ekstern_id, ekstern_versjon) in (
+                        select ekstern_id, ekstern_versjon from oppgave_v3 where id = :id
+                    )
+                """.trimIndent(),
+                mapOf("id" to id)
+            ).asUpdate
+        )
     }
 
 
@@ -85,6 +117,20 @@ class StatistikkRepository(
                 where ekstern_id = :id
             """.trimIndent()
                 , mapOf("id" to oppgave.oppgaveEksternId)
+            ).asUpdate
+        )
+        // Dual-write: legg alle versjoner av oppgaven tilbake som pending
+        tx.run(
+            queryOf(
+                """
+                insert into oppgave_v3_dvh_pending (ekstern_id, ekstern_versjon, oppgavetype_ekstern_id)
+                select ekstern_id, ekstern_versjon, oppgavetype_ekstern_id
+                from oppgave_v3
+                where ekstern_id = :id
+                  and oppgavetype_ekstern_id in ('k9sak', 'k9klage')
+                on conflict (ekstern_id, ekstern_versjon) do nothing
+                """.trimIndent(),
+                mapOf("id" to oppgave.oppgaveEksternId)
             ).asUpdate
         )
     }
@@ -105,14 +151,162 @@ class StatistikkRepository(
                     , mapOf("oppgavetype" to oppgavetype)
                     ).asUpdate
                 )
+                // Dual-write: repopuler pending for denne oppgavetypen (alle nå-usendte rader)
+                it.run(
+                    queryOf(
+                        """
+                        insert into oppgave_v3_dvh_pending (ekstern_id, ekstern_versjon, oppgavetype_ekstern_id)
+                        select ov.ekstern_id, ov.ekstern_versjon, ov.oppgavetype_ekstern_id
+                        from oppgave_v3 ov
+                        left join oppgave_v3_sendt_dvh_ekstern os
+                            on os.ekstern_id = ov.ekstern_id
+                           and os.ekstern_versjon = ov.ekstern_versjon
+                        where ov.oppgavetype_ekstern_id = :oppgavetype
+                          and os.ekstern_id is null
+                        on conflict (ekstern_id, ekstern_versjon) do nothing
+                        """.trimIndent(),
+                        mapOf("oppgavetype" to oppgavetype)
+                    ).asUpdate
+                )
             } else {
                 it.run(
                     queryOf(
                         """delete from OPPGAVE_V3_SENDT_DVH_EKSTERN"""
                     ).asUpdate
                 )
+                // Dual-write: repopuler pending for alle relevante oppgavetyper
+                it.run(
+                    queryOf(
+                        """
+                        insert into oppgave_v3_dvh_pending (ekstern_id, ekstern_versjon, oppgavetype_ekstern_id)
+                        select ov.ekstern_id, ov.ekstern_versjon, ov.oppgavetype_ekstern_id
+                        from oppgave_v3 ov
+                        left join oppgave_v3_sendt_dvh_ekstern os
+                            on os.ekstern_id = ov.ekstern_id
+                           and os.ekstern_versjon = ov.ekstern_versjon
+                        where ov.oppgavetype_ekstern_id in ('k9sak', 'k9klage')
+                          and os.ekstern_id is null
+                        on conflict (ekstern_id, ekstern_versjon) do nothing
+                        """.trimIndent()
+                    ).asUpdate
+                )
             }
         }
+    }
+
+    /**
+     * Dual-write: registrerer en ny oppgaveversjon i pending-tabellen så snart den er lagret
+     * i oppgave_v3, men før den er sendt til DVH. Kalles fra EventTilOppgaveAdapter.
+     * Kun relevant for oppgavetyper som sendes til DVH (k9sak, k9klage).
+     */
+    fun bestillDvhSending(
+        eksternId: String,
+        eksternVersjon: String,
+        oppgavetypeEksternId: String,
+        tx: TransactionalSession,
+    ) {
+        if (oppgavetypeEksternId !in DVH_OPPGAVETYPER) return
+        tx.run(
+            queryOf(
+                """
+                insert into oppgave_v3_dvh_pending (ekstern_id, ekstern_versjon, oppgavetype_ekstern_id)
+                values (:eksternId, :eksternVersjon, :oppgavetypeEksternId)
+                on conflict (ekstern_id, ekstern_versjon) do nothing
+                """.trimIndent(),
+                mapOf(
+                    "eksternId" to eksternId,
+                    "eksternVersjon" to eksternVersjon,
+                    "oppgavetypeEksternId" to oppgavetypeEksternId,
+                )
+            ).asUpdate
+        )
+    }
+
+    companion object {
+        /** Oppgavetyper hvis versjoner spores i oppgave_v3_dvh_pending for sending til DVH. */
+        private val DVH_OPPGAVETYPER = setOf("k9sak", "k9klage")
+    }
+
+    /**
+     * Initiell populering av oppgave_v3_dvh_pending fra anti-join mot oppgave_v3_sendt_dvh_ekstern.
+     * Trygg å kjøre flere ganger (idempotent via ON CONFLICT DO NOTHING).
+     * Returnerer antall rader lagt til.
+     */
+    fun populerPendingFraAntijoin(): Int {
+        return using(sessionOf(dataSource)) {
+            it.run(
+                queryOf(
+                    """
+                    insert into oppgave_v3_dvh_pending (ekstern_id, ekstern_versjon, oppgavetype_ekstern_id)
+                    select ov.ekstern_id, ov.ekstern_versjon, ov.oppgavetype_ekstern_id
+                    from oppgave_v3 ov
+                    left join oppgave_v3_sendt_dvh_ekstern os
+                        on os.ekstern_id = ov.ekstern_id
+                       and os.ekstern_versjon = ov.ekstern_versjon
+                    where ov.oppgavetype_ekstern_id in ('k9sak', 'k9klage')
+                      and os.ekstern_id is null
+                    on conflict (ekstern_id, ekstern_versjon) do nothing
+                    """.trimIndent()
+                ).asUpdate
+            )
+        }
+    }
+
+    /**
+     * Sammenligner antall usendte rader per oppgavetype mellom den gamle anti-join-tellingen
+     * og den nye [oppgave_v3_dvh_pending]-tabellen.
+     *
+     * Differanse > 0: rader i anti-join som ikke (ennå) finnes i pending
+     *   — forventes like etter populering, og vokser med nye oppgaveversjoner
+     *     inntil dual-write-løkkene tar over.
+     * Differanse < 0: rader i pending som ikke lenger er i anti-join (ghost rows)
+     *   — indikerer feil i dual-write-logikken.
+     */
+    fun sammenlignPendingMedAntijoin(): List<DvhPendingSammenlignDto> {
+        val antijoinAntall = using(sessionOf(dataSource)) {
+            it.run(
+                queryOf(
+                    """
+                    select ov.oppgavetype_ekstern_id, count(*) as antall
+                    from oppgave_v3 ov
+                    left join oppgave_v3_sendt_dvh_ekstern os
+                        on os.ekstern_id = ov.ekstern_id
+                       and os.ekstern_versjon = ov.ekstern_versjon
+                    where ov.oppgavetype_ekstern_id in ('k9sak', 'k9klage')
+                      and os.ekstern_id is null
+                    group by ov.oppgavetype_ekstern_id
+                    """.trimIndent()
+                ).map { row ->
+                    row.string("oppgavetype_ekstern_id") to row.long("antall")
+                }.asList
+            ).toMap()
+        }
+
+        val pendingAntall = using(sessionOf(dataSource)) {
+            it.run(
+                queryOf(
+                    """
+                    select oppgavetype_ekstern_id, count(*) as antall
+                    from oppgave_v3_dvh_pending
+                    group by oppgavetype_ekstern_id
+                    """.trimIndent()
+                ).map { row ->
+                    row.string("oppgavetype_ekstern_id") to row.long("antall")
+                }.asList
+            ).toMap()
+        }
+
+        val alleTyper = (antijoinAntall.keys + pendingAntall.keys).toSet()
+        return alleTyper.map { type ->
+            val antijoin = antijoinAntall[type] ?: 0L
+            val pending = pendingAntall[type] ?: 0L
+            DvhPendingSammenlignDto(
+                oppgavetype = type,
+                antijoinAntall = antijoin,
+                pendingAntall = pending,
+                differanse = antijoin - pending,
+            )
+        }.sortedBy { it.oppgavetype }
     }
 
     fun hentOppgaveForId(tx: TransactionalSession, id: Long, now: LocalDateTime = LocalDateTime.now()): Pair<Oppgave, Int> {

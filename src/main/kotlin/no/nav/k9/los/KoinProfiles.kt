@@ -346,7 +346,8 @@ fun common(app: Application, config: Configuration) = module {
             eventTilOppgaveMapper = get(),
             oppgaveOppdatertHandler = get(),
             vaskeeventSerieutleder = get(),
-            ajourholdTjeneste = get()
+            ajourholdTjeneste = get(),
+            statistikkRepository = get(),
         )
     }
 
@@ -508,7 +509,6 @@ fun common(app: Application, config: Configuration) = module {
         PepCacheService(
             pepClient = get(),
             pepCacheRepository = get(),
-            oppgaveRepository = get(),
             transactionalManager = get()
         )
     }
