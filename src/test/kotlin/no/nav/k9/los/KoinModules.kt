@@ -299,6 +299,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             oppgaveOppdatertHandler = get(),
             vaskeeventSerieutleder = get(),
             ajourholdTjeneste = get(),
+            statistikkRepository = get(),
         )
     }
 
