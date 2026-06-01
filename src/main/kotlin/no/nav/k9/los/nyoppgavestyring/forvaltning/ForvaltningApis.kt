@@ -344,7 +344,8 @@ fun Route.forvaltningApis() {
 
     get("/avstemming/{fagsystem}", {
         tags("Forvaltning")
-        description = "Hent ut liste med åpne behandlinger/journalposter i spesifisert fagsystem og kontroller opp mot åpne oppgaver i los. Returnerer en avviksrapport"
+        description =
+            "Hent ut liste med åpne behandlinger/journalposter i spesifisert fagsystem og kontroller opp mot åpne oppgaver i los. Returnerer en avviksrapport"
         request {
             pathParameter<Fagsystem>("fagsystem") {
                 description = "Kildesystem som har levert eventene"
@@ -369,7 +370,7 @@ fun Route.forvaltningApis() {
     }
 
     route("/ytelse") {
-        get("/oppgaveko/antall", {tags("Forvaltning")}) {
+        get("/oppgaveko/antall", { tags("Forvaltning") }) {
             requestContextService.withRequestContext(call) {
                 if (pepClient.kanLeggeUtDriftsmelding()) {
                     val antall = oppgaveKoTjeneste.hentOppgavekøer(skjermet = false).map {
@@ -386,7 +387,7 @@ fun Route.forvaltningApis() {
             }
         }
 
-        get("/oppgaveko", {tags("Forvaltning")}) {
+        get("/oppgaveko", { tags("Forvaltning") }) {
             requestContextService.withRequestContext(call) {
                 if (pepClient.kanLeggeUtDriftsmelding()) {
                     call.respond(oppgaveKoTjeneste.hentOppgavekøer(skjermet = false).map { it.id })
@@ -396,7 +397,7 @@ fun Route.forvaltningApis() {
             }
         }
 
-        get("/oppgaveko/{ko}/antall", {tags("Forvaltning")}) {
+        get("/oppgaveko/{ko}/antall", { tags("Forvaltning") }) {
             requestContextService.withRequestContext(call) {
                 if (pepClient.kanLeggeUtDriftsmelding()) {
                     val køId = call.parameters["ko"]!!.toLong()
@@ -445,7 +446,13 @@ fun Route.forvaltningApis() {
 
                 val matchendeSøk = lagredeSøk
                     .filter { it.oppgaveQuery.inneholderFelt(område, kode) }
-                    .map { LagretSøkFeltbrukDto(id = it.id, tittel = it.tittel, saksbehandlerEpost = it.saksbehandlerEpost) }
+                    .map {
+                        LagretSøkFeltbrukDto(
+                            id = it.id,
+                            tittel = it.tittel,
+                            saksbehandlerEpost = it.saksbehandlerEpost
+                        )
+                    }
 
                 call.respond(FeltbrukDetaljerDto(oppgavekøer = matchendeKøer, lagredeSøk = matchendeSøk))
             } else {
@@ -456,7 +463,8 @@ fun Route.forvaltningApis() {
 
     get("/feltdefinisjon/bruk", {
         tags("Forvaltning")
-        description = "Hent oversikt over alle feltdefinisjoner som er brukt som kriterie i oppgavekøer og lagrede søk, med antall for hver"
+        description =
+            "Hent oversikt over alle feltdefinisjoner som er brukt som kriterie i oppgavekøer og lagrede søk, med antall for hver"
     }) {
         requestContextService.withRequestContext(call) {
             if (pepClient.kanLeggeUtDriftsmelding()) {
@@ -515,22 +523,20 @@ fun Route.forvaltningApis() {
     }) {
         requestContextService.withRequestContext(call) {
             if (pepClient.kanLeggeUtDriftsmelding()) {
-                Thread.ofVirtual().name("dvh-pending-populate").start {
-                    val t0 = System.nanoTime()
-                    try {
-                        val antall = statistikkRepository.populerPendingFraAntijoin()
-                        log.info(
-                            "dvh-pending populate: la til {} rader på {}ms",
-                            antall,
-                            (System.nanoTime() - t0) / 1_000_000,
-                        )
-                    } catch (e: Exception) {
-                        log.error(
-                            "dvh-pending populate feilet etter {}ms",
-                            (System.nanoTime() - t0) / 1_000_000,
-                            e,
-                        )
-                    }
+                val t0 = System.nanoTime()
+                try {
+                    val antall = statistikkRepository.populerPendingFraAntijoin()
+                    log.info(
+                        "dvh-pending populate: la til {} rader på {}ms",
+                        antall,
+                        (System.nanoTime() - t0) / 1_000_000,
+                    )
+                } catch (e: Exception) {
+                    log.error(
+                        "dvh-pending populate feilet etter {}ms",
+                        (System.nanoTime() - t0) / 1_000_000,
+                        e,
+                    )
                 }
                 call.respond(HttpStatusCode.Accepted)
             } else {
