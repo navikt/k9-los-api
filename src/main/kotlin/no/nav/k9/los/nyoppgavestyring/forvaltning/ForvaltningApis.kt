@@ -3,7 +3,6 @@ package no.nav.k9.los.nyoppgavestyring.forvaltning
 import io.github.smiley4.ktoropenapi.get
 import io.github.smiley4.ktoropenapi.post
 import io.ktor.http.*
-import io.ktor.server.application.log
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotliquery.queryOf
@@ -29,9 +28,11 @@ import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Repository
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepositoryTxWrapper
 import org.koin.ktor.ext.inject
+import org.slf4j.LoggerFactory
 
 
 fun Route.forvaltningApis() {
+    val log = LoggerFactory.getLogger("ForvaltningApis")
     val oppgaveRepositoryTxWrapper by inject<OppgaveRepositoryTxWrapper>()
     val oppgaveTypeRepository by inject<OppgavetypeRepository>()
     val oppgaveKoTjeneste by inject<OppgaveKoTjeneste>()
@@ -518,13 +519,13 @@ fun Route.forvaltningApis() {
                     val t0 = System.nanoTime()
                     try {
                         val antall = statistikkRepository.populerPendingFraAntijoin()
-                        appLog.info(
+                        log.info(
                             "dvh-pending populate: la til {} rader på {}ms",
                             antall,
                             (System.nanoTime() - t0) / 1_000_000,
                         )
                     } catch (e: Exception) {
-                        appLog.error(
+                        log.error(
                             "dvh-pending populate feilet etter {}ms",
                             (System.nanoTime() - t0) / 1_000_000,
                             e,
