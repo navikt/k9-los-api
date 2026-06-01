@@ -7,6 +7,7 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.K9Oppgavetypenavn
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventLagret
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventNøkkel
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventRepository
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.StatistikkRepository
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.AktivOgPartisjonertOppgaveAjourholdTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
@@ -24,6 +25,7 @@ class EventTilOppgaveAdapter(
     private val oppgaveOppdatertHandler: OppgaveOppdatertHandler,
     private val vaskeeventSerieutleder: VaskeeventSerieutleder,
     private val ajourholdTjeneste: AktivOgPartisjonertOppgaveAjourholdTjeneste,
+    private val statistikkRepository: StatistikkRepository,
 ) {
     private val log: Logger = LoggerFactory.getLogger(EventTilOppgaveAdapter::class.java)
 
@@ -86,6 +88,14 @@ class EventTilOppgaveAdapter(
         for ((eventnummer, eventLagret) in eventerMedNummerering) {
             val oppgave = mapOgLagre(eventLagret, eventnummer, forrigeOppgaveversjon, tx)
             if (oppgave != null) {
+                // Kun i normalflyt: ny versjon er usendt til DVH inntil kvittert.
+                // Historikkvask skal ikke trigge resend-semantikk for allerede sendte versjoner.
+                statistikkRepository.bestillDvhSending(
+                    eksternId = oppgave.eksternId,
+                    eksternVersjon = oppgave.eksternVersjon,
+                    oppgavetypeEksternId = oppgave.oppgavetype.eksternId,
+                    tx = tx,
+                )
                 oppgaveOppdatertHandler.håndterOppgaveOppdatert(eventLagret, oppgave, tx)
                 statistikkteller++
                 forrigeOppgaveversjon = oppgave
