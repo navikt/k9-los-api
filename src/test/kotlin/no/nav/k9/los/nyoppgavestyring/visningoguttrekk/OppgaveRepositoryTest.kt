@@ -13,8 +13,8 @@ class OppgaveRepositoryTest : AbstractK9LosIntegrationTest() {
 
     @Test
     fun hentNyesteOppgaveForEksternId() {
-        val oppgaveOppslagTjeneste = get<AktivOppgaveOppslag>()
-        val temporalOppgaveTjeneste = get<TemporalOppgaveOppslag>()
+        val aktivIOppgaveOppslag = get<AktivOppgaveOppslag>()
+        val temporalOppgaveOppslag = get<TemporalOppgaveOppslag>()
         val behandlingUuid = UUID.randomUUID().toString()
         OppgaveTestDataBuilder()
             .medOppgaveFeltVerdi(FeltType.BEHANDLINGUUID, behandlingUuid)
@@ -27,7 +27,7 @@ class OppgaveRepositoryTest : AbstractK9LosIntegrationTest() {
             .lagOgLagre()
 
         val oppgaveTidsserie =
-            temporalOppgaveTjeneste.hentTidsserie(
+            temporalOppgaveOppslag.hentTidsserie(
                 oppgavetypeEksternId = "k9sak",
                 oppgaveEksternId = behandlingUuid
             )
@@ -36,7 +36,7 @@ class OppgaveRepositoryTest : AbstractK9LosIntegrationTest() {
         assertThat(oppgaveTidsserie[0].hentListeverdi(FeltType.AKSJONSPUNKT.eksternId)[0]).isEqualTo("1234")
         assertThat(oppgaveTidsserie[1].hentListeverdi(FeltType.AKSJONSPUNKT.eksternId)[0]).isEqualTo("2345")
 
-        val nyesteOppgave = oppgaveOppslagTjeneste.hentAktivOppgave(behandlingUuid, "k9sak")
+        val nyesteOppgave = aktivIOppgaveOppslag.hentAktivOppgave(behandlingUuid, "k9sak")
 
         // Identifiserer nyeste oppgave basert på aksjonspunktkode 2345
         assertThat(nyesteOppgave.hentListeverdi(FeltType.AKSJONSPUNKT.eksternId)[0]).isEqualTo("2345")
