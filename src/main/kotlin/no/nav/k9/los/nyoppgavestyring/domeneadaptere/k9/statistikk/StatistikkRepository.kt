@@ -166,7 +166,8 @@ class StatistikkRepository(
 
     /**
      * Populerer oppgave_v3_dvh_pending fra oppgave_v3.
-     * Trygg å kjøre flere ganger (idempotent via ON CONFLICT DO NOTHING).
+     * Backfill/requeue-operasjon som ikke skal kjøres i normal drift, siden allerede
+     * sendte oppgaveversjoner kan bli lagt til i pending på nytt.
      * Returnerer antall rader lagt til.
      */
     fun populerPendingFraOppgaveV3(): Int {
