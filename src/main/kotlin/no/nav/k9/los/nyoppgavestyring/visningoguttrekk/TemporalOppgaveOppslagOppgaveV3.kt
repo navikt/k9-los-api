@@ -70,23 +70,25 @@ class TemporalOppgaveOppslagOppgaveV3(
         eksternId: String,
         tx: TransactionalSession
     ): List<Oppgave> {
+        val now = LocalDateTime.now()
         return tx.run(
             queryOf(
                 """
-                    select *
+                    select o.*
                     from oppgave_v3 o
-                    	inner join oppgavetype ot on o.oppgavetype_id = ot.id 
-                    	inner join omrade omr on ot.omrade_id = omr.id 
+                        inner join oppgavetype ot on o.oppgavetype_id = ot.id
+                        inner join omrade omr on ot.omrade_id = omr.id
                     where omr.ekstern_id = :omrade
-                    and ot.ekstern_id = :oppgavetype
-                    and o.ekstern_id = :oppgaveEksternId
+                      and ot.ekstern_id = :oppgavetype
+                      and o.ekstern_id = :oppgaveEksternId
                     order by o.versjon asc
-                """.trimIndent(), mapOf(
+                """.trimIndent(),
+                mapOf(
                     "omrade" to "K9",
                     "oppgavetype" to oppgavetypeEksternId,
                     "oppgaveEksternId" to eksternId,
                 )
-            ).map { row -> mapOppgave(row, LocalDateTime.now(), tx) }.asList
+            ).map { row -> mapOppgave(row, now, tx) }.asList
         )
     }
 
