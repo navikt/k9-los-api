@@ -25,8 +25,8 @@ import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
 import no.nav.k9.los.nyoppgavestyring.query.mapping.EksternFeltverdiOperator
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Repository
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.AktivOppgaveOppslag
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.TemporalOppgaveOppslag
 import org.koin.ktor.ext.inject
 import org.slf4j.LoggerFactory
@@ -214,24 +214,16 @@ fun Route.forvaltningApis() {
                 val oppgavetype = call.parameters["oppgavetype"]!!
                 val oppgaveEksternId = call.parameters["oppgaveEksternId"]!!
 
-                try {
-                    val oppgave =
-                        oppgaveOppslagTjeneste.hentAktivOppgave(oppgaveEksternId, oppgavetype)
-                    call.respond(objectMapper.writeValueAsString(OppgaveIkkeSensitiv(oppgave)))
-                } catch (e: IllegalStateException) {
-                    if (e.message != null && e.message!!.startsWith("")) {
-                        call.respond(HttpStatusCode.NotFound)
-                    } else {
-                        throw e
-                    }
-                }
+                val oppgave =
+                    oppgaveOppslagTjeneste.hentAktivOppgave(oppgaveEksternId, oppgavetype)
+                call.respond(objectMapper.writeValueAsString(OppgaveIkkeSensitiv(oppgave)))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
         }
     }
 
-    get("/oppgaveV3/{omrade}/{oppgavetype}/{oppgaveEksternId}", {
+    get("/oppgaveV3/{oppgavetype}/{oppgaveEksternId}", {
         tags("Forvaltning")
         description = "Hent ut oppgavehistorikk for en oppgave"
         request {
