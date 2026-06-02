@@ -335,14 +335,14 @@ fun common(app: Application, config: Configuration) = module {
 
     single {
         EventTilOppgaveAdapter(
-            eventRepository = get(),
-            oppgaveV3Tjeneste = get(),
-            transactionalManager = get(),
-            eventTilOppgaveMapper = get(),
-            oppgaveOppdatertHandler = get(),
-            vaskeeventSerieutleder = get(),
-            ajourholdTjeneste = get(),
-            statistikkRepository = get(),
+            eventRepository = get<EventRepository>(),
+            oppgaveV3Tjeneste = get<OppgaveV3Tjeneste>(),
+            transactionalManager = get<TransactionalManager>(),
+            eventTilOppgaveMapper = get<EventTilOppgaveMapper>(),
+            oppgaveOppdatertHandler = get<OppgaveOppdatertHandler>(),
+            vaskeeventSerieutleder = get<VaskeeventSerieutleder>(),
+            ajourholdTjeneste = get<AktivOgPartisjonertOppgaveAjourholdTjeneste>(),
+            statistikkRepository = get<StatistikkRepository>(),
         )
     }
 

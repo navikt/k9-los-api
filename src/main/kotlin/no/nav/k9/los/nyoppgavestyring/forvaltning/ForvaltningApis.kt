@@ -1,7 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.forvaltning
 
 import io.github.smiley4.ktoropenapi.get
-import io.github.smiley4.ktoropenapi.post
 import io.ktor.http.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
@@ -478,68 +477,6 @@ fun Route.forvaltningApis() {
         }
     }
 
-    // -------------------------------------------------------------------------
-    // Migrering: oppgave_v3_dvh_pending
-    // -------------------------------------------------------------------------
-
-    post("/dvh-pending/populate", {
-        tags("Forvaltning")
-        description = """
-            Populerer oppgave_v3_dvh_pending fra gjeldende anti-join mellom oppgave_v3 og
-            oppgave_v3_sendt_dvh_ekstern. Trygg å kjøre flere ganger (idempotent).
-            Kjøres i bakgrunnen — returnerer umiddelbart med 202 Accepted.
-        """.trimIndent()
-        response {
-            HttpStatusCode.Accepted to { description = "Populering startet i bakgrunnen" }
-            HttpStatusCode.Forbidden to { description = "Manglende tilgang" }
-        }
-    }) {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.kanLeggeUtDriftsmelding()) {
-                val t0 = System.nanoTime()
-                try {
-                    val antall = statistikkRepository.populerPendingFraAntijoin()
-                    log.info(
-                        "dvh-pending populate: la til {} rader på {}ms",
-                        antall,
-                        (System.nanoTime() - t0) / 1_000_000,
-                    )
-                } catch (e: Exception) {
-                    log.error(
-                        "dvh-pending populate feilet etter {}ms",
-                        (System.nanoTime() - t0) / 1_000_000,
-                        e,
-                    )
-                }
-                call.respond(HttpStatusCode.Accepted)
-            } else {
-                call.respond(HttpStatusCode.Forbidden)
-            }
-        }
-    }
-
-    get("/dvh-pending/sammenlign", {
-        tags("Forvaltning")
-        description = """
-            Sammenligner antall usendte oppgaveversjoner per oppgavetype mellom
-            den gamle anti-join-tellingen (oppgave_v3 LEFT JOIN oppgave_v3_sendt_dvh_ekstern)
-            og den nye oppgave_v3_dvh_pending-tabellen.
-            Differanse > 0: rader i anti-join som ikke er i pending (nye rader siden siste populate, eller dual-write-gap).
-            Differanse < 0: ghost rows i pending (feil i dual-write).
-        """.trimIndent()
-        response {
-            HttpStatusCode.OK to { description = "Sammenligning per oppgavetype" }
-        }
-    }) {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.kanLeggeUtDriftsmelding()) {
-                call.respond(statistikkRepository.sammenlignPendingMedAntijoin())
-            } else {
-                call.respond(HttpStatusCode.Forbidden)
-            }
-        }
-    }
-
 }
 
 fun utledReservasjonsnøkkel(oppgave: Oppgave, erTilBeslutter: Boolean): String {
@@ -575,4 +512,3 @@ data class FinnEksternIdResponse(
     val eksternId: String,
     val opprettetTidspunkt: String?,
 )
-
