@@ -99,9 +99,10 @@ class StatistikkRepository(
         )
     }
 
-    fun fjernSendtMarkering(oppgavetype: String? = null) {
-        using(sessionOf(dataSource)) {
-            if (oppgavetype != null) {
+fun fjernSendtMarkering(oppgavetype: String? = null) {
+    if (oppgavetype != null && oppgavetype !in DVH_OPPGAVETYPER) return
+    using(sessionOf(dataSource)) {
+        if (oppgavetype != null) {
                 it.run(
                     queryOf(
                         """
