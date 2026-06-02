@@ -1,7 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.forvaltning
 
 import io.github.smiley4.ktoropenapi.get
-import io.github.smiley4.ktoropenapi.post
 import io.ktor.http.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
@@ -9,7 +8,6 @@ import kotliquery.queryOf
 import no.nav.k9.kodeverk.behandling.FagsakYtelseType
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.AvstemmingsTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.K9Oppgavetypenavn
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.StatistikkRepository
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.RequestContextService
@@ -28,11 +26,9 @@ import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Repository
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepositoryTxWrapper
 import org.koin.ktor.ext.inject
-import org.slf4j.LoggerFactory
 
 
 fun Route.forvaltningApis() {
-    val log = LoggerFactory.getLogger("ForvaltningApis")
     val oppgaveRepositoryTxWrapper by inject<OppgaveRepositoryTxWrapper>()
     val oppgaveTypeRepository by inject<OppgavetypeRepository>()
     val oppgaveKoTjeneste by inject<OppgaveKoTjeneste>()
@@ -42,7 +38,6 @@ fun Route.forvaltningApis() {
     val transactionalManager by inject<TransactionalManager>()
     val forvaltningRepository by inject<ForvaltningRepository>()
     val avstemmingsTjeneste by inject<AvstemmingsTjeneste>()
-    val statistikkRepository by inject<StatistikkRepository>()
 
     val pepClient by inject<IPepClient>()
     val requestContextService by inject<RequestContextService>()
@@ -499,68 +494,6 @@ fun Route.forvaltningApis() {
                 }.sortedWith(compareBy({ it.område ?: "" }, { it.kode }))
 
                 call.respond(resultat)
-            } else {
-                call.respond(HttpStatusCode.Forbidden)
-            }
-        }
-    }
-
-    // -------------------------------------------------------------------------
-    // Migrering: oppgave_v3_dvh_pending
-    // -------------------------------------------------------------------------
-
-    post("/dvh-pending/populate", {
-        tags("Forvaltning")
-        description = """
-            Populerer oppgave_v3_dvh_pending fra gjeldende anti-join mellom oppgave_v3 og
-            oppgave_v3_sendt_dvh_ekstern. Trygg å kjøre flere ganger (idempotent).
-            Kjøres i bakgrunnen — returnerer umiddelbart med 202 Accepted.
-        """.trimIndent()
-        response {
-            HttpStatusCode.Accepted to { description = "Populering startet i bakgrunnen" }
-            HttpStatusCode.Forbidden to { description = "Manglende tilgang" }
-        }
-    }) {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.kanLeggeUtDriftsmelding()) {
-                val t0 = System.nanoTime()
-                try {
-                    val antall = statistikkRepository.populerPendingFraAntijoin()
-                    log.info(
-                        "dvh-pending populate: la til {} rader på {}ms",
-                        antall,
-                        (System.nanoTime() - t0) / 1_000_000,
-                    )
-                } catch (e: Exception) {
-                    log.error(
-                        "dvh-pending populate feilet etter {}ms",
-                        (System.nanoTime() - t0) / 1_000_000,
-                        e,
-                    )
-                }
-                call.respond(HttpStatusCode.Accepted)
-            } else {
-                call.respond(HttpStatusCode.Forbidden)
-            }
-        }
-    }
-
-    get("/dvh-pending/sammenlign", {
-        tags("Forvaltning")
-        description = """
-            Sammenligner antall usendte oppgaveversjoner per oppgavetype mellom
-            den gamle anti-join-tellingen (oppgave_v3 LEFT JOIN oppgave_v3_sendt_dvh_ekstern)
-            og den nye oppgave_v3_dvh_pending-tabellen.
-            Differanse > 0: rader i anti-join som ikke er i pending (nye rader siden siste populate, eller dual-write-gap).
-            Differanse < 0: ghost rows i pending (feil i dual-write).
-        """.trimIndent()
-        response {
-            HttpStatusCode.OK to { description = "Sammenligning per oppgavetype" }
-        }
-    }) {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.kanLeggeUtDriftsmelding()) {
-                call.respond(statistikkRepository.sammenlignPendingMedAntijoin())
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }

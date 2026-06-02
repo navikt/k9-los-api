@@ -82,12 +82,31 @@ class EventRepositoryPerLinjeForKonverteringTest() : AbstractK9LosIntegrationTes
             ).asUpdate
         )
 
-        if (markertSomSendt) {
+        // Populer pending-tabellen for DVH-relevant oppgavetyper
+        if (oppgavetypeEksternId in setOf("k9sak", "k9klage")) {
             tx.run(
                 queryOf(
                     """
-                    insert into oppgave_v3_sendt_dvh_ekstern(ekstern_id, ekstern_versjon)
-                    values (:ekstern_id, :ekstern_versjon)
+                    insert into oppgave_v3_dvh_pending (ekstern_id, ekstern_versjon, oppgavetype_ekstern_id)
+                    values (:ekstern_id, :ekstern_versjon, :oppgavetype_ekstern_id)
+                    on conflict (ekstern_id, ekstern_versjon) do nothing
+                    """.trimIndent(),
+                    mapOf(
+                        "ekstern_id" to eksternId,
+                        "ekstern_versjon" to eksternVersjon,
+                        "oppgavetype_ekstern_id" to oppgavetypeEksternId,
+                    )
+                ).asUpdate
+            )
+        }
+
+        if (markertSomSendt) {
+            // Mark as sent by removing from pending table
+            tx.run(
+                queryOf(
+                    """
+                    delete from oppgave_v3_dvh_pending
+                    where ekstern_id = :ekstern_id and ekstern_versjon = :ekstern_versjon
                     """.trimIndent(),
                     mapOf(
                         "ekstern_id" to eksternId,

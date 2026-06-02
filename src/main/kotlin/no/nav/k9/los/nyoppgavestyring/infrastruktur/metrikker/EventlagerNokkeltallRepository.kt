@@ -84,16 +84,10 @@ class EventlagerNokkeltallRepository(private val dataSource: DataSource) {
             it.run(
                 queryOf(
                     """
-                    select o.ekstern_id as oppgavetype_ekstern_id, count(*) as antall
-                    from oppgave_v3 ov
-                    join oppgavetype o
-                        on ov.oppgavetype_id = o.id
-                    left join oppgave_v3_sendt_dvh_ekstern os
-                        on os.ekstern_id = ov.ekstern_id
-                        and os.ekstern_versjon = ov.ekstern_versjon
-                    where o.ekstern_id in ('k9sak', 'k9klage')
-                        and os.ekstern_id is null
-                    group by o.ekstern_id
+                    select oppgavetype_ekstern_id, count(*) as antall
+                    from oppgave_v3_dvh_pending
+                    where oppgavetype_ekstern_id in ('k9sak', 'k9klage')
+                    group by oppgavetype_ekstern_id
                     """.trimIndent()
                 ).map { row ->
                     UsendtStatistikkPerOppgavetype(
