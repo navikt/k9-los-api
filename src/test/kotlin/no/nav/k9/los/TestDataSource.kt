@@ -45,7 +45,6 @@ const val TØM_DATA_SQL = """
                 RESERVASJON_V3,
                 RESERVASJON_V3_ENDRING,
                 OPPGAVE_V3,
-                oppgave_v3_sendt_dvh_ekstern,
                 oppgave_v3_dvh_pending,
                 OPPGAVE_PEP_CACHE,
                 kodeverk,

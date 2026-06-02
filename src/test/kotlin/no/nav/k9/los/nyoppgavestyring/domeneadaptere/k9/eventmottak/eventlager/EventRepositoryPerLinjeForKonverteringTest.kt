@@ -101,20 +101,7 @@ class EventRepositoryPerLinjeForKonverteringTest() : AbstractK9LosIntegrationTes
         }
 
         if (markertSomSendt) {
-            tx.run(
-                queryOf(
-                    """
-                    insert into oppgave_v3_sendt_dvh_ekstern(ekstern_id, ekstern_versjon)
-                    values (:ekstern_id, :ekstern_versjon)
-                    """.trimIndent(),
-                    mapOf(
-                        "ekstern_id" to eksternId,
-                        "ekstern_versjon" to eksternVersjon,
-                    )
-                ).asUpdate
-            )
-
-            // Fjern fra pending når markert som sendt
+            // Mark as sent by removing from pending table
             tx.run(
                 queryOf(
                     """

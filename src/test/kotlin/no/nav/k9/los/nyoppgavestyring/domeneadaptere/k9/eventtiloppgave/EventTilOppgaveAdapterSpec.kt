@@ -381,16 +381,6 @@ class EventTilOppgaveAdapterSpec : KoinTest, FreeSpec() {
                         tx.run(
                             queryOf(
                                 """
-                                insert into oppgave_v3_sendt_dvh_ekstern (ekstern_id, ekstern_versjon)
-                                values (:eksternId, :eksternVersjon)
-                                on conflict (ekstern_id, ekstern_versjon) do nothing
-                                """.trimIndent(),
-                                params,
-                            ).asUpdate
-                        )
-                        tx.run(
-                            queryOf(
-                                """
                                 delete from oppgave_v3_dvh_pending
                                 where ekstern_id = :eksternId and ekstern_versjon = :eksternVersjon
                                 """.trimIndent(),
