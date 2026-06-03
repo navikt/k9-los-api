@@ -94,6 +94,9 @@ class SaksbehandlerAdminTjeneste(
     suspend fun hentSaksbehandlere(): List<SaksbehandlerDto> {
         return transactionalManager.transactionSuspend { tx ->
             val saksbehandlere = saksbehandlerRepository.hentAlleSaksbehandlere(tx)
+            val saksbehandlerIder = saksbehandlere.map { it.id!! }.toSet()
+            val antallReservasjoner = reservasjonV3Tjeneste.tellReservasjonerForSaksbehandlere(saksbehandlerIder, tx)
+
             saksbehandlere.map {
                 SaksbehandlerDto(
                     id = it.id,
@@ -101,7 +104,7 @@ class SaksbehandlerAdminTjeneste(
                     navn = it.navn,
                     epost = it.epost,
                     enhet = it.enhet,
-                    antallAktiveReservasjoner = reservasjonV3Tjeneste.tellReservasjonerForSaksbehandler(it.id!!, tx)
+                    antallAktiveReservasjoner = antallReservasjoner.getOrElse(it.id!!) { 0 }
                 )
             }.sortedBy { it.navn }
         }

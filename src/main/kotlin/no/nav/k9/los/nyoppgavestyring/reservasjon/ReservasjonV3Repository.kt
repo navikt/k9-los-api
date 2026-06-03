@@ -8,7 +8,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
-import java.util.UUID
+import java.util.*
 
 class ReservasjonV3Repository(
     private val transactionalManager: TransactionalManager,
@@ -188,29 +188,43 @@ class ReservasjonV3Repository(
         )
     }
 
-    fun tellAktiveReservasjonerForSaksbehandler(
-        saksbehandlerId: Long,
+    fun tellAktiveReservasjonerForSaksbehandlere(
+        saksbehandlerId: Set<Long>,
         tx: TransactionalSession
-    ): Int {
-        return tx.run(
+    ): Map<Long, Int> {
+        val ufiltrert = tx.run(
             queryOf(
                 """
-                   select count(*)
+                   select reservertAv, count(*) as antall
                    from reservasjon_v3 r
                    where r.reservertAv = :reservertAv
                        and annullert_for_utlop = false
                        and lower(r.gyldig_tidsrom) <= :now
                        and upper(r.gyldig_tidsrom) > :now
+                   group by reservertAv
                     """.trimIndent(),
                 mapOf(
                     "reservertAv" to saksbehandlerId,
                     "now" to LocalDateTime.now().truncatedTo(ChronoUnit.MICROS),
                 )
             ).map { row ->
-                row.int(1)
-            }.asSingle
-        ) ?: 0
+                AntallReservasjonerForSaksbehandler(
+                    saksbehandlerId = row.long("reservertAv"),
+                    antallReservasjoner = row.int("antall")
+                )
+            }
+                .asList
+
+        )
+        return ufiltrert.filter { saksbehandlerId.contains(it.saksbehandlerId) }
+            .map { it.saksbehandlerId to it.antallReservasjoner }
+            .toMap()
     }
+
+    data class AntallReservasjonerForSaksbehandler(
+        val saksbehandlerId: Long,
+        val antallReservasjoner: Int
+    )
 
     fun hentAktiveReservasjonerForSaksbehandler(
         saksbehandlerId: Long,
