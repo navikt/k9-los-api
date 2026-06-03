@@ -373,7 +373,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
         ReservasjonV3Tjeneste(
             transactionalManager = get(),
             reservasjonV3Repository = get(),
-            reservasjonsnøkkelOppgaveTjeneste = get(),
+            reservasjonsnøkkelOppgaveOppslag = get(),
             pepClient = get(),
             saksbehandlerRepository = get(),
             køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
@@ -445,8 +445,8 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             transactionalManager = get(),
         )
     }
-    single<OppgaveForReservasjonsnøkkelOppslag> {
-        OppgaveForReservasjonsnøkkelOppslagPartisjonert(
+    single<ReservasjonsnøkkelOppgaveOppslag> {
+        ReservasjonsnøkkelOppgaveOppslagPartisjonert(
             oppgavetypeRepository = get(),
             transactionalManager = get(),
         )

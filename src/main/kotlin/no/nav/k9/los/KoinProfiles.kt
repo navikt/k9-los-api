@@ -453,7 +453,7 @@ fun common(app: Application, config: Configuration) = module {
         ReservasjonV3Tjeneste(
             transactionalManager = get(),
             reservasjonV3Repository = get(),
-            reservasjonsnøkkelOppgaveTjeneste = get(),
+            reservasjonsnøkkelOppgaveOppslag = get(),
             pepClient = get(),
             saksbehandlerRepository = get(),
             køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
@@ -466,8 +466,8 @@ fun common(app: Application, config: Configuration) = module {
             transactionalManager = get(),
         )
     }
-    single<OppgaveForReservasjonsnøkkelOppslag> {
-        OppgaveForReservasjonsnøkkelOppslagPartisjonert(
+    single<ReservasjonsnøkkelOppgaveOppslag> {
+        ReservasjonsnøkkelOppgaveOppslagPartisjonert(
             oppgavetypeRepository = get(),
             transactionalManager = get(),
         )

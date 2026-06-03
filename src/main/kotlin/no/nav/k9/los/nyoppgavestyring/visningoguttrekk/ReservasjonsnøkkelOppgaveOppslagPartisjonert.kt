@@ -8,10 +8,10 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRad.Companion.tilOppgaveRad
 import java.time.LocalDateTime
 
-class OppgaveForReservasjonsnøkkelOppslagPartisjonert(
+class ReservasjonsnøkkelOppgaveOppslagPartisjonert(
     private val oppgavetypeRepository: OppgavetypeRepository,
     private val transactionalManager: TransactionalManager,
-) : OppgaveForReservasjonsnøkkelOppslag {
+) : ReservasjonsnøkkelOppgaveOppslag {
 
     override fun hentÅpneOppgaverForReservasjonsnøkkel(reservasjonsnøkkel: String): List<Oppgave> {
         return transactionalManager.transaction { tx ->
