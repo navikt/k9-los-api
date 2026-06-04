@@ -542,7 +542,9 @@ fun Route.forvaltningApis() {
                     .distinct()
 
                 transactionalManager.transaction { tx ->
-                    eventRepository.bestillHistorikkvask(fagsystem, eksternIder, tx)
+                    eksternIder.chunked(1000).forEach { chunk ->
+                        eventRepository.bestillHistorikkvask(fagsystem, chunk, tx)
+                    }
                 }
 
                 call.respond(BestillingFraQueryResponse(eksternIder.size))
