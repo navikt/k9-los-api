@@ -596,7 +596,9 @@ fun Route.forvaltningApis() {
                     .distinct()
 
                 transactionalManager.transaction { tx ->
-                    statistikkRepository.bestillDvhSendingForEksternIder(eksternIder, tx)
+                    eksternIder.chunked(1000).forEach { chunk ->
+                        statistikkRepository.bestillDvhSendingForEksternIder(chunk, tx)
+                    }
                 }
 
                 call.respond(BestillingFraQueryResponse(eksternIder.size))
