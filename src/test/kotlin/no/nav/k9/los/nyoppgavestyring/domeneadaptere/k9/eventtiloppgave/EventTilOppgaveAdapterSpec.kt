@@ -6,6 +6,7 @@ import io.kotest.matchers.shouldBe
 import io.mockk.clearAllMocks
 import io.mockk.spyk
 import io.mockk.verify
+import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import no.nav.k9.kodeverk.behandling.BehandlingStegType
 import no.nav.k9.kodeverk.behandling.FagsakYtelseType
@@ -97,7 +98,7 @@ class EventTilOppgaveAdapterSpec : KoinTest, FreeSpec() {
                             oppgaveOppdatertHandler.håndterOppgaveOppdatert(any(), any(), any())
                         }
                         verify(exactly = 0) {
-                            eventRepository.bestillHistorikkvask(any(), any(), any())
+                            eventRepository.bestillHistorikkvask(any<Fagsystem>(), any<String>(), any<TransactionalSession>())
                         }
                     }
                 }
@@ -119,7 +120,7 @@ class EventTilOppgaveAdapterSpec : KoinTest, FreeSpec() {
                         oppgaveOppdatertHandler.håndterOppgaveOppdatert(any(), any(), any())
                     }
                     verify(exactly = 0) {
-                        eventRepository.bestillHistorikkvask(any(), any(), any())
+                        eventRepository.bestillHistorikkvask(any<Fagsystem>(), any<String>(), any<TransactionalSession>())
                     }
                     val internVersjon = transactionalManager.transaction { tx ->
                         oppgaveV3Tjeneste.hentHøyesteInternVersjon(event.eksternId.toString(), K9Oppgavetypenavn.PUNSJ.kode, "K9", tx)
@@ -142,7 +143,7 @@ class EventTilOppgaveAdapterSpec : KoinTest, FreeSpec() {
                             oppgaveOppdatertHandler.håndterOppgaveOppdatert(any(), any(), any())
                         }
                         verify(exactly = 0) {
-                            eventRepository.bestillHistorikkvask(any(), any(), any())
+                            eventRepository.bestillHistorikkvask(any<Fagsystem>(), any<String>(), any<TransactionalSession>())
                         }
                         val internVersjon = transactionalManager.transaction { tx ->
                             oppgaveV3Tjeneste.hentHøyesteInternVersjon(event.eksternId.toString(), K9Oppgavetypenavn.PUNSJ.kode, "K9", tx)
@@ -166,7 +167,7 @@ class EventTilOppgaveAdapterSpec : KoinTest, FreeSpec() {
                         oppgaveOppdatertHandler.håndterOppgaveOppdatert(any(), any(), any())
                     }
                     verify(exactly = 0) {
-                        eventRepository.bestillHistorikkvask(any(), any(), any())
+                        eventRepository.bestillHistorikkvask(any<Fagsystem>(), any<String>(), any<TransactionalSession>())
                     }
                     val internVersjon = transactionalManager.transaction { tx ->
                         oppgaveV3Tjeneste.hentHøyesteInternVersjon(event.eksternId.toString(), K9Oppgavetypenavn.PUNSJ.kode, "K9", tx)
@@ -193,7 +194,7 @@ class EventTilOppgaveAdapterSpec : KoinTest, FreeSpec() {
                         oppgaveOppdatertHandler.håndterOppgaveOppdatert(any(), any(), any())
                     }
                     verify(exactly = 1) {
-                        eventRepository.bestillHistorikkvask(any(), any(), any())
+                        eventRepository.bestillHistorikkvask(any<Fagsystem>(), any<String>(), any<TransactionalSession>())
                     }
                     val internVersjon = transactionalManager.transaction { tx ->
                         oppgaveV3Tjeneste.hentHøyesteInternVersjon(event.eksternId.toString(), K9Oppgavetypenavn.PUNSJ.kode, "K9", tx)
@@ -223,7 +224,7 @@ class EventTilOppgaveAdapterSpec : KoinTest, FreeSpec() {
                             oppgaveOppdatertHandler.håndterOppgaveOppdatert(any(), any(), any())
                         }
                         verify(exactly = 1) {
-                            eventRepository.bestillHistorikkvask(any(), any(), any())
+                            eventRepository.bestillHistorikkvask(any<Fagsystem>(), any<String>(), any<TransactionalSession>())
                         }
                         val internVersjon = transactionalManager.transaction { tx ->
                             oppgaveV3Tjeneste.hentHøyesteInternVersjon(event.eksternId.toString(), K9Oppgavetypenavn.PUNSJ.kode, "K9", tx)
