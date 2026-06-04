@@ -1,14 +1,14 @@
-package no.nav.k9.los.nyoppgavestyring.query.db
+package no.nav.k9.los.nyoppgavestyring.uthenting.query.db
 
 import no.nav.k9.los.nyoppgavestyring.kodeverk.PersonBeskyttelseType
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Synlighet
-import no.nav.k9.los.nyoppgavestyring.query.dto.felter.Oppgavefelt
-import no.nav.k9.los.nyoppgavestyring.query.dto.query.Aggregeringsfunksjon
-import no.nav.k9.los.nyoppgavestyring.query.dto.query.AggregertSelectFelt
-import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelSelectFelt
-import no.nav.k9.los.nyoppgavestyring.query.mapping.CombineOperator
-import no.nav.k9.los.nyoppgavestyring.query.mapping.FeltverdiOperator
+import no.nav.k9.los.nyoppgavestyring.uthenting.query.dto.felter.Oppgavefelt
+import no.nav.k9.los.nyoppgavestyring.uthenting.query.dto.query.Aggregeringsfunksjon
+import no.nav.k9.los.nyoppgavestyring.uthenting.query.dto.query.AggregertSelectFelt
+import no.nav.k9.los.nyoppgavestyring.uthenting.query.dto.query.EnkelSelectFelt
+import no.nav.k9.los.nyoppgavestyring.uthenting.query.mapping.CombineOperator
+import no.nav.k9.los.nyoppgavestyring.uthenting.query.mapping.FeltverdiOperator
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime

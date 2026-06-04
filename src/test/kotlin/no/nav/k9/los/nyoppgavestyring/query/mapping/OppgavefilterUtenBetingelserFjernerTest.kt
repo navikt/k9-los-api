@@ -1,10 +1,10 @@
-package no.nav.k9.los.nyoppgavestyring.query.mapping
+package no.nav.k9.los.nyoppgavestyring.uthenting.query.mapping
 
 import assertk.assertThat
 import assertk.assertions.*
 import no.nav.k9.los.nyoppgavestyring.FeltType
-import no.nav.k9.los.nyoppgavestyring.query.dto.query.CombineOppgavefilter
-import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
+import no.nav.k9.los.nyoppgavestyring.uthenting.query.dto.query.CombineOppgavefilter
+import no.nav.k9.los.nyoppgavestyring.uthenting.query.dto.query.FeltverdiOppgavefilter
 import org.junit.jupiter.api.Test
 
 class OppgavefilterUtenBetingelserFjernerTest {

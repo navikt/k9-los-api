@@ -4,7 +4,7 @@ import assertk.assertThat
 import assertk.assertions.isEqualTo
 import assertk.assertions.isFalse
 import assertk.assertions.isNotEqualTo
-import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
+import no.nav.k9.los.nyoppgavestyring.uthenting.query.dto.query.OppgaveQuery
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.Saksbehandler
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows

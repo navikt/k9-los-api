@@ -1,9 +1,9 @@
 package no.nav.k9.los.nyoppgavestyring.forvaltning
 
-import no.nav.k9.los.nyoppgavestyring.query.dto.query.CombineOppgavefilter
-import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
-import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
-import no.nav.k9.los.nyoppgavestyring.query.dto.query.Oppgavefilter
+import no.nav.k9.los.nyoppgavestyring.uthenting.query.dto.query.CombineOppgavefilter
+import no.nav.k9.los.nyoppgavestyring.uthenting.query.dto.query.FeltverdiOppgavefilter
+import no.nav.k9.los.nyoppgavestyring.uthenting.query.dto.query.OppgaveQuery
+import no.nav.k9.los.nyoppgavestyring.uthenting.query.dto.query.Oppgavefilter
 
 data class Feltreferanse(val område: String?, val kode: String)
 

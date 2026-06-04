@@ -64,7 +64,7 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Api
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeApi
 import no.nav.k9.los.nyoppgavestyring.nøkkeltall.saksbehandler.nyeogferdigstilte.NyeOgFerdigstilteApi
 import no.nav.k9.los.nyoppgavestyring.nøkkeltall.saksbehandler.nyeogferdigstilte.NyeOgFerdigstilteService
-import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryApis
+import no.nav.k9.los.nyoppgavestyring.uthenting.query.OppgaveQueryApis
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonApis
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerAdminApis
 import no.nav.k9.los.nyoppgavestyring.sisteoppgaver.SisteOppgaverApi

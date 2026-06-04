@@ -5,7 +5,7 @@ import kotliquery.queryOf
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
-import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
+import no.nav.k9.los.nyoppgavestyring.uthenting.query.dto.query.OppgaveQuery
 
 class ForvaltningRepository(
     private val oppgavetypeRepository: OppgavetypeRepository,

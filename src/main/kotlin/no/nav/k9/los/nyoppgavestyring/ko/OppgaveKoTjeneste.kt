@@ -22,10 +22,10 @@ import no.nav.k9.los.nyoppgavestyring.ko.dto.NesteOppgaverFraKoDto
 import no.nav.k9.los.nyoppgavestyring.ko.dto.OppgaveKo
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonTjeneste
-import no.nav.k9.los.nyoppgavestyring.query.Avgrensning
-import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
-import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
-import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelOrderFelt
+import no.nav.k9.los.nyoppgavestyring.uthenting.query.Avgrensning
+import no.nav.k9.los.nyoppgavestyring.uthenting.query.OppgaveQueryService
+import no.nav.k9.los.nyoppgavestyring.uthenting.query.QueryRequest
+import no.nav.k9.los.nyoppgavestyring.uthenting.query.dto.query.EnkelOrderFelt
 import no.nav.k9.los.nyoppgavestyring.reservasjon.AlleredeReservertException
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ManglerTilgangException
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste

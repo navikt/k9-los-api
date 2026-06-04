@@ -1,0 +1,49 @@
+package no.nav.k9.los.nyoppgavestyring.uthenting.query.db
+
+import kotliquery.Row
+import no.nav.k9.los.nyoppgavestyring.uthenting.query.dto.query.Aggregeringsfunksjon
+import no.nav.k9.los.nyoppgavestyring.uthenting.query.dto.query.EnkelSelectFelt
+import no.nav.k9.los.nyoppgavestyring.uthenting.query.dto.query.Oppgavefilter
+import no.nav.k9.los.nyoppgavestyring.uthenting.query.dto.query.AggregertSelectFelt
+import no.nav.k9.los.nyoppgavestyring.uthenting.query.dto.resultat.OppgaveQueryRad
+import no.nav.k9.los.nyoppgavestyring.uthenting.query.mapping.CombineOperator
+import no.nav.k9.los.nyoppgavestyring.uthenting.query.mapping.FeltverdiOperator
+
+interface OppgaveQuerySqlBuilder {
+    fun filterRens(felter: Map<OmrådeOgKode, OppgavefeltMedMer>, filtere: List<Oppgavefilter>): List<Oppgavefilter>
+
+    fun medFeltverdi(
+        combineOperator: CombineOperator,
+        feltområde: String?,
+        feltkode: String,
+        operator: FeltverdiOperator,
+        feltverdier: List<Any?>
+    )
+    fun medBlokk(combineOperator: CombineOperator, defaultTrue: Boolean, blokk: () -> Unit)
+    fun medEnkelOrder(feltområde: String?, feltkode: String, økende: Boolean)
+    fun medAggregertOrder(funksjon: Aggregeringsfunksjon, feltområde: String?, feltkode: String?, økende: Boolean)
+
+    fun utenReservasjoner()
+    fun medPaging(limit: Long, offset: Long)
+
+    fun medSelectFelter(selectFelter: List<EnkelSelectFelt>)
+    fun medAggregering(grupperingsFelter: List<EnkelSelectFelt>, aggregerteFelter: List<AggregertSelectFelt>)
+
+    fun mapRowTilRad(row: Row): OppgaveQueryRad
+
+    /** Skal bare brukes til debugging, siden parametrene settes inn ukritisk */
+    fun unsafeDebug(): String {
+        var queryWithParams = getQuery()
+
+        // erstatter placeholdere reversert siden f.eks. ':feltverdi1' også matcher ':feltverdi10'
+        for ((key, value) in getParams().toSortedMap().reversed()) {
+            queryWithParams = queryWithParams.replace(":$key", if (value is Number || value == null) value.toString() else "'$value'")
+        }
+
+        return queryWithParams
+    }
+
+    // Det som bygges
+    fun getQuery(): String
+    fun getParams(): Map<String, Any?>
+}

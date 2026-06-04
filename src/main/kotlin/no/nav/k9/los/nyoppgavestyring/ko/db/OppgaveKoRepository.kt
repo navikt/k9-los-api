@@ -3,7 +3,7 @@ package no.nav.k9.los.nyoppgavestyring.ko.db
 import com.fasterxml.jackson.databind.ObjectMapper
 import kotliquery.*
 import no.nav.k9.los.nyoppgavestyring.ko.dto.OppgaveKo
-import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
+import no.nav.k9.los.nyoppgavestyring.uthenting.query.dto.query.OppgaveQuery
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime

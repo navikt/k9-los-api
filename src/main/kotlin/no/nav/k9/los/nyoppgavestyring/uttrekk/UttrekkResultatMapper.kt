@@ -2,10 +2,10 @@ package no.nav.k9.los.nyoppgavestyring.uttrekk
 
 import com.fasterxml.jackson.core.type.TypeReference
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
-import no.nav.k9.los.nyoppgavestyring.query.dto.query.AggregertSelectFelt
-import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelSelectFelt
-import no.nav.k9.los.nyoppgavestyring.query.dto.query.SelectFelt
-import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.OppgaveQueryRad
+import no.nav.k9.los.nyoppgavestyring.uthenting.query.dto.query.AggregertSelectFelt
+import no.nav.k9.los.nyoppgavestyring.uthenting.query.dto.query.EnkelSelectFelt
+import no.nav.k9.los.nyoppgavestyring.uthenting.query.dto.query.SelectFelt
+import no.nav.k9.los.nyoppgavestyring.uthenting.query.dto.resultat.OppgaveQueryRad
 
 object UttrekkResultatMapper {
 

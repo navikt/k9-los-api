@@ -1,4 +1,4 @@
-package no.nav.k9.los.nyoppgavestyring.query
+package no.nav.k9.los.nyoppgavestyring.uthenting.query
 
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit

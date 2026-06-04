@@ -6,7 +6,7 @@ import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.Oppgavetype
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
-import no.nav.k9.los.nyoppgavestyring.query.db.PartisjonertOppgaveId
+import no.nav.k9.los.nyoppgavestyring.uthenting.query.db.PartisjonertOppgaveId
 import no.nav.k9.los.nyoppgavestyring.uthenting.Oppgave
 import no.nav.k9.los.nyoppgavestyring.uthenting.Oppgavefelt
 import org.slf4j.LoggerFactory

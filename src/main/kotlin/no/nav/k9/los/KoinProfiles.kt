@@ -70,8 +70,8 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.PartisjonertOppgaveReposito
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeTjeneste
 import no.nav.k9.los.nyoppgavestyring.nøkkeltall.saksbehandler.nyeogferdigstilte.NyeOgFerdigstilteService
-import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
-import no.nav.k9.los.nyoppgavestyring.query.db.OppgaveQueryRepository
+import no.nav.k9.los.nyoppgavestyring.uthenting.query.OppgaveQueryService
+import no.nav.k9.los.nyoppgavestyring.uthenting.query.db.OppgaveQueryRepository
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonApisTjeneste
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3DtoBuilder
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Repository

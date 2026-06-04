@@ -1,4 +1,4 @@
-package no.nav.k9.los.nyoppgavestyring.query.mapping.transientfeltutleder
+package no.nav.k9.los.nyoppgavestyring.uthenting.query.mapping.transientfeltutleder
 
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.shouldBe
@@ -8,12 +8,12 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.NyOppgaveversjon
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdiDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
-import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
-import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
-import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelSelectFelt
-import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
-import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
-import no.nav.k9.los.nyoppgavestyring.query.mapping.EksternFeltverdiOperator
+import no.nav.k9.los.nyoppgavestyring.uthenting.query.OppgaveQueryService
+import no.nav.k9.los.nyoppgavestyring.uthenting.query.QueryRequest
+import no.nav.k9.los.nyoppgavestyring.uthenting.query.dto.query.EnkelSelectFelt
+import no.nav.k9.los.nyoppgavestyring.uthenting.query.dto.query.FeltverdiOppgavefilter
+import no.nav.k9.los.nyoppgavestyring.uthenting.query.dto.query.OppgaveQuery
+import no.nav.k9.los.nyoppgavestyring.uthenting.query.mapping.EksternFeltverdiOperator
 import org.koin.test.KoinTest
 import org.koin.test.get
 import java.time.LocalDate

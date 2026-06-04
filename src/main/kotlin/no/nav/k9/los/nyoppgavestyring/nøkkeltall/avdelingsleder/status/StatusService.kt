@@ -2,10 +2,10 @@ package no.nav.k9.los.nyoppgavestyring.nøkkeltall.avdelingsleder.status
 
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
-import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
-import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
-import no.nav.k9.los.nyoppgavestyring.query.dto.query.*
-import no.nav.k9.los.nyoppgavestyring.query.mapping.EksternFeltverdiOperator
+import no.nav.k9.los.nyoppgavestyring.uthenting.query.OppgaveQueryService
+import no.nav.k9.los.nyoppgavestyring.uthenting.query.QueryRequest
+import no.nav.k9.los.nyoppgavestyring.uthenting.query.dto.query.*
+import no.nav.k9.los.nyoppgavestyring.uthenting.query.mapping.EksternFeltverdiOperator
 
 class StatusService(
     private val queryService: OppgaveQueryService,

@@ -9,11 +9,11 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
-import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
-import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
-import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
-import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
-import no.nav.k9.los.nyoppgavestyring.query.mapping.EksternFeltverdiOperator
+import no.nav.k9.los.nyoppgavestyring.uthenting.query.OppgaveQueryService
+import no.nav.k9.los.nyoppgavestyring.uthenting.query.QueryRequest
+import no.nav.k9.los.nyoppgavestyring.uthenting.query.dto.query.OppgaveQuery
+import no.nav.k9.los.nyoppgavestyring.uthenting.query.dto.query.FeltverdiOppgavefilter
+import no.nav.k9.los.nyoppgavestyring.uthenting.query.mapping.EksternFeltverdiOperator
 import no.nav.k9.los.nyoppgavestyring.uthenting.OppgaveRepository
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.BeforeEach

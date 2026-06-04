@@ -1,4 +1,4 @@
-package no.nav.k9.los.nyoppgavestyring.query
+package no.nav.k9.los.nyoppgavestyring.uthenting.query
 
 import assertk.Assert
 import assertk.assertThat
@@ -6,11 +6,11 @@ import assertk.assertions.isEqualTo
 import assertk.assertions.support.fail
 import no.nav.k9.los.nyoppgavestyring.FeltType
 import no.nav.k9.los.nyoppgavestyring.felter
-import no.nav.k9.los.nyoppgavestyring.query.dto.query.CombineOppgavefilter
-import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
-import no.nav.k9.los.nyoppgavestyring.query.mapping.CombineOperator
-import no.nav.k9.los.nyoppgavestyring.query.mapping.EksternFeltverdiOperator
-import no.nav.k9.los.nyoppgavestyring.query.mapping.OppgavefilterRens
+import no.nav.k9.los.nyoppgavestyring.uthenting.query.dto.query.CombineOppgavefilter
+import no.nav.k9.los.nyoppgavestyring.uthenting.query.dto.query.FeltverdiOppgavefilter
+import no.nav.k9.los.nyoppgavestyring.uthenting.query.mapping.CombineOperator
+import no.nav.k9.los.nyoppgavestyring.uthenting.query.mapping.EksternFeltverdiOperator
+import no.nav.k9.los.nyoppgavestyring.uthenting.query.mapping.OppgavefilterRens
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 import kotlin.test.fail

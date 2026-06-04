@@ -1,4 +1,4 @@
-package no.nav.k9.los.nyoppgavestyring.query
+package no.nav.k9.los.nyoppgavestyring.uthenting.query
 
 import assertk.assertThat
 import assertk.assertions.*
@@ -17,9 +17,9 @@ import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.nyoppgavestyring.kodeverk.PersonBeskyttelseType
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
-import no.nav.k9.los.nyoppgavestyring.query.dto.query.*
-import no.nav.k9.los.nyoppgavestyring.query.mapping.CombineOperator
-import no.nav.k9.los.nyoppgavestyring.query.mapping.EksternFeltverdiOperator
+import no.nav.k9.los.nyoppgavestyring.uthenting.query.dto.query.*
+import no.nav.k9.los.nyoppgavestyring.uthenting.query.mapping.CombineOperator
+import no.nav.k9.los.nyoppgavestyring.uthenting.query.mapping.EksternFeltverdiOperator
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository

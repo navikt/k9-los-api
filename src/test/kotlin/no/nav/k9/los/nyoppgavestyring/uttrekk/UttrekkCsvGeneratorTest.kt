@@ -2,9 +2,9 @@ package no.nav.k9.los.nyoppgavestyring.uttrekk
 
 import assertk.assertThat
 import assertk.assertions.isEqualTo
-import no.nav.k9.los.nyoppgavestyring.query.dto.query.AggregertSelectFelt
-import no.nav.k9.los.nyoppgavestyring.query.dto.query.Aggregeringsfunksjon
-import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelSelectFelt
+import no.nav.k9.los.nyoppgavestyring.uthenting.query.dto.query.AggregertSelectFelt
+import no.nav.k9.los.nyoppgavestyring.uthenting.query.dto.query.Aggregeringsfunksjon
+import no.nav.k9.los.nyoppgavestyring.uthenting.query.dto.query.EnkelSelectFelt
 import org.junit.jupiter.api.Test
 
 class UttrekkCsvGeneratorTest {

@@ -11,10 +11,10 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Repository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
-import no.nav.k9.los.nyoppgavestyring.query.db.OmrådeOgKode
-import no.nav.k9.los.nyoppgavestyring.query.db.OppgavefeltMedMer
+import no.nav.k9.los.nyoppgavestyring.uthenting.query.db.OmrådeOgKode
+import no.nav.k9.los.nyoppgavestyring.uthenting.query.db.OppgavefeltMedMer
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Synlighet
-import no.nav.k9.los.nyoppgavestyring.query.dto.felter.Oppgavefelt
+import no.nav.k9.los.nyoppgavestyring.uthenting.query.dto.felter.Oppgavefelt
 import org.koin.test.KoinTest
 import org.koin.test.get
 import java.time.LocalDateTime

@@ -1,7 +1,7 @@
 package no.nav.k9.los.nyoppgavestyring.spi.felter
 
-import no.nav.k9.los.nyoppgavestyring.query.db.Spørringstrategi
-import no.nav.k9.los.nyoppgavestyring.query.mapping.FeltverdiOperator
+import no.nav.k9.los.nyoppgavestyring.uthenting.query.db.Spørringstrategi
+import no.nav.k9.los.nyoppgavestyring.uthenting.query.mapping.FeltverdiOperator
 import no.nav.k9.los.nyoppgavestyring.uthenting.Oppgave
 import java.time.LocalDateTime
 

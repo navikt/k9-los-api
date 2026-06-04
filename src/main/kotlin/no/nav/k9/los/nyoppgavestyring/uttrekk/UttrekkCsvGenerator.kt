@@ -1,6 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.uttrekk
 
-import no.nav.k9.los.nyoppgavestyring.query.dto.query.*
+import no.nav.k9.los.nyoppgavestyring.uthenting.query.dto.query.*
 
 class UttrekkCsvGenerator {
 

@@ -1,4 +1,4 @@
-package no.nav.k9.los.nyoppgavestyring.query
+package no.nav.k9.los.nyoppgavestyring.uthenting.query
 
 import assertk.assertThat
 import assertk.assertions.isEqualTo
@@ -8,15 +8,15 @@ import no.nav.k9.los.nyoppgavestyring.OppgaveTestDataBuilder
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.PartisjonertOppgaveRepository
-import no.nav.k9.los.nyoppgavestyring.query.db.OppgaveId
-import no.nav.k9.los.nyoppgavestyring.query.db.OppgaveQueryRepository
-import no.nav.k9.los.nyoppgavestyring.query.db.OppgaveV3Id
-import no.nav.k9.los.nyoppgavestyring.query.db.PartisjonertOppgaveId
-import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelOrderFelt
-import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelSelectFelt
-import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
-import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
-import no.nav.k9.los.nyoppgavestyring.query.mapping.EksternFeltverdiOperator
+import no.nav.k9.los.nyoppgavestyring.uthenting.query.db.OppgaveId
+import no.nav.k9.los.nyoppgavestyring.uthenting.query.db.OppgaveQueryRepository
+import no.nav.k9.los.nyoppgavestyring.uthenting.query.db.OppgaveV3Id
+import no.nav.k9.los.nyoppgavestyring.uthenting.query.db.PartisjonertOppgaveId
+import no.nav.k9.los.nyoppgavestyring.uthenting.query.dto.query.EnkelOrderFelt
+import no.nav.k9.los.nyoppgavestyring.uthenting.query.dto.query.EnkelSelectFelt
+import no.nav.k9.los.nyoppgavestyring.uthenting.query.dto.query.FeltverdiOppgavefilter
+import no.nav.k9.los.nyoppgavestyring.uthenting.query.dto.query.OppgaveQuery
+import no.nav.k9.los.nyoppgavestyring.uthenting.query.mapping.EksternFeltverdiOperator
 import no.nav.k9.los.nyoppgavestyring.uthenting.Oppgave
 import no.nav.k9.los.nyoppgavestyring.uthenting.OppgaveRepository
 import org.junit.jupiter.api.BeforeEach

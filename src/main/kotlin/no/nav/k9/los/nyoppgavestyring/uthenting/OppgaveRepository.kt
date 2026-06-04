@@ -5,7 +5,7 @@ import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.util.InClauseHjelper
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
-import no.nav.k9.los.nyoppgavestyring.query.db.OppgaveV3Id
+import no.nav.k9.los.nyoppgavestyring.uthenting.query.db.OppgaveV3Id
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime

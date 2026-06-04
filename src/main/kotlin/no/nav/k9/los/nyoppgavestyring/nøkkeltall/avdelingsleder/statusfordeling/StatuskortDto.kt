@@ -1,6 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.nøkkeltall.avdelingsleder.statusfordeling
 
-import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
+import no.nav.k9.los.nyoppgavestyring.uthenting.query.dto.query.OppgaveQuery
 import no.nav.k9.los.nyoppgavestyring.nøkkeltall.KodeOgNavn
 
 data class StatuskortDto(

@@ -1,13 +1,13 @@
-package no.nav.k9.los.nyoppgavestyring.query.mapping
+package no.nav.k9.los.nyoppgavestyring.uthenting.query.mapping
 
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import assertk.assertions.isNull
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Synlighet
-import no.nav.k9.los.nyoppgavestyring.query.db.OmrådeOgKode
-import no.nav.k9.los.nyoppgavestyring.query.db.OppgavefeltMedMer
-import no.nav.k9.los.nyoppgavestyring.query.dto.felter.Oppgavefelt
-import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
+import no.nav.k9.los.nyoppgavestyring.uthenting.query.db.OmrådeOgKode
+import no.nav.k9.los.nyoppgavestyring.uthenting.query.db.OppgavefeltMedMer
+import no.nav.k9.los.nyoppgavestyring.uthenting.query.dto.felter.Oppgavefelt
+import no.nav.k9.los.nyoppgavestyring.uthenting.query.dto.query.FeltverdiOppgavefilter
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test

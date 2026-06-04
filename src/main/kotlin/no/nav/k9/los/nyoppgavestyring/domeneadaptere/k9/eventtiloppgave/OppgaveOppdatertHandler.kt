@@ -15,7 +15,7 @@ import no.nav.k9.los.nyoppgavestyring.kodeverk.AksjonspunktStatus
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingStatus
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
-import no.nav.k9.los.nyoppgavestyring.query.db.EksternOppgaveId
+import no.nav.k9.los.nyoppgavestyring.uthenting.query.db.EksternOppgaveId
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.uthenting.OppgaveRepository
 import org.slf4j.Logger
