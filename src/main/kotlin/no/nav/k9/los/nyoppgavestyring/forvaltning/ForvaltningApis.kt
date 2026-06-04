@@ -521,6 +521,10 @@ fun Route.forvaltningApis() {
             if (pepClient.kanLeggeUtDriftsmelding()) {
                 val fagsystem = Fagsystem.fraKode(call.parameters["fagsystem"]!!)
                 val oppgaveQueryFraRequest = call.receive<OppgaveQuery>()
+                if (oppgaveQueryFraRequest.select.isNotEmpty()) {
+                    call.respond(HttpStatusCode.BadRequest, "OppgaveQuery.select støttes ikke for bestilling fra query")
+                    return@withRequestContext
+                }
                 val filtereUtenOppgavetype = oppgaveQueryFraRequest.filtere
                     .filterNot { filter ->
                         filter is FeltverdiOppgavefilter && filter.kode == "oppgavetype"
