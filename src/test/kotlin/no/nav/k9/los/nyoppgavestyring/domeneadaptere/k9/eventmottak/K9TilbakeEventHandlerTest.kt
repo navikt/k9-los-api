@@ -8,13 +8,13 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.K9TilbakeEventHandler
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
-import no.nav.k9.los.nyoppgavestyring.uthenting.query.OppgaveQueryService
-import no.nav.k9.los.nyoppgavestyring.uthenting.query.QueryRequest
-import no.nav.k9.los.nyoppgavestyring.uthenting.query.dto.query.OppgaveQuery
-import no.nav.k9.los.nyoppgavestyring.uthenting.query.dto.query.FeltverdiOppgavefilter
-import no.nav.k9.los.nyoppgavestyring.uthenting.query.mapping.EksternFeltverdiOperator
-import no.nav.k9.los.nyoppgavestyring.uthenting.OppgaveRepository
+import no.nav.k9.los.nyoppgavestyring.oppgavemottak.Oppgavestatus
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.OppgaveQueryService
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.QueryRequest
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.dto.query.OppgaveQuery
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.dto.query.FeltverdiOppgavefilter
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.mapping.EksternFeltverdiOperator
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.OppgaveRepository
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -37,7 +37,7 @@ class K9TilbakeEventHandlerTest : AbstractK9LosIntegrationTest() {
         transactionalManager = get<TransactionalManager>()
     }
 
-    private fun hentOppgaveForEksternId(eksternId: String): no.nav.k9.los.nyoppgavestyring.uthenting.Oppgave? {
+    private fun hentOppgaveForEksternId(eksternId: String): no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.Oppgave? {
         return transactionalManager.transaction { tx ->
             oppgaveRepository.hentNyesteOppgaveForEksternIdHvisFinnes(tx, "K9", eksternId)
         }

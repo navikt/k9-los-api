@@ -8,13 +8,13 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.saksbehandlin
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.saksbehandling.SakAvstemmer
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.saksbehandling.systemklient.SakAvstemmingsklient
 import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
-import no.nav.k9.los.nyoppgavestyring.uthenting.query.OppgaveQueryService
-import no.nav.k9.los.nyoppgavestyring.uthenting.query.QueryRequest
-import no.nav.k9.los.nyoppgavestyring.uthenting.query.dto.query.FeltverdiOppgavefilter
-import no.nav.k9.los.nyoppgavestyring.uthenting.query.dto.query.OppgaveQuery
-import no.nav.k9.los.nyoppgavestyring.uthenting.query.mapping.EksternFeltverdiOperator
-import no.nav.k9.los.nyoppgavestyring.uthenting.Oppgave
+import no.nav.k9.los.nyoppgavestyring.oppgavemottak.Oppgavestatus
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.OppgaveQueryService
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.QueryRequest
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.dto.query.FeltverdiOppgavefilter
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.dto.query.OppgaveQuery
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.mapping.EksternFeltverdiOperator
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.Oppgave
 
 class AvstemmingsTjeneste(
     private val oppgaveQueryService: OppgaveQueryService,

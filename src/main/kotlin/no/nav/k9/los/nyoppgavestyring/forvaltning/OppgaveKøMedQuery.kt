@@ -1,5 +1,5 @@
 package no.nav.k9.los.nyoppgavestyring.forvaltning
 
-import no.nav.k9.los.nyoppgavestyring.uthenting.query.dto.query.OppgaveQuery
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.dto.query.OppgaveQuery
 
 data class OppgaveKøMedQuery(val id: Long, val tittel: String, val oppgaveQuery: OppgaveQuery)

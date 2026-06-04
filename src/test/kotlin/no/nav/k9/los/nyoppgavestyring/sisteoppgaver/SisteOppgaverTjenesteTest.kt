@@ -21,9 +21,9 @@ import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.PersonPdl
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.PersonPdlResponse
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
-import no.nav.k9.los.nyoppgavestyring.uthenting.Oppgave
-import no.nav.k9.los.nyoppgavestyring.uthenting.OppgaveNøkkelDto
-import no.nav.k9.los.nyoppgavestyring.uthenting.OppgaveRepository
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.Oppgave
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.OppgaveNøkkelDto
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.OppgaveRepository
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.koin.test.get

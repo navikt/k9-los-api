@@ -1,9 +1,7 @@
 package no.nav.k9.los.nyoppgavestyring.uttrekk
 
-import no.nav.k9.los.nyoppgavestyring.uthenting.query.OppgaveQueryService
-import no.nav.k9.los.nyoppgavestyring.uthenting.query.QueryRequest
-import no.nav.k9.los.nyoppgavestyring.uthenting.query.dto.query.Aggregeringsfunksjon
-import no.nav.k9.los.nyoppgavestyring.uthenting.query.dto.query.AggregertSelectFelt
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.OppgaveQueryService
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.QueryRequest
 import org.slf4j.LoggerFactory
 import kotlin.time.measureTime
 

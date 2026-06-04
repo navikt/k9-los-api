@@ -9,8 +9,8 @@ import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.IPdlService
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.fnr
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.navn
-import no.nav.k9.los.nyoppgavestyring.uthenting.OppgaveNøkkelDto
-import no.nav.k9.los.nyoppgavestyring.uthenting.OppgaveRepository
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.OppgaveNøkkelDto
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.OppgaveRepository
 import org.slf4j.LoggerFactory
 import kotlin.time.Duration.Companion.seconds
 

@@ -7,8 +7,8 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.E
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.HistorikkvaskBestilling
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.DB_AWARE_PARALLELISM
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
-import no.nav.k9.los.nyoppgavestyring.uthenting.OppgaveNøkkelDto
+import no.nav.k9.los.nyoppgavestyring.oppgavemottak.OppgaveV3Tjeneste
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.OppgaveNøkkelDto
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import kotlin.time.measureTime

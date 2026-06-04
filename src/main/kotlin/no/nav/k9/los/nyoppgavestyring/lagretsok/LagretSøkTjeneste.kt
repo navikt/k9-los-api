@@ -1,7 +1,7 @@
 package no.nav.k9.los.nyoppgavestyring.lagretsok
 
-import no.nav.k9.los.nyoppgavestyring.uthenting.query.OppgaveQueryService
-import no.nav.k9.los.nyoppgavestyring.uthenting.query.QueryRequest
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.OppgaveQueryService
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.QueryRequest
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
 
 class LagretSøkTjeneste(

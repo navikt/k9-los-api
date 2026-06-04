@@ -3,7 +3,6 @@ package no.nav.k9.los.nyoppgavestyring.reservasjon
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.IPdlService
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
-import no.nav.k9.los.nyoppgavestyring.uthenting.GenerellOppgaveV3Dto
 
 class ReservasjonV3DtoBuilder(
     private val pdlService: IPdlService,

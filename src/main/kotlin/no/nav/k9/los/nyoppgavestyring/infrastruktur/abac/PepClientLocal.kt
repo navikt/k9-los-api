@@ -1,7 +1,7 @@
 package no.nav.k9.los.nyoppgavestyring.infrastruktur.abac
 
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.Saksbehandler
-import no.nav.k9.los.nyoppgavestyring.uthenting.Oppgave
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.Oppgave
 import no.nav.sif.abac.kontrakt.abac.Diskresjonskode
 import java.util.*
 

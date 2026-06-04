@@ -13,19 +13,19 @@ import no.nav.k9.los.Configuration
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetillos.KlageEventTilOppgaveMapper
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.nyoppgavestyring.kodeverk.*
-import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.*
-import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeTjeneste
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetyperDto
+import no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.feltdefinisjon.*
+import no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.omraade.OmrådeRepository
+import no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.oppgavetype.OppgavetypeTjeneste
+import no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.oppgavetype.OppgavetyperDto
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon as KlageAksjonspunktDefinisjon
 import no.nav.k9.kodeverk.api.Kodeverdi as KodeverdiK9Sak
 
 class OmrådeSetup(
-    private val områdeRepository: OmrådeRepository,
-    private val feltdefinisjonTjeneste: FeltdefinisjonTjeneste,
-    private val oppgavetypeTjeneste: OppgavetypeTjeneste,
+    private val områdeRepository: no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.omraade.OmrådeRepository,
+    private val feltdefinisjonTjeneste: no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.feltdefinisjon.FeltdefinisjonTjeneste,
+    private val oppgavetypeTjeneste: no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.oppgavetype.OppgavetypeTjeneste,
     private val config: Configuration,
 ) {
     private val log: Logger = LoggerFactory.getLogger(OmrådeSetup::class.java)

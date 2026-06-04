@@ -1,0 +1,151 @@
+package no.nav.k9.los.nyoppgavestyring.oppgaveuthenting
+
+import kotliquery.Row
+import kotliquery.TransactionalSession
+import kotliquery.queryOf
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.util.InClauseHjelper
+import no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.oppgavetype.OppgavetypeRepository
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.db.OppgaveV3Id
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+import java.time.LocalDateTime
+
+class OppgaveRepository(
+    private val oppgavetypeRepository: OppgavetypeRepository
+) {
+    private val log: Logger = LoggerFactory.getLogger("OppgaveRepository")
+
+    fun hentOppgaveForEksternIdOgOppgavetype(
+        tx: TransactionalSession,
+        oppgaveEksternId: String,
+        oppgavetypeEksternId: String,
+        now: LocalDateTime = LocalDateTime.now()
+    ): Oppgave {
+        return tx.run(
+            queryOf(
+                """
+                        select * 
+                        from oppgave_v3 ov
+                        inner join oppgavetype ot on ov.oppgavetype_id = ot.id and ot.ekstern_id = :oppgavetypeEksternId
+                        where ov.ekstern_id = :eksternId and ov.aktiv = true
+                    """.trimIndent(),
+                mapOf(
+                    "eksternId" to oppgaveEksternId,
+                    "oppgavetypeEksternId" to oppgavetypeEksternId
+                )
+            ).map { mapOppgave(it, now, tx) }.asSingle) ?: throw IllegalStateException("Fant ikke oppgave med eksternId $oppgaveEksternId og oppgavetype $oppgavetypeEksternId")
+    }
+
+    fun hentNyesteOppgaveForEksternId(tx: TransactionalSession, kildeområde: String, eksternId: String, now: LocalDateTime = LocalDateTime.now()): Oppgave {
+        return hentNyesteOppgaveForEksternIdHvisFinnes(tx, kildeområde, eksternId, now) ?: throw IllegalStateException("Fant ikke oppgave med kilde $kildeområde og eksternId $eksternId")
+    }
+
+    fun hentNyesteOppgaveForEksternIdHvisFinnes(tx: TransactionalSession, kildeområde: String, eksternId: String, now: LocalDateTime = LocalDateTime.now()): Oppgave? {
+        val queryString = """
+                select * 
+                from oppgave_v3 ov
+                where ov.kildeomrade = :kildeomrade 
+                 AND ov.ekstern_id = :eksternId 
+                and ov.aktiv = true
+            """.trimIndent()
+
+        val oppgave = tx.run(
+            queryOf(
+                queryString,
+                mapOf(
+                    "kildeomrade" to kildeområde,
+                    "eksternId" to eksternId
+                )
+            ).map { row -> mapOppgave(row, now, tx) }.asSingle
+        )
+        return oppgave
+    }
+
+    fun hentAlleÅpneOppgaverForReservasjonsnøkkel(tx: TransactionalSession, reservasjonsnøkkel: String, now: LocalDateTime = LocalDateTime.now()) : List<Oppgave> {
+        return hentAlleÅpneOppgaverForReservasjonsnøkkel(tx, listOf(reservasjonsnøkkel), now)
+    }
+
+    fun hentAlleÅpneOppgaverForReservasjonsnøkkel(tx: TransactionalSession, reservasjonsnøkler: List<String>, now: LocalDateTime = LocalDateTime.now()) : List<Oppgave> {
+        val queryString = """
+                select *
+                from oppgave_v3 ov 
+                where reservasjonsnokkel in (${InClauseHjelper.tilParameternavn(reservasjonsnøkler, "n")})
+                and aktiv = true
+                and status in ('VENTER', 'AAPEN', 'UAVKLART')
+            """.trimIndent()
+
+        val oppgaver = tx.run(
+            queryOf(
+                queryString,
+                InClauseHjelper.parameternavnTilVerdierMap(reservasjonsnøkler, "n")
+            ).map { row ->
+                mapOppgave(row, now, tx)
+            }.asList
+        )
+
+        return oppgaver
+    }
+
+    fun hentOppgaveForId(tx: TransactionalSession, id: OppgaveV3Id, now: LocalDateTime = LocalDateTime.now()): Oppgave {
+        val oppgave = tx.run(
+            queryOf(
+                """
+                select * 
+                from oppgave_v3 ov
+                where ov.id = :id
+            """.trimIndent(),
+                mapOf("id" to id.id)
+            ).map { row ->
+                mapOppgave(row, now, tx)
+            }.asSingle
+        ) ?: throw IllegalStateException("Fant ikke oppgave med id $id")
+
+        return oppgave
+    }
+
+    private fun mapOppgave(
+        row: Row,
+        now: LocalDateTime,
+        tx: TransactionalSession
+    ): Oppgave {
+        val kildeområde = row.string("kildeomrade")
+        val oppgaveTypeId = row.long("oppgavetype_id")
+        val oppgavetype = oppgavetypeRepository.hentOppgavetype(kildeområde, oppgaveTypeId, tx)
+        val oppgavefelter = hentOppgavefelter(tx, row.long("id"))
+        return Oppgave(
+            eksternId = row.string("ekstern_id"),
+            eksternVersjon = row.string("ekstern_versjon"),
+            oppgavetype = oppgavetype,
+            status = row.string("status"),
+            endretTidspunkt = row.localDateTime("endret_tidspunkt"),
+            felter = oppgavefelter,
+            reservasjonsnøkkel = row.string("reservasjonsnokkel"),
+        ).fyllDefaultverdier().utledTransienteFelter(now)
+    }
+
+    private fun hentOppgavefelter(tx: TransactionalSession, oppgaveId: Long): List<Oppgavefelt> {
+        return tx.run(
+            queryOf(
+                """
+                select fd.ekstern_id as ekstern_id, o.ekstern_id as omrade, fd.liste_type, f.pakrevd, ov.verdi, ov.verdi_bigint
+                from oppgavefelt_verdi ov 
+                inner join oppgavefelt f on ov.oppgavefelt_id = f.id 
+                inner join feltdefinisjon fd on f.feltdefinisjon_id = fd.id 
+                inner join omrade o on fd.omrade_id = o.id 
+                where ov.oppgave_id = :oppgaveId
+                order by fd.ekstern_id
+                """.trimIndent(),
+                mapOf("oppgaveId" to oppgaveId)
+            ).map { row ->
+                Oppgavefelt(
+                    eksternId = row.string("ekstern_id"),
+                    område = row.string("omrade"),
+                    listetype = row.boolean("liste_type"),
+                    påkrevd = row.boolean("pakrevd"),
+                    verdi = row.string("verdi"),
+                    verdiBigInt = row.longOrNull("verdi_bigint"),
+                )
+            }.asList
+        )
+    }
+}

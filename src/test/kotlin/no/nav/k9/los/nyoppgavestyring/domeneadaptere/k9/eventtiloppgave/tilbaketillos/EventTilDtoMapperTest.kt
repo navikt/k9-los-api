@@ -6,7 +6,7 @@ import assertk.assertions.containsOnly
 import assertk.assertions.matchesPredicate
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.K9TilbakeEventDtoBuilder
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.AksjonspunktDefinisjonK9Tilbake
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdiDto
+import no.nav.k9.los.nyoppgavestyring.oppgavemottak.OppgaveFeltverdiDto
 import org.junit.jupiter.api.Test
 
 private fun verdierFor(feltverdier: List<OppgaveFeltverdiDto>, nøkkel: String): List<String?> =

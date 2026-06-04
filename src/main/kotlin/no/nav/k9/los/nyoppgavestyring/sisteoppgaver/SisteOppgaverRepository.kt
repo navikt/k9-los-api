@@ -2,8 +2,8 @@ package no.nav.k9.los.nyoppgavestyring.sisteoppgaver
 
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
-import no.nav.k9.los.nyoppgavestyring.uthenting.query.db.EksternOppgaveId
-import no.nav.k9.los.nyoppgavestyring.uthenting.OppgaveNøkkelDto
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.db.EksternOppgaveId
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.OppgaveNøkkelDto
 import javax.sql.DataSource
 
 class SisteOppgaverRepository(

@@ -7,7 +7,7 @@ import kotlinx.coroutines.*
 import kotliquery.TransactionalSession
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
+import no.nav.k9.los.nyoppgavestyring.oppgavemottak.Oppgavestatus
 import no.nav.sif.abac.kontrakt.abac.Diskresjonskode
 import java.time.Duration
 import java.time.LocalDateTime

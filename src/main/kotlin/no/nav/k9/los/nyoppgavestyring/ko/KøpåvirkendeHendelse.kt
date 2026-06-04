@@ -1,7 +1,7 @@
 package no.nav.k9.los.nyoppgavestyring.ko
 
 import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
-import no.nav.k9.los.nyoppgavestyring.uthenting.query.db.EksternOppgaveId
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.db.EksternOppgaveId
 
 interface KøpåvirkendeHendelse
 data class Kødefinisjon(val køId : Long) : KøpåvirkendeHendelse

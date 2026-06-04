@@ -1,9 +1,9 @@
-package no.nav.k9.los.nyoppgavestyring.uthenting.query.db
+package no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.db
 
 import assertk.assertThat
 import assertk.assertions.containsAll
-import no.nav.k9.los.nyoppgavestyring.uthenting.query.mapping.EksternFeltverdiOperator
-import no.nav.k9.los.nyoppgavestyring.uthenting.query.mapping.FeltverdiOperator
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.mapping.EksternFeltverdiOperator
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.mapping.FeltverdiOperator
 import org.junit.jupiter.api.Test
 
 class EksternFeltverdiOperatorTest {

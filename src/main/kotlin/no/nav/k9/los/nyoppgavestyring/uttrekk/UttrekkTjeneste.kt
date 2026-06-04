@@ -2,7 +2,7 @@ package no.nav.k9.los.nyoppgavestyring.uttrekk
 
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.nyoppgavestyring.lagretsok.LagretSøkRepository
-import no.nav.k9.los.nyoppgavestyring.uthenting.query.dto.resultat.OppgaveQueryRad
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.dto.resultat.OppgaveQueryRad
 
 class UttrekkTjeneste(
     private val uttrekkRepository: UttrekkRepository,

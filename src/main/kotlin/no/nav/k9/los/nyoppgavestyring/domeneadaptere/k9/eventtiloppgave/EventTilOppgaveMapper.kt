@@ -5,8 +5,8 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetil
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.punsjtillos.PunsjEventTilOppgaveMapper
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.SakEventTilOppgaveMapper
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.tilbaketillos.TilbakeEventTilOppgaveMapper
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.NyOppgaveVersjonInnsending
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
+import no.nav.k9.los.nyoppgavestyring.oppgavemottak.NyOppgaveVersjonInnsending
+import no.nav.k9.los.nyoppgavestyring.oppgavemottak.OppgaveV3
 
 class EventTilOppgaveMapper(
     private val klageEventTilOppgaveMapper: KlageEventTilOppgaveMapper,

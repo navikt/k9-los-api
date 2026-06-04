@@ -1,8 +1,8 @@
 package no.nav.k9.los.nyoppgavestyring.feltutlederforlagring
 
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdi
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
+import no.nav.k9.los.nyoppgavestyring.oppgavemottak.OppgaveFeltverdi
+import no.nav.k9.los.nyoppgavestyring.oppgavemottak.OppgaveV3
+import no.nav.k9.los.nyoppgavestyring.oppgavemottak.Oppgavestatus
 
 object FerdigstiltTidspunkt : Feltutleder {
     override fun utled(innkommendeOppgave: OppgaveV3, aktivOppgaveVersjon: OppgaveV3?): OppgaveFeltverdi? {

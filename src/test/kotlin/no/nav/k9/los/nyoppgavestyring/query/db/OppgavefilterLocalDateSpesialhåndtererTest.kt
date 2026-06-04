@@ -1,16 +1,16 @@
-package no.nav.k9.los.nyoppgavestyring.uthenting.query.db
+package no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.db
 
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import no.nav.k9.los.nyoppgavestyring.FeltType
 import no.nav.k9.los.nyoppgavestyring.felter
-import no.nav.k9.los.nyoppgavestyring.uthenting.query.dto.query.CombineOppgavefilter
-import no.nav.k9.los.nyoppgavestyring.uthenting.query.dto.query.FeltverdiOppgavefilter
-import no.nav.k9.los.nyoppgavestyring.uthenting.query.hentFørsteMedOperator
-import no.nav.k9.los.nyoppgavestyring.uthenting.query.isEqualToDate
-import no.nav.k9.los.nyoppgavestyring.uthenting.query.mapping.CombineOperator
-import no.nav.k9.los.nyoppgavestyring.uthenting.query.mapping.EksternFeltverdiOperator
-import no.nav.k9.los.nyoppgavestyring.uthenting.query.mapping.OppgavefilterRens
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.dto.query.CombineOppgavefilter
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.dto.query.FeltverdiOppgavefilter
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.hentFørsteMedOperator
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.isEqualToDate
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.mapping.CombineOperator
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.mapping.EksternFeltverdiOperator
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.mapping.OppgavefilterRens
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 

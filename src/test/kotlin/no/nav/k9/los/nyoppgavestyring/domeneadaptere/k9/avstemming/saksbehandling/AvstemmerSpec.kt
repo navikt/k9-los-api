@@ -5,11 +5,11 @@ import io.kotest.matchers.shouldBe
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingStatus
 import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
 import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
-import no.nav.k9.los.nyoppgavestyring.mottak.omraade.Område
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.Oppgavetype
-import no.nav.k9.los.nyoppgavestyring.uthenting.Oppgave
-import no.nav.k9.los.nyoppgavestyring.uthenting.Oppgavefelt
+import no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.omraade.Område
+import no.nav.k9.los.nyoppgavestyring.oppgavemottak.Oppgavestatus
+import no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.oppgavetype.Oppgavetype
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.Oppgave
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.Oppgavefelt
 import java.time.LocalDateTime
 import java.util.*
 

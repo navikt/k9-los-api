@@ -1,4 +1,4 @@
-package no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon
+package no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.feltdefinisjon
 
 import assertk.assertThat
 import assertk.assertions.isEqualTo

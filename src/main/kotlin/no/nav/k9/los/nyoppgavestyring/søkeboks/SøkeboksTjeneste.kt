@@ -5,16 +5,16 @@ import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.IPdlService
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.navn
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingStatus
 import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
-import no.nav.k9.los.nyoppgavestyring.uthenting.query.OppgaveQueryService
-import no.nav.k9.los.nyoppgavestyring.uthenting.query.QueryRequest
-import no.nav.k9.los.nyoppgavestyring.uthenting.query.dto.query.EnkelOrderFelt
-import no.nav.k9.los.nyoppgavestyring.uthenting.query.dto.query.FeltverdiOppgavefilter
-import no.nav.k9.los.nyoppgavestyring.uthenting.query.dto.query.OppgaveQuery
-import no.nav.k9.los.nyoppgavestyring.uthenting.query.mapping.EksternFeltverdiOperator
+import no.nav.k9.los.nyoppgavestyring.oppgavemottak.Oppgavestatus
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.OppgaveQueryService
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.QueryRequest
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.dto.query.EnkelOrderFelt
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.dto.query.FeltverdiOppgavefilter
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.dto.query.OppgaveQuery
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.mapping.EksternFeltverdiOperator
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
-import no.nav.k9.los.nyoppgavestyring.uthenting.Oppgave
-import no.nav.k9.los.nyoppgavestyring.uthenting.OppgaveNøkkelDto
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.Oppgave
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.OppgaveNøkkelDto
 import java.time.LocalDateTime
 
 class SøkeboksTjeneste(

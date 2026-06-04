@@ -1,4 +1,4 @@
-package no.nav.k9.los.nyoppgavestyring.uthenting.query.mapping
+package no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.mapping
 
 import assertk.assertThat
 import assertk.assertions.contains
@@ -6,11 +6,11 @@ import assertk.assertions.containsOnly
 import assertk.assertions.hasSize
 import no.nav.k9.los.nyoppgavestyring.FeltType
 import no.nav.k9.los.nyoppgavestyring.felter
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
-import no.nav.k9.los.nyoppgavestyring.uthenting.query.QueryRequest
-import no.nav.k9.los.nyoppgavestyring.uthenting.query.dto.query.CombineOppgavefilter
-import no.nav.k9.los.nyoppgavestyring.uthenting.query.dto.query.FeltverdiOppgavefilter
-import no.nav.k9.los.nyoppgavestyring.uthenting.query.dto.query.OppgaveQuery
+import no.nav.k9.los.nyoppgavestyring.oppgavemottak.Oppgavestatus
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.QueryRequest
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.dto.query.CombineOppgavefilter
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.dto.query.FeltverdiOppgavefilter
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.dto.query.OppgaveQuery
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime

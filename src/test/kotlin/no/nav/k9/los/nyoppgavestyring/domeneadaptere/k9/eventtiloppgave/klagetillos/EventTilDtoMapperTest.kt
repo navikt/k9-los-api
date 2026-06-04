@@ -14,7 +14,7 @@ import no.nav.k9.klage.kontrakt.behandling.oppgavetillos.Aksjonspunkttilstand
 import no.nav.k9.klage.typer.AktørId
 import no.nav.k9.klage.typer.Periode
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.klage.K9KlageEventDto
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdiDto
+import no.nav.k9.los.nyoppgavestyring.oppgavemottak.OppgaveFeltverdiDto
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime

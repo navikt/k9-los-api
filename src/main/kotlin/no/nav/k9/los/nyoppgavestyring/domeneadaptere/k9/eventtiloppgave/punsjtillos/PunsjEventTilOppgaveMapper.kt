@@ -6,7 +6,7 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.K9Puns
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
 import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
 import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.*
+import no.nav.k9.los.nyoppgavestyring.oppgavemottak.*
 
 class PunsjEventTilOppgaveMapper {
     fun lagOppgaveDto(eventLagret: EventLagret.K9Punsj, forrigeOppgave: OppgaveV3?): NyOppgaveVersjonInnsending {

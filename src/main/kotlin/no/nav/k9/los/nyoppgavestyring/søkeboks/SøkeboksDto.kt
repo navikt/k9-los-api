@@ -1,7 +1,7 @@
 package no.nav.k9.los.nyoppgavestyring.søkeboks
 
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.*
-import no.nav.k9.los.nyoppgavestyring.uthenting.OppgaveNøkkelDto
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.OppgaveNøkkelDto
 import java.time.LocalDate
 import java.time.LocalDateTime
 

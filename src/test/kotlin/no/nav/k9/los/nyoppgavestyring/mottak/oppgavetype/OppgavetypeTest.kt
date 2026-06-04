@@ -1,11 +1,11 @@
-package no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype
+package no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.oppgavetype
 
 import assertk.assertThat
 import assertk.assertions.hasSize
 import assertk.assertions.isEmpty
-import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Feltdefinisjon
-import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Synlighet
-import no.nav.k9.los.nyoppgavestyring.mottak.omraade.Område
+import no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.feltdefinisjon.Feltdefinisjon
+import no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.feltdefinisjon.Synlighet
+import no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.omraade.Område
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import kotlin.test.assertEquals

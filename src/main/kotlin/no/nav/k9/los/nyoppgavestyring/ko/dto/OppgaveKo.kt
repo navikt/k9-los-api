@@ -1,6 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.ko.dto
 
-import no.nav.k9.los.nyoppgavestyring.uthenting.query.dto.query.OppgaveQuery
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.dto.query.OppgaveQuery
 import java.time.LocalDateTime
 
 data class OppgaveKo(

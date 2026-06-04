@@ -1,8 +1,8 @@
 package no.nav.k9.los.nyoppgavestyring.uttrekk
 
 import no.nav.k9.los.nyoppgavestyring.lagretsok.LagretSøk
-import no.nav.k9.los.nyoppgavestyring.uthenting.query.Avgrensning
-import no.nav.k9.los.nyoppgavestyring.uthenting.query.dto.query.OppgaveQuery
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.Avgrensning
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.dto.query.OppgaveQuery
 import java.time.LocalDateTime
 
 enum class UttrekkStatus {

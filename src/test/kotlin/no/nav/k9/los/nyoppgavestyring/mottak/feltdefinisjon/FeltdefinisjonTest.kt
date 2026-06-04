@@ -1,9 +1,9 @@
-package no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon
+package no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.feltdefinisjon
 
 import assertk.assertThat
 import assertk.assertions.hasSize
 import assertk.assertions.isEmpty
-import no.nav.k9.los.nyoppgavestyring.mottak.omraade.Område
+import no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.omraade.Område
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 

@@ -59,12 +59,12 @@ import no.nav.k9.los.nyoppgavestyring.innloggetbruker.InnloggetBrukerApi
 import no.nav.k9.los.nyoppgavestyring.ko.KøpåvirkendeHendelse
 import no.nav.k9.los.nyoppgavestyring.ko.OppgaveKoApis
 import no.nav.k9.los.nyoppgavestyring.lagretsok.LagretSøkApi
-import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonApi
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Api
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeApi
+import no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.feltdefinisjon.FeltdefinisjonApi
+import no.nav.k9.los.nyoppgavestyring.oppgavemottak.OppgaveV3Api
+import no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.oppgavetype.OppgavetypeApi
 import no.nav.k9.los.nyoppgavestyring.nøkkeltall.saksbehandler.nyeogferdigstilte.NyeOgFerdigstilteApi
 import no.nav.k9.los.nyoppgavestyring.nøkkeltall.saksbehandler.nyeogferdigstilte.NyeOgFerdigstilteService
-import no.nav.k9.los.nyoppgavestyring.uthenting.query.OppgaveQueryApis
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.OppgaveQueryApis
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonApis
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerAdminApis
 import no.nav.k9.los.nyoppgavestyring.sisteoppgaver.SisteOppgaverApi

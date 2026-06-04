@@ -1,12 +1,12 @@
-package no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon
+package no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.feltdefinisjon
 
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import junit.framework.TestCase.assertNotNull
 import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
-import no.nav.k9.los.nyoppgavestyring.mottak.omraade.Område
-import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
+import no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.omraade.Område
+import no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.omraade.OmrådeRepository
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.koin.test.get

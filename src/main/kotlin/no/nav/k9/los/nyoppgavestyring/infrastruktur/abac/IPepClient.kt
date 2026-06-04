@@ -33,13 +33,13 @@ interface IPepClient {
     suspend fun erAktørKode7EllerEgenAnsatt(aktørid: String): Boolean
 
     suspend fun harTilgangTilOppgaveV3(
-        oppgave: no.nav.k9.los.nyoppgavestyring.uthenting.Oppgave,
+        oppgave: no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.Oppgave,
         action: Action = Action.read,
         grupperForSaksbehandler: Set<UUID>? = null
     ) : Boolean
 
     fun harTilgangTilOppgaveV3(
-        oppgave: no.nav.k9.los.nyoppgavestyring.uthenting.Oppgave,
+        oppgave: no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.Oppgave,
         saksbehandler: Saksbehandler,
         action: Action
     ) : Boolean

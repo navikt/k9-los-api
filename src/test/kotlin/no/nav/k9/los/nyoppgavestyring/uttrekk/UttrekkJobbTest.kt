@@ -2,16 +2,14 @@ package no.nav.k9.los.nyoppgavestyring.uttrekk
 
 import assertk.assertThat
 import assertk.assertions.isEqualTo
-import assertk.assertions.isNotNull
 import assertk.assertions.isNull
-import assertk.assertions.startsWith
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.nyoppgavestyring.lagretsok.LagretSøk
 import no.nav.k9.los.nyoppgavestyring.lagretsok.LagretSøkRepository
 import no.nav.k9.los.nyoppgavestyring.lagretsok.NyttLagretSøkRequest
-import no.nav.k9.los.nyoppgavestyring.uthenting.query.dto.query.EnkelSelectFelt
-import no.nav.k9.los.nyoppgavestyring.uthenting.query.dto.query.OppgaveQuery
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.dto.query.EnkelSelectFelt
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.dto.query.OppgaveQuery
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
 import org.junit.jupiter.api.BeforeEach

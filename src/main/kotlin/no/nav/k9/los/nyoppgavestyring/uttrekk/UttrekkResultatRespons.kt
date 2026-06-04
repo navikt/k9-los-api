@@ -1,6 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.uttrekk
 
-import no.nav.k9.los.nyoppgavestyring.uthenting.query.dto.query.SelectFelt
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.dto.query.SelectFelt
 
 data class UttrekkResultatRespons(
     val kolonner: List<SelectFelt>,

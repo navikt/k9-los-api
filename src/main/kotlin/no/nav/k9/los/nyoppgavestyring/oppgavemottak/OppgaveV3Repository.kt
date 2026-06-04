@@ -1,0 +1,568 @@
+package no.nav.k9.los.nyoppgavestyring.oppgavemottak
+
+import kotliquery.TransactionalSession
+import kotliquery.queryOf
+import kotliquery.sessionOf
+import kotliquery.using
+import no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.omraade.Område
+import no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.oppgavetype.Oppgavetype
+import no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.oppgavetype.OppgavetypeRepository
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.db.OppgaveId
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.db.OppgaveV3Id
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.OppgaveNøkkelDto
+import org.jetbrains.annotations.VisibleForTesting
+import org.slf4j.LoggerFactory
+import java.time.LocalDateTime
+import javax.sql.DataSource
+
+class OppgaveV3Repository(
+    private val dataSource: DataSource,
+    private val oppgavetypeRepository: OppgavetypeRepository,
+) {
+    private val partisjonertOppgaveRepository = PartisjonertOppgaveRepository(oppgavetypeRepository)
+    private val log = LoggerFactory.getLogger(OppgaveV3Repository::class.java)
+
+    fun nyOppgaveversjon(oppgave: OppgaveV3, tx: TransactionalSession) {
+        val (eksisterendeId, eksisterendeOppgavestatus, eksisterendeVersjon) = hentOppgaveIdStatusOgHøyesteInternversjon(
+            tx,
+            oppgave.eksternId,
+            oppgave.oppgavetype.eksternId,
+            oppgave.oppgavetype.område.eksternId
+        )
+
+        eksisterendeId?.let {
+            deaktiverVersjon(eksisterendeId, oppgave.endretTidspunkt, tx)
+            deaktiverOppgavefelter(eksisterendeId, tx)
+        }
+
+        val nyVersjon = eksisterendeVersjon?.plus(1) ?: 0
+
+        val oppgaveId = nyOppgaveversjon(oppgave, nyVersjon, tx)
+        lagreFeltverdier(oppgaveId, oppgave, tx)
+    }
+
+    fun hentOppgaveversjon(
+        område: Område,
+        oppgavetype: Oppgavetype,
+        eksternId: String,
+        eksternVersjon: String,
+        tx: TransactionalSession
+    ): OppgaveV3 {
+        return tx.run(
+            queryOf(
+                """
+                    select o.*
+                    from oppgave_v3 o
+                        inner join oppgavetype ot on o.oppgavetype_id = ot.id
+                        inner join omrade omr on ot.omrade_id = omr.id
+                    where o.ekstern_id = :oppgave_ekstern_id
+                    and o.ekstern_versjon = :oppgave_ekstern_versjon 
+                    and omr.ekstern_id = :omrade_ekstern_id
+                    and ot.ekstern_id = :oppgavetype_ekstern_id
+                """.trimIndent(),
+                mapOf(
+                    "oppgave_ekstern_id" to eksternId,
+                    "oppgave_ekstern_versjon" to eksternVersjon,
+                    "omrade_ekstern_id" to område.eksternId,
+                    "oppgavetype_ekstern_id" to oppgavetype.eksternId,
+                )
+            ).map { row ->
+                OppgaveV3(
+                    id = OppgaveV3Id(row.long("id")),
+                    eksternId = row.string("ekstern_id"),
+                    eksternVersjon = row.string("ekstern_versjon"),
+                    oppgavetype = oppgavetypeRepository.hentOppgavetype(
+                        område = område.eksternId,
+                        row.long("oppgavetype_id"),
+                        tx
+                    ),
+                    status = Oppgavestatus.valueOf(row.string("status")),
+                    endretTidspunkt = row.localDateTime("endret_tidspunkt"),
+                    kildeområde = row.string("kildeomrade"),
+                    reservasjonsnøkkel = row.stringOrNull("reservasjonsnokkel") ?: "mangler_historikkvask",
+                    aktiv = row.boolean("aktiv"),
+                    felter = hentFeltverdier(
+                        OppgaveV3Id(row.long("id")),
+                        oppgavetypeRepository.hentOppgavetype(
+                            område = område.eksternId,
+                            row.long("oppgavetype_id"),
+                            tx
+                        ),
+                        tx
+                    )
+                )
+            }.asSingle
+        )
+            ?: throw IllegalArgumentException("Fant ikke oppgave med ekstern_id: ${eksternId}, ekstern_versjon: ${eksternVersjon} og område: ${område.eksternId}")
+    }
+
+    fun hentOppgaveversjon(
+        område: Område,
+        oppgavetype: Oppgavetype,
+        eksternId: String,
+        internVersjon: Int,
+        tx: TransactionalSession
+    ): OppgaveV3? {
+        return tx.run(
+            queryOf(
+                """
+                    select o.*
+                    from oppgave_v3 o
+                        inner join oppgavetype ot on o.oppgavetype_id = ot.id
+                        inner join omrade omr on ot.omrade_id = omr.id
+                    where omr.ekstern_id = :omrade_ekstern_id
+                    and ot.ekstern_id = :oppgavetype_ekstern_id
+                    and o.ekstern_id = :oppgave_ekstern_id
+                    and o.versjon = :intern_versjon
+                """.trimIndent(),
+                mapOf(
+                    "omrade_ekstern_id" to område.eksternId,
+                    "oppgavetype_ekstern_id" to oppgavetype.eksternId,
+                    "oppgave_ekstern_id" to eksternId,
+                    "intern_versjon" to internVersjon
+                )
+            ).map { row ->
+                OppgaveV3(
+                    id = OppgaveV3Id(row.long("id")),
+                    eksternId = row.string("ekstern_id"),
+                    eksternVersjon = row.string("ekstern_versjon"),
+                    oppgavetype = oppgavetype,
+                    status = Oppgavestatus.valueOf(row.string("status")),
+                    endretTidspunkt = row.localDateTime("endret_tidspunkt"),
+                    kildeområde = row.string("kildeomrade"),
+                    reservasjonsnøkkel = row.stringOrNull("reservasjonsnokkel") ?: "mangler_historikkvask",
+                    aktiv = row.boolean("aktiv"),
+                    felter = hentFeltverdier(OppgaveV3Id(row.long("id")), oppgavetype, tx)
+                )
+            }.asSingle
+        )
+    }
+
+    fun hentOppgaveversjonenFør(
+        område: Område,
+        oppgavetype: Oppgavetype,
+        eksternId: String,
+        internVersjon: Int,
+        tx: TransactionalSession
+    ): OppgaveV3? {
+        return hentOppgaveversjon(område, oppgavetype, eksternId, internVersjon - 1, tx)
+    }
+
+    fun hentAktivOppgaveEksternversjon(
+        område: Område,
+        oppgavetype: Oppgavetype,
+        oppgaveEksternId: String,
+        tx: TransactionalSession
+    ): String? {
+        return tx.run(
+            queryOf(
+                """
+                    select ekstern_versjon
+                    from oppgave_v3 o
+                        inner join oppgavetype ot on o.oppgavetype_id = ot.id and ot.ekstern_id = :oppgavetype_ekstern_id
+                        inner join omrade omr on ot.omrade_id = omr.id and omr.ekstern_id = :omrade_ekstern_id
+                    where o.ekstern_id = :ekstern_id
+                    and aktiv = true
+                """.trimIndent(),
+                mapOf(
+                    "omrade_ekstern_id" to område.eksternId,
+                    "oppgavetype_ekstern_id" to oppgavetype.eksternId,
+                    "ekstern_id" to oppgaveEksternId
+                )
+            ).map { row ->
+                row.string("ekstern_versjon")
+            }.asSingle
+        )
+    }
+
+    fun hentAktivOppgave(eksternId: String, oppgavetype: Oppgavetype, tx: TransactionalSession): OppgaveV3? {
+        return tx.run(
+            queryOf(
+                """
+                    select * from oppgave_v3 where ekstern_id = :eksternId and aktiv = true
+                """.trimIndent(), mapOf("eksternId" to eksternId)
+            ).map { row ->
+                OppgaveV3(
+                    id = OppgaveV3Id(row.long("id")),
+                    eksternId = row.string("ekstern_id"),
+                    eksternVersjon = row.string("ekstern_versjon"),
+                    oppgavetype = oppgavetype,
+                    status = Oppgavestatus.valueOf(row.string("status")),
+                    endretTidspunkt = row.localDateTime("endret_tidspunkt"),
+                    kildeområde = oppgavetype.område.eksternId,
+                    reservasjonsnøkkel = row.stringOrNull("reservasjonsnokkel") ?: "mangler_historikkvask",
+                    aktiv = row.boolean("aktiv"),
+                    felter = hentFeltverdier(OppgaveV3Id(row.long("id")), oppgavetype, tx)
+                )
+            }.asSingle
+        )
+    }
+
+    fun hentEksternIdForOppgaverMedStatus(
+        oppgavetype: Oppgavetype,
+        område: Område,
+        oppgavestatus: Oppgavestatus,
+        tx: TransactionalSession
+    ): List<String> {
+        return tx.run(
+            queryOf(
+                """
+                    select ov.ekstern_id as ekstern_id
+                    from oppgave_v3 ov
+                        inner join oppgavetype ot on ov.oppgavetype_id = ot.id and ot.ekstern_id = :oppgavetype
+                        inner join omrade o on ot.omrade_id = o.id and o.ekstern_id = :omrade
+                    where ov.status = :oppgavestatus
+                    and ov.aktiv = true
+                """.trimIndent(),
+                mapOf(
+                    "oppgavetype" to oppgavetype.eksternId,
+                    "omrade" to område.eksternId,
+                    "oppgavestatus" to oppgavestatus.kode
+                )
+            ).map { row ->
+                row.string("ekstern_id")
+            }.asList
+        )
+    }
+
+    fun oppdaterReservasjonsnøkkelStatusOgEksternVersjon(
+        eksternId: String,
+        eksternVersjon: String,
+        status: Oppgavestatus,
+        internVersjon: Int,
+        reservasjonsnokkel: String,
+        tx: TransactionalSession
+    ) {
+        tx.run(
+            queryOf(
+                """
+                    update oppgave_v3 
+                    set reservasjonsnokkel = :reservasjonsnokkel, ekstern_versjon = :eksternVersjon, status = :status
+                    where ekstern_id = :eksternId 
+                    and versjon = :internVersjon
+                """.trimIndent(),
+                mapOf(
+                    "reservasjonsnokkel" to reservasjonsnokkel,
+                    "eksternVersjon" to eksternVersjon,
+                    "status" to status.kode,
+                    "eksternId" to eksternId,
+                    "internVersjon" to internVersjon
+                )
+            ).asUpdateAndReturnGeneratedKey
+        )
+    }
+
+    @VisibleForTesting
+    fun nyOppgaveversjon(oppgave: OppgaveV3, nyVersjon: Int, tx: TransactionalSession): OppgaveV3Id {
+        return OppgaveV3Id(
+            tx.updateAndReturnGeneratedKey(
+                queryOf(
+                    """
+                    insert into oppgave_v3(ekstern_id, ekstern_versjon, oppgavetype_id, status, versjon, aktiv, kildeomrade, endret_tidspunkt, reservasjonsnokkel, oppgavetype_ekstern_id, omrade_ekstern_id)
+                    values(:eksternId, :eksternVersjon, :oppgavetypeId, :status, :versjon, :aktiv, :kildeomrade, :endretTidspunkt, :reservasjonsnokkel, :oppgavetype_ekstern_id, :omrade_ekstern_id)
+                """.trimIndent(),
+                    mapOf(
+                        "eksternId" to oppgave.eksternId,
+                        "eksternVersjon" to oppgave.eksternVersjon,
+                        "oppgavetypeId" to oppgave.oppgavetype.id,
+                        "status" to oppgave.status.toString(),
+                        "endretTidspunkt" to oppgave.endretTidspunkt,
+                        "versjon" to nyVersjon,
+                        "aktiv" to true,
+                        "kildeomrade" to oppgave.kildeområde,
+                        "reservasjonsnokkel" to oppgave.reservasjonsnøkkel,
+                        "oppgavetype_ekstern_id" to oppgave.oppgavetype.eksternId,
+                        "omrade_ekstern_id" to oppgave.oppgavetype.område.eksternId
+                    )
+                )
+            )!!
+        )
+    }
+
+    private fun hentFeltverdier(
+        oppgaveId: OppgaveV3Id,
+        oppgavetype: Oppgavetype,
+        tx: TransactionalSession
+    ): List<OppgaveFeltverdi> {
+        return tx.run(
+            queryOf(
+                """
+                    select * from oppgavefelt_verdi where oppgave_id = :oppgaveId
+                """.trimIndent(),
+                mapOf("oppgaveId" to oppgaveId.id)
+            ).map { row ->
+                OppgaveFeltverdi(
+                    id = row.long("id"),
+                    oppgavefelt = oppgavetype.hentFeltById(row.long("oppgavefelt_id")),
+                    verdi = row.string("verdi"),
+                    verdiBigInt = row.longOrNull("verdi_bigint")
+                )
+            }.asList
+        )
+    }
+
+    @VisibleForTesting
+    fun lagreFeltverdier(
+        oppgaveId: OppgaveV3Id,
+        oppgave: OppgaveV3,
+        tx: TransactionalSession
+    ) {
+        tx.batchPreparedNamedStatement(
+            """
+            insert into oppgavefelt_verdi(oppgave_id, oppgavefelt_id, verdi, verdi_bigint, oppgavestatus, oppgavetype_ekstern_id, omrade_ekstern_id, feltdefinisjon_ekstern_id)
+                    VALUES (:oppgaveId, :oppgavefeltId, :verdi, :verdi_bigint, :oppgavestatus, :oppgavetype_ekstern_id, :omrade_ekstern_id, :feltdefinisjon_ekstern_id)
+        """.trimIndent(),
+            oppgave.felter.map { feltverdi ->
+                mapOf(
+                    "oppgaveId" to oppgaveId.id,
+                    "oppgavefeltId" to feltverdi.oppgavefelt.id,
+                    "verdi" to feltverdi.verdi,
+                    "verdi_bigint" to feltverdi.verdiBigInt,
+                    "oppgavestatus" to oppgave.status.kode,
+                    "oppgavetype_ekstern_id" to oppgave.oppgavetype.eksternId,
+                    "omrade_ekstern_id" to oppgave.oppgavetype.område.eksternId,
+                    "feltdefinisjon_ekstern_id" to feltverdi.oppgavefelt.feltDefinisjon.eksternId
+                )
+            }
+        )
+    }
+
+    fun lagreFeltverdierForDatavask( //TODO Rydde her, så man kan hente ekstern_ider fra oppgaven, etter historikkvask
+        oppgave: OppgaveV3,
+        internVersjon: Int,
+        tx: TransactionalSession
+    ) {
+        tx.batchPreparedNamedStatement(
+            """
+            INSERT INTO oppgavefelt_verdi(oppgave_id, oppgavefelt_id, verdi, verdi_bigint, oppgavestatus, oppgavetype_ekstern_id, omrade_ekstern_id, feltdefinisjon_ekstern_id)
+            VALUES (
+                (
+                    SELECT id 
+                    FROM oppgave_v3
+                    WHERE ekstern_id = :ekstern_id
+                    AND versjon = :intern_versjon
+                ),
+                :oppgavefelt_id,
+                :verdi,
+                :verdi_bigint,
+                :oppgavestatus,
+                :oppgavetype_ekstern_id,
+                :omrade_ekstern_id,
+                :feltdefinisjon_ekstern_id
+            )
+        """.trimIndent(),
+            oppgave.felter.map { feltverdi ->
+                mapOf(
+                    "ekstern_id" to oppgave.eksternId,
+                    "intern_versjon" to internVersjon,
+                    "oppgavefelt_id" to feltverdi.oppgavefelt.id,
+                    "verdi" to feltverdi.verdi,
+                    "verdi_bigint" to feltverdi.verdiBigInt,
+                    "oppgavestatus" to oppgave.status.kode,
+                    "oppgavetype_ekstern_id" to oppgave.oppgavetype.eksternId,
+                    "omrade_ekstern_id" to oppgave.oppgavetype.område.eksternId,
+                    "feltdefinisjon_ekstern_id" to feltverdi.oppgavefelt.feltDefinisjon.eksternId,
+                )
+            }
+        )
+    }
+
+    fun slettOppgave(oppgavenøkkel: OppgaveNøkkelDto, tx: TransactionalSession) {
+        tx.update(
+            queryOf(
+                """
+                delete 
+                from oppgavefelt_verdi 
+                where oppgavefelt_verdi.id in (
+                    select ov.id
+                    from oppgavefelt_verdi ov
+                    inner join oppgave_v3 o on ov.oppgave_id = o.id
+                    inner join oppgavetype ot on o.oppgavetype_id = ot.id
+                    inner join omrade om on ot.omrade_id = om.id
+                    where o.ekstern_id = :ekstern_id
+                      and ot.ekstern_id = :oppgavetype_ekstern_id
+                      and om.ekstern_id = :omrade_ekstern_id
+                )
+                """.trimIndent(),
+                mapOf(
+                    "ekstern_id" to oppgavenøkkel.oppgaveEksternId,
+                    "oppgavetype_ekstern_id" to oppgavenøkkel.oppgaveTypeEksternId,
+                    "omrade_ekstern_id" to oppgavenøkkel.områdeEksternId
+                )
+            )
+        )
+        tx.update(
+            queryOf(
+                """
+                    delete 
+                    from oppgave_v3 
+                    where oppgave_v3.id in (
+                        select o.id
+                        from oppgave_v3 o
+                        inner join oppgavetype ot on o.oppgavetype_id = ot.id
+                        inner join omrade om on ot.omrade_id = om.id
+                        where o.ekstern_id = :ekstern_id
+                          and ot.ekstern_id = :oppgavetype_ekstern_id
+                          and om.ekstern_id = :omrade_ekstern_id
+                    )
+                    """.trimIndent(),
+                mapOf(
+                    "ekstern_id" to oppgavenøkkel.oppgaveEksternId,
+                    "oppgavetype_ekstern_id" to oppgavenøkkel.oppgaveTypeEksternId,
+                    "omrade_ekstern_id" to oppgavenøkkel.områdeEksternId
+                )
+            )
+        )
+    }
+
+    fun slettFeltverdier(
+        eksternId: String,
+        internVersjon: Int,
+        tx: TransactionalSession
+    ) {
+        tx.update(
+            queryOf(
+                """
+                    delete 
+                    from oppgavefelt_verdi 
+                    where oppgavefelt_verdi.id in (
+                        select ov.id
+                        from oppgavefelt_verdi ov
+                        inner join oppgave_v3 o on ov.oppgave_id = o.id
+                        where o.ekstern_id = :ekstern_id
+                          and o.versjon = :intern_versjon
+                    )
+                    """.trimIndent(),
+                mapOf(
+                    "ekstern_id" to eksternId,
+                    "intern_versjon" to internVersjon
+                )
+            )
+        )
+    }
+
+    fun hentOppgaveIdStatusOgHøyesteInternversjon(
+        tx: TransactionalSession,
+        oppgaveEksternId: String,
+        oppgaveTypeEksternId: String,
+        områdeEksternId: String
+    ): Triple<OppgaveV3Id?, Oppgavestatus?, Int?> {
+        return tx.run(
+            queryOf(
+                """
+                select versjon, o.id, o.status
+                from oppgave_v3 o
+                inner join oppgavetype ot on o.oppgavetype_id = ot.id 
+                inner join omrade om on ot.omrade_id = om.id 
+                where o.ekstern_id = :ekstern_id
+                  and ot.ekstern_id = :oppgavetype_ekstern_id
+                  and om.ekstern_id = :omrade_ekstern_id
+                  and versjon = 
+                    (select max(versjon)
+                     from oppgave_v3 oi
+                     where oi.ekstern_id = o.ekstern_id
+                       and oi.oppgavetype_id = o.oppgavetype_id)
+                """.trimIndent(),
+                mapOf(
+                    "ekstern_id" to oppgaveEksternId,
+                    "oppgavetype_ekstern_id" to oppgaveTypeEksternId,
+                    "omrade_ekstern_id" to områdeEksternId
+                )
+            ).map { row ->
+                Triple(
+                    OppgaveV3Id(row.long("id")),
+                    Oppgavestatus.fraKode(row.string("status")),
+                    row.int("versjon")
+                )
+            }.asSingle
+        ) ?: Triple(null, null, null)
+    }
+
+    @VisibleForTesting
+    fun deaktiverVersjon(eksisterendeId: OppgaveV3Id, deaktivertTidspunkt: LocalDateTime, tx: TransactionalSession) {
+        tx.run(
+            queryOf(
+                """
+                update oppgave_v3 set aktiv = false, deaktivert_tidspunkt = :deaktivertTidspunkt where id = :id
+            """.trimIndent(),
+                mapOf(
+                    "id" to eksisterendeId.id,
+                    "deaktivertTidspunkt" to deaktivertTidspunkt
+                )
+            ).asUpdate
+        )
+    }
+
+    @VisibleForTesting
+    fun deaktiverOppgavefelter(oppgaveId: OppgaveV3Id, tx: TransactionalSession) {
+        tx.run(
+            queryOf(
+                """
+                update oppgavefelt_verdi
+                set aktiv = false
+                where oppgave_id = :oppgave_id 
+            """.trimIndent(),
+                mapOf(
+                    "oppgave_id" to oppgaveId.id
+                )
+            ).asUpdate
+        )
+    }
+
+    fun finnesFraFør(tx: TransactionalSession, eksternId: String, eksternVersjon: String): Boolean {
+        return tx.run(
+            queryOf(
+                """
+                    select exists(
+                        select *
+                        from oppgave_v3 ov 
+                        where ekstern_id = :eksternId
+                        and ekstern_versjon = :eksternVersjon
+                    )
+                """.trimIndent(),
+                mapOf(
+                    "eksternId" to eksternId,
+                    "eksternVersjon" to eksternVersjon
+                )
+            ).map { row -> row.boolean(1) }.asSingle
+        )!!
+    }
+
+    fun tellAntall(): Pair<Long, Long> {
+        return using(sessionOf(dataSource)) {
+            it.run(
+                queryOf(
+                    """
+                    with antallAlle as (
+                        select count(*) as antallAlle
+                        from oppgave_v3
+                    ), antallAktive as (
+                        select count(*) as antallAktive
+                        from oppgave_v3
+                        where aktiv = true
+                    )
+                    select antallAlle, antallAktive
+                    from antallAlle, antallAktive
+                """.trimIndent()
+                ).map { row ->
+                    Pair(
+                        first = row.long("antallAlle"),
+                        second = row.long("antallAktive")
+                    )
+                }.asSingle
+            )!!
+        }
+    }
+
+    fun hentOppgaveId(eksternId: String, internVersjon: Int, tx: TransactionalSession): OppgaveId? {
+        return tx.run(
+            queryOf(
+                "select id from oppgave_v3 where ekstern_id = :ekstern_id and versjon = :versjon",
+                mapOf(
+                    "ekstern_id" to eksternId,
+                    "versjon" to internVersjon
+                )
+            ).map { row -> OppgaveV3Id(row.long("id")) }.asSingle
+        )
+    }
+}

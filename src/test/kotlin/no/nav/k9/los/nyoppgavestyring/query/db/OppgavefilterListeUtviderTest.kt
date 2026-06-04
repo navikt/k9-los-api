@@ -1,13 +1,13 @@
-package no.nav.k9.los.nyoppgavestyring.uthenting.query.db
+package no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.db
 
 import assertk.assertThat
 import assertk.assertions.containsExactly
 import assertk.assertions.isEqualTo
-import no.nav.k9.los.nyoppgavestyring.uthenting.query.dto.query.CombineOppgavefilter
-import no.nav.k9.los.nyoppgavestyring.uthenting.query.dto.query.FeltverdiOppgavefilter
-import no.nav.k9.los.nyoppgavestyring.uthenting.query.mapping.CombineOperator
-import no.nav.k9.los.nyoppgavestyring.uthenting.query.mapping.EksternFeltverdiOperator
-import no.nav.k9.los.nyoppgavestyring.uthenting.query.mapping.OppgavefilterListeUtvider
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.dto.query.CombineOppgavefilter
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.dto.query.FeltverdiOppgavefilter
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.mapping.CombineOperator
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.mapping.EksternFeltverdiOperator
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.mapping.OppgavefilterListeUtvider
 import org.junit.jupiter.api.Test
 
 class OppgavefilterListeUtviderTest {

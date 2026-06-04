@@ -1,7 +1,7 @@
 package no.nav.k9.los.nyoppgavestyring.forvaltning
 
-import no.nav.k9.los.nyoppgavestyring.uthenting.Oppgave
-import no.nav.k9.los.nyoppgavestyring.uthenting.Oppgavefelt
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.Oppgave
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.Oppgavefelt
 import java.time.LocalDateTime
 
 data class OppgaveDto(

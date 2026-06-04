@@ -11,7 +11,7 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.EventHendels
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.K9SakEventDtoBuilder
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventLagret
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdiDto
+import no.nav.k9.los.nyoppgavestyring.oppgavemottak.OppgaveFeltverdiDto
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.koin.test.get
@@ -50,7 +50,7 @@ class EventTilDtoMapperTest: AbstractK9LosIntegrationTest() {
                 opprettet = k9SakEvent.eventTid,
             ), null, 0)
 
-        assertTrue(innsending is no.nav.k9.los.nyoppgavestyring.mottak.oppgave.VaskOppgaveversjon)
+        assertTrue(innsending is no.nav.k9.los.nyoppgavestyring.oppgavemottak.VaskOppgaveversjon)
     }
 
     @Test
@@ -67,7 +67,7 @@ class EventTilDtoMapperTest: AbstractK9LosIntegrationTest() {
                 opprettet = k9SakEvent.eventTid,
             ), null, 0)
 
-        assertTrue(innsending is no.nav.k9.los.nyoppgavestyring.mottak.oppgave.NyOppgaveversjon)
+        assertTrue(innsending is no.nav.k9.los.nyoppgavestyring.oppgavemottak.NyOppgaveversjon)
     }
 
     @Test
