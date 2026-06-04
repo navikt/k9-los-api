@@ -69,7 +69,7 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.PartisjonertOppgaveRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeTjeneste
-import no.nav.k9.los.nyoppgavestyring.nyeogferdigstilte.NyeOgFerdigstilteService
+import no.nav.k9.los.nyoppgavestyring.nøkkeltall.saksbehandler.nyeogferdigstilte.NyeOgFerdigstilteService
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
 import no.nav.k9.los.nyoppgavestyring.query.db.OppgaveQueryRepository
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonApisTjeneste
@@ -86,10 +86,6 @@ import no.nav.k9.los.nyoppgavestyring.uttrekk.UttrekkJobb
 import no.nav.k9.los.nyoppgavestyring.uttrekk.UttrekkRepository
 import no.nav.k9.los.nyoppgavestyring.uttrekk.UttrekkTjeneste
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.*
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.dagenstall.DagensTallService
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.ferdigstilteperenhet.FerdigstiltePerEnhetService
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.status.StatusService
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.statusfordeling.StatusFordelingService
 import org.koin.core.module.Module
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
@@ -541,19 +537,19 @@ fun common(app: Application, config: Configuration) = module {
     }
 
     single {
-        StatusService(
+        _root_ide_package_.no.nav.k9.los.nyoppgavestyring.nøkkeltall.avdelingsleder.status.StatusService(
             queryService = get(),
         )
     }
 
     single {
-        DagensTallService(
+        _root_ide_package_.no.nav.k9.los.nyoppgavestyring.nøkkeltall.avdelingsleder.dagenstall.DagensTallService(
             queryService = get(),
         )
     }
 
     single {
-        FerdigstiltePerEnhetService(
+        _root_ide_package_.no.nav.k9.los.nyoppgavestyring.nøkkeltall.avdelingsleder.ferdigstilteperenhet.FerdigstiltePerEnhetService(
             queryService = get()
         )
     }
@@ -565,7 +561,7 @@ fun common(app: Application, config: Configuration) = module {
     }
 
     single {
-        StatusFordelingService(
+        _root_ide_package_.no.nav.k9.los.nyoppgavestyring.nøkkeltall.avdelingsleder.statusfordeling.StatusFordelingService(
             queryService = get()
         )
     }

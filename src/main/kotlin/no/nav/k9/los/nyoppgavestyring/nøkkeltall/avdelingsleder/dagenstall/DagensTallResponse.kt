@@ -1,6 +1,6 @@
-package no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.dagenstall
+package no.nav.k9.los.nyoppgavestyring.nøkkeltall.avdelingsleder.dagenstall
 
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.KodeOgNavn
+import no.nav.k9.los.nyoppgavestyring.nøkkeltall.KodeOgNavn
 import java.time.LocalDateTime
 
 data class DagensTallResponse(

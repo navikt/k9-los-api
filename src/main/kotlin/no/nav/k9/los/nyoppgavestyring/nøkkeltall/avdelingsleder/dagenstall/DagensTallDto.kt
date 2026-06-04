@@ -1,7 +1,4 @@
-package no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.dagenstall
-
-import com.fasterxml.jackson.annotation.JsonFormat
-import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
+package no.nav.k9.los.nyoppgavestyring.nøkkeltall.avdelingsleder.dagenstall
 
 data class DagensTallDto(
     val hovedgruppe: DagensTallHovedgruppe,

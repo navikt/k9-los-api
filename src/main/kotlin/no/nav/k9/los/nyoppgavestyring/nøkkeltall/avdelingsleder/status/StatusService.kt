@@ -1,4 +1,4 @@
-package no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.status
+package no.nav.k9.los.nyoppgavestyring.nøkkeltall.avdelingsleder.status
 
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus

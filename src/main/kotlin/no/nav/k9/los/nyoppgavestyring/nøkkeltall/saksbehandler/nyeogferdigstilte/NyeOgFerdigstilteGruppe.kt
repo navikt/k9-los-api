@@ -1,4 +1,4 @@
-package no.nav.k9.los.nyoppgavestyring.nyeogferdigstilte
+package no.nav.k9.los.nyoppgavestyring.nøkkeltall.saksbehandler.nyeogferdigstilte
 
 enum class NyeOgFerdigstilteGruppe(val navn: String) {
     ALLE("Alle ytelser"),

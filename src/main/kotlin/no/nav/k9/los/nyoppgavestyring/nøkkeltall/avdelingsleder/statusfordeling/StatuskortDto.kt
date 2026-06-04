@@ -1,7 +1,7 @@
-package no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.statusfordeling
+package no.nav.k9.los.nyoppgavestyring.nøkkeltall.avdelingsleder.statusfordeling
 
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.KodeOgNavn
+import no.nav.k9.los.nyoppgavestyring.nøkkeltall.KodeOgNavn
 
 data class StatuskortDto(
     val tittel: KodeOgNavn,

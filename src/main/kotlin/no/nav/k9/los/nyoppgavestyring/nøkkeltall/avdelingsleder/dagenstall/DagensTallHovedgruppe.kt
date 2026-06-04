@@ -1,4 +1,4 @@
-package no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.dagenstall
+package no.nav.k9.los.nyoppgavestyring.nøkkeltall.avdelingsleder.dagenstall
 
 enum class DagensTallHovedgruppe(val navn: String) {
     ALLE("Alle ytelser"),

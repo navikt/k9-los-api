@@ -1,6 +1,6 @@
-package no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.ferdigstilteperenhet
+package no.nav.k9.los.nyoppgavestyring.nøkkeltall.avdelingsleder.ferdigstilteperenhet
 
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.KodeOgNavn
+import no.nav.k9.los.nyoppgavestyring.nøkkeltall.KodeOgNavn
 import java.time.LocalDateTime
 
 data class FerdigstiltePerEnhetResponse(

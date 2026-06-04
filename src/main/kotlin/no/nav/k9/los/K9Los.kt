@@ -62,8 +62,8 @@ import no.nav.k9.los.nyoppgavestyring.lagretsok.LagretSøkApi
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonApi
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Api
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeApi
-import no.nav.k9.los.nyoppgavestyring.nyeogferdigstilte.NyeOgFerdigstilteApi
-import no.nav.k9.los.nyoppgavestyring.nyeogferdigstilte.NyeOgFerdigstilteService
+import no.nav.k9.los.nyoppgavestyring.nøkkeltall.saksbehandler.nyeogferdigstilte.NyeOgFerdigstilteApi
+import no.nav.k9.los.nyoppgavestyring.nøkkeltall.saksbehandler.nyeogferdigstilte.NyeOgFerdigstilteService
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryApis
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonApis
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerAdminApis
@@ -72,10 +72,7 @@ import no.nav.k9.los.nyoppgavestyring.søkeboks.SøkeboksApi
 import no.nav.k9.los.nyoppgavestyring.uttrekk.MigrerUttrekkResultatJobb
 import no.nav.k9.los.nyoppgavestyring.uttrekk.UttrekkApi
 import no.nav.k9.los.nyoppgavestyring.uttrekk.UttrekkJobb
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.NøkkeltallV3Apis
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.dagenstall.DagensTallService
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.ferdigstilteperenhet.FerdigstiltePerEnhetService
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.statusfordeling.StatusFordelingService
+import no.nav.k9.los.nyoppgavestyring.nøkkeltall.NøkkeltallV3Apis
 import no.nav.k9.los.tjenester.mock.localSetup
 import org.koin.core.Koin
 import org.koin.core.qualifier.named
@@ -276,9 +273,9 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
     val oppgavestatistikkTjeneste = koin.get<OppgavestatistikkTjeneste>()
 
     val pepCacheService = koin.get<PepCacheService>()
-    val statusFordelingService = koin.get<StatusFordelingService>()
-    val dagensTallService = koin.get<DagensTallService>()
-    val perEnhetService = koin.get<FerdigstiltePerEnhetService>()
+    val statusFordelingService = koin.get<no.nav.k9.los.nyoppgavestyring.nøkkeltall.avdelingsleder.statusfordeling.StatusFordelingService>()
+    val dagensTallService = koin.get<no.nav.k9.los.nyoppgavestyring.nøkkeltall.avdelingsleder.dagenstall.DagensTallService>()
+    val perEnhetService = koin.get<no.nav.k9.los.nyoppgavestyring.nøkkeltall.avdelingsleder.ferdigstilteperenhet.FerdigstiltePerEnhetService>()
     val nyeOgFerdigstilteService = koin.get<NyeOgFerdigstilteService>()
     val uttrekkJobb = koin.get<UttrekkJobb>()
     val migrerUttrekkResultatJobb = MigrerUttrekkResultatJobb(koin.get())

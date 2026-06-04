@@ -1,4 +1,4 @@
-package no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.dagenstall
+package no.nav.k9.los.nyoppgavestyring.nøkkeltall.avdelingsleder.dagenstall
 
 enum class DagensTallUndergruppe(val navn: String) {
     TOTALT("Totalt"),

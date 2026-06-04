@@ -1,4 +1,4 @@
-package no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.statusfordeling
+package no.nav.k9.los.nyoppgavestyring.nøkkeltall.avdelingsleder.statusfordeling
 
 enum class StatusGruppe(val tekst: String) {
     BEHANDLINGER("Behandlinger"),

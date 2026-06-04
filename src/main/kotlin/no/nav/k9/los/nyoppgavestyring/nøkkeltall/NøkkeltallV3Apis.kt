@@ -1,22 +1,22 @@
-package no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall
+package no.nav.k9.los.nyoppgavestyring.nøkkeltall
 
 import io.ktor.http.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.RequestContextService
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.dagenstall.DagensTallService
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.ferdigstilteperenhet.FerdigstiltePerEnhetGruppe
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.ferdigstilteperenhet.FerdigstiltePerEnhetService
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.statusfordeling.StatusFordelingService
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.status.StatusService
+import no.nav.k9.los.nyoppgavestyring.nøkkeltall.avdelingsleder.dagenstall.DagensTallService
+import no.nav.k9.los.nyoppgavestyring.nøkkeltall.avdelingsleder.ferdigstilteperenhet.FerdigstiltePerEnhetGruppe
+import no.nav.k9.los.nyoppgavestyring.nøkkeltall.avdelingsleder.ferdigstilteperenhet.FerdigstiltePerEnhetService
+import no.nav.k9.los.nyoppgavestyring.nøkkeltall.avdelingsleder.statusfordeling.StatusFordelingService
+import no.nav.k9.los.nyoppgavestyring.nøkkeltall.avdelingsleder.status.StatusService
 import org.koin.ktor.ext.inject
 
 fun Route.NøkkeltallV3Apis() {
-    val statusFordelingService by inject< StatusFordelingService>()
-    val statusService by inject<StatusService>()
-    val dagensTallService by inject<DagensTallService>()
-    val perEnhetService by inject<FerdigstiltePerEnhetService>()
+    val statusFordelingService by inject<no.nav.k9.los.nyoppgavestyring.nøkkeltall.avdelingsleder.statusfordeling.StatusFordelingService>()
+    val statusService by inject<no.nav.k9.los.nyoppgavestyring.nøkkeltall.avdelingsleder.status.StatusService>()
+    val dagensTallService by inject<no.nav.k9.los.nyoppgavestyring.nøkkeltall.avdelingsleder.dagenstall.DagensTallService>()
+    val perEnhetService by inject<no.nav.k9.los.nyoppgavestyring.nøkkeltall.avdelingsleder.ferdigstilteperenhet.FerdigstiltePerEnhetService>()
     val requestContextService by inject<RequestContextService>()
     val pepClient by inject<IPepClient>()
 

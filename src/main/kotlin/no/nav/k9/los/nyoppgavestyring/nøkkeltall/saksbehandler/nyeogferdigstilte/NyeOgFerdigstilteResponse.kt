@@ -1,6 +1,6 @@
-package no.nav.k9.los.nyoppgavestyring.nyeogferdigstilte
+package no.nav.k9.los.nyoppgavestyring.nøkkeltall.saksbehandler.nyeogferdigstilte
 
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.KodeOgNavn
+import no.nav.k9.los.nyoppgavestyring.nøkkeltall.KodeOgNavn
 import java.time.LocalDateTime
 
 data class NyeOgFerdigstilteResponse(
