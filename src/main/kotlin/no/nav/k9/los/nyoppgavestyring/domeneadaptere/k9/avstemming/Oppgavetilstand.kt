@@ -1,12 +1,13 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming
 
+import no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.Oppgave
 
 data class Oppgavetilstand(
     val saksnummer: String?,
     val journalpostId: String?,
     val eksternId: String,
-    val status: String,
+    val status: Oppgavestatus,
     val ytelseType: String,
     val frist: String?,
 ) {

@@ -69,6 +69,12 @@ import no.nav.k9.los.nyoppgavestyring.oppgavemottak.OppgaveV3Repository
 import no.nav.k9.los.nyoppgavestyring.oppgavemottak.OppgaveV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.oppgavemottak.PartisjonertOppgaveRepository
 import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.*
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.enkeltoppslag.AktivOppgaveOppslag
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.enkeltoppslag.AktivOppgaveOppslagPartisjonert
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.enkeltoppslag.ReservasjonsnøkkelOppgaveOppslag
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.enkeltoppslag.ReservasjonsnøkkelOppgaveOppslagPartisjonert
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.enkeltoppslag.TemporalOppgaveOppslag
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.enkeltoppslag.TemporalOppgaveOppslagOppgaveV3
 import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.OppgaveQueryService
 import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.db.OppgaveQueryRepository
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonApisTjeneste
@@ -518,7 +524,6 @@ fun common(app: Application, config: Configuration) = module {
         SøkeboksTjeneste(
             queryService = get(),
             pdlService = get(),
-            saksbehandlerRepository = get(),
             pepClient = get(),
         )
     }

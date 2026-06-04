@@ -4,7 +4,7 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.Avstemmingsra
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.Oppgavetilstand
 import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
 import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
-import no.nav.k9.los.nyoppgavestyring.oppgavemottak.Oppgavestatus
+import no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.Oppgave
 
 
@@ -64,7 +64,7 @@ enum class FuzzySammenligningsresultat {
             journalposttilstand: Journalposttilstand,
             oppgave: Oppgave
         ): FuzzySammenligningsresultat {
-            val oppgavestatus = Oppgavestatus.fraKode(oppgave.status)
+            val oppgavestatus = oppgave.status
             if (oppgavestatus != Oppgavestatus.AAPEN) {
                 return ULIK
             }

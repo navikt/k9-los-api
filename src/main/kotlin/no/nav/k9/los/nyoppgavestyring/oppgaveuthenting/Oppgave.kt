@@ -1,5 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.oppgaveuthenting
 
+import no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.feltdefinisjon.Datatype
 import no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.oppgavetype.Oppgavetype
 import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.mapping.transientfeltutleder.HentVerdiInput
@@ -10,7 +11,7 @@ data class Oppgave(
     val eksternVersjon: String,
     val reservasjonsnøkkel: String,
     val oppgavetype: Oppgavetype,
-    val status: String, //TODO: definere typer/enum
+    val status: Oppgavestatus,
     val endretTidspunkt: LocalDateTime,
     val felter: List<Oppgavefelt>,
 ) {

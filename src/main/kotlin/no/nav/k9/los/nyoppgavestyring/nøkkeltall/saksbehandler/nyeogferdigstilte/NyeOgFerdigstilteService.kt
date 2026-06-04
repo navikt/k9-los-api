@@ -6,7 +6,7 @@ import kotlinx.coroutines.launch
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.Cache
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.CacheObject
 import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
-import no.nav.k9.los.nyoppgavestyring.oppgavemottak.Oppgavestatus
+import no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.OppgaveQueryService
 import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.QueryRequest
 import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.dto.query.FeltverdiOppgavefilter

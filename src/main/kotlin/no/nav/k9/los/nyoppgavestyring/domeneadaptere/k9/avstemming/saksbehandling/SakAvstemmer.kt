@@ -4,7 +4,7 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.Avstemmingsra
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.Oppgavetilstand
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingStatus
 import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
-import no.nav.k9.los.nyoppgavestyring.oppgavemottak.Oppgavestatus
+import no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.Oppgave
 
 object SakAvstemmer {
@@ -56,7 +56,7 @@ enum class FuzzySammenligningsresultat {
 
     companion object {
         fun sammenlign(behandlingstilstand: Behandlingstilstand, oppgave: Oppgave): FuzzySammenligningsresultat {
-            val oppgavestatus = Oppgavestatus.fraKode(oppgave.status)
+            val oppgavestatus = oppgave.status
             return when (behandlingstilstand.behandlingStatus) {
                 BehandlingStatus.AVSLUTTET -> if (oppgavestatus == Oppgavestatus.LUKKET) {
                     LIK

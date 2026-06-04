@@ -1,6 +1,7 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk
 
 import kotliquery.*
+import no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.oppgavetype.OppgavetypeRepository
 import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.Oppgave
 import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.OppgaveNøkkelDto
@@ -237,7 +238,7 @@ fun fjernSendtMarkering(oppgavetype: String? = null) {
             eksternId = row.string("ekstern_id"),
             eksternVersjon = row.string("ekstern_versjon"),
             oppgavetype = oppgavetype,
-            status = row.string("status"),
+            status = Oppgavestatus.fraKode(row.string("status")),
             endretTidspunkt = row.localDateTime("endret_tidspunkt"),
             felter = oppgavefelter,
             reservasjonsnøkkel = row.string("reservasjonsnokkel"),

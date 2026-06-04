@@ -51,7 +51,7 @@ data class SøkeboksOppgaveDto(
         oppgaveNøkkel = OppgaveNøkkelDto(oppgaveV3),
         journalpostId = oppgaveV3.hentVerdi("journalpostId"),
         opprettetTidspunkt = oppgaveV3.hentVerdi("registrertDato")?.let { LocalDateTime.parse(it) },
-        oppgavestatus = OppgavestatusMedNavn.valueOf(oppgaveV3.status),
+        oppgavestatus = OppgavestatusMedNavn.valueOf(oppgaveV3.status.kode),
         behandlingsstatus = oppgaveV3.hentVerdi("behandlingsstatus")?.let { BehandlingStatus.fraKode(it) },
         oppgavebehandlingsUrl = oppgaveV3.getOppgaveBehandlingsurl(),
         reservasjonsnøkkel = oppgaveV3.reservasjonsnøkkel,

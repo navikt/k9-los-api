@@ -8,7 +8,7 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.saksbehandlin
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.saksbehandling.SakAvstemmer
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.saksbehandling.systemklient.SakAvstemmingsklient
 import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
-import no.nav.k9.los.nyoppgavestyring.oppgavemottak.Oppgavestatus
+import no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.OppgaveQueryService
 import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.QueryRequest
 import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.dto.query.FeltverdiOppgavefilter

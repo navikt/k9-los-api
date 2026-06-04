@@ -5,14 +5,13 @@ import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.IPdlService
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.navn
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingStatus
 import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
-import no.nav.k9.los.nyoppgavestyring.oppgavemottak.Oppgavestatus
+import no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.OppgaveQueryService
 import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.QueryRequest
 import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.dto.query.EnkelOrderFelt
 import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.dto.query.OppgaveQuery
 import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.mapping.EksternFeltverdiOperator
-import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
 import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.Oppgave
 import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.OppgaveNøkkelDto
 import java.time.LocalDateTime
@@ -20,7 +19,6 @@ import java.time.LocalDateTime
 class SøkeboksTjeneste(
     private val queryService: OppgaveQueryService,
     private val pdlService: IPdlService,
-    private val saksbehandlerRepository: SaksbehandlerRepository,
     private val pepClient: IPepClient,
 ) {
     suspend fun finnOppgaver(søkeord: String): Søkeresultat {
@@ -141,7 +139,7 @@ class SøkeboksTjeneste(
 
         val filtrerteMedSaksnummer = gruppertPåSaksnummer.values.map { oppgaverISak ->
             // Finn den ene oppgaven som ikke er lukket (hvis den finnes)
-            oppgaverISak.find { it.status != "LUKKET" } ?: oppgaverISak.first()
+            oppgaverISak.find { it.status != Oppgavestatus.LUKKET } ?: oppgaverISak.first()
         }
 
         return oppgaverUtenSaksnummer + filtrerteMedSaksnummer
@@ -162,7 +160,7 @@ class SøkeboksTjeneste(
             opprettetTidspunkt = oppgave.hentVerdi("registrertDato")?.let { dato -> LocalDateTime.parse(dato) },
             status = oppgave.hentVerdi("behandlingsstatus")
                 ?.let { kode -> BehandlingStatus.fraKode(kode).navn }
-                ?: Oppgavestatus.fraKode(oppgave.status).visningsnavn,
+                ?: oppgave.status.visningsnavn,
             oppgavebehandlingsUrl = oppgave.getOppgaveBehandlingsurl(),
             reservasjonsnøkkel = oppgave.reservasjonsnøkkel,
             fagsakÅr = oppgave.hentVerdi("fagsakÅr")?.toIntOrNull()

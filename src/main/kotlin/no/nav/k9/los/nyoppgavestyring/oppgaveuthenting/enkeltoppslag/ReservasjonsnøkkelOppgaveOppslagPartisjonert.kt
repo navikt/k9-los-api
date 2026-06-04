@@ -1,11 +1,13 @@
-package no.nav.k9.los.nyoppgavestyring.oppgaveuthenting
+package no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.enkeltoppslag
 
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.oppgavetype.Oppgavetype
 import no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.oppgavetype.OppgavetypeRepository
-import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.OppgaveRad.Companion.tilOppgaveRad
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.Oppgave
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.Oppgavefelt
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.enkeltoppslag.OppgaveRad.Companion.tilOppgaveRad
 import java.time.LocalDateTime
 
 class ReservasjonsnøkkelOppgaveOppslagPartisjonert(

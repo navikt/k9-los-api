@@ -5,7 +5,7 @@ import no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.feltdefinisjon.Synlighet
 import no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.omraade.Område
 import no.nav.k9.los.nyoppgavestyring.oppgavemottak.OppgaveFeltverdi
 import no.nav.k9.los.nyoppgavestyring.oppgavemottak.OppgaveV3
-import no.nav.k9.los.nyoppgavestyring.oppgavemottak.Oppgavestatus
+import no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.oppgavetype.Oppgavefelt
 import no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.oppgavetype.Oppgavetype
 import org.junit.jupiter.api.Assertions.*

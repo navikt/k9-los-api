@@ -8,7 +8,7 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.K9TilbakeEventHandler
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
-import no.nav.k9.los.nyoppgavestyring.oppgavemottak.Oppgavestatus
+import no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.OppgaveQueryService
 import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.QueryRequest
 import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.dto.query.OppgaveQuery
@@ -59,7 +59,7 @@ class K9TilbakeEventHandlerTest : AbstractK9LosIntegrationTest() {
         k9TilbakeEventHandler.prosesser(event)
 
         val oppgaveV3 = hentOppgaveForEksternId("29cbdc33-0e59-4559-96a8-c2154bf17e5a")
-        assertThat(oppgaveV3!!.status).isEqualTo(Oppgavestatus.VENTER.kode)
+        assertThat(oppgaveV3!!.status).isEqualTo(Oppgavestatus.VENTER)
     }
 
     @Test
@@ -103,7 +103,7 @@ class K9TilbakeEventHandlerTest : AbstractK9LosIntegrationTest() {
         k9TilbakeEventHandler.prosesser(event)
 
         val oppgaveV3 = hentOppgaveForEksternId("29cbdc33-0e59-4559-96a8-c2154bf17e5a")
-        assertThat(oppgaveV3!!.status).isEqualTo(Oppgavestatus.AAPEN.kode)
+        assertThat(oppgaveV3!!.status).isEqualTo(Oppgavestatus.AAPEN)
     }
 
     @Test
@@ -126,7 +126,7 @@ class K9TilbakeEventHandlerTest : AbstractK9LosIntegrationTest() {
         k9TilbakeEventHandler.prosesser(event)
 
         val oppgaveV3 = hentOppgaveForEksternId("29cbdc33-0e59-4559-96a8-c2154bf17e5a")
-        assertThat(oppgaveV3!!.status).isEqualTo(Oppgavestatus.AAPEN.kode)
+        assertThat(oppgaveV3!!.status).isEqualTo(Oppgavestatus.AAPEN)
     }
 
     fun lagK9TilbakeEvent(ytelsetype: FagsakYtelseType, aksjonspunkter: Map<String, AksjonspunktStatus>): String {

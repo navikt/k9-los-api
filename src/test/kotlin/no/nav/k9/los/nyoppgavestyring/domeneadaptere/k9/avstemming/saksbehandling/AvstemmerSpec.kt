@@ -6,7 +6,7 @@ import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingStatus
 import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
 import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
 import no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.omraade.Område
-import no.nav.k9.los.nyoppgavestyring.oppgavemottak.Oppgavestatus
+import no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.oppgavetype.Oppgavetype
 import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.Oppgave
 import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.Oppgavefelt
@@ -120,7 +120,7 @@ object Testdata {
         status: Oppgavestatus = Oppgavestatus.AAPEN,
     ): Oppgave {
         return Oppgave(
-            eksternId = eksternId.toString(),
+            eksternId = eksternId,
             eksternVersjon = "versjon",
             reservasjonsnøkkel = "reservasjonsnøkkel",
             oppgavetype = Oppgavetype(
@@ -130,7 +130,7 @@ object Testdata {
                 oppgavebehandlingsUrlTemplate = "\${baseUrl}/fagsak/\${K9.saksnummer}/behandling/\${K9.behandlingUuid}?fakta=default&punkt=default",
                 oppgavefelter = setOf()
             ),
-            status = status.toString(),
+            status = status,
             endretTidspunkt = LocalDateTime.now(),
             felter = listOf(
                 Oppgavefelt(

@@ -1,6 +1,7 @@
 package no.nav.k9.los.nyoppgavestyring.oppgavemottak
 
 import kotliquery.TransactionalSession
+import no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.omraade.OmrådeRepository
 import no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.oppgavetype.OppgavetypeRepository
 import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.OppgaveNøkkelDto

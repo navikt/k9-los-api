@@ -24,9 +24,9 @@ import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.dto.query.Feltverdi
 import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.dto.query.OppgaveQuery
 import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.mapping.EksternFeltverdiOperator
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Repository
-import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.AktivOppgaveOppslag
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.enkeltoppslag.AktivOppgaveOppslag
 import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.Oppgave
-import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.TemporalOppgaveOppslag
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.enkeltoppslag.TemporalOppgaveOppslag
 import org.koin.ktor.ext.inject
 import org.slf4j.LoggerFactory
 

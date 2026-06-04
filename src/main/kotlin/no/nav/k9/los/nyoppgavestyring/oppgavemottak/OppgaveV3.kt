@@ -1,5 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.oppgavemottak
 
+import no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.feltdefinisjon.Datatype
 import no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.oppgavetype.Oppgavefelt
 import no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.oppgavetype.Oppgavetype

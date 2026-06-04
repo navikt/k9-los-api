@@ -14,7 +14,7 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.EventHendels
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.beriker.K9SakSystemKlientLocal
 import no.nav.k9.los.nyoppgavestyring.oppgavemottak.OppgaveDto
 import no.nav.k9.los.nyoppgavestyring.oppgavemottak.OppgaveFeltverdiDto
-import no.nav.k9.los.nyoppgavestyring.oppgavemottak.Oppgavestatus
+import no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.sak.kontrakt.produksjonsstyring.los.BehandlingMedFagsakDto
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test

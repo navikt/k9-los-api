@@ -1,6 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.mapping
 
-import no.nav.k9.los.nyoppgavestyring.oppgavemottak.Oppgavestatus
+import no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.QueryRequest
 import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.db.*
 import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.dto.query.*

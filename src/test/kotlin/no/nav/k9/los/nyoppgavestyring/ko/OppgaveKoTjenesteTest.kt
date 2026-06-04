@@ -16,6 +16,7 @@ import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.IPdlService
 import no.nav.k9.los.nyoppgavestyring.ko.db.OppgaveKoRepository
 import no.nav.k9.los.nyoppgavestyring.ko.dto.OppgaveKo
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
+import no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.feltdefinisjon.FeltdefinisjonTjeneste
 import no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.omraade.Område
 import no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.oppgavetype.Oppgavetype
@@ -110,7 +111,7 @@ class OppgaveKoTjenesteTest {
             eksternVersjon = "1",
             reservasjonsnøkkel = eksternId,
             oppgavetype = oppgavetype,
-            status = "AAPEN",
+            status = Oppgavestatus.AAPEN,
             endretTidspunkt = LocalDateTime.now(),
             felter = listOf(
                 Oppgavefelt(

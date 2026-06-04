@@ -74,6 +74,12 @@ import no.nav.k9.los.nyoppgavestyring.nøkkeltall.avdelingsleder.dagenstall.Dage
 import no.nav.k9.los.nyoppgavestyring.nøkkeltall.avdelingsleder.ferdigstilteperenhet.FerdigstiltePerEnhetService
 import no.nav.k9.los.nyoppgavestyring.nøkkeltall.avdelingsleder.status.StatusService
 import no.nav.k9.los.nyoppgavestyring.nøkkeltall.avdelingsleder.statusfordeling.StatusFordelingService
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.enkeltoppslag.AktivOppgaveOppslag
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.enkeltoppslag.AktivOppgaveOppslagPartisjonert
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.enkeltoppslag.ReservasjonsnøkkelOppgaveOppslag
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.enkeltoppslag.ReservasjonsnøkkelOppgaveOppslagPartisjonert
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.enkeltoppslag.TemporalOppgaveOppslag
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.enkeltoppslag.TemporalOppgaveOppslagOppgaveV3
 import org.koin.core.module.Module
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
@@ -484,7 +490,6 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
         SøkeboksTjeneste(
             queryService = get(),
             pdlService = get(),
-            saksbehandlerRepository = get(),
             pepClient = get(),
         )
     }

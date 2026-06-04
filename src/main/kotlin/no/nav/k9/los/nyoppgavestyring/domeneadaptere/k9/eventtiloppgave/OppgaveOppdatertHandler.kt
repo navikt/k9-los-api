@@ -14,7 +14,7 @@ import no.nav.k9.los.nyoppgavestyring.ko.OppgaveHendelseMottatt
 import no.nav.k9.los.nyoppgavestyring.kodeverk.AksjonspunktStatus
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingStatus
 import no.nav.k9.los.nyoppgavestyring.oppgavemottak.OppgaveV3
-import no.nav.k9.los.nyoppgavestyring.oppgavemottak.Oppgavestatus
+import no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.db.EksternOppgaveId
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.OppgaveRepository
@@ -148,7 +148,7 @@ class OppgaveOppdatertHandler(
         //  -- return
         val åpneOppgaverForReservasjonsnøkkel =
             oppgaveRepository.hentAlleÅpneOppgaverForReservasjonsnøkkel(tx, reservasjonsnøkler)
-                .filter { it.status == Oppgavestatus.AAPEN.kode }
+                .filter { it.status == Oppgavestatus.AAPEN }
 
         if (åpneOppgaverForReservasjonsnøkkel.isEmpty()) {
             return reservasjonsnøkler.map { reservasjonsnøkkel ->

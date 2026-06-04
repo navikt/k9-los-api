@@ -1,4 +1,4 @@
-package no.nav.k9.los.nyoppgavestyring.oppgavemottak
+package no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon
 
 import com.fasterxml.jackson.annotation.JsonCreator
 
@@ -12,7 +12,7 @@ enum class Oppgavestatus(val kode: String, val visningsnavn: String) {
         @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
         @JvmStatic
         fun fraKode(kode: String): Oppgavestatus {
-            return Oppgavestatus.values().find { it.kode == kode } ?: throw IllegalStateException("Kjenner ikke igjen koden=$kode")
+            return values().find { it.kode == kode } ?: throw IllegalStateException("Kjenner ikke igjen koden=$kode")
         }
     }
 }

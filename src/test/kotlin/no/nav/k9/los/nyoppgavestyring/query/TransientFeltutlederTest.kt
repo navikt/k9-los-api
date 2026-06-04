@@ -6,7 +6,7 @@ import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.nyoppgavestyring.FeltType
 import no.nav.k9.los.nyoppgavestyring.OppgaveTestDataBuilder
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
-import no.nav.k9.los.nyoppgavestyring.oppgavemottak.Oppgavestatus
+import no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.oppgavemottak.PartisjonertOppgaveRepository
 import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.db.OppgaveId
 import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.db.OppgaveQueryRepository

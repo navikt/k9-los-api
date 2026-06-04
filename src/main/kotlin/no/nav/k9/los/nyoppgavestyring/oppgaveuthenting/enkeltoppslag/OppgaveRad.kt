@@ -1,6 +1,7 @@
-package no.nav.k9.los.nyoppgavestyring.oppgaveuthenting
+package no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.enkeltoppslag
 
 import kotliquery.Row
+import no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.Oppgavestatus
 import java.time.LocalDateTime
 
 internal data class OppgaveRad(
@@ -8,7 +9,7 @@ internal data class OppgaveRad(
     val oppgavetypeEksternId: String,
     val oppgaveEksternId: String,
     val oppgaveEksternVersjon: String,
-    val oppgavestatus: String,
+    val oppgavestatus: Oppgavestatus,
     val endretTidspunkt: LocalDateTime,
     val reservasjonsnokkel: String,
 ) {
@@ -18,7 +19,7 @@ internal data class OppgaveRad(
             oppgavetypeEksternId = this.string("oppgavetype_ekstern_id"),
             oppgaveEksternId = this.string("oppgave_ekstern_id"),
             oppgaveEksternVersjon = this.string("oppgave_ekstern_versjon"),
-            oppgavestatus = this.string("oppgavestatus"),
+            oppgavestatus = Oppgavestatus.fraKode(this.string("oppgavestatus")),
             endretTidspunkt = this.localDateTime("endret_tidspunkt"),
             reservasjonsnokkel = this.string("reservasjonsnokkel"),
         )

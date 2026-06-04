@@ -2,6 +2,7 @@ package no.nav.k9.los.nyoppgavestyring.oppgavemottak
 
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.Cache
+import no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.Oppgavestatus
 import java.time.Duration
 import java.time.LocalDateTime
 

@@ -6,7 +6,7 @@ import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.util.InClauseHjelper
-import no.nav.k9.los.nyoppgavestyring.oppgavemottak.Oppgavestatus
+import no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.Oppgavestatus
 import java.time.LocalDateTime
 import javax.sql.DataSource
 

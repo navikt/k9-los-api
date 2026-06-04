@@ -5,6 +5,8 @@ import assertk.assertions.isEqualTo
 import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.nyoppgavestyring.FeltType
 import no.nav.k9.los.nyoppgavestyring.OppgaveTestDataBuilder
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.enkeltoppslag.AktivOppgaveOppslag
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.enkeltoppslag.TemporalOppgaveOppslag
 import org.junit.jupiter.api.Test
 import org.koin.test.get
 import java.util.*

@@ -1,7 +1,7 @@
 package no.nav.k9.los.nyoppgavestyring.lagretsok
 
 import no.nav.k9.los.nyoppgavestyring.kodeverk.PersonBeskyttelseType
-import no.nav.k9.los.nyoppgavestyring.oppgavemottak.Oppgavestatus
+import no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.dto.query.OppgaveQuery
 import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.mapping.EksternFeltverdiOperator

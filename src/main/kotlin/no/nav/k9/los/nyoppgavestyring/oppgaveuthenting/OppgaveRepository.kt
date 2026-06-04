@@ -4,6 +4,7 @@ import kotliquery.Row
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.util.InClauseHjelper
+import no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.oppgavetype.OppgavetypeRepository
 import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.db.OppgaveV3Id
 import org.slf4j.Logger
@@ -116,7 +117,7 @@ class OppgaveRepository(
             eksternId = row.string("ekstern_id"),
             eksternVersjon = row.string("ekstern_versjon"),
             oppgavetype = oppgavetype,
-            status = row.string("status"),
+            status = Oppgavestatus.fraKode(row.string("status")),
             endretTidspunkt = row.localDateTime("endret_tidspunkt"),
             felter = oppgavefelter,
             reservasjonsnøkkel = row.string("reservasjonsnokkel"),

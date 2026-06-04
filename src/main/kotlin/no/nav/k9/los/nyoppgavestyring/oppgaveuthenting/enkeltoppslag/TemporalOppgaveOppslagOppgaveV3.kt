@@ -1,10 +1,13 @@
-package no.nav.k9.los.nyoppgavestyring.oppgaveuthenting
+package no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.enkeltoppslag
 
 import kotliquery.Row
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
+import no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.oppgavetype.OppgavetypeRepository
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.Oppgave
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.Oppgavefelt
 import java.time.LocalDateTime
 
 class TemporalOppgaveOppslagOppgaveV3(
@@ -23,7 +26,7 @@ class TemporalOppgaveOppslagOppgaveV3(
             eksternId = row.string("ekstern_id"),
             eksternVersjon = row.string("ekstern_versjon"),
             oppgavetype = oppgavetype,
-            status = row.string("status"),
+            status = Oppgavestatus.fraKode(row.string("status")),
             endretTidspunkt = row.localDateTime("endret_tidspunkt"),
             felter = oppgavefelter,
             reservasjonsnøkkel = row.string("reservasjonsnokkel"),

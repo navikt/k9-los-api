@@ -9,7 +9,7 @@ import no.nav.k9.los.nyoppgavestyring.kodeverk.PersonBeskyttelseType
 import no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.feltdefinisjon.FeltdefinisjonRepository
 import no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.feltdefinisjon.Kodeverkreferanse
 import no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.feltdefinisjon.Synlighet
-import no.nav.k9.los.nyoppgavestyring.oppgavemottak.Oppgavestatus
+import no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.QueryRequest
 import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.dto.felter.Oppgavefelt
 import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.dto.felter.Oppgavefelter

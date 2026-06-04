@@ -1,5 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.forvaltning
 
+import no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.Oppgave
 import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.Oppgavefelt
 import java.time.LocalDateTime
@@ -8,7 +9,7 @@ data class OppgaveDto(
     val eksternId: String,
     val eksternVersjon: String,
     val reservasjonsnøkkel: String,
-    val status: String,
+    val status: Oppgavestatus,
     val endretTidspunkt: LocalDateTime,
     val felter: List<Oppgavefelt>,
 ) {

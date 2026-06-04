@@ -16,7 +16,7 @@ import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.cache.TestRepository
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.nyoppgavestyring.kodeverk.PersonBeskyttelseType
-import no.nav.k9.los.nyoppgavestyring.oppgavemottak.Oppgavestatus
+import no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.dto.query.*
 import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.mapping.CombineOperator
 import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.mapping.EksternFeltverdiOperator

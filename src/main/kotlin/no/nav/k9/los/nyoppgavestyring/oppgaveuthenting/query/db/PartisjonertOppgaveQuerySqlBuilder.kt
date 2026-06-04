@@ -6,7 +6,7 @@ import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.util.InClauseHjelper
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.nyoppgavestyring.kodeverk.PersonBeskyttelseType
 import no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.feltdefinisjon.Datatype
-import no.nav.k9.los.nyoppgavestyring.oppgavemottak.Oppgavestatus
+import no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.dto.query.*
 import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.dto.resultat.Aggregertverdi
 import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.dto.resultat.OppgaveQueryRad

@@ -1,6 +1,7 @@
 package no.nav.k9.los.nyoppgavestyring.oppgaveuthenting
 
 import no.nav.k9.los.AbstractK9LosIntegrationTest
+import no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.omraade.Område
 import no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.oppgavetype.Oppgavetype
 import org.junit.jupiter.api.Test
@@ -42,7 +43,7 @@ class UtledOppgavebehandlingsUrlTest : AbstractK9LosIntegrationTest(){
             eksternVersjon = "123",
             reservasjonsnøkkel = "test",
             oppgavetype = oppgavetype,
-            status = "test",
+            status = Oppgavestatus.AAPEN,
             endretTidspunkt = LocalDateTime.now(),
             felter = oppgavefelter,
         )
@@ -82,7 +83,7 @@ class UtledOppgavebehandlingsUrlTest : AbstractK9LosIntegrationTest(){
             eksternVersjon = "123",
             reservasjonsnøkkel = "test",
             oppgavetype = oppgavetype,
-            status = "test",
+            status = Oppgavestatus.AAPEN,
             endretTidspunkt = LocalDateTime.now(),
             felter = oppgavefelter,
         )
@@ -122,7 +123,7 @@ class UtledOppgavebehandlingsUrlTest : AbstractK9LosIntegrationTest(){
             eksternVersjon = "123",
             reservasjonsnøkkel = "test",
             oppgavetype = oppgavetype,
-            status = "test",
+            status = Oppgavestatus.AAPEN,
             endretTidspunkt = LocalDateTime.now(),
             felter = oppgavefelter,
         )

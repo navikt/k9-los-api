@@ -9,7 +9,7 @@ import no.nav.k9.los.nyoppgavestyring.oppgavemottak.AktivOgPartisjonertOppgaveAj
 import no.nav.k9.los.nyoppgavestyring.oppgavemottak.OppgaveFeltverdi
 import no.nav.k9.los.nyoppgavestyring.oppgavemottak.OppgaveV3
 import no.nav.k9.los.nyoppgavestyring.oppgavemottak.OppgaveV3Repository
-import no.nav.k9.los.nyoppgavestyring.oppgavemottak.Oppgavestatus
+import no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.oppgavetype.OppgavetypeRepository
 import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.db.OmrådeOgKode
 import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.db.OppgavefeltMedMer

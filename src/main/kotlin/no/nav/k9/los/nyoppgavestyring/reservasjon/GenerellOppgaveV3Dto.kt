@@ -2,7 +2,7 @@ package no.nav.k9.los.nyoppgavestyring.reservasjon
 
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.*
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
-import no.nav.k9.los.nyoppgavestyring.oppgavemottak.Oppgavestatus
+import no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.Oppgave
 import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.OppgaveNøkkelDto
 import java.time.LocalDate
@@ -33,7 +33,7 @@ data class GenerellOppgaveV3Dto(
         oppgaveNøkkel = OppgaveNøkkelDto(oppgaveV3),
         journalpostId = oppgaveV3.hentVerdi("journalpostId"),
         opprettetTidspunkt = oppgaveV3.hentVerdi("registrertDato")?.let { LocalDateTime.parse(it) },
-        oppgavestatus = Oppgavestatus.fraKode(oppgaveV3.status),
+        oppgavestatus = oppgaveV3.status,
         oppgavebehandlingsUrl = oppgaveV3.getOppgaveBehandlingsurl(),
         reservasjonsnøkkel = oppgaveV3.reservasjonsnøkkel,
         hastesak = oppgaveV3.hentVerdi("hastesak") == "true",

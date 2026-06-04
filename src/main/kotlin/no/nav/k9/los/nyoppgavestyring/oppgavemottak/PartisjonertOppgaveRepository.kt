@@ -4,6 +4,7 @@ import io.opentelemetry.instrumentation.annotations.WithSpan
 import kotliquery.Row
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
+import no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.oppgavetype.Oppgavetype
 import no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.oppgavetype.OppgavetypeRepository
 import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.db.PartisjonertOppgaveId
@@ -280,7 +281,7 @@ class PartisjonertOppgaveRepository(val oppgavetypeRepository: OppgavetypeReposi
             eksternId = row.string("oppgave_ekstern_id"),
             eksternVersjon = row.string("oppgave_ekstern_versjon"),
             oppgavetype = oppgavetype,
-            status = row.string("oppgavestatus"),
+            status = Oppgavestatus.fraKode(row.string("oppgavestatus")),
             endretTidspunkt = row.localDateTime("endret_tidspunkt"),
             felter = oppgavefelter,
             reservasjonsnøkkel = row.string("reservasjonsnokkel"),
