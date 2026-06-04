@@ -8,7 +8,7 @@ import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.FeltType
 import no.nav.k9.los.nyoppgavestyring.OppgaveTestDataBuilder
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
+import no.nav.k9.los.nyoppgavestyring.uthenting.OppgaveRepository
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.koin.test.get

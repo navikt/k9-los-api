@@ -5,7 +5,7 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.Oppgavetilsta
 import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
 import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
+import no.nav.k9.los.nyoppgavestyring.uthenting.Oppgave
 
 
 object PunsjAvstemmer {

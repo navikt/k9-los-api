@@ -17,7 +17,7 @@ import no.nav.k9.los.nyoppgavestyring.query.db.EksternOppgaveId
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
 import no.nav.k9.los.nyoppgavestyring.query.mapping.EksternFeltverdiOperator
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
+import no.nav.k9.los.nyoppgavestyring.uthenting.Oppgave
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.*

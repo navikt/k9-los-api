@@ -26,8 +26,8 @@ import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelOrderFelt
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgavefelt
+import no.nav.k9.los.nyoppgavestyring.uthenting.Oppgave
+import no.nav.k9.los.nyoppgavestyring.uthenting.Oppgavefelt
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 

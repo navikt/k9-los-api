@@ -33,7 +33,7 @@ import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelSelectFelt
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
 import no.nav.k9.los.nyoppgavestyring.query.mapping.EksternFeltverdiOperator
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
+import no.nav.k9.los.nyoppgavestyring.uthenting.OppgaveRepository
 import no.nav.k9.sak.typer.AktørId
 import no.nav.k9.sak.typer.JournalpostId
 import no.nav.sif.abac.kontrakt.abac.Diskresjonskode

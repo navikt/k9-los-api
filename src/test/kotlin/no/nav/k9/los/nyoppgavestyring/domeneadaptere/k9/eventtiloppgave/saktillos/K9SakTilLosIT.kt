@@ -32,9 +32,8 @@ import no.nav.k9.los.nyoppgavestyring.query.mapping.EksternFeltverdiOperator
 import no.nav.k9.los.nyoppgavestyring.reservasjon.OppgaveIdMedOverstyringDto
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonApisTjeneste
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.Saksbehandler
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveNøkkelDto
+import no.nav.k9.los.nyoppgavestyring.uthenting.OppgaveNøkkelDto
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.koin.test.get
 import java.time.LocalDateTime

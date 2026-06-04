@@ -2,9 +2,9 @@ package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk
 
 import kotliquery.*
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveNøkkelDto
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgavefelt
+import no.nav.k9.los.nyoppgavestyring.uthenting.Oppgave
+import no.nav.k9.los.nyoppgavestyring.uthenting.OppgaveNøkkelDto
+import no.nav.k9.los.nyoppgavestyring.uthenting.Oppgavefelt
 import java.time.LocalDateTime
 import javax.sql.DataSource
 

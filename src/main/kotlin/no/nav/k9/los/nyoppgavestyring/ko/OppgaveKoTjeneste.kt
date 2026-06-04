@@ -31,7 +31,7 @@ import no.nav.k9.los.nyoppgavestyring.reservasjon.ManglerTilgangException
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
+import no.nav.k9.los.nyoppgavestyring.uthenting.Oppgave
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.LocalDateTime

@@ -1,6 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.reservasjon
 
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
+import no.nav.k9.los.nyoppgavestyring.uthenting.Oppgave
 
 
 data class ReservasjonV3MedOppgaver(

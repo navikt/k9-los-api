@@ -3,7 +3,7 @@ package no.nav.k9.los.nyoppgavestyring.mottak.oppgave
 import kotliquery.TransactionalSession
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveNøkkelDto
+import no.nav.k9.los.nyoppgavestyring.uthenting.OppgaveNøkkelDto
 import org.jetbrains.annotations.VisibleForTesting
 
 class OppgaveV3Tjeneste(

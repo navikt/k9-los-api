@@ -4,7 +4,7 @@ import no.nav.k9.kodeverk.behandling.BehandlingResultatType
 import no.nav.k9.kodeverk.behandling.BehandlingStatus
 import no.nav.k9.kodeverk.behandling.FagsakYtelseType
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
+import no.nav.k9.los.nyoppgavestyring.uthenting.Oppgave
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.OffsetDateTime

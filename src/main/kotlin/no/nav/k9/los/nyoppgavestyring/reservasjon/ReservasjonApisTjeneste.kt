@@ -8,8 +8,8 @@ import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
 import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.AktivOppgaveOppslag
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveNøkkelDto
+import no.nav.k9.los.nyoppgavestyring.uthenting.AktivOppgaveOppslag
+import no.nav.k9.los.nyoppgavestyring.uthenting.OppgaveNøkkelDto
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.LocalDate

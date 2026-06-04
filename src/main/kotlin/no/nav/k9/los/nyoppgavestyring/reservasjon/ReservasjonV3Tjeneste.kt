@@ -14,8 +14,8 @@ import no.nav.k9.los.nyoppgavestyring.ko.ReservasjonEndret
 import no.nav.k9.los.nyoppgavestyring.ko.ReservasjonTatt
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.ReservasjonsnøkkelOppgaveOppslag
+import no.nav.k9.los.nyoppgavestyring.uthenting.Oppgave
+import no.nav.k9.los.nyoppgavestyring.uthenting.ReservasjonsnøkkelOppgaveOppslag
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime

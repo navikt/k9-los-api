@@ -1,8 +1,7 @@
 package no.nav.k9.los.nyoppgavestyring.forvaltning
 
-import io.ktor.util.*
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgavefelt
+import no.nav.k9.los.nyoppgavestyring.uthenting.Oppgave
+import no.nav.k9.los.nyoppgavestyring.uthenting.Oppgavefelt
 import java.time.LocalDateTime
 
 data class OppgaveIkkeSensitiv(

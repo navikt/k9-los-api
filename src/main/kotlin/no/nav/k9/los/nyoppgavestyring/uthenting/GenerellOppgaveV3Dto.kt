@@ -1,4 +1,4 @@
-package no.nav.k9.los.nyoppgavestyring.visningoguttrekk
+package no.nav.k9.los.nyoppgavestyring.uthenting
 
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.*
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType

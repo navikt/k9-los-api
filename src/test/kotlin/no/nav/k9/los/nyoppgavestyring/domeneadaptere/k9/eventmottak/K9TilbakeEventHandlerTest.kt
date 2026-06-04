@@ -2,22 +2,19 @@ package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak
 
 import assertk.assertThat
 import assertk.assertions.isEqualTo
-import assertk.assertions.isNull
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus
 import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.K9TilbakeEventHandler
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.PartisjonertOppgaveRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
-import no.nav.k9.los.nyoppgavestyring.query.db.EksternOppgaveId
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
 import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.mapping.EksternFeltverdiOperator
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
+import no.nav.k9.los.nyoppgavestyring.uthenting.OppgaveRepository
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -40,7 +37,7 @@ class K9TilbakeEventHandlerTest : AbstractK9LosIntegrationTest() {
         transactionalManager = get<TransactionalManager>()
     }
 
-    private fun hentOppgaveForEksternId(eksternId: String): no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave? {
+    private fun hentOppgaveForEksternId(eksternId: String): no.nav.k9.los.nyoppgavestyring.uthenting.Oppgave? {
         return transactionalManager.transaction { tx ->
             oppgaveRepository.hentNyesteOppgaveForEksternIdHvisFinnes(tx, "K9", eksternId)
         }

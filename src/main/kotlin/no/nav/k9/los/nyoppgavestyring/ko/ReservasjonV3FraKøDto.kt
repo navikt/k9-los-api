@@ -2,8 +2,8 @@ package no.nav.k9.los.nyoppgavestyring.ko
 
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveNøkkelDto
+import no.nav.k9.los.nyoppgavestyring.uthenting.Oppgave
+import no.nav.k9.los.nyoppgavestyring.uthenting.OppgaveNøkkelDto
 import java.time.LocalDateTime
 
 data class ReservasjonV3FraKøDto (

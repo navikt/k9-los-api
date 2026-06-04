@@ -85,7 +85,7 @@ import no.nav.k9.los.nyoppgavestyring.uttrekk.UttrekkCsvGenerator
 import no.nav.k9.los.nyoppgavestyring.uttrekk.UttrekkJobb
 import no.nav.k9.los.nyoppgavestyring.uttrekk.UttrekkRepository
 import no.nav.k9.los.nyoppgavestyring.uttrekk.UttrekkTjeneste
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.*
+import no.nav.k9.los.nyoppgavestyring.uthenting.*
 import org.koin.core.module.Module
 import org.koin.core.qualifier.named
 import org.koin.dsl.module

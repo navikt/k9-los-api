@@ -1,11 +1,11 @@
-package no.nav.k9.los.nyoppgavestyring.visningoguttrekk
+package no.nav.k9.los.nyoppgavestyring.uthenting
 
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.Oppgavetype
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRad.Companion.tilOppgaveRad
+import no.nav.k9.los.nyoppgavestyring.uthenting.OppgaveRad.Companion.tilOppgaveRad
 import java.time.LocalDateTime
 
 class AktivOppgaveOppslagPartisjonert(

@@ -14,8 +14,8 @@ import no.nav.k9.los.nyoppgavestyring.query.dto.query.Aggregeringsfunksjon
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.AggregertSelectFelt
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
 import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.OppgaveQueryRad
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
+import no.nav.k9.los.nyoppgavestyring.uthenting.Oppgave
+import no.nav.k9.los.nyoppgavestyring.uthenting.OppgaveRepository
 import java.time.LocalDateTime
 import javax.sql.DataSource
 
