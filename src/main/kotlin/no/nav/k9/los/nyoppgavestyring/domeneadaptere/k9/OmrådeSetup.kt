@@ -167,7 +167,7 @@ class OmrådeSetup(
             BehandlingStegType.VURDER_UTLAND,
             BehandlingStegType.VURDER_UTLAND_V2,
             BehandlingStegType.VURDER_SØKNADSFRIST,
-            BehandlingStegType.VURDER_RETT_FRA_DAG_1 -> Triple("Inngangsvilkår", Synlighet.OVER_STREKEN, 2)
+            BehandlingStegType.VURDER_RETT_FRA_DAG_EN -> Triple("Inngangsvilkår", Synlighet.OVER_STREKEN, 2)
 
             BehandlingStegType.VURDER_UTTAK,
             BehandlingStegType.VURDER_UTTAK_V2,
