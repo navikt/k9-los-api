@@ -3,6 +3,7 @@ package no.nav.k9.los.nyoppgavestyring.reservasjon
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.util.InClauseHjelper
 import org.postgresql.util.PSQLException
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -192,21 +193,23 @@ class ReservasjonV3Repository(
         saksbehandlerId: Set<Long>,
         tx: TransactionalSession
     ): Map<Long, Int> {
-        val ufiltrert = tx.run(
+        val saksbehandlerIdParametre = InClauseHjelper.tilParameternavn(saksbehandlerId, "saksbehandlerId")
+        val resultat = tx.run(
             queryOf(
                 """
                    select reservertAv, count(*) as antall
                    from reservasjon_v3 r
-                   where r.reservertAv = :reservertAv
+                   where r.reservertAv in ($saksbehandlerIdParametre)
                        and annullert_for_utlop = false
                        and lower(r.gyldig_tidsrom) <= :now
                        and upper(r.gyldig_tidsrom) > :now
                    group by reservertAv
                     """.trimIndent(),
-                mapOf(
-                    "reservertAv" to saksbehandlerId,
-                    "now" to LocalDateTime.now().truncatedTo(ChronoUnit.MICROS),
-                )
+                buildMap {
+                    put("reservertAv", saksbehandlerId)
+                    put("now" ,LocalDateTime.now().truncatedTo(ChronoUnit.MICROS))
+                    putAll(InClauseHjelper.parameternavnTilVerdierMap(saksbehandlerId, "saksbehandlerId"))
+                }
             ).map { row ->
                 AntallReservasjonerForSaksbehandler(
                     saksbehandlerId = row.long("reservertAv"),
@@ -216,7 +219,7 @@ class ReservasjonV3Repository(
                 .asList
 
         )
-        return ufiltrert.filter { saksbehandlerId.contains(it.saksbehandlerId) }
+        return resultat
             .map { it.saksbehandlerId to it.antallReservasjoner }
             .toMap()
     }
