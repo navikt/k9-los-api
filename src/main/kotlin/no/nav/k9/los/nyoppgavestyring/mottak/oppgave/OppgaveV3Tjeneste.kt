@@ -13,13 +13,17 @@ class OppgaveV3Tjeneste(
 ) {
 
 
-    fun sjekkDuplikatOgProsesser(innsending: NyOppgaveVersjonInnsending, tx: TransactionalSession): OppgaveV3? {
+    fun sjekkDuplikatOgProsesser(
+        innsending: NyOppgaveVersjonInnsending,
+        tx: TransactionalSession,
+        forrigeOppgaveversjon: OppgaveV3? = null,
+    ): OppgaveV3? {
         when (innsending) {
             is NyOppgaveversjon -> {
                 val skalOppdatere = nyEksternversjon(innsending.dto, tx)
 
                 if (skalOppdatere) {
-                    return lagreNyOppgaveversjon(innsending.dto, tx)
+                    return lagreNyOppgaveversjon(innsending.dto, tx, forrigeOppgaveversjon)
                 } else {
                     return null
                 }
@@ -27,15 +31,19 @@ class OppgaveV3Tjeneste(
             is VaskOppgaveversjon -> {
                 val eksisterer = oppgaveV3Repository.hentOppgaveIdStatusOgHøyesteInternversjon(tx, innsending.dto.eksternId, innsending.dto.type, innsending.dto.område).first != null
                 if (eksisterer) {
-                    return vaskEksisterendeOppgaveversjon(innsending.dto, innsending.eventNummer, tx)
+                    return vaskEksisterendeOppgaveversjon(innsending.dto, innsending.eventNummer, tx, forrigeOppgaveversjon)
                 } else {
-                    return lagreNyOppgaveversjon(innsending.dto, tx)
+                    return lagreNyOppgaveversjon(innsending.dto, tx, forrigeOppgaveversjon)
                 }
             }
         }
     }
 
-    private fun lagreNyOppgaveversjon(oppgaveDto: OppgaveDto, tx: TransactionalSession): OppgaveV3 {
+    private fun lagreNyOppgaveversjon(
+        oppgaveDto: OppgaveDto,
+        tx: TransactionalSession,
+        forrigeOppgaveversjon: OppgaveV3? = null,
+    ): OppgaveV3 {
         val område = områdeRepository.hentOmråde(oppgaveDto.område, tx)
         val oppgavetype = oppgavetypeRepository.hentOppgavetype(
             område = område.eksternId,
@@ -43,7 +51,10 @@ class OppgaveV3Tjeneste(
             tx = tx
         )
 
-        val aktivOppgaveVersjon = oppgaveV3Repository.hentAktivOppgave(oppgaveDto.eksternId, oppgavetype, tx)
+        // Hopper over hentAktivOppgave når caller allerede har forrige versjon i minne
+        // (gjelder per-event replay i EventTilOppgaveAdapter).
+        val aktivOppgaveVersjon = forrigeOppgaveversjon
+            ?: oppgaveV3Repository.hentAktivOppgave(oppgaveDto.eksternId, oppgavetype, tx)
         var innkommendeOppgave = OppgaveV3(oppgaveDto, oppgavetype)
 
         val utledeteFelter = oppgavetype.oppgavefelter
@@ -114,7 +125,12 @@ class OppgaveV3Tjeneste(
         oppgaveV3Repository.slettOppgave(oppgavenøkkel, tx)
     }
 
-    fun vaskEksisterendeOppgaveversjon(oppgaveDto: OppgaveDto, eventNr: Int, tx: TransactionalSession) : OppgaveV3 {
+    fun vaskEksisterendeOppgaveversjon(
+        oppgaveDto: OppgaveDto,
+        eventNr: Int,
+        tx: TransactionalSession,
+        forrigeOppgaveversjon: OppgaveV3? = null,
+    ) : OppgaveV3 {
         val oppgavetype = oppgavetypeRepository.hentOppgavetype(
             område = oppgaveDto.område,
             eksternId = oppgaveDto.type,
@@ -123,7 +139,8 @@ class OppgaveV3Tjeneste(
 
         val område = områdeRepository.hentOmråde(oppgaveDto.område, tx)
 
-        val forrigeOppgaveversjon = if (eventNr > 0) {
+        // Hopper over hentOppgaveversjon-oppslaget hvis caller allerede har versjonen i minne.
+        val forrigeOppgaveversjonResolved = forrigeOppgaveversjon ?: if (eventNr > 0) {
             oppgaveV3Repository.hentOppgaveversjon(område, oppgavetype, oppgaveDto.eksternId, eventNr, tx)
         } else {
             null
@@ -134,7 +151,7 @@ class OppgaveV3Tjeneste(
         oppgavetype.oppgavefelter
             .filter { oppgavefelt -> oppgavefelt.feltutleder != null }
             .forEach { oppgavefelt ->
-                val utledetFeltverdi = oppgavefelt.feltutleder!!.utled(innkommendeOppgave, forrigeOppgaveversjon)
+                val utledetFeltverdi = oppgavefelt.feltutleder!!.utled(innkommendeOppgave, forrigeOppgaveversjonResolved)
                 if (utledetFeltverdi != null) {
                     utledeteFelter.add(utledetFeltverdi)
                 }

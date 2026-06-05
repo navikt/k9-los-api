@@ -1,12 +1,19 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk
 
 import kotliquery.*
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.util.InClauseHjelper
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveNøkkelDto
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgavefelt
 import java.time.LocalDateTime
 import javax.sql.DataSource
+
+data class DvhPendingPerOppgavetypeDto(
+    val oppgavetype: String,
+    val antall: Long,
+)
+
 
 class StatistikkRepository(
     private val dataSource: DataSource,
@@ -19,15 +26,28 @@ class StatistikkRepository(
                 queryOf(
                     """
                         select ov.id
-                        from oppgave_v3 ov
-                        join oppgavetype o ON ov.oppgavetype_id = o.id 
-                        where o.ekstern_id in ('k9sak', 'k9klage')
-                          and not exists (select * from OPPGAVE_V3_SENDT_DVH os where os.id = ov.id)
+                        from oppgave_v3_dvh_pending p
+                        join oppgave_v3 ov
+                            on ov.ekstern_id = p.ekstern_id
+                           and ov.ekstern_versjon = p.ekstern_versjon
+                        left join (
+                            select ofv.oppgave_id, max(ofv.verdi) as saksnummer
+                            from oppgavefelt_verdi ofv
+                            join oppgavefelt f
+                                on ofv.oppgavefelt_id = f.id
+                            join feltdefinisjon fd
+                                on f.feltdefinisjon_id = fd.id
+                            join omrade om
+                                on fd.omrade_id = om.id
+                            where fd.ekstern_id = 'saksnummer'
+                                and om.ekstern_id = 'K9'
+                            group by ofv.oppgave_id
+                        ) saksnummer
+                            on saksnummer.oppgave_id = ov.id
+                        where p.oppgavetype_ekstern_id in ('k9sak', 'k9klage')
+                        order by saksnummer.saksnummer nulls last, ov.ekstern_id, ov.ekstern_versjon
                     """.trimIndent()
-                )
-                    .map { row ->
-                        row.long("id")
-                    }.asList
+                ).map { row -> row.long("id") }.asList
             )
         }
     }
@@ -37,7 +57,10 @@ class StatistikkRepository(
             it.run(
                 queryOf(
                     """
-                        insert into OPPGAVE_V3_SENDT_DVH(id) values (:id)
+                        delete from oppgave_v3_dvh_pending
+                        where (ekstern_id, ekstern_versjon) in (
+                            select ekstern_id, ekstern_versjon from oppgave_v3 where id = :id
+                        )
                     """.trimIndent(),
                     mapOf("id" to id)
                 ).asUpdate
@@ -45,44 +68,161 @@ class StatistikkRepository(
         }
     }
 
-    fun fjernSendtMarkering(oppgave: OppgaveNøkkelDto, tx: TransactionalSession) {
+    fun kvitterSending(tx: TransactionalSession, id: Long) {
         tx.run(
-            queryOf("""
-                delete from oppgave_v3_sendt_dvh ov3sd 
-                where ov3sd.id IN (
-                    SELECT ov3.id 
-                    FROM oppgave_v3 ov3 
-                    join oppgavetype ot ON ov3.oppgavetype_id = ot.id 
-                    join omrade o ON ot.omrade_id = o.id 
-                    WHERE ov3.ekstern_id = :id 
-                      AND ot.ekstern_id = :type 
-                      AND o.ekstern_id = :omrade
-                )
-            """.trimIndent()
-                , mapOf(
-                    "id" to oppgave.oppgaveEksternId,
-                    "type" to oppgave.oppgaveTypeEksternId,
-                    "omrade" to oppgave.områdeEksternId)
+            queryOf(
+                """
+                    delete from oppgave_v3_dvh_pending
+                    where (ekstern_id, ekstern_versjon) in (
+                        select ekstern_id, ekstern_versjon from oppgave_v3 where id = :id
+                    )
+                """.trimIndent(),
+                mapOf("id" to id)
             ).asUpdate
         )
     }
 
-    fun fjernSendtMarkering(oppgavetype: String? = null) {
-        using(sessionOf(dataSource)) {
-            if (oppgavetype != null) {
+
+    fun fjernSendtMarkering(oppgave: OppgaveNøkkelDto, tx: TransactionalSession) {
+        // Legg alle versjoner av oppgaven tilbake som pending (resend fra start)
+        tx.run(
+            queryOf(
+                """
+                insert into oppgave_v3_dvh_pending (ekstern_id, ekstern_versjon, oppgavetype_ekstern_id)
+                select ekstern_id, ekstern_versjon, oppgavetype_ekstern_id
+                from oppgave_v3
+                where ekstern_id = :id
+                  and oppgavetype_ekstern_id in ('k9sak', 'k9klage')
+                on conflict (ekstern_id, ekstern_versjon) do nothing
+                """.trimIndent(),
+                mapOf("id" to oppgave.oppgaveEksternId)
+            ).asUpdate
+        )
+    }
+
+fun fjernSendtMarkering(oppgavetype: String? = null) {
+    if (oppgavetype != null && oppgavetype !in DVH_OPPGAVETYPER) return
+    using(sessionOf(dataSource)) {
+        if (oppgavetype != null) {
                 it.run(
                     queryOf(
-                        """delete from oppgave_v3_sendt_dvh ov3sd where ov3sd.id IN (SELECT ov3.id FROM oppgave_v3 ov3 join oppgavetype ot ON ov3.oppgavetype_id = ot.id WHERE ot.ekstern_id = :oppgavetype)"""
-                    , mapOf("oppgavetype" to oppgavetype)
+                        """
+                        insert into oppgave_v3_dvh_pending (ekstern_id, ekstern_versjon, oppgavetype_ekstern_id)
+                        select ov.ekstern_id, ov.ekstern_versjon, ov.oppgavetype_ekstern_id
+                        from oppgave_v3 ov
+                        where ov.oppgavetype_ekstern_id = :oppgavetype
+                        on conflict (ekstern_id, ekstern_versjon) do nothing
+                        """.trimIndent(),
+                        mapOf("oppgavetype" to oppgavetype)
                     ).asUpdate
                 )
             } else {
+                // Repopuler pending for alle relevante oppgavetyper
                 it.run(
                     queryOf(
-                        """delete from oppgave_v3_sendt_dvh"""
+                        """
+                        insert into oppgave_v3_dvh_pending (ekstern_id, ekstern_versjon, oppgavetype_ekstern_id)
+                        select ov.ekstern_id, ov.ekstern_versjon, ov.oppgavetype_ekstern_id
+                        from oppgave_v3 ov
+                        where ov.oppgavetype_ekstern_id in ('k9sak', 'k9klage')
+                        on conflict (ekstern_id, ekstern_versjon) do nothing
+                        """.trimIndent()
                     ).asUpdate
                 )
             }
+        }
+    }
+
+    /**
+     * Dual-write: registrerer en ny oppgaveversjon i pending-tabellen så snart den er lagret
+     * i oppgave_v3, men før den er sendt til DVH. Kalles fra EventTilOppgaveAdapter.
+     * Kun relevant for oppgavetyper som sendes til DVH (k9sak, k9klage).
+     */
+    fun bestillDvhSending(
+        eksternId: String,
+        eksternVersjon: String,
+        oppgavetypeEksternId: String,
+        tx: TransactionalSession,
+    ) {
+        if (oppgavetypeEksternId !in DVH_OPPGAVETYPER) return
+        tx.run(
+            queryOf(
+                """
+                insert into oppgave_v3_dvh_pending (ekstern_id, ekstern_versjon, oppgavetype_ekstern_id)
+                values (:eksternId, :eksternVersjon, :oppgavetypeEksternId)
+                on conflict (ekstern_id, ekstern_versjon) do nothing
+                """.trimIndent(),
+                mapOf(
+                    "eksternId" to eksternId,
+                    "eksternVersjon" to eksternVersjon,
+                    "oppgavetypeEksternId" to oppgavetypeEksternId,
+                )
+            ).asUpdate
+        )
+    }
+
+    fun bestillDvhSendingForEksternIder(eksternIder: List<String>, tx: TransactionalSession) {
+        if (eksternIder.isEmpty()) return
+
+        tx.run(
+            queryOf(
+                """
+                insert into oppgave_v3_dvh_pending (ekstern_id, ekstern_versjon, oppgavetype_ekstern_id)
+                select ov.ekstern_id, ov.ekstern_versjon, ov.oppgavetype_ekstern_id
+                from oppgave_v3 ov
+                where ov.ekstern_id in (${InClauseHjelper.tilParameternavn(eksternIder, "ekstern_id")})
+                  and ov.oppgavetype_ekstern_id in ('k9sak', 'k9klage')
+                on conflict (ekstern_id, ekstern_versjon) do nothing
+                """.trimIndent(),
+                InClauseHjelper.parameternavnTilVerdierMap(eksternIder, "ekstern_id")
+            ).asUpdate
+        )
+    }
+
+    companion object {
+        /** Oppgavetyper hvis versjoner spores i oppgave_v3_dvh_pending for sending til DVH. */
+        private val DVH_OPPGAVETYPER = setOf("k9sak", "k9klage")
+    }
+
+    /**
+     * Populerer oppgave_v3_dvh_pending fra oppgave_v3.
+     * Backfill/requeue-operasjon som ikke skal kjøres i normal drift, siden allerede
+     * sendte oppgaveversjoner kan bli lagt til i pending på nytt.
+     * Returnerer antall rader lagt til.
+     */
+    fun populerPendingFraOppgaveV3(): Int {
+        return using(sessionOf(dataSource)) {
+            it.run(
+                queryOf(
+                    """
+                    insert into oppgave_v3_dvh_pending (ekstern_id, ekstern_versjon, oppgavetype_ekstern_id)
+                    select ov.ekstern_id, ov.ekstern_versjon, ov.oppgavetype_ekstern_id
+                    from oppgave_v3 ov
+                    where ov.oppgavetype_ekstern_id in ('k9sak', 'k9klage')
+                    on conflict (ekstern_id, ekstern_versjon) do nothing
+                    """.trimIndent()
+                ).asUpdate
+            )
+        }
+    }
+
+    fun hentPendingPerOppgavetype(): List<DvhPendingPerOppgavetypeDto> {
+        return using(sessionOf(dataSource)) {
+            it.run(
+                queryOf(
+                    """
+                    select oppgavetype_ekstern_id, count(*) as antall
+                    from oppgave_v3_dvh_pending
+                    group by oppgavetype_ekstern_id
+                    order by oppgavetype_ekstern_id
+                    """.trimIndent()
+                ).map { row ->
+                    DvhPendingPerOppgavetypeDto(
+                        oppgavetype = row.string("oppgavetype_ekstern_id"),
+                        antall = row.long("antall"),
+                    )
+                }.asList
+            )
         }
     }
 

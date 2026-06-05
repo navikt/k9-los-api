@@ -1,13 +1,19 @@
 package no.nav.k9.los.nyoppgavestyring.forvaltning
 
+import com.fasterxml.jackson.annotation.JsonCreator
+import com.fasterxml.jackson.annotation.JsonValue
 import io.github.smiley4.ktoropenapi.get
+import io.github.smiley4.ktoropenapi.post
 import io.ktor.http.*
+import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotliquery.queryOf
 import no.nav.k9.kodeverk.behandling.FagsakYtelseType
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.AvstemmingsTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.K9Oppgavetypenavn
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventRepository
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.StatistikkRepository
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.RequestContextService
@@ -18,17 +24,14 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
 import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelOrderFelt
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelSelectFelt
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
-import no.nav.k9.los.nyoppgavestyring.query.dto.query.OrderFelt
 import no.nav.k9.los.nyoppgavestyring.query.mapping.EksternFeltverdiOperator
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Repository
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepositoryTxWrapper
 import org.koin.ktor.ext.inject
-import org.slf4j.LoggerFactory
-import java.util.*
-import kotlin.getValue
 
 
 fun Route.forvaltningApis() {
@@ -41,6 +44,8 @@ fun Route.forvaltningApis() {
     val transactionalManager by inject<TransactionalManager>()
     val forvaltningRepository by inject<ForvaltningRepository>()
     val avstemmingsTjeneste by inject<AvstemmingsTjeneste>()
+    val eventRepository by inject<EventRepository>()
+    val statistikkRepository by inject<StatistikkRepository>()
 
     val pepClient by inject<IPepClient>()
     val requestContextService by inject<RequestContextService>()
@@ -106,14 +111,14 @@ fun Route.forvaltningApis() {
         tags("Forvaltning")
         description = "Søk opp eksternId for saksnummer eller journalpostId"
         request {
-            pathParameter<String>("system") {
+            pathParameter<Fagsystem>("system") {
                 description = "Kildesystem som har sendt inn oppgaven"
                 example("k9sak") {
-                    value = "K9SAK"
+                    value = Fagsystem.K9SAK
                     description = "K9sak"
                 }
                 example("k9punsj") {
-                    value = "PUNSJ"
+                    value = Fagsystem.PUNSJ
                     description = "K9punsj"
                 }
             }
@@ -126,57 +131,63 @@ fun Route.forvaltningApis() {
             if (pepClient.kanLeggeUtDriftsmelding()) {
                 val fagsystem = Fagsystem.fraKode(call.parameters["system"]!!)
                 val saksnummer = call.parameters["saksnummer"]!!
+                val oppgavetypeKode = K9Oppgavetypenavn.fraFagsystem(fagsystem).kode
 
-                when (fagsystem) {
+                val sokefelt = when (fagsystem) {
                     Fagsystem.K9SAK,
                     Fagsystem.K9TILBAKE,
-                    Fagsystem.K9KLAGE -> {
-                        val query = QueryRequest(
-                            oppgaveQuery = OppgaveQuery(
-                                filtere = listOf(
-                                    FeltverdiOppgavefilter(
-                                        "K9",
-                                        "saksnummer",
-                                        operator = EksternFeltverdiOperator.EQUALS,
-                                        verdi = listOf(saksnummer)
-                                    )
-                                ),
-                                order = listOf(
-                                    EnkelOrderFelt(
-                                        område = "K9",
-                                        kode = "opprettetTidspunkt",
-                                        økende = true
-                                    )
-                                )
-                            ),
-                            fjernReserverte = false,
-                            avgrensning = null
-                        )
+                    Fagsystem.K9KLAGE -> "saksnummer"
 
-                        val eksternIds = oppgaveQueryService.queryForOppgaveEksternId(query)
-                        call.respond(eksternIds)
-                    }
-
-                    Fagsystem.PUNSJ -> {
-                        val query = QueryRequest(
-                            oppgaveQuery = OppgaveQuery(
-                                filtere = listOf(
-                                    FeltverdiOppgavefilter(
-                                        "K9",
-                                        "journalpostId",
-                                        operator = EksternFeltverdiOperator.EQUALS,
-                                        verdi = listOf(saksnummer)
-                                    )
-                                )
-                            ),
-                            fjernReserverte = false,
-                            avgrensning = null
-                        )
-
-                        val eksternIds = oppgaveQueryService.queryForOppgaveEksternId(query)
-                        call.respond(eksternIds)
-                    }
+                    Fagsystem.PUNSJ -> "journalpostId"
                 }
+
+                val query = QueryRequest(
+                    oppgaveQuery = OppgaveQuery(
+                        filtere = listOf(
+                            FeltverdiOppgavefilter(
+                                område = null,
+                                kode = "oppgavetype",
+                                operator = EksternFeltverdiOperator.EQUALS,
+                                verdi = listOf(oppgavetypeKode)
+                            ),
+                            FeltverdiOppgavefilter(
+                                område = "K9",
+                                kode = sokefelt,
+                                operator = EksternFeltverdiOperator.EQUALS,
+                                verdi = listOf(saksnummer)
+                            )
+                        ),
+                        select = listOf(
+                            EnkelSelectFelt(
+                                område = "K9",
+                                kode = "opprettetTidspunkt"
+                            )
+                        ),
+                        order = listOf(
+                            EnkelOrderFelt(
+                                område = "K9",
+                                kode = "opprettetTidspunkt",
+                                økende = true
+                            )
+                        )
+                    ),
+                    fjernReserverte = false,
+                    avgrensning = null
+                )
+
+                val eksternIds = oppgaveQueryService.query(query).map { rad ->
+                    val eksternOppgaveId = rad.eksternOppgaveId
+                        ?: throw IllegalStateException("OppgaveQueryRad mangler eksternOppgaveId")
+                    FinnEksternIdResponse(
+                        område = eksternOppgaveId.område,
+                        eksternId = eksternOppgaveId.eksternId,
+                        opprettetTidspunkt = rad.feltverdier
+                            .firstOrNull { it.område == "K9" && it.kode == "opprettetTidspunkt" }
+                            ?.verdi
+                            ?.toString()
+                    )
+                }
+                call.respond(eksternIds)
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
@@ -194,10 +205,10 @@ fun Route.forvaltningApis() {
                     description = "Oppgaver definert innenfor K9"
                 }
             }
-            pathParameter<String>("oppgavetype") {
+            pathParameter<K9Oppgavetypenavn>("oppgavetype") {
                 description = "Navnet på oppgavetypen."
                 example("k9sak") {
-                    value = "k9sak"
+                    value = K9Oppgavetypenavn.SAK
                     description = "Oppgaver som kommer fra k9sak"
                 }
             }
@@ -240,10 +251,10 @@ fun Route.forvaltningApis() {
                     description = "Oppgaver definert innenfor K9"
                 }
             }
-            pathParameter<String>("oppgavetype") {
+            pathParameter<K9Oppgavetypenavn>("oppgavetype") {
                 description = "Navnet på oppgavetypen."
                 example("k9sak") {
-                    value = "k9sak"
+                    value = K9Oppgavetypenavn.SAK
                     description = "Oppgaver som kommer fra k9sak"
                 }
             }
@@ -290,10 +301,10 @@ fun Route.forvaltningApis() {
                     description = "Oppgaver definert innenfor K9"
                 }
             }
-            pathParameter<String>("oppgavetype") {
+            pathParameter<K9Oppgavetypenavn>("oppgavetype") {
                 description = "Navnet på oppgavetypen."
                 example("k9sak") {
-                    value = "k9sak"
+                    value = K9Oppgavetypenavn.SAK
                     description = "Oppgaver som kommer fra k9sak"
                 }
             }
@@ -336,7 +347,8 @@ fun Route.forvaltningApis() {
 
     get("/avstemming/{fagsystem}", {
         tags("Forvaltning")
-        description = "Hent ut liste med åpne behandlinger/journalposter i spesifisert fagsystem og kontroller opp mot åpne oppgaver i los. Returnerer en avviksrapport"
+        description =
+            "Hent ut liste med åpne behandlinger/journalposter i spesifisert fagsystem og kontroller opp mot åpne oppgaver i los. Returnerer en avviksrapport"
         request {
             pathParameter<Fagsystem>("fagsystem") {
                 description = "Kildesystem som har levert eventene"
@@ -361,7 +373,7 @@ fun Route.forvaltningApis() {
     }
 
     route("/ytelse") {
-        get("/oppgaveko/antall", {tags("Forvaltning")}) {
+        get("/oppgaveko/antall", { tags("Forvaltning") }) {
             requestContextService.withRequestContext(call) {
                 if (pepClient.kanLeggeUtDriftsmelding()) {
                     val antall = oppgaveKoTjeneste.hentOppgavekøer(skjermet = false).map {
@@ -378,7 +390,7 @@ fun Route.forvaltningApis() {
             }
         }
 
-        get("/oppgaveko", {tags("Forvaltning")}) {
+        get("/oppgaveko", { tags("Forvaltning") }) {
             requestContextService.withRequestContext(call) {
                 if (pepClient.kanLeggeUtDriftsmelding()) {
                     call.respond(oppgaveKoTjeneste.hentOppgavekøer(skjermet = false).map { it.id })
@@ -388,7 +400,7 @@ fun Route.forvaltningApis() {
             }
         }
 
-        get("/oppgaveko/{ko}/antall", {tags("Forvaltning")}) {
+        get("/oppgaveko/{ko}/antall", { tags("Forvaltning") }) {
             requestContextService.withRequestContext(call) {
                 if (pepClient.kanLeggeUtDriftsmelding()) {
                     val køId = call.parameters["ko"]!!.toLong()
@@ -402,6 +414,196 @@ fun Route.forvaltningApis() {
                 } else {
                     call.respond(HttpStatusCode.Forbidden)
                 }
+            }
+        }
+    }
+
+    get("/feltdefinisjon/{omrade}/{kode}/bruk", {
+        tags("Forvaltning")
+        description = "Hent oppgavekøer og lagrede søk som bruker et spesifikt felt som kriterie"
+        request {
+            pathParameter<String>("omrade") {
+                description = "Området feltdefinisjonen tilhører"
+                example("K9") { value = "K9" }
+            }
+            pathParameter<String>("kode") {
+                description = "Feltdefinisjonens kode (eksternId)"
+                example("ytelsestype") { value = "ytelsestype" }
+            }
+        }
+    }) {
+        requestContextService.withRequestContext(call) {
+            if (pepClient.kanLeggeUtDriftsmelding()) {
+                val område = call.parameters["omrade"].let { if (it == "null" || it == null) null else it }
+                val kode = call.parameters["kode"]!!
+
+                val (køer, lagredeSøk) = transactionalManager.transaction { tx ->
+                    val alleKøer = forvaltningRepository.hentAlleOppgavekoerMedQuery(tx)
+                    val alleLagredeSøk = forvaltningRepository.hentAlleLagredeSøkMedQuery(tx)
+                    alleKøer to alleLagredeSøk
+                }
+
+                val matchendeKøer = køer
+                    .filter { it.oppgaveQuery.inneholderFelt(område, kode) }
+                    .map { OppgavekøFeltbrukDto(id = it.id, tittel = it.tittel) }
+
+                val matchendeSøk = lagredeSøk
+                    .filter { it.oppgaveQuery.inneholderFelt(område, kode) }
+                    .map {
+                        LagretSøkFeltbrukDto(
+                            id = it.id,
+                            tittel = it.tittel,
+                            saksbehandlerEpost = it.saksbehandlerEpost
+                        )
+                    }
+
+                call.respond(FeltbrukDetaljerDto(oppgavekøer = matchendeKøer, lagredeSøk = matchendeSøk))
+            } else {
+                call.respond(HttpStatusCode.Forbidden)
+            }
+        }
+    }
+
+    get("/feltdefinisjon/bruk", {
+        tags("Forvaltning")
+        description =
+            "Hent oversikt over alle feltdefinisjoner som er brukt som kriterie i oppgavekøer og lagrede søk, med antall for hver"
+    }) {
+        requestContextService.withRequestContext(call) {
+            if (pepClient.kanLeggeUtDriftsmelding()) {
+                val (køer, lagredeSøk) = transactionalManager.transaction { tx ->
+                    val alleKøer = forvaltningRepository.hentAlleOppgavekoerMedQuery(tx)
+                    val alleLagredeSøk = forvaltningRepository.hentAlleLagredeSøkMedQuery(tx)
+                    alleKøer to alleLagredeSøk
+                }
+
+                val køTelling = mutableMapOf<Feltreferanse, Int>()
+                for (kø in køer) {
+                    for (ref in kø.oppgaveQuery.hentAlleFeltreferanser()) {
+                        køTelling[ref] = (køTelling[ref] ?: 0) + 1
+                    }
+                }
+
+                val søkTelling = mutableMapOf<Feltreferanse, Int>()
+                for (søk in lagredeSøk) {
+                    for (ref in søk.oppgaveQuery.hentAlleFeltreferanser()) {
+                        søkTelling[ref] = (søkTelling[ref] ?: 0) + 1
+                    }
+                }
+
+                val alleReferanser = køTelling.keys + søkTelling.keys
+                val resultat = alleReferanser.map { ref ->
+                    FeltbrukOversiktDto(
+                        område = ref.område,
+                        kode = ref.kode,
+                        antallOppgavekøer = køTelling[ref] ?: 0,
+                        antallLagredeSøk = søkTelling[ref] ?: 0
+                    )
+                }.sortedWith(compareBy({ it.område ?: "" }, { it.kode }))
+
+                call.respond(resultat)
+            } else {
+                call.respond(HttpStatusCode.Forbidden)
+            }
+        }
+    }
+
+    post("/bestillHistorikkvaskFraQuery/{fagsystem}", {
+        tags("Forvaltning")
+        description = "Bestill historikkvask for oppgaver truffet av oppgavequery"
+        request {
+            pathParameter<Fagsystem>("fagsystem") {
+                description = "Fagsystemet oppgavene tilhører"
+            }
+        }
+    }) {
+        requestContextService.withRequestContext(call) {
+            if (pepClient.kanLeggeUtDriftsmelding()) {
+                val fagsystem = Fagsystem.fraKode(call.parameters["fagsystem"]!!)
+                val oppgaveQueryFraRequest = call.receive<OppgaveQuery>()
+                if (oppgaveQueryFraRequest.select.isNotEmpty()) {
+                    call.respond(HttpStatusCode.BadRequest, "OppgaveQuery.select støttes ikke for bestilling fra query")
+                    return@withRequestContext
+                }
+                val filtereUtenOppgavetype = oppgaveQueryFraRequest.filtere
+                    .filterNot { filter ->
+                        filter is FeltverdiOppgavefilter && filter.kode == "oppgavetype"
+                    }
+                val oppgaveQuery = oppgaveQueryFraRequest.copy(
+                    filtere = filtereUtenOppgavetype + FeltverdiOppgavefilter(
+                        område = null,
+                        kode = "oppgavetype",
+                        operator = EksternFeltverdiOperator.EQUALS,
+                        verdi = listOf(K9Oppgavetypenavn.fraFagsystem(fagsystem).kode)
+                    )
+                )
+                val eksternIder = oppgaveQueryService.queryForOppgaveEksternId(QueryRequest(oppgaveQuery))
+                    .map { it.eksternId }
+                    .distinct()
+
+                transactionalManager.transaction { tx ->
+                    eksternIder.chunked(1000).forEach { chunk ->
+                        eventRepository.bestillHistorikkvask(fagsystem, chunk, tx)
+                    }
+                }
+
+                call.respond(BestillingFraQueryResponse(eksternIder.size))
+            } else {
+                call.respond(HttpStatusCode.Forbidden)
+            }
+        }
+    }
+
+    post("/bestillDvhSendingFraQuery/{fagsystem}", {
+        tags("Forvaltning")
+        description = "Bestill DVH-sending for oppgaver truffet av oppgavequery"
+        request {
+            pathParameter<DvhSendingFagsystem>("fagsystem") {
+                description = "Fagsystemet oppgavene skal begrenses til"
+                example("k9sak") {
+                    value = DvhSendingFagsystem.K9SAK
+                    description = "Oppgaver fra k9sak"
+                }
+                example("k9klage") {
+                    value = DvhSendingFagsystem.K9KLAGE
+                    description = "Oppgaver fra k9klage"
+                }
+            }
+        }
+    }) {
+        requestContextService.withRequestContext(call) {
+            if (pepClient.kanLeggeUtDriftsmelding()) {
+                val fagsystem = DvhSendingFagsystem.fraKode(call.parameters["fagsystem"]!!)
+                val oppgaveQueryFraRequest = call.receive<OppgaveQuery>()
+                if (oppgaveQueryFraRequest.select.isNotEmpty()) {
+                    call.respond(HttpStatusCode.BadRequest, "OppgaveQuery.select støttes ikke for bestilling fra query")
+                    return@withRequestContext
+                }
+                val filtereUtenOppgavetype = oppgaveQueryFraRequest.filtere
+                    .filterNot { filter ->
+                        filter is FeltverdiOppgavefilter && filter.kode == "oppgavetype"
+                    }
+                val oppgaveQuery = oppgaveQueryFraRequest.copy(
+                    filtere = filtereUtenOppgavetype + FeltverdiOppgavefilter(
+                        område = null,
+                        kode = "oppgavetype",
+                        operator = EksternFeltverdiOperator.EQUALS,
+                        verdi = listOf(fagsystem.oppgavetypeKode)
+                    )
+                )
+                val eksternIder = oppgaveQueryService.queryForOppgaveEksternId(QueryRequest(oppgaveQuery))
+                    .map { it.eksternId }
+                    .distinct()
+
+                transactionalManager.transaction { tx ->
+                    eksternIder.chunked(1000).forEach { chunk ->
+                        statistikkRepository.bestillDvhSendingForEksternIder(chunk, tx)
+                    }
+                }
+
+                call.respond(BestillingFraQueryResponse(eksternIder.size))
+            } else {
+                call.respond(HttpStatusCode.Forbidden)
             }
         }
     }
@@ -435,3 +637,28 @@ fun lagNøkkelAktør(oppgave: Oppgave, tilBeslutter: Boolean): String {
         "K9_b_${oppgave.hentVerdi("ytelsestype")}_${oppgave.hentVerdi("aktorId")}"
     }
 }
+
+data class FinnEksternIdResponse(
+    val område: String,
+    val eksternId: String,
+    val opprettetTidspunkt: String?,
+)
+
+data class BestillingFraQueryResponse(
+    val antallEksternIder: Int,
+)
+
+enum class DvhSendingFagsystem(@JsonValue val oppgavetypeKode: String) {
+    K9SAK("k9sak"),
+    K9KLAGE("k9klage");
+
+    companion object {
+        @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
+        @JvmStatic
+        fun fraKode(kode: String): DvhSendingFagsystem {
+            return entries.find { it.oppgavetypeKode == kode }
+                ?: throw IllegalStateException("Kjenner ikke igjen DVH-fagsystem=$kode")
+        }
+    }
+}
+

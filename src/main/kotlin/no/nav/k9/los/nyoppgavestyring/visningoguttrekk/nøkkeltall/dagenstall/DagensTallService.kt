@@ -28,28 +28,15 @@ class DagensTallService(
 
     companion object {
         val omsorgspenger = FeltverdiOppgavefilter("K9", "ytelsestype", EksternFeltverdiOperator.IN, listOf(FagsakYtelseType.OMSORGSPENGER.kode))
-        val omsorgsdager = FeltverdiOppgavefilter("K9", "ytelsestype", EksternFeltverdiOperator.IN,
-            listOf(FagsakYtelseType.OMSORGSDAGER, FagsakYtelseType.OMSORGSPENGER_KS, FagsakYtelseType.OMSORGSPENGER_AO, FagsakYtelseType.OMSORGSPENGER_MA).map { it.kode })
         val opplæringspenger = FeltverdiOppgavefilter("K9", "ytelsestype", EksternFeltverdiOperator.IN, listOf(FagsakYtelseType.OLP.kode))
         val psb = FeltverdiOppgavefilter("K9", "ytelsestype", EksternFeltverdiOperator.IN, listOf(FagsakYtelseType.PLEIEPENGER_SYKT_BARN.kode))
-        val ppn = FeltverdiOppgavefilter("K9", "ytelsestype", EksternFeltverdiOperator.IN, listOf(FagsakYtelseType.PPN.kode))
 
         val mottattDato = { dato: LocalDate -> FeltverdiOppgavefilter("K9", "mottattDato", EksternFeltverdiOperator.GREATER_THAN_OR_EQUALS, listOf(dato.toString())) }
         val ferdigstiltDato = { dato: LocalDate -> FeltverdiOppgavefilter(null, "ferdigstiltDato", EksternFeltverdiOperator.GREATER_THAN_OR_EQUALS, listOf(dato.toString())) }
-        val mottattDatoFør = { dato: LocalDate -> FeltverdiOppgavefilter("K9", "mottattDato", EksternFeltverdiOperator.LESS_THAN, listOf(dato.toString())) }
-        val ferdigstiltDatoMellom = { fra: LocalDate, tilEksklusive: LocalDate ->
-            FeltverdiOppgavefilter(null, "ferdigstiltDato", EksternFeltverdiOperator.INTERVAL, listOf(fra.toString(), tilEksklusive.minusDays(1).toString()))
-        }
         val lukket = FeltverdiOppgavefilter(null, "oppgavestatus", EksternFeltverdiOperator.EQUALS, listOf(Oppgavestatus.LUKKET.kode))
 
-        val førstegang = FeltverdiOppgavefilter("K9", "behandlingTypekode", EksternFeltverdiOperator.EQUALS, listOf(BehandlingType.FORSTEGANGSSOKNAD.kode))
-        val revurdering = FeltverdiOppgavefilter("K9", "behandlingTypekode", EksternFeltverdiOperator.IN, listOf(BehandlingType.REVURDERING.kode, BehandlingType.REVURDERING_TILBAKEKREVING.kode))
         val klage = FeltverdiOppgavefilter(null, "oppgavetype", EksternFeltverdiOperator.EQUALS, listOf("k9klage"))
         val punsj = FeltverdiOppgavefilter(null, "oppgavetype", EksternFeltverdiOperator.EQUALS, listOf("k9punsj"))
-        val feilutbetaling = FeltverdiOppgavefilter(null, "oppgavetype", EksternFeltverdiOperator.EQUALS, listOf("k9tilbake"))
-        val unntaksbehandling = FeltverdiOppgavefilter("K9", "behandlingTypekode", EksternFeltverdiOperator.EQUALS, listOf(BehandlingType.UNNTAKSBEHANDLING.kode))
-        val helautomatisk = FeltverdiOppgavefilter("K9", "helautomatiskBehandlet", EksternFeltverdiOperator.EQUALS, listOf(true.toString()))
-        val ikkeHelautomatisk = FeltverdiOppgavefilter("K9", "helautomatiskBehandlet", EksternFeltverdiOperator.EQUALS, listOf(false.toString()))
 
         private val hovedgruppeYtelser: Map<DagensTallHovedgruppe, Set<String>?> = mapOf(
             DagensTallHovedgruppe.ALLE to null,
@@ -59,25 +46,6 @@ class DagensTallService(
             DagensTallHovedgruppe.PLEIEPENGER_SYKT_BARN to setOf(FagsakYtelseType.PLEIEPENGER_SYKT_BARN.kode),
             DagensTallHovedgruppe.PPN to setOf(FagsakYtelseType.PPN.kode),
         )
-
-        private fun ytelseFilter(hovedgruppe: DagensTallHovedgruppe): FeltverdiOppgavefilter? = when (hovedgruppe) {
-            DagensTallHovedgruppe.ALLE -> null
-            DagensTallHovedgruppe.OMSORGSPENGER -> omsorgspenger
-            DagensTallHovedgruppe.OMSORGSDAGER -> omsorgsdager
-            DagensTallHovedgruppe.OPPLÆRINGSPENGER -> opplæringspenger
-            DagensTallHovedgruppe.PLEIEPENGER_SYKT_BARN -> psb
-            DagensTallHovedgruppe.PPN -> ppn
-        }
-
-        private fun behandlingFilter(undergruppe: DagensTallUndergruppe): FeltverdiOppgavefilter? = when (undergruppe) {
-            DagensTallUndergruppe.TOTALT -> null
-            DagensTallUndergruppe.FØRSTEGANG -> førstegang
-            DagensTallUndergruppe.REVURDERING -> revurdering
-            DagensTallUndergruppe.KLAGE -> klage
-            DagensTallUndergruppe.PUNSJ -> punsj
-            DagensTallUndergruppe.FEILUTBETALING -> feilutbetaling
-            DagensTallUndergruppe.UNNTAKSBEHANDLING -> unntaksbehandling
-        }
     }
 
     fun hentCachetVerdi(): DagensTallResponse {
@@ -169,19 +137,6 @@ class DagensTallService(
         val ferdigstiltSiste2Uker = hentGrupperte(listOf(lukket, ferdigstiltDato(toUkerSiden)), medHelautomatisk = true)
         val ferdigstiltSiste4Uker = hentGrupperte(listOf(lukket, ferdigstiltDato(fireUkerSiden)), medHelautomatisk = true)
 
-        // Månedlige data for siste 6 måneder
-//        val måneder = (1..12).map { i ->
-//            val start = YearMonth.now().minusMonths(i.toLong()).atDay(1)
-//            val slutt = start.plusMonths(1)
-//            start to slutt
-//        }
-//        val månedligInngang = måneder.map { (start, slutt) ->
-//            hentGrupperte(listOf(mottattDato(start), mottattDatoFør(slutt)), medHelautomatisk = false)
-//        }
-//        val månedligFerdigstilt = måneder.map { (start, slutt) ->
-//            hentGrupperte(listOf(lukket, ferdigstiltDatoMellom(start, slutt)), medHelautomatisk = true)
-//        }
-
         val tall = DagensTallHovedgruppe.entries.flatMap { hovedgruppe ->
             val ytelser = hovedgruppeYtelser[hovedgruppe]
 
@@ -222,12 +177,6 @@ class DagensTallService(
                 val siste14Dager = dagenstallKort(inngangSiste2Uker, ferdigstiltSiste2Uker)
                 val siste28Dager = dagenstallKort(inngangSiste4Uker, ferdigstiltSiste4Uker)
 
-//                val månedSerier = måneder.mapIndexed { index, (start, _) ->
-//                    YearMonth.from(start).toString() to dagenstallKort(
-//                        månedligInngang[index], månedligFerdigstilt[index],
-//                    )
-//                }
-
                 DagensTallDto(
                     hovedgruppe = hovedgruppe,
                     undergruppe = undergruppe,
@@ -237,7 +186,7 @@ class DagensTallService(
                         "siste2Uker" to siste14Dager,
                         "siste4Uker" to siste28Dager,
                     ),
-                    månedSerier = emptyMap() // Bytte til månedSerier
+                    månedSerier = emptyMap()
                 )
             }
         }

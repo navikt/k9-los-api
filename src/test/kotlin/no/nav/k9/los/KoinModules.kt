@@ -10,6 +10,7 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.adhocjobber.reservasjonk
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.adhocjobber.reservasjonkonvertering.ReservasjonOversetter
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.AvstemmingsTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventRepository
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.metrikker.EventlagerNokkeltallRepository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.klage.K9KlageEventHandler
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventHandler
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventHandler
@@ -107,7 +108,6 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
         PepCacheService(
             pepClient = get(),
             pepCacheRepository = get(),
-            oppgaveRepository = get(),
             transactionalManager = get()
         )
     }
@@ -203,6 +203,10 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     }
 
     single {
+        EventlagerNokkeltallRepository(dataSource = get())
+    }
+
+    single {
         SaksbehandlerAdminTjeneste(
             pepClient = get(),
             transactionalManager = get(),
@@ -251,7 +255,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             statistikkPublisher = get(),
             transactionalManager = get(),
             statistikkRepository = get(),
-            pepClient = get(),
+            pepCacheRepository = get(),
         )
     }
 
@@ -287,13 +291,14 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
 
     single {
         EventTilOppgaveAdapter(
-            eventRepository = get(),
-            oppgaveV3Tjeneste = get(),
-            transactionalManager = get(),
-            eventTilOppgaveMapper = get(),
-            oppgaveOppdatertHandler = get(),
-            vaskeeventSerieutleder = get(),
-            ajourholdTjeneste = get(),
+            eventRepository = get<EventRepository>(),
+            oppgaveV3Tjeneste = get<OppgaveV3Tjeneste>(),
+            transactionalManager = get<TransactionalManager>(),
+            eventTilOppgaveMapper = get<EventTilOppgaveMapper>(),
+            oppgaveOppdatertHandler = get<OppgaveOppdatertHandler>(),
+            vaskeeventSerieutleder = get<VaskeeventSerieutleder>(),
+            ajourholdTjeneste = get<AktivOgPartisjonertOppgaveAjourholdTjeneste>(),
+            statistikkRepository = get<StatistikkRepository>(),
         )
     }
 
@@ -314,7 +319,6 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
         HistorikkvaskTjeneste(
             eventRepository = get(),
             oppgaveV3Tjeneste = get(),
-            statistikkRepository = get(),
             eventTilOppgaveAdapter = get(),
             transactionalManager = get()
         )

@@ -1,6 +1,7 @@
 package no.nav.k9.los.nyoppgavestyring.feltutlederforlagring
 
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Feltdefinisjon
+import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Synlighet
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.Område
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdi
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
@@ -136,8 +137,8 @@ internal class AkkumulertVentetidTest {
             beskrivelse = null,
             listetype = false,
             tolkesSom = "boolean",
-            visTilBruker = true,
-            kokriterie = true,
+
+            synlighet = Synlighet.OVER_STREKEN,
             kodeverkreferanse = null,
             transientFeltutleder = null,
         ),

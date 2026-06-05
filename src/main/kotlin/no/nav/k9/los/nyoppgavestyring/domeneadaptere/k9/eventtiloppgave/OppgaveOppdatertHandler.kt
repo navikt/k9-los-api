@@ -1,22 +1,18 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave
 
-import com.fasterxml.jackson.module.kotlin.readValue
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
 import kotliquery.TransactionalSession
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventLagret
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.klage.K9KlageEventDto
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventDto
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.AksjonspunktDefinisjonK9Tilbake
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.K9TilbakeEventDto
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.cache.PepCacheInput
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.cache.PepCacheService
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.nyoppgavestyring.ko.KøpåvirkendeHendelse
 import no.nav.k9.los.nyoppgavestyring.ko.OppgaveHendelseMottatt
 import no.nav.k9.los.nyoppgavestyring.kodeverk.AksjonspunktStatus
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingStatus
-import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.query.db.EksternOppgaveId
@@ -35,10 +31,27 @@ class OppgaveOppdatertHandler(
     private val log: Logger = LoggerFactory.getLogger(OppgaveOppdatertHandler::class.java)
 
     internal fun oppdaterPepCache(oppgave: OppgaveV3, tx: TransactionalSession) {
-        pepCacheService.oppdater(tx, oppgave.kildeområde, oppgave.eksternId)
+        runBlocking(Dispatchers.IO) {
+            pepCacheService.oppdater(
+                tx,
+                PepCacheInput(
+                    oppgave.eksternId,
+                    oppgave.hentVerdi("saksnummer"),
+                    listOfNotNull(
+                        oppgave.hentVerdi("aktorId"),
+                        oppgave.hentVerdi("pleietrengendeAktorId"),
+                        oppgave.hentVerdi("relatertPartAktorid")
+                    )
+                )
+            )
+        }
     }
 
-    internal fun håndterOppgaveOppdatert(eventLagret: EventLagret, oppgave: OppgaveV3, tx: TransactionalSession) {
+    internal fun håndterOppgaveOppdatert(
+        eventLagret: EventLagret,
+        oppgave: OppgaveV3,
+        tx: TransactionalSession,
+    ) {
         runBlocking {
             køpåvirkendeHendelseChannel.send(
                 OppgaveHendelseMottatt(
@@ -47,19 +60,12 @@ class OppgaveOppdatertHandler(
                 )
             )
         }
-        when (eventLagret.fagsystem) {
-            Fagsystem.K9SAK -> {
-                håndterSakOppdatert(eventLagret, oppgave, tx)
-            }
-            Fagsystem.K9TILBAKE -> {
-                håndterTilbakeOppdatert(eventLagret, oppgave, tx)
-            }
-            Fagsystem.K9KLAGE -> {
-                håndterKlageOppdatert(eventLagret, oppgave, tx)
-            }
-            Fagsystem.PUNSJ -> {
-                håndterPunsjOppdatert(oppgave, tx)
-            }
+
+        when (eventLagret) {
+            is EventLagret.K9Sak -> håndterSakOppdatert(eventLagret, oppgave, tx)
+            is EventLagret.K9Tilbake -> håndterTilbakeOppdatert(eventLagret, oppgave, tx)
+            is EventLagret.K9Klage -> håndterKlageOppdatert(eventLagret, oppgave, tx)
+            is EventLagret.K9Punsj -> håndterPunsjOppdatert(oppgave, tx)
         }
     }
 
@@ -77,27 +83,34 @@ class OppgaveOppdatertHandler(
         }
     }
 
-    private fun håndterKlageOppdatert(eventLagret: EventLagret, oppgave: OppgaveV3, tx: TransactionalSession) {
-        val event = LosObjectMapper.instance.readValue<K9KlageEventDto>(eventLagret.eventJson)
-        val erPåVent  = event.aksjonspunkttilstander.any {
+    private fun håndterKlageOppdatert(eventLagret: EventLagret.K9Klage, oppgave: OppgaveV3, tx: TransactionalSession) {
+        val event = eventLagret.eventDto
+        val erPåVent = event.aksjonspunkttilstander.any {
             it.status.erÅpentAksjonspunkt()
-                    && no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon.fraKode(it.aksjonspunktKode).erAutopunkt()
+                    && no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon.fraKode(it.aksjonspunktKode)
+                .erAutopunkt()
         }
         if (erPåVent || BehandlingStatus.AVSLUTTET.kode == event.behandlingStatus || oppgave.status == Oppgavestatus.LUKKET) {
             annullerReservasjonerHvisAlleOppgaverPåVentEllerAvsluttet(eventLagret, oppgave, tx)
         }
     }
 
-    private fun håndterTilbakeOppdatert(eventLagret: EventLagret, oppgave: OppgaveV3, tx: TransactionalSession) {
-        val event = LosObjectMapper.instance.readValue<K9TilbakeEventDto>(eventLagret.eventJson)
-        val erPåVent = event.aksjonspunktKoderMedStatusListe.any { it.value == AksjonspunktStatus.OPPRETTET.kode && AksjonspunktDefinisjonK9Tilbake.fraKode(it.key).erAutopunkt }
+    private fun håndterTilbakeOppdatert(
+        eventLagret: EventLagret.K9Tilbake,
+        oppgave: OppgaveV3,
+        tx: TransactionalSession
+    ) {
+        val event = eventLagret.eventDto
+        val erPåVent = event.aksjonspunktKoderMedStatusListe.any {
+            it.value == AksjonspunktStatus.OPPRETTET.kode && AksjonspunktDefinisjonK9Tilbake.fraKode(it.key).erAutopunkt
+        }
         if (erPåVent || BehandlingStatus.AVSLUTTET.kode == event.behandlingStatus || oppgave.status == Oppgavestatus.LUKKET) {
             annullerReservasjonerHvisAlleOppgaverPåVentEllerAvsluttet(eventLagret, oppgave, tx)
         }
     }
 
-    private fun håndterSakOppdatert(eventLagret: EventLagret, oppgave: OppgaveV3, tx: TransactionalSession) {
-        val event = LosObjectMapper.instance.readValue<K9SakEventDto>(eventLagret.eventJson)
+    private fun håndterSakOppdatert(eventLagret: EventLagret.K9Sak, oppgave: OppgaveV3, tx: TransactionalSession) {
+        val event = eventLagret.eventDto
         val erPåVent = event.aksjonspunktTilstander.any {
             it.status.erÅpentAksjonspunkt() && AksjonspunktDefinisjon.fraKode(it.aksjonspunktKode)
                 .erAutopunkt()

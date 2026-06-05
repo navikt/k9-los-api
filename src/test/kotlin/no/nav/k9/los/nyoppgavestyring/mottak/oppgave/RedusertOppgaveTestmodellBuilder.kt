@@ -3,6 +3,7 @@ package no.nav.k9.los.nyoppgavestyring.mottak.oppgave
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonDto
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonerDto
+import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Synlighet
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.Område
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavefeltDto
@@ -45,8 +46,8 @@ class RedusertOppgaveTestmodellBuilder(
                     beskrivelse = null,
                     listetype = true,
                     tolkesSom = "String",
-                    true,
-                    false,
+
+                    synlighet = Synlighet.UNDER_STREKEN,
                     kodeverkreferanse = null,
                     transientFeltutleder = null,
                 ),
@@ -56,8 +57,8 @@ class RedusertOppgaveTestmodellBuilder(
                     beskrivelse = null,
                     listetype = false,
                     tolkesSom = "Date",
-                    true,
-                    false,
+
+                    synlighet = Synlighet.UNDER_STREKEN,
                     kodeverkreferanse = null,
                     transientFeltutleder = null,
                 ),
@@ -67,20 +68,18 @@ class RedusertOppgaveTestmodellBuilder(
                     beskrivelse = null,
                     listetype = false,
                     tolkesSom = "String",
-                    true,
-                    false,
+
+                    synlighet = Synlighet.UNDER_STREKEN,
                     kodeverkreferanse = null,
                     transientFeltutleder = null,
-
-                    ),
+                ),
                 FeltdefinisjonDto(
                     id = "akkumulertVentetidSaksbehandler",
                     visningsnavn = "Test",
                     beskrivelse = null,
                     listetype = false,
                     tolkesSom = "Duration",
-                    false,
-                    false,
+                    synlighet = Synlighet.INTERNT,
                     kodeverkreferanse = null,
                     transientFeltutleder = null,
                 ),
@@ -90,8 +89,7 @@ class RedusertOppgaveTestmodellBuilder(
                     beskrivelse = null,
                     listetype = false,
                     tolkesSom = "boolean",
-                    false,
-                    false,
+                    synlighet = Synlighet.INTERNT,
                     kodeverkreferanse = null,
                     transientFeltutleder = null,
                 )

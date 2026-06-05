@@ -5,15 +5,17 @@ class Kodeverkverdi(
     val verdi: String,
     val visningsnavn: String,
     val beskrivelse: String?,
-    val favoritt: Boolean,
-    val gruppering: String?
+    val synlighet: Synlighet,
+    val gruppering: String?,
+    val rekkefølge: Int? = null
 ) {
-    constructor(kodeverkVerdiDto: KodeverkVerdiDto) :this (
+    constructor(kodeverkVerdiDto: KodeverkVerdiDto) : this(
         verdi = kodeverkVerdiDto.verdi,
         visningsnavn = kodeverkVerdiDto.visningsnavn,
         beskrivelse = kodeverkVerdiDto.beskrivelse,
-        favoritt = kodeverkVerdiDto.favoritt,
-        gruppering = kodeverkVerdiDto.gruppering
+        synlighet = kodeverkVerdiDto.synlighet,
+        gruppering = kodeverkVerdiDto.gruppering,
+        rekkefølge = kodeverkVerdiDto.rekkefølge
     )
 
     override fun equals(other: Any?): Boolean {

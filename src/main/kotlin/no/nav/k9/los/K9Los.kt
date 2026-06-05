@@ -28,6 +28,7 @@ import io.prometheus.client.CollectorRegistry
 import io.prometheus.client.exporter.common.TextFormat
 import io.prometheus.client.hotspot.DefaultExports
 import kotlinx.coroutines.Dispatchers
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.DB_AWARE_PARALLELISM
 import kotlinx.coroutines.channels.Channel
 import no.nav.helse.dusseldorf.ktor.auth.AuthStatusPages
 import no.nav.helse.dusseldorf.ktor.auth.allIssuers
@@ -53,6 +54,7 @@ import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.cache.PepCacheService
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.jobbplanlegger.Jobbplanlegger
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.jobbplanlegger.PlanlagtJobb
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.jobbplanlegger.Tidsvindu
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.metrikker.EventlagerNokkeltallPrometheusCollector
 import no.nav.k9.los.nyoppgavestyring.innloggetbruker.InnloggetBrukerApi
 import no.nav.k9.los.nyoppgavestyring.ko.KøpåvirkendeHendelse
 import no.nav.k9.los.nyoppgavestyring.ko.OppgaveKoApis
@@ -100,6 +102,8 @@ fun Application.k9Los() {
 
     val koin = getKoin()
 
+    koin.get<EventlagerNokkeltallPrometheusCollector>()
+
     koin.get<OmrådeSetup>().setup()
 
     konfigurerJobber(koin, configuration)
@@ -146,7 +150,7 @@ fun Application.k9Los() {
         statistikkPublisher = koin.get(),
         transactionalManager = koin.get(),
         statistikkRepository = koin.get(),
-        pepClient = koin.get(),
+        pepCacheRepository = koin.get(),
     )
 
     install(CallLogging) {
@@ -480,7 +484,7 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
 
     val jobbplanlegger = Jobbplanlegger(
         innkommendeJobber = planlagteJobber,
-        coroutineContext = Dispatchers.IO.limitedParallelism(4) + Span.current().asContextElement(),
+        coroutineContext = Dispatchers.IO.limitedParallelism(DB_AWARE_PARALLELISM) + Span.current().asContextElement(),
     )
 
     monitor.subscribe(ApplicationStarted) {

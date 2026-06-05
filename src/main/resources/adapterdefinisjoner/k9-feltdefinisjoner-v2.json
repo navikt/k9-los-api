@@ -6,40 +6,42 @@
       "visningsnavn": "Behandling",
       "listetype": false,
       "tolkesSom": "String",
-      "visTilBruker": false,
-      "kokriterie": false
+      "synlighet": "INTERNT"
+    },
+    {
+      "id": "historisk",
+      "visningsnavn": "Historisk behandling (skjult)",
+      "listetype": false,
+      "tolkesSom": "boolean",
+      "synlighet": "INTERNT"
     },
     {
       "id": "påklagdBehandlingUuid",
       "visningsnavn": "Påklaget behandling",
       "listetype": false,
       "tolkesSom": "String",
-      "visTilBruker": false,
-      "kokriterie": false
+      "synlighet": "INTERNT"
     },
     {
       "id": "påklagdBehandlingtype",
       "visningsnavn": "Påklaget behandlingtype",
       "listetype": false,
       "tolkesSom": "String",
-      "visTilBruker": true,
-      "kokriterie": false
+      "synlighet": "UNDER_STREKEN"
     },
     {
       "id": "aktorId",
       "visningsnavn": "Søkers aktør-ID",
       "listetype": false,
       "tolkesSom": "String",
-      "visTilBruker": false,
-      "kokriterie": false
+      "synlighet": "INTERNT"
     },
     {
       "id": "fagsystem",
       "visningsnavn": "Fagsystem",
       "listetype": false,
       "tolkesSom": "String",
-      "visTilBruker": true,
-      "kokriterie": false,
+      "synlighet": "UNDER_STREKEN",
       "kodeverkreferanse": {
         "område": "K9",
         "eksternId": "Fagsystem"
@@ -50,16 +52,14 @@
       "visningsnavn": "Saksnummer",
       "listetype": false,
       "tolkesSom": "String",
-      "visTilBruker": true,
-      "kokriterie": false
+      "synlighet": "UNDER_STREKEN"
     },
     {
       "id": "resultattype",
       "visningsnavn": "Resultattype",
       "listetype": false,
       "tolkesSom": "String",
-      "visTilBruker": true,
-      "kokriterie": false,
+      "synlighet": "UNDER_STREKEN",
       "kodeverkreferanse": {
         "område": "K9",
         "eksternId": "Resultattype"
@@ -70,8 +70,7 @@
       "visningsnavn": "Behandlingssteg",
       "listetype": false,
       "tolkesSom": "String",
-      "visTilBruker": true,
-      "kokriterie": false,
+      "synlighet": "UNDER_STREKEN",
       "kodeverkreferanse": {
         "område": "K9",
         "eksternId": "Behandlingssteg"
@@ -82,8 +81,7 @@
       "visningsnavn": "Ytelsestype",
       "listetype": false,
       "tolkesSom": "String",
-      "visTilBruker": true,
-      "kokriterie": true,
+      "synlighet": "OVER_STREKEN",
       "kodeverkreferanse": {
         "område": "K9",
         "eksternId": "Ytelsetype"
@@ -94,8 +92,7 @@
       "visningsnavn": "Behandlingsstatus",
       "listetype": false,
       "tolkesSom": "String",
-      "visTilBruker": true,
-      "kokriterie": false,
+      "synlighet": "UNDER_STREKEN",
       "kodeverkreferanse": {
         "område": "K9",
         "eksternId": "Behandlingsstatus"
@@ -106,16 +103,14 @@
       "visningsnavn": "Mottatt dato",
       "listetype": false,
       "tolkesSom": "Timestamp",
-      "visTilBruker": true,
-      "kokriterie": false
+      "synlighet": "UNDER_STREKEN"
     },
     {
       "id": "tidSidenMottattDato",
       "visningsnavn": "Dager siden mottatt dato",
       "listetype": false,
       "tolkesSom": "Duration",
-      "visTilBruker": true,
-      "kokriterie": true,
+      "synlighet": "OVER_STREKEN",
       "transientFeltutleder": "no.nav.k9.los.nyoppgavestyring.query.mapping.transientfeltutleder.K9SakTidSidenMottattDatoUtleder"
     },
     {
@@ -123,16 +118,14 @@
       "visningsnavn": "Registrert dato",
       "listetype": false,
       "tolkesSom": "Timestamp",
-      "visTilBruker": true,
-      "kokriterie": false
+      "synlighet": "UNDER_STREKEN"
     },
     {
       "id": "behandlingTypekode",
       "visningsnavn": "Behandlingstype",
       "listetype": false,
       "tolkesSom": "String",
-      "visTilBruker": true,
-      "kokriterie": true,
+      "synlighet": "OVER_STREKEN",
       "kodeverkreferanse": {
         "område": "K9",
         "eksternId": "Behandlingtype"
@@ -143,24 +136,21 @@
       "visningsnavn": "Relatert part aktør-ID",
       "listetype": false,
       "tolkesSom": "String",
-      "visTilBruker": false,
-      "kokriterie": false
+      "synlighet": "INTERNT"
     },
     {
       "id": "pleietrengendeAktorId",
       "visningsnavn": "Pleietrengende aktør-ID",
       "listetype": false,
       "tolkesSom": "String",
-      "visTilBruker": false,
-      "kokriterie": false
+      "synlighet": "INTERNT"
     },
     {
       "id": "behandlendeEnhet",
       "visningsnavn": "Behandlende enhet",
       "listetype": false,
       "tolkesSom": "String",
-      "visTilBruker": true,
-      "kokriterie": false,
+      "synlighet": "UNDER_STREKEN",
       "kodeverkreferanse": {
         "område": "K9",
         "eksternId": "behandlendeEnhet"
@@ -171,40 +161,35 @@
       "visningsnavn": "Ansvarlig saksbehandler",
       "listetype": false,
       "tolkesSom": "String",
-      "visTilBruker": true,
-      "kokriterie": false
+      "synlighet": "UNDER_STREKEN"
     },
     {
       "id": "ansvarligBeslutter",
       "visningsnavn": "Ansvarlig beslutter",
       "listetype": false,
       "tolkesSom": "String",
-      "visTilBruker": true,
-      "kokriterie": false
+      "synlighet": "UNDER_STREKEN"
     },
     {
       "id": "liggerHosBeslutter",
       "visningsnavn": "Til beslutter",
       "listetype": false,
       "tolkesSom": "boolean",
-      "visTilBruker": true,
-      "kokriterie": true
+      "synlighet": "OVER_STREKEN"
     },
     {
       "id": "tidFørsteGangHosBeslutter",
       "visningsnavn": "Tidspunkt oppgaven gikk til beslutter første gang",
       "listetype": false,
       "tolkesSom": "Timestamp",
-      "visTilBruker": true,
-      "kokriterie": true
+      "synlighet": "OVER_STREKEN"
     },
     {
       "id": "totrinnskontroll",
       "visningsnavn": "Må gjennom totrinnskontroll",
       "listetype": false,
       "tolkesSom": "boolean",
-      "visTilBruker": true,
-      "kokriterie": false
+      "synlighet": "UNDER_STREKEN"
     },
     {
       "id": "aksjonspunkt",
@@ -212,8 +197,7 @@
       "beskrivelse": "Løsbare- (se aksjonspunkt som kan løses), fremtidige- (se Løsbare og fremtidige aksjonspunkt) og løste aksjonspunkt",
       "listetype": true,
       "tolkesSom": "String",
-      "visTilBruker": true,
-      "kokriterie": false,
+      "synlighet": "UNDER_STREKEN",
       "kodeverkreferanse": {
         "område": "K9",
         "eksternId": "Aksjonspunkt"
@@ -225,8 +209,7 @@
       "beskrivelse": "Løsbare aksjonspunkt (se aksjonspunkt som kan løses) og åpne aksjonspunkter som kan løses først når behandlingen når riktig steg",
       "listetype": true,
       "tolkesSom": "String",
-      "visTilBruker": true,
-      "kokriterie": false,
+      "synlighet": "UNDER_STREKEN",
       "kodeverkreferanse": {
         "område": "K9",
         "eksternId": "Aksjonspunkt"
@@ -234,12 +217,47 @@
     },
     {
       "id": "løsbartAksjonspunkt",
-      "visningsnavn": "Aksjonspunkt som kan løses",
+      "visningsnavn": "Aksjonspunkt: løsbart",
       "beskrivelse": "Åpne aksjonspunkt som er løsbart akkurat nå, fordi de hører til steget behandlingen står i",
       "listetype": false,
       "tolkesSom": "String",
-      "visTilBruker": true,
-      "kokriterie": true,
+      "synlighet": "OVER_STREKEN",
+      "kodeverkreferanse": {
+        "område": "K9",
+        "eksternId": "Aksjonspunkt"
+      }
+    },
+    {
+      "id": "utførtAksjonspunkt",
+      "visningsnavn": "Aksjonspunkt: utførte",
+      "beskrivelse": "Aksjonspunkter som er utført",
+      "listetype": true,
+      "tolkesSom": "String",
+      "synlighet": "SKJULT",
+      "kodeverkreferanse": {
+        "område": "K9",
+        "eksternId": "Aksjonspunkt"
+      }
+    },
+    {
+      "id": "avbruttAksjonspunkt",
+      "visningsnavn": "Aksjonspunkt: avbrutte",
+      "beskrivelse": "Aksjonspunkter som er avbrutt",
+      "listetype": true,
+      "tolkesSom": "String",
+      "synlighet": "SKJULT",
+      "kodeverkreferanse": {
+        "område": "K9",
+        "eksternId": "Aksjonspunkt"
+      }
+    },
+    {
+      "id": "fremtidigAksjonspunkt",
+      "visningsnavn": "Aksjonspunkt: fremtidige",
+      "beskrivelse": "Åpne aksjonspunkter som ikke kan løses i steget behandlingen står i nå",
+      "listetype": true,
+      "tolkesSom": "String",
+      "synlighet": "SKJULT",
       "kodeverkreferanse": {
         "område": "K9",
         "eksternId": "Aksjonspunkt"
@@ -250,104 +268,91 @@
       "visningsnavn": "Avventer saksbehandler",
       "listetype": false,
       "tolkesSom": "boolean",
-      "visTilBruker": true,
-      "kokriterie": false
+      "synlighet": "UNDER_STREKEN"
     },
     {
       "id": "avventerSøker",
       "visningsnavn": "Avventer søker",
       "listetype": false,
       "tolkesSom": "boolean",
-      "visTilBruker": true,
-      "kokriterie": false
+      "synlighet": "UNDER_STREKEN"
     },
     {
       "id": "avventerArbeidsgiver",
       "visningsnavn": "Avventer arbeidsgiver",
       "listetype": false,
       "tolkesSom": "boolean",
-      "visTilBruker": true,
-      "kokriterie": false
+      "synlighet": "UNDER_STREKEN"
     },
     {
       "id": "avventerTekniskFeil",
       "visningsnavn": "Avventer teknisk feil",
       "listetype": false,
       "tolkesSom": "boolean",
-      "visTilBruker": true,
-      "kokriterie": false
+      "synlighet": "UNDER_STREKEN"
     },
     {
       "id": "avventerAnnet",
       "visningsnavn": "Avventer annet",
       "listetype": false,
       "tolkesSom": "boolean",
-      "visTilBruker": true,
-      "kokriterie": false
+      "synlighet": "UNDER_STREKEN"
     },
     {
       "id": "avventerAnnetIkkeSaksbehandlingstid",
       "visningsnavn": "Avventer annet (ikke saksbehandlingstid)",
       "listetype": false,
       "tolkesSom": "boolean",
-      "visTilBruker": true,
-      "kokriterie": false
+      "synlighet": "UNDER_STREKEN"
     },
     {
       "id": "akkumulertVentetidSaksbehandlerForTidligereVersjoner",
       "visningsnavn": "Akkumulert ventetid saksbehandler for tidligere versjoner",
       "listetype": false,
       "tolkesSom": "Duration",
-      "visTilBruker": false,
-      "kokriterie": false
+      "synlighet": "INTERNT"
     },
     {
       "id": "akkumulertVentetidSøkerForTidligereVersjoner",
       "visningsnavn": "Akkumulert ventetid søker for tidligere versjoner",
       "listetype": false,
       "tolkesSom": "Duration",
-      "visTilBruker": false,
-      "kokriterie": false
+      "synlighet": "INTERNT"
     },
     {
       "id": "akkumulertVentetidTekniskFeilForTidligereVersjoner",
       "visningsnavn": "Akkumulert ventetid teknisk feil for tidligere versjoner",
       "listetype": false,
       "tolkesSom": "Duration",
-      "visTilBruker": false,
-      "kokriterie": false
+      "synlighet": "INTERNT"
     },
     {
       "id": "akkumulertVentetidArbeidsgiverForTidligereVersjoner",
       "visningsnavn": "Akkumulert ventetid arbeidsgiver for tidligere versjoner",
       "listetype": false,
       "tolkesSom": "Duration",
-      "visTilBruker": false,
-      "kokriterie": false
+      "synlighet": "INTERNT"
     },
     {
       "id": "akkumulertVentetidAnnetForTidligereVersjoner",
       "visningsnavn": "Akkumulert ventetid annet for tidligere versjoner",
       "listetype": false,
       "tolkesSom": "Duration",
-      "visTilBruker": false,
-      "kokriterie": false
+      "synlighet": "INTERNT"
     },
     {
       "id": "akkumulertVentetidAnnetIkkeSaksbehandlingstidForTidligereVersjoner",
       "visningsnavn": "Akkumulert ventetid annet (ikke saksbehandlingstid) for tidligere versjoner",
       "listetype": false,
       "tolkesSom": "Duration",
-      "visTilBruker": false,
-      "kokriterie": false
+      "synlighet": "INTERNT"
     },
     {
       "id": "akkumulertVentetidAnnetIkkeSaksbehandlingstid",
       "visningsnavn": "Hittil akkumulert ventetid på annet som ikke skal telle som saksbehandlingstid for denne oppgaven",
       "listetype": false,
       "tolkesSom": "Duration",
-      "visTilBruker": true,
-      "kokriterie": false,
+      "synlighet": "UNDER_STREKEN",
       "transientFeltutleder": "no.nav.k9.los.nyoppgavestyring.query.mapping.transientfeltutleder.K9SakVentetPåAnnetIkkeSaksbehandlingstidUtleder"
     },
     {
@@ -355,8 +360,7 @@
       "visningsnavn": "Hittil akkumulert ventetid på annet for denne oppgaven",
       "listetype": false,
       "tolkesSom": "Duration",
-      "visTilBruker": true,
-      "kokriterie": false,
+      "synlighet": "UNDER_STREKEN",
       "transientFeltutleder": "no.nav.k9.los.nyoppgavestyring.query.mapping.transientfeltutleder.K9SakVentetPåAnnetUtleder"
     },
     {
@@ -364,8 +368,7 @@
       "visningsnavn": "Hittil akkumulert ventetid på arbeidsgiver for denne oppgaven",
       "listetype": false,
       "tolkesSom": "Duration",
-      "visTilBruker": true,
-      "kokriterie": false,
+      "synlighet": "UNDER_STREKEN",
       "transientFeltutleder": "no.nav.k9.los.nyoppgavestyring.query.mapping.transientfeltutleder.K9SakVentetPåArbeidsgiverUtleder"
     },
     {
@@ -373,8 +376,7 @@
       "visningsnavn": "Hittil akkumulert ventetid på saksbehandler for denne oppgaven",
       "listetype": false,
       "tolkesSom": "Duration",
-      "visTilBruker": true,
-      "kokriterie": false,
+      "synlighet": "UNDER_STREKEN",
       "transientFeltutleder": "no.nav.k9.los.nyoppgavestyring.query.mapping.transientfeltutleder.K9SakVentetPåSaksbehandlerUtleder"
     },
     {
@@ -382,8 +384,7 @@
       "visningsnavn": "Hittil akkumulert ventetid på søker for denne oppgaven",
       "listetype": false,
       "tolkesSom": "Duration",
-      "visTilBruker": true,
-      "kokriterie": false,
+      "synlighet": "UNDER_STREKEN",
       "transientFeltutleder": "no.nav.k9.los.nyoppgavestyring.query.mapping.transientfeltutleder.K9SakVentetPåSøkerUtleder"
     },
     {
@@ -391,8 +392,7 @@
       "visningsnavn": "Hittil akkumulert ventetid på tekniske feil for denne oppgaven",
       "listetype": false,
       "tolkesSom": "Duration",
-      "visTilBruker": true,
-      "kokriterie": false,
+      "synlighet": "UNDER_STREKEN",
       "transientFeltutleder": "no.nav.k9.los.nyoppgavestyring.query.mapping.transientfeltutleder.K9SakVentetPåTekniskFeilUtleder"
     },
     {
@@ -400,8 +400,7 @@
       "visningsnavn": "Oppgavesaksbehandlingstid",
       "listetype": false,
       "tolkesSom": "Duration",
-      "visTilBruker": true,
-      "kokriterie": false,
+      "synlighet": "UNDER_STREKEN",
       "transientFeltutleder": "no.nav.k9.los.nyoppgavestyring.query.mapping.transientfeltutleder.K9SakOppgavesaksbehandlingstidUtleder"
     },
     {
@@ -409,8 +408,7 @@
       "visningsnavn": "Aktiv venteårsak",
       "listetype": false,
       "tolkesSom": "String",
-      "visTilBruker": true,
-      "kokriterie": false,
+      "synlighet": "UNDER_STREKEN",
       "kodeverkreferanse": {
         "område": "K9",
         "eksternId": "Venteårsak"
@@ -421,88 +419,77 @@
       "visningsnavn": "Aktiv ventefrist",
       "listetype": false,
       "tolkesSom": "Timestamp",
-      "visTilBruker": true,
-      "kokriterie": false
+      "synlighet": "UNDER_STREKEN"
     },
     {
       "id": "helautomatiskBehandlet",
       "visningsnavn": "Helautomatisk behandlet",
       "listetype": false,
       "tolkesSom": "boolean",
-      "visTilBruker": true,
-      "kokriterie": false
+      "synlighet": "UNDER_STREKEN"
     },
     {
       "id": "vedtaksdato",
       "visningsnavn": "Vedtaksdato",
       "listetype": false,
       "tolkesSom": "Timestamp",
-      "visTilBruker": true,
-      "kokriterie": false
+      "synlighet": "UNDER_STREKEN"
     },
     {
       "id": "nyeKrav",
       "visningsnavn": "Søknad inneholder nye perioder",
       "listetype": false,
       "tolkesSom": "boolean",
-      "visTilBruker": true,
-      "kokriterie": true
+      "synlighet": "OVER_STREKEN"
     },
     {
       "id": "bareNyeKrav",
       "visningsnavn": "Søknad inneholder bare nye perioder",
       "listetype": false,
       "tolkesSom": "boolean",
-      "visTilBruker": true,
-      "kokriterie": true
+      "synlighet": "OVER_STREKEN"
     },
     {
       "id": "antallOmsøkteDager",
       "visningsnavn": "Antall dager man har søkt om støtte for",
       "listetype": false,
       "tolkesSom": "Integer",
-      "visTilBruker": true,
-      "kokriterie": true
+      "synlighet": "OVER_STREKEN"
     },
     {
       "id": "fraEndringsdialog",
       "visningsnavn": "Oppdatert gjennom endringsdialog",
       "listetype": false,
       "tolkesSom": "boolean",
-      "visTilBruker": true,
-      "kokriterie": true
+      "synlighet": "OVER_STREKEN"
     },
     {
       "id": "hastesak",
       "visningsnavn": "Hastesak",
       "listetype": false,
       "tolkesSom": "boolean",
-      "visTilBruker": true,
-      "kokriterie": true
+      "synlighet": "OVER_STREKEN"
     },
     {
       "id": "utenlandstilsnitt",
       "visningsnavn": "Utenlandssak",
       "listetype": false,
       "tolkesSom": "boolean",
-      "visTilBruker": true,
-      "kokriterie": true
+      "synlighet": "OVER_STREKEN"
     },
     {
       "id": "direkteutbetaling",
       "visningsnavn": "Direkteutbetaling til søker",
       "listetype": false,
       "tolkesSom": "boolean",
-      "visTilBruker": true,
-      "kokriterie": true
+      "synlighet": "OVER_STREKEN"
     },
     {
       "id": "søknadsårsak",
       "visningsnavn": "Søknadsårsak - gjelder kun omsorgspenger",
       "listetype": true,
       "tolkesSom": "String",
-      "visTilBruker": true,
-      "kokriterie": true,
+      "synlighet": "OVER_STREKEN",
       "kodeverkreferanse": {
         "område": "K9",
         "eksternId": "søknadsårsak"
@@ -513,8 +500,7 @@
       "visningsnavn": "Behandlingsårsak",
       "listetype": true,
       "tolkesSom": "String",
-      "visTilBruker": true,
-      "kokriterie": true,
+      "synlighet": "OVER_STREKEN",
       "kodeverkreferanse": {
         "område": "K9",
         "eksternId": "behandlingsårsak"
@@ -525,72 +511,63 @@
       "visningsnavn": "Journalført",
       "listetype": false,
       "tolkesSom": "boolean",
-      "visTilBruker": true,
-      "kokriterie": true
+      "synlighet": "OVER_STREKEN"
     },
     {
       "id": "journalfortTidspunkt",
       "visningsnavn": "Journalført tidspunkt",
       "listetype": false,
       "tolkesSom": "Timestamp",
-      "visTilBruker": true,
-      "kokriterie": false
+      "synlighet": "UNDER_STREKEN"
     },
     {
       "id": "journalpostId",
       "visningsnavn": "Journalpost-ID",
       "listetype": false,
       "tolkesSom": "String",
-      "visTilBruker": true,
-      "kokriterie": false
+      "synlighet": "UNDER_STREKEN"
     },
     {
       "id": "oversendtKabalTidspunkt",
       "visningsnavn": "Tidspunkt for eventuell overføring til klageinstans",
       "listetype": false,
       "tolkesSom": "Timestamp",
-      "visTilBruker": false,
-      "kokriterie": false
+      "synlighet": "INTERNT"
     },
     {
       "id": "oversendtKlageinstansTidspunkt",
       "visningsnavn": "Tidspunkt for eventuell overføring til klageinstans",
       "listetype": false,
       "tolkesSom": "Timestamp",
-      "visTilBruker": false,
-      "kokriterie": false
+      "synlighet": "INTERNT"
     },
     {
       "id": "førsteFeilutbetalingDato",
       "visningsnavn": "Første dato som har feilutbetaling",
       "listetype": false,
       "tolkesSom": "Timestamp",
-      "visTilBruker": true,
-      "kokriterie": false
+      "synlighet": "UNDER_STREKEN"
     },
     {
       "id": "feilutbetaltBeløp",
       "visningsnavn": "Feilutbetalt beløp (kun tilbakekreving)",
       "listetype": false,
       "tolkesSom": "Integer",
-      "visTilBruker": true,
-      "kokriterie": true
+      "synlighet": "OVER_STREKEN"
     },
     {
       "id": "ferdigstiltTidspunkt",
       "visningsnavn": "Ferdigstilt tidspunkt",
       "listetype": false,
       "tolkesSom": "Timestamp",
-      "visTilBruker": false,
-      "kokriterie": false
+      "synlighet": "INTERNT"
     },
     {
       "id": "ferdigstiltEnhet",
       "visningsnavn": "Ferdigstilt av enhet",
       "listetype": false,
       "tolkesSom": "String",
-      "visTilBruker": true,
-      "kokriterie": false,
+      "synlighet": "UNDER_STREKEN",
       "kodeverkreferanse": {
         "område": "K9",
         "eksternId": "behandlendeEnhet"
@@ -601,8 +578,24 @@
       "visningsnavn": "Fagsak år",
       "listetype": false,
       "tolkesSom": "Integer",
-      "visTilBruker": false,
-      "kokriterie": false
+      "synlighet": "INTERNT"
+    },
+    {
+      "id": "relevanteSøknadsperioder",
+      "visningsnavn": "Relevante søknadsperioder",
+      "beskrivelse": "Liste over søknadsperioder i ISO 8601 intervallformat (YYYY-MM-DD/YYYY-MM-DD)",
+      "listetype": true,
+      "tolkesSom": "Periode",
+      "synlighet": "UNDER_STREKEN"
+    },
+    {
+      "id": "antallOmsøkteDagerSomErPassert",
+      "visningsnavn": "Antall omsøkte dager som er passert",
+      "beskrivelse": "Antall dager fra relevante søknadsperioder som er før dagens dato",
+      "listetype": false,
+      "tolkesSom": "Integer",
+      "synlighet": "OVER_STREKEN",
+      "transientFeltutleder": "no.nav.k9.los.nyoppgavestyring.query.mapping.transientfeltutleder.K9SakAntallOmsøkteDagerSomErPassertUtleder"
     }
   ]
 }

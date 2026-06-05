@@ -6,12 +6,15 @@ import io.kotest.matchers.shouldBe
 import io.mockk.clearAllMocks
 import io.mockk.spyk
 import io.mockk.verify
+import kotliquery.TransactionalSession
+import kotliquery.queryOf
 import no.nav.k9.kodeverk.behandling.BehandlingStegType
 import no.nav.k9.kodeverk.behandling.FagsakYtelseType
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.K9Oppgavetypenavn
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.EventHendelse
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventNøkkel
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventRepository
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.HistorikkvaskBestilling
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventDto
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventDto
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
@@ -43,6 +46,7 @@ class EventTilOppgaveAdapterSpec : KoinTest, FreeSpec() {
     private lateinit var oppgaveAdapter: EventTilOppgaveAdapter
     private lateinit var oppgaveRepositoryTxWrapper: OppgaveRepositoryTxWrapper
     private lateinit var oppgaveQueryService: OppgaveQueryService
+    private val historikkvaskTjeneste = get<HistorikkvaskTjeneste>()
 
     val oppgaveV3Tjeneste = get<OppgaveV3Tjeneste>()
 
@@ -67,6 +71,7 @@ class EventTilOppgaveAdapterSpec : KoinTest, FreeSpec() {
             oppgaveOppdatertHandler = oppgaveOppdatertHandler,
             vaskeeventSerieutleder = get(),
             ajourholdTjeneste = get(),
+            statistikkRepository = get(),
         )
 
         oppgaveRepositoryTxWrapper = get()
@@ -93,7 +98,7 @@ class EventTilOppgaveAdapterSpec : KoinTest, FreeSpec() {
                             oppgaveOppdatertHandler.håndterOppgaveOppdatert(any(), any(), any())
                         }
                         verify(exactly = 0) {
-                            eventRepository.bestillHistorikkvask(any(), any(), any())
+                            eventRepository.bestillHistorikkvask(any<Fagsystem>(), any<String>(), any<TransactionalSession>())
                         }
                     }
                 }
@@ -115,7 +120,7 @@ class EventTilOppgaveAdapterSpec : KoinTest, FreeSpec() {
                         oppgaveOppdatertHandler.håndterOppgaveOppdatert(any(), any(), any())
                     }
                     verify(exactly = 0) {
-                        eventRepository.bestillHistorikkvask(any(), any(), any())
+                        eventRepository.bestillHistorikkvask(any<Fagsystem>(), any<String>(), any<TransactionalSession>())
                     }
                     val internVersjon = transactionalManager.transaction { tx ->
                         oppgaveV3Tjeneste.hentHøyesteInternVersjon(event.eksternId.toString(), K9Oppgavetypenavn.PUNSJ.kode, "K9", tx)
@@ -138,7 +143,7 @@ class EventTilOppgaveAdapterSpec : KoinTest, FreeSpec() {
                             oppgaveOppdatertHandler.håndterOppgaveOppdatert(any(), any(), any())
                         }
                         verify(exactly = 0) {
-                            eventRepository.bestillHistorikkvask(any(), any(), any())
+                            eventRepository.bestillHistorikkvask(any<Fagsystem>(), any<String>(), any<TransactionalSession>())
                         }
                         val internVersjon = transactionalManager.transaction { tx ->
                             oppgaveV3Tjeneste.hentHøyesteInternVersjon(event.eksternId.toString(), K9Oppgavetypenavn.PUNSJ.kode, "K9", tx)
@@ -162,7 +167,7 @@ class EventTilOppgaveAdapterSpec : KoinTest, FreeSpec() {
                         oppgaveOppdatertHandler.håndterOppgaveOppdatert(any(), any(), any())
                     }
                     verify(exactly = 0) {
-                        eventRepository.bestillHistorikkvask(any(), any(), any())
+                        eventRepository.bestillHistorikkvask(any<Fagsystem>(), any<String>(), any<TransactionalSession>())
                     }
                     val internVersjon = transactionalManager.transaction { tx ->
                         oppgaveV3Tjeneste.hentHøyesteInternVersjon(event.eksternId.toString(), K9Oppgavetypenavn.PUNSJ.kode, "K9", tx)
@@ -189,7 +194,7 @@ class EventTilOppgaveAdapterSpec : KoinTest, FreeSpec() {
                         oppgaveOppdatertHandler.håndterOppgaveOppdatert(any(), any(), any())
                     }
                     verify(exactly = 1) {
-                        eventRepository.bestillHistorikkvask(any(), any(), any())
+                        eventRepository.bestillHistorikkvask(any<Fagsystem>(), any<String>(), any<TransactionalSession>())
                     }
                     val internVersjon = transactionalManager.transaction { tx ->
                         oppgaveV3Tjeneste.hentHøyesteInternVersjon(event.eksternId.toString(), K9Oppgavetypenavn.PUNSJ.kode, "K9", tx)
@@ -219,7 +224,7 @@ class EventTilOppgaveAdapterSpec : KoinTest, FreeSpec() {
                             oppgaveOppdatertHandler.håndterOppgaveOppdatert(any(), any(), any())
                         }
                         verify(exactly = 1) {
-                            eventRepository.bestillHistorikkvask(any(), any(), any())
+                            eventRepository.bestillHistorikkvask(any<Fagsystem>(), any<String>(), any<TransactionalSession>())
                         }
                         val internVersjon = transactionalManager.transaction { tx ->
                             oppgaveV3Tjeneste.hentHøyesteInternVersjon(event.eksternId.toString(), K9Oppgavetypenavn.PUNSJ.kode, "K9", tx)
@@ -330,6 +335,76 @@ class EventTilOppgaveAdapterSpec : KoinTest, FreeSpec() {
             }
         }
 
+        "Historikkvask-kontekst" - {
+            val eksternId = UUID.randomUUID()
+            val event1 = punsjEvent(eksternId, LocalDateTime.now().minusHours(2))
+            val event2 = punsjEvent(eksternId, LocalDateTime.now().minusHours(1))
+            val event3 = punsjEvent(eksternId, LocalDateTime.now())
+            transactionalManager.transaction { tx ->
+                eventRepository.lagre(Fagsystem.PUNSJ, event1, tx)
+                eventRepository.lagre(Fagsystem.PUNSJ, event2, tx)
+                eventRepository.lagre(Fagsystem.PUNSJ, event3, tx)
+            }
+            "med tre eventer" - {
+                "oppgaveOppdatertHandler skal ikke kalles under historikkvask" {
+                    transactionalManager.transaction { tx ->
+                        oppgaveAdapter.oppdaterOppgaveForEksternIdUnderHistorikkvask(
+                            EventNøkkel(Fagsystem.PUNSJ, eksternId.toString()), tx
+                        )
+                    }
+                    verify(exactly = 0) {
+                        oppgaveOppdatertHandler.håndterOppgaveOppdatert(any(), any(), any())
+                    }
+                    verify(exactly = 0) {
+                        oppgaveOppdatertHandler.oppdaterPepCache(any(), any())
+                    }
+                }
+            }
+
+            "allerede sendt k9sak-versjon" - {
+                val eksternId = UUID.randomUUID()
+                val event = k9SakEvent(
+                    eksternId = eksternId,
+                    eventTid = LocalDateTime.now().minusHours(1),
+                    eventHendelse = EventHendelse.BEHANDLINGSKONTROLL_EVENT,
+                )
+                transactionalManager.transaction { tx ->
+                    eventRepository.lagre(Fagsystem.K9SAK, event, tx)
+                }
+                oppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(Fagsystem.K9SAK, eksternId.toString()))
+
+                "skal ikke legges tilbake i dvh-pending av historikkvask" {
+                    val params = mapOf(
+                        "eksternId" to eksternId.toString(),
+                        "eksternVersjon" to event.eventTid.toString(),
+                    )
+                    transactionalManager.transaction { tx ->
+                        tx.run(
+                            queryOf(
+                                """
+                                delete from oppgave_v3_dvh_pending
+                                where ekstern_id = :eksternId and ekstern_versjon = :eksternVersjon
+                                """.trimIndent(),
+                                params,
+                            ).asUpdate
+                        )
+                    }
+
+                    hentPendingAntall(eksternId.toString()) shouldBe 0L
+
+                    historikkvaskTjeneste.vaskBestilling(
+                        HistorikkvaskBestilling(
+                            eventlagerNøkkel = null,
+                            eksternId = eksternId.toString(),
+                            fagsystem = Fagsystem.K9SAK,
+                        )
+                    )
+
+                    hentPendingAntall(eksternId.toString()) shouldBe 0L
+                }
+            }
+        }
+
     }
 
     private fun k9SakEvent(eksternId: UUID = UUID.randomUUID(), eventTid: LocalDateTime = LocalDateTime.now(), eventHendelse: EventHendelse, saksnummerSomTeller: Int? = null,) : K9SakEventDto {
@@ -373,5 +448,20 @@ class EventTilOppgaveAdapterSpec : KoinTest, FreeSpec() {
             ferdigstiltAv = "saksbehandler",
             journalførtTidspunkt = LocalDateTime.now().minusDays(1),
         )
+    }
+
+    private fun hentPendingAntall(eksternId: String): Long {
+        return transactionalManager.transaction { tx ->
+            tx.run(
+                queryOf(
+                    """
+                    select count(*) as antall
+                    from oppgave_v3_dvh_pending
+                    where ekstern_id = :eksternId
+                    """.trimIndent(),
+                    mapOf("eksternId" to eksternId),
+                ).map { row -> row.long("antall") }.asSingle
+            ) ?: 0L
+        }
     }
 }

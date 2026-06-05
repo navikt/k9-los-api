@@ -73,30 +73,30 @@ object DbCleanupListener : TestListener {
  * JUnit-testene bruker TØM_DATA_SQL som truncater alt, men de kaller OmrådeSetup.setup() i @BeforeEach.
  */
 private const val KOTEST_TØM_DATA_SQL = """
-            truncate 
-                driftsmeldinger,
-                saksbehandler,
-                siste_oppgaver,
-                OPPGAVEKO_SAKSBEHANDLER,
-                OPPGAVEKO_V3,
-                RESERVASJON_V3,
-                RESERVASJON_V3_ENDRING,
-                oppgave_v3_sendt_dvh,
-                OPPGAVE_PEP_CACHE,
-                oppgavefelt_verdi_part,
-                oppgavefelt_verdi,
-                oppgavefelt_verdi_aktiv,
-                oppgave_v3_part,
-                oppgave_id_part,
-                oppgave_v3,
-                oppgave_v3_aktiv,
-                uttrekk,
-                lagret_sok,
-                event,
-                event_historikkvask_bestilt,
-                event_nokkel;
-                
-            ALTER SEQUENCE saksbehandler_id_seq restart
+             truncate 
+                 driftsmeldinger,
+                 saksbehandler,
+                 siste_oppgaver,
+                 OPPGAVEKO_SAKSBEHANDLER,
+                 OPPGAVEKO_V3,
+                 RESERVASJON_V3,
+                 RESERVASJON_V3_ENDRING,
+                 oppgave_v3_dvh_pending,
+                 OPPGAVE_PEP_CACHE,
+                 oppgavefelt_verdi_part,
+                 oppgavefelt_verdi,
+                 oppgavefelt_verdi_aktiv,
+                 oppgave_v3_part,
+                 oppgave_id_part,
+                 oppgave_v3,
+                 oppgave_v3_aktiv,
+                 uttrekk,
+                 lagret_sok,
+                 event,
+                 event_historikkvask_bestilt,
+                 event_nokkel;
+                 
+             ALTER SEQUENCE saksbehandler_id_seq restart
         """
 
 fun cleanupTables(dataSource: DataSource) {

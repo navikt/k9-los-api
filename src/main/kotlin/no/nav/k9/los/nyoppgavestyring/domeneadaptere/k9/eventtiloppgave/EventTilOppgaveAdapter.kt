@@ -7,6 +7,7 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.K9Oppgavetypenavn
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventLagret
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventNøkkel
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventRepository
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.StatistikkRepository
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.AktivOgPartisjonertOppgaveAjourholdTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
@@ -14,6 +15,7 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
+
 
 class EventTilOppgaveAdapter(
     private val eventRepository: EventRepository,
@@ -23,6 +25,7 @@ class EventTilOppgaveAdapter(
     private val oppgaveOppdatertHandler: OppgaveOppdatertHandler,
     private val vaskeeventSerieutleder: VaskeeventSerieutleder,
     private val ajourholdTjeneste: AktivOgPartisjonertOppgaveAjourholdTjeneste,
+    private val statistikkRepository: StatistikkRepository,
 ) {
     private val log: Logger = LoggerFactory.getLogger(EventTilOppgaveAdapter::class.java)
 
@@ -58,7 +61,10 @@ class EventTilOppgaveAdapter(
     }
 
     @WithSpan
-    fun oppdaterOppgaveForEksternId(@SpanAttribute eventnøkkel: EventNøkkel, statistikktellerInn: Long = 0): Long {
+    fun oppdaterOppgaveForEksternId(
+        @SpanAttribute eventnøkkel: EventNøkkel,
+        statistikktellerInn: Long = 0,
+    ): Long {
         return transactionalManager.transaction { tx ->
             oppdaterOppgaveForEksternId(eventnøkkel, tx, statistikktellerInn)
         }
@@ -69,62 +75,135 @@ class EventTilOppgaveAdapter(
         tx: TransactionalSession,
         statistikktellerInn: Long = 0,
     ): Long {
-        log.info("Nytt felles oppgaveadapter, oppdaterer oppgave for fagsystem: ${eventnøkkel.fagsystem}, eksternId: ${eventnøkkel.eksternId}")
+        log.info("Oppdaterer oppgave for fagsystem: ${eventnøkkel.fagsystem}, eksternId: ${eventnøkkel.eksternId}")
+        val eventerMedNummerering = hentEventerOgKorriger(eventnøkkel, tx)
+        if (eventerMedNummerering.isEmpty()) return statistikktellerInn
+
+        sjekkMeldingIFeilRekkefølgeOgBestillVask(eventnøkkel, eventerMedNummerering, tx)
+
         var statistikkteller = statistikktellerInn
-        var forrigeOppgaveversjon: OppgaveV3?
-        //låse alle eventer for denne eksternIden mens vi prosesserer dem
-        val eventer = eventRepository.hentAlleEventerMedLås(eventnøkkel, tx)
-        val eventerMedNummerering = vaskeeventSerieutleder.korrigerEventnummerForVaskeeventer(eventer)
+        var forrigeOppgaveversjon = hentStartversjon(eventnøkkel, eventerMedNummerering, tx)
+        var sisteOppgaveversjon: OppgaveV3? = null
 
-        if (eventerMedNummerering.isNotEmpty()) {
-            sjekkMeldingIFeilRekkefølgeOgBestillVask(eventnøkkel, eventerMedNummerering, tx)
-
-            forrigeOppgaveversjon =
-                if (eventerMedNummerering.first().first > 0) { //Første dirty melding er ikke første for oppgaven
-                    oppgaveV3Tjeneste.hentOppgaveversjon(
-                        "K9",
-                        K9Oppgavetypenavn.fraFagsystem(eventnøkkel.fagsystem).kode,
-                        eventnøkkel.eksternId,
-                        eventerMedNummerering.first().first - 1,
-                        tx
-                    )
-                } else {
-                    null
-                }
-
-            var sisteOppdaterteEvent: EventLagret? = null
-
-            for ((eventnummer, eventLagret) in eventerMedNummerering) {
-                val nyOppgaveversjon =
-                    eventTilOppgaveMapper.mapOppgave(eventLagret, forrigeOppgaveversjon, eventnummer)
-                val oppgave = oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(nyOppgaveversjon, tx)
-
-                if (oppgave != null) {
-                    oppgaveOppdatertHandler.håndterOppgaveOppdatert(eventLagret, oppgave, tx)
-
-                    statistikkteller++
-                    forrigeOppgaveversjon = oppgave
-                    sisteOppdaterteEvent = eventLagret
-                } else { // hvis oppgave == null ble ikke oppgaven oppdatert selv om eventet var dirty. Vi henter ut oppgaveversjonen vi forsøkte å oppdatere som kontekst for neste event
-                    forrigeOppgaveversjon = oppgaveV3Tjeneste.hentOppgaveversjon(
-                        "K9",
-                        K9Oppgavetypenavn.fraFagsystem(eventnøkkel.fagsystem).kode,
-                        eventnøkkel.eksternId,
-                        eventnummer,
-                        tx
-                    )
-                }
+        for ((eventnummer, eventLagret) in eventerMedNummerering) {
+            val oppgave = mapOgLagre(eventLagret, eventnummer, forrigeOppgaveversjon, tx)
+            if (oppgave != null) {
+                // Kun i normalflyt: ny versjon er usendt til DVH inntil kvittert.
+                // Historikkvask skal ikke trigge resend-semantikk for allerede sendte versjoner.
+                statistikkRepository.bestillDvhSending(
+                    eksternId = oppgave.eksternId,
+                    eksternVersjon = oppgave.eksternVersjon,
+                    oppgavetypeEksternId = oppgave.oppgavetype.eksternId,
+                    tx = tx,
+                )
+                oppgaveOppdatertHandler.håndterOppgaveOppdatert(eventLagret, oppgave, tx)
+                statistikkteller++
+                forrigeOppgaveversjon = oppgave
+                sisteOppgaveversjon = oppgave
+            } else {
+                forrigeOppgaveversjon = hentEksisterendeVersjon(eventnøkkel, eventnummer, tx)
             }
-            // Oppdater PEP-cache én gang for siste tilstand, i stedet for per event (unngår gjentatte eksterne kall)
-            if (sisteOppdaterteEvent != null) {
-                oppgaveOppdatertHandler.oppdaterPepCache(forrigeOppgaveversjon!!, tx)
-            }
-            // Batch-oppdater alle dirty-flagg i én SQL-spørring i stedet for én pr event
-            eventRepository.fjernAlleDirty(eventer.first().nøkkelId, tx)
-            ajourholdTjeneste.ajourholdOppgave(forrigeOppgaveversjon!!, eventerMedNummerering.last().first, tx)
         }
 
+        // Oppdater PEP-cache én gang for siste tilstand, i stedet for per event
+        if (sisteOppgaveversjon != null) {
+            oppgaveOppdatertHandler.oppdaterPepCache(sisteOppgaveversjon, tx)
+        }
+
+        fjernDirtyOgAjourhold(eventerMedNummerering, forrigeOppgaveversjon!!, tx)
         return statistikkteller
+    }
+
+    /**
+     * Variant for historikkvask. Forutsetter at kaller har slettet oppgave_v3 og satt eventene
+     * dirty først. Skiller seg fra normalflyt på to punkter:
+     *  - Hopper over rekkefølge-sjekk (oppgave_v3 er per definisjon tom).
+     *  - Kjører ikke side-effekter (PEP-cache, køpåvirkende hendelser, reservasjons-
+     *    håndtering) – vask skal være en stille rebuild.
+     */
+    fun oppdaterOppgaveForEksternIdUnderHistorikkvask(
+        eventnøkkel: EventNøkkel,
+        tx: TransactionalSession,
+    ): Long {
+        log.info("Vasker oppgave for fagsystem: ${eventnøkkel.fagsystem}, eksternId: ${eventnøkkel.eksternId}")
+        val eventerMedNummerering = hentEventerOgKorriger(eventnøkkel, tx)
+        if (eventerMedNummerering.isEmpty()) return 0L
+
+        var statistikkteller = 0L
+        var forrigeOppgaveversjon = hentStartversjon(eventnøkkel, eventerMedNummerering, tx)
+
+        for ((eventnummer, eventLagret) in eventerMedNummerering) {
+            val oppgave = mapOgLagre(eventLagret, eventnummer, forrigeOppgaveversjon, tx)
+            if (oppgave != null) {
+                statistikkteller++
+                forrigeOppgaveversjon = oppgave
+            } else {
+                forrigeOppgaveversjon = hentEksisterendeVersjon(eventnøkkel, eventnummer, tx)
+            }
+        }
+
+        fjernDirtyOgAjourhold(eventerMedNummerering, forrigeOppgaveversjon!!, tx)
+        return statistikkteller
+    }
+
+    private fun hentEventerOgKorriger(
+        eventnøkkel: EventNøkkel,
+        tx: TransactionalSession,
+    ): List<Pair<Int, EventLagret>> {
+        // Låser alle eventer for denne eksternIden mens vi prosesserer dem
+        val eventer = eventRepository.hentAlleEventerMedLås(eventnøkkel, tx)
+        return vaskeeventSerieutleder.korrigerEventnummerForVaskeeventer(eventer)
+    }
+
+    private fun hentStartversjon(
+        eventnøkkel: EventNøkkel,
+        eventerMedNummerering: List<Pair<Int, EventLagret>>,
+        tx: TransactionalSession,
+    ): OppgaveV3? {
+        val førsteEventnummer = eventerMedNummerering.first().first
+        // Første dirty melding er ikke første for oppgaven – hent foregående versjon som kontekst.
+        return if (førsteEventnummer > 0) {
+            hentEksisterendeVersjon(eventnøkkel, førsteEventnummer - 1, tx)
+        } else {
+            null
+        }
+    }
+
+    private fun hentEksisterendeVersjon(
+        eventnøkkel: EventNøkkel,
+        internVersjon: Int,
+        tx: TransactionalSession,
+    ): OppgaveV3? {
+        return oppgaveV3Tjeneste.hentOppgaveversjon(
+            "K9",
+            K9Oppgavetypenavn.fraFagsystem(eventnøkkel.fagsystem).kode,
+            eventnøkkel.eksternId,
+            internVersjon,
+            tx,
+        )
+    }
+
+    private fun mapOgLagre(
+        eventLagret: EventLagret,
+        eventnummer: Int,
+        forrigeOppgaveversjon: OppgaveV3?,
+        tx: TransactionalSession,
+    ): OppgaveV3? {
+        val nyOppgaveversjon = eventTilOppgaveMapper.mapOppgave(eventLagret, forrigeOppgaveversjon, eventnummer)
+        // Plumber forrigeOppgaveversjon ned for å spare et hentAktivOppgave-kall pr event
+        return oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(nyOppgaveversjon, tx, forrigeOppgaveversjon)
+    }
+
+    private fun fjernDirtyOgAjourhold(
+        eventerMedNummerering: List<Pair<Int, EventLagret>>,
+        sluttversjon: OppgaveV3,
+        tx: TransactionalSession,
+    ) {
+        // Batch-oppdater alle dirty-flagg i én SQL-spørring i stedet for én pr event
+        eventRepository.fjernAlleDirty(eventerMedNummerering.first().second.nøkkelId, tx)
+        // Kjøres alltid som sikkerhetsnett: ajourhold er også del av vanlig event-ingest, og
+        // koster lite hvis staten faktisk er uendret.
+        ajourholdTjeneste.ajourholdOppgave(sluttversjon, eventerMedNummerering.last().first, tx)
     }
 
     private fun sjekkMeldingIFeilRekkefølgeOgBestillVask(eventnøkkel: EventNøkkel, eventerForEksternId: List<Pair<Int, EventLagret>>, tx: TransactionalSession)  {
