@@ -152,8 +152,8 @@ class ReservasjonV3Tjeneste(
         return reservasjonV3Repository.hentAktivReservasjonForReservasjonsnøkkel(reservasjonsnøkkel, tx)
     }
 
-    fun tellReservasjonerForSaksbehandler(saksbehandlerId: Long, tx: TransactionalSession): Int {
-        return reservasjonV3Repository.tellAktiveReservasjonerForSaksbehandler(saksbehandlerId, tx)
+    fun tellReservasjonerForSaksbehandlere(saksbehandlerIder: Set<Long>, tx: TransactionalSession): Map<Long, Int> {
+        return reservasjonV3Repository.tellAktiveReservasjonerForSaksbehandlere(saksbehandlerIder, tx)
     }
 
     fun hentReservasjonerForSaksbehandler(saksbehandlerId: Long): List<ReservasjonV3MedOppgaver> {

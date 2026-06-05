@@ -3,12 +3,13 @@ package no.nav.k9.los.nyoppgavestyring.reservasjon
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.util.InClauseHjelper
 import org.postgresql.util.PSQLException
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
-import java.util.UUID
+import java.util.*
 
 class ReservasjonV3Repository(
     private val transactionalManager: TransactionalManager,
@@ -188,29 +189,45 @@ class ReservasjonV3Repository(
         )
     }
 
-    fun tellAktiveReservasjonerForSaksbehandler(
-        saksbehandlerId: Long,
+    fun tellAktiveReservasjonerForSaksbehandlere(
+        saksbehandlerId: Set<Long>,
         tx: TransactionalSession
-    ): Int {
-        return tx.run(
+    ): Map<Long, Int> {
+        val saksbehandlerIdParametre = InClauseHjelper.tilParameternavn(saksbehandlerId, "saksbehandlerId")
+        val resultat = tx.run(
             queryOf(
                 """
-                   select count(*)
+                   select reservertAv, count(*) as antall
                    from reservasjon_v3 r
-                   where r.reservertAv = :reservertAv
+                   where r.reservertAv in ($saksbehandlerIdParametre)
                        and annullert_for_utlop = false
                        and lower(r.gyldig_tidsrom) <= :now
                        and upper(r.gyldig_tidsrom) > :now
+                   group by reservertAv
                     """.trimIndent(),
-                mapOf(
-                    "reservertAv" to saksbehandlerId,
-                    "now" to LocalDateTime.now().truncatedTo(ChronoUnit.MICROS),
-                )
+                buildMap {
+                    put("reservertAv", saksbehandlerId)
+                    put("now" ,LocalDateTime.now().truncatedTo(ChronoUnit.MICROS))
+                    putAll(InClauseHjelper.parameternavnTilVerdierMap(saksbehandlerId, "saksbehandlerId"))
+                }
             ).map { row ->
-                row.int(1)
-            }.asSingle
-        ) ?: 0
+                AntallReservasjonerForSaksbehandler(
+                    saksbehandlerId = row.long("reservertAv"),
+                    antallReservasjoner = row.int("antall")
+                )
+            }
+                .asList
+
+        )
+        return resultat
+            .map { it.saksbehandlerId to it.antallReservasjoner }
+            .toMap()
     }
+
+    data class AntallReservasjonerForSaksbehandler(
+        val saksbehandlerId: Long,
+        val antallReservasjoner: Int
+    )
 
     fun hentAktiveReservasjonerForSaksbehandler(
         saksbehandlerId: Long,
