@@ -13,10 +13,10 @@ import no.nav.k9.los.nyoppgavestyring.nøkkeltall.avdelingsleder.status.StatusSe
 import org.koin.ktor.ext.inject
 
 fun Route.NøkkeltallV3Apis() {
-    val statusFordelingService by inject<no.nav.k9.los.nyoppgavestyring.nøkkeltall.avdelingsleder.statusfordeling.StatusFordelingService>()
-    val statusService by inject<no.nav.k9.los.nyoppgavestyring.nøkkeltall.avdelingsleder.status.StatusService>()
-    val dagensTallService by inject<no.nav.k9.los.nyoppgavestyring.nøkkeltall.avdelingsleder.dagenstall.DagensTallService>()
-    val perEnhetService by inject<no.nav.k9.los.nyoppgavestyring.nøkkeltall.avdelingsleder.ferdigstilteperenhet.FerdigstiltePerEnhetService>()
+    val statusFordelingService by inject<StatusFordelingService>()
+    val statusService by inject<StatusService>()
+    val dagensTallService by inject<DagensTallService>()
+    val perEnhetService by inject<FerdigstiltePerEnhetService>()
     val requestContextService by inject<RequestContextService>()
     val pepClient by inject<IPepClient>()
 
