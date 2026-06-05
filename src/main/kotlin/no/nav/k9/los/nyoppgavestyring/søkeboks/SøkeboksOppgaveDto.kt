@@ -17,6 +17,7 @@ enum class OppgavestatusMedNavn(val kode: String, val navn: String) {
     AAPEN("AAPEN", "Åpen"),
     VENTER("VENTER", "Venter"),
     LUKKET("LUKKET", "Lukket"),
+    UAVKLART("UAVKLART", "Uavklart"),
 }
 
 data class SøkeboksOppgaveDto(
