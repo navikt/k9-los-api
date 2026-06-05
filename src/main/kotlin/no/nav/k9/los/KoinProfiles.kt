@@ -7,89 +7,89 @@ import io.ktor.server.application.*
 import kotlinx.coroutines.channels.Channel
 import no.nav.helse.dusseldorf.ktor.health.HealthService
 import no.nav.k9.los.KoinProfile.*
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.adhocjobber.reservasjonkonvertering.ReservasjonKonverteringJobb
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.AvstemmingsTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.punsj.systemklient.LocalPunsjAvstemmingsklient
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.punsj.systemklient.RestPunsjAvstemmingsklient
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.saksbehandling.systemklient.LocalSakAvstemmingsklient
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.saksbehandling.systemklient.RestSakAvstemmingsklient
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventRepository
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.kafka.AsynkronProsesseringV1Service
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.klage.K9KlageEventHandler
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventHandler
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventHandler
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.K9TilbakeEventHandler
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.*
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetillos.KlageEventTilOppgaveMapper
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetillos.beriker.K9KlageBerikerInterfaceKludge
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetillos.beriker.K9KlageBerikerKlientLocal
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetillos.beriker.K9KlageBerikerSystemKlient
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.punsjtillos.PunsjEventTilOppgaveMapper
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.SakEventTilOppgaveMapper
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.beriker.K9SakSystemKlient
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.beriker.K9SakSystemKlientInterfaceKludge
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.beriker.K9SakSystemKlientLocal
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.tilbaketillos.TilbakeEventTilOppgaveMapper
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.refreshk9sakoppgaver.RefreshK9v3Tjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.refreshk9sakoppgaver.restklient.IK9SakService
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.refreshk9sakoppgaver.restklient.K9SakBehandlingOppfrisketRepository
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.refreshk9sakoppgaver.restklient.K9SakServiceLocal
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.refreshk9sakoppgaver.restklient.K9SakServiceSystemClient
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.*
-import no.nav.k9.los.nyoppgavestyring.driftsmelding.DriftsmeldingRepository
-import no.nav.k9.los.nyoppgavestyring.driftsmelding.DriftsmeldingTjeneste
-import no.nav.k9.los.nyoppgavestyring.feltutlederforlagring.GyldigeFeltutledere
-import no.nav.k9.los.nyoppgavestyring.forvaltning.ForvaltningRepository
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.*
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.cache.PepCacheRepository
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.cache.PepCacheService
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.azuregraph.AzureGraphService
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.azuregraph.AzureGraphServiceLocal
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.azuregraph.IAzureGraphService
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.hikariConfig
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.metrikker.EventlagerNokkeltallPrometheusCollector
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.metrikker.EventlagerNokkeltallRepository
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.IPdlService
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.PdlService
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.PdlServiceLocal
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.RequestContextService
-import no.nav.k9.los.nyoppgavestyring.ko.KøpåvirkendeHendelse
-import no.nav.k9.los.nyoppgavestyring.ko.OppgaveKoTjeneste
-import no.nav.k9.los.nyoppgavestyring.ko.db.OppgaveKoRepository
-import no.nav.k9.los.nyoppgavestyring.lagretsok.LagretSøkRepository
-import no.nav.k9.los.nyoppgavestyring.lagretsok.LagretSøkTjeneste
-import no.nav.k9.los.nyoppgavestyring.nøkkeltall.saksbehandler.nyeogferdigstilte.NyeOgFerdigstilteService
-import no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.feltdefinisjon.FeltdefinisjonRepository
-import no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.omraade.OmrådeRepository
-import no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.oppgavetype.OppgavetypeRepository
-import no.nav.k9.los.nyoppgavestyring.oppgavemottak.AktivOgPartisjonertOppgaveAjourholdTjeneste
-import no.nav.k9.los.nyoppgavestyring.oppgavemottak.OppgaveV3Repository
-import no.nav.k9.los.nyoppgavestyring.oppgavemottak.OppgaveV3Tjeneste
-import no.nav.k9.los.nyoppgavestyring.oppgavemottak.PartisjonertOppgaveRepository
-import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.*
-import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.enkeltoppslag.AktivOppgaveOppslag
-import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.enkeltoppslag.AktivOppgaveOppslagPartisjonert
-import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.enkeltoppslag.ReservasjonsnøkkelOppgaveOppslag
-import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.enkeltoppslag.ReservasjonsnøkkelOppgaveOppslagPartisjonert
-import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.enkeltoppslag.TemporalOppgaveOppslag
-import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.enkeltoppslag.TemporalOppgaveOppslagOppgaveV3
-import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.OppgaveQueryService
-import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.db.OppgaveQueryRepository
-import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonApisTjeneste
-import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3DtoBuilder
-import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Repository
-import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
-import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerAdminTjeneste
-import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
-import no.nav.k9.los.nyoppgavestyring.sisteoppgaver.SisteOppgaverRepository
-import no.nav.k9.los.nyoppgavestyring.sisteoppgaver.SisteOppgaverTjeneste
-import no.nav.k9.los.nyoppgavestyring.søkeboks.SøkeboksTjeneste
-import no.nav.k9.los.nyoppgavestyring.uttrekk.UttrekkCsvGenerator
-import no.nav.k9.los.nyoppgavestyring.uttrekk.UttrekkJobb
-import no.nav.k9.los.nyoppgavestyring.uttrekk.UttrekkRepository
-import no.nav.k9.los.nyoppgavestyring.uttrekk.UttrekkTjeneste
+import no.nav.k9.los.domeneadaptere.k9.OmrådeSetup
+import no.nav.k9.los.domeneadaptere.k9.adhocjobber.reservasjonkonvertering.ReservasjonKonverteringJobb
+import no.nav.k9.los.domeneadaptere.k9.avstemming.AvstemmingsTjeneste
+import no.nav.k9.los.domeneadaptere.k9.avstemming.punsj.systemklient.LocalPunsjAvstemmingsklient
+import no.nav.k9.los.domeneadaptere.k9.avstemming.punsj.systemklient.RestPunsjAvstemmingsklient
+import no.nav.k9.los.domeneadaptere.k9.avstemming.saksbehandling.systemklient.LocalSakAvstemmingsklient
+import no.nav.k9.los.domeneadaptere.k9.avstemming.saksbehandling.systemklient.RestSakAvstemmingsklient
+import no.nav.k9.los.domeneadaptere.k9.eventmottak.eventlager.EventRepository
+import no.nav.k9.los.domeneadaptere.k9.eventmottak.kafka.AsynkronProsesseringV1Service
+import no.nav.k9.los.domeneadaptere.k9.eventmottak.klage.K9KlageEventHandler
+import no.nav.k9.los.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventHandler
+import no.nav.k9.los.domeneadaptere.k9.eventmottak.sak.K9SakEventHandler
+import no.nav.k9.los.domeneadaptere.k9.eventmottak.tilbakekrav.K9TilbakeEventHandler
+import no.nav.k9.los.domeneadaptere.k9.eventtiloppgave.*
+import no.nav.k9.los.domeneadaptere.k9.eventtiloppgave.klagetillos.KlageEventTilOppgaveMapper
+import no.nav.k9.los.domeneadaptere.k9.eventtiloppgave.klagetillos.beriker.K9KlageBerikerInterfaceKludge
+import no.nav.k9.los.domeneadaptere.k9.eventtiloppgave.klagetillos.beriker.K9KlageBerikerKlientLocal
+import no.nav.k9.los.domeneadaptere.k9.eventtiloppgave.klagetillos.beriker.K9KlageBerikerSystemKlient
+import no.nav.k9.los.domeneadaptere.k9.eventtiloppgave.punsjtillos.PunsjEventTilOppgaveMapper
+import no.nav.k9.los.domeneadaptere.k9.eventtiloppgave.saktillos.SakEventTilOppgaveMapper
+import no.nav.k9.los.domeneadaptere.k9.eventtiloppgave.saktillos.beriker.K9SakSystemKlient
+import no.nav.k9.los.domeneadaptere.k9.eventtiloppgave.saktillos.beriker.K9SakSystemKlientInterfaceKludge
+import no.nav.k9.los.domeneadaptere.k9.eventtiloppgave.saktillos.beriker.K9SakSystemKlientLocal
+import no.nav.k9.los.domeneadaptere.k9.eventtiloppgave.tilbaketillos.TilbakeEventTilOppgaveMapper
+import no.nav.k9.los.domeneadaptere.k9.refreshk9sakoppgaver.RefreshK9v3Tjeneste
+import no.nav.k9.los.domeneadaptere.k9.refreshk9sakoppgaver.restklient.IK9SakService
+import no.nav.k9.los.domeneadaptere.k9.refreshk9sakoppgaver.restklient.K9SakBehandlingOppfrisketRepository
+import no.nav.k9.los.domeneadaptere.k9.refreshk9sakoppgaver.restklient.K9SakServiceLocal
+import no.nav.k9.los.domeneadaptere.k9.refreshk9sakoppgaver.restklient.K9SakServiceSystemClient
+import no.nav.k9.los.domeneadaptere.k9.statistikk.*
+import no.nav.k9.los.driftsmelding.DriftsmeldingRepository
+import no.nav.k9.los.driftsmelding.DriftsmeldingTjeneste
+import no.nav.k9.los.oppgavemottak.feltutlederforlagring.GyldigeFeltutledere
+import no.nav.k9.los.forvaltning.ForvaltningRepository
+import no.nav.k9.los.infrastruktur.abac.*
+import no.nav.k9.los.infrastruktur.abac.cache.PepCacheRepository
+import no.nav.k9.los.infrastruktur.abac.cache.PepCacheService
+import no.nav.k9.los.infrastruktur.azuregraph.AzureGraphService
+import no.nav.k9.los.infrastruktur.azuregraph.AzureGraphServiceLocal
+import no.nav.k9.los.infrastruktur.azuregraph.IAzureGraphService
+import no.nav.k9.los.infrastruktur.db.TransactionalManager
+import no.nav.k9.los.infrastruktur.db.hikariConfig
+import no.nav.k9.los.infrastruktur.metrikker.EventlagerNokkeltallPrometheusCollector
+import no.nav.k9.los.infrastruktur.metrikker.EventlagerNokkeltallRepository
+import no.nav.k9.los.infrastruktur.pdl.IPdlService
+import no.nav.k9.los.infrastruktur.pdl.PdlService
+import no.nav.k9.los.infrastruktur.pdl.PdlServiceLocal
+import no.nav.k9.los.infrastruktur.rest.RequestContextService
+import no.nav.k9.los.ko.KøpåvirkendeHendelse
+import no.nav.k9.los.ko.OppgaveKoTjeneste
+import no.nav.k9.los.ko.db.OppgaveKoRepository
+import no.nav.k9.los.lagretsok.LagretSøkRepository
+import no.nav.k9.los.lagretsok.LagretSøkTjeneste
+import no.nav.k9.los.nøkkeltall.saksbehandler.nyeogferdigstilte.NyeOgFerdigstilteService
+import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.FeltdefinisjonRepository
+import no.nav.k9.los.oppgavedefinisjon.omraade.OmrådeRepository
+import no.nav.k9.los.oppgavedefinisjon.oppgavetype.OppgavetypeRepository
+import no.nav.k9.los.oppgavemottak.AktivOgPartisjonertOppgaveAjourholdTjeneste
+import no.nav.k9.los.oppgavemottak.OppgaveV3Repository
+import no.nav.k9.los.oppgavemottak.OppgaveV3Tjeneste
+import no.nav.k9.los.oppgavemottak.PartisjonertOppgaveRepository
+import no.nav.k9.los.oppgaveuthenting.*
+import no.nav.k9.los.oppgaveuthenting.enkeltoppslag.AktivOppgaveOppslag
+import no.nav.k9.los.oppgaveuthenting.enkeltoppslag.AktivOppgaveOppslagPartisjonert
+import no.nav.k9.los.oppgaveuthenting.enkeltoppslag.ReservasjonsnøkkelOppgaveOppslag
+import no.nav.k9.los.oppgaveuthenting.enkeltoppslag.ReservasjonsnøkkelOppgaveOppslagPartisjonert
+import no.nav.k9.los.oppgaveuthenting.enkeltoppslag.TemporalOppgaveOppslag
+import no.nav.k9.los.oppgaveuthenting.enkeltoppslag.TemporalOppgaveOppslagOppgaveV3
+import no.nav.k9.los.oppgaveuthenting.query.OppgaveQueryService
+import no.nav.k9.los.oppgaveuthenting.query.db.OppgaveQueryRepository
+import no.nav.k9.los.reservasjon.ReservasjonApisTjeneste
+import no.nav.k9.los.reservasjon.ReservasjonV3DtoBuilder
+import no.nav.k9.los.reservasjon.ReservasjonV3Repository
+import no.nav.k9.los.reservasjon.ReservasjonV3Tjeneste
+import no.nav.k9.los.saksbehandleradmin.SaksbehandlerAdminTjeneste
+import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
+import no.nav.k9.los.sisteoppgaver.SisteOppgaverRepository
+import no.nav.k9.los.sisteoppgaver.SisteOppgaverTjeneste
+import no.nav.k9.los.søkeboks.SøkeboksTjeneste
+import no.nav.k9.los.uttrekk.UttrekkCsvGenerator
+import no.nav.k9.los.uttrekk.UttrekkJobb
+import no.nav.k9.los.uttrekk.UttrekkRepository
+import no.nav.k9.los.uttrekk.UttrekkTjeneste
 import org.koin.core.module.Module
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
@@ -301,7 +301,7 @@ fun common(app: Application, config: Configuration) = module {
     }
 
     single {
-        _root_ide_package_.no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.feltdefinisjon.FeltdefinisjonTjeneste(
+        _root_ide_package_.no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.FeltdefinisjonTjeneste(
             feltdefinisjonRepository = get(),
             områdeRepository = get(),
             transactionalManager = get()
@@ -315,7 +315,7 @@ fun common(app: Application, config: Configuration) = module {
         )
     }
     single {
-        _root_ide_package_.no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.oppgavetype.OppgavetypeTjeneste(
+        _root_ide_package_.no.nav.k9.los.oppgavedefinisjon.oppgavetype.OppgavetypeTjeneste(
             oppgavetypeRepository = get(),
             områdeRepository = get(),
             feltdefinisjonRepository = get(),
@@ -540,19 +540,19 @@ fun common(app: Application, config: Configuration) = module {
     }
 
     single {
-        _root_ide_package_.no.nav.k9.los.nyoppgavestyring.nøkkeltall.avdelingsleder.status.StatusService(
+        _root_ide_package_.no.nav.k9.los.nøkkeltall.avdelingsleder.status.StatusService(
             queryService = get(),
         )
     }
 
     single {
-        _root_ide_package_.no.nav.k9.los.nyoppgavestyring.nøkkeltall.avdelingsleder.dagenstall.DagensTallService(
+        _root_ide_package_.no.nav.k9.los.nøkkeltall.avdelingsleder.dagenstall.DagensTallService(
             queryService = get(),
         )
     }
 
     single {
-        _root_ide_package_.no.nav.k9.los.nyoppgavestyring.nøkkeltall.avdelingsleder.ferdigstilteperenhet.FerdigstiltePerEnhetService(
+        _root_ide_package_.no.nav.k9.los.nøkkeltall.avdelingsleder.ferdigstilteperenhet.FerdigstiltePerEnhetService(
             queryService = get()
         )
     }
@@ -564,7 +564,7 @@ fun common(app: Application, config: Configuration) = module {
     }
 
     single {
-        _root_ide_package_.no.nav.k9.los.nyoppgavestyring.nøkkeltall.avdelingsleder.statusfordeling.StatusFordelingService(
+        _root_ide_package_.no.nav.k9.los.nøkkeltall.avdelingsleder.statusfordeling.StatusFordelingService(
             queryService = get()
         )
     }
