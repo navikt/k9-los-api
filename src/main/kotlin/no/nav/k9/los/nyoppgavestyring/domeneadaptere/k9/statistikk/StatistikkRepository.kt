@@ -1,6 +1,7 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk
 
 import kotliquery.*
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.util.InClauseHjelper
 import no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.oppgavetype.OppgavetypeRepository
 import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.Oppgave
@@ -157,6 +158,24 @@ fun fjernSendtMarkering(oppgavetype: String? = null) {
                     "eksternVersjon" to eksternVersjon,
                     "oppgavetypeEksternId" to oppgavetypeEksternId,
                 )
+            ).asUpdate
+        )
+    }
+
+    fun bestillDvhSendingForEksternIder(eksternIder: List<String>, tx: TransactionalSession) {
+        if (eksternIder.isEmpty()) return
+
+        tx.run(
+            queryOf(
+                """
+                insert into oppgave_v3_dvh_pending (ekstern_id, ekstern_versjon, oppgavetype_ekstern_id)
+                select ov.ekstern_id, ov.ekstern_versjon, ov.oppgavetype_ekstern_id
+                from oppgave_v3 ov
+                where ov.ekstern_id in (${InClauseHjelper.tilParameternavn(eksternIder, "ekstern_id")})
+                  and ov.oppgavetype_ekstern_id in ('k9sak', 'k9klage')
+                on conflict (ekstern_id, ekstern_versjon) do nothing
+                """.trimIndent(),
+                InClauseHjelper.parameternavnTilVerdierMap(eksternIder, "ekstern_id")
             ).asUpdate
         )
     }

@@ -60,23 +60,23 @@ internal fun Route.EventlagerApi() {
 
                 val eventerIkkeSensitive = when (fagsystem) {
                     Fagsystem.K9SAK -> {
-                        val eventliste = eventStrenger.map { LosObjectMapper.instance.readValue<K9SakEventDto>(it) }.toList()
+                        val eventliste = eventStrenger.map { LosObjectMapper.prettyInstance.readValue<K9SakEventDto>(it) }.toList()
                         eventliste.map { event -> K9SakEventIkkeSensitiv(event) }
                     }
                     Fagsystem.K9TILBAKE -> {
-                        val eventliste = eventStrenger.map { LosObjectMapper.instance.readValue<K9TilbakeEventDto>(it) }.toList()
+                        val eventliste = eventStrenger.map { LosObjectMapper.prettyInstance.readValue<K9TilbakeEventDto>(it) }.toList()
                         eventliste.map { event -> K9TilbakeEventIkkeSensitiv(event) }
                     }
                     Fagsystem.K9KLAGE -> {
-                        val eventliste = eventStrenger.map { LosObjectMapper.instance.readValue<K9KlageEventDto>(it) }.toList()
+                        val eventliste = eventStrenger.map { LosObjectMapper.prettyInstance.readValue<K9KlageEventDto>(it) }.toList()
                         eventliste.map { event -> K9KlageEventIkkeSensitiv(event) }
                     }
                     Fagsystem.PUNSJ -> {
-                        val eventliste = eventStrenger.map { LosObjectMapper.instance.readValue<K9PunsjEventDto>(it) }.toList()
+                        val eventliste = eventStrenger.map { LosObjectMapper.prettyInstance.readValue<K9PunsjEventDto>(it) }.toList()
                         eventliste.map { event -> K9PunsjEventIkkeSensitiv(event) }
                     }
                 }
-                call.respond(LosObjectMapper.instance.writeValueAsString(eventerIkkeSensitive))
+                call.respond(LosObjectMapper.prettyInstance.writeValueAsString(eventerIkkeSensitive))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }

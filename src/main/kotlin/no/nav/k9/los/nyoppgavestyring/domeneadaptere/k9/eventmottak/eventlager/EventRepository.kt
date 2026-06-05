@@ -1,6 +1,7 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager
 
 import kotliquery.*
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.util.InClauseHjelper
 import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
 import org.jetbrains.annotations.VisibleForTesting
 import javax.sql.DataSource
@@ -357,6 +358,24 @@ class EventRepository(
                     "fagsystem" to fagsystem.kode,
                     "ekstern_id" to eksternId
                 )
+            ).asUpdate
+        )
+    }
+
+    fun bestillHistorikkvask(fagsystem: Fagsystem, eksternIder: List<String>, tx: TransactionalSession) {
+        if (eksternIder.isEmpty()) return
+
+        tx.run(
+            queryOf(
+                """
+                insert into event_historikkvask_bestilt(event_nokkel_id)
+                select id
+                from event_nokkel
+                where fagsystem = :fagsystem
+                  and ekstern_id in (${InClauseHjelper.tilParameternavn(eksternIder, "ekstern_id")})
+                on conflict do nothing
+                """.trimIndent(),
+                mapOf("fagsystem" to fagsystem.kode) + InClauseHjelper.parameternavnTilVerdierMap(eksternIder, "ekstern_id")
             ).asUpdate
         )
     }

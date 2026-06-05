@@ -1,13 +1,16 @@
 package no.nav.k9.los.nyoppgavestyring.forvaltning
 
 import io.github.smiley4.ktoropenapi.get
+import io.github.smiley4.ktoropenapi.post
 import io.ktor.http.*
+import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotliquery.queryOf
 import no.nav.k9.kodeverk.behandling.FagsakYtelseType
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.K9Oppgavetypenavn
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.AvstemmingsTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventRepository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.StatistikkRepository
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
@@ -16,6 +19,9 @@ import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.nyoppgavestyring.ko.OppgaveKoTjeneste
 import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
 import no.nav.k9.los.nyoppgavestyring.oppgavedefinisjon.oppgavetype.OppgavetypeRepository
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.Oppgave
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.enkeltoppslag.AktivOppgaveOppslag
+import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.enkeltoppslag.TemporalOppgaveOppslag
 import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.OppgaveQueryService
 import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.QueryRequest
 import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.dto.query.EnkelOrderFelt
@@ -24,9 +30,6 @@ import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.dto.query.Feltverdi
 import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.dto.query.OppgaveQuery
 import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.query.mapping.EksternFeltverdiOperator
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Repository
-import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.enkeltoppslag.AktivOppgaveOppslag
-import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.Oppgave
-import no.nav.k9.los.nyoppgavestyring.oppgaveuthenting.enkeltoppslag.TemporalOppgaveOppslag
 import org.koin.ktor.ext.inject
 import org.slf4j.LoggerFactory
 
@@ -41,6 +44,7 @@ fun Route.forvaltningApis() {
     val objectMapper = LosObjectMapper.prettyInstance
     val transactionalManager by inject<TransactionalManager>()
     val avstemmingsTjeneste by inject<AvstemmingsTjeneste>()
+    val eventRepository by inject<EventRepository>()
     val statistikkRepository by inject<StatistikkRepository>()
     val temporalOppslagTjeneste by inject<TemporalOppgaveOppslag>()
     val forvaltningRepository by inject<ForvaltningRepository>()
@@ -477,6 +481,106 @@ fun Route.forvaltningApis() {
         }
     }
 
+    post("/bestillHistorikkvaskFraQuery/{fagsystem}", {
+        tags("Forvaltning")
+        description = "Bestill historikkvask for oppgaver truffet av oppgavequery"
+        request {
+            pathParameter<Fagsystem>("fagsystem") {
+                description = "Fagsystemet oppgavene tilhører"
+            }
+        }
+    }) {
+        requestContextService.withRequestContext(call) {
+            if (pepClient.kanLeggeUtDriftsmelding()) {
+                val fagsystem = Fagsystem.fraKode(call.parameters["fagsystem"]!!)
+                val oppgaveQueryFraRequest = call.receive<OppgaveQuery>()
+                if (oppgaveQueryFraRequest.select.isNotEmpty()) {
+                    call.respond(HttpStatusCode.BadRequest, "OppgaveQuery.select støttes ikke for bestilling fra query")
+                    return@withRequestContext
+                }
+                val filtereUtenOppgavetype = oppgaveQueryFraRequest.filtere
+                    .filterNot { filter ->
+                        filter is FeltverdiOppgavefilter && filter.kode == "oppgavetype"
+                    }
+                val oppgaveQuery = oppgaveQueryFraRequest.copy(
+                    filtere = filtereUtenOppgavetype + FeltverdiOppgavefilter(
+                        område = null,
+                        kode = "oppgavetype",
+                        operator = EksternFeltverdiOperator.EQUALS,
+                        verdi = listOf(K9Oppgavetypenavn.fraFagsystem(fagsystem).kode)
+                    )
+                )
+                val eksternIder = oppgaveQueryService.queryForOppgaveEksternId(QueryRequest(oppgaveQuery))
+                    .map { it.eksternId }
+                    .distinct()
+
+                transactionalManager.transaction { tx ->
+                    eksternIder.chunked(1000).forEach { chunk ->
+                        eventRepository.bestillHistorikkvask(fagsystem, chunk, tx)
+                    }
+                }
+
+                call.respond(BestillingFraQueryResponse(eksternIder.size))
+            } else {
+                call.respond(HttpStatusCode.Forbidden)
+            }
+        }
+    }
+
+    post("/bestillDvhSendingFraQuery/{fagsystem}", {
+        tags("Forvaltning")
+        description = "Bestill DVH-sending for oppgaver truffet av oppgavequery"
+        request {
+            pathParameter<DvhSendingFagsystem>("fagsystem") {
+                description = "Fagsystemet oppgavene skal begrenses til"
+                example("k9sak") {
+                    value = DvhSendingFagsystem.K9SAK
+                    description = "Oppgaver fra k9sak"
+                }
+                example("k9klage") {
+                    value = DvhSendingFagsystem.K9KLAGE
+                    description = "Oppgaver fra k9klage"
+                }
+            }
+        }
+    }) {
+        requestContextService.withRequestContext(call) {
+            if (pepClient.kanLeggeUtDriftsmelding()) {
+                val fagsystem = DvhSendingFagsystem.fraKode(call.parameters["fagsystem"]!!)
+                val oppgaveQueryFraRequest = call.receive<OppgaveQuery>()
+                if (oppgaveQueryFraRequest.select.isNotEmpty()) {
+                    call.respond(HttpStatusCode.BadRequest, "OppgaveQuery.select støttes ikke for bestilling fra query")
+                    return@withRequestContext
+                }
+                val filtereUtenOppgavetype = oppgaveQueryFraRequest.filtere
+                    .filterNot { filter ->
+                        filter is FeltverdiOppgavefilter && filter.kode == "oppgavetype"
+                    }
+                val oppgaveQuery = oppgaveQueryFraRequest.copy(
+                    filtere = filtereUtenOppgavetype + FeltverdiOppgavefilter(
+                        område = null,
+                        kode = "oppgavetype",
+                        operator = EksternFeltverdiOperator.EQUALS,
+                        verdi = listOf(fagsystem.oppgavetypeKode)
+                    )
+                )
+                val eksternIder = oppgaveQueryService.queryForOppgaveEksternId(QueryRequest(oppgaveQuery))
+                    .map { it.eksternId }
+                    .distinct()
+
+                transactionalManager.transaction { tx ->
+                    eksternIder.chunked(1000).forEach { chunk ->
+                        statistikkRepository.bestillDvhSendingForEksternIder(chunk, tx)
+                    }
+                }
+
+                call.respond(BestillingFraQueryResponse(eksternIder.size))
+            } else {
+                call.respond(HttpStatusCode.Forbidden)
+            }
+        }
+    }
+
 }
 
 fun utledReservasjonsnøkkel(oppgave: Oppgave, erTilBeslutter: Boolean): String {
@@ -512,3 +616,22 @@ data class FinnEksternIdResponse(
     val eksternId: String,
     val opprettetTidspunkt: String?,
 )
+
+data class BestillingFraQueryResponse(
+    val antallEksternIder: Int,
+)
+
+enum class DvhSendingFagsystem(@JsonValue val oppgavetypeKode: String) {
+    K9SAK("k9sak"),
+    K9KLAGE("k9klage");
+
+    companion object {
+        @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
+        @JvmStatic
+        fun fraKode(kode: String): DvhSendingFagsystem {
+            return entries.find { it.oppgavetypeKode == kode }
+                ?: throw IllegalStateException("Kjenner ikke igjen DVH-fagsystem=$kode")
+        }
+    }
+}
+
