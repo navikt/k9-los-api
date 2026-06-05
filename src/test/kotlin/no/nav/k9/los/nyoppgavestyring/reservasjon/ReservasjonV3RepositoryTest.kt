@@ -364,4 +364,102 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
         assertThat(forlengetReservasjon.gyldigTil).isEqualTo(reservasjon.gyldigTil.plusDays(1))
         assertThat(forlengetReservasjon.kommentar).isEqualTo("testkommentar")
     }
+
+    @Test
+    fun `Skal hente riktig antall reservasjoner for saksbehandlerne, og for kun de saksbehandlerne som er i lista`() {
+        val saksbehandlerRepository = get<SaksbehandlerRepository>()
+        val reservasjonV3Repository = get<ReservasjonV3Repository>()
+        val transactionalManager = get<TransactionalManager>()
+
+        val saksbehandler1 = runBlocking {
+            saksbehandlerRepository.addSaksbehandler(
+                Saksbehandler(
+                    id = null,
+                    navident = null,
+                    navn = null,
+                    epost = "test1@test.no",
+                    enhet = null,
+                )
+            )
+            saksbehandlerRepository.finnSaksbehandlerMedEpost("test1@test.no")!!
+        }
+        val saksbehandler2 = runBlocking {
+            saksbehandlerRepository.addSaksbehandler(
+                Saksbehandler(
+                    id = null,
+                    navident = null,
+                    navn = null,
+                    epost = "test2@test.no",
+                    enhet = null,
+                )
+            )
+            saksbehandlerRepository.finnSaksbehandlerMedEpost("test2@test.no")!!
+        }
+        val saksbehandler3skjermet = runBlocking {
+            saksbehandlerRepository.addSaksbehandler(
+                Saksbehandler(
+                    id = null,
+                    navident = null,
+                    navn = null,
+                    epost = "test3@test.no",
+                    enhet = null,
+                )
+            )
+            saksbehandlerRepository.finnSaksbehandlerMedEpost("test3@test.no")!!
+        }
+
+        val reservasjon1 = ReservasjonV3(
+            reservertAv = saksbehandler1.id!!,
+            reservasjonsnøkkel = "test1",
+            gyldigFra = LocalDateTime.now(),
+            gyldigTil = LocalDateTime.now().plusDays(1),
+            kommentar = "",
+            endretAv = null
+        )
+        val reservasjon2 = ReservasjonV3(
+            reservertAv = saksbehandler1.id!!,
+            reservasjonsnøkkel = "test2",
+            gyldigFra = LocalDateTime.now(),
+            gyldigTil = LocalDateTime.now().plusDays(1),
+            kommentar = "",
+            endretAv = null
+        )
+        val reservasjon3 = ReservasjonV3(
+            reservertAv = saksbehandler2.id!!,
+            reservasjonsnøkkel = "test3",
+            gyldigFra = LocalDateTime.now(),
+            gyldigTil = LocalDateTime.now().plusDays(1),
+            kommentar = "",
+            endretAv = null
+        )
+        val reservasjon4 = ReservasjonV3(
+            reservertAv = saksbehandler3skjermet.id!!,
+            reservasjonsnøkkel = "test4",
+            gyldigFra = LocalDateTime.now(),
+            gyldigTil = LocalDateTime.now().plusDays(1),
+            kommentar = "",
+            endretAv = null
+        )
+
+        transactionalManager.transaction { tx ->
+            reservasjonV3Repository.lagreReservasjon(reservasjon1,tx)
+            reservasjonV3Repository.lagreReservasjon(reservasjon2,tx)
+            reservasjonV3Repository.lagreReservasjon(reservasjon3,tx)
+            reservasjonV3Repository.lagreReservasjon(reservasjon4,tx)
+        }
+
+        val resultat = transactionalManager.transaction { tx ->
+            reservasjonV3Repository.tellAktiveReservasjonerForSaksbehandlere(
+                setOf(
+                    saksbehandler1.id!!,
+                    saksbehandler2.id!!
+                ), tx
+            )
+        }
+
+        assertEquals(resultat, mapOf(
+            saksbehandler1.id!! to 2,
+            saksbehandler2.id!! to 1
+        ))
+    }
 }
