@@ -1,0 +1,111 @@
+package no.nav.k9.los.domeneadaptere.k9.eventtiloppgave.punsjtillos
+
+import assertk.assertThat
+import assertk.assertions.isEqualTo
+import no.nav.k9.los.AbstractK9LosIntegrationTest
+import no.nav.k9.los.infrastruktur.db.TransactionalManager
+import no.nav.k9.los.OppgaveTestDataBuilder
+import no.nav.k9.los.domeneadaptere.k9.eventmottak.punsj.PunsjEventDtoBuilder
+import no.nav.k9.los.domeneadaptere.k9.eventmottak.TestSaksbehandler
+import no.nav.k9.los.domeneadaptere.k9.eventmottak.eventlager.EventNøkkel
+import no.nav.k9.los.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventHandler
+import no.nav.k9.los.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventDto
+import no.nav.k9.los.domeneadaptere.k9.eventtiloppgave.EventTilOppgaveAdapter
+import no.nav.k9.los.ko.OppgaveKoTjeneste
+import no.nav.k9.los.kodeverk.FagsakYtelseType
+import no.nav.k9.los.kodeverk.Fagsystem
+import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
+import no.nav.k9.los.oppgaveuthenting.OppgaveRepository
+import no.nav.k9.los.reservasjon.ReservasjonApisTjeneste
+import no.nav.k9.sak.typer.AktørId
+import no.nav.k9.sak.typer.JournalpostId
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import org.koin.test.get
+import java.time.LocalDateTime
+import java.util.*
+
+
+class K9PunsjTilLosIT : AbstractK9LosIntegrationTest() {
+
+    lateinit var eventHandler: K9PunsjEventHandler
+    lateinit var oppgaveKøTjeneste: OppgaveKoTjeneste
+
+    lateinit var reservasjonApisTjeneste: ReservasjonApisTjeneste
+    lateinit var transactionalManager: TransactionalManager
+    lateinit var oppgaveRepository: OppgaveRepository
+    lateinit var eventTilOppgaveAdapter: EventTilOppgaveAdapter
+
+    @BeforeEach
+    fun setup() {
+        eventHandler = get<K9PunsjEventHandler>()
+        oppgaveKøTjeneste = get<OppgaveKoTjeneste>()
+        reservasjonApisTjeneste = get<ReservasjonApisTjeneste>()
+        transactionalManager = get<TransactionalManager>()
+        oppgaveRepository = get<OppgaveRepository>()
+        eventTilOppgaveAdapter = get<EventTilOppgaveAdapter>()
+
+        TestSaksbehandler().init()
+        OppgaveTestDataBuilder()
+    }
+
+    @Test
+    fun `Punsjadapter skal håndtere eventer fra punsj som enda ikke er klassifisert til noen ytelse`() {
+        val punsjEventDtoBuilder = PunsjEventDtoBuilder(ytelse = FagsakYtelseType.UKJENT)
+        eventHandler.prosesser(punsjEventDtoBuilder.papirsøknad().build())
+
+        // Sjekke at de dukker opp i oppgavequery
+    }
+
+    @Test
+    fun `Skal ta imot eventer og lukke oppgave når siste event er LUKKET`() {
+        var nå = LocalDateTime.now()
+        var punsjId = UUID.randomUUID()
+        var søkerAktørId = AktørId(2000000000000)
+        var pleietrengendeAktørId = AktørId(2000000000001)
+        val event1 = K9PunsjEventDto(
+            type = "PAPIRSØKNAD",
+            status = Oppgavestatus.AAPEN,
+            ytelse = "PSB",
+            aktørId = søkerAktørId,
+            eventTid = nå.minusMinutes(2),
+            eksternId = punsjId,
+            journalpostId = JournalpostId(1),
+            aksjonspunktKoderMedStatusListe = mutableMapOf("PUNSJ" to "OPPR"),
+        )
+        val event2 = K9PunsjEventDto(
+            type = "PAPIRSØKNAD",
+            status = Oppgavestatus.AAPEN,
+            ytelse = "PSB",
+            aktørId = søkerAktørId,
+            eventTid = nå.minusMinutes(1),
+            eksternId = punsjId,
+            journalpostId = JournalpostId(1),
+            journalførtTidspunkt = nå.minusMinutes(1),
+            pleietrengendeAktørId = pleietrengendeAktørId.aktørId.toString(),
+            aksjonspunktKoderMedStatusListe = mutableMapOf("PUNSJ" to "OPPR"),
+        )
+
+        val event3 = K9PunsjEventDto(
+            type = "PAPIRSØKNAD",
+            status = Oppgavestatus.LUKKET,
+            ytelse = null,
+            aktørId = søkerAktørId,
+            eventTid = nå,
+            sendtInn = false,
+            eksternId = punsjId,
+            journalpostId = JournalpostId(1),
+            aksjonspunktKoderMedStatusListe = mutableMapOf("PUNSJ" to "OPPR"),
+        )
+
+        eventHandler.prosesser(event1)
+        eventHandler.prosesser(event2)
+        eventHandler.prosesser(event3)
+
+        eventTilOppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(Fagsystem.PUNSJ, punsjId.toString()))
+
+        val oppgave = transactionalManager.transaction { tx -> oppgaveRepository.hentNyesteOppgaveForEksternIdHvisFinnes(tx, "K9", punsjId.toString()) }
+        assertThat(oppgave!!.status).isEqualTo(Oppgavestatus.LUKKET.kode)
+
+    }
+}
