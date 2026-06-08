@@ -31,8 +31,9 @@ class StatistikkRepository(
                         join oppgave_v3 ov
                             on ov.ekstern_id = p.ekstern_id
                            and ov.ekstern_versjon = p.ekstern_versjon
-                        left join (
-                            select ofv.oppgave_id, max(ofv.verdi) as saksnummer
+                           and ov.oppgavetype_ekstern_id in ('k9sak', 'k9klage')
+                        left join lateral (
+                            select ofv.verdi as saksnummer
                             from oppgavefelt_verdi ofv
                             join oppgavefelt f
                                 on ofv.oppgavefelt_id = f.id
@@ -40,11 +41,10 @@ class StatistikkRepository(
                                 on f.feltdefinisjon_id = fd.id
                             join omrade om
                                 on fd.omrade_id = om.id
-                            where fd.ekstern_id = 'saksnummer'
+                            where ofv.oppgave_id = ov.id
+                                and fd.ekstern_id = 'saksnummer'
                                 and om.ekstern_id = 'K9'
-                            group by ofv.oppgave_id
-                        ) saksnummer
-                            on saksnummer.oppgave_id = ov.id
+                        ) saksnummer on true
                         where p.oppgavetype_ekstern_id in ('k9sak', 'k9klage')
                         order by saksnummer.saksnummer nulls last, ov.ekstern_id, ov.ekstern_versjon
                     """.trimIndent()
