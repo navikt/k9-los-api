@@ -28,18 +28,23 @@ class StatistikkRepository(
                     """
                         select ov.id
                         from oppgave_v3_dvh_pending p
-                        join oppgave_v3_part ov
+                        join oppgave_v3 ov
                             on ov.ekstern_id = p.ekstern_id
-                        left join lateral (
-                            -- Saksnummer finnes i partisjonerte feltverdier for aktiv oppgave.
-                            select max(ofvp.verdi) as saksnummer
-                            from oppgave_id_part oip
-                            join oppgavefelt_verdi_part ofvp
-                                on ofvp.oppgave_id = oip.id
-                            where oip.oppgave_ekstern_id = p.ekstern_id
-                                and oip.oppgavetype_ekstern_id = ov.oppgavetype_ekstern_id
-                                and ofvp.feltdefinisjon_ekstern_id = 'saksnummer'
-                        ) saksnummer on true
+                           and ov.ekstern_versjon = p.ekstern_versjon
+                        left join (
+                            select ofv.oppgave_id, max(ofv.verdi) as saksnummer
+                            from oppgavefelt_verdi ofv
+                            join oppgavefelt f
+                                on ofv.oppgavefelt_id = f.id
+                            join feltdefinisjon fd
+                                on f.feltdefinisjon_id = fd.id
+                            join omrade om
+                                on fd.omrade_id = om.id
+                            where fd.ekstern_id = 'saksnummer'
+                                and om.ekstern_id = 'K9'
+                            group by ofv.oppgave_id
+                        ) saksnummer
+                            on saksnummer.oppgave_id = ov.id
                         where p.oppgavetype_ekstern_id in ('k9sak', 'k9klage')
                         order by saksnummer.saksnummer nulls last, ov.ekstern_id, ov.ekstern_versjon
                     """.trimIndent()
