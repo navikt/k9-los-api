@@ -33,7 +33,7 @@ class StatistikkRepository(
                            and ov.ekstern_versjon = p.ekstern_versjon
                            and ov.oppgavetype_ekstern_id in ('k9sak', 'k9klage')
                         left join lateral (
-                            select max(ofv.verdi) as saksnummer
+                            select ofv.verdi as saksnummer
                             from oppgavefelt_verdi ofv
                             join oppgavefelt f
                                 on ofv.oppgavefelt_id = f.id
