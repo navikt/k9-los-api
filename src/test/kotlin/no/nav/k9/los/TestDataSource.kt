@@ -2,7 +2,7 @@ package no.nav.k9.los
 
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.runMigration
+import no.nav.k9.los.infrastruktur.db.runMigration
 import org.junit.jupiter.api.AfterEach
 import org.testcontainers.containers.PostgreSQLContainer
 import javax.sql.DataSource
@@ -45,7 +45,7 @@ const val TØM_DATA_SQL = """
                 RESERVASJON_V3,
                 RESERVASJON_V3_ENDRING,
                 OPPGAVE_V3,
-                oppgave_v3_sendt_dvh_ekstern,
+                oppgave_v3_dvh_pending,
                 OPPGAVE_PEP_CACHE,
                 kodeverk,
                 kodeverk_verdi,

@@ -28,7 +28,7 @@ import io.prometheus.client.CollectorRegistry
 import io.prometheus.client.exporter.common.TextFormat
 import io.prometheus.client.hotspot.DefaultExports
 import kotlinx.coroutines.Dispatchers
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.DB_AWARE_PARALLELISM
+import no.nav.k9.los.infrastruktur.db.DB_AWARE_PARALLELISM
 import kotlinx.coroutines.channels.Channel
 import no.nav.helse.dusseldorf.ktor.auth.AuthStatusPages
 import no.nav.helse.dusseldorf.ktor.auth.allIssuers
@@ -39,43 +39,40 @@ import no.nav.helse.dusseldorf.ktor.health.HealthRoute
 import no.nav.helse.dusseldorf.ktor.jackson.JacksonStatusPages
 import no.nav.helse.dusseldorf.ktor.jackson.dusseldorfConfigured
 import no.nav.helse.dusseldorf.ktor.metrics.init
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventlagerApi
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.kafka.AsynkronProsesseringV1Service
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.EventTilOppgaveAdapter
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.HistorikkvaskTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.refreshk9sakoppgaver.K9sakBehandlingsoppfriskingJobb
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.refreshk9sakoppgaver.RefreshK9v3
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.OppgavestatistikkTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.StatistikkApi
-import no.nav.k9.los.nyoppgavestyring.driftsmelding.DriftsmeldingerApis
-import no.nav.k9.los.nyoppgavestyring.forvaltning.forvaltningApis
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.cache.PepCacheService
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.jobbplanlegger.Jobbplanlegger
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.jobbplanlegger.PlanlagtJobb
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.jobbplanlegger.Tidsvindu
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.metrikker.EventlagerNokkeltallPrometheusCollector
-import no.nav.k9.los.nyoppgavestyring.innloggetbruker.InnloggetBrukerApi
-import no.nav.k9.los.nyoppgavestyring.ko.KøpåvirkendeHendelse
-import no.nav.k9.los.nyoppgavestyring.ko.OppgaveKoApis
-import no.nav.k9.los.nyoppgavestyring.lagretsok.LagretSøkApi
-import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonApi
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Api
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeApi
-import no.nav.k9.los.nyoppgavestyring.nyeogferdigstilte.NyeOgFerdigstilteApi
-import no.nav.k9.los.nyoppgavestyring.nyeogferdigstilte.NyeOgFerdigstilteService
-import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryApis
-import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonApis
-import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerAdminApis
-import no.nav.k9.los.nyoppgavestyring.sisteoppgaver.SisteOppgaverApi
-import no.nav.k9.los.nyoppgavestyring.søkeboks.SøkeboksApi
-import no.nav.k9.los.nyoppgavestyring.uttrekk.MigrerUttrekkResultatJobb
-import no.nav.k9.los.nyoppgavestyring.uttrekk.UttrekkApi
-import no.nav.k9.los.nyoppgavestyring.uttrekk.UttrekkJobb
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.NøkkeltallV3Apis
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.dagenstall.DagensTallService
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.ferdigstilteperenhet.FerdigstiltePerEnhetService
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.statusfordeling.StatusFordelingService
+import no.nav.k9.los.domeneadaptere.k9.OmrådeSetup
+import no.nav.k9.los.domeneadaptere.k9.eventmottak.eventlager.EventlagerApi
+import no.nav.k9.los.domeneadaptere.k9.eventmottak.kafka.AsynkronProsesseringV1Service
+import no.nav.k9.los.domeneadaptere.k9.eventtiloppgave.EventTilOppgaveAdapter
+import no.nav.k9.los.domeneadaptere.k9.eventtiloppgave.HistorikkvaskTjeneste
+import no.nav.k9.los.domeneadaptere.k9.refreshk9sakoppgaver.K9sakBehandlingsoppfriskingJobb
+import no.nav.k9.los.domeneadaptere.k9.refreshk9sakoppgaver.RefreshK9v3
+import no.nav.k9.los.domeneadaptere.k9.statistikk.OppgavestatistikkTjeneste
+import no.nav.k9.los.domeneadaptere.k9.statistikk.StatistikkApi
+import no.nav.k9.los.driftsmelding.DriftsmeldingerApis
+import no.nav.k9.los.forvaltning.forvaltningApis
+import no.nav.k9.los.infrastruktur.abac.cache.PepCacheService
+import no.nav.k9.los.infrastruktur.jobbplanlegger.Jobbplanlegger
+import no.nav.k9.los.infrastruktur.jobbplanlegger.PlanlagtJobb
+import no.nav.k9.los.infrastruktur.jobbplanlegger.Tidsvindu
+import no.nav.k9.los.infrastruktur.metrikker.EventlagerNokkeltallPrometheusCollector
+import no.nav.k9.los.innloggetbruker.InnloggetBrukerApi
+import no.nav.k9.los.ko.KøpåvirkendeHendelse
+import no.nav.k9.los.ko.OppgaveKoApis
+import no.nav.k9.los.lagretsok.LagretSøkApi
+import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.FeltdefinisjonApi
+import no.nav.k9.los.oppgavemottak.OppgaveV3Api
+import no.nav.k9.los.oppgavedefinisjon.oppgavetype.OppgavetypeApi
+import no.nav.k9.los.nøkkeltall.saksbehandler.nyeogferdigstilte.NyeOgFerdigstilteApi
+import no.nav.k9.los.nøkkeltall.saksbehandler.nyeogferdigstilte.NyeOgFerdigstilteService
+import no.nav.k9.los.oppgaveuthenting.query.OppgaveQueryApis
+import no.nav.k9.los.reservasjon.ReservasjonApis
+import no.nav.k9.los.saksbehandleradmin.SaksbehandlerAdminApis
+import no.nav.k9.los.sisteoppgaver.SisteOppgaverApi
+import no.nav.k9.los.søkeboks.SøkeboksApi
+import no.nav.k9.los.uttrekk.MigrerUttrekkResultatJobb
+import no.nav.k9.los.uttrekk.UttrekkApi
+import no.nav.k9.los.uttrekk.UttrekkJobb
+import no.nav.k9.los.nøkkeltall.NøkkeltallV3Apis
 import no.nav.k9.los.tjenester.mock.localSetup
 import org.koin.core.Koin
 import org.koin.core.qualifier.named
@@ -276,9 +273,9 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
     val oppgavestatistikkTjeneste = koin.get<OppgavestatistikkTjeneste>()
 
     val pepCacheService = koin.get<PepCacheService>()
-    val statusFordelingService = koin.get<StatusFordelingService>()
-    val dagensTallService = koin.get<DagensTallService>()
-    val perEnhetService = koin.get<FerdigstiltePerEnhetService>()
+    val statusFordelingService = koin.get<no.nav.k9.los.nøkkeltall.avdelingsleder.statusfordeling.StatusFordelingService>()
+    val dagensTallService = koin.get<no.nav.k9.los.nøkkeltall.avdelingsleder.dagenstall.DagensTallService>()
+    val perEnhetService = koin.get<no.nav.k9.los.nøkkeltall.avdelingsleder.ferdigstilteperenhet.FerdigstiltePerEnhetService>()
     val nyeOgFerdigstilteService = koin.get<NyeOgFerdigstilteService>()
     val uttrekkJobb = koin.get<UttrekkJobb>()
     val migrerUttrekkResultatJobb = MigrerUttrekkResultatJobb(koin.get())

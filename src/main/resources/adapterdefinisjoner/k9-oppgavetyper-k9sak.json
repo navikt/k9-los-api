@@ -190,37 +190,37 @@
           "id": "akkumulertVentetidSaksbehandlerForTidligereVersjoner",
           "visPåOppgave": false,
           "påkrevd": false,
-          "feltutleder": "no.nav.k9.los.nyoppgavestyring.feltutlederforlagring.AkkumulertVentetidSaksbehandler"
+          "feltutleder": "no.nav.k9.los.oppgavemottak.feltutlederforlagring.AkkumulertVentetidSaksbehandler"
         },
         {
           "id": "akkumulertVentetidSøkerForTidligereVersjoner",
           "visPåOppgave": false,
           "påkrevd": false,
-          "feltutleder": "no.nav.k9.los.nyoppgavestyring.feltutlederforlagring.AkkumulertVentetidSøker"
+          "feltutleder": "no.nav.k9.los.oppgavemottak.feltutlederforlagring.AkkumulertVentetidSøker"
         },
         {
           "id": "akkumulertVentetidTekniskFeilForTidligereVersjoner",
           "visPåOppgave": false,
           "påkrevd": false,
-          "feltutleder": "no.nav.k9.los.nyoppgavestyring.feltutlederforlagring.AkkumulertVentetidTekniskFeil"
+          "feltutleder": "no.nav.k9.los.oppgavemottak.feltutlederforlagring.AkkumulertVentetidTekniskFeil"
         },
         {
           "id": "akkumulertVentetidArbeidsgiverForTidligereVersjoner",
           "visPåOppgave": false,
           "påkrevd": false,
-          "feltutleder": "no.nav.k9.los.nyoppgavestyring.feltutlederforlagring.AkkumulertVentetidArbeidsgiver"
+          "feltutleder": "no.nav.k9.los.oppgavemottak.feltutlederforlagring.AkkumulertVentetidArbeidsgiver"
         },
         {
           "id": "akkumulertVentetidAnnetForTidligereVersjoner",
           "visPåOppgave": false,
           "påkrevd": false,
-          "feltutleder": "no.nav.k9.los.nyoppgavestyring.feltutlederforlagring.AkkumulertVentetidAnnet"
+          "feltutleder": "no.nav.k9.los.oppgavemottak.feltutlederforlagring.AkkumulertVentetidAnnet"
         },
         {
           "id": "akkumulertVentetidAnnetIkkeSaksbehandlingstidForTidligereVersjoner",
           "visPåOppgave": false,
           "påkrevd": false,
-          "feltutleder": "no.nav.k9.los.nyoppgavestyring.feltutlederforlagring.AkkumulertVentetidAnnetIkkeSaksbehandlingstid"
+          "feltutleder": "no.nav.k9.los.oppgavemottak.feltutlederforlagring.AkkumulertVentetidAnnetIkkeSaksbehandlingstid"
         },
         {
           "id": "akkumulertVentetidAnnetIkkeSaksbehandlingstid",
@@ -314,13 +314,13 @@
           "id": "ferdigstiltTidspunkt",
           "visPåOppgave": false,
           "påkrevd": false,
-          "feltutleder": "no.nav.k9.los.nyoppgavestyring.feltutlederforlagring.FerdigstiltTidspunkt"
+          "feltutleder": "no.nav.k9.los.oppgavemottak.feltutlederforlagring.FerdigstiltTidspunkt"
         },
         {
           "id": "ferdigstiltEnhet",
           "visPåOppgave": false,
           "påkrevd": false,
-          "feltutleder": "no.nav.k9.los.nyoppgavestyring.feltutlederforlagring.FerdigstiltEnhet"
+          "feltutleder": "no.nav.k9.los.oppgavemottak.feltutlederforlagring.FerdigstiltEnhet"
         },
         {
           "id": "fagsakÅr",

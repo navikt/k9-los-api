@@ -2,7 +2,7 @@ package no.nav.k9.los.domene.modell
 
 import assertk.assertThat
 import assertk.assertions.doesNotContain
-import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.Saksbehandler
+import no.nav.k9.los.saksbehandleradmin.Saksbehandler
 import org.junit.jupiter.api.Test
 
 class SaksbehandlerTest {

@@ -8,8 +8,8 @@ import io.kotest.core.listeners.TestListener
 import io.kotest.core.test.TestCase
 import io.kotest.engine.test.TestResult
 import no.nav.k9.los.buildAndTestConfig
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.runMigration
+import no.nav.k9.los.domeneadaptere.k9.OmrådeSetup
+import no.nav.k9.los.infrastruktur.db.runMigration
 import no.nav.k9.los.tjenester.mock.localSetup.getKoin
 import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
@@ -73,30 +73,30 @@ object DbCleanupListener : TestListener {
  * JUnit-testene bruker TØM_DATA_SQL som truncater alt, men de kaller OmrådeSetup.setup() i @BeforeEach.
  */
 private const val KOTEST_TØM_DATA_SQL = """
-            truncate 
-                driftsmeldinger,
-                saksbehandler,
-                siste_oppgaver,
-                OPPGAVEKO_SAKSBEHANDLER,
-                OPPGAVEKO_V3,
-                RESERVASJON_V3,
-                RESERVASJON_V3_ENDRING,
-                oppgave_v3_sendt_dvh_ekstern,
-                OPPGAVE_PEP_CACHE,
-                oppgavefelt_verdi_part,
-                oppgavefelt_verdi,
-                oppgavefelt_verdi_aktiv,
-                oppgave_v3_part,
-                oppgave_id_part,
-                oppgave_v3,
-                oppgave_v3_aktiv,
-                uttrekk,
-                lagret_sok,
-                event,
-                event_historikkvask_bestilt,
-                event_nokkel;
-                
-            ALTER SEQUENCE saksbehandler_id_seq restart
+             truncate 
+                 driftsmeldinger,
+                 saksbehandler,
+                 siste_oppgaver,
+                 OPPGAVEKO_SAKSBEHANDLER,
+                 OPPGAVEKO_V3,
+                 RESERVASJON_V3,
+                 RESERVASJON_V3_ENDRING,
+                 oppgave_v3_dvh_pending,
+                 OPPGAVE_PEP_CACHE,
+                 oppgavefelt_verdi_part,
+                 oppgavefelt_verdi,
+                 oppgavefelt_verdi_aktiv,
+                 oppgave_v3_part,
+                 oppgave_id_part,
+                 oppgave_v3,
+                 oppgave_v3_aktiv,
+                 uttrekk,
+                 lagret_sok,
+                 event,
+                 event_historikkvask_bestilt,
+                 event_nokkel;
+                 
+             ALTER SEQUENCE saksbehandler_id_seq restart
         """
 
 fun cleanupTables(dataSource: DataSource) {
