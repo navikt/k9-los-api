@@ -1,19 +1,36 @@
--- Stable identity for a logical oppgave (one row per business key)
-create table if not exists oppgave (
-    id                          bigint generated always as identity not null primary key,
-    omrade_ekstern_id           varchar(100)                        not null,
-    oppgavetype_ekstern_id      varchar(100)                        not null,
-    oppgave_ekstern_id          varchar(100)                        not null,
-    opprettet_tidspunkt         timestamp(3)                        not null default now(),
-    unique (omrade_ekstern_id, oppgavetype_ekstern_id, oppgave_ekstern_id)
-    );
+-- Reuse existing oppgave id table and align schema for temporal use.
+do
+$$
+begin
+    if to_regclass('public.oppgave_id') is null and to_regclass('public.oppgave_id_part') is not null then
+        alter table oppgave_id_part rename to oppgave_id;
+    end if;
+end
+$$;
 
-comment on table oppgave is 'Stabil identitet for oppgave på tvers av versjoner/perioder';
+alter table if exists oppgave_id
+    add column if not exists omrade_ekstern_id varchar(100);
+
+update oppgave_id
+set omrade_ekstern_id = 'K9'
+where omrade_ekstern_id is null;
+
+alter table oppgave_id
+    alter column omrade_ekstern_id set not null;
+
+alter table oppgave_id
+    drop constraint if exists unique_oppgave_oppgavetype;
+
+alter table oppgave_id
+    add constraint unique_oppgave_omrade_oppgavetype unique (omrade_ekstern_id, oppgavetype_ekstern_id, oppgave_ekstern_id);
+
+comment on table oppgave_id is 'Stabil identitet for oppgave på tvers av versjoner/perioder';
 
 -- Temporal oppgave state (one row per validity interval)
 create table if not exists oppgave_v3_temporal (
     id                          bigint generated always as identity not null primary key,
-    oppgave_id                  bigint                               not null,
+    oppgave_id                  bigint                                 not null,
+    intern_versjon              bigint                               not null,
     ekstern_versjon             varchar(100)                         not null,
     status                      varchar(50)                          not null,
     reservasjonsnokkel          varchar(50)                          not null,
@@ -22,7 +39,7 @@ create table if not exists oppgave_v3_temporal (
     gyldig_fra                  timestamp(3)                         not null,
     gyldig_til                  timestamp(3)                         null,
     constraint fk_oppgave_v3_temporal_oppgave
-    foreign key (oppgave_id) references oppgave(id),
+    foreign key (oppgave_id) references oppgave_id(id),
     constraint chk_oppgave_v3_temporal_intervall
     check (gyldig_til is null or gyldig_til > gyldig_fra)
     );
@@ -41,7 +58,7 @@ create table if not exists oppgavefelt_verdi_temporal (
     gyldig_fra                  timestamp(3)                         not null,
     gyldig_til                  timestamp(3)                         null,
     constraint fk_ofv_temporal_oppgave
-    foreign key (oppgave_id) references oppgave(id),
+    foreign key (oppgave_id) references oppgave_id(id),
     constraint fk_ofv_temporal_oppgavefelt
     foreign key (oppgavefelt_id) references oppgavefelt(id),
     constraint chk_ofv_temporal_intervall

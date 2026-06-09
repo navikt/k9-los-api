@@ -35,11 +35,16 @@ class PartisjonertOppgaveRepository(val oppgavetypeRepository: OppgavetypeReposi
         return tx.run(
             queryOf(
                 """
-                select id from oppgave_id_part where oppgave_ekstern_id = :oppgave_ekstern_id and oppgavetype_ekstern_id = :oppgavetype_ekstern_id
+                select id
+                from oppgave_id
+                where oppgave_ekstern_id = :oppgave_ekstern_id
+                  and oppgavetype_ekstern_id = :oppgavetype_ekstern_id
+                  and omrade_ekstern_id = :omrade_ekstern_id
                 """.trimIndent(),
                 mapOf(
                     "oppgave_ekstern_id" to oppgave.eksternId,
-                    "oppgavetype_ekstern_id" to oppgave.oppgavetype.eksternId
+                    "oppgavetype_ekstern_id" to oppgave.oppgavetype.eksternId,
+                    "omrade_ekstern_id" to oppgave.oppgavetype.område.eksternId
                 )
             ).map { row ->
                 PartisjonertOppgaveId(row.long("id"))
@@ -50,10 +55,11 @@ class PartisjonertOppgaveRepository(val oppgavetypeRepository: OppgavetypeReposi
     private fun opprettPartisjonertOppgaveId(oppgave: OppgaveV3, tx: TransactionalSession): PartisjonertOppgaveId {
         return tx.run(
             queryOf(
-                "insert into oppgave_id_part(oppgave_ekstern_id, oppgavetype_ekstern_id) values (:oppgave_ekstern_id, :oppgavetype_ekstern_id)",
+                "insert into oppgave_id(oppgave_ekstern_id, oppgavetype_ekstern_id, omrade_ekstern_id) values (:oppgave_ekstern_id, :oppgavetype_ekstern_id, :omrade_ekstern_id)",
                 mapOf(
                     "oppgave_ekstern_id" to oppgave.eksternId,
-                    "oppgavetype_ekstern_id" to oppgave.oppgavetype.eksternId
+                    "oppgavetype_ekstern_id" to oppgave.oppgavetype.eksternId,
+                    "omrade_ekstern_id" to oppgave.oppgavetype.område.eksternId
                 )
             ).asUpdateAndReturnGeneratedKey
         )?.let { PartisjonertOppgaveId(it) }
@@ -241,7 +247,7 @@ class PartisjonertOppgaveRepository(val oppgavetypeRepository: OppgavetypeReposi
         return tx.run(
             queryOf(
                 """
-                select * from oppgave_id_part where id = :oppgave_id
+                select * from oppgave_id where id = :oppgave_id
                 """.trimIndent(),
                 mapOf(
                     "oppgave_id" to oppgaveId.id,
