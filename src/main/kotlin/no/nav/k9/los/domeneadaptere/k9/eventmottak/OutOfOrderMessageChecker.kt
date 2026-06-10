@@ -35,7 +35,7 @@ class OutOfOrderMessageChecker(
             } else if (harSettClean) {
                 log.warn(
                     "Oppgave med fagsystem: ${eventnøkkel.fagsystem}, eksternId: ${eventnøkkel.eksternId} " +
-                        "har fått meldinger i feil rekkefølge. Bestiller historikkvask!"
+                        "har fått meldinger i feil rekkefølge. Trenger historikkvask."
                 )
                 return true
             }
