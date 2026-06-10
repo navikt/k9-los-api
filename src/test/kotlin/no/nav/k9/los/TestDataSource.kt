@@ -49,7 +49,7 @@ const val TØM_DATA_SQL = """
                 if truncate_sql is not null then
                     execute truncate_sql;
                 end if;
-            end
+            end;
             $$;
         """
 
