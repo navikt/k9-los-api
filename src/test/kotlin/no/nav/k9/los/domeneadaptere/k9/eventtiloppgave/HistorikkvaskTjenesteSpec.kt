@@ -82,8 +82,6 @@ class HistorikkvaskTjenesteSpec: FreeSpec(), KoinTest {
                     }
                     oppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(Fagsystem.PUNSJ, eksternId.toString()))
                     "skal kunne korrigeres med historikkvask" {
-                        eventRepository.hentAntallHistorikkvaskbestillinger() shouldBe 1
-
                         val uvasketHistorikk = hentOppgavehistorikk(eksternId.toString())
                         uvasketHistorikk.size shouldBe 3
                         uvasketHistorikk.sortedBy { it.second } shouldNotBeEqual uvasketHistorikk.sortedBy { it.third }

@@ -31,7 +31,7 @@ class FeltdefinisjonRepositoryTest: AbstractK9LosIntegrationTest() {
                 visningsnavn = "test123",
                 beskrivelse = null,
                 listetype = false,
-                tolkesSom = "string",
+                tolkesSom = "String",
 
                 synlighet = Synlighet.OVER_STREKEN,
                 kodeverkreferanse = null,
@@ -56,7 +56,7 @@ class FeltdefinisjonRepositoryTest: AbstractK9LosIntegrationTest() {
             visningsnavn = "test1234",
             beskrivelse = null,
             listetype = true,
-            tolkesSom = "string",
+            tolkesSom = "String",
             synlighet = Synlighet.INTERNT,
             kodeverkreferanse = null,
             transientFeltutleder = null,
@@ -138,7 +138,7 @@ class FeltdefinisjonRepositoryTest: AbstractK9LosIntegrationTest() {
                 visningsnavn = "test123",
                 beskrivelse = null,
                 listetype = false,
-                tolkesSom = "string",
+                tolkesSom = "String",
 
                 synlighet = Synlighet.OVER_STREKEN,
                 kodeverkreferanse = null,
