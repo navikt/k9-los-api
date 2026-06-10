@@ -7,7 +7,7 @@ import org.slf4j.LoggerFactory
 
 /**
  * Checks if incoming events are out of order by comparing dirty and non-dirty events.
- * Out of order means: there exists a dirty event that is newer (per ekstern_versjon)
+ * Out of order means: there exists a dirty event that is older (per ekstern_versjon)
  * than an existing non-dirty event.
  */
 class OutOfOrderMessageChecker(
