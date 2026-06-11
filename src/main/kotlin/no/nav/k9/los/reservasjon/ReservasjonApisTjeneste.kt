@@ -255,6 +255,7 @@ class ReservasjonApisTjeneste(
                         kommentar = reservasjonMedOppgaver.reservasjonV3.kommentar ?: "",
                         tilBeslutter = oppgave.hentVerdi("liggerHosBeslutter").toBoolean(),
                         oppgavenøkkel = OppgaveNøkkelDto(oppgave),
+                        reservasjonsnøkkel = oppgave.reservasjonsnøkkel,
                     )
                 }.toList()
             }
