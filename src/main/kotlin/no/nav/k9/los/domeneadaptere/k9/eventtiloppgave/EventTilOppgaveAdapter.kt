@@ -63,9 +63,10 @@ class EventTilOppgaveAdapter(
     fun oppdaterOppgaveForEksternId(
         @SpanAttribute eventnøkkel: EventNøkkel,
         statistikktellerInn: Long = 0,
+        eventer: List<EventLagret>? = null,
     ): Long {
         return transactionalManager.transaction { tx ->
-            oppdaterOppgaveForEksternId(eventnøkkel, tx, statistikktellerInn)
+            oppdaterOppgaveForEksternId(eventnøkkel, tx, statistikktellerInn, eventer)
         }
     }
 
@@ -74,9 +75,10 @@ class EventTilOppgaveAdapter(
         eventnøkkel: EventNøkkel,
         tx: TransactionalSession,
         statistikktellerInn: Long = 0,
+        eventer: List<EventLagret>? = null,
     ): Long {
         log.info("Oppdaterer oppgave for fagsystem: ${eventnøkkel.fagsystem}, eksternId: ${eventnøkkel.eksternId}")
-        val eventerMedNummerering = hentEventerOgKorriger(eventnøkkel, tx)
+        val eventerMedNummerering = hentEventerOgKorriger(eventnøkkel, tx, eventer)
         if (eventerMedNummerering.isEmpty()) return statistikktellerInn
 
         var statistikkteller = statistikktellerInn
@@ -147,10 +149,10 @@ class EventTilOppgaveAdapter(
     private fun hentEventerOgKorriger(
         eventnøkkel: EventNøkkel,
         tx: TransactionalSession,
+        eventer: List<EventLagret>? = null,
     ): List<Pair<Int, EventLagret>> {
-        // Låser alle eventer for denne eksternIden mens vi prosesserer dem
-        val eventer = eventRepository.hentAlleEventerMedLås(eventnøkkel, tx)
-        return vaskeeventSerieutleder.korrigerEventnummerForVaskeeventer(eventer)
+        val låsteEventer = eventer ?: eventRepository.hentAlleEventerMedLås(eventnøkkel, tx)
+        return vaskeeventSerieutleder.korrigerEventnummerForVaskeeventer(låsteEventer)
     }
 
     private fun hentStartversjon(
