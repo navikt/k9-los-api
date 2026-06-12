@@ -8,6 +8,7 @@ import kotlinx.coroutines.channels.Channel
 import no.nav.k9.los.domeneadaptere.k9.OmrådeSetup
 import no.nav.k9.los.domeneadaptere.k9.adhocjobber.reservasjonkonvertering.ReservasjonKonverteringJobb
 import no.nav.k9.los.domeneadaptere.k9.avstemming.AvstemmingsTjeneste
+import no.nav.k9.los.domeneadaptere.k9.eventmottak.FeilRekkefølgeSjekker
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.eventlager.EventRepository
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.klage.K9KlageEventHandler
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventHandler
@@ -167,6 +168,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             transactionalManager = get(),
             eventTilOppgaveAdapter = get(),
             eventRepository = get(),
+            feilRekkefølgeSjekker = get(),
         )
     }
 
@@ -175,6 +177,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             transactionalManager = get(),
             oppgaveAdapter = get(),
             eventRepository = get(),
+            feilRekkefølgeSjekker = get(),
         )
     }
 
@@ -182,7 +185,8 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
         K9TilbakeEventHandler(
             transactionalManager = get(),
             oppgaveAdapter = get(),
-            eventRepository = get()
+            eventRepository = get(),
+            feilRekkefølgeSjekker = get(),
         )
     }
 
@@ -191,6 +195,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             transactionalManager = get(),
             oppgaveAdapter = get(),
             eventRepository = get(),
+            feilRekkefølgeSjekker = get(),
         )
     }
 
@@ -571,5 +576,9 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
 
     single<UttrekkCsvGenerator> {
         UttrekkCsvGenerator()
+    }
+
+    single {
+        FeilRekkefølgeSjekker()
     }
 }

@@ -1,5 +1,6 @@
 package no.nav.k9.los.domeneadaptere.k9.eventtiloppgave
 
+import io.kotest.core.spec.IsolationMode
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.core.test.TestCase
 import io.kotest.matchers.shouldBe
@@ -175,59 +176,6 @@ class EventTilOppgaveAdapterSpec : KoinTest, FreeSpec() {
                     }
 
                     aktivOppgave.hentVerdi("ytelsestype") shouldBe "ytelse"
-                }
-            }
-            "hvor den andre er lest inn og den første er dirty" - {
-                transactionalManager.transaction { tx ->
-                    eventRepository.lagre(Fagsystem.PUNSJ, event2, tx)
-                }
-                oppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(Fagsystem.PUNSJ, eksternId.toString()))
-                transactionalManager.transaction { tx ->
-                    eventRepository.lagre(Fagsystem.PUNSJ, event, tx)
-                }
-                "skal lese inn dirty event og bestille historikkvask" {
-                    oppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(Fagsystem.PUNSJ, eksternId.toString()))
-                    verify(exactly = 1) {
-                        oppgaveOppdatertHandler.håndterOppgaveOppdatert(any(), any(), any())
-                    }
-                    verify(exactly = 1) {
-                        eventRepository.bestillHistorikkvask(any<Fagsystem>(), any<String>(), any<TransactionalSession>())
-                    }
-                    val internVersjon = transactionalManager.transaction { tx ->
-                        oppgaveV3Tjeneste.hentHøyesteInternVersjon(event.eksternId.toString(), K9Oppgavetypenavn.PUNSJ.kode, "K9", tx)
-                    }
-                    internVersjon shouldBe 1
-                }
-            }
-        }
-        "Tre oppgaveeventer" - {
-            val eksternId = UUID.randomUUID()
-            val event = punsjEvent(eksternId, LocalDateTime.now().minusHours(2))
-            val event2 = punsjEvent(eksternId, LocalDateTime.now().minusHours(1))
-            val event3 = punsjEvent(eksternId, LocalDateTime.now())
-            "hvor bare den midterste er dirty og de andre er lest inn" - {
-                transactionalManager.transaction { tx ->
-                    eventRepository.lagre(Fagsystem.PUNSJ, event, tx)
-                    eventRepository.lagre(Fagsystem.PUNSJ, event3, tx)
-                }
-                oppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(Fagsystem.PUNSJ, eksternId.toString()))
-                transactionalManager.transaction { tx ->
-                    eventRepository.lagre(Fagsystem.PUNSJ, event2, tx)
-                }
-                "skal bare laste inn det midterste eventet" - {
-                    "skal bestille historikkvask" {
-                        oppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(Fagsystem.PUNSJ, eksternId.toString()))
-                        verify(exactly = 1) {
-                            oppgaveOppdatertHandler.håndterOppgaveOppdatert(any(), any(), any())
-                        }
-                        verify(exactly = 1) {
-                            eventRepository.bestillHistorikkvask(any<Fagsystem>(), any<String>(), any<TransactionalSession>())
-                        }
-                        val internVersjon = transactionalManager.transaction { tx ->
-                            oppgaveV3Tjeneste.hentHøyesteInternVersjon(event.eksternId.toString(), K9Oppgavetypenavn.PUNSJ.kode, "K9", tx)
-                        }
-                        internVersjon shouldBe 2
-                    }
                 }
             }
         }

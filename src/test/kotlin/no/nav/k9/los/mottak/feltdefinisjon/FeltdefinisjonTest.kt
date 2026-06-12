@@ -56,7 +56,7 @@ class FeltdefinisjonTest {
 
                     synlighet = Synlighet.UNDER_STREKEN,
                     kodeverkreferanse = null,
-                    transientFeltutleder = null
+                    transientFeltutleder = null,
                 ),
                 Feltdefinisjon(
                     eksternId = "opprettet",
@@ -64,11 +64,11 @@ class FeltdefinisjonTest {
                     visningsnavn = "Test",
                     beskrivelse = null,
                     listetype = true,
-                    tolkesSom = "Date",
+                    tolkesSom = "Timestamp",
 
                     synlighet = Synlighet.UNDER_STREKEN,
                     kodeverkreferanse = null,
-                    transientFeltutleder = null
+                    transientFeltutleder = null,
                 )
             )
         )
@@ -102,7 +102,7 @@ class FeltdefinisjonTest {
 
                     synlighet = Synlighet.UNDER_STREKEN,
                     kodeverkreferanse = null,
-                    transientFeltutleder = null
+                    transientFeltutleder = null,
                 ),
                 Feltdefinisjon(
                     eksternId = "opprettet",
@@ -110,11 +110,11 @@ class FeltdefinisjonTest {
                     visningsnavn = "Test",
                     beskrivelse = null,
                     listetype = true,
-                    tolkesSom = "Date",
+                    tolkesSom = "Timestamp",
 
                     synlighet = Synlighet.UNDER_STREKEN,
                     kodeverkreferanse = null,
-                    transientFeltutleder = null
+                    transientFeltutleder = null,
                 )
             )
         )
@@ -146,7 +146,7 @@ class FeltdefinisjonTest {
                     visningsnavn = "Test",
                     beskrivelse = null,
                     listetype = false,
-                    tolkesSom = "Date",
+                    tolkesSom = "Timestamp",
 
                     synlighet = Synlighet.UNDER_STREKEN,
                     kodeverkreferanse = null,

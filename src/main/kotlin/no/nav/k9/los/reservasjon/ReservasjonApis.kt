@@ -71,7 +71,7 @@ internal fun Route.ReservasjonApis() {
     post("/opphev") {
         requestContextService.withRequestContext(call) {
             if (pepClient.harBasisTilgang()) {
-                val params = call.receive<List<AnnullerReservasjon>>()
+                val params = call.receive<List<AnnullerReservasjonDto>>()
                 val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedIdent(kotlin.coroutines.coroutineContext.idToken().getNavIdent())!!
 
                 try {
@@ -113,14 +113,14 @@ internal fun Route.ReservasjonApis() {
     post("/flytt") {
         requestContextService.withRequestContext(call) {
             if (pepClient.harBasisTilgang()) {
-                val params = call.receive<FlyttReservasjonId>()
+                val params = call.receive<FlyttReservasjonDto>()
 
                 val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedIdent(
                     kotlin.coroutines.coroutineContext.idToken().getNavIdent()
                 )!!
 
                 try {
-                    log.info("Flytter reservasjonen ${params.oppgaveNøkkel.oppgaveEksternId} til ${params.brukerIdent} (Gjort av ${innloggetBruker.navident})")
+                    log.info("Flytter reservasjonen til ${params.brukerIdent} (Gjort av ${innloggetBruker.navident})")
                     call.respond(reservasjonApisTjeneste.overførReservasjon(params, innloggetBruker))
                 } catch (e: FinnerIkkeDataException) {
                     call.respond(HttpStatusCode.NotFound, "Fant ingen aktiv reservasjon for angitt reservasjonsnøkkel")

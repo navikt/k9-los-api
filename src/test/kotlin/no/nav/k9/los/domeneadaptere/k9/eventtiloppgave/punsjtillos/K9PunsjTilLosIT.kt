@@ -105,7 +105,7 @@ class K9PunsjTilLosIT : AbstractK9LosIntegrationTest() {
         eventTilOppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(Fagsystem.PUNSJ, punsjId.toString()))
 
         val oppgave = transactionalManager.transaction { tx -> oppgaveRepository.hentNyesteOppgaveForEksternIdHvisFinnes(tx, "K9", punsjId.toString()) }
-        assertThat(oppgave!!.status).isEqualTo(Oppgavestatus.LUKKET.kode)
+        assertThat(oppgave!!.status).isEqualTo(Oppgavestatus.LUKKET)
 
     }
 }
