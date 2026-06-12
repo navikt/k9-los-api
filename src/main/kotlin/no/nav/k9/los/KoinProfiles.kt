@@ -17,6 +17,7 @@ import no.nav.k9.los.domeneadaptere.k9.avstemming.saksbehandling.systemklient.Re
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.eventlager.EventRepository
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.kafka.AsynkronProsesseringV1Service
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.klage.K9KlageEventHandler
+import no.nav.k9.los.domeneadaptere.k9.eventmottak.FeilRekkefølgeSjekker
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventHandler
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.sak.K9SakEventHandler
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.tilbakekrav.K9TilbakeEventHandler
@@ -163,6 +164,7 @@ fun common(app: Application, config: Configuration) = module {
             transactionalManager = get(),
             eventTilOppgaveAdapter = get(),
             eventRepository = get(),
+            feilRekkefølgeSjekker = get(),
         )
     }
 
@@ -171,6 +173,7 @@ fun common(app: Application, config: Configuration) = module {
             transactionalManager = get(),
             eventRepository = get(),
             oppgaveAdapter = get(),
+            feilRekkefølgeSjekker = get(),
         )
     }
 
@@ -179,6 +182,7 @@ fun common(app: Application, config: Configuration) = module {
             transactionalManager = get(),
             eventRepository = get(),
             oppgaveAdapter = get(),
+            feilRekkefølgeSjekker = get(),
         )
     }
 
@@ -187,6 +191,7 @@ fun common(app: Application, config: Configuration) = module {
             transactionalManager = get(),
             oppgaveAdapter = get(),
             eventRepository = get(),
+            feilRekkefølgeSjekker = get(),
         )
     }
 
@@ -357,6 +362,10 @@ fun common(app: Application, config: Configuration) = module {
             sakEventTilOppgaveMapper = get(),
             klageEventTilOppgaveMapper = get(),
         )
+    }
+
+    single {
+        FeilRekkefølgeSjekker()
     }
 
     single {

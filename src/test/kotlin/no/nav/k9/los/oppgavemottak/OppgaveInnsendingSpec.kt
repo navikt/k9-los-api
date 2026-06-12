@@ -75,4 +75,3 @@ class OppgaveInnsendingSpec: KoinTest, FreeSpec(){
         }
     }
 }
-

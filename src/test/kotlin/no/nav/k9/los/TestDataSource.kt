@@ -35,38 +35,22 @@ class TestDataSource {
 class KPostgreSQLContainer(imageName: String) : PostgreSQLContainer<KPostgreSQLContainer>(imageName)
 
 const val TØM_DATA_SQL = """
-            truncate 
-                driftsmeldinger,
-                oppgavefelt_verdi,
-                saksbehandler,
-                siste_oppgaver,
-                OPPGAVEKO_SAKSBEHANDLER,
-                OPPGAVEKO_V3,
-                RESERVASJON_V3,
-                RESERVASJON_V3_ENDRING,
-                OPPGAVE_V3,
-                oppgave_v3_dvh_pending,
-                OPPGAVE_PEP_CACHE,
-                kodeverk,
-                kodeverk_verdi,
-                omrade,
-                oppgavetype,
-                oppgavefelt,
-                oppgavefelt_verdi_part,
-                oppgavefelt_verdi,
-                oppgavefelt_verdi_aktiv,
-                oppgave_v3_part,
-                oppgave_id_part,
-                oppgave_v3,
-                oppgave_v3_aktiv,
-                feltdefinisjon,
-                uttrekk,
-                lagret_sok,
-                event,
-                event_historikkvask_bestilt,
-                event_nokkel;
-                
-            ALTER SEQUENCE saksbehandler_id_seq restart
+            do $$
+            declare
+                truncate_sql text;
+            begin
+                select
+                    'truncate table ' || string_agg(format('%I.%I', schemaname, tablename), ', ') || ' restart identity cascade'
+                into truncate_sql
+                from pg_tables
+                where schemaname = 'public'
+                  and tablename <> 'flyway_schema_history';
+
+                if truncate_sql is not null then
+                    execute truncate_sql;
+                end if;
+            end;
+            $$;
         """
 
 abstract class AbstractPostgresTest {

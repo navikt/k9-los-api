@@ -56,7 +56,7 @@ class RedusertOppgaveTestmodellBuilder(
                     visningsnavn = "Test",
                     beskrivelse = null,
                     listetype = false,
-                    tolkesSom = "Date",
+                    tolkesSom = "Timestamp",
 
                     synlighet = Synlighet.UNDER_STREKEN,
                     kodeverkreferanse = null,

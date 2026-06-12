@@ -10,7 +10,8 @@ enum class Datatype(val kode: String) {
 
     companion object {
         fun fraKode(kode: String): Datatype {
-            return entries.first { it.kode == kode }
+            return entries.firstOrNull { it.kode == kode }
+                ?: throw NoSuchElementException("Ukjent Datatype-kode: '$kode'. Gyldige koder: ${entries.map { it.kode }}")
         }
     }
 }

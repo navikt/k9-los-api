@@ -35,7 +35,7 @@ internal class FerdigstiltTidspunktTest {
                         visningsnavn = "Test",
                         beskrivelse = null,
                         listetype = false,
-                        tolkesSom = "string",
+                        tolkesSom = "String",
 
                         synlighet = Synlighet.OVER_STREKEN,
                         kodeverkreferanse = null,
@@ -99,7 +99,7 @@ internal class FerdigstiltTidspunktTest {
                         visningsnavn = "Test",
                         beskrivelse = null,
                         listetype = false,
-                        tolkesSom = "string",
+                        tolkesSom = "String",
 
                         synlighet = Synlighet.OVER_STREKEN,
                         kodeverkreferanse = null,

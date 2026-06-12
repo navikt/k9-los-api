@@ -493,8 +493,8 @@
                 <configuration>
                     <includes>
                         <include>**/*Test.java</include>
-                        <include>**/*Test.kt</include>
-                        <include>**/*Spec.kt</include>
+                        <include>**/*Spec.java</include>
+                        <include>**/*IT.java</include>
                     </includes>
                     <!-- Show test results -->
                     <printSummary>true</printSummary>
@@ -534,8 +534,9 @@
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
                             <excludes>
-                                <exclude>**/*Spec.kt</exclude>
-                                <exclude>**/*IntegrationTest.kt</exclude>
+                                <exclude>**/*Spec.java</exclude>
+                                <exclude>**/*IntegrationTest.java</exclude>
+                                <exclude>**/*IT.java</exclude>
                             </excludes>
                         </configuration>
                     </plugin>

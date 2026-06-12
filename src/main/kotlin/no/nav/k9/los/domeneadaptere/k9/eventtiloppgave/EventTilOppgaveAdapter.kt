@@ -14,7 +14,6 @@ import no.nav.k9.los.oppgavemottak.OppgaveV3
 import no.nav.k9.los.oppgavemottak.OppgaveV3Tjeneste
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import java.time.LocalDateTime
 
 
 class EventTilOppgaveAdapter(
@@ -64,22 +63,23 @@ class EventTilOppgaveAdapter(
     fun oppdaterOppgaveForEksternId(
         @SpanAttribute eventnøkkel: EventNøkkel,
         statistikktellerInn: Long = 0,
+        eventer: List<EventLagret>? = null,
     ): Long {
         return transactionalManager.transaction { tx ->
-            oppdaterOppgaveForEksternId(eventnøkkel, tx, statistikktellerInn)
+            oppdaterOppgaveForEksternId(eventnøkkel, tx, statistikktellerInn, eventer)
         }
     }
 
+    @WithSpan
     fun oppdaterOppgaveForEksternId(
         eventnøkkel: EventNøkkel,
         tx: TransactionalSession,
         statistikktellerInn: Long = 0,
+        eventer: List<EventLagret>? = null,
     ): Long {
         log.info("Oppdaterer oppgave for fagsystem: ${eventnøkkel.fagsystem}, eksternId: ${eventnøkkel.eksternId}")
-        val eventerMedNummerering = hentEventerOgKorriger(eventnøkkel, tx)
+        val eventerMedNummerering = hentEventerOgKorriger(eventnøkkel, tx, eventer)
         if (eventerMedNummerering.isEmpty()) return statistikktellerInn
-
-        sjekkMeldingIFeilRekkefølgeOgBestillVask(eventnøkkel, eventerMedNummerering, tx)
 
         var statistikkteller = statistikktellerInn
         var forrigeOppgaveversjon = hentStartversjon(eventnøkkel, eventerMedNummerering, tx)
@@ -149,10 +149,10 @@ class EventTilOppgaveAdapter(
     private fun hentEventerOgKorriger(
         eventnøkkel: EventNøkkel,
         tx: TransactionalSession,
+        eventer: List<EventLagret>? = null,
     ): List<Pair<Int, EventLagret>> {
-        // Låser alle eventer for denne eksternIden mens vi prosesserer dem
-        val eventer = eventRepository.hentAlleEventerMedLås(eventnøkkel, tx)
-        return vaskeeventSerieutleder.korrigerEventnummerForVaskeeventer(eventer)
+        val låsteEventer = eventer ?: eventRepository.hentAlleEventerMedLås(eventnøkkel, tx)
+        return vaskeeventSerieutleder.korrigerEventnummerForVaskeeventer(låsteEventer)
     }
 
     private fun hentStartversjon(
@@ -206,19 +206,6 @@ class EventTilOppgaveAdapter(
         ajourholdTjeneste.ajourholdOppgave(sluttversjon, eventerMedNummerering.last().first, tx)
     }
 
-    private fun sjekkMeldingIFeilRekkefølgeOgBestillVask(eventnøkkel: EventNøkkel, eventerForEksternId: List<Pair<Int, EventLagret>>, tx: TransactionalSession)  {
-        val sisteEksternVersjon =
-            oppgaveV3Tjeneste.hentSisteEksternVersjon("K9", K9Oppgavetypenavn.fraFagsystem(eventnøkkel.fagsystem).kode, eventnøkkel.eksternId, tx)
-
-        val meldingerIFeilRekkefølge = sisteEksternVersjon?.let {
-            LocalDateTime.parse(sisteEksternVersjon)
-                .isAfter(LocalDateTime.parse(eventerForEksternId.last().second.eksternVersjon))
-        } ?: false //Logger enn så lenge, men trenger å trigge historikkvask
-        if (meldingerIFeilRekkefølge) {
-            log.warn("Oppgave med fagsystem: ${eventnøkkel.fagsystem}, eksternId: ${eventnøkkel.eksternId} har fått meldinger i feil rekkefølge. Bestiller historikkvask!")
-            eventRepository.bestillHistorikkvask(eventnøkkel.fagsystem, eventnøkkel.eksternId, tx)
-        }
-    }
 
     private fun loggFremgangForHver100(teller: Long, tekst: String) {
         if (teller.mod(100) == 0) {
