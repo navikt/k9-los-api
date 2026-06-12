@@ -3,7 +3,7 @@ package no.nav.k9.los
 import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
-import no.nav.k9.los.oppgavemottak.PartisjonertOppgaveRepository
+import no.nav.k9.los.oppgavemottak.partisjonert.PartisjonertOppgaveRepository
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Test

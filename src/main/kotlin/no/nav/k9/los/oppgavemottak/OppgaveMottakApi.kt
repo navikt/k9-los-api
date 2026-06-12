@@ -12,7 +12,7 @@ import org.koin.ktor.ext.inject
 // Må legge til tilgangskontroll dersom disse endepunktene aktiveres
 internal fun Route.OppgaveV3Api() {
     val requestContextService by inject<RequestContextService>()
-    val oppgaveV3Tjeneste by inject<OppgaveV3Tjeneste>()
+    val oppgaveMottakTjeneste by inject<OppgaveMottakTjeneste>()
     val transactionalManager by inject<TransactionalManager>()
     val config by inject<Configuration>()
 
@@ -22,7 +22,7 @@ internal fun Route.OppgaveV3Api() {
                 val oppgaveDto = call.receive<OppgaveDto>()
 
                 transactionalManager.transaction { tx ->
-                    oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(NyOppgaveversjon(oppgaveDto), tx)
+                    oppgaveMottakTjeneste.sjekkDuplikatOgProsesser(NyOppgaveversjon(oppgaveDto), tx)
                 }
 
                 call.respond("OK")
@@ -37,7 +37,7 @@ internal fun Route.OppgaveV3Api() {
             requestContextService.withRequestContext(call) {
                 call.respond(
                     transactionalManager.transaction { tx ->
-                        oppgaveV3Tjeneste.hentOppgaveversjon(
+                        oppgaveMottakTjeneste.hentOppgaveversjon(
                             område = call.parameters["område"]!!,
                             oppgavetype = call.parameters["oppgavetype"]!!,
                             eksternId = call.parameters["eksternId"]!!,

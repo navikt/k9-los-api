@@ -1,12 +1,13 @@
-package no.nav.k9.los.oppgavemottak
+package no.nav.k9.los.oppgavemottak.partisjonert
 
 import kotliquery.TransactionalSession
+import no.nav.k9.los.oppgavemottak.OppgaveV3
 import org.slf4j.LoggerFactory
 
-class AktivOgPartisjonertOppgaveAjourholdTjeneste(
+class PartisjonertOppgaveAjourholdTjeneste(
     private val partisjonertOppgaveRepository: PartisjonertOppgaveRepository,
 ) {
-    private val log = LoggerFactory.getLogger(AktivOgPartisjonertOppgaveAjourholdTjeneste::class.java)
+    private val log = LoggerFactory.getLogger(PartisjonertOppgaveAjourholdTjeneste::class.java)
 
     fun ajourholdOppgave(innkommendeOppgave: OppgaveV3, internVersjon: Int, tx: TransactionalSession) {
         val ignorerForKøer = gjelderFRISINN(innkommendeOppgave)

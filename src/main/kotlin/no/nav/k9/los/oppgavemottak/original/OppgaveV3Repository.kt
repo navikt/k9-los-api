@@ -1,4 +1,4 @@
-package no.nav.k9.los.oppgavemottak
+package no.nav.k9.los.oppgavemottak.original
 
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
@@ -8,9 +8,12 @@ import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.oppgavedefinisjon.omraade.Område
 import no.nav.k9.los.oppgavedefinisjon.oppgavetype.Oppgavetype
 import no.nav.k9.los.oppgavedefinisjon.oppgavetype.OppgavetypeRepository
+import no.nav.k9.los.oppgavemottak.OppgaveFeltverdi
+import no.nav.k9.los.oppgavemottak.OppgaveV3
+import no.nav.k9.los.oppgavemottak.partisjonert.PartisjonertOppgaveRepository
+import no.nav.k9.los.oppgaveuthenting.OppgaveNøkkelDto
 import no.nav.k9.los.oppgaveuthenting.query.db.OppgaveId
 import no.nav.k9.los.oppgaveuthenting.query.db.OppgaveV3Id
-import no.nav.k9.los.oppgaveuthenting.OppgaveNøkkelDto
 import org.jetbrains.annotations.VisibleForTesting
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
@@ -567,3 +570,4 @@ class OppgaveV3Repository(
         )
     }
 }
+

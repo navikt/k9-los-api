@@ -1,4 +1,4 @@
-package no.nav.k9.los.oppgavemottak
+package no.nav.k9.los.oppgavemottak.partisjonert
 
 import io.opentelemetry.instrumentation.annotations.WithSpan
 import kotliquery.Row
@@ -7,9 +7,11 @@ import kotliquery.queryOf
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.oppgavedefinisjon.oppgavetype.Oppgavetype
 import no.nav.k9.los.oppgavedefinisjon.oppgavetype.OppgavetypeRepository
-import no.nav.k9.los.oppgaveuthenting.query.db.PartisjonertOppgaveId
+import no.nav.k9.los.oppgavemottak.OppgaveFeltverdi
+import no.nav.k9.los.oppgavemottak.OppgaveV3
 import no.nav.k9.los.oppgaveuthenting.Oppgave
 import no.nav.k9.los.oppgaveuthenting.Oppgavefelt
+import no.nav.k9.los.oppgaveuthenting.query.db.PartisjonertOppgaveId
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 
@@ -319,3 +321,4 @@ class PartisjonertOppgaveRepository(val oppgavetypeRepository: OppgavetypeReposi
         )
     }
 }
+
