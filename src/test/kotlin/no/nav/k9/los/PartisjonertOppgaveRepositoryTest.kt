@@ -3,7 +3,7 @@ package no.nav.k9.los
 import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
-import no.nav.k9.los.oppgavemottak.PartisjonertOppgaveRepository
+import no.nav.k9.los.oppgavemottak.partisjonert.PartisjonertOppgaveRepository
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Test
@@ -103,7 +103,7 @@ class PartisjonertOppgaveRepositoryTest : AbstractK9LosIntegrationTest() {
             tx.run(
                 kotliquery.queryOf(
                     """
-                    SELECT oid.oppgave_ekstern_id, oppgavestatus FROM oppgave_v3_part o INNER JOIN oppgave_id_part oid ON o.id = oid.id
+                    SELECT oid.oppgave_ekstern_id, oppgavestatus FROM oppgave_v3_part o INNER JOIN oppgave_id oid ON o.id = oid.id
                     WHERE oid.oppgave_ekstern_id = :eksternId
                     """.trimIndent(),
                     mapOf("eksternId" to eksternId)
@@ -119,8 +119,8 @@ class PartisjonertOppgaveRepositoryTest : AbstractK9LosIntegrationTest() {
                 kotliquery.queryOf(
                     """
                     SELECT feltdefinisjon_ekstern_id, verdi FROM oppgavefelt_verdi_part
-                     INNER JOIN oppgave_id_part ON oppgave_id = oppgave_id_part.id
-                    WHERE oppgave_id_part.oppgave_ekstern_id = :eksternId
+                     INNER JOIN oppgave_id ON oppgave_id = oppgave_id.id
+                    WHERE oppgave_id.oppgave_ekstern_id = :eksternId
                     """.trimIndent(),
                     mapOf("eksternId" to eksternId)
                 ).map { row -> Pair(row.string("feltdefinisjon_ekstern_id"), row.string("verdi")) }

@@ -48,10 +48,11 @@ import no.nav.k9.los.lagretsok.LagretSøkTjeneste
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.FeltdefinisjonRepository
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.FeltdefinisjonTjeneste
 import no.nav.k9.los.oppgavedefinisjon.omraade.OmrådeRepository
-import no.nav.k9.los.oppgavemottak.AktivOgPartisjonertOppgaveAjourholdTjeneste
-import no.nav.k9.los.oppgavemottak.OppgaveV3Repository
-import no.nav.k9.los.oppgavemottak.OppgaveV3Tjeneste
-import no.nav.k9.los.oppgavemottak.PartisjonertOppgaveRepository
+import no.nav.k9.los.oppgavemottak.partisjonert.PartisjonertOppgaveAjourholdTjeneste
+import no.nav.k9.los.oppgavemottak.OppgaveMottakTjeneste
+import no.nav.k9.los.oppgavemottak.original.OppgaveV3Tjeneste as OppgaveV3OriginalTjeneste
+import no.nav.k9.los.oppgavemottak.original.OppgaveV3Repository
+import no.nav.k9.los.oppgavemottak.partisjonert.PartisjonertOppgaveRepository
 import no.nav.k9.los.oppgavedefinisjon.oppgavetype.OppgavetypeRepository
 import no.nav.k9.los.oppgavedefinisjon.oppgavetype.OppgavetypeTjeneste
 import no.nav.k9.los.nøkkeltall.saksbehandler.nyeogferdigstilte.NyeOgFerdigstilteService
@@ -270,10 +271,15 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
         )
     }
     single {
-        OppgaveV3Tjeneste(
+        OppgaveV3OriginalTjeneste(
             oppgaveV3Repository = get(),
             oppgavetypeRepository = get(),
             områdeRepository = get(),
+        )
+    }
+    single {
+        OppgaveMottakTjeneste(
+            oppgaveV3OriginalTjeneste = get(),
         )
     }
     single {
@@ -295,18 +301,18 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     single {
         EventTilOppgaveAdapter(
             eventRepository = get<EventRepository>(),
-            oppgaveV3Tjeneste = get<OppgaveV3Tjeneste>(),
+            oppgaveMottakTjeneste = get<OppgaveMottakTjeneste>(),
             transactionalManager = get<TransactionalManager>(),
             eventTilOppgaveMapper = get<EventTilOppgaveMapper>(),
             oppgaveOppdatertHandler = get<OppgaveOppdatertHandler>(),
             vaskeeventSerieutleder = get<VaskeeventSerieutleder>(),
-            ajourholdTjeneste = get<AktivOgPartisjonertOppgaveAjourholdTjeneste>(),
+            ajourholdTjeneste = get<PartisjonertOppgaveAjourholdTjeneste>(),
             statistikkRepository = get<StatistikkRepository>(),
         )
     }
 
     single {
-        AktivOgPartisjonertOppgaveAjourholdTjeneste(
+        PartisjonertOppgaveAjourholdTjeneste(
             partisjonertOppgaveRepository = get(),
         )
     }
@@ -321,7 +327,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     single {
         HistorikkvaskTjeneste(
             eventRepository = get(),
-            oppgaveV3Tjeneste = get(),
+            oppgaveMottakTjeneste = get(),
             eventTilOppgaveAdapter = get(),
             transactionalManager = get()
         )

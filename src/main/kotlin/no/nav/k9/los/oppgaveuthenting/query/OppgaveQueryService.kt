@@ -4,7 +4,7 @@ import io.opentelemetry.instrumentation.annotations.WithSpan
 import kotliquery.TransactionalSession
 import kotliquery.sessionOf
 import kotliquery.using
-import no.nav.k9.los.oppgavemottak.PartisjonertOppgaveRepository
+import no.nav.k9.los.oppgavemottak.partisjonert.PartisjonertOppgaveRepository
 import no.nav.k9.los.oppgaveuthenting.query.db.EksternOppgaveId
 import no.nav.k9.los.oppgaveuthenting.query.db.OppgaveQueryRepository
 import no.nav.k9.los.oppgaveuthenting.query.db.OppgaveV3Id

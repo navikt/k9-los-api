@@ -7,7 +7,7 @@ import no.nav.k9.los.domeneadaptere.k9.eventmottak.eventlager.EventRepository
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.eventlager.HistorikkvaskBestilling
 import no.nav.k9.los.infrastruktur.db.DB_AWARE_PARALLELISM
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
-import no.nav.k9.los.oppgavemottak.OppgaveV3Tjeneste
+import no.nav.k9.los.oppgavemottak.OppgaveMottakTjeneste
 import no.nav.k9.los.oppgaveuthenting.OppgaveNøkkelDto
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -15,7 +15,7 @@ import kotlin.time.measureTime
 
 class HistorikkvaskTjeneste(
     private val eventRepository: EventRepository,
-    private val oppgaveV3Tjeneste: OppgaveV3Tjeneste,
+    private val oppgaveMottakTjeneste: OppgaveMottakTjeneste,
     private val transactionalManager: TransactionalManager,
     private val eventTilOppgaveAdapter: EventTilOppgaveAdapter,
 ) {
@@ -95,7 +95,7 @@ class HistorikkvaskTjeneste(
 
         var eventNrForBehandling = 0
         transactionalManager.transaction { tx ->
-            oppgaveV3Tjeneste.slettOppgave(oppgavenøkkel, tx)
+            oppgaveMottakTjeneste.slettOppgave(oppgavenøkkel, tx)
             eventRepository.settDirty(eventNøkkel, tx)
             eventNrForBehandling = eventTilOppgaveAdapter.oppdaterOppgaveForEksternIdUnderHistorikkvask(
                 eventNøkkel, tx
