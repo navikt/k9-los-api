@@ -17,4 +17,5 @@ data class ReservasjonDto(
     val kommentar: String,
     val tilBeslutter: Boolean,
     val oppgavenøkkel: OppgaveNøkkelDto,
+    val reservasjonsnøkkel: String,
 )
