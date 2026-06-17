@@ -524,7 +524,7 @@
                 <version>3.6.3</version>
                 <executions>
                     <execution>
-                        <id>default-cli</id>
+                        <id>enforce-dependency-convergence</id>
                         <phase>validate</phase>
                         <goals>
                             <goal>enforce</goal>
