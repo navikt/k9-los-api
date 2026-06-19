@@ -6,10 +6,10 @@ import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.infrastruktur.utils.leggTilDagerHoppOverHelg
 import no.nav.k9.los.kodeverk.BehandlingType
 import no.nav.k9.los.kodeverk.FagsakYtelseType
+import no.nav.k9.los.oppgaveuthenting.OppgaveNøkkelDto
+import no.nav.k9.los.oppgaveuthenting.enkeltoppslag.AktivOppgaveOppslag
 import no.nav.k9.los.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
-import no.nav.k9.los.oppgaveuthenting.enkeltoppslag.AktivOppgaveOppslag
-import no.nav.k9.los.oppgaveuthenting.OppgaveNøkkelDto
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
@@ -89,12 +89,8 @@ class ReservasjonApisTjeneste(
         val tilSaksbehandler =
             tilBrukerIdent?.let { saksbehandlerRepository.finnSaksbehandlerMedIdent(it) }
 
-        val reservasjonsnøkkel = endringDto.reservasjonsnøkkel ?: aktivOppgaveOppslag.hentAktivOppgave(
-            endringDto.oppgaveNøkkel!!.oppgaveEksternId,
-            endringDto.oppgaveNøkkel.oppgaveTypeEksternId
-        ).reservasjonsnøkkel
         val nyReservasjon = reservasjonV3Tjeneste.endreReservasjon(
-            reservasjonsnøkkel = reservasjonsnøkkel,
+            reservasjonsnøkkel = endringDto.reservasjonsnøkkel,
             endretAvBrukerId = innloggetBruker.id!!,
             nyTildato = reserverTil?.let {
                 LocalDateTime.of(
@@ -116,15 +112,9 @@ class ReservasjonApisTjeneste(
         forlengReservasjonDto: ForlengReservasjonDto,
         innloggetBruker: Saksbehandler
     ): ReservasjonV3Dto {
-        val reservasjonsnøkkel =
-            forlengReservasjonDto.reservasjonsnøkkel ?: aktivOppgaveOppslag.hentAktivOppgave(
-                forlengReservasjonDto.oppgaveNøkkel!!.oppgaveEksternId,
-                forlengReservasjonDto.oppgaveNøkkel.oppgaveTypeEksternId
-            ).reservasjonsnøkkel
-
         val forlengetReservasjon =
             reservasjonV3Tjeneste.forlengReservasjon(
-                reservasjonsnøkkel = reservasjonsnøkkel,
+                reservasjonsnøkkel = forlengReservasjonDto.reservasjonsnøkkel,
                 nyTildato = forlengReservasjonDto.nyTilDato,
                 utførtAvBrukerId = innloggetBruker.id!!,
                 kommentar = forlengReservasjonDto.kommentar
@@ -145,13 +135,8 @@ class ReservasjonApisTjeneste(
             params.brukerIdent
         )!!
 
-        val reservasjonsnøkkel = params.reservasjonsnøkkel ?: aktivOppgaveOppslag.hentAktivOppgave(
-            params.oppgaveNøkkel!!.oppgaveEksternId,
-            params.oppgaveNøkkel.oppgaveTypeEksternId
-        ).reservasjonsnøkkel
-
         val nyReservasjon = reservasjonV3Tjeneste.overførReservasjon(
-            reservasjonsnøkkel = reservasjonsnøkkel,
+            reservasjonsnøkkel = params.reservasjonsnøkkel,
             reserverTil = LocalDateTime.now().leggTilDagerHoppOverHelg(1),
             tilSaksbehandlerId = tilSaksbehandler.id!!,
             utførtAvBrukerId = innloggetBruker.id!!,
@@ -166,13 +151,8 @@ class ReservasjonApisTjeneste(
         innloggetBruker: Saksbehandler,
         annullerReservasjon: AnnullerReservasjonDto,
     ) {
-        val reservasjonsnøkkel = annullerReservasjon.reservasjonsnøkkel ?: aktivOppgaveOppslag.hentAktivOppgave(
-            annullerReservasjon.oppgaveNøkkel!!.oppgaveEksternId,
-            annullerReservasjon.oppgaveNøkkel.oppgaveTypeEksternId
-        ).reservasjonsnøkkel
-
         val annulleringUtført = reservasjonV3Tjeneste.annullerReservasjonHvisFinnes(
-            reservasjonsnøkkel = reservasjonsnøkkel,
+            reservasjonsnøkkel = annullerReservasjon.reservasjonsnøkkel,
             null,
             annullertAvBrukerId = innloggetBruker.id!!
         )

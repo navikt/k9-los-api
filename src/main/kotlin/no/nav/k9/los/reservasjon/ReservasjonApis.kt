@@ -76,9 +76,7 @@ internal fun Route.ReservasjonApis() {
 
                 try {
                     log.info(
-                        "Opphever reservasjoner ${
-                            params.map { it.oppgaveNøkkel }.joinToString(", ")
-                        } (Gjort av ${innloggetBruker.navident})"
+                        "Opphever reservasjoner (gjort av ${innloggetBruker.navident})"
                     )
                     reservasjonApisTjeneste.annullerReservasjoner(params, innloggetBruker)
                     call.respond(HttpStatusCode.OK) //TODO: Hva er evt meningsfullt å returnere her?
