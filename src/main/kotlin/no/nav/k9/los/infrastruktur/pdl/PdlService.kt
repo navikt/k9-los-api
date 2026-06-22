@@ -203,7 +203,7 @@ class PdlService(
         )
     }
 
-    private suspend fun authorizationHeader() = cachedAccessTokenClient.getAccessToken(
+    private suspend fun authorizationHeader() = cachedAccessTokenClient.getOnBehalfOfAccessToken(
         scopes = scopes,
         onBehalfOf = coroutineContext.idToken().value
     ).asAuthoriationHeader()

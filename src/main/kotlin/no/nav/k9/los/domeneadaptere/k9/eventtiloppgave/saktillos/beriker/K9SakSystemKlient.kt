@@ -49,7 +49,7 @@ class K9SakSystemKlient(
                 parameter("behandlingUuid", behandlingUUID.toString())
                 header(
                     //OBS! Dette kalles bare med system token, og skal ikke brukes ved saksbehandler token
-                    HttpHeaders.Authorization, cachedAccessTokenClient.getAccessToken(scopes).asAuthoriationHeader()
+                    HttpHeaders.Authorization, cachedAccessTokenClient.getClientCredentialsAccessToken(scopes).asAuthoriationHeader()
                 )
                 header(HttpHeaders.Accept, "application/json")
                 header(HttpHeaders.ContentType, "application/json")

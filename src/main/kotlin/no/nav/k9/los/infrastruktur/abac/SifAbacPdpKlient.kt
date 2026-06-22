@@ -40,7 +40,7 @@ class SifAbacPdpKlient(
 
     override suspend fun diskresjonskoderPerson(aktørId: AktørId): Set<Diskresjonskode> {
         val antallForsøk = 3
-        val systemToken = cachedAccessTokenClient.getAccessToken(scopes)
+        val systemToken = cachedAccessTokenClient.getClientCredentialsAccessToken(scopes)
         val response = Retry.retry(
             tries = antallForsøk,
             operation = "diskresjonskoder-person",
@@ -72,7 +72,7 @@ class SifAbacPdpKlient(
 
     override suspend fun diskresjonskoderSak(saksnummerDto: SaksnummerDto): Set<Diskresjonskode> {
         val antallForsøk = 3
-        val systemToken = cachedAccessTokenClient.getAccessToken(scopes)
+        val systemToken = cachedAccessTokenClient.getClientCredentialsAccessToken(scopes)
 
         val completeUrl = "${url}/api/diskresjonskoder/k9/sak"
         val body = LosObjectMapper.instance.writeValueAsString(saksnummerDto)
@@ -109,7 +109,7 @@ class SifAbacPdpKlient(
         val request = SaksnummerOperasjonDto(saksnummerDto, OperasjonDto(ResourceType.FAGSAK, map(action), emptySet<AksjonspunktType>()))
         val antallForsøk = 3
         val jwt = coroutineContext.idToken().value
-        val oboToken = cachedAccessTokenClient.getAccessToken(scopes, jwt)
+        val oboToken = cachedAccessTokenClient.getOnBehalfOfAccessToken(scopes, jwt)
         val response = Retry.retry(
             tries = antallForsøk,
             operation = "tilgangskontroll-sak",
@@ -157,7 +157,7 @@ class SifAbacPdpKlient(
             OperasjonDto(ResourceType.FAGSAK, map(action), emptySet<AksjonspunktType>())
         )
         val antallForsøk = 3
-        val systemToken = cachedAccessTokenClient.getAccessToken(scopes)
+        val systemToken = cachedAccessTokenClient.getClientCredentialsAccessToken(scopes)
         val body = LosObjectMapper.instance.writeValueAsString(request)
         val response = Retry.retry(
             tries = antallForsøk,
@@ -190,7 +190,7 @@ class SifAbacPdpKlient(
         val request = PersonerOperasjonDto(aktørIder, emptyList(), OperasjonDto(ResourceType.FAGSAK, map(action), emptySet<AksjonspunktType>()))
         val antallForsøk = 3
         val jwt = coroutineContext.idToken().value
-        val oboToken = cachedAccessTokenClient.getAccessToken(scopes, jwt)
+        val oboToken = cachedAccessTokenClient.getOnBehalfOfAccessToken(scopes, jwt)
         val response = Retry.retry(
             tries = antallForsøk,
             operation = "tilgangskontroll-personer",
@@ -234,7 +234,7 @@ class SifAbacPdpKlient(
             OperasjonDto(ResourceType.FAGSAK, map(action), emptySet<AksjonspunktType>())
         )
         val antallForsøk = 3
-        val systemToken = cachedAccessTokenClient.getAccessToken(scopes)
+        val systemToken = cachedAccessTokenClient.getClientCredentialsAccessToken(scopes)
         val body = LosObjectMapper.instance.writeValueAsString(request)
         val response = Retry.retry(
             tries = antallForsøk,
