@@ -7,7 +7,7 @@ import no.nav.k9.los.FeltType
 import no.nav.k9.los.OppgaveTestDataBuilder
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
-import no.nav.k9.los.oppgavemottak.PartisjonertOppgaveRepository
+import no.nav.k9.los.oppgavemottak.partisjonert.PartisjonertOppgaveRepository
 import no.nav.k9.los.oppgaveuthenting.query.db.OppgaveId
 import no.nav.k9.los.oppgaveuthenting.query.db.OppgaveQueryRepository
 import no.nav.k9.los.oppgaveuthenting.query.db.OppgaveV3Id
