@@ -185,6 +185,7 @@ class OmrådeSetup(
             BehandlingStegType.FORESLÅ_BEHANDLINGSRESULTAT,
             BehandlingStegType.FORTSETT_FORESLÅ_BEREGNINGSGRUNNLAG,
             BehandlingStegType.VURDER_TILKOMMET_INNTEKT,
+            BehandlingStegType.FASTSETT_INNTEKTSGRADERING,
             BehandlingStegType.FASTSETT_BEREGNINGSGRUNNLAG -> Triple("Beregning", Synlighet.OVER_STREKEN, 4)
 
             BehandlingStegType.SIMULER_OPPDRAG,
