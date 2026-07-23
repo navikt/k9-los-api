@@ -145,7 +145,7 @@
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
-            <version>42.7.11</version>
+            <version>42.7.12</version>
         </dependency>
         <dependency>
             <groupId>no.nav</groupId>
@@ -227,7 +227,7 @@
         <dependency>
             <groupId>no.nav.sif.abac</groupId>
             <artifactId>kontrakt</artifactId>
-            <version>1.12.0</version>
+            <version>1.14.0</version>
         </dependency>
 
         <!-- Kontrakter -->
