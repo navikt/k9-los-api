@@ -13,14 +13,14 @@ import kotlin.test.assertEquals
 
 class OppgaveV3Test : AbstractK9LosIntegrationTest() {
 
-    private lateinit var oppgaveV3Tjeneste: OppgaveV3Tjeneste
+    private lateinit var oppgaveMottakTjeneste: OppgaveMottakTjeneste
     private lateinit var transactionalManager: TransactionalManager
     private lateinit var oppgavemodellBuilder: RedusertOppgaveTestmodellBuilder
     private lateinit var gyldigeFeltutledere: GyldigeFeltutledere
 
     @BeforeEach
     fun setup() {
-        oppgaveV3Tjeneste = get()
+        oppgaveMottakTjeneste = get()
         transactionalManager = get()
         gyldigeFeltutledere = get()
         oppgavemodellBuilder = RedusertOppgaveTestmodellBuilder()
@@ -32,7 +32,7 @@ class OppgaveV3Test : AbstractK9LosIntegrationTest() {
         val innkommendeOppgaveMedUkjentOmråde = oppgavemodellBuilder.lagOppgaveDto().copy(område = "ukjent-område")
         val exception = assertThrows<IllegalArgumentException> {
             transactionalManager.transaction { tx ->
-                oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(NyOppgaveversjon(innkommendeOppgaveMedUkjentOmråde), tx)
+                oppgaveMottakTjeneste.sjekkDuplikatOgProsesser(NyOppgaveversjon(innkommendeOppgaveMedUkjentOmråde), tx)
             }
         }
         assertEquals("Området finnes ikke: ukjent-område", exception.message!!)
@@ -48,7 +48,7 @@ class OppgaveV3Test : AbstractK9LosIntegrationTest() {
         val exception =
             assertThrows<IllegalArgumentException> {
                 transactionalManager.transaction { tx ->
-                    oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(NyOppgaveversjon(oppgaveDtoMedUkjentFeltVerdi), tx)
+                    oppgaveMottakTjeneste.sjekkDuplikatOgProsesser(NyOppgaveversjon(oppgaveDtoMedUkjentFeltVerdi), tx)
                 }
             }
 
@@ -66,7 +66,7 @@ class OppgaveV3Test : AbstractK9LosIntegrationTest() {
         val exception =
             assertThrows<IllegalArgumentException> {
                 transactionalManager.transaction { tx ->
-                    oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(NyOppgaveversjon(oppgaveSomManglerObligatoriskFelt), tx)
+                    oppgaveMottakTjeneste.sjekkDuplikatOgProsesser(NyOppgaveversjon(oppgaveSomManglerObligatoriskFelt), tx)
                 }
             }
 

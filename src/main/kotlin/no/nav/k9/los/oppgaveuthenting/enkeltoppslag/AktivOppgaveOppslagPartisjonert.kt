@@ -37,7 +37,7 @@ class AktivOppgaveOppslagPartisjonert(
             queryOf(
                 """
                     SELECT o.*
-                    FROM oppgave_id_part ip
+                    FROM oppgave_id ip
                     INNER JOIN oppgave_v3_part o ON o.id = ip.id
                     WHERE ip.oppgave_ekstern_id = :eksternId
                       AND ip.oppgavetype_ekstern_id = :oppgavetype

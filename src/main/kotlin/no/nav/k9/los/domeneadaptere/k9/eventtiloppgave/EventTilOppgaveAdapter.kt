@@ -9,21 +9,21 @@ import no.nav.k9.los.domeneadaptere.k9.eventmottak.eventlager.EventNøkkel
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.eventlager.EventRepository
 import no.nav.k9.los.domeneadaptere.k9.statistikk.StatistikkRepository
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
-import no.nav.k9.los.oppgavemottak.AktivOgPartisjonertOppgaveAjourholdTjeneste
+import no.nav.k9.los.oppgavemottak.partisjonert.PartisjonertOppgaveAjourholdTjeneste
 import no.nav.k9.los.oppgavemottak.OppgaveV3
-import no.nav.k9.los.oppgavemottak.OppgaveV3Tjeneste
+import no.nav.k9.los.oppgavemottak.OppgaveMottakTjeneste
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 
 class EventTilOppgaveAdapter(
     private val eventRepository: EventRepository,
-    private val oppgaveV3Tjeneste: OppgaveV3Tjeneste,
+    private val oppgaveMottakTjeneste: OppgaveMottakTjeneste,
     private val transactionalManager: TransactionalManager,
     private val eventTilOppgaveMapper: EventTilOppgaveMapper,
     private val oppgaveOppdatertHandler: OppgaveOppdatertHandler,
     private val vaskeeventSerieutleder: VaskeeventSerieutleder,
-    private val ajourholdTjeneste: AktivOgPartisjonertOppgaveAjourholdTjeneste,
+    private val ajourholdTjeneste: PartisjonertOppgaveAjourholdTjeneste,
     private val statistikkRepository: StatistikkRepository,
 ) {
     private val log: Logger = LoggerFactory.getLogger(EventTilOppgaveAdapter::class.java)
@@ -50,7 +50,7 @@ class EventTilOppgaveAdapter(
             loggFremgangForHver100(behandlingTeller, "Forsert $behandlingTeller behandlinger")
         }
 
-        val (antallAlle, antallAktive) = oppgaveV3Tjeneste.tellAntall()
+        val (antallAlle, antallAktive) = oppgaveMottakTjeneste.tellAntall()
         val tidHeleKjøringen = System.currentTimeMillis() - tidKjøringStartet
         log.info("Antall oppgaver etter kjøring: $antallAlle, antall aktive: $antallAktive, antall nye eventer: $eventTeller fordelt på $behandlingTeller behandlinger.")
         if (eventTeller > 0) {
@@ -174,7 +174,7 @@ class EventTilOppgaveAdapter(
         internVersjon: Int,
         tx: TransactionalSession,
     ): OppgaveV3? {
-        return oppgaveV3Tjeneste.hentOppgaveversjon(
+        return oppgaveMottakTjeneste.hentOppgaveversjon(
             "K9",
             K9Oppgavetypenavn.fraFagsystem(eventnøkkel.fagsystem).kode,
             eventnøkkel.eksternId,
@@ -191,7 +191,7 @@ class EventTilOppgaveAdapter(
     ): OppgaveV3? {
         val nyOppgaveversjon = eventTilOppgaveMapper.mapOppgave(eventLagret, forrigeOppgaveversjon, eventnummer)
         // Plumber forrigeOppgaveversjon ned for å spare et hentAktivOppgave-kall pr event
-        return oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(nyOppgaveversjon, tx, forrigeOppgaveversjon)
+        return oppgaveMottakTjeneste.sjekkDuplikatOgProsesser(nyOppgaveversjon, tx, forrigeOppgaveversjon)
     }
 
     private fun fjernDirtyOgAjourhold(

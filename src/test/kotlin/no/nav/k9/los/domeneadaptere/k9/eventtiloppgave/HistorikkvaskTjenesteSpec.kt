@@ -16,7 +16,7 @@ import no.nav.k9.los.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventDto
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.kodeverk.Fagsystem
-import no.nav.k9.los.oppgavemottak.OppgaveV3Tjeneste
+import no.nav.k9.los.oppgavemottak.original.OppgaveV3Tjeneste as OppgaveV3OriginalTjeneste
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.sak.typer.AktørId
 import no.nav.k9.sak.typer.JournalpostId
@@ -30,7 +30,7 @@ class HistorikkvaskTjenesteSpec: FreeSpec(), KoinTest {
     val eventRepository = get<EventRepository>()
     val oppgaveAdapter = get<EventTilOppgaveAdapter>()
     val historikkvaskTjeneste = get<HistorikkvaskTjeneste>()
-    val oppgaveTjeneste = get<OppgaveV3Tjeneste>()
+    val oppgaveTjeneste = get<OppgaveV3OriginalTjeneste>()
 
     override fun isolationMode() = IsolationMode.InstancePerLeaf
 

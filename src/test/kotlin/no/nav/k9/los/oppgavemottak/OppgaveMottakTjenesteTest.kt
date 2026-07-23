@@ -11,19 +11,22 @@ import no.nav.k9.los.domeneadaptere.k9.K9Oppgavetypenavn
 import no.nav.k9.los.kodeverk.FagsakYtelseType
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.oppgavedefinisjon.omraade.Område
+import no.nav.k9.los.oppgavemottak.original.OppgaveV3Tjeneste as OppgaveV3OriginalTjeneste
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.koin.test.get
 import java.time.LocalDateTime
 
-class OppgaveV3TjenesteTest : AbstractK9LosIntegrationTest() {
-    private lateinit var oppgaveV3Tjeneste: OppgaveV3Tjeneste
+class OppgaveMottakTjenesteTest : AbstractK9LosIntegrationTest() {
+    private lateinit var oppgaveMottakTjeneste: OppgaveMottakTjeneste
+    private lateinit var oppgaveV3OriginalTjeneste: OppgaveV3OriginalTjeneste
     private lateinit var transactionalManager: TransactionalManager
 
     @BeforeEach
     fun setup() {
         OppgaveTestDataBuilder()
-        oppgaveV3Tjeneste = get<OppgaveV3Tjeneste>()
+        oppgaveMottakTjeneste = get<OppgaveMottakTjeneste>()
+        oppgaveV3OriginalTjeneste = get<OppgaveV3OriginalTjeneste>()
         transactionalManager = get<TransactionalManager>()
     }
 
@@ -58,20 +61,20 @@ class OppgaveV3TjenesteTest : AbstractK9LosIntegrationTest() {
         )
 
         transactionalManager.transaction { tx ->
-            oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(NyOppgaveversjon(oppgaveVersjon1), tx)
-            oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(NyOppgaveversjon(oppgaveVersjon2), tx)
+            oppgaveMottakTjeneste.sjekkDuplikatOgProsesser(NyOppgaveversjon(oppgaveVersjon1), tx)
+            oppgaveMottakTjeneste.sjekkDuplikatOgProsesser(NyOppgaveversjon(oppgaveVersjon2), tx)
 
-            oppgaveV3Tjeneste.vaskEksisterendeOppgaveversjon(oppgaveVersjon1korrigert, 0, tx)
+            oppgaveV3OriginalTjeneste.vaskEksisterendeOppgaveversjon(oppgaveVersjon1korrigert, 0, tx)
 
-            oppgaveV3Tjeneste.vaskEksisterendeOppgaveversjon(oppgaveVersjon2korrigert, 1, tx)
+            oppgaveV3OriginalTjeneste.vaskEksisterendeOppgaveversjon(oppgaveVersjon2korrigert, 1, tx)
         }
 
         val vasketOppgave1 = transactionalManager.transaction { tx ->
-            oppgaveV3Tjeneste.hentOppgaveversjon("K9", K9Oppgavetypenavn.SAK.kode, oppgaveVersjon1.eksternId, oppgaveVersjon1.eksternVersjon, tx)
+            oppgaveMottakTjeneste.hentOppgaveversjon("K9", K9Oppgavetypenavn.SAK.kode, oppgaveVersjon1.eksternId, oppgaveVersjon1.eksternVersjon, tx)
         }
 
         val vasketOppgave2 = transactionalManager.transaction { tx ->
-            oppgaveV3Tjeneste.hentOppgaveversjon("K9", K9Oppgavetypenavn.SAK.kode, oppgaveVersjon2.eksternId, oppgaveVersjon2.eksternVersjon, tx)
+            oppgaveMottakTjeneste.hentOppgaveversjon("K9", K9Oppgavetypenavn.SAK.kode, oppgaveVersjon2.eksternId, oppgaveVersjon2.eksternVersjon, tx)
         }
 
         assertThat(vasketOppgave1.aktiv).isFalse()

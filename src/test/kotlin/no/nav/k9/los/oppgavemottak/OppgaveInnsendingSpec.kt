@@ -10,7 +10,7 @@ import org.koin.test.get
 
 class OppgaveInnsendingSpec: KoinTest, FreeSpec(){
     val oppgavemodellBuilder = RedusertOppgaveTestmodellBuilder()
-    val oppgaveV3Tjeneste = get<OppgaveV3Tjeneste>()
+    val oppgaveMottakTjeneste = get<OppgaveMottakTjeneste>()
     val transactionalManager = get<TransactionalManager>()
 
     init {
@@ -21,7 +21,7 @@ class OppgaveInnsendingSpec: KoinTest, FreeSpec(){
             "og eksternVersjon ikke har blitt sendt inn før" - {
                 "skal gi ny oppgaveversjon" {
                     val retur = transactionalManager.transaction { tx ->
-                        oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(innsending, tx)
+                        oppgaveMottakTjeneste.sjekkDuplikatOgProsesser(innsending, tx)
                     }
 
                     retur.shouldBeInstanceOf<OppgaveV3>()
@@ -29,11 +29,11 @@ class OppgaveInnsendingSpec: KoinTest, FreeSpec(){
             }
             "og eksternVersjon har blitt sendt inn før" - {
                 transactionalManager.transaction { tx ->
-                    oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(innsending, tx)
+                    oppgaveMottakTjeneste.sjekkDuplikatOgProsesser(innsending, tx)
                 }
                 "skal avvise innsendingen og returnere NULL" {
                     val retur = transactionalManager.transaction { tx ->
-                        oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(innsending, tx)
+                        oppgaveMottakTjeneste.sjekkDuplikatOgProsesser(innsending, tx)
                     }
 
                     retur shouldBe null
@@ -47,7 +47,7 @@ class OppgaveInnsendingSpec: KoinTest, FreeSpec(){
             "og eksternId ikke finnes fra før" - {
                 "skal gi ny oppgaveversjon" {
                     val retur = transactionalManager.transaction { tx ->
-                        oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(innsending, tx)
+                        oppgaveMottakTjeneste.sjekkDuplikatOgProsesser(innsending, tx)
                     }
 
                     retur.shouldBeInstanceOf<OppgaveV3>()
@@ -56,14 +56,14 @@ class OppgaveInnsendingSpec: KoinTest, FreeSpec(){
             "og eksternId finnes fra før" - {
                 val innsendingPre = NyOppgaveversjon(oppgaveDto)
                 transactionalManager.transaction { tx ->
-                    oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(innsendingPre, tx)
+                    oppgaveMottakTjeneste.sjekkDuplikatOgProsesser(innsendingPre, tx)
                 }
                 "skal oppdatere siste innkomne oppgaveversjon med data fra vaskemeldingen" {
                     val nyeFeltverdier = oppgaveDto.feltverdier.toMutableList()
                     nyeFeltverdier.add(OppgaveFeltverdiDto("aksjonspunkt", "9002"))
 
                     val retur = transactionalManager.transaction { tx ->
-                        oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(
+                        oppgaveMottakTjeneste.sjekkDuplikatOgProsesser(
                             VaskOppgaveversjon(oppgaveDto.copy(feltverdier = nyeFeltverdier), 0)
                             , tx
                         )

@@ -3,11 +3,11 @@ package no.nav.k9.los.oppgaveuthenting.query.mapping.transientfeltutleder
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.shouldBe
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
-import no.nav.k9.los.oppgavemottak.AktivOgPartisjonertOppgaveAjourholdTjeneste
+import no.nav.k9.los.oppgavemottak.partisjonert.PartisjonertOppgaveAjourholdTjeneste
 import no.nav.k9.los.oppgavemottak.NyOppgaveversjon
 import no.nav.k9.los.oppgavemottak.OppgaveDto
 import no.nav.k9.los.oppgavemottak.OppgaveFeltverdiDto
-import no.nav.k9.los.oppgavemottak.OppgaveV3Tjeneste
+import no.nav.k9.los.oppgavemottak.OppgaveMottakTjeneste
 import no.nav.k9.los.oppgaveuthenting.query.OppgaveQueryService
 import no.nav.k9.los.oppgaveuthenting.query.QueryRequest
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.EnkelSelectFelt
@@ -101,9 +101,9 @@ class K9SakAntallOmsøkteDagerSomErPassertUtlederSpec : KoinTest, FreeSpec() {
 
         "antallPasserteDagerSql (mot postgres)" - {
             val transactionalManager = get<TransactionalManager>()
-            val oppgaveV3Tjeneste = get<OppgaveV3Tjeneste>()
+            val oppgaveMottakTjeneste = get<OppgaveMottakTjeneste>()
             val oppgaveQueryService = get<OppgaveQueryService>()
-            val ajourholdTjeneste = get<AktivOgPartisjonertOppgaveAjourholdTjeneste>()
+            val ajourholdTjeneste = get<PartisjonertOppgaveAjourholdTjeneste>()
 
             "where-filter på antallOmsøkteDagerSomErPassert filtrerer korrekt" {
                 val now = LocalDateTime.now()
@@ -113,7 +113,7 @@ class K9SakAntallOmsøkteDagerSomErPassertUtlederSpec : KoinTest, FreeSpec() {
                     perioder = listOf("2020-01-01/2020-01-10")
                 )
                 transactionalManager.transaction { tx ->
-                    val oppgave = oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(NyOppgaveversjon(oppgaveMedPassertePerioder), tx)!!
+                    val oppgave = oppgaveMottakTjeneste.sjekkDuplikatOgProsesser(NyOppgaveversjon(oppgaveMedPassertePerioder), tx)!!
                     ajourholdTjeneste.ajourholdOppgave(oppgave, 0, tx)
                 }
 
@@ -122,7 +122,7 @@ class K9SakAntallOmsøkteDagerSomErPassertUtlederSpec : KoinTest, FreeSpec() {
                     perioder = listOf("2099-01-01/2099-01-10")
                 )
                 transactionalManager.transaction { tx ->
-                    val oppgave = oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(NyOppgaveversjon(oppgaveUtenPassertePerioder), tx)!!
+                    val oppgave = oppgaveMottakTjeneste.sjekkDuplikatOgProsesser(NyOppgaveversjon(oppgaveUtenPassertePerioder), tx)!!
                     ajourholdTjeneste.ajourholdOppgave(oppgave, 0, tx)
                 }
 
@@ -151,7 +151,7 @@ class K9SakAntallOmsøkteDagerSomErPassertUtlederSpec : KoinTest, FreeSpec() {
                     perioder = listOf("$fom/$tom")
                 )
                 transactionalManager.transaction { tx ->
-                    val o = oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(NyOppgaveversjon(oppgave), tx)!!
+                    val o = oppgaveMottakTjeneste.sjekkDuplikatOgProsesser(NyOppgaveversjon(oppgave), tx)!!
                     ajourholdTjeneste.ajourholdOppgave(o, 0, tx)
                 }
 
@@ -174,7 +174,7 @@ class K9SakAntallOmsøkteDagerSomErPassertUtlederSpec : KoinTest, FreeSpec() {
 
                 val oppgave = lagOppgaveDto(perioder = emptyList())
                 transactionalManager.transaction { tx ->
-                    val o = oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(NyOppgaveversjon(oppgave), tx)!!
+                    val o = oppgaveMottakTjeneste.sjekkDuplikatOgProsesser(NyOppgaveversjon(oppgave), tx)!!
                     ajourholdTjeneste.ajourholdOppgave(o, 0, tx)
                 }
 
@@ -202,7 +202,7 @@ class K9SakAntallOmsøkteDagerSomErPassertUtlederSpec : KoinTest, FreeSpec() {
                     )
                 )
                 transactionalManager.transaction { tx ->
-                    val o = oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(NyOppgaveversjon(oppgave), tx)!!
+                    val o = oppgaveMottakTjeneste.sjekkDuplikatOgProsesser(NyOppgaveversjon(oppgave), tx)!!
                     ajourholdTjeneste.ajourholdOppgave(o, 0, tx)
                 }
 
