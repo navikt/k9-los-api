@@ -306,7 +306,7 @@ fun common(app: Application, config: Configuration) = module {
     }
 
     single {
-        _root_ide_package_.no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.FeltdefinisjonTjeneste(
+        no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.FeltdefinisjonTjeneste(
             feltdefinisjonRepository = get(),
             områdeRepository = get(),
             transactionalManager = get()
@@ -320,7 +320,7 @@ fun common(app: Application, config: Configuration) = module {
         )
     }
     single {
-        _root_ide_package_.no.nav.k9.los.oppgavedefinisjon.oppgavetype.OppgavetypeTjeneste(
+        no.nav.k9.los.oppgavedefinisjon.oppgavetype.OppgavetypeTjeneste(
             oppgavetypeRepository = get(),
             områdeRepository = get(),
             feltdefinisjonRepository = get(),
@@ -549,19 +549,19 @@ fun common(app: Application, config: Configuration) = module {
     }
 
     single {
-        _root_ide_package_.no.nav.k9.los.nøkkeltall.avdelingsleder.status.StatusService(
+        no.nav.k9.los.nøkkeltall.avdelingsleder.status.StatusService(
             queryService = get(),
         )
     }
 
     single {
-        _root_ide_package_.no.nav.k9.los.nøkkeltall.avdelingsleder.dagenstall.DagensTallService(
+        no.nav.k9.los.nøkkeltall.avdelingsleder.dagenstall.DagensTallService(
             queryService = get(),
         )
     }
 
     single {
-        _root_ide_package_.no.nav.k9.los.nøkkeltall.avdelingsleder.ferdigstilteperenhet.FerdigstiltePerEnhetService(
+        no.nav.k9.los.nøkkeltall.avdelingsleder.ferdigstilteperenhet.FerdigstiltePerEnhetService(
             queryService = get()
         )
     }
@@ -573,7 +573,7 @@ fun common(app: Application, config: Configuration) = module {
     }
 
     single {
-        _root_ide_package_.no.nav.k9.los.nøkkeltall.avdelingsleder.statusfordeling.StatusFordelingService(
+        no.nav.k9.los.nøkkeltall.avdelingsleder.statusfordeling.StatusFordelingService(
             queryService = get()
         )
     }
