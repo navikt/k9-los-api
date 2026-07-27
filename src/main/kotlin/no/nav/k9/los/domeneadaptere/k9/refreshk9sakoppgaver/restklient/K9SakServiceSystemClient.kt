@@ -65,7 +65,7 @@ open class K9SakServiceSystemClient(
                 httpClient.post("${url}/behandling/backend-root/refresh") {
                     setBody(body)
                     header(
-                        HttpHeaders.Authorization, cachedAccessTokenClient.getAccessToken(scopes).asAuthoriationHeader()
+                        HttpHeaders.Authorization, cachedAccessTokenClient.getClientCredentialsAccessToken(scopes).asAuthoriationHeader()
                     )
                     header(HttpHeaders.Accept, "application/json")
                     header(HttpHeaders.ContentType, "application/json")
