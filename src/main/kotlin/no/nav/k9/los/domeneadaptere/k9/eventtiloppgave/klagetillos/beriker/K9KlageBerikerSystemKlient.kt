@@ -57,7 +57,7 @@ class K9KlageBerikerSystemKlient(
                 parameter("behandlingUuid", påklagdBehandlingUUID.toString())
                 header(
                     //OBS! Dette kalles bare med system token, og skal ikke brukes ved saksbehandler token
-                    HttpHeaders.Authorization, cachedAccessTokenClient.getAccessToken(setOf(scopeSak)).asAuthoriationHeader()
+                    HttpHeaders.Authorization, cachedAccessTokenClient.getClientCredentialsAccessToken(setOf(scopeSak)).asAuthoriationHeader()
                 )
                 header(HttpHeaders.Accept, "application/json")
                 header(HttpHeaders.ContentType, "application/json")
@@ -111,7 +111,7 @@ class K9KlageBerikerSystemKlient(
                 parameter("behandlingUuid", påklagdBehandlingUUID.toString())
                 header(
                     //OBS! Dette kalles bare med system token, og skal ikke brukes ved saksbehandler token
-                    HttpHeaders.Authorization, cachedAccessTokenClient.getAccessToken(setOf(scopeKlage)).asAuthoriationHeader()
+                    HttpHeaders.Authorization, cachedAccessTokenClient.getClientCredentialsAccessToken(setOf(scopeKlage)).asAuthoriationHeader()
                 )
                 header(HttpHeaders.Accept, "application/json")
                 header(HttpHeaders.ContentType, "application/json")
