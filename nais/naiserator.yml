@@ -45,8 +45,6 @@ spec:
   vault:
     enabled: true
     paths:
-      - mountPath: /var/run/secrets/nais.io/serviceuser
-        kvPath: {{serviceuser_kvpath}}
       - mountPath: /var/run/secrets/nais.io/vault
         kvPath: {{vault_kvpath}}
   webproxy: true
