@@ -28,7 +28,6 @@ import io.prometheus.client.CollectorRegistry
 import io.prometheus.client.exporter.common.TextFormat
 import io.prometheus.client.hotspot.DefaultExports
 import kotlinx.coroutines.Dispatchers
-import no.nav.k9.los.infrastruktur.db.DB_AWARE_PARALLELISM
 import kotlinx.coroutines.channels.Channel
 import no.nav.helse.dusseldorf.ktor.auth.AuthStatusPages
 import no.nav.helse.dusseldorf.ktor.auth.allIssuers
@@ -51,6 +50,7 @@ import no.nav.k9.los.domeneadaptere.k9.statistikk.StatistikkApi
 import no.nav.k9.los.driftsmelding.DriftsmeldingerApis
 import no.nav.k9.los.forvaltning.forvaltningApis
 import no.nav.k9.los.infrastruktur.abac.cache.PepCacheService
+import no.nav.k9.los.infrastruktur.db.DB_AWARE_PARALLELISM
 import no.nav.k9.los.infrastruktur.jobbplanlegger.Jobbplanlegger
 import no.nav.k9.los.infrastruktur.jobbplanlegger.PlanlagtJobb
 import no.nav.k9.los.infrastruktur.jobbplanlegger.Tidsvindu
@@ -59,21 +59,22 @@ import no.nav.k9.los.innloggetbruker.InnloggetBrukerApi
 import no.nav.k9.los.ko.KøpåvirkendeHendelse
 import no.nav.k9.los.ko.OppgaveKoApis
 import no.nav.k9.los.lagretsok.LagretSøkApi
-import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.FeltdefinisjonApi
-import no.nav.k9.los.oppgavemottak.OppgaveV3Api
-import no.nav.k9.los.oppgavedefinisjon.oppgavetype.OppgavetypeApi
+import no.nav.k9.los.nøkkeltall.NøkkeltallV3Apis
 import no.nav.k9.los.nøkkeltall.saksbehandler.nyeogferdigstilte.NyeOgFerdigstilteApi
 import no.nav.k9.los.nøkkeltall.saksbehandler.nyeogferdigstilte.NyeOgFerdigstilteService
+import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.FeltdefinisjonApi
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
+import no.nav.k9.los.oppgavedefinisjon.oppgavetype.OppgavetypeApi
+import no.nav.k9.los.oppgavemottak.OppgaveV3Api
 import no.nav.k9.los.oppgaveuthenting.query.OppgaveQueryApis
 import no.nav.k9.los.reservasjon.ReservasjonApis
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerAdminApis
 import no.nav.k9.los.sisteoppgaver.SisteOppgaverApi
 import no.nav.k9.los.søkeboks.SøkeboksApi
+import no.nav.k9.los.tjenester.mock.localSetup
 import no.nav.k9.los.uttrekk.MigrerUttrekkResultatJobb
 import no.nav.k9.los.uttrekk.UttrekkApi
 import no.nav.k9.los.uttrekk.UttrekkJobb
-import no.nav.k9.los.nøkkeltall.NøkkeltallV3Apis
-import no.nav.k9.los.tjenester.mock.localSetup
 import org.koin.core.Koin
 import org.koin.core.qualifier.named
 import org.koin.ktor.ext.getKoin
@@ -212,50 +213,32 @@ fun Application.k9Los() {
 }
 
 private fun Route.api() {
-    route("k9/los/api") {
-        route("openapi.json") {
-            openApi()
-        }
-        swaggerUI("openapi.json")
-        route("/forvaltning") {
-            forvaltningApis()
-            route("eventlager") { EventlagerApi() }
-            route("statistikk") { StatistikkApi() }
-        }
-    }
-    route("api", { hidden = true }) {
-        route("driftsmeldinger") {
-            DriftsmeldingerApis()
-        }
-        route("saksbehandler") {
-            route("oppgaver") {
-                ReservasjonApis()
+    Områder.entries.forEach { område ->
+        områdeApi(område) {
+            route("openapi.json") {
+                openApi()
             }
-        }
-        route("avdelingsleder") {
-            SaksbehandlerAdminApis()
-        }
+            swaggerUI("openapi.json")
+            route("/forvaltning") {
+                forvaltningApis()
+                route("eventlager") { EventlagerApi() }
+                route("statistikk") { StatistikkApi() }
+            }
 
-        InnloggetBrukerApi()
+            route("driftsmeldinger") { DriftsmeldingerApis() }
+            route("saksbehandler") {
+                route("oppgaver") { ReservasjonApis() }
+            }
+            route("avdelingsleder") { SaksbehandlerAdminApis() }
 
-        route("ny-oppgavestyring") {
+            InnloggetBrukerApi()
+
             route("ko") { OppgaveKoApis() }
             route("oppgave") { OppgaveQueryApis() }
-            route(
-                "feltdefinisjon",
-                {
-                    hidden = true
-                }) { FeltdefinisjonApi() } // Må legge til tilgangskontroll dersom disse endepunktene aktiveres
-            route(
-                "oppgavetype",
-                {
-                    hidden = true
-                }) { OppgavetypeApi() } // Må legge til tilgangskontroll dersom disse endepunktene aktiveres
-            route(
-                "oppgave-v3",
-                {
-                    hidden = true
-                }) { OppgaveV3Api() } // Må legge til tilgangskontroll dersom disse endepunktene aktiveres
+            // Må legge til tilgangskontroll dersom disse endepunktene aktiveres
+            route("feltdefinisjon", { hidden = true }) { FeltdefinisjonApi() }
+            route("oppgavetype", { hidden = true }) { OppgavetypeApi() }
+            route("oppgave-v3", { hidden = true }) { OppgaveV3Api() }
             route("sok") { SøkeboksApi() }
             route("nokkeltall") { NøkkeltallV3Apis() }
             route("siste-oppgaver") { SisteOppgaverApi() }

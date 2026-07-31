@@ -12,9 +12,11 @@ import no.nav.k9.los.kodeverk.Fagsystem
  *
  * Enumen holder kun eksternId. Trenger du det persisterte [Område] med database-id,
  * hentes det via OmrådeRepository.hentOmråde(område).
+ *
+ * [urlSegment] er området sitt prefiks i API-URLene (f.eks. `k9/los/api`).
  */
-enum class Områder(val eksternId: String) {
-    K9("K9");
+enum class Områder(val eksternId: String, val urlSegment: String) {
+    K9("K9", "k9");
 
     companion object {
         fun fraEksternId(eksternId: String): Områder =
@@ -24,6 +26,12 @@ enum class Områder(val eksternId: String) {
                 )
 
         fun erGyldig(eksternId: String): Boolean = entries.any { it.eksternId == eksternId }
+
+        fun fraUrlSegment(urlSegment: String): Områder =
+            entries.find { it.urlSegment == urlSegment }
+                ?: throw IllegalArgumentException(
+                    "Ukjent område i url: $urlSegment. Gyldige områder: ${entries.map { it.urlSegment }}"
+                )
 
         /**
          * Området et fagsystem hører til.
