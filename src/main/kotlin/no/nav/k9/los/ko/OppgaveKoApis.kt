@@ -11,6 +11,7 @@ import no.nav.k9.los.infrastruktur.rest.idToken
 import no.nav.k9.los.ko.dto.*
 import no.nav.k9.los.infrastruktur.utils.OpentelemetrySpanUtil
 import org.koin.ktor.ext.inject
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 
 fun Route.OppgaveKoApis() {
     val requestContextService by inject<RequestContextService>()
@@ -76,7 +77,15 @@ fun Route.OppgaveKoApis() {
             if (pepClient.erOppgaveStyrer()) {
                 val opprettOppgaveKoDto = call.receive<OpprettOppgaveKoDto>()
                 val harSkjermetTilgang = pepClient.harTilgangTilKode6()
-                call.respond(oppgaveKoTjeneste.leggTil(opprettOppgaveKoDto.tittel, skjermet = harSkjermetTilgang))
+                // OpprettOppgaveKoDto bærer ikke område ennå. Skal det opprettes køer utenfor K9,
+                // må feltet inn i DTO-en og settes av klienten.
+                call.respond(
+                    oppgaveKoTjeneste.leggTil(
+                        opprettOppgaveKoDto.tittel,
+                        skjermet = harSkjermetTilgang,
+                        område = Områder.K9
+                    )
+                )
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }

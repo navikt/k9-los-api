@@ -6,6 +6,8 @@ import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
+import no.nav.k9.los.oppgavedefinisjon.omraade.OmrådeRepository
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import org.apache.commons.text.similarity.LevenshteinDistance
 import java.util.Locale
 import java.util.Locale.getDefault
@@ -14,7 +16,8 @@ import javax.sql.DataSource
 class SaksbehandlerRepository(
     private val dataSource: DataSource,
     private val pepClient: IPepClient,
-    private val transactionalManager: TransactionalManager
+    private val transactionalManager: TransactionalManager,
+    private val områdeRepository: OmrådeRepository
 ) {
     suspend fun addSaksbehandler(saksbehandler: Saksbehandler): Long {
         val erSkjermet = pepClient.harTilgangTilKode6()
@@ -23,13 +26,14 @@ class SaksbehandlerRepository(
                 val saksbehandlerId = tx.run(
                     queryOf(
                         """
-                        insert into saksbehandler as k (navident, navn, epost, enhet, skjermet)
-                        values (:navident,:navn,:epost, :enhet, :skjermet)
+                        insert into saksbehandler as k (navident, navn, epost, enhet, skjermet, omrade_id)
+                        values (:navident,:navn,:epost, :enhet, :skjermet, :omradeId)
                         on conflict (epost) do update
                         set navident = :navident,
                             navn = :navn,
                             enhet = :enhet,
-                            skjermet = :skjermet
+                            skjermet = :skjermet,
+                            omrade_id = :omradeId
                         returning id
                      """,
                         mapOf(
@@ -37,7 +41,8 @@ class SaksbehandlerRepository(
                             "epost" to saksbehandler.epost.lowercase(getDefault()),
                             "navn" to saksbehandler.navn,
                             "enhet" to saksbehandler.enhet,
-                            "skjermet" to erSkjermet
+                            "skjermet" to erSkjermet,
+                            "omradeId" to områdeRepository.hentOmråde(saksbehandler.område, tx).id
                         )
                     ).map { row -> row.long("id") }.asSingle
                 )
@@ -51,7 +56,7 @@ class SaksbehandlerRepository(
         return using(sessionOf(dataSource)) {
             it.run(
                 queryOf(
-                    """select * from saksbehandler where id = :id""",
+                    """$SAKSBEHANDLER_SELECT where s.id = :id""",
                     mapOf("id" to id)
                 ).map { row ->
                     mapSaksbehandler(row)
@@ -67,7 +72,7 @@ class SaksbehandlerRepository(
             session.transaction { tx ->
                 tx.run(
                     queryOf(
-                        "select * from saksbehandler where lower(epost) = lower(:epost) and skjermet = :skjermet",
+                        "$SAKSBEHANDLER_SELECT where lower(s.epost) = lower(:epost) and s.skjermet = :skjermet",
                         mapOf("epost" to epost, "skjermet" to skjermet)
                     ).map { row ->
                         mapSaksbehandler(row)
@@ -85,7 +90,7 @@ class SaksbehandlerRepository(
             it.transaction { tx ->
                 tx.run(
                     queryOf(
-                        "select * from saksbehandler where lower(navident) = lower(:ident) and skjermet = :skjermet",
+                        "$SAKSBEHANDLER_SELECT where lower(s.navident) = lower(:ident) and s.skjermet = :skjermet",
                         mapOf("ident" to ident, "skjermet" to skjermet)
                     )
                         .map { row ->
@@ -103,7 +108,7 @@ class SaksbehandlerRepository(
         val saksbehandler = using(sessionOf(dataSource)) {
             it.run(
                 queryOf(
-                    "select * from saksbehandler where skjermet = false and lower(navident) = lower(:ident)",
+                    "$SAKSBEHANDLER_SELECT where s.skjermet = false and lower(s.navident) = lower(:ident)",
                     mapOf("ident" to ident)
                 )
                     .map { row ->
@@ -266,7 +271,7 @@ class SaksbehandlerRepository(
         val identer = using(sessionOf(dataSource)) {
             tx.run(
                 queryOf(
-                    "select * from saksbehandler where skjermet = :skjermet",
+                    "$SAKSBEHANDLER_SELECT where s.skjermet = :skjermet",
                     mapOf("skjermet" to skjermet)
                 )
                     .map { row ->
@@ -331,7 +336,15 @@ class SaksbehandlerRepository(
             navident = row.stringOrNull("navident"),
             navn = row.stringOrNull("navn"),
             epost = row.string("epost").lowercase(Locale.getDefault()),
-            enhet = row.stringOrNull("enhet")
+            enhet = row.stringOrNull("enhet"),
+            område = Områder.fraEksternId(row.string("omrade_ekstern_id"))
         )
+    }
+
+    companion object {
+        private const val SAKSBEHANDLER_SELECT =
+            """select s.*, o.ekstern_id as omrade_ekstern_id
+               from saksbehandler s
+               join omrade o on o.id = s.omrade_id"""
     }
 }

@@ -1,5 +1,3 @@
-@file:Suppress("USELESS_CAST")
-
 package no.nav.k9.los
 
 import io.mockk.every
@@ -30,6 +28,7 @@ import no.nav.k9.los.domeneadaptere.k9.statistikk.*
 import no.nav.k9.los.driftsmelding.DriftsmeldingRepository
 import no.nav.k9.los.oppgavemottak.feltutlederforlagring.GyldigeFeltutledere
 import no.nav.k9.los.forvaltning.ForvaltningRepository
+import no.nav.k9.los.forvaltning.OmrådeKoblingRepository
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.abac.PepClientLocal
 import no.nav.k9.los.infrastruktur.abac.cache.PepCacheRepository
@@ -108,7 +107,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
         K9SakServiceLocal() as IK9SakService
     }
 
-    single { PepCacheRepository(dataSource) }
+    single { PepCacheRepository(dataSource, get()) }
     single {
         PepCacheService(
             pepClient = get(),
@@ -127,6 +126,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             dataSource = get(),
             pepClient = get(),
             transactionalManager = get(),
+            områdeRepository = get(),
         )
     }
 
@@ -202,6 +202,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     single {
         EventRepository(
             dataSource = get(),
+            områdeRepository = get(),
         )
     }
 
@@ -289,6 +290,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     single {
         EventRepository(
             dataSource = get(),
+            områdeRepository = get(),
         )
     }
 
@@ -377,6 +379,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     single {
         ReservasjonV3Repository(
             transactionalManager = get(),
+            områdeRepository = get(),
         )
     }
 
@@ -430,7 +433,8 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
 
     single {
         OppgaveKoRepository(
-            datasource = get()
+            datasource = get(),
+            områdeRepository = get(),
         )
     }
 
@@ -447,7 +451,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     }
 
     single {
-        PepCacheRepository(dataSource = get())
+        PepCacheRepository(dataSource = get(), områdeRepository = get())
     }
 
     single<AktivOppgaveOppslag> {
@@ -471,6 +475,10 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             oppgavetypeRepository = get(),
             transactionalManager = get(),
         )
+    }
+
+    single {
+        OmrådeKoblingRepository(dataSource = get())
     }
 
     single<AvstemmingsTjeneste> {

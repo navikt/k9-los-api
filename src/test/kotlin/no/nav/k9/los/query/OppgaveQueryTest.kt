@@ -33,6 +33,7 @@ import java.io.StringWriter
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 
 class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
 
@@ -732,7 +733,8 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
                     ident,
                     ident,
                     ident + "@nav.no",
-                    enhet = "1234"
+                    enhet = "1234",
+                    område = Områder.K9
                 )
             )
             saksbehandlerRepository.hentAlleSaksbehandlere()
@@ -1293,7 +1295,8 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
                     kode6 = kode6,
                     kode7 = kode7,
                     egenAnsatt = egenAnsatt,
-                    oppdatert = LocalDateTime.now()
+                    oppdatert = LocalDateTime.now(),
+                    område = Områder.K9
                 ), tx
             )
         }

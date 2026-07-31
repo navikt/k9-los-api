@@ -7,11 +7,14 @@ import kotliquery.queryOf
 import kotliquery.sessionOf
 import no.nav.k9.los.infrastruktur.db.util.InClauseHjelper
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
+import no.nav.k9.los.oppgavedefinisjon.omraade.OmrådeRepository
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import java.time.LocalDateTime
 import javax.sql.DataSource
 
 class PepCacheRepository(
-    val dataSource: DataSource
+    val dataSource: DataSource,
+    private val områdeRepository: OmrådeRepository
 ) {
     fun hentOppgaverMedStatusOgPepCacheEldreEnn(
         tidspunkt: LocalDateTime = LocalDateTime.now(),
@@ -58,11 +61,12 @@ class PepCacheRepository(
     fun lagre(cache: PepCache, tx: TransactionalSession) {
         tx.run(
             queryOf("""
-                INSERT INTO OPPGAVE_PEP_CACHE (kildeomrade, ekstern_id, kode6, kode7, egen_ansatt, oppdatert) 
-                VALUES(:kildeomrade, :ekstern_id, :kode6, :kode7, :egen_ansatt, :oppdatert) 
+                INSERT INTO OPPGAVE_PEP_CACHE (kildeomrade, omrade_id, ekstern_id, kode6, kode7, egen_ansatt, oppdatert) 
+                VALUES(:kildeomrade, :omradeId, :ekstern_id, :kode6, :kode7, :egen_ansatt, :oppdatert) 
                 ON CONFLICT ON CONSTRAINT pep_kildeomrade_eksternid
                 DO UPDATE SET 
                     kildeomrade = :kildeomrade, 
+                    omrade_id = :omradeId,
                     ekstern_id = :ekstern_id, 
                     kode6 = :kode6, 
                     kode7 = :kode7, 
@@ -70,6 +74,7 @@ class PepCacheRepository(
                     oppdatert = :oppdatert
             """, mapOf(
                 "kildeomrade" to cache.kildeområde,
+                "omradeId" to områdeRepository.hentOmråde(cache.område, tx).id,
                 "ekstern_id" to cache.eksternId,
                 "kode6" to cache.kode6,
                 "kode7" to cache.kode7,
@@ -100,7 +105,10 @@ class PepCacheRepository(
     fun hent(kildeområde: String, eksternId: String, tx: TransactionalSession): PepCache? {
         return tx.run(
             queryOf("""
-                    SELECT * FROM OPPGAVE_PEP_CACHE WHERE kildeomrade = :kildeomrade AND ekstern_id = :ekstern_id 
+                    SELECT pc.*, o.ekstern_id as omrade_ekstern_id
+                    FROM OPPGAVE_PEP_CACHE pc
+                    JOIN OMRADE o ON o.id = pc.omrade_id
+                    WHERE pc.kildeomrade = :kildeomrade AND pc.ekstern_id = :ekstern_id 
                 """, mapOf(
                     "kildeomrade" to kildeområde,
                     "ekstern_id" to eksternId
@@ -117,6 +125,7 @@ class PepCacheRepository(
         kode7 = boolean("kode7"),
         egenAnsatt = boolean("egen_ansatt"),
         oppdatert = localDateTime("oppdatert"),
+        område = Områder.fraEksternId(string("omrade_ekstern_id")),
     )
 }
 
@@ -127,7 +136,8 @@ data class PepCache(
     val kode6: Boolean,
     val kode7: Boolean,
     val egenAnsatt: Boolean,
-    val oppdatert: LocalDateTime
+    val oppdatert: LocalDateTime,
+    val område: Områder
 ) {
     fun oppdater(kode6: Boolean, kode7: Boolean, egenAnsatt: Boolean): PepCache {
         return copy(

@@ -14,6 +14,7 @@ import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.koin.test.get
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 
 class MigrerUttrekkResultatJobbTest : AbstractK9LosIntegrationTest() {
 
@@ -39,6 +40,7 @@ class MigrerUttrekkResultatJobbTest : AbstractK9LosIntegrationTest() {
                     navn = "Test Testersen",
                     epost = "test@nav.no",
                     enhet = null,
+                    område = Områder.K9,
                 )
             )
             val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedEpost("test@nav.no")!!

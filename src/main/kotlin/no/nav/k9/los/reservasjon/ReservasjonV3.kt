@@ -1,5 +1,6 @@
 package no.nav.k9.los.reservasjon
 
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.saksbehandleradmin.Saksbehandler
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
@@ -13,6 +14,7 @@ class ReservasjonV3(
     gyldigFra: LocalDateTime,
     gyldigTil: LocalDateTime,
     val endretAv: Long?,
+    val område: Områder,
 ) {
     val gyldigFra = gyldigFra.truncatedTo(ChronoUnit.MICROS)
     val gyldigTil = gyldigTil.truncatedTo(ChronoUnit.MICROS)
@@ -25,7 +27,8 @@ class ReservasjonV3(
         kommentar: String? = this.kommentar,
         gyldigFra: LocalDateTime = this.gyldigFra,
         gyldigTil: LocalDateTime = this.gyldigTil,
-        endretAv: Long? = this.endretAv
+        endretAv: Long? = this.endretAv,
+        område: Områder = this.område
     ): ReservasjonV3 {
         return ReservasjonV3(
             id,
@@ -35,7 +38,8 @@ class ReservasjonV3(
             kommentar,
             gyldigFra,
             gyldigTil,
-            endretAv
+            endretAv,
+            område
         )
     }
 
@@ -45,14 +49,16 @@ class ReservasjonV3(
         kommentar: String,
         gyldigFra: LocalDateTime,
         gyldigTil: LocalDateTime,
-        endretAv: Long?
+        endretAv: Long?,
+        område: Områder
     ) : this(
         reservertAv = saksbehandlerId,
         reservasjonsnøkkel = reservasjonsnøkkel,
         kommentar = kommentar,
         gyldigFra = gyldigFra,
         gyldigTil = gyldigTil,
-        endretAv = endretAv
+        endretAv = endretAv,
+        område = område
     )
 
     constructor(
@@ -61,14 +67,16 @@ class ReservasjonV3(
         kommentar: String,
         gyldigFra: LocalDateTime,
         gyldigTil: LocalDateTime,
-        endretAv: Long?
+        endretAv: Long?,
+        område: Områder = saksbehandler.område
     ) : this(
         reservertAv = saksbehandler.id!!,
         reservasjonsnøkkel = reservasjonsnøkkel,
         kommentar = kommentar,
         gyldigFra = gyldigFra,
         gyldigTil = gyldigTil,
-        endretAv = endretAv
+        endretAv = endretAv,
+        område = område
     )
 
     fun erAktiv(): Boolean {
@@ -84,6 +92,7 @@ class ReservasjonV3(
         if (reservertAv != other.reservertAv) return false
         if (reservasjonsnøkkel != other.reservasjonsnøkkel) return false
         if (annullertFørUtløp != other.annullertFørUtløp) return false
+        if (område != other.område) return false
 
         if (!gyldigFra.equals(other.gyldigFra)) return false
         return gyldigTil.equals(other.gyldigTil)
@@ -95,6 +104,7 @@ class ReservasjonV3(
         result = 31 * result + annullertFørUtløp.hashCode()
         result = 31 * result + gyldigFra.hashCode()
         result = 31 * result + gyldigTil.hashCode()
+        result = 31 * result + område.hashCode()
         return result
     }
 
@@ -102,6 +112,7 @@ class ReservasjonV3(
         return """
             Reservasjon(
             id: $id,
+            område: ${område.eksternId},
             reservertAv: $reservertAv,
             reservasjonsnøkkel: ${Reservasjonsnøkkel(reservasjonsnøkkel)},
             annullertFørUtløp: $annullertFørUtløp,

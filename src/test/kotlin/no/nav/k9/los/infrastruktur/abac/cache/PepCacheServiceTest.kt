@@ -53,6 +53,7 @@ import java.time.LocalDateTime
 import java.util.*
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 
 class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
 
@@ -147,7 +148,7 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
         val eksternId = UUID.randomUUID().toString()
         gjørAktørOrdinær(aktørId)
         k9punsjEventHandler.prosesser(lagPunsjBehandlingprosessEventMedStatus(eksternId, aktørId))
-        oppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(Fagsystem.PUNSJ, eksternId))
+        oppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(Fagsystem.PUNSJ, eksternId, område = Områder.K9))
 
         val pepCache = pepRepository.hent("K9", eksternId)!!
         assertThat(pepCache.kode6).isFalse()
@@ -167,7 +168,7 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
         val eksternId = UUID.randomUUID().toString()
         gjørAktørKode6(aktørId)
         k9punsjEventHandler.prosesser(lagPunsjBehandlingprosessEventMedStatus(eksternId, aktørId))
-        oppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(Fagsystem.PUNSJ, eksternId))
+        oppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(Fagsystem.PUNSJ, eksternId, område = Områder.K9))
 
         val pepCache = pepRepository.hent("K9", eksternId)!!
         assertThat(pepCache.kode6).isTrue()
@@ -187,7 +188,7 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
         val eksternId = UUID.randomUUID().toString()
         gjørAktørKode7(aktørId)
         k9punsjEventHandler.prosesser(lagPunsjBehandlingprosessEventMedStatus(eksternId, aktørId))
-        oppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(Fagsystem.PUNSJ, eksternId))
+        oppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(Fagsystem.PUNSJ, eksternId, område = Områder.K9))
 
         val pepCache = pepRepository.hent("K9", eksternId)!!
         assertThat(pepCache.kode6).isFalse()
@@ -205,7 +206,7 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
         val eksternId = UUID.randomUUID().toString()
         gjørSakKode6(saksnummer)
         k9sakEventHandler.prosesser(lagBehandlingprosessEventMedStatus(eksternId, saksnummer))
-        oppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(Fagsystem.K9SAK, eksternId))
+        oppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(Fagsystem.K9SAK, eksternId, område = Områder.K9))
 
         val pepCache = pepRepository.hent("K9", eksternId)!!
         assertThat(pepCache.kode6).isTrue()

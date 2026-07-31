@@ -42,6 +42,7 @@ import no.nav.k9.los.driftsmelding.DriftsmeldingRepository
 import no.nav.k9.los.driftsmelding.DriftsmeldingTjeneste
 import no.nav.k9.los.oppgavemottak.feltutlederforlagring.GyldigeFeltutledere
 import no.nav.k9.los.forvaltning.ForvaltningRepository
+import no.nav.k9.los.forvaltning.OmrådeKoblingRepository
 import no.nav.k9.los.infrastruktur.abac.*
 import no.nav.k9.los.infrastruktur.abac.cache.PepCacheRepository
 import no.nav.k9.los.infrastruktur.abac.cache.PepCacheService
@@ -134,6 +135,7 @@ fun common(app: Application, config: Configuration) = module {
             dataSource = get(),
             pepClient = get(),
             transactionalManager = get(),
+            områdeRepository = get(),
         )
     }
 
@@ -198,6 +200,7 @@ fun common(app: Application, config: Configuration) = module {
     single {
         EventRepository(
             dataSource = get(),
+            områdeRepository = get(),
         )
     }
 
@@ -214,6 +217,7 @@ fun common(app: Application, config: Configuration) = module {
     single {
         EventRepository(
             dataSource = get(),
+            områdeRepository = get(),
         )
     }
 
@@ -439,7 +443,8 @@ fun common(app: Application, config: Configuration) = module {
 
     single {
         OppgaveKoRepository(
-            datasource = get()
+            datasource = get(),
+            områdeRepository = get(),
         )
     }
 
@@ -455,6 +460,7 @@ fun common(app: Application, config: Configuration) = module {
     single {
         ReservasjonV3Repository(
             transactionalManager = get(),
+            områdeRepository = get(),
         )
     }
 
@@ -498,7 +504,7 @@ fun common(app: Application, config: Configuration) = module {
     }
 
     single {
-        PepCacheRepository(dataSource = get())
+        PepCacheRepository(dataSource = get(), områdeRepository = get())
     }
 
     single {
@@ -518,6 +524,10 @@ fun common(app: Application, config: Configuration) = module {
             oppgavetypeRepository = get(),
             transactionalManager = get(),
         )
+    }
+
+    single {
+        OmrådeKoblingRepository(dataSource = get())
     }
 
     single {

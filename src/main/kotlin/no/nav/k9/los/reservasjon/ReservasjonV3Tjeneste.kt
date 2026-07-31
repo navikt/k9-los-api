@@ -19,6 +19,7 @@ import no.nav.k9.los.oppgaveuthenting.enkeltoppslag.ReservasjonsnøkkelOppgaveOp
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 
 class ReservasjonV3Tjeneste(
     private val transactionalManager: TransactionalManager,
@@ -129,7 +130,8 @@ class ReservasjonV3Tjeneste(
             gyldigFra = gyldigFra,
             gyldigTil = gyldigTil,
             kommentar = kommentar,
-            endretAv = null
+            endretAv = null,
+            område = utledOmråde(oppgaverForReservasjonsnøkkel, reservasjonsnøkkel, reserverForId)
         )
         val reservasjon = reservasjonV3Repository.lagreReservasjon(reservasjonTilLagring, tx)
         log.info("taReservasjon: Ny reservasjon $reservasjon, utført av $utføresAvId, for saksbehandler $reserverForId")
@@ -291,6 +293,29 @@ class ReservasjonV3Tjeneste(
             aktiveReservasjoner.map { reservasjon ->
                 finnOppgaverFor(reservasjon, tx)
             }
+        }
+    }
+
+    /**
+     * Reservasjonen arver området fra oppgavene den gjelder. Er det ingen åpne oppgaver på
+     * nøkkelen, faller vi tilbake på området til saksbehandleren som reserverer - fortsatt
+     * data fra kallet, ikke en hardkodet antakelse.
+     */
+    private fun utledOmråde(
+        oppgaver: List<Oppgave>,
+        reservasjonsnøkkel: String,
+        reserverForId: Long
+    ): Områder {
+        val områder = oppgaver
+            .map { Områder.fraEksternId(it.oppgavetype.område.eksternId) }
+            .distinct()
+
+        return when {
+            områder.size == 1 -> områder.single()
+            områder.isEmpty() -> saksbehandlerRepository.finnSaksbehandlerMedId(reserverForId)!!.område
+            else -> throw IllegalStateException(
+                "Reservasjonsnøkkel $reservasjonsnøkkel dekker oppgaver i flere områder: $områder"
+            )
         }
     }
 

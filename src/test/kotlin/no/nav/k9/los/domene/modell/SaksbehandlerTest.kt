@@ -2,6 +2,7 @@ package no.nav.k9.los.domene.modell
 
 import assertk.assertThat
 import assertk.assertions.doesNotContain
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.saksbehandleradmin.Saksbehandler
 import org.junit.jupiter.api.Test
 
@@ -15,6 +16,7 @@ class SaksbehandlerTest {
             navn = sensitiv,
             epost = sensitiv,
             enhet = sensitiv,
+            område = Områder.K9,
         )
 
         assertThat(sb.toString()).doesNotContain(sensitiv)

@@ -36,6 +36,7 @@ import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.LocalDateTime
 import kotlin.coroutines.CoroutineContext
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 
 class OppgaveKoTjeneste(
     private val transactionalManager: TransactionalManager,
@@ -323,8 +324,8 @@ class OppgaveKoTjeneste(
     }
 
     @WithSpan
-    fun leggTil(tittel: String, skjermet: Boolean): OppgaveKo {
-        val kø = oppgaveKoRepository.leggTil(tittel, skjermet)
+    fun leggTil(tittel: String, skjermet: Boolean, område: Områder): OppgaveKo {
+        val kø = oppgaveKoRepository.leggTil(tittel, skjermet, område)
         runBlocking {
             køpåvirkendeHendelseChannel.send(Kødefinisjon(kø.id))
         }

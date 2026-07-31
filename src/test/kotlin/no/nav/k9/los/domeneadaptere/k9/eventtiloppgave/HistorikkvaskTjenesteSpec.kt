@@ -24,6 +24,7 @@ import org.koin.test.KoinTest
 import org.koin.test.get
 import java.time.LocalDateTime
 import java.util.*
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 
 class HistorikkvaskTjenesteSpec: FreeSpec(), KoinTest {
     val transactionalManager = get<TransactionalManager>()
@@ -41,7 +42,7 @@ class HistorikkvaskTjenesteSpec: FreeSpec(), KoinTest {
             val eventnøkkel = transactionalManager.transaction { tx ->
                 eventRepository.lagre(Fagsystem.PUNSJ, event, tx)
             }
-            oppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(Fagsystem.PUNSJ, eksternId.toString()))
+            oppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(Fagsystem.PUNSJ, eksternId.toString(), område = Områder.K9))
             "med feil i oppgavefeltverdier" - {
                 val eventKorrigert = LosObjectMapper.instance.writeValueAsString(event.copy(ytelse = "ytelsekorrigert"))
                 transactionalManager.transaction { tx ->
@@ -75,12 +76,12 @@ class HistorikkvaskTjenesteSpec: FreeSpec(), KoinTest {
                     eventRepository.lagre(Fagsystem.PUNSJ, event, tx)
                     eventRepository.lagre(Fagsystem.PUNSJ, event3, tx)
                 }
-                oppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(Fagsystem.PUNSJ, eksternId.toString()))
+                oppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(Fagsystem.PUNSJ, eksternId.toString(), område = Områder.K9))
                 "og event nr 2 er innlest etterpå" - {
                     transactionalManager.transaction { tx ->
                         eventRepository.lagre(Fagsystem.PUNSJ, event2, tx)
                     }
-                    oppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(Fagsystem.PUNSJ, eksternId.toString()))
+                    oppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(Fagsystem.PUNSJ, eksternId.toString(), område = Områder.K9))
                     "skal kunne korrigeres med historikkvask" {
                         val uvasketHistorikk = hentOppgavehistorikk(eksternId.toString())
                         uvasketHistorikk.size shouldBe 3
@@ -105,8 +106,8 @@ class HistorikkvaskTjenesteSpec: FreeSpec(), KoinTest {
                 eventRepository.lagre(Fagsystem.PUNSJ, event1, tx)
                 eventRepository.lagre(Fagsystem.PUNSJ, event2, tx)
             }
-            oppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(Fagsystem.PUNSJ, eksternId1.toString()))
-            oppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(Fagsystem.PUNSJ, eksternId2.toString()))
+            oppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(Fagsystem.PUNSJ, eksternId1.toString(), område = Områder.K9))
+            oppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(Fagsystem.PUNSJ, eksternId2.toString(), område = Områder.K9))
             
             "skal kunne vaskes med eventlagerNøkkel fra bestillingen" {
                 eventRepository.bestillHistorikkvask(Fagsystem.PUNSJ)
@@ -138,7 +139,7 @@ class HistorikkvaskTjenesteSpec: FreeSpec(), KoinTest {
             transactionalManager.transaction { tx ->
                 eventer.forEach { eventRepository.lagre(Fagsystem.PUNSJ, it, tx) }
             }
-            eksternIder.forEach { oppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(Fagsystem.PUNSJ, it.toString())) }
+            eksternIder.forEach { oppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(Fagsystem.PUNSJ, it.toString(), område = Områder.K9)) }
             
             "skal kunne prosessere alle bestillinger" {
                 eventRepository.bestillHistorikkvask(Fagsystem.PUNSJ)

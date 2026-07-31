@@ -17,6 +17,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 
 internal class FerdigstiltEnhetTest {
     private val saksbehandlerRepository = mockk<SaksbehandlerRepository>()
@@ -51,6 +52,7 @@ internal class FerdigstiltEnhetTest {
             saksbehandlerRepository.finnSaksbehandlerMedIdentEkskluderKode6(saksbehandlerId)
         } returns Saksbehandler(
             id = 0, navident = saksbehandlerId, navn = "Navn Navnesen", epost = "", enhet = forventetEnhet,
+            område = Områder.K9,
         )
 
         val oppgave = lagOppgave(
@@ -80,7 +82,7 @@ internal class FerdigstiltEnhetTest {
 
         every {
             saksbehandlerRepository.finnSaksbehandlerMedIdentEkskluderKode6(saksbehandlerId)
-        } returns Saksbehandler(id = 0, navident = saksbehandlerId, navn = "Navn Navnesen", epost = "", enhet = null)
+        } returns Saksbehandler(id = 0, navident = saksbehandlerId, navn = "Navn Navnesen", epost = "", enhet = null, område = Områder.K9)
 
         val oppgave = lagOppgave(
             status = Oppgavestatus.LUKKET,

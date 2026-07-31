@@ -19,6 +19,7 @@ import no.nav.k9.los.kodeverk.BehandlingType
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.FeltdefinisjonTjeneste
 import no.nav.k9.los.oppgavedefinisjon.omraade.Område
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgavedefinisjon.oppgavetype.Oppgavetype
 import no.nav.k9.los.oppgaveuthenting.query.Avgrensning
 import no.nav.k9.los.oppgaveuthenting.query.OppgaveQueryService
@@ -63,6 +64,7 @@ class OppgaveKoTjenesteTest {
             saksbehandlere = emptyList(),
             endretTidspunkt = null,
             skjermet = false,
+            område = Områder.K9,
         )
 
         val utenTilgang = oppgave("uten-tilgang", "SAK-1")

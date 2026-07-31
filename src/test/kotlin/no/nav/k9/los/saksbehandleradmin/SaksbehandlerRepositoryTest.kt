@@ -11,6 +11,7 @@ import org.hamcrest.MatcherAssert.assertThat
 import org.junit.jupiter.api.Test
 import org.koin.test.get
 import java.time.LocalDateTime
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 
 class SaksbehandlerRepositoryTest : AbstractK9LosIntegrationTest() {
     @Test
@@ -26,7 +27,8 @@ class SaksbehandlerRepositoryTest : AbstractK9LosIntegrationTest() {
                     ident,
                     ident,
                     ident + "@nav.no",
-                    enhet = "1234"
+                    enhet = "1234",
+                    område = Områder.K9
                 )
             )
         }
@@ -38,7 +40,8 @@ class SaksbehandlerRepositoryTest : AbstractK9LosIntegrationTest() {
                     ident2,
                     ident2,
                     ident2 + "@nav.no",
-                    enhet = "1234"
+                    enhet = "1234",
+                    område = Områder.K9
                 )
             )
         }

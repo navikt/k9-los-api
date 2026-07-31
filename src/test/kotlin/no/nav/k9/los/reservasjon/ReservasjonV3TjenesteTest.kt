@@ -13,6 +13,7 @@ import org.junit.jupiter.api.assertThrows
 import org.koin.test.get
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 
 class ReservasjonV3TjenesteTest : AbstractK9LosIntegrationTest() {
     private lateinit var saksbehandlerInnlogget: Saksbehandler
@@ -30,6 +31,7 @@ class ReservasjonV3TjenesteTest : AbstractK9LosIntegrationTest() {
                     navn = null,
                     epost = "saksbehandler@nav.no",
                     enhet = null,
+                    område = Områder.K9,
                 )
             )
             saksbehandlerRepository.finnSaksbehandlerMedEpost("saksbehandler@nav.no")!!
@@ -43,6 +45,7 @@ class ReservasjonV3TjenesteTest : AbstractK9LosIntegrationTest() {
                     navn = null,
                     epost = "test1@test.no",
                     enhet = null,
+                    område = Områder.K9,
                 )
             )
             saksbehandlerRepository.finnSaksbehandlerMedEpost("test1@test.no")!!
@@ -125,6 +128,7 @@ class ReservasjonV3TjenesteTest : AbstractK9LosIntegrationTest() {
                     navn = null,
                     epost = "test2@test.no",
                     enhet = null,
+                    område = Områder.K9,
                 )
             )
             saksbehandlerRepository.finnSaksbehandlerMedEpost("test2@test.no")!!
@@ -136,7 +140,8 @@ class ReservasjonV3TjenesteTest : AbstractK9LosIntegrationTest() {
             kommentar = "",
             gyldigFra = LocalDateTime.now(),
             gyldigTil = LocalDateTime.now().plusDays(1),
-            endretAv = null
+            endretAv = null,
+            område = Områder.K9
         )
 
         transactionalManager.transaction { tx ->
@@ -180,7 +185,8 @@ class ReservasjonV3TjenesteTest : AbstractK9LosIntegrationTest() {
             kommentar = "",
             gyldigFra = LocalDateTime.now(),
             gyldigTil = LocalDateTime.now().plusDays(1),
-            endretAv = null
+            endretAv = null,
+            område = Områder.K9
         )
 
         transactionalManager.transaction { tx ->

@@ -6,6 +6,7 @@ import no.nav.k9.los.ko.db.OppgaveKoRepository
 import no.nav.k9.los.lagretsok.LagretSøkTjeneste
 import no.nav.k9.los.reservasjon.ReservasjonV3Tjeneste
 import no.nav.k9.los.uttrekk.UttrekkTjeneste
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 
 class SaksbehandlerAdminTjeneste(
     private val pepClient: IPepClient,
@@ -22,7 +23,7 @@ class SaksbehandlerAdminTjeneste(
         var saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedEpost(epostDto.epost)
         if (saksbehandler == null) {
             saksbehandler = Saksbehandler(
-                null, null, null, epostDto.epost, null
+                null, null, null, epostDto.epost, null, Områder.K9
             )
             saksbehandlerRepository.addSaksbehandler(saksbehandler)
         }
@@ -34,7 +35,7 @@ class SaksbehandlerAdminTjeneste(
             throw IllegalStateException("Saksbehandler finnes fra før")
         }
         // lagrer med tomme verdier, disse blir populert etter at saksbehandleren har logget seg inn
-        val saksbehandler = Saksbehandler(null, null, null, epost, null)
+        val saksbehandler = Saksbehandler(null, null, null, epost, null, Områder.K9)
         saksbehandlerRepository.addSaksbehandler(saksbehandler)
     }
 

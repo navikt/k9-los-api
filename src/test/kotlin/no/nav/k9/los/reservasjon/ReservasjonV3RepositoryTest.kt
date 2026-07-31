@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.koin.test.get
 import java.time.LocalDateTime
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 
 class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
     @Test
@@ -29,6 +30,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
                     navn = null,
                     epost = "test1@test.no",
                     enhet = null,
+                    område = Områder.K9,
                 )
             )
 
@@ -41,7 +43,8 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
             gyldigFra = LocalDateTime.now(),
             gyldigTil = LocalDateTime.now().plusDays(1),
             kommentar = "",
-            endretAv = null
+            endretAv = null,
+            område = Områder.K9
         )
 
         transactionalManager.transaction { tx ->
@@ -74,6 +77,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
                     navn = null,
                     epost = "test1@test.no",
                     enhet = null,
+                    område = Områder.K9,
                 )
             )
 
@@ -88,6 +92,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
                     navn = null,
                     epost = "test2@test.no",
                     enhet = null,
+                    område = Områder.K9,
                 )
             )
             saksbehandlerRepository.finnSaksbehandlerMedEpost("test2@test.no")!!
@@ -99,7 +104,8 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
             gyldigFra = LocalDateTime.now().minusDays(5),
             gyldigTil = LocalDateTime.now().minusDays(1),
             kommentar = "",
-            endretAv = null
+            endretAv = null,
+            område = Områder.K9
         )
 
         val reservasjon2 = ReservasjonV3(
@@ -108,7 +114,8 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
             gyldigFra = LocalDateTime.now().plusMinutes(1),
             gyldigTil = LocalDateTime.now().plusDays(1).plusMinutes(1),
             kommentar = "",
-            endretAv = null
+            endretAv = null,
+            område = Områder.K9
         )
 
         transactionalManager.transaction { tx ->
@@ -134,6 +141,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
                     navn = null,
                     epost = "test1@test.no",
                     enhet = null,
+                    område = Områder.K9,
                 )
             )
 
@@ -146,7 +154,8 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
             gyldigFra = LocalDateTime.now().minusDays(5),
             gyldigTil = LocalDateTime.now().minusDays(1),
             kommentar = "",
-            endretAv = null
+            endretAv = null,
+            område = Områder.K9
         )
 
         val reservasjon2 = ReservasjonV3(
@@ -155,7 +164,8 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
             gyldigFra = LocalDateTime.now(),
             gyldigTil = LocalDateTime.now().plusDays(1).plusMinutes(1),
             kommentar = "",
-            endretAv = null
+            endretAv = null,
+            område = Områder.K9
         )
 
         transactionalManager.transaction { tx ->
@@ -191,6 +201,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
                     navn = null,
                     epost = "test1@test.no",
                     enhet = null,
+                    område = Områder.K9,
                 )
             )
 
@@ -205,6 +216,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
                     navn = null,
                     epost = "test2@test.no",
                     enhet = null,
+                    område = Områder.K9,
                 )
             )
             saksbehandlerRepository.finnSaksbehandlerMedEpost("test2@test.no")!!
@@ -216,7 +228,8 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
             gyldigFra = LocalDateTime.now(),
             gyldigTil = LocalDateTime.now().plusDays(1),
             kommentar = "",
-            endretAv = null
+            endretAv = null,
+            område = Områder.K9
         )
 
         val reservasjon2 = ReservasjonV3(
@@ -225,7 +238,8 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
             gyldigFra = LocalDateTime.now().plusMinutes(1),
             gyldigTil = LocalDateTime.now().plusDays(1).plusMinutes(1),
             kommentar = "",
-            endretAv = null
+            endretAv = null,
+            område = Områder.K9
         )
 
         transactionalManager.transaction { tx ->
@@ -256,6 +270,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
                     navn = null,
                     epost = "test1@test.no",
                     enhet = null,
+                    område = Områder.K9,
                 )
             )
 
@@ -270,6 +285,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
                     navn = null,
                     epost = "test2@test.no",
                     enhet = null,
+                    område = Områder.K9,
                 )
             )
             saksbehandlerRepository.finnSaksbehandlerMedEpost("test2@test.no")!!
@@ -281,7 +297,8 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
             gyldigFra = LocalDateTime.now(),
             gyldigTil = LocalDateTime.now().plusDays(1),
             kommentar = "",
-            endretAv = null
+            endretAv = null,
+            område = Områder.K9
         )
 
         val reservasjon2 = ReservasjonV3(
@@ -290,7 +307,8 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
             gyldigFra = LocalDateTime.now().plusMinutes(1),
             gyldigTil = LocalDateTime.now().plusDays(1).plusMinutes(1),
             kommentar = "",
-            endretAv = null
+            endretAv = null,
+            område = Områder.K9
         )
 
         val saksbehandlerInnlogget = runBlocking {
@@ -301,6 +319,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
                     navn = null,
                     epost = "saksbehandler@nav.no",
                     enhet = null,
+                    område = Områder.K9,
                 )
             )
             saksbehandlerRepository.finnSaksbehandlerMedEpost("saksbehandler@nav.no")!!
@@ -330,6 +349,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
                     navn = null,
                     epost = "test1@test.no",
                     enhet = null,
+                    område = Områder.K9,
                 )
             )
 
@@ -342,7 +362,8 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
             gyldigFra = LocalDateTime.now(),
             gyldigTil = LocalDateTime.now().plusDays(1),
             kommentar = "",
-            endretAv = null
+            endretAv = null,
+            område = Områder.K9
         )
 
         transactionalManager.transaction { tx ->
@@ -379,6 +400,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
                     navn = null,
                     epost = "test1@test.no",
                     enhet = null,
+                    område = Områder.K9,
                 )
             )
             saksbehandlerRepository.finnSaksbehandlerMedEpost("test1@test.no")!!
@@ -391,6 +413,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
                     navn = null,
                     epost = "test2@test.no",
                     enhet = null,
+                    område = Områder.K9,
                 )
             )
             saksbehandlerRepository.finnSaksbehandlerMedEpost("test2@test.no")!!
@@ -403,6 +426,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
                     navn = null,
                     epost = "test3@test.no",
                     enhet = null,
+                    område = Områder.K9,
                 )
             )
             saksbehandlerRepository.finnSaksbehandlerMedEpost("test3@test.no")!!
@@ -414,7 +438,8 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
             gyldigFra = LocalDateTime.now(),
             gyldigTil = LocalDateTime.now().plusDays(1),
             kommentar = "",
-            endretAv = null
+            endretAv = null,
+            område = Områder.K9
         )
         val reservasjon2 = ReservasjonV3(
             reservertAv = saksbehandler1.id!!,
@@ -422,7 +447,8 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
             gyldigFra = LocalDateTime.now(),
             gyldigTil = LocalDateTime.now().plusDays(1),
             kommentar = "",
-            endretAv = null
+            endretAv = null,
+            område = Områder.K9
         )
         val reservasjon3 = ReservasjonV3(
             reservertAv = saksbehandler2.id!!,
@@ -430,7 +456,8 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
             gyldigFra = LocalDateTime.now(),
             gyldigTil = LocalDateTime.now().plusDays(1),
             kommentar = "",
-            endretAv = null
+            endretAv = null,
+            område = Områder.K9
         )
         val reservasjon4 = ReservasjonV3(
             reservertAv = saksbehandler3skjermet.id!!,
@@ -438,7 +465,8 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
             gyldigFra = LocalDateTime.now(),
             gyldigTil = LocalDateTime.now().plusDays(1),
             kommentar = "",
-            endretAv = null
+            endretAv = null,
+            område = Områder.K9
         )
 
         transactionalManager.transaction { tx ->

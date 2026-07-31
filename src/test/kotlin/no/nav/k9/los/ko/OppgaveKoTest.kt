@@ -16,14 +16,15 @@ import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.ko.db.OppgaveKoRepository
 import org.junit.jupiter.api.Test
 import org.koin.test.get
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 
 class OppgaveKoTest : AbstractK9LosIntegrationTest() {
 
     @Test
     fun `sjekker at oppgavekø kan opprettes og slettes`() {
-        val oppgaveKoRepository = OppgaveKoRepository(dataSource)
+        val oppgaveKoRepository = OppgaveKoRepository(dataSource, get())
 
-        val oppgaveKo = oppgaveKoRepository.leggTil("Testkø", skjermet = false)
+        val oppgaveKo = oppgaveKoRepository.leggTil("Testkø", skjermet = false, område = Områder.K9)
         assertThat(oppgaveKo.tittel).isEqualTo("Testkø")
 
         val oppgaveKoFraDb = oppgaveKoRepository.hent(oppgaveKo.id, false)
@@ -37,10 +38,10 @@ class OppgaveKoTest : AbstractK9LosIntegrationTest() {
 
     @Test
     fun `sjekker at oppgavekø kan endres`() {
-        val oppgaveKoRepository = OppgaveKoRepository(dataSource)
+        val oppgaveKoRepository = OppgaveKoRepository(dataSource, get())
 
         val tittel = "Testkø"
-        val oppgaveKo = oppgaveKoRepository.leggTil(tittel, skjermet = false)
+        val oppgaveKo = oppgaveKoRepository.leggTil(tittel, skjermet = false, område = Områder.K9)
         assertThat(oppgaveKo.tittel).isEqualTo(tittel)
 
         val beskrivelse = "En god beskrivelse"
@@ -52,10 +53,10 @@ class OppgaveKoTest : AbstractK9LosIntegrationTest() {
 
     @Test
     fun `sjekker at oppgavekø kan få saksbehandler tilknyttet og fjernet`() {
-        val oppgaveKoRepository = OppgaveKoRepository(dataSource)
+        val oppgaveKoRepository = OppgaveKoRepository(dataSource, get())
 
         val tittel = "Testkø"
-        val oppgaveKo = oppgaveKoRepository.leggTil(tittel, skjermet = false)
+        val oppgaveKo = oppgaveKoRepository.leggTil(tittel, skjermet = false, område = Områder.K9)
         assertThat(oppgaveKo.tittel).isEqualTo(tittel)
 
         val saksbehandlerepost = "a@b"
@@ -77,11 +78,11 @@ class OppgaveKoTest : AbstractK9LosIntegrationTest() {
 
     @Test
     fun `oppgavekø skal kunne kopieres`() {
-        val oppgaveKoRepository = OppgaveKoRepository(dataSource)
+        val oppgaveKoRepository = OppgaveKoRepository(dataSource, get())
 
         val tittel = "Testkø"
         val saksbehandlerepost = "a@b"
-        val oppgaveKo = oppgaveKoRepository.leggTil(tittel, skjermet = false)
+        val oppgaveKo = oppgaveKoRepository.leggTil(tittel, skjermet = false, område = Områder.K9)
         val saksbehandlerId = mockLeggTilSaksbehandler(saksbehandlerepost)
         val gammelOppgaveko = oppgaveKoRepository.endre(oppgaveKo.copy(saksbehandlere = listOf(saksbehandlerepost), saksbehandlerIds = listOf(saksbehandlerId)), false)
 
@@ -98,7 +99,7 @@ class OppgaveKoTest : AbstractK9LosIntegrationTest() {
 
     private fun mockLeggTilSaksbehandler(saksbehandlerepost: String): Long {
         val pepClient = mockk<IPepClient>()
-        val saksbehandlerRepository = SaksbehandlerRepository(dataSource, pepClient, transactionalManager = get())
+        val saksbehandlerRepository = SaksbehandlerRepository(dataSource, pepClient, transactionalManager = get(), områdeRepository = get())
         coEvery {
             pepClient.harTilgangTilKode6()
         } returns true
@@ -110,7 +111,8 @@ class OppgaveKoTest : AbstractK9LosIntegrationTest() {
                     navident = "Ident$saksbehandlerepost",
                     navn = "Navn for $saksbehandlerepost",
                     epost = saksbehandlerepost,
-                    enhet = null
+                    enhet = null,
+                    område = Områder.K9
                 )
             )
         }

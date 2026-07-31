@@ -9,6 +9,7 @@ import no.nav.k9.los.saksbehandleradmin.Saksbehandler
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import java.time.LocalDateTime
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 
 class LagretSøkTest {
 
@@ -17,7 +18,8 @@ class LagretSøkTest {
         navident = "test",
         navn = "Test Testersen",
         epost = "test@nav.no",
-        enhet = null
+        enhet = null,
+        område = Områder.K9
     )
 
     private val annenSaksbehandler = Saksbehandler(
@@ -25,7 +27,8 @@ class LagretSøkTest {
         navident = "annen",
         navn = "Annen Testersen",
         epost = "annen@nav.no",
-        enhet = null
+        enhet = null,
+        område = Områder.K9
     )
 
     @Test
@@ -51,7 +54,8 @@ class LagretSøkTest {
             navident = "test",
             navn = "Test Testersen",
             epost = "test@nav.no",
-            enhet = null
+            enhet = null,
+            område = Områder.K9
         )
 
         val opprettLagretSøk = NyttLagretSøkRequest(

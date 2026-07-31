@@ -11,6 +11,7 @@ import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.sif.abac.kontrakt.abac.Diskresjonskode
 import java.time.Duration
 import java.time.LocalDateTime
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 
 class PepCacheService(
     private val pepClient: IPepClient,
@@ -45,13 +46,18 @@ class PepCacheService(
     }
 
     private suspend fun lagPepCacheFra(oppgaveIdOgAktører: PepCacheInput): PepCache {
+        // PepCacheInput kommer i dag utelukkende fra K9-oppgaver, jf. spørringen i
+        // PepCacheRepository.hentOppgaverMedStatusOgPepCacheEldreEnn som filtrerer på kildeomrade
+        // = 'K9'. Når UNG-oppgaver skal pep-caches må området følge med fra oppgaven.
+        val område = Områder.K9
         val pep = PepCache(
             eksternId = oppgaveIdOgAktører.eksternId,
-            kildeområde = "K9",
+            kildeområde = område.eksternId,
             kode6 = false,
             kode7 = false,
             egenAnsatt = false,
-            oppdatert = LocalDateTime.now()
+            oppdatert = LocalDateTime.now(),
+            område = område
         )
 
         return if (oppgaveIdOgAktører.saksnummer != null) {

@@ -15,6 +15,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.koin.test.get
 import java.util.*
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 
 class SisteOppgaverRepositoryTest : AbstractK9LosIntegrationTest() {
 
@@ -38,6 +39,7 @@ class SisteOppgaverRepositoryTest : AbstractK9LosIntegrationTest() {
                     navn = "Test Testersen",
                     epost = "test@nav.no",
                     enhet = null,
+                    område = Områder.K9,
                 )
             )
             saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedEpost("test@nav.no")!!

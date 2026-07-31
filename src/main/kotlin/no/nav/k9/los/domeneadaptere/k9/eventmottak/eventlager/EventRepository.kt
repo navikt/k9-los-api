@@ -3,6 +3,8 @@ package no.nav.k9.los.domeneadaptere.k9.eventmottak.eventlager
 import kotliquery.*
 import no.nav.k9.los.infrastruktur.db.util.InClauseHjelper
 import no.nav.k9.los.kodeverk.Fagsystem
+import no.nav.k9.los.oppgavedefinisjon.omraade.OmrådeRepository
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import org.jetbrains.annotations.VisibleForTesting
 import javax.sql.DataSource
 
@@ -10,10 +12,16 @@ import javax.sql.DataSource
 
 class EventRepository(
     private val dataSource: DataSource,
+    private val områdeRepository: OmrådeRepository,
 ) {
     private val log = org.slf4j.LoggerFactory.getLogger(EventRepository::class.java)
 
-    fun upsertOgLåsEventnøkkel(fagsystem: Fagsystem, eksternId: String, tx: TransactionalSession): Long {
+    fun upsertOgLåsEventnøkkel(
+        fagsystem: Fagsystem,
+        eksternId: String,
+        område: Områder,
+        tx: TransactionalSession
+    ): Long {
         val id = tx.run(
             queryOf(
                 """
@@ -38,13 +46,14 @@ class EventRepository(
             return tx.run(
                 queryOf(
                     """
-                    insert into event_nokkel (ekstern_id, fagsystem)
-                    values(:eksternId, :fagsystem)
+                    insert into event_nokkel (ekstern_id, fagsystem, omrade_id)
+                    values(:eksternId, :fagsystem, :omradeId)
                     returning id
                 """.trimIndent(),
                     mapOf(
                         "eksternId" to eksternId,
-                        "fagsystem" to fagsystem.kode
+                        "fagsystem" to fagsystem.kode,
+                        "omradeId" to områdeRepository.hentOmråde(område, tx).id
                     )
                 ).asUpdateAndReturnGeneratedKey
             )!!
@@ -80,9 +89,10 @@ class EventRepository(
         eksternId: String,
         eksternVersjon: String,
         event: String,
+        område: Områder,
         tx: TransactionalSession
     ): EventNøkkel {
-        val eventnøkkelId = upsertOgLåsEventnøkkel(fagsystem, eksternId, tx)
+        val eventnøkkelId = upsertOgLåsEventnøkkel(fagsystem, eksternId, område, tx)
 
         tx.run(
             queryOf(
@@ -103,7 +113,7 @@ class EventRepository(
             ).asUpdate
         )
 
-        return EventNøkkel(fagsystem, eksternId, eventnøkkelId)
+        return EventNøkkel(fagsystem, eksternId, eventnøkkelId, område)
     }
 
     fun hentAlleEventer(fagsystem: Fagsystem, eksternId: String): List<EventLagret> {
@@ -179,8 +189,9 @@ class EventRepository(
             it.run(
                 queryOf(
                     """
-                    select en.*
+                    select en.*, o.ekstern_id as omrade_ekstern_id
                     from event_nokkel en
+                    join omrade o on o.id = en.omrade_id
                     where exists (
                         select 1
                         from event e
@@ -192,7 +203,8 @@ class EventRepository(
                     EventNøkkel(
                         eksternId = row.string("ekstern_id"),
                         fagsystem = Fagsystem.fraKode(row.string("fagsystem")),
-                        id = row.long("id")
+                        id = row.long("id"),
+                        område = Områder.fraEksternId(row.string("omrade_ekstern_id"))
                     )
                 }.asList
             )
