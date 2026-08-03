@@ -17,6 +17,11 @@
           "påkrevd": false
         },
         {
+          "id": "påklagdBehandlingtype",
+          "visPåOppgave": true,
+          "påkrevd": false
+        },
+        {
           "id": "aktorId",
           "visPåOppgave": true,
           "påkrevd": true
@@ -137,6 +142,21 @@
           "påkrevd": false
         },
         {
+          "id": "utførtAksjonspunkt",
+          "visPåOppgave": true,
+          "påkrevd": false
+        },
+        {
+          "id": "avbruttAksjonspunkt",
+          "visPåOppgave": true,
+          "påkrevd": false
+        },
+        {
+          "id": "fremtidigAksjonspunkt",
+          "visPåOppgave": true,
+          "påkrevd": false
+        },
+        {
           "id": "avventerSaksbehandler",
           "visPåOppgave": true,
           "påkrevd": true
@@ -171,13 +191,18 @@
           "id": "ferdigstiltTidspunkt",
           "visPåOppgave": false,
           "påkrevd": false,
-          "feltutleder": "no.nav.k9.los.nyoppgavestyring.feltutlederforlagring.FerdigstiltTidspunkt"
+          "feltutleder": "no.nav.k9.los.oppgavemottak.feltutlederforlagring.FerdigstiltTidspunkt"
         },
         {
           "id": "ferdigstiltEnhet",
           "visPåOppgave": false,
           "påkrevd": false,
-          "feltutleder": "no.nav.k9.los.nyoppgavestyring.feltutlederforlagring.FerdigstiltEnhet"
+          "feltutleder": "no.nav.k9.los.oppgavemottak.feltutlederforlagring.FerdigstiltEnhet"
+        },
+        {
+          "id": "fagsakÅr",
+          "visPåOppgave": true,
+          "påkrevd": false
         }
       ]
     }

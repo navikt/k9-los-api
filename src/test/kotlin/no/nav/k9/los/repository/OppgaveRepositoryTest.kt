@@ -1,7 +1,7 @@
 package no.nav.k9.los.repository
 
-import no.nav.k9.los.integrasjon.pdl.PdlService
-import no.nav.k9.los.utils.LosObjectMapper
+import no.nav.k9.los.infrastruktur.pdl.PdlService
+import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
 import org.junit.jupiter.api.Test
 
 class OppgaveRepositoryTest {

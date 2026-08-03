@@ -1,0 +1,64 @@
+package no.nav.k9.los.uttrekk
+
+import no.nav.k9.los.oppgaveuthenting.query.OppgaveQueryService
+import no.nav.k9.los.oppgaveuthenting.query.QueryRequest
+import org.slf4j.LoggerFactory
+import kotlin.time.measureTime
+
+class UttrekkJobb(
+    val oppgaveQueryService: OppgaveQueryService,
+    val uttrekkTjeneste: UttrekkTjeneste,
+) {
+    private var antallKjøringerUtenTreff = 0
+    private val log = LoggerFactory.getLogger(UttrekkJobb::class.java)
+
+    fun kjørUttrekk(uttrekkId: Long) {
+        try {
+            val uttrekk = uttrekkTjeneste.startUttrekk(uttrekkId)
+            var queryRequest = QueryRequest(uttrekk.query, avgrensning = uttrekk.avgrensning)
+
+            val resultat = oppgaveQueryService.query(queryRequest)
+
+            uttrekkTjeneste.fullførUttrekk(
+                uttrekkId,
+                resultat
+            )
+        } catch (e: Exception) {
+            log.warn("Kjøring av uttrekk med id {} feilet", uttrekkId, e)
+            uttrekkTjeneste.feilUttrekk(uttrekkId, e.message)
+        }
+    }
+
+    fun kjørAlleUttrekkSomIkkeHarKjørt() {
+        val uttrekkListe = uttrekkTjeneste.hentAlle()
+            .filter { it.status == UttrekkStatus.OPPRETTET }
+        if (uttrekkListe.isEmpty()) {
+            antallKjøringerUtenTreff++
+            if (antallKjøringerUtenTreff % 10 == 0) {
+                log.info("Sjekket om det er noen uttrekk å kjøre, men ingen funnet. Logger bare hvert tiende forsøk.")
+            }
+            return
+        }
+        log.info("Starter kjøring av ${uttrekkListe.size} uttrekk")
+        val tidsbruk = measureTime {
+            for (uttrekk in uttrekkListe) {
+                kjørUttrekk(uttrekk.id!!)
+            }
+        }
+        log.info("Ferdig med kjøring av ${uttrekkListe.size} uttrekk på $tidsbruk")
+    }
+
+    fun ryddOppUttrekk() {
+        val uttrekkListe = uttrekkTjeneste.hentAlle()
+            .filter { it.skalRyddesOpp() }
+        if (uttrekkListe.isEmpty()) {
+            log.info("Ingen uttrekk funnet som trenger opprydding")
+            return
+        }
+        uttrekkListe.forEach {
+            log.info("Markerer uttrekk med id ${it.id} som feilet på grunn av timeout")
+            uttrekkTjeneste.feilUttrekk(it.id!!, "Uttrekk feilet på grunn av timeout")
+        }
+    }
+
+}

@@ -5,7 +5,7 @@ import com.github.tomakehurst.wiremock.extension.Parameters
 import com.github.tomakehurst.wiremock.extension.ResponseTransformer
 import com.github.tomakehurst.wiremock.http.Request
 import com.github.tomakehurst.wiremock.http.Response
-import no.nav.k9.los.integrasjon.rest.NavHeaders
+import no.nav.k9.los.infrastruktur.rest.NavHeaders
 
 class TpsProxyResponseTransformer : ResponseTransformer() {
     override fun transform(
@@ -43,7 +43,7 @@ private fun getResponse(navIdent: String): String {
             etternavn = "TEST"
             foedselsdato = "1985-07-27"
         }
-        "25037139184" -> {
+        "24420167209" -> {
             fornavn = "ARNE"
             mellomnavn = "BJARNE"
             etternavn = "CARLSEN"

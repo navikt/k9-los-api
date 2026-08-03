@@ -1,23 +1,40 @@
 version: 2
 registries:
-  k9los:
+  k9-klage:
+    type: maven-repository
+    url: https://maven.pkg.github.com/navikt/k9-klage
+    username: x-access-token
+    password: ${{secrets.READER_TOKEN}}
+  k9-los:
     type: maven-repository
     url: https://maven.pkg.github.com/navikt/k9-los-api
     username: x-access-token
     password: ${{secrets.READER_TOKEN}}
+  k9-sak:
+    type: maven-repository
+    url: https://maven.pkg.github.com/navikt/k9-sak
+    username: x-access-token
+    password: ${{secrets.READER_TOKEN}}
+  sif-abac-pdp:
+    type: maven-repository
+    url: https://maven.pkg.github.com/navikt/sif-abac-pdp
+    username: x-access-token
+    password: ${{secrets.READER_TOKEN}}
 updates:
-  - package-ecosystem: gradle
+  - package-ecosystem: maven
     directory: "/"
     schedule:
       interval: daily
+    cooldown:
+      default-days: 7
+      exclude:
+        - "no.nav.*"
     open-pull-requests-limit: 20
     registries:
-      - k9los
-    ignore:
-      - dependency-name: "no.nav.helse:dusseldorf*"
-        versions: [ "6.0.0" ]
-      - dependency-name: "io.ktor:ktor*"
-        versions: [ ">=3.0.0" ] #krever at dusseldorf migreres til 3.0.0 først
+      - k9-klage
+      - k9-los
+      - k9-sak
+      - sif-abac-pdp
     groups:
       ktor:
         patterns:
@@ -26,22 +43,26 @@ updates:
       kontrakt:
         patterns:
           - "no.nav.k9*"
+          - "no.nav.sif.abac*"
       koin:
         patterns:
           - "io.insert-koin*"
-      gradle:
+      maven:
         patterns:
           - "*"
         exclude-patterns:
           - "io.ktor*"
           - "dusseldorf*"
           - "no.nav.k9*"
-          - "io.insert-koin*" 
+          - "no.nav.sif.abac*"
+          - "io.insert-koin*"
 
   - package-ecosystem: github-actions
     directory: "/"
     schedule:
       interval: daily
+    cooldown:
+      default-days: 7
     groups:
       github:
         patterns:

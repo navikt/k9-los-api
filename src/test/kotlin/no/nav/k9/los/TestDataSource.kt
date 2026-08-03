@@ -2,7 +2,7 @@ package no.nav.k9.los
 
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
-import no.nav.k9.los.db.runMigration
+import no.nav.k9.los.infrastruktur.db.runMigration
 import org.junit.jupiter.api.AfterEach
 import org.testcontainers.containers.PostgreSQLContainer
 import javax.sql.DataSource
@@ -34,6 +34,25 @@ class TestDataSource {
 // Hack needed because testcontainers use of generics confuses Kotlin
 class KPostgreSQLContainer(imageName: String) : PostgreSQLContainer<KPostgreSQLContainer>(imageName)
 
+const val TØM_DATA_SQL = """
+            do $$
+            declare
+                truncate_sql text;
+            begin
+                select
+                    'truncate table ' || string_agg(format('%I.%I', schemaname, tablename), ', ') || ' restart identity cascade'
+                into truncate_sql
+                from pg_tables
+                where schemaname = 'public'
+                  and tablename <> 'flyway_schema_history';
+
+                if truncate_sql is not null then
+                    execute truncate_sql;
+                end if;
+            end;
+            $$;
+        """
+
 abstract class AbstractPostgresTest {
     companion object {
         private val postgresContainer = KPostgreSQLContainer("postgres:16-alpine")
@@ -55,45 +74,7 @@ abstract class AbstractPostgresTest {
     @AfterEach
     fun tømDB() {
         dataSource.connection.use {
-            it.createStatement().execute("""
-            truncate 
-                behandling_prosess_events_k9,
-                behandling_prosess_events_k9_historikkvask_ferdig,                
-                behandling_prosess_events_klage_historikkvask_ferdig,
-                behandling_prosess_events_k9_punsj_historikkvask_ferdig,
-                behandling_prosess_events_k9_punsj,
-                behandling_prosess_events_k9_punsj_historikkvask_ferdig,
-                behandling_prosess_events_tilbake,
-                behandling_prosess_events_tilbake_historikkvask_ferdig,
-                driftsmeldinger,
-                ferdigstilte_behandlinger,
-                nye_og_ferdigstilte,
-                oppgave,
-                oppgavefelt_verdi,
-                oppgaveko,
-                reservasjon,
-                saksbehandler,
-                siste_behandlinger,
-                OPPGAVEKO_SAKSBEHANDLER,
-                OPPGAVEKO_V3,
-                RESERVASJON_V3,
-                RESERVASJON_V3_ENDRING,
-                OPPGAVE_V3,
-                OPPGAVE_PEP_CACHE,
-                kodeverk,
-                kodeverk_verdi,
-                omrade,
-                oppgavetype,
-                oppgavefelt,
-                oppgave_v3,
-                oppgavefelt_Verdi,
-                oppgave_v3_aktiv,
-                oppgavefelt_verdi_aktiv,
-                feltdefinisjon,
-                oppgave_v3_sendt_dvh;
-                
-            ALTER SEQUENCE saksbehandler_id_seq restart
-        """)
+            it.createStatement().execute(TØM_DATA_SQL)
         }
 
     }

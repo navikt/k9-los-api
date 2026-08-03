@@ -1,0 +1,3 @@
+package no.nav.k9.los.oppgavemottak.feltutlederforlagring
+
+class AkkumulertVentetidAnnetIkkeSaksbehandlingstid : AkkumulerDuration(beslutningsfelt = "avventerAnnetIkkeSaksbehandlingstid", målfelt = "akkumulertVentetidAnnetIkkeSaksbehandlingstidForTidligereVersjoner")

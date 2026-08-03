@@ -2,6 +2,7 @@ package no.nav.k9.los.domene.modell
 
 import assertk.assertThat
 import assertk.assertions.doesNotContain
+import no.nav.k9.los.saksbehandleradmin.Saksbehandler
 import org.junit.jupiter.api.Test
 
 class SaksbehandlerTest {
@@ -10,11 +11,10 @@ class SaksbehandlerTest {
     fun `Skal kun bruke brukerIdent ved toString eller logging`() {
         val sensitiv = "SENSITIV"
         val sb = Saksbehandler(id = 123L,
-            brukerIdent = "Test",
+            navident = "Test",
             navn = sensitiv,
             epost = sensitiv,
             enhet = sensitiv,
-            reservasjoner = mutableSetOf(),
         )
 
         assertThat(sb.toString()).doesNotContain(sensitiv)

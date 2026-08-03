@@ -6,9 +6,9 @@ import no.nav.helse.dusseldorf.ktor.auth.issuers
 import no.nav.helse.dusseldorf.ktor.auth.withoutAdditionalClaimRules
 import no.nav.helse.dusseldorf.ktor.core.getOptionalString
 import no.nav.helse.dusseldorf.ktor.core.getRequiredString
-import no.nav.k9.los.db.createHikariConfig
-import no.nav.k9.los.integrasjon.kafka.KafkaAivenConfig
-import no.nav.k9.los.integrasjon.kafka.KafkaConfig
+import no.nav.k9.los.domeneadaptere.k9.eventmottak.kafka.IKafkaConfig
+import no.nav.k9.los.domeneadaptere.k9.eventmottak.kafka.KafkaAivenConfig
+import no.nav.k9.los.infrastruktur.db.createHikariConfig
 import org.apache.kafka.clients.consumer.OffsetResetStrategy
 import java.net.URI
 import java.time.Duration
@@ -27,12 +27,13 @@ data class Configuration(private val config: ApplicationConfig) {
 
     internal fun pdlUrl() = URI(config.getRequiredString("nav.register_urls.pdl_url", secret = false))
     internal fun k9Url() = config.getRequiredString("nav.register_urls.k9_url", secret = false)
+    internal fun k9KlageUrl() = config.getRequiredString("nav.register_urls.k9_klage_url", secret = false)
+    internal fun k9PunsjUrl() = config.getRequiredString("nav.register_urls.k9_punsj_url", secret = false)
     internal fun k9FrontendUrl() = config.getRequiredString("nav.register_urls.k9_frontend_url", secret = false)
-    internal fun k9PunsjFrontendUrl() = config.getRequiredString("nav.register_urls.k9_punsj_frontend_url", secret = false)
+    internal fun k9PunsjFrontendUrl() =
+        config.getRequiredString("nav.register_urls.k9_punsj_frontend_url", secret = false)
 
-    internal val abacUsername = config.getRequiredString("nav.abac.system_user", secret = false)
-    internal val abacPassword = config.getRequiredString("nav.abac.system_user_password", secret = false)
-    internal val abacEndpointUrl = config.getRequiredString("nav.abac.url", secret = false)
+    internal fun sifAbacPdpUrl() = config.getRequiredString("nav.register_urls.sif_abac_pdp_url", secret = false)
 
     internal fun hikariConfig() = createHikariConfig(
         jdbcUrl = config.getRequiredString("nav.db.url", secret = false),
@@ -123,30 +124,11 @@ data class Configuration(private val config: ApplicationConfig) {
         return config.getOptionalString("nav.features.k9SakConsumerAiven", secret = false).toBoolean()
     }
 
-    internal fun getKafkaConfig() =
-        config.getRequiredString("nav.kafka.bootstrap_servers", secret = false).let { bootstrapServers ->
-            val trustStore = config.getRequiredString("nav.trust_store.path", secret = false).let { trustStorePath ->
-                config.getOptionalString("nav.trust_store.password", secret = true)?.let { trustStorePassword ->
-                    Pair(trustStorePath, trustStorePassword)
-                }
-            }
-
-            KafkaConfig(
-                bootstrapServers = bootstrapServers,
-                credentials = Pair(
-                    config.getRequiredString("nav.kafka.username", secret = false),
-                    config.getRequiredString("nav.kafka.password", secret = true)
-                ),
-                trustStore = trustStore,
-                exactlyOnce = false,
-                unreadyAfterStreamStoppedIn = unreadyAfterStreamStoppedIn()
-            )
-        }
-
-    internal fun getProfileAwareKafkaAivenConfig() =
-        // Bytter ut aivenkonfig med onprem kafkakonfig som er støttet i vtp.
-        if (koinProfile == KoinProfile.LOCAL) getKafkaConfig() else getKafkaAivenConfig()
-
+    internal fun getProfileAwareKafkaAivenConfig(): IKafkaConfig {
+        val defaultOffsetResetStrategy =
+            if (koinProfile == KoinProfile.LOCAL) OffsetResetStrategy.EARLIEST else OffsetResetStrategy.NONE
+        return getKafkaAivenConfig(defaultOffsetResetStrategy)
+    }
 
     internal fun getKafkaAivenConfig(defaultOffsetResetStrategy: OffsetResetStrategy = OffsetResetStrategy.NONE): KafkaAivenConfig {
         val bootstrapServers = config.getRequiredString("nav.kafka_aiven.bootstrap_servers", secret = false)
@@ -160,7 +142,6 @@ data class Configuration(private val config: ApplicationConfig) {
             trustStore = Pair(trustStorePath, credStorePassword),
             keyStore = Pair(keyStorePath, credStorePassword),
             credStorePassword = credStorePassword,
-            exactlyOnce = false,
             defaultOffsetResetStrategy = defaultOffsetResetStrategy,
             unreadyAfterStreamStoppedIn = unreadyAfterStreamStoppedIn()
         )
@@ -177,18 +158,6 @@ data class Configuration(private val config: ApplicationConfig) {
 
     fun databaseName(): String {
         return "k9-los"
-    }
-
-    fun auditEnabled(): Boolean {
-        return config.getRequiredString("nav.audit.enabled", secret = false).toBoolean()
-    }
-
-    fun auditVendor(): String {
-        return config.getRequiredString("nav.audit.vendor", secret = false)
-    }
-
-    fun auditProduct(): String {
-        return config.getRequiredString("nav.audit.product", secret = false)
     }
 
     var koinProfile = KoinProfile.LOCAL

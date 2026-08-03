@@ -1,124 +1,117 @@
 package no.nav.k9.los
 
+import io.ktor.client.*
+import io.ktor.client.engine.*
+import io.ktor.client.engine.java.*
 import io.ktor.server.application.*
 import kotlinx.coroutines.channels.Channel
 import no.nav.helse.dusseldorf.ktor.health.HealthService
 import no.nav.k9.los.KoinProfile.*
-import no.nav.k9.los.aksjonspunktbehandling.K9KlageEventHandler
-import no.nav.k9.los.aksjonspunktbehandling.K9TilbakeEventHandler
-import no.nav.k9.los.aksjonspunktbehandling.K9punsjEventHandler
-import no.nav.k9.los.aksjonspunktbehandling.K9sakEventHandler
-import no.nav.k9.los.auditlogger.K9Auditlogger
-import no.nav.k9.los.db.hikariConfig
-import no.nav.k9.los.domene.lager.oppgave.v2.BehandlingsmigreringTjeneste
-import no.nav.k9.los.domene.lager.oppgave.v2.OppgaveRepositoryV2
-import no.nav.k9.los.domene.lager.oppgave.v2.OppgaveTjenesteV2
-import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
-import no.nav.k9.los.domene.repository.*
-import no.nav.k9.los.eventhandler.RefreshK9v3Tjeneste
-import no.nav.k9.los.fagsystem.k9sak.AksjonspunktHendelseMapper
-import no.nav.k9.los.fagsystem.k9sak.K9sakEventHandlerV2
-import no.nav.k9.los.integrasjon.abac.IPepClient
-import no.nav.k9.los.integrasjon.abac.PepClient
-import no.nav.k9.los.integrasjon.abac.PepClientLocal
-import no.nav.k9.los.integrasjon.audit.Auditlogger
-import no.nav.k9.los.integrasjon.azuregraph.AzureGraphService
-import no.nav.k9.los.integrasjon.azuregraph.AzureGraphServiceLocal
-import no.nav.k9.los.integrasjon.azuregraph.IAzureGraphService
-import no.nav.k9.los.integrasjon.k9.IK9SakService
-import no.nav.k9.los.integrasjon.k9.K9SakBehandlingOppfrisketRepostiory
-import no.nav.k9.los.integrasjon.k9.K9SakServiceLocal
-import no.nav.k9.los.integrasjon.k9.K9SakServiceSystemClient
-import no.nav.k9.los.integrasjon.kafka.AsynkronProsesseringV1Service
-import no.nav.k9.los.integrasjon.pdl.IPdlService
-import no.nav.k9.los.integrasjon.pdl.PdlService
-import no.nav.k9.los.integrasjon.pdl.PdlServiceLocal
-import no.nav.k9.los.integrasjon.rest.RequestContextService
-import no.nav.k9.los.integrasjon.sakogbehandling.SakOgBehandlingProducer
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.aktivvask.Aktivvask
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.k9sakberiker.K9SakBerikerInterfaceKludge
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.k9sakberiker.K9SakBerikerKlientLocal
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.k9sakberiker.K9SakBerikerSystemKlient
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.klagetillos.K9KlageTilLosAdapterTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.klagetillos.K9KlageTilLosHistorikkvaskTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.punsjtillos.K9PunsjTilLosAdapterTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.punsjtillos.K9PunsjTilLosHistorikkvaskTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.saktillos.K9SakTilLosAdapterTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.saktillos.K9SakTilLosHistorikkvaskTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.saktillos.K9SakTilLosLukkeFeiloppgaverTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.saktillos.k9SakEksternId
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.tilbaketillos.K9TilbakeTilLosAdapterTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.tilbaketillos.K9TilbakeTilLosHistorikkvaskTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.tilbaketillos.k9TilbakeEksternId
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.reservasjonkonvertering.ReservasjonKonverteringJobb
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.reservasjonkonvertering.ReservasjonOversetter
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.K9KlageOppgaveTilDVHMapper
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.K9SakOppgaveTilDVHMapper
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.OppgavestatistikkTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.StatistikkPublisher
-import no.nav.k9.los.nyoppgavestyring.feltutlederforlagring.GyldigeFeltutledere
-import no.nav.k9.los.nyoppgavestyring.forvaltning.ForvaltningRepository
-import no.nav.k9.los.nyoppgavestyring.ko.KøpåvirkendeHendelse
-import no.nav.k9.los.nyoppgavestyring.ko.OppgaveKoTjeneste
-import no.nav.k9.los.nyoppgavestyring.ko.db.OppgaveKoRepository
-import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonRepository
-import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonTjeneste
-import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.AktivOppgaveRepository
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Repository
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeTjeneste
-import no.nav.k9.los.nyoppgavestyring.pep.PepCacheRepository
-import no.nav.k9.los.nyoppgavestyring.pep.PepCacheService
-import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
-import no.nav.k9.los.nyoppgavestyring.query.db.OppgaveQueryRepository
-import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Repository
-import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
-import no.nav.k9.los.nyoppgavestyring.søkeboks.SøkeboksTjeneste
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.NøkkeltallRepositoryV3
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.OppgaverGruppertRepository
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.dagenstall.DagensTallService
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.ferdigstilteperenhet.FerdigstiltePerEnhetService
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.status.StatusService
-import no.nav.k9.los.tjenester.avdelingsleder.AvdelingslederTjeneste
-import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.NokkeltallTjeneste
-import no.nav.k9.los.tjenester.driftsmeldinger.DriftsmeldingTjeneste
-import no.nav.k9.los.tjenester.kodeverk.HentKodeverkTjeneste
-import no.nav.k9.los.tjenester.saksbehandler.oppgave.*
-import no.nav.k9.los.tjenester.saksbehandler.saksliste.SakslisteTjeneste
+import no.nav.k9.los.domeneadaptere.k9.OmrådeSetup
+import no.nav.k9.los.domeneadaptere.k9.adhocjobber.reservasjonkonvertering.ReservasjonKonverteringJobb
+import no.nav.k9.los.domeneadaptere.k9.avstemming.AvstemmingsTjeneste
+import no.nav.k9.los.domeneadaptere.k9.avstemming.punsj.systemklient.LocalPunsjAvstemmingsklient
+import no.nav.k9.los.domeneadaptere.k9.avstemming.punsj.systemklient.RestPunsjAvstemmingsklient
+import no.nav.k9.los.domeneadaptere.k9.avstemming.saksbehandling.systemklient.LocalSakAvstemmingsklient
+import no.nav.k9.los.domeneadaptere.k9.avstemming.saksbehandling.systemklient.RestSakAvstemmingsklient
+import no.nav.k9.los.domeneadaptere.k9.eventmottak.eventlager.EventRepository
+import no.nav.k9.los.domeneadaptere.k9.eventmottak.kafka.AsynkronProsesseringV1Service
+import no.nav.k9.los.domeneadaptere.k9.eventmottak.klage.K9KlageEventHandler
+import no.nav.k9.los.domeneadaptere.k9.eventmottak.FeilRekkefølgeSjekker
+import no.nav.k9.los.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventHandler
+import no.nav.k9.los.domeneadaptere.k9.eventmottak.sak.K9SakEventHandler
+import no.nav.k9.los.domeneadaptere.k9.eventmottak.tilbakekrav.K9TilbakeEventHandler
+import no.nav.k9.los.domeneadaptere.k9.eventtiloppgave.*
+import no.nav.k9.los.domeneadaptere.k9.eventtiloppgave.klagetillos.KlageEventTilOppgaveMapper
+import no.nav.k9.los.domeneadaptere.k9.eventtiloppgave.klagetillos.beriker.K9KlageBerikerInterfaceKludge
+import no.nav.k9.los.domeneadaptere.k9.eventtiloppgave.klagetillos.beriker.K9KlageBerikerKlientLocal
+import no.nav.k9.los.domeneadaptere.k9.eventtiloppgave.klagetillos.beriker.K9KlageBerikerSystemKlient
+import no.nav.k9.los.domeneadaptere.k9.eventtiloppgave.punsjtillos.PunsjEventTilOppgaveMapper
+import no.nav.k9.los.domeneadaptere.k9.eventtiloppgave.saktillos.SakEventTilOppgaveMapper
+import no.nav.k9.los.domeneadaptere.k9.eventtiloppgave.saktillos.beriker.K9SakSystemKlient
+import no.nav.k9.los.domeneadaptere.k9.eventtiloppgave.saktillos.beriker.K9SakSystemKlientInterfaceKludge
+import no.nav.k9.los.domeneadaptere.k9.eventtiloppgave.saktillos.beriker.K9SakSystemKlientLocal
+import no.nav.k9.los.domeneadaptere.k9.eventtiloppgave.tilbaketillos.TilbakeEventTilOppgaveMapper
+import no.nav.k9.los.domeneadaptere.k9.refreshk9sakoppgaver.RefreshK9v3Tjeneste
+import no.nav.k9.los.domeneadaptere.k9.refreshk9sakoppgaver.restklient.IK9SakService
+import no.nav.k9.los.domeneadaptere.k9.refreshk9sakoppgaver.restklient.K9SakBehandlingOppfrisketRepository
+import no.nav.k9.los.domeneadaptere.k9.refreshk9sakoppgaver.restklient.K9SakServiceLocal
+import no.nav.k9.los.domeneadaptere.k9.refreshk9sakoppgaver.restklient.K9SakServiceSystemClient
+import no.nav.k9.los.domeneadaptere.k9.statistikk.*
+import no.nav.k9.los.driftsmelding.DriftsmeldingRepository
+import no.nav.k9.los.driftsmelding.DriftsmeldingTjeneste
+import no.nav.k9.los.oppgavemottak.feltutlederforlagring.GyldigeFeltutledere
+import no.nav.k9.los.forvaltning.ForvaltningRepository
+import no.nav.k9.los.infrastruktur.abac.*
+import no.nav.k9.los.infrastruktur.abac.cache.PepCacheRepository
+import no.nav.k9.los.infrastruktur.abac.cache.PepCacheService
+import no.nav.k9.los.infrastruktur.azuregraph.AzureGraphService
+import no.nav.k9.los.infrastruktur.azuregraph.AzureGraphServiceLocal
+import no.nav.k9.los.infrastruktur.azuregraph.IAzureGraphService
+import no.nav.k9.los.infrastruktur.db.TransactionalManager
+import no.nav.k9.los.infrastruktur.db.hikariConfig
+import no.nav.k9.los.infrastruktur.metrikker.EventlagerNokkeltallPrometheusCollector
+import no.nav.k9.los.infrastruktur.metrikker.EventlagerNokkeltallRepository
+import no.nav.k9.los.infrastruktur.pdl.IPdlService
+import no.nav.k9.los.infrastruktur.pdl.PdlService
+import no.nav.k9.los.infrastruktur.pdl.PdlServiceLocal
+import no.nav.k9.los.infrastruktur.rest.RequestContextService
+import no.nav.k9.los.ko.KøpåvirkendeHendelse
+import no.nav.k9.los.ko.OppgaveKoTjeneste
+import no.nav.k9.los.ko.db.OppgaveKoRepository
+import no.nav.k9.los.lagretsok.LagretSøkRepository
+import no.nav.k9.los.lagretsok.LagretSøkTjeneste
+import no.nav.k9.los.nøkkeltall.saksbehandler.nyeogferdigstilte.NyeOgFerdigstilteService
+import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.FeltdefinisjonRepository
+import no.nav.k9.los.oppgavedefinisjon.omraade.OmrådeRepository
+import no.nav.k9.los.oppgavedefinisjon.oppgavetype.OppgavetypeRepository
+import no.nav.k9.los.oppgavemottak.AktivOgPartisjonertOppgaveAjourholdTjeneste
+import no.nav.k9.los.oppgavemottak.OppgaveV3Repository
+import no.nav.k9.los.oppgavemottak.OppgaveV3Tjeneste
+import no.nav.k9.los.oppgavemottak.PartisjonertOppgaveRepository
+import no.nav.k9.los.oppgaveuthenting.*
+import no.nav.k9.los.oppgaveuthenting.enkeltoppslag.AktivOppgaveOppslag
+import no.nav.k9.los.oppgaveuthenting.enkeltoppslag.AktivOppgaveOppslagPartisjonert
+import no.nav.k9.los.oppgaveuthenting.enkeltoppslag.ReservasjonsnøkkelOppgaveOppslag
+import no.nav.k9.los.oppgaveuthenting.enkeltoppslag.ReservasjonsnøkkelOppgaveOppslagPartisjonert
+import no.nav.k9.los.oppgaveuthenting.enkeltoppslag.TemporalOppgaveOppslag
+import no.nav.k9.los.oppgaveuthenting.enkeltoppslag.TemporalOppgaveOppslagOppgaveV3
+import no.nav.k9.los.oppgaveuthenting.query.OppgaveQueryService
+import no.nav.k9.los.oppgaveuthenting.query.db.OppgaveQueryRepository
+import no.nav.k9.los.reservasjon.ReservasjonApisTjeneste
+import no.nav.k9.los.reservasjon.ReservasjonV3DtoBuilder
+import no.nav.k9.los.reservasjon.ReservasjonV3Repository
+import no.nav.k9.los.reservasjon.ReservasjonV3Tjeneste
+import no.nav.k9.los.saksbehandleradmin.SaksbehandlerAdminTjeneste
+import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
+import no.nav.k9.los.sisteoppgaver.SisteOppgaverRepository
+import no.nav.k9.los.sisteoppgaver.SisteOppgaverTjeneste
+import no.nav.k9.los.søkeboks.SøkeboksTjeneste
+import no.nav.k9.los.uttrekk.UttrekkCsvGenerator
+import no.nav.k9.los.uttrekk.UttrekkJobb
+import no.nav.k9.los.uttrekk.UttrekkRepository
+import no.nav.k9.los.uttrekk.UttrekkTjeneste
 import org.koin.core.module.Module
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
+import org.slf4j.LoggerFactory
 import java.util.*
 import javax.sql.DataSource
 
-fun selectModuleBasedOnProfile(application: Application, config: Configuration): List<Module> {
-    val envModule = when (config.koinProfile()) {
-        LOCAL -> localDevConfig()
-        PREPROD -> preprodConfig(config)
-        PROD -> prodConfig(config)
+fun selectModulesBasedOnProfile(application: Application, config: Configuration): List<Module> {
+    return when (config.koinProfile()) {
+        LOCAL -> listOf(common(application, config), localDevConfig())
+        PREPROD -> listOf(common(application, config), naisCommonConfig(config), preprodConfig(config))
+        PROD -> listOf(common(application, config), naisCommonConfig(config), prodConfig(config))
     }
-    return listOf(common(application, config), envModule)
 }
 
 fun common(app: Application, config: Configuration) = module {
     single { config.koinProfile() }
     single { config }
+    single { RequestContextService(profile = get()) }
     single<DataSource> { app.hikariConfig(config) }
-    single {
-        NokkeltallTjeneste(
-            pepClient = get(),
-            oppgaverGruppertRepository = get(),
-            oppgaveRepository = get(),
-            statistikkRepository = get(),
-            nøkkeltallRepository = get(),
-            nøkkeltallRepositoryV3 = get(),
-            koinProfile = config.koinProfile(),
-        )
-    }
+
     single(named("oppgaveKøOppdatert")) {
         Channel<UUID>(Channel.UNLIMITED)
     }
@@ -131,40 +124,16 @@ fun common(app: Application, config: Configuration) = module {
     single(named("statistikkRefreshChannel")) {
         Channel<Boolean>(Channel.CONFLATED)
     }
-    single(named("historikkvaskChannelK9Sak")) {
-        Channel<k9SakEksternId>(Channel.UNLIMITED)
-    }
-    single(named("historikkvaskChannelK9Tilbake")) {
-        Channel<k9TilbakeEksternId>(Channel.UNLIMITED)
-    }
 
-    single { OppgaveRepository(get(), get(), get(named("oppgaveRefreshChannel"))) }
+    single { OppgaveRepository(get()) }
 
-    single { AktivOppgaveRepository(
-        oppgavetypeRepository = get()
-    )
-    }
-
-    single {
-        OppgaveKøRepository(
-            dataSource = get(),
-            oppgaveRepositoryV2 = get(),
-            oppgaveKøOppdatert = get(named("oppgaveKøOppdatert")),
-            oppgaveRefreshChannel = get(named("oppgaveRefreshChannel")),
-            pepClient = get()
-        )
-    }
-
-    single { AksjonspunktHendelseMapper(get()) }
-    single { OppgaveRepositoryV2(dataSource = get()) }
     single { TransactionalManager(dataSource = get()) }
-    single { BehandlingsmigreringTjeneste(get()) }
-    single { OppgaveTjenesteV2(get(), get(), get()) }
 
     single {
         SaksbehandlerRepository(
             dataSource = get(),
-            pepClient = get()
+            pepClient = get(),
+            transactionalManager = get(),
         )
     }
 
@@ -181,56 +150,7 @@ fun common(app: Application, config: Configuration) = module {
     }
 
     single {
-        ReservasjonRepository(
-            oppgaveKøRepository = get(),
-            oppgaveRepository = get(),
-            oppgaveRepositoryV2 = get(),
-            saksbehandlerRepository = get(),
-            dataSource = get()
-        )
-    }
-
-    single {
-        BehandlingProsessEventK9Repository(get())
-    }
-
-    single {
-        BehandlingProsessEventKlageRepository(get())
-    }
-
-    single {
-        PunsjEventK9Repository(get())
-    }
-
-    single {
-        BehandlingProsessEventTilbakeRepository(get())
-    }
-
-    single {
-        NøkkeltallRepository(get())
-    }
-
-    single {
-        NøkkeltallRepositoryV3(get())
-    }
-
-    single {
-        OppgaverGruppertRepository(get())
-    }
-
-    single {
-        no.nav.k9.los.domene.repository.StatistikkRepository(get())
-    }
-
-    single {
-        no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.StatistikkRepository(get(), get())
-    }
-
-    single {
-        SakOgBehandlingProducer(
-            kafkaConfig = config.getProfileAwareKafkaAivenConfig(),
-            config = config
-        )
+        StatistikkRepository(get(), get())
     }
 
     single {
@@ -240,105 +160,72 @@ fun common(app: Application, config: Configuration) = module {
     }
 
     single {
-        K9sakEventHandlerV2(
-            oppgaveTjenesteV2 = get(),
-            aksjonspunktHendelseMapper = get()
-        )
-    }
-
-    single {
-        K9sakEventHandler(
-            oppgaveRepository = get(),
-            behandlingProsessEventK9Repository = get(),
-            sakOgBehandlingProducer = get(),
-            oppgaveKøRepository = get(),
-            reservasjonRepository = get(),
-            statistikkChannel = get(named("statistikkRefreshChannel")),
-            statistikkRepository = get(),
-            reservasjonTjeneste = get(),
-            k9SakTilLosAdapterTjeneste = get(),
-            køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
+        K9SakEventHandler(
+            transactionalManager = get(),
+            eventTilOppgaveAdapter = get(),
+            eventRepository = get(),
+            feilRekkefølgeSjekker = get(),
         )
     }
 
     single {
         K9KlageEventHandler(
-            behandlingProsessEventKlageRepository = get(),
-            k9KlageTilLosAdapterTjeneste = get(),
-            køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
+            transactionalManager = get(),
+            eventRepository = get(),
+            oppgaveAdapter = get(),
+            feilRekkefølgeSjekker = get(),
         )
     }
 
     single {
         K9TilbakeEventHandler(
-            oppgaveRepository = get(),
-            behandlingProsessEventTilbakeRepository = get(),
-            sakOgBehandlingProducer = get(),
-            oppgaveKøRepository = get(),
-            reservasjonRepository = get(),
-            statistikkRepository = get(),
-            statistikkChannel = get(named("statistikkRefreshChannel")),
-            reservasjonTjeneste = get(),
-            køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
-            k9TilbakeTilLosAdapterTjeneste = get(),
+            transactionalManager = get(),
+            eventRepository = get(),
+            oppgaveAdapter = get(),
+            feilRekkefølgeSjekker = get(),
         )
     }
 
     single {
-        K9punsjEventHandler(
-            oppgaveRepository = get(),
-            oppgaveTjenesteV2 = get(),
-            punsjEventK9Repository = get(),
-            statistikkChannel = get(named("statistikkRefreshChannel")),
-            oppgaveKøRepository = get(),
-            reservasjonRepository = get(),
-            reservasjonTjeneste = get(),
-            statistikkRepository = get(),
-            azureGraphService = get(),
-            punsjTilLosAdapterTjeneste = get(),
-            køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
+        K9PunsjEventHandler(
+            transactionalManager = get(),
+            oppgaveAdapter = get(),
+            eventRepository = get(),
+            feilRekkefølgeSjekker = get(),
+        )
+    }
+
+    single {
+        EventRepository(
+            dataSource = get(),
+        )
+    }
+
+    single {
+        EventlagerNokkeltallRepository(dataSource = get())
+    }
+
+    single {
+        EventlagerNokkeltallPrometheusCollector(
+            nokkeltallRepository = get(),
+        )
+    }
+
+    single {
+        EventRepository(
+            dataSource = get(),
         )
     }
 
 
     single {
         AsynkronProsesseringV1Service(
-            kafkaConfig = config.getKafkaConfig(),
             kafkaAivenConfig = config.getProfileAwareKafkaAivenConfig(),
             configuration = config,
             k9sakEventHandler = get(),
-            k9sakEventHandlerv2 = get(),
             k9TilbakeEventHandler = get(),
-            punsjEventHandler = get(),
+            k9PunsjEventHandler = get(),
             k9KlageEventHandler = get(),
-        )
-    }
-
-    single {
-        OppgaveTjeneste(
-            oppgaveRepository = get(),
-            oppgaverGruppertRepository = get(),
-            oppgaveKøRepository = get(),
-            saksbehandlerRepository = get(),
-            reservasjonRepository = get(),
-            pdlService = get(),
-            configuration = config,
-            pepClient = get(),
-            azureGraphService = get(),
-            statistikkRepository = get(),
-            reservasjonOversetter = get(),
-            statistikkChannel = get(named("statistikkRefreshChannel")),
-            koinProfile = config.koinProfile,
-        )
-    }
-
-    single {
-        ReservasjonOversetter(
-            transactionalManager = get(),
-            oppgaveV3Repository = get(),
-            reservasjonV3Tjeneste = get(),
-            oppgaveV1Repository = get(),
-            oppgaveV3RepositoryMedTxWrapper = get(),
         )
     }
 
@@ -352,20 +239,13 @@ fun common(app: Application, config: Configuration) = module {
     }
 
     single {
-        ReservasjonTjeneste(
-            reservasjonRepository = get(),
-            saksbehandlerRepository = get()
-        )
-    }
-
-    single {
-        AvdelingslederTjeneste(
-            transactionalManager = get(),
-            oppgaveKøRepository = get(),
-            oppgaveKøV3Repository = get(),
-            saksbehandlerRepository = get(),
-            oppgaveTjeneste = get(),
+        SaksbehandlerAdminTjeneste(
             pepClient = get(),
+            transactionalManager = get(),
+            saksbehandlerRepository = get(),
+            oppgaveKøV3Repository = get(),
+            lagretSøkTjeneste = get(),
+            uttrekkTjeneste = get(),
             reservasjonV3Tjeneste = get(),
         )
     }
@@ -373,7 +253,6 @@ fun common(app: Application, config: Configuration) = module {
     single {
         ReservasjonV3DtoBuilder(
             pdlService = get(),
-            oppgaveTjeneste = get(),
             saksbehandlerRepository = get()
         )
     }
@@ -381,14 +260,6 @@ fun common(app: Application, config: Configuration) = module {
     single {
         DriftsmeldingTjeneste(driftsmeldingRepository = get())
     }
-    single {
-        SakslisteTjeneste(oppgaveTjeneste = get())
-    }
-    single {
-        HentKodeverkTjeneste()
-    }
-
-    single { OppgaveKøOppdaterer(get(), get(), get()) }
 
     single {
         HealthService(
@@ -405,13 +276,17 @@ fun common(app: Application, config: Configuration) = module {
             oppgavetypeRepository = get()
         )
     }
+    single {
+        PartisjonertOppgaveRepository(
+            oppgavetypeRepository = get()
+        )
+    }
     single { K9SakOppgaveTilDVHMapper() }
     single { K9KlageOppgaveTilDVHMapper() }
     single { OppgaveRepository(oppgavetypeRepository = get()) }
+
     single {
-        StatistikkRepository(
-            dataSource = get(),
-        )
+        SisteOppgaverRepository(dataSource = get())
     }
 
     single {
@@ -423,17 +298,15 @@ fun common(app: Application, config: Configuration) = module {
 
     single {
         OppgavestatistikkTjeneste(
-            oppgavetypeRepository = get(),
             statistikkPublisher = get(),
             transactionalManager = get(),
             statistikkRepository = get(),
-            pepClient = get(),
-            config = get()
+            pepCacheRepository = get(),
         )
     }
 
     single {
-        FeltdefinisjonTjeneste(
+        no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.FeltdefinisjonTjeneste(
             feltdefinisjonRepository = get(),
             områdeRepository = get(),
             transactionalManager = get()
@@ -447,7 +320,7 @@ fun common(app: Application, config: Configuration) = module {
         )
     }
     single {
-        OppgavetypeTjeneste(
+        no.nav.k9.los.oppgavedefinisjon.oppgavetype.OppgavetypeTjeneste(
             oppgavetypeRepository = get(),
             områdeRepository = get(),
             feltdefinisjonRepository = get(),
@@ -459,47 +332,78 @@ fun common(app: Application, config: Configuration) = module {
     single {
         OmrådeSetup(
             områdeRepository = get(),
-            feltdefinisjonTjeneste = get()
+            feltdefinisjonTjeneste = get(),
+            oppgavetypeTjeneste = get(),
+            config = get(),
         )
     }
 
     single {
-        K9PunsjTilLosAdapterTjeneste(
-            eventRepository = get(),
-            oppgavetypeTjeneste = get(),
-            oppgaveV3Tjeneste = get(),
-            reservasjonV3Tjeneste = get(),
-            config = get(),
-            transactionalManager = get(),
-            pepCacheService = get(),
+        EventTilOppgaveAdapter(
+            eventRepository = get<EventRepository>(),
+            oppgaveV3Tjeneste = get<OppgaveV3Tjeneste>(),
+            transactionalManager = get<TransactionalManager>(),
+            eventTilOppgaveMapper = get<EventTilOppgaveMapper>(),
+            oppgaveOppdatertHandler = get<OppgaveOppdatertHandler>(),
+            vaskeeventSerieutleder = get<VaskeeventSerieutleder>(),
+            ajourholdTjeneste = get<AktivOgPartisjonertOppgaveAjourholdTjeneste>(),
+            statistikkRepository = get<StatistikkRepository>(),
         )
     }
 
     single {
-        K9SakTilLosAdapterTjeneste(
-            behandlingProsessEventK9Repository = get(),
-            oppgavetypeTjeneste = get(),
-            oppgaveV3Tjeneste = get(),
-            config = get(),
-            transactionalManager = get(),
+        AktivOgPartisjonertOppgaveAjourholdTjeneste(
+            partisjonertOppgaveRepository = get(),
+        )
+    }
+
+    single {
+        VaskeeventSerieutleder(
+            sakEventTilOppgaveMapper = get(),
+            klageEventTilOppgaveMapper = get(),
+        )
+    }
+
+    single {
+        FeilRekkefølgeSjekker()
+    }
+
+    single {
+        EventTilOppgaveMapper(
+            klageEventTilOppgaveMapper = get(),
+            punsjEventTilOppgaveMapper = get(),
+            sakEventTilOppgaveMapper = get(),
+            tilbakeEventTilOppgaveMapper = get()
+        )
+    }
+
+    single {
+        SakEventTilOppgaveMapper(
             k9SakBerikerKlient = get(),
-            pepCacheService = get(),
-            oppgaveRepository = get(),
-            reservasjonV3Tjeneste = get(),
-            historikkvaskChannel = get(named("historikkvaskChannelK9Sak")),
         )
     }
+
     single {
-        K9TilbakeTilLosAdapterTjeneste(
-            behandlingProsessEventTilbakeRepository = get(),
-            oppgavetypeTjeneste = get(),
-            oppgaveV3Tjeneste = get(),
-            config = get(),
-            transactionalManager = get(),
-            pepCacheService = get(),
+        KlageEventTilOppgaveMapper(
+            k9klageBeriker = get()
+        )
+    }
+
+    single {
+        TilbakeEventTilOppgaveMapper()
+    }
+
+    single {
+        PunsjEventTilOppgaveMapper()
+    }
+
+    single {
+        OppgaveOppdatertHandler(
             oppgaveRepository = get(),
             reservasjonV3Tjeneste = get(),
-            historikkvaskChannel = get(named("historikkvaskChannelK9Tilbake")),
+            eventTilOppgaveMapper = get(),
+            pepCacheService = get(),
+            køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
         )
     }
 
@@ -511,7 +415,12 @@ fun common(app: Application, config: Configuration) = module {
     }
 
     single {
-        OppgaveQueryService()
+        OppgaveQueryService(
+            datasource = get(),
+            oppgaveQueryRepository = get(),
+            oppgaveRepository = get(),
+            partisjonertOppgaveRepository = get(),
+        )
     }
 
     single {
@@ -519,16 +428,10 @@ fun common(app: Application, config: Configuration) = module {
             transactionalManager = get(),
             oppgaveKoRepository = get(),
             oppgaveQueryService = get(),
-            oppgaveRepository = get(),
             reservasjonV3Tjeneste = get(),
             saksbehandlerRepository = get(),
-            oppgaveTjeneste = get(),
-            reservasjonRepository = get(),
-            oppgaveRepositoryTxWrapper = get(),
             pepClient = get(),
             pdlService = get(),
-            aktivOppgaveRepository = get(),
-            statistikkChannel = get(named("statistikkRefreshChannel")),
             køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
             feltdefinisjonTjeneste = get(),
         )
@@ -541,71 +444,11 @@ fun common(app: Application, config: Configuration) = module {
     }
 
     single {
-        K9KlageTilLosAdapterTjeneste(
-            behandlingProsessEventKlageRepository = get(),
-            områdeRepository = get(),
-            feltdefinisjonTjeneste = get(),
-            oppgavetypeTjeneste = get(),
-            oppgaveV3Tjeneste = get(),
-            transactionalManager = get(),
-            config = get(),
-            k9sakBeriker = get(),
-        )
-    }
-
-    single {
-        K9SakTilLosHistorikkvaskTjeneste(
-            behandlingProsessEventK9Repository = get(),
-            oppgaveV3Tjeneste = get(),
-            config = get(),
-            transactionalManager = get(),
-            k9SakTilLosAdapterTjeneste = get(),
-            k9SakBerikerKlient = get(),
-        )
-    }
-
-    single {
-        K9PunsjTilLosHistorikkvaskTjeneste(
+        HistorikkvaskTjeneste(
             eventRepository = get(),
             oppgaveV3Tjeneste = get(),
-            config = get(),
-            transactionalManager = get(),
-        )
-    }
-
-    single {
-        K9KlageTilLosHistorikkvaskTjeneste(
-            behandlingProsessEventKlageRepository = get(),
-            områdeRepository = get(),
-            feltdefinisjonTjeneste = get(),
-            oppgavetypeTjeneste = get(),
-            oppgaveV3Tjeneste = get(),
-            config = get(),
-            transactionalManager = get(),
-            k9sakBeriker = get(),
-        )
-    }
-
-    single {
-        K9TilbakeTilLosHistorikkvaskTjeneste(
-            behandlingProsessEventTilbakeRepository = get(),
-            oppgaveV3Tjeneste = get(),
-            config = get(),
-            transactionalManager = get(),
-        )
-    }
-
-    single {
-        Aktivvask(dataSource = get())
-    }
-
-    single {
-        K9SakTilLosLukkeFeiloppgaverTjeneste(
-            behandlingProsessEventK9Repository = get(),
-            oppgaveV3Tjeneste = get(),
-            config = get(),
-            transactionalManager = get(),
-            k9SakBerikerKlient = get(),
+            eventTilOppgaveAdapter = get(),
+            transactionalManager = get()
         )
     }
 
@@ -619,31 +462,38 @@ fun common(app: Application, config: Configuration) = module {
         ReservasjonV3Tjeneste(
             transactionalManager = get(),
             reservasjonV3Repository = get(),
-            oppgaveV1Repository = get(),
-            oppgaveV3Repository = get(),
+            reservasjonsnøkkelOppgaveOppslag = get(),
             pepClient = get(),
             saksbehandlerRepository = get(),
             køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
         )
     }
 
-    single {
-        no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepositoryTxWrapper(
-            oppgaveRepository = get(),
+    single<AktivOppgaveOppslag> {
+        AktivOppgaveOppslagPartisjonert(
+            oppgavetypeRepository = get(),
             transactionalManager = get(),
         )
     }
+    single<ReservasjonsnøkkelOppgaveOppslag> {
+        ReservasjonsnøkkelOppgaveOppslagPartisjonert(
+            oppgavetypeRepository = get(),
+            transactionalManager = get(),
+        )
+    }
+    single<TemporalOppgaveOppslag> {
+        TemporalOppgaveOppslagOppgaveV3(get(), get())
+    }
 
     single {
-        OppgaveApisTjeneste(
-            oppgaveTjeneste = get(),
-            oppgaveV1Repository = get(),
+        ReservasjonApisTjeneste(
             saksbehandlerRepository = get(),
             reservasjonV3Tjeneste = get(),
-            oppgaveV3Repository = get(),
             transactionalManager = get(),
             reservasjonV3DtoBuilder = get(),
-            reservasjonOversetter = get(),
+            aktivOppgaveOppslag = get(),
+            pepClient = get(),
+            azureGraphService = get(),
         )
     }
 
@@ -652,14 +502,13 @@ fun common(app: Application, config: Configuration) = module {
     }
 
     single {
-        K9SakBehandlingOppfrisketRepostiory(dataSource = get())
+        K9SakBehandlingOppfrisketRepository(dataSource = get())
     }
 
     single {
         PepCacheService(
             pepClient = get(),
             pepCacheRepository = get(),
-            oppgaveRepository = get(),
             transactionalManager = get()
         )
     }
@@ -675,7 +524,6 @@ fun common(app: Application, config: Configuration) = module {
         RefreshK9v3Tjeneste(
             k9SakService = get(),
             oppgaveQueryService = get(),
-            aktivOppgaveRepository = get(),
             oppgaveKoRepository = get(),
             transactionalManager = get()
         )
@@ -684,35 +532,92 @@ fun common(app: Application, config: Configuration) = module {
     single {
         SøkeboksTjeneste(
             queryService = get(),
-            oppgaveRepository = get(),
             pdlService = get(),
             pepClient = get(),
-            reservasjonV3Tjeneste = get(),
-            saksbehandlerRepository = get()
         )
     }
 
     single {
-        StatusService(
+        SisteOppgaverTjeneste(
+            oppgaveRepository = get(),
+            pepClient = get(),
+            sisteOppgaverRepository = get(),
+            pdlService = get(),
+            azureGraphService = get(),
+            transactionalManager = get(),
+        )
+    }
+
+    single {
+        no.nav.k9.los.nøkkeltall.avdelingsleder.status.StatusService(
             queryService = get(),
-            oppgaverGruppertRepository = get(),
         )
     }
 
     single {
-        DagensTallService(
+        no.nav.k9.los.nøkkeltall.avdelingsleder.dagenstall.DagensTallService(
             queryService = get(),
         )
     }
 
     single {
-        FerdigstiltePerEnhetService(
-            enheter = config.enheter(),
+        no.nav.k9.los.nøkkeltall.avdelingsleder.ferdigstilteperenhet.FerdigstiltePerEnhetService(
             queryService = get()
         )
     }
+
+    single {
+        NyeOgFerdigstilteService(
+            queryService = get()
+        )
+    }
+
+    single {
+        no.nav.k9.los.nøkkeltall.avdelingsleder.statusfordeling.StatusFordelingService(
+            queryService = get()
+        )
+    }
+
+    single<LagretSøkRepository> {
+        LagretSøkRepository(
+            dataSource = get()
+        )
+    }
+
+    single<LagretSøkTjeneste> {
+        LagretSøkTjeneste(
+            lagretSøkRepository = get(),
+            saksbehandlerRepository = get(),
+            oppgaveQueryService = get()
+        )
+    }
+
+    single<UttrekkRepository> {
+        UttrekkRepository(
+            dataSource = get()
+        )
+    }
+
+    single<UttrekkTjeneste> {
+        UttrekkTjeneste(
+            uttrekkRepository = get(),
+            lagretSøkRepository = get()
+        )
+    }
+
+    single<UttrekkJobb> {
+        UttrekkJobb(
+            oppgaveQueryService = get(),
+            uttrekkTjeneste = get(),
+        )
+    }
+
+    single<UttrekkCsvGenerator> {
+        UttrekkCsvGenerator()
+    }
 }
 
+// Kun lokalt, og verdikjede
 fun localDevConfig() = module {
     single<IAzureGraphService> {
         AzureGraphServiceLocal()
@@ -720,7 +625,6 @@ fun localDevConfig() = module {
     single<IPepClient> {
         PepClientLocal()
     }
-    single { RequestContextService(profile = LOCAL) }
 
     single<IPdlService> {
         PdlServiceLocal()
@@ -729,85 +633,205 @@ fun localDevConfig() = module {
         K9SakServiceLocal()
     }
 
-    single<K9SakBerikerInterfaceKludge> {
-        K9SakBerikerKlientLocal()
+    single<K9SakSystemKlientInterfaceKludge> {
+        K9SakSystemKlientLocal()
     }
 
-}
+    single<K9KlageBerikerInterfaceKludge> {
+        K9KlageBerikerKlientLocal()
+    }
 
-fun preprodConfig(config: Configuration) = module {
-    single<IAzureGraphService> {
-        AzureGraphService(
-            accessTokenClient = get<AccessTokenClientResolver>().azureV2()
+    single<AvstemmingsTjeneste> {
+        AvstemmingsTjeneste(
+            oppgaveQueryService = get(),
+            k9SakAvstemmingsklient = LocalSakAvstemmingsklient(),
+            k9KlageAvstemmingsklient = LocalSakAvstemmingsklient(),
+            k9PunsjAvstemmingsklient = LocalPunsjAvstemmingsklient()
         )
     }
-    single<IPepClient> {
-        PepClient(azureGraphService = get(), config = config, k9Auditlogger = K9Auditlogger(Auditlogger(config)))
+}
+
+// For både preprod og prod
+fun naisCommonConfig(config: Configuration) = module {
+    single {
+        // Standard httpclient uten proxy. Er eksplisitt på engine for å unngå en uforutsett engine fra classpath.
+        HttpClient(Java)
     }
+
+    single(named("webproxyHttpClient")) {
+        // Httpclient med webproxy, for trafikk ut på internett
+        HttpClient(Java) {
+            engine {
+                proxy = ProxyBuilder.http("http://webproxy.nais:8088")
+            }
+        }
+    }
+
+    single<IAzureGraphService> {
+        AzureGraphService(
+            accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
+            httpClient = get(named("webproxyHttpClient"))
+        )
+    }
+
+    single<IPepClient> {
+        PepClient(azureGraphService = get(), get())
+    }
+}
+
+// Unik konfigurasjon for preprod
+fun preprodConfig(config: Configuration) = module {
+    LoggerFactory.getLogger(KoinProfile::class.java).info("Koin preprodConfig loaded")
     single<IK9SakService> {
         K9SakServiceSystemClient(
             configuration = get(),
             accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
             scope = "api://dev-fss.k9saksbehandling.k9-sak/.default",
-            k9SakBehandlingOppfrisketRepostiory = get()
+            k9SakBehandlingOppfrisketRepository = get(),
+            httpClient = get()
         )
     }
-
-    single { RequestContextService(profile = PREPROD) }
 
     single<IPdlService> {
         PdlService(
             baseUrl = config.pdlUrl(),
             accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
             scope = "api://dev-fss.pdl.pdl-api/.default",
-            azureGraphService = get<IAzureGraphService>()
+            azureGraphService = get<IAzureGraphService>(),
+            httpClient = get()
         )
     }
 
-    single<K9SakBerikerInterfaceKludge> {
-        K9SakBerikerSystemKlient(
+    single<K9SakSystemKlientInterfaceKludge> {
+        K9SakSystemKlient(
             configuration = get(),
             accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
-            scope = "api://dev-fss.k9saksbehandling.k9-sak/.default"
+            scope = "api://dev-fss.k9saksbehandling.k9-sak/.default",
+            httpClient = get()
+        )
+    }
+
+    single<K9KlageBerikerInterfaceKludge> {
+        K9KlageBerikerSystemKlient(
+            configuration = get(),
+            accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
+            scopeKlage = "api://dev-fss.k9saksbehandling.k9-klage/.default",
+            scopeSak = "api://dev-fss.k9saksbehandling.k9-sak/.default",
+            httpClient = get()
+        )
+    }
+
+    single<ISifAbacPdpKlient> {
+        SifAbacPdpKlient(
+            configuration = get(),
+            accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
+            scope = "api://dev-fss.k9saksbehandling.sif-abac-pdp/.default",
+            httpClient = get()
+        )
+    }
+
+    single<AvstemmingsTjeneste> {
+        AvstemmingsTjeneste(
+            oppgaveQueryService = get(),
+            k9SakAvstemmingsklient = RestSakAvstemmingsklient(
+                url = config.k9Url(),
+                navn = "k9sak",
+                accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
+                scope = "api://dev-fss.k9saksbehandling.k9-sak/.default",
+                httpClient = get(),
+            ),
+            k9KlageAvstemmingsklient = RestSakAvstemmingsklient(
+                url = config.k9KlageUrl(),
+                navn = "k9klage",
+                accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
+                scope = "api://dev-fss.k9saksbehandling.k9-klage/.default",
+                httpClient = get(),
+            ),
+            k9PunsjAvstemmingsklient = RestPunsjAvstemmingsklient(
+                url = config.k9PunsjUrl(),
+                navn = "k9punsj",
+                accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
+                scope = "api://dev-gcp.k9saksbehandling.k9-punsj/.default",
+                httpClient = get(),
+            )
         )
     }
 }
 
+// Unik konfigurasjon for prod
 fun prodConfig(config: Configuration) = module {
-    single<IAzureGraphService> {
-        AzureGraphService(
-            accessTokenClient = get<AccessTokenClientResolver>().azureV2()
-        )
-    }
-    single<IPepClient> {
-        PepClient(azureGraphService = get(), config = config, k9Auditlogger = K9Auditlogger(Auditlogger(config)))
-    }
     single<IK9SakService> {
         K9SakServiceSystemClient(
             configuration = get(),
             accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
             scope = "api://prod-fss.k9saksbehandling.k9-sak/.default",
-            k9SakBehandlingOppfrisketRepostiory = get()
+            k9SakBehandlingOppfrisketRepository = get(),
+            httpClient = get()
         )
     }
-
-    single { RequestContextService(profile = PROD) }
 
     single<IPdlService> {
         PdlService(
             baseUrl = config.pdlUrl(),
             accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
             scope = "api://prod-fss.pdl.pdl-api/.default",
-            azureGraphService = get<IAzureGraphService>()
+            azureGraphService = get<IAzureGraphService>(),
+            httpClient = get()
         )
     }
 
-    single<K9SakBerikerInterfaceKludge> {
-        K9SakBerikerSystemKlient(
+    single<K9SakSystemKlientInterfaceKludge> {
+        K9SakSystemKlient(
             configuration = get(),
             accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
-            scope = "api://prod-fss.k9saksbehandling.k9-sak/.default"
+            scope = "api://prod-fss.k9saksbehandling.k9-sak/.default",
+            httpClient = get()
+        )
+    }
+
+    single<K9KlageBerikerInterfaceKludge> {
+        K9KlageBerikerSystemKlient(
+            configuration = get(),
+            accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
+            scopeKlage = "api://prod-fss.k9saksbehandling.k9-klage/.default",
+            scopeSak = "api://prod-fss.k9saksbehandling.k9-sak/.default",
+            httpClient = get()
+        )
+    }
+
+    single<ISifAbacPdpKlient> {
+        SifAbacPdpKlient(
+            configuration = get(),
+            accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
+            scope = "api://prod-fss.k9saksbehandling.sif-abac-pdp/.default",
+            httpClient = get()
+        )
+    }
+
+    single<AvstemmingsTjeneste> {
+        AvstemmingsTjeneste(
+            oppgaveQueryService = get(),
+            k9SakAvstemmingsklient = RestSakAvstemmingsklient(
+                url = config.k9Url(),
+                navn = "k9sak",
+                accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
+                scope = "api://prod-fss.k9saksbehandling.k9-sak/.default",
+                httpClient = get(),
+            ),
+            k9KlageAvstemmingsklient = RestSakAvstemmingsklient(
+                url = config.k9KlageUrl(),
+                navn = "k9klage",
+                accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
+                scope = "api://prod-fss.k9saksbehandling.k9-klage/.default",
+                httpClient = get(),
+            ),
+            k9PunsjAvstemmingsklient = RestPunsjAvstemmingsklient(
+                url = config.k9PunsjUrl(),
+                navn = "k9punsj",
+                accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
+                scope = "api://prod-fss.k9saksbehandling.k9-punsj/.default",
+                httpClient = get(),
+            )
         )
     }
 }
-

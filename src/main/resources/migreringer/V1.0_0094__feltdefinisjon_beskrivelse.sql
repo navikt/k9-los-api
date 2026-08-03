@@ -1,0 +1,1 @@
+alter table feltdefinisjon add column beskrivelse varchar(200);

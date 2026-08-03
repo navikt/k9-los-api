@@ -1,0 +1,27 @@
+package no.nav.k9.los.ko
+
+import no.nav.k9.los.saksbehandleradmin.Saksbehandler
+import no.nav.k9.los.reservasjon.ReservasjonV3
+import no.nav.k9.los.oppgaveuthenting.Oppgave
+import no.nav.k9.los.oppgaveuthenting.OppgaveNøkkelDto
+import java.time.LocalDateTime
+
+data class ReservasjonV3FraKøDto (
+    val oppgaveNøkkelDto: OppgaveNøkkelDto,
+    val reservasjonsnøkkel: String,
+    val oppgavebehandlingsUrl: String?,
+    val reservertAv: String,
+    val reservertAvId: Long,
+    val reservertFra: LocalDateTime,
+    val reservertTil: LocalDateTime?,
+) {
+    constructor(reservasjonV3: ReservasjonV3, oppgave: Oppgave, reservertAv: Saksbehandler) : this (
+        oppgaveNøkkelDto = OppgaveNøkkelDto(oppgave),
+        reservasjonsnøkkel = reservasjonV3.reservasjonsnøkkel,
+        oppgavebehandlingsUrl = oppgave.getOppgaveBehandlingsurl(),
+        reservertAv = reservertAv.epost,
+        reservertAvId = reservertAv.id!!,
+        reservertFra = reservasjonV3.gyldigFra,
+        reservertTil = reservasjonV3.gyldigTil
+    )
+}
