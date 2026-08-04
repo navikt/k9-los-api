@@ -51,6 +51,7 @@ import no.nav.k9.los.driftsmelding.DriftsmeldingerApis
 import no.nav.k9.los.forvaltning.forvaltningApis
 import no.nav.k9.los.infrastruktur.abac.cache.PepCacheService
 import no.nav.k9.los.infrastruktur.db.DB_AWARE_PARALLELISM
+import no.nav.k9.los.infrastruktur.db.migrate
 import no.nav.k9.los.infrastruktur.jobbplanlegger.Jobbplanlegger
 import no.nav.k9.los.infrastruktur.jobbplanlegger.PlanlagtJobb
 import no.nav.k9.los.infrastruktur.jobbplanlegger.Tidsvindu
@@ -276,6 +277,36 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
     val heleTiden = Tidsvindu.alleDager()
 
     val planlagteJobber = buildSet {
+        if (configuration.migreringEtterOppstart) {
+            add(
+                PlanlagtJobb.Oppstart(
+                    navn = "FlywayMigrering",
+                    prioritet = 0,
+                ) {
+                    migrate(configuration)
+                }
+            )
+        }
+
+        add(PlanlagtJobb.Oppstart(
+            navn = "Setup",
+            prioritet = 1,
+        ) {
+            koin.get<OmrådeSetup>().setup()
+        })
+
+        if (configuration.koinProfile == KoinProfile.LOCAL) {
+            add(PlanlagtJobb.Oppstart(
+                navn = "Testdata",
+                prioritet = 1,
+            ) {
+                localSetup.initSaksbehandlere()
+                localSetup.initPunsjoppgaver(0)
+                localSetup.initTilbakeoppgaver(0)
+                localSetup.initK9SakOppgaver(0)
+            })
+        }
+
         // Hyppig oppdatering i arbeidstiden
         add(
             PlanlagtJobb.Periodisk(

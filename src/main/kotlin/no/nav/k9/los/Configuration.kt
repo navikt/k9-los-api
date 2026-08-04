@@ -41,6 +41,9 @@ data class Configuration(private val config: ApplicationConfig) {
         password = config.getOptionalString("nav.db.password", secret = true)
     )
 
+    internal val migreringEtterOppstart =
+        config.getOptionalString("nav.db.migrering_etter_oppstart", secret = false)?.toBoolean() ?: false
+
     internal fun getAksjonspunkthendelseTopic(): String {
         if (k9SakConsumerAiven()) {
             return config.getOptionalString("nav.kafka.aksjonshendelseTopic", secret = false)
