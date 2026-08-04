@@ -19,6 +19,7 @@
   "oppgave_base_uri": "https://oppgave.intern.nav.no",
   "db_url": "jdbc:postgresql://a01dbvl041.adeo.no:5432/k9-los",
   "db_vault_mountpath": "postgresql/prod-fss/",
+  "migrering_etter_oppstart": "false",
   "pdl_url": "https://pdl-api.nais.adeo.no/graphql",
   "app_k9sak_url": "https://k9-sak.nais.adeo.no/k9/sak/api",
   "app_k9klage_url": "https://k9-klage.intern.nav.no/k9/klage/api",

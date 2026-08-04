@@ -111,6 +111,8 @@ spec:
       value: {{db_url}}
     - name: DB_VAULT_MOUNTPATH
       value: {{db_vault_mountpath}}
+    - name: MIGRERING_ETTER_OPPSTART
+      value: "{{migrering_etter_oppstart}}"
 
     - name: PDL_URL
       value: {{pdl_url}}
