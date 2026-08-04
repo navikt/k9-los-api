@@ -294,7 +294,7 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
     val heleTiden = Tidsvindu.alleDager()
 
     val planlagteJobber = buildSet {
-        if (!configuration.synkronMigrering) {
+        if (configuration.migreringEtterOppstart) {
             add(
                 PlanlagtJobb.Oppstart(
                     navn = "FlywayMigrering",

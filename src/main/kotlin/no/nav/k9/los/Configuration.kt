@@ -41,7 +41,8 @@ data class Configuration(private val config: ApplicationConfig) {
         password = config.getOptionalString("nav.db.password", secret = true)
     )
 
-    internal val synkronMigrering = config.getOptionalString("nav.db.synkron_migrering", secret = false)?.toBoolean() ?: true
+    internal val migreringEtterOppstart =
+        config.getOptionalString("nav.db.migrering_etter_oppstart", secret = false)?.toBoolean() ?: false
 
     internal fun getAksjonspunkthendelseTopic(): String {
         if (k9SakConsumerAiven()) {

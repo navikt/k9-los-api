@@ -34,12 +34,16 @@ fun Application.migrate(configuration: Configuration) {
     log.info("Migrerer database")
     val (antallMigrert, tidsbruk) = measureTimedValue {
         if (configuration.koinProfile() == KoinProfile.LOCAL) {
-            runMigration(HikariDataSource(configuration.hikariConfig()))
+            HikariDataSource(configuration.hikariConfig()).use { dataSource ->
+                runMigration(dataSource)
+            }
         } else {
-            runMigration(
-                dataSourceFromVault(configuration, Role.Admin),
-                "SET ROLE \"${configuration.databaseName()}-${Role.Admin}\""
-            )
+            dataSourceFromVault(configuration, Role.Admin).use { dataSource ->
+                runMigration(
+                    dataSource,
+                    "SET ROLE \"${configuration.databaseName()}-${Role.Admin}\""
+                )
+            }
         }
     }
     log.info("Migrert database, antallMigrert={} tidsbruk={}", antallMigrert, tidsbruk)

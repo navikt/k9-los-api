@@ -30,7 +30,7 @@ fun createHikariConfig(jdbcUrl: String, username: String? = null, password: Stri
     }
 
 fun Application.hikariConfig(configuration: Configuration): HikariDataSource {
-    if (configuration.synkronMigrering) {
+    if (!configuration.migreringEtterOppstart) {
         migrate(configuration)
     }
     return getDataSource(configuration)
