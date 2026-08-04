@@ -28,7 +28,6 @@ import io.prometheus.client.CollectorRegistry
 import io.prometheus.client.exporter.common.TextFormat
 import io.prometheus.client.hotspot.DefaultExports
 import kotlinx.coroutines.Dispatchers
-import no.nav.k9.los.infrastruktur.db.DB_AWARE_PARALLELISM
 import kotlinx.coroutines.channels.Channel
 import no.nav.helse.dusseldorf.ktor.auth.AuthStatusPages
 import no.nav.helse.dusseldorf.ktor.auth.allIssuers
@@ -51,6 +50,8 @@ import no.nav.k9.los.domeneadaptere.k9.statistikk.StatistikkApi
 import no.nav.k9.los.driftsmelding.DriftsmeldingerApis
 import no.nav.k9.los.forvaltning.forvaltningApis
 import no.nav.k9.los.infrastruktur.abac.cache.PepCacheService
+import no.nav.k9.los.infrastruktur.db.DB_AWARE_PARALLELISM
+import no.nav.k9.los.infrastruktur.db.migrate
 import no.nav.k9.los.infrastruktur.jobbplanlegger.Jobbplanlegger
 import no.nav.k9.los.infrastruktur.jobbplanlegger.PlanlagtJobb
 import no.nav.k9.los.infrastruktur.jobbplanlegger.Tidsvindu
@@ -59,21 +60,21 @@ import no.nav.k9.los.innloggetbruker.InnloggetBrukerApi
 import no.nav.k9.los.ko.KøpåvirkendeHendelse
 import no.nav.k9.los.ko.OppgaveKoApis
 import no.nav.k9.los.lagretsok.LagretSøkApi
-import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.FeltdefinisjonApi
-import no.nav.k9.los.oppgavemottak.OppgaveV3Api
-import no.nav.k9.los.oppgavedefinisjon.oppgavetype.OppgavetypeApi
+import no.nav.k9.los.nøkkeltall.NøkkeltallV3Apis
 import no.nav.k9.los.nøkkeltall.saksbehandler.nyeogferdigstilte.NyeOgFerdigstilteApi
 import no.nav.k9.los.nøkkeltall.saksbehandler.nyeogferdigstilte.NyeOgFerdigstilteService
+import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.FeltdefinisjonApi
+import no.nav.k9.los.oppgavedefinisjon.oppgavetype.OppgavetypeApi
+import no.nav.k9.los.oppgavemottak.OppgaveV3Api
 import no.nav.k9.los.oppgaveuthenting.query.OppgaveQueryApis
 import no.nav.k9.los.reservasjon.ReservasjonApis
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerAdminApis
 import no.nav.k9.los.sisteoppgaver.SisteOppgaverApi
 import no.nav.k9.los.søkeboks.SøkeboksApi
+import no.nav.k9.los.tjenester.mock.localSetup
 import no.nav.k9.los.uttrekk.MigrerUttrekkResultatJobb
 import no.nav.k9.los.uttrekk.UttrekkApi
 import no.nav.k9.los.uttrekk.UttrekkJobb
-import no.nav.k9.los.nøkkeltall.NøkkeltallV3Apis
-import no.nav.k9.los.tjenester.mock.localSetup
 import org.koin.core.Koin
 import org.koin.core.qualifier.named
 import org.koin.ktor.ext.getKoin
@@ -293,6 +294,36 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
     val heleTiden = Tidsvindu.alleDager()
 
     val planlagteJobber = buildSet {
+        if (configuration.migreringEtterOppstart) {
+            add(
+                PlanlagtJobb.Oppstart(
+                    navn = "FlywayMigrering",
+                    prioritet = 0,
+                ) {
+                    migrate(configuration)
+                }
+            )
+        }
+
+        add(PlanlagtJobb.Oppstart(
+            navn = "Setup",
+            prioritet = 1,
+        ) {
+            koin.get<OmrådeSetup>().setup()
+        })
+
+        if (configuration.koinProfile == KoinProfile.LOCAL) {
+            add(PlanlagtJobb.Oppstart(
+                navn = "Testdata",
+                prioritet = 1,
+            ) {
+                localSetup.initSaksbehandlere()
+                localSetup.initPunsjoppgaver(0)
+                localSetup.initTilbakeoppgaver(0)
+                localSetup.initK9SakOppgaver(0)
+            })
+        }
+
         // Hyppig oppdatering i arbeidstiden
         add(
             PlanlagtJobb.Periodisk(
