@@ -36,7 +36,7 @@ class OmrådeKoblingRepository(
         val TABELLER_KOBLET_TIL_OMRÅDE = listOf(
             "reservasjon_v3",
             "oppgaveko_v3",
-            "saksbehandler",
+            "saksbehandler_omrade",
             "oppgave_pep_cache",
             "event_nokkel",
         )
@@ -44,8 +44,9 @@ class OmrådeKoblingRepository(
         /**
          * Tabeller som får indeks på omrade_id, med indeksnavn.
          *
-         * SAKSBEHANDLER og OPPGAVEKO_V3 er utelatt med vilje: de har i størrelsesorden hundrevis
-         * av rader, og planleggeren vil velge seq scan uansett hvilket område det filtreres på.
+         * SAKSBEHANDLER_OMRADE og OPPGAVEKO_V3 er utelatt med vilje: de har i størrelsesorden
+         * hundrevis av rader, og planleggeren vil velge seq scan uansett hvilket område det
+         * filtreres på.
          *
          * For de tre som er med blir fordelingen skjev - K9 dominerer og UNG blir en klart mindre
          * andel (FELLES eier feltdefinisjoner, ikke oppgaver/reservasjoner, og får normalt ingen

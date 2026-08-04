@@ -43,7 +43,7 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
                     navn = "Test Testersen",
                     epost = "test@nav.no",
                     enhet = null,
-                    område = Områder.K9,
+                    områder = listOf(Områder.K9),
                 )
             )
             val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedEpost("test@nav.no")!!
@@ -178,7 +178,7 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
                     navn = "Test Testersen 2",
                     epost = "test2@nav.no",
                     enhet = null,
-                    område = Områder.K9,
+                    områder = listOf(Områder.K9),
                 )
             )
             saksbehandlerRepository.finnSaksbehandlerMedEpost("test2@nav.no")!!.id!!

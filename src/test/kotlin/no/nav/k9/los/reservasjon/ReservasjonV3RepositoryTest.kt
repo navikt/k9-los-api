@@ -30,7 +30,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
                     navn = null,
                     epost = "test1@test.no",
                     enhet = null,
-                    område = Områder.K9,
+                    områder = listOf(Områder.K9),
                 )
             )
 
@@ -77,7 +77,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
                     navn = null,
                     epost = "test1@test.no",
                     enhet = null,
-                    område = Områder.K9,
+                    områder = listOf(Områder.K9),
                 )
             )
 
@@ -92,7 +92,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
                     navn = null,
                     epost = "test2@test.no",
                     enhet = null,
-                    område = Områder.K9,
+                    områder = listOf(Områder.K9),
                 )
             )
             saksbehandlerRepository.finnSaksbehandlerMedEpost("test2@test.no")!!
@@ -141,7 +141,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
                     navn = null,
                     epost = "test1@test.no",
                     enhet = null,
-                    område = Områder.K9,
+                    områder = listOf(Områder.K9),
                 )
             )
 
@@ -201,7 +201,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
                     navn = null,
                     epost = "test1@test.no",
                     enhet = null,
-                    område = Områder.K9,
+                    områder = listOf(Områder.K9),
                 )
             )
 
@@ -216,7 +216,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
                     navn = null,
                     epost = "test2@test.no",
                     enhet = null,
-                    område = Områder.K9,
+                    områder = listOf(Områder.K9),
                 )
             )
             saksbehandlerRepository.finnSaksbehandlerMedEpost("test2@test.no")!!
@@ -270,7 +270,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
                     navn = null,
                     epost = "test1@test.no",
                     enhet = null,
-                    område = Områder.K9,
+                    områder = listOf(Områder.K9),
                 )
             )
 
@@ -285,7 +285,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
                     navn = null,
                     epost = "test2@test.no",
                     enhet = null,
-                    område = Områder.K9,
+                    områder = listOf(Områder.K9),
                 )
             )
             saksbehandlerRepository.finnSaksbehandlerMedEpost("test2@test.no")!!
@@ -319,7 +319,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
                     navn = null,
                     epost = "saksbehandler@nav.no",
                     enhet = null,
-                    område = Områder.K9,
+                    områder = listOf(Områder.K9),
                 )
             )
             saksbehandlerRepository.finnSaksbehandlerMedEpost("saksbehandler@nav.no")!!
@@ -349,7 +349,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
                     navn = null,
                     epost = "test1@test.no",
                     enhet = null,
-                    område = Områder.K9,
+                    områder = listOf(Områder.K9),
                 )
             )
 
@@ -400,7 +400,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
                     navn = null,
                     epost = "test1@test.no",
                     enhet = null,
-                    område = Områder.K9,
+                    områder = listOf(Områder.K9),
                 )
             )
             saksbehandlerRepository.finnSaksbehandlerMedEpost("test1@test.no")!!
@@ -413,7 +413,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
                     navn = null,
                     epost = "test2@test.no",
                     enhet = null,
-                    område = Områder.K9,
+                    områder = listOf(Områder.K9),
                 )
             )
             saksbehandlerRepository.finnSaksbehandlerMedEpost("test2@test.no")!!
@@ -426,7 +426,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
                     navn = null,
                     epost = "test3@test.no",
                     enhet = null,
-                    område = Områder.K9,
+                    områder = listOf(Områder.K9),
                 )
             )
             saksbehandlerRepository.finnSaksbehandlerMedEpost("test3@test.no")!!

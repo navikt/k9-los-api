@@ -734,7 +734,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
                     ident,
                     ident + "@nav.no",
                     enhet = "1234",
-                    område = Områder.K9
+                    områder = listOf(Områder.K9)
                 )
             )
             saksbehandlerRepository.hentAlleSaksbehandlere()

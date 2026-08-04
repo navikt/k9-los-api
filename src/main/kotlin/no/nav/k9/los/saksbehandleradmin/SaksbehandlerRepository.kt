@@ -21,19 +21,23 @@ class SaksbehandlerRepository(
 ) {
     suspend fun addSaksbehandler(saksbehandler: Saksbehandler): Long {
         val erSkjermet = pepClient.harTilgangTilKode6()
+        val områder = saksbehandler.områder.distinct()
+        if (områder.isEmpty()) {
+            throw IllegalArgumentException("Saksbehandler må ha minst ett område")
+        }
+
         return using(sessionOf(dataSource)) {
             val saksbehandlerId = it.transaction { tx ->
                 val saksbehandlerId = tx.run(
                     queryOf(
                         """
-                        insert into saksbehandler as k (navident, navn, epost, enhet, skjermet, omrade_id)
-                        values (:navident,:navn,:epost, :enhet, :skjermet, :omradeId)
+                        insert into saksbehandler as k (navident, navn, epost, enhet, skjermet)
+                        values (:navident,:navn,:epost, :enhet, :skjermet)
                         on conflict (epost) do update
                         set navident = :navident,
                             navn = :navn,
                             enhet = :enhet,
-                            skjermet = :skjermet,
-                            omrade_id = :omradeId
+                            skjermet = :skjermet
                         returning id
                      """,
                         mapOf(
@@ -42,11 +46,35 @@ class SaksbehandlerRepository(
                             "navn" to saksbehandler.navn,
                             "enhet" to saksbehandler.enhet,
                             "skjermet" to erSkjermet,
-                            "omradeId" to områdeRepository.hentOmråde(saksbehandler.område, tx).id
                         )
                     ).map { row -> row.long("id") }.asSingle
                 )
-                saksbehandlerId!!
+                val id = saksbehandlerId!!
+
+                tx.run(
+                    queryOf(
+                        "delete from saksbehandler_omrade where saksbehandler_id = :saksbehandlerId",
+                        mapOf("saksbehandlerId" to id)
+                    ).asUpdate
+                )
+
+                områder.forEach { område ->
+                    val omradeId = områdeRepository.hentOmråde(område, tx).id
+                    tx.run(
+                        queryOf(
+                            """
+                            insert into saksbehandler_omrade (saksbehandler_id, omrade_id)
+                            values (:saksbehandlerId, :omradeId)
+                            """.trimIndent(),
+                            mapOf(
+                                "saksbehandlerId" to id,
+                                "omradeId" to omradeId,
+                            )
+                        ).asUpdate
+                    )
+                }
+
+                id
             }
             saksbehandlerId
         }
@@ -331,20 +359,43 @@ class SaksbehandlerRepository(
     }
 
     private fun mapSaksbehandler(row: Row): Saksbehandler {
+        val områder = row.stringOrNull("omrade_ekstern_ider")
+            ?.split(",")
+            ?.map { it.trim() }
+            ?.filter { it.isNotBlank() }
+            ?.distinct()
+            ?.map { Områder.fraEksternId(it) }
+            ?: emptyList()
+
+        if (områder.isEmpty()) {
+            throw IllegalStateException("Saksbehandler ${row.long("id")} mangler områdekobling")
+        }
+
         return Saksbehandler(
             id = row.long("id"),
             navident = row.stringOrNull("navident"),
             navn = row.stringOrNull("navn"),
             epost = row.string("epost").lowercase(Locale.getDefault()),
             enhet = row.stringOrNull("enhet"),
-            område = Områder.fraEksternId(row.string("omrade_ekstern_id"))
+            områder = områder
         )
     }
 
     companion object {
         private const val SAKSBEHANDLER_SELECT =
-            """select s.*, o.ekstern_id as omrade_ekstern_id
-               from saksbehandler s
-               join omrade o on o.id = s.omrade_id"""
+            """
+            select *
+            from (select s.id,
+                         s.navident,
+                         s.navn,
+                         s.epost,
+                         s.enhet,
+                         s.skjermet,
+                         string_agg(distinct o.ekstern_id, ',') as omrade_ekstern_ider
+                  from saksbehandler s
+                           left join saksbehandler_omrade so on so.saksbehandler_id = s.id
+                           left join omrade o on o.id = so.omrade_id
+                  group by s.id, s.navident, s.navn, s.epost, s.enhet, s.skjermet) s
+            """
     }
 }

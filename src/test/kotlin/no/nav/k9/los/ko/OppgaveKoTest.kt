@@ -112,7 +112,7 @@ class OppgaveKoTest : AbstractK9LosIntegrationTest() {
                     navn = "Navn for $saksbehandlerepost",
                     epost = saksbehandlerepost,
                     enhet = null,
-                    område = Områder.K9
+                    områder = listOf(Områder.K9)
                 )
             )
         }

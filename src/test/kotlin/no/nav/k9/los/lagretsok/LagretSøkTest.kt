@@ -19,7 +19,7 @@ class LagretSøkTest {
         navn = "Test Testersen",
         epost = "test@nav.no",
         enhet = null,
-        område = Områder.K9
+        områder = listOf(Områder.K9)
     )
 
     private val annenSaksbehandler = Saksbehandler(
@@ -28,7 +28,7 @@ class LagretSøkTest {
         navn = "Annen Testersen",
         epost = "annen@nav.no",
         enhet = null,
-        område = Områder.K9
+        områder = listOf(Områder.K9)
     )
 
     @Test
@@ -55,7 +55,7 @@ class LagretSøkTest {
             navn = "Test Testersen",
             epost = "test@nav.no",
             enhet = null,
-            område = Områder.K9
+            områder = listOf(Områder.K9)
         )
 
         val opprettLagretSøk = NyttLagretSøkRequest(

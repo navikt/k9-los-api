@@ -23,7 +23,7 @@ class SaksbehandlerAdminTjeneste(
         var saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedEpost(epostDto.epost)
         if (saksbehandler == null) {
             saksbehandler = Saksbehandler(
-                null, null, null, epostDto.epost, null, Områder.K9
+                null, null, null, epostDto.epost, null, listOf(Områder.K9)
             )
             saksbehandlerRepository.addSaksbehandler(saksbehandler)
         }
@@ -35,7 +35,7 @@ class SaksbehandlerAdminTjeneste(
             throw IllegalStateException("Saksbehandler finnes fra før")
         }
         // lagrer med tomme verdier, disse blir populert etter at saksbehandleren har logget seg inn
-        val saksbehandler = Saksbehandler(null, null, null, epost, null, Områder.K9)
+        val saksbehandler = Saksbehandler(null, null, null, epost, null, listOf(Områder.K9))
         saksbehandlerRepository.addSaksbehandler(saksbehandler)
     }
 

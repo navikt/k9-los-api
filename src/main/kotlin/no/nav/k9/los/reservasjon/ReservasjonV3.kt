@@ -68,7 +68,7 @@ class ReservasjonV3(
         gyldigFra: LocalDateTime,
         gyldigTil: LocalDateTime,
         endretAv: Long?,
-        område: Områder = saksbehandler.område
+        område: Områder = saksbehandler.områder.first()
     ) : this(
         reservertAv = saksbehandler.id!!,
         reservasjonsnøkkel = reservasjonsnøkkel,

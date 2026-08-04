@@ -131,7 +131,7 @@ class ReservasjonV3Tjeneste(
             gyldigTil = gyldigTil,
             kommentar = kommentar,
             endretAv = null,
-            område = utledOmråde(oppgaverForReservasjonsnøkkel, reservasjonsnøkkel, reserverForId)
+            område = utledOmråde(oppgaverForReservasjonsnøkkel, reservasjonsnøkkel)
         )
         val reservasjon = reservasjonV3Repository.lagreReservasjon(reservasjonTilLagring, tx)
         log.info("taReservasjon: Ny reservasjon $reservasjon, utført av $utføresAvId, for saksbehandler $reserverForId")
@@ -297,14 +297,11 @@ class ReservasjonV3Tjeneste(
     }
 
     /**
-     * Reservasjonen arver området fra oppgavene den gjelder. Er det ingen åpne oppgaver på
-     * nøkkelen, faller vi tilbake på området til saksbehandleren som reserverer - fortsatt
-     * data fra kallet, ikke en hardkodet antakelse.
+     * Reservasjonen arver området fra oppgavene den gjelder. Krever at alle oppgaver tilhører samme område
      */
     private fun utledOmråde(
         oppgaver: List<Oppgave>,
-        reservasjonsnøkkel: String,
-        reserverForId: Long
+        reservasjonsnøkkel: String
     ): Områder {
         val områder = oppgaver
             .map { Områder.fraEksternId(it.oppgavetype.område.eksternId) }
@@ -312,10 +309,8 @@ class ReservasjonV3Tjeneste(
 
         return when {
             områder.size == 1 -> områder.single()
-            områder.isEmpty() -> saksbehandlerRepository.finnSaksbehandlerMedId(reserverForId)!!.område
-            else -> throw IllegalStateException(
-                "Reservasjonsnøkkel $reservasjonsnøkkel dekker oppgaver i flere områder: $områder"
-            )
+            områder.isEmpty() -> throw IllegalStateException("Oppgave for resevasjonsnøkkel $reservasjonsnøkkel har ikke definert område")
+            else -> throw IllegalStateException("Reservasjonsnøkkel $reservasjonsnøkkel dekker oppgaver i flere områder: $områder")
         }
     }
 

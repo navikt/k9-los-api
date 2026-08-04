@@ -16,7 +16,7 @@ class SaksbehandlerTest {
             navn = sensitiv,
             epost = sensitiv,
             enhet = sensitiv,
-            område = Områder.K9,
+            områder = listOf(Områder.K9),
         )
 
         assertThat(sb.toString()).doesNotContain(sensitiv)

@@ -28,7 +28,7 @@ class OmrådeReferanseintegritetTest : AbstractK9LosIntegrationTest() {
     private val tabellerKobletTilOmråde = listOf(
         "reservasjon_v3",
         "oppgaveko_v3",
-        "saksbehandler",
+        "saksbehandler_omrade",
         "oppgave_pep_cache",
         "event_nokkel",
     )
@@ -89,7 +89,7 @@ class OmrådeReferanseintegritetTest : AbstractK9LosIntegrationTest() {
                     navn = "Test Testesen",
                     epost = "referanseintegritet@test.no",
                     enhet = null,
-                    område = Områder.K9,
+                    områder = listOf(Områder.K9),
                 )
             )
         }
@@ -116,8 +116,14 @@ class OmrådeReferanseintegritetTest : AbstractK9LosIntegrationTest() {
                 session.run(
                     queryOf(
                         """
-                        insert into saksbehandler (navident, navn, epost, enhet, skjermet, omrade_id)
-                        values ('Z999002', 'Ukjent Omraade', 'ukjent-omrade@test.no', null, false, 999999)
+                        with ny_saksbehandler as (
+                            insert into saksbehandler (navident, navn, epost, enhet, skjermet)
+                            values ('Z999002', 'Ukjent Omraade', 'ukjent-omrade@test.no', null, false)
+                            returning id
+                        )
+                        insert into saksbehandler_omrade (saksbehandler_id, omrade_id)
+                        select id, 999999
+                        from ny_saksbehandler
                         """.trimIndent()
                     ).asUpdate
                 )

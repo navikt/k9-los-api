@@ -28,7 +28,7 @@ class TestSaksbehandler: KoinTest {
             navn = "Sara Saksbehandler",
             epost = "sara.saksbehandler@nav.no",
             enhet = "2830 NAV DRIFT",
-            område = Områder.K9
+            områder = listOf(Områder.K9)
         )
 
         val BIRGER_BESLUTTER = Saksbehandler(
@@ -37,7 +37,7 @@ class TestSaksbehandler: KoinTest {
             navn = "Birger Beslutter",
             epost = "birger.beslutter@nav.no",
             enhet = "2830 NAV DRIFT",
-            område = Områder.K9
+            områder = listOf(Områder.K9)
         )
 
         val KJERSTI_SKJERMET = Saksbehandler(
@@ -46,7 +46,7 @@ class TestSaksbehandler: KoinTest {
             navn = "Kjersti Skjermet",
             epost = "kjersti.skjermet@nav.no",
             enhet = "SKJERMET",
-            område = Områder.K9
+            områder = listOf(Områder.K9)
         )
 
     }

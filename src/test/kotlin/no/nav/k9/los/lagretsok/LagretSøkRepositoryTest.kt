@@ -35,7 +35,7 @@ class LagretSøkRepositoryTest : AbstractK9LosIntegrationTest() {
                     navn = "Test Testersen",
                     epost = "test@nav.no",
                     enhet = null,
-                    område = Områder.K9,
+                    områder = listOf(Områder.K9),
                 )
             )
             saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedEpost("test@nav.no")!!
@@ -142,7 +142,7 @@ class LagretSøkRepositoryTest : AbstractK9LosIntegrationTest() {
                     navn = "Annen Testersen",
                     epost = "annen@nav.no",
                     enhet = null,
-                    område = Områder.K9,
+                    områder = listOf(Områder.K9),
                 )
             )
             val annenSaksbehandler = saksbehandlerRepository.finnSaksbehandlerMedEpost("annen@nav.no")!!

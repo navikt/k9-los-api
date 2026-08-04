@@ -61,7 +61,7 @@ internal fun Route.InnloggetBrukerApi() {
                             enhet = azureGraphService.hentEnhetForInnloggetBruker(),
                             // Behold området saksbehandleren allerede står oppført med, slik at
                             // innlogging ikke overskriver det.
-                            område = saksbehandler!!.område //TODO: utlede område fra enhet?
+                            områder = saksbehandler!!.områder //TODO: utlede område fra enhet?
                         )
                     )
                 }

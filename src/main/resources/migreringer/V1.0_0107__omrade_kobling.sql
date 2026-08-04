@@ -25,10 +25,22 @@ begin
     alter table oppgaveko_v3 add constraint fk_oppgaveko_v3_omrade foreign key (omrade_id) references omrade (id) not valid;
     comment on column oppgaveko_v3.omrade_id is 'Omraadet raden tilhoerer';
 
-    execute format('alter table saksbehandler add column omrade_id bigint not null default %s', k9_id);
-    alter table saksbehandler alter column omrade_id drop default;
-    alter table saksbehandler add constraint fk_saksbehandler_omrade foreign key (omrade_id) references omrade (id) not valid;
-    comment on column saksbehandler.omrade_id is 'Omraadet raden tilhoerer';
+    create table if not exists saksbehandler_omrade
+    (
+        saksbehandler_id bigint not null,
+        omrade_id        bigint not null,
+        constraint pk_saksbehandler_omrade primary key (saksbehandler_id, omrade_id),
+        constraint fk_saksbehandler_omrade_saksbehandler foreign key (saksbehandler_id) references saksbehandler (id) on delete cascade,
+        constraint fk_saksbehandler_omrade_omrade foreign key (omrade_id) references omrade (id) not valid
+    );
+    comment on table saksbehandler_omrade is 'Koblingstabell mellom saksbehandler og omrade';
+    comment on column saksbehandler_omrade.saksbehandler_id is 'Referanse til saksbehandler';
+    comment on column saksbehandler_omrade.omrade_id is 'Referanse til omrade';
+
+    execute format(
+            'insert into saksbehandler_omrade (saksbehandler_id, omrade_id) select id, %s from saksbehandler on conflict do nothing',
+            k9_id
+            );
 
     execute format('alter table oppgave_pep_cache add column omrade_id bigint not null default %s', k9_id);
     alter table oppgave_pep_cache alter column omrade_id drop default;
@@ -43,6 +55,6 @@ end
 $$;
 
 -- Smaa tabeller valideres med en gang, store tabeller valideres i backfill-endepunkt.
-alter table saksbehandler validate constraint fk_saksbehandler_omrade;
+alter table saksbehandler_omrade validate constraint fk_saksbehandler_omrade_omrade;
 alter table oppgaveko_v3 validate constraint fk_oppgaveko_v3_omrade;
 

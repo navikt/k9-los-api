@@ -76,7 +76,7 @@ class SisteOppgaverTjenesteTest : AbstractK9LosIntegrationTest() {
                     navn = "Test Testersen",
                     epost = "test@nav.no",
                     enhet = null,
-                    område = Områder.K9,
+                    områder = listOf(Områder.K9),
                 )
             )
             saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedEpost("test@nav.no")!!

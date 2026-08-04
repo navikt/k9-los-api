@@ -52,7 +52,7 @@ internal class FerdigstiltEnhetTest {
             saksbehandlerRepository.finnSaksbehandlerMedIdentEkskluderKode6(saksbehandlerId)
         } returns Saksbehandler(
             id = 0, navident = saksbehandlerId, navn = "Navn Navnesen", epost = "", enhet = forventetEnhet,
-            område = Områder.K9,
+            områder = listOf(Områder.K9),
         )
 
         val oppgave = lagOppgave(
@@ -82,7 +82,7 @@ internal class FerdigstiltEnhetTest {
 
         every {
             saksbehandlerRepository.finnSaksbehandlerMedIdentEkskluderKode6(saksbehandlerId)
-        } returns Saksbehandler(id = 0, navident = saksbehandlerId, navn = "Navn Navnesen", epost = "", enhet = null, område = Områder.K9)
+        } returns Saksbehandler(id = 0, navident = saksbehandlerId, navn = "Navn Navnesen", epost = "", enhet = null, områder = listOf(Områder.K9))
 
         val oppgave = lagOppgave(
             status = Oppgavestatus.LUKKET,
