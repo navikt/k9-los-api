@@ -4,13 +4,13 @@ import io.ktor.http.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import no.nav.k9.los.område
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.rest.RequestContextService
-import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.reservasjon.ReservasjonApisTjeneste
 import org.koin.ktor.ext.inject
 
-internal fun Route.SaksbehandlerAdminApis() {
+internal fun Route.SaksbehandlerAdminApisNy() {
     val requestContextService by inject<RequestContextService>()
     val saksbehandlerAdminTjeneste by inject<SaksbehandlerAdminTjeneste>()
     val pepClient by inject<IPepClient>()
@@ -33,7 +33,7 @@ internal fun Route.SaksbehandlerAdminApis() {
         requestContextService.withRequestContext(call) {
             if (pepClient.erOppgaveStyrer()) {
                 val epost = call.receive<EpostDto>()
-                call.respond(saksbehandlerAdminTjeneste.søkSaksbehandler(epost, Områder.K9))
+                call.respond(saksbehandlerAdminTjeneste.søkSaksbehandler(epost, call.område))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
@@ -44,7 +44,7 @@ internal fun Route.SaksbehandlerAdminApis() {
         requestContextService.withRequestContext(call) {
             if (pepClient.erOppgaveStyrer()) {
                 val request = call.receive<EpostDto>()
-                call.respond(saksbehandlerAdminTjeneste.leggTilSaksbehandlerForEpost(request.epost, Områder.K9))
+                call.respond(saksbehandlerAdminTjeneste.leggTilSaksbehandlerForEpost(request.epost, call.område))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
@@ -55,7 +55,7 @@ internal fun Route.SaksbehandlerAdminApis() {
         requestContextService.withRequestContext(call) {
             if (pepClient.erOppgaveStyrer()) {
                 val request = call.receive<EpostDto>()
-                call.respond(saksbehandlerAdminTjeneste.slettSaksbehandler(request.epost, Områder.K9))
+                call.respond(saksbehandlerAdminTjeneste.slettSaksbehandler(request.epost, call.område))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
@@ -84,3 +84,4 @@ internal fun Route.SaksbehandlerAdminApis() {
         }
     }
 }
+

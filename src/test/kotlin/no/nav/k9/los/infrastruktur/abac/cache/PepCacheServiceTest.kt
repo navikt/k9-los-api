@@ -10,8 +10,8 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import no.nav.helse.dusseldorf.ktor.jackson.dusseldorfConfigured
 import no.nav.k9.los.AbstractPostgresTest
-import no.nav.k9.los.buildAndTestConfig
 import no.nav.k9.los.FeltType
+import no.nav.k9.los.buildAndTestConfig
 import no.nav.k9.los.domeneadaptere.k9.OmrådeSetup
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.EventHendelse
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.eventlager.EventNøkkel
@@ -27,13 +27,14 @@ import no.nav.k9.los.infrastruktur.jobbplanlegger.Tidsvindu
 import no.nav.k9.los.kodeverk.BehandlingStatus
 import no.nav.k9.los.kodeverk.Fagsystem
 import no.nav.k9.los.kodeverk.PersonBeskyttelseType
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
+import no.nav.k9.los.oppgaveuthenting.OppgaveRepository
 import no.nav.k9.los.oppgaveuthenting.query.OppgaveQueryService
 import no.nav.k9.los.oppgaveuthenting.query.QueryRequest
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.EnkelSelectFelt
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.OppgaveQuery
 import no.nav.k9.los.oppgaveuthenting.query.mapping.EksternFeltverdiOperator
-import no.nav.k9.los.oppgaveuthenting.OppgaveRepository
 import no.nav.k9.sak.typer.AktørId
 import no.nav.k9.sak.typer.JournalpostId
 import no.nav.sif.abac.kontrakt.abac.Diskresjonskode
@@ -53,7 +54,6 @@ import java.time.LocalDateTime
 import java.util.*
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
-import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 
 class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
 

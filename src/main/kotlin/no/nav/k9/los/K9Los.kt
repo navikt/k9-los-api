@@ -70,6 +70,7 @@ import no.nav.k9.los.oppgavemottak.OppgaveV3Api
 import no.nav.k9.los.oppgaveuthenting.query.OppgaveQueryApis
 import no.nav.k9.los.reservasjon.ReservasjonApis
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerAdminApis
+import no.nav.k9.los.saksbehandleradmin.SaksbehandlerAdminApisNy
 import no.nav.k9.los.sisteoppgaver.SisteOppgaverApi
 import no.nav.k9.los.søkeboks.SøkeboksApi
 import no.nav.k9.los.tjenester.mock.localSetup
@@ -298,7 +299,7 @@ private fun Route.apiUnderConstruction() {
             }
 
             route("avdelingsleder") {
-                route("saksbehandler-admin") { SaksbehandlerAdminApis() }
+                route("saksbehandler-admin") { SaksbehandlerAdminApisNy() }
                 route("nokkeltall") { NøkkeltallV3Apis() }
                 route("lagret-sok") { LagretSøkApi() }
                 route("uttrekk") { UttrekkApi() }
