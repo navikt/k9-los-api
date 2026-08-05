@@ -36,7 +36,8 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
         saksbehandlerRepository = get()
 
         runBlocking {
-            saksbehandlerRepository.addSaksbehandler(
+            saksbehandlerRepository.addSaksbehandler("test@nav.no", Områder.K9)
+            saksbehandlerRepository.vedlikeholdSaksbehandler(
                 Saksbehandler(
                     id = null,
                     navident = "test",
@@ -171,7 +172,8 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
     fun `skal hente uttrekk for saksbehandler`() {
         // Opprett en annen saksbehandler for å teste filtreringen
         val annenSaksbehandlerId = runBlocking {
-            saksbehandlerRepository.addSaksbehandler(
+            saksbehandlerRepository.addSaksbehandler("test2@nav.no", Områder.K9)
+            saksbehandlerRepository.vedlikeholdSaksbehandler(
                 Saksbehandler(
                     id = null,
                     navident = "test2",

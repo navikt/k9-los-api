@@ -78,9 +78,10 @@ object localSetup : KoinComponent {
         if (profile == KoinProfile.LOCAL) {
             runBlocking {
                 saksbehandlere.forEach { saksbehandler ->
-                    saksbehandlerRepository.addSaksbehandler(
-                        saksbehandler
-                    )
+                    saksbehandler.områder.forEach { område ->
+                        saksbehandlerRepository.addSaksbehandler(saksbehandler.epost, område)
+                    }
+                    saksbehandlerRepository.vedlikeholdSaksbehandler(saksbehandler)
                 }
             }
         }

@@ -213,7 +213,70 @@ fun Application.k9Los() {
     install(OpenApi)
 }
 
+
 private fun Route.api() {
+    legacyApi()
+    apiUnderConstruction()
+}
+
+private fun Route.legacyApi() {
+    route("k9/los/api") {
+        route("openapi.json") {
+            openApi()
+        }
+        swaggerUI("openapi.json")
+        route("/forvaltning") {
+            forvaltningApis()
+            route("eventlager") { EventlagerApi() }
+            route("statistikk") { StatistikkApi() }
+        }
+    }
+    route("api", { hidden = true }) {
+        route("driftsmeldinger") {
+            DriftsmeldingerApis()
+        }
+        route("saksbehandler") {
+            route("oppgaver") {
+                ReservasjonApis()
+            }
+        }
+        route("avdelingsleder") {
+            SaksbehandlerAdminApis()
+        }
+
+        InnloggetBrukerApi()
+
+        route("ny-oppgavestyring") {
+            route("ko") { OppgaveKoApis() }
+            route("oppgave") { OppgaveQueryApis() }
+            route(
+                "feltdefinisjon",
+                {
+                    hidden = true
+                }) { FeltdefinisjonApi() } // Må legge til tilgangskontroll dersom disse endepunktene aktiveres
+            route(
+                "oppgavetype",
+                {
+                    hidden = true
+                }) { OppgavetypeApi() } // Må legge til tilgangskontroll dersom disse endepunktene aktiveres
+            route(
+                "oppgave-v3",
+                {
+                    hidden = true
+                }) { OppgaveV3Api() } // Må legge til tilgangskontroll dersom disse endepunktene aktiveres
+            route("sok") { SøkeboksApi() }
+            route("nokkeltall") { NøkkeltallV3Apis() }
+            route("siste-oppgaver") { SisteOppgaverApi() }
+            route("nye-og-ferdigstilte") { NyeOgFerdigstilteApi() }
+            route("lagret-sok") { LagretSøkApi() }
+            route("uttrekk") { UttrekkApi() }
+        }
+    }
+}
+
+private fun Route.apiUnderConstruction() {
+    route("driftsmeldinger") { DriftsmeldingerApis() } //TODO: Tag driftsmelding
+    route("innloggetbruker") { InnloggetBrukerApi() }
     Områder.entries.forEach { område ->
         områdeApi(område) {
             route("openapi.json") {
@@ -221,31 +284,28 @@ private fun Route.api() {
             }
             swaggerUI("openapi.json")
             route("/forvaltning") {
-                forvaltningApis()
                 route("eventlager") { EventlagerApi() }
+                forvaltningApis()
                 route("statistikk") { StatistikkApi() }
             }
 
-            route("driftsmeldinger") { DriftsmeldingerApis() }
+            //TODO: tagge alle under her med "applikasjon"
             route("saksbehandler") {
-                route("oppgaver") { ReservasjonApis() }
+                route("sok") { SøkeboksApi() }
+                route("reservasjoner") { ReservasjonApis() } //TODO: alle reservasjoner til egen fil under avdelingsleder
+                route("siste-oppgaver") { SisteOppgaverApi() }
+                route("nye-og-ferdigstilte") { NyeOgFerdigstilteApi() }
             }
-            route("avdelingsleder") { SaksbehandlerAdminApis() }
 
-            InnloggetBrukerApi()
+            route("avdelingsleder") {
+                route("saksbehandler-admin") { SaksbehandlerAdminApis() }
+                route("nokkeltall") { NøkkeltallV3Apis() }
+                route("lagret-sok") { LagretSøkApi() }
+                route("uttrekk") { UttrekkApi() }
+                route("query") { OppgaveQueryApis() }
+            }
 
-            route("ko") { OppgaveKoApis() }
-            route("oppgave") { OppgaveQueryApis() }
-            // Må legge til tilgangskontroll dersom disse endepunktene aktiveres
-            route("feltdefinisjon", { hidden = true }) { FeltdefinisjonApi() }
-            route("oppgavetype", { hidden = true }) { OppgavetypeApi() }
-            route("oppgave-v3", { hidden = true }) { OppgaveV3Api() }
-            route("sok") { SøkeboksApi() }
-            route("nokkeltall") { NøkkeltallV3Apis() }
-            route("siste-oppgaver") { SisteOppgaverApi() }
-            route("nye-og-ferdigstilte") { NyeOgFerdigstilteApi() }
-            route("lagret-sok") { LagretSøkApi() }
-            route("uttrekk") { UttrekkApi() }
+            route("ko") { OppgaveKoApis() } //TODO: splitt i admin- og saksbehandleroperasjoner
         }
     }
 }

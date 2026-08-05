@@ -15,13 +15,47 @@ import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 
 class SaksbehandlerRepositoryTest : AbstractK9LosIntegrationTest() {
     @Test
+    fun `addSaksbehandler upserter uten a nullstille eksisterende felter`() {
+        val saksbehandlerRepository = get<SaksbehandlerRepository>()
+        val epost = "z999999@nav.no"
+
+        runBlocking {
+            // Saksbehandler får område via admin, og feltene vedlikeholdes ved innlogging
+            saksbehandlerRepository.addSaksbehandler(epost, Områder.K9)
+            saksbehandlerRepository.vedlikeholdSaksbehandler(
+                Saksbehandler(
+                    id = null,
+                    navident = "Z999999",
+                    navn = "Zed Saksbehandler",
+                    epost = epost,
+                    enhet = "9999",
+                    områder = listOf(Områder.K9)
+                )
+            )
+
+            // Simulerer admin-legg-til på eksisterende epost med kun område.
+            saksbehandlerRepository.addSaksbehandler(epost, Områder.K9)
+        }
+
+        val lagret = runBlocking {
+            saksbehandlerRepository.finnSaksbehandlerMedEpost(epost)
+        }!!
+
+        assertThat(lagret.navident, equalTo("Z999999"))
+        assertThat(lagret.navn, equalTo("Zed Saksbehandler"))
+        assertThat(lagret.enhet, equalTo("9999"))
+        assertThat(lagret.områder, equalTo(listOf(Områder.K9)))
+    }
+
+    @Test
     fun `slette saksbehandler`() {
         val saksbehandlerRepository = get<SaksbehandlerRepository>()
         val ident = "Z123456"
         val ident2 = "Z234567"
 
         runBlocking {
-            saksbehandlerRepository.addSaksbehandler(
+            saksbehandlerRepository.addSaksbehandler(ident + "@nav.no", Områder.K9)
+            saksbehandlerRepository.vedlikeholdSaksbehandler(
                 Saksbehandler(
                     null,
                     ident,
@@ -34,7 +68,8 @@ class SaksbehandlerRepositoryTest : AbstractK9LosIntegrationTest() {
         }
 
         runBlocking {
-            saksbehandlerRepository.addSaksbehandler(
+            saksbehandlerRepository.addSaksbehandler(ident2 + "@nav.no", Områder.K9)
+            saksbehandlerRepository.vedlikeholdSaksbehandler(
                 Saksbehandler(
                     null,
                     ident2,

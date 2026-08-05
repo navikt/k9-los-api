@@ -82,7 +82,8 @@ class OmrådeReferanseintegritetTest : AbstractK9LosIntegrationTest() {
     fun `skal ikke kunne slette et omrade som er i bruk`() {
         val saksbehandlerRepository = get<SaksbehandlerRepository>()
         runBlocking {
-            saksbehandlerRepository.addSaksbehandler(
+            saksbehandlerRepository.addSaksbehandler("referanseintegritet@test.no", Områder.K9)
+            saksbehandlerRepository.vedlikeholdSaksbehandler(
                 Saksbehandler(
                     id = null,
                     navident = "Z999001",

@@ -727,7 +727,8 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
 
         val saksbehandler = runBlocking {
             val ident = "test"
-            saksbehandlerRepository.addSaksbehandler(
+            saksbehandlerRepository.addSaksbehandler(ident + "@nav.no", Områder.K9)
+            saksbehandlerRepository.vedlikeholdSaksbehandler(
                 Saksbehandler(
                     null,
                     ident,

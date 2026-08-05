@@ -28,7 +28,8 @@ class LagretSøkRepositoryTest : AbstractK9LosIntegrationTest() {
         saksbehandlerRepository = get()
 
         runBlocking {
-            saksbehandlerRepository.addSaksbehandler(
+            saksbehandlerRepository.addSaksbehandler("test@nav.no", Områder.K9)
+            saksbehandlerRepository.vedlikeholdSaksbehandler(
                 Saksbehandler(
                     id = null,
                     navident = "test",
@@ -135,7 +136,8 @@ class LagretSøkRepositoryTest : AbstractK9LosIntegrationTest() {
     fun `skal kun hente søk som tilhører saksbehandleren`() {
         runBlocking {
             // Opprett en annen saksbehandler
-            saksbehandlerRepository.addSaksbehandler(
+            saksbehandlerRepository.addSaksbehandler("annen@nav.no", Områder.K9)
+            saksbehandlerRepository.vedlikeholdSaksbehandler(
                 Saksbehandler(
                     id = null,
                     navident = "annen",

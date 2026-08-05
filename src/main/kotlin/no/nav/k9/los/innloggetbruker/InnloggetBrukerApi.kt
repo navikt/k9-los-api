@@ -8,6 +8,7 @@ import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.azuregraph.IAzureGraphService
 import no.nav.k9.los.infrastruktur.idtoken.idToken
 import no.nav.k9.los.infrastruktur.rest.RequestContextService
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
 import org.koin.ktor.ext.inject
@@ -45,23 +46,22 @@ internal fun Route.InnloggetBrukerApi() {
                     kanOppgavestyre = pepClient.erOppgaveStyrer(),
                     kanReservere = pepClient.harTilgangTilReserveringAvOppgaver(),
                     kanDrifte = pepClient.kanLeggeUtDriftsmelding(),
-                    finnesISaksbehandlerTabell = finnesISaksbehandlerTabell
+                    finnesISaksbehandlerTabell = finnesISaksbehandlerTabell,
+                    områder = saksbehandler?.områder ?: emptyList()
                 )
                 if (!innloggetBrukerDto.kanSaksbehandle) {
                     log.warn("Saksbehandler med epost ${token.getUsername()} har ikke basistilgang, og kan derfor ikke bruke systemet")
                 }
                 if (finnesISaksbehandlerTabell) {
-                    //  oppdaterer saksbehandler i tabell etter at epost er lagt inn av avdelingsleder
-                    saksbehandlerRepository.addSaksbehandler(
+                    //  vedlikeholder saksbehandler-feltene etter at epost er lagt inn av avdelingsleder
+                    saksbehandlerRepository.vedlikeholdSaksbehandler(
                         Saksbehandler(
                             id = null,
                             navident = saksbehandlerIdent,
                             navn = token.getName(),
                             epost = token.getUsername(),
                             enhet = azureGraphService.hentEnhetForInnloggetBruker(),
-                            // Behold området saksbehandleren allerede står oppført med, slik at
-                            // innlogging ikke overskriver det.
-                            områder = saksbehandler!!.områder //TODO: utlede område fra enhet?
+                            områder = saksbehandler!!.områder
                         )
                     )
                 }
@@ -80,7 +80,8 @@ internal fun Route.InnloggetBrukerApi() {
                     kanOppgavestyre = true,
                     kanReservere = true,
                     kanDrifte = true,
-                    finnesISaksbehandlerTabell = true
+                    finnesISaksbehandlerTabell = true,
+                    områder = listOf(Områder.K9)
                 )
             )
         }

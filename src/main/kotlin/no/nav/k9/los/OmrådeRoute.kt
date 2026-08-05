@@ -14,7 +14,7 @@ private val områdeAttributeKey = AttributeKey<Områder>("los-omrade")
  * uten å måtte tråkle parameteret gjennom alle route-funksjonene.
  */
 fun Route.områdeApi(område: Områder, build: Route.() -> Unit): Route =
-    route("${område.urlSegment}/los/api") {
+    route("${område.urlSegment}/") {
         install(
             createRouteScopedPlugin("OmrådeKontekst-${område.eksternId}") {
                 onCall { call -> call.attributes.put(områdeAttributeKey, område) }

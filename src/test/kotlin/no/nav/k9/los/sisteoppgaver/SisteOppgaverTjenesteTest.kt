@@ -69,7 +69,8 @@ class SisteOppgaverTjenesteTest : AbstractK9LosIntegrationTest() {
         )
         
         runBlocking {
-            saksbehandlerRepository.addSaksbehandler(
+            saksbehandlerRepository.addSaksbehandler("test@nav.no", Områder.K9)
+            saksbehandlerRepository.vedlikeholdSaksbehandler(
                 Saksbehandler(
                     id = null,
                     navident = "test",

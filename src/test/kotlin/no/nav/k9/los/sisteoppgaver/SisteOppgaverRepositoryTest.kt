@@ -32,7 +32,8 @@ class SisteOppgaverRepositoryTest : AbstractK9LosIntegrationTest() {
         transactionalManager = get()
 
         runBlocking {
-            saksbehandlerRepository.addSaksbehandler(
+            saksbehandlerRepository.addSaksbehandler("test@nav.no", Områder.K9)
+            saksbehandlerRepository.vedlikeholdSaksbehandler(
                 Saksbehandler(
                     id = null,
                     navident = "test",

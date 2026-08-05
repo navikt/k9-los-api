@@ -13,6 +13,8 @@ import no.nav.k9.los.infrastruktur.utils.OpentelemetrySpanUtil
 import org.koin.ktor.ext.inject
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 
+//TODO: Splitte i OppgaveKoAvdelingslederpanelApis og OppgaveKoSaksbehandlerpanelApis
+
 fun Route.OppgaveKoApis() {
     val requestContextService by inject<RequestContextService>()
     val oppgaveKoTjeneste by inject<OppgaveKoTjeneste>()

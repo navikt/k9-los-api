@@ -4,6 +4,7 @@ import io.ktor.http.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import no.nav.k9.los.område
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.rest.RequestContextService
 import no.nav.k9.los.reservasjon.ReservasjonApisTjeneste
@@ -32,7 +33,7 @@ internal fun Route.SaksbehandlerAdminApis() {
         requestContextService.withRequestContext(call) {
             if (pepClient.erOppgaveStyrer()) {
                 val epost = call.receive<EpostDto>()
-                call.respond(saksbehandlerAdminTjeneste.søkSaksbehandler(epost))
+                call.respond(saksbehandlerAdminTjeneste.søkSaksbehandler(epost, call.område))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
@@ -42,8 +43,8 @@ internal fun Route.SaksbehandlerAdminApis() {
     post("/saksbehandlere/legg-til") {
         requestContextService.withRequestContext(call) {
             if (pepClient.erOppgaveStyrer()) {
-                val epost = call.receive<EpostDto>()
-                call.respond(saksbehandlerAdminTjeneste.leggTilSaksbehandlerForEpost(epost.epost))
+                val request = call.receive<EpostOgOmraadeDto>()
+                call.respond(saksbehandlerAdminTjeneste.leggTilSaksbehandlerForEpost(request.epost, call.område))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
@@ -53,8 +54,8 @@ internal fun Route.SaksbehandlerAdminApis() {
     post("/saksbehandlere/slett") {
         requestContextService.withRequestContext(call) {
             if (pepClient.erOppgaveStyrer()) {
-                val epost = call.receive<EpostDto>()
-                call.respond(saksbehandlerAdminTjeneste.slettSaksbehandler(epost.epost))
+                val request = call.receive<EpostOgOmraadeDto>()
+                call.respond(saksbehandlerAdminTjeneste.slettSaksbehandler(request.epost, request.omraade))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }

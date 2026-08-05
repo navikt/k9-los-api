@@ -10,7 +10,6 @@ import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.AbstractK9LosIntegrationTest
-import no.nav.k9.los.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.ko.db.OppgaveKoRepository
@@ -105,16 +104,7 @@ class OppgaveKoTest : AbstractK9LosIntegrationTest() {
         } returns true
 
         return runBlocking {
-            saksbehandlerRepository.addSaksbehandler(
-                Saksbehandler(
-                    id = null,
-                    navident = "Ident$saksbehandlerepost",
-                    navn = "Navn for $saksbehandlerepost",
-                    epost = saksbehandlerepost,
-                    enhet = null,
-                    områder = listOf(Områder.K9)
-                )
-            )
+            saksbehandlerRepository.addSaksbehandler(saksbehandlerepost, Områder.K9)
         }
     }
 }

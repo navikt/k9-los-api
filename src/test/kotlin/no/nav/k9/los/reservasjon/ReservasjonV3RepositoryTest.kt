@@ -5,7 +5,6 @@ import assertk.assertions.isEqualTo
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
-import no.nav.k9.los.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -23,16 +22,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
         val transactionalManager = get<TransactionalManager>()
 
         val saksbehandler = runBlocking {
-            saksbehandlerRepository.addSaksbehandler(
-                Saksbehandler(
-                    id = null,
-                    navident = null,
-                    navn = null,
-                    epost = "test1@test.no",
-                    enhet = null,
-                    områder = listOf(Områder.K9),
-                )
-            )
+            saksbehandlerRepository.addSaksbehandler("test1@test.no", Områder.K9)
 
             saksbehandlerRepository.finnSaksbehandlerMedEpost("test1@test.no")!!
         }
@@ -70,31 +60,13 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
         val saksbehandlerRepository = get<SaksbehandlerRepository>()
 
         val saksbehandler1 = runBlocking {
-            saksbehandlerRepository.addSaksbehandler(
-                Saksbehandler(
-                    id = null,
-                    navident = null,
-                    navn = null,
-                    epost = "test1@test.no",
-                    enhet = null,
-                    områder = listOf(Områder.K9),
-                )
-            )
+            saksbehandlerRepository.addSaksbehandler("test1@test.no", Områder.K9)
 
             saksbehandlerRepository.finnSaksbehandlerMedEpost("test1@test.no")!!
         }
 
         val saksbehandler2 = runBlocking {
-            saksbehandlerRepository.addSaksbehandler(
-                Saksbehandler(
-                    id = null,
-                    navident = null,
-                    navn = null,
-                    epost = "test2@test.no",
-                    enhet = null,
-                    områder = listOf(Områder.K9),
-                )
-            )
+            saksbehandlerRepository.addSaksbehandler("test2@test.no", Områder.K9)
             saksbehandlerRepository.finnSaksbehandlerMedEpost("test2@test.no")!!
         }
 
@@ -134,16 +106,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
         val saksbehandlerRepository = get<SaksbehandlerRepository>()
 
         val saksbehandler1 = runBlocking {
-            saksbehandlerRepository.addSaksbehandler(
-                Saksbehandler(
-                    id = null,
-                    navident = null,
-                    navn = null,
-                    epost = "test1@test.no",
-                    enhet = null,
-                    områder = listOf(Områder.K9),
-                )
-            )
+            saksbehandlerRepository.addSaksbehandler("test1@test.no", Områder.K9)
 
             saksbehandlerRepository.finnSaksbehandlerMedEpost("test1@test.no")!!
         }
@@ -194,31 +157,13 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
         val saksbehandlerRepository = get<SaksbehandlerRepository>()
 
         val saksbehandler1 = runBlocking {
-            saksbehandlerRepository.addSaksbehandler(
-                Saksbehandler(
-                    id = null,
-                    navident = null,
-                    navn = null,
-                    epost = "test1@test.no",
-                    enhet = null,
-                    områder = listOf(Områder.K9),
-                )
-            )
+            saksbehandlerRepository.addSaksbehandler("test1@test.no", Områder.K9)
 
             saksbehandlerRepository.finnSaksbehandlerMedEpost("test1@test.no")!!
         }
 
         val saksbehandler2 = runBlocking {
-            saksbehandlerRepository.addSaksbehandler(
-                Saksbehandler(
-                    id = null,
-                    navident = null,
-                    navn = null,
-                    epost = "test2@test.no",
-                    enhet = null,
-                    områder = listOf(Områder.K9),
-                )
-            )
+            saksbehandlerRepository.addSaksbehandler("test2@test.no", Områder.K9)
             saksbehandlerRepository.finnSaksbehandlerMedEpost("test2@test.no")!!
         }
 
@@ -263,31 +208,13 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
         val saksbehandlerRepository = get<SaksbehandlerRepository>()
 
         val saksbehandler1 = runBlocking {
-            saksbehandlerRepository.addSaksbehandler(
-                Saksbehandler(
-                    id = null,
-                    navident = null,
-                    navn = null,
-                    epost = "test1@test.no",
-                    enhet = null,
-                    områder = listOf(Områder.K9),
-                )
-            )
+            saksbehandlerRepository.addSaksbehandler("test1@test.no", Områder.K9)
 
             saksbehandlerRepository.finnSaksbehandlerMedEpost("test1@test.no")!!
         }
 
         val saksbehandler2 = runBlocking {
-            saksbehandlerRepository.addSaksbehandler(
-                Saksbehandler(
-                    id = null,
-                    navident = null,
-                    navn = null,
-                    epost = "test2@test.no",
-                    enhet = null,
-                    områder = listOf(Områder.K9),
-                )
-            )
+            saksbehandlerRepository.addSaksbehandler("test2@test.no", Områder.K9)
             saksbehandlerRepository.finnSaksbehandlerMedEpost("test2@test.no")!!
         }
 
@@ -312,16 +239,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
         )
 
         val saksbehandlerInnlogget = runBlocking {
-            saksbehandlerRepository.addSaksbehandler(
-                Saksbehandler(
-                    id = null,
-                    navident = "saksbehandler@nav.no",
-                    navn = null,
-                    epost = "saksbehandler@nav.no",
-                    enhet = null,
-                    områder = listOf(Områder.K9),
-                )
-            )
+            saksbehandlerRepository.addSaksbehandler("saksbehandler@nav.no", Områder.K9)
             saksbehandlerRepository.finnSaksbehandlerMedEpost("saksbehandler@nav.no")!!
         }
 
@@ -342,16 +260,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
         val transactionalManager = get<TransactionalManager>()
 
         val saksbehandler = runBlocking {
-            saksbehandlerRepository.addSaksbehandler(
-                Saksbehandler(
-                    id = null,
-                    navident = null,
-                    navn = null,
-                    epost = "test1@test.no",
-                    enhet = null,
-                    områder = listOf(Områder.K9),
-                )
-            )
+            saksbehandlerRepository.addSaksbehandler("test1@test.no", Områder.K9)
 
             saksbehandlerRepository.finnSaksbehandlerMedEpost("test1@test.no")!!
         }
@@ -393,42 +302,15 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
         val transactionalManager = get<TransactionalManager>()
 
         val saksbehandler1 = runBlocking {
-            saksbehandlerRepository.addSaksbehandler(
-                Saksbehandler(
-                    id = null,
-                    navident = null,
-                    navn = null,
-                    epost = "test1@test.no",
-                    enhet = null,
-                    områder = listOf(Områder.K9),
-                )
-            )
+            saksbehandlerRepository.addSaksbehandler("test1@test.no", Områder.K9)
             saksbehandlerRepository.finnSaksbehandlerMedEpost("test1@test.no")!!
         }
         val saksbehandler2 = runBlocking {
-            saksbehandlerRepository.addSaksbehandler(
-                Saksbehandler(
-                    id = null,
-                    navident = null,
-                    navn = null,
-                    epost = "test2@test.no",
-                    enhet = null,
-                    områder = listOf(Områder.K9),
-                )
-            )
+            saksbehandlerRepository.addSaksbehandler("test2@test.no", Områder.K9)
             saksbehandlerRepository.finnSaksbehandlerMedEpost("test2@test.no")!!
         }
         val saksbehandler3skjermet = runBlocking {
-            saksbehandlerRepository.addSaksbehandler(
-                Saksbehandler(
-                    id = null,
-                    navident = null,
-                    navn = null,
-                    epost = "test3@test.no",
-                    enhet = null,
-                    områder = listOf(Områder.K9),
-                )
-            )
+            saksbehandlerRepository.addSaksbehandler("test3@test.no", Områder.K9)
             saksbehandlerRepository.finnSaksbehandlerMedEpost("test3@test.no")!!
         }
 

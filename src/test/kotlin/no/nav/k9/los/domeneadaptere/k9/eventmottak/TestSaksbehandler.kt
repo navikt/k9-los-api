@@ -3,10 +3,10 @@ package no.nav.k9.los.domeneadaptere.k9.eventmottak
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
+import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
-import no.nav.k9.los.infrastruktur.abac.IPepClient
 import org.koin.test.KoinTest
 import org.koin.test.get
 import javax.sql.DataSource
@@ -53,15 +53,18 @@ class TestSaksbehandler: KoinTest {
 
     fun init() {
         runBlocking {
-            repo.addSaksbehandler(SARA)
-            repo.addSaksbehandler(BIRGER_BESLUTTER)
+            repo.addSaksbehandler(SARA.epost, Områder.K9)
+            repo.vedlikeholdSaksbehandler(SARA)
+            repo.addSaksbehandler(BIRGER_BESLUTTER.epost, Områder.K9)
+            repo.vedlikeholdSaksbehandler(BIRGER_BESLUTTER)
             leggTilSkjermet()
         }
     }
 
     private suspend fun leggTilSkjermet() {
         coEvery { pepClient.harTilgangTilKode6() } returns true
-        repo.addSaksbehandler(KJERSTI_SKJERMET)
+        repo.addSaksbehandler(KJERSTI_SKJERMET.epost, Områder.K9)
+        repo.vedlikeholdSaksbehandler(KJERSTI_SKJERMET)
         coEvery { pepClient.harTilgangTilKode6() } returns false
     }
 }

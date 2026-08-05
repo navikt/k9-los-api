@@ -19,24 +19,20 @@ class SaksbehandlerAdminTjeneste(
 ) {
 
     // TODO: slett når frontend har begynt å bruke nytt endepunkt
-    suspend fun søkSaksbehandler(epostDto: EpostDto): Saksbehandler {
+    suspend fun søkSaksbehandler(epostDto: EpostDto, område: Områder): Saksbehandler {
         var saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedEpost(epostDto.epost)
         if (saksbehandler == null) {
             saksbehandler = Saksbehandler(
-                null, null, null, epostDto.epost, null, listOf(Områder.K9)
+                null, null, null, epostDto.epost, null, listOf(område)
             )
-            saksbehandlerRepository.addSaksbehandler(saksbehandler)
+            saksbehandlerRepository.addSaksbehandler(epostDto.epost, område)
         }
         return saksbehandler
     }
 
-    suspend fun leggTilSaksbehandlerForEpost(epost: String) {
-        if (saksbehandlerRepository.finnSaksbehandlerMedEpost(epost) != null) {
-            throw IllegalStateException("Saksbehandler finnes fra før")
-        }
+    suspend fun leggTilSaksbehandlerForEpost(epost: String, område: Områder) {
         // lagrer med tomme verdier, disse blir populert etter at saksbehandleren har logget seg inn
-        val saksbehandler = Saksbehandler(null, null, null, epost, null, listOf(Områder.K9))
-        saksbehandlerRepository.addSaksbehandler(saksbehandler)
+        saksbehandlerRepository.addSaksbehandler(epost, område)
     }
 
     suspend fun slettSaksbehandlerForId(id: Long) {
@@ -62,10 +58,23 @@ class SaksbehandlerAdminTjeneste(
 
     suspend fun slettSaksbehandler(
         epost: String,
+        område: Områder
     ) {
         val skjermet = pepClient.harTilgangTilKode6()
 
         val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedEpost(epost) ?: throw IllegalStateException("Kunne ikke finne saksbehandler med epost")
+        if (!saksbehandler.områder.contains(område)) {
+            throw IllegalStateException("Saksbehandler med epost $epost har ikke område ${område.eksternId}")
+        }
+
+        if (saksbehandler.områder.size > 1) {
+            transactionalManager.transaction { tx ->
+                saksbehandlerRepository.fjernOmrådeFraSaksbehandler(tx, epost, skjermet, område)
+                //TODO: fjern saksbehandler-områdets reservasjoner
+            }
+            return
+        }
+
         if (saksbehandler.navident != null) {
             val lagredeSøk = lagretSøkTjeneste.hentAlle(saksbehandler.navident!!)
             lagredeSøk.forEach {

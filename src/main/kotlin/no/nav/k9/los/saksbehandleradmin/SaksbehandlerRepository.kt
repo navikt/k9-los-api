@@ -19,25 +19,74 @@ class SaksbehandlerRepository(
     private val transactionalManager: TransactionalManager,
     private val områdeRepository: OmrådeRepository
 ) {
-    suspend fun addSaksbehandler(saksbehandler: Saksbehandler): Long {
-        val erSkjermet = pepClient.harTilgangTilKode6()
-        val områder = saksbehandler.områder.distinct()
-        if (områder.isEmpty()) {
-            throw IllegalArgumentException("Saksbehandler må ha minst ett område")
-        }
-
+    /**
+     * Upserter en saksbehandler basert på epost og kobler den til [område].
+     *
+     * Kun epost og områdekoblingen berøres. De øvrige feltene på saksbehandleren
+     * (navident, navn, enhet, skjermet) røres ikke her – de vedlikeholdes av
+     * [vedlikeholdSaksbehandler] når saksbehandleren selv logger inn.
+     */
+    fun addSaksbehandler(epost: String, område: Områder): Long {
         return using(sessionOf(dataSource)) {
-            val saksbehandlerId = it.transaction { tx ->
+            it.transaction { tx ->
                 val saksbehandlerId = tx.run(
                     queryOf(
                         """
-                        insert into saksbehandler as k (navident, navn, epost, enhet, skjermet)
-                        values (:navident,:navn,:epost, :enhet, :skjermet)
+                        insert into saksbehandler (epost)
+                        values (:epost)
                         on conflict (epost) do update
-                        set navident = :navident,
-                            navn = :navn,
-                            enhet = :enhet,
+                        set epost = excluded.epost
+                        returning id
+                     """,
+                        mapOf(
+                            "epost" to epost.lowercase(getDefault()),
+                        )
+                    ).map { row -> row.long("id") }.asSingle
+                )!!
+
+                val omradeId = områdeRepository.hentOmråde(område, tx).id
+                tx.run(
+                    queryOf(
+                        """
+                        insert into saksbehandler_omrade (saksbehandler_id, omrade_id)
+                        values (:saksbehandlerId, :omradeId)
+                        on conflict do nothing
+                        """.trimIndent(),
+                        mapOf(
+                            "saksbehandlerId" to saksbehandlerId,
+                            "omradeId" to omradeId,
+                        )
+                    ).asUpdate
+                )
+
+                saksbehandlerId
+            }
+        }
+    }
+
+    /**
+     * Vedlikeholder de saksbehandler-eide feltene (navident, navn, enhet, skjermet) for en
+     * eksisterende saksbehandler, matchet på epost. Områdekoblinger røres ikke her – de
+     * håndteres av [addSaksbehandler].
+     *
+     * Bruker en ren UPDATE (ikke upsert). Saksbehandleren må allerede finnes – raden legges inn
+     * av [addSaksbehandler] når avdelingsleder registrerer eposten. En upsert her ville dessuten
+     * forbrukt en sekvensverdi på id-kolonnen ved konflikt, og forskjøvet genererte id-er.
+     */
+    suspend fun vedlikeholdSaksbehandler(saksbehandler: Saksbehandler): Long {
+        val erSkjermet = pepClient.harTilgangTilKode6()
+
+        return using(sessionOf(dataSource)) {
+            it.transaction { tx ->
+                tx.run(
+                    queryOf(
+                        """
+                        update saksbehandler
+                        set navident = coalesce(:navident, navident),
+                            navn = coalesce(:navn, navn),
+                            enhet = coalesce(:enhet, enhet),
                             skjermet = :skjermet
+                        where lower(epost) = lower(:epost)
                         returning id
                      """,
                         mapOf(
@@ -48,35 +97,8 @@ class SaksbehandlerRepository(
                             "skjermet" to erSkjermet,
                         )
                     ).map { row -> row.long("id") }.asSingle
-                )
-                val id = saksbehandlerId!!
-
-                tx.run(
-                    queryOf(
-                        "delete from saksbehandler_omrade where saksbehandler_id = :saksbehandlerId",
-                        mapOf("saksbehandlerId" to id)
-                    ).asUpdate
-                )
-
-                områder.forEach { område ->
-                    val omradeId = områdeRepository.hentOmråde(område, tx).id
-                    tx.run(
-                        queryOf(
-                            """
-                            insert into saksbehandler_omrade (saksbehandler_id, omrade_id)
-                            values (:saksbehandlerId, :omradeId)
-                            """.trimIndent(),
-                            mapOf(
-                                "saksbehandlerId" to id,
-                                "omradeId" to omradeId,
-                            )
-                        ).asUpdate
-                    )
-                }
-
-                id
+                ) ?: throw IllegalStateException("Fant ikke saksbehandler med epost ${saksbehandler.epost} for vedlikehold")
             }
-            saksbehandlerId
         }
     }
 
@@ -286,6 +308,31 @@ class SaksbehandlerRepository(
                 mapOf("saksbehandlerId" to saksbehandlerId)
             ).asUpdate
         )
+    }
+
+    fun fjernOmrådeFraSaksbehandler(tx: TransactionalSession, epost: String, skjermet: Boolean, område: Områder) {
+        val antallSlettet = tx.run(
+            queryOf(
+                """
+                    delete from saksbehandler_omrade so
+                    using saksbehandler s, omrade o
+                    where so.saksbehandler_id = s.id
+                      and so.omrade_id = o.id
+                      and lower(s.epost) = lower(:epost)
+                      and s.skjermet = :skjermet
+                      and o.ekstern_id = :omradeEksternId
+                """.trimIndent(),
+                mapOf(
+                    "epost" to epost.lowercase(Locale.getDefault()),
+                    "skjermet" to skjermet,
+                    "omradeEksternId" to område.eksternId
+                )
+            ).asUpdate
+        )
+
+        if (antallSlettet == 0) {
+            throw IllegalStateException("Fant ikke område ${område.eksternId} for saksbehandler med epost $epost")
+        }
     }
 
     suspend fun hentAlleSaksbehandlere(): List<Saksbehandler> {
