@@ -1,13 +1,11 @@
 package no.nav.k9.los.driftsmelding
 
 import io.ktor.http.*
-import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.rest.RequestContextService
-import no.nav.k9.los.driftsmelding.IdDto
 import org.koin.ktor.ext.inject
 import java.util.*
 

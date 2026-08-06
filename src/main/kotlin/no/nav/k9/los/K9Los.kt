@@ -59,6 +59,8 @@ import no.nav.k9.los.infrastruktur.metrikker.EventlagerNokkeltallPrometheusColle
 import no.nav.k9.los.innloggetbruker.InnloggetBrukerApi
 import no.nav.k9.los.ko.KøpåvirkendeHendelse
 import no.nav.k9.los.ko.OppgaveKoApis
+import no.nav.k9.los.ko.OppgaveKoAvdelingslederApis
+import no.nav.k9.los.ko.OppgaveKoSaksbehandlerApis
 import no.nav.k9.los.lagretsok.LagretSøkApi
 import no.nav.k9.los.nøkkeltall.NøkkeltallV3Apis
 import no.nav.k9.los.nøkkeltall.saksbehandler.nyeogferdigstilte.NyeOgFerdigstilteApi
@@ -276,7 +278,7 @@ private fun Route.legacyApi() {
 }
 
 private fun Route.apiUnderConstruction() {
-    route("driftsmeldinger") { DriftsmeldingerApis() } //TODO: Tag driftsmelding
+    route("driftsmeldinger", { tags("Driftsmelding") }) { DriftsmeldingerApis() }
     route("innloggetbruker") { InnloggetBrukerApi() }
     Områder.entries.forEach { område ->
         områdeApi(område) {
@@ -284,29 +286,32 @@ private fun Route.apiUnderConstruction() {
                 openApi()
             }
             swaggerUI("openapi.json")
-            route("/forvaltning") {
+            route("/forvaltning", {
+                tags("Forvaltning")
+            }) {
                 route("eventlager") { EventlagerApi() }
                 forvaltningApis()
                 route("statistikk") { StatistikkApi() }
             }
 
             //TODO: tagge alle under her med "applikasjon"
-            route("saksbehandler") {
+            route("saksbehandler", { tags("Saksbehandler") } ) {
                 route("sok") { SøkeboksApi() }
+                route("oppgaveko") { OppgaveKoSaksbehandlerApis() }
                 route("reservasjoner") { ReservasjonApis() } //TODO: alle reservasjoner til egen fil under avdelingsleder
                 route("siste-oppgaver") { SisteOppgaverApi() }
                 route("nye-og-ferdigstilte") { NyeOgFerdigstilteApi() }
             }
 
-            route("avdelingsleder") {
+            route("avdelingsleder", { tags("Avdelingsleder") } ) {
                 route("saksbehandler-admin") { SaksbehandlerAdminApisNy() }
+                route("reservasjon-admin") {}
+                route("oppgaveko") { OppgaveKoAvdelingslederApis() }
                 route("nokkeltall") { NøkkeltallV3Apis() }
                 route("lagret-sok") { LagretSøkApi() }
                 route("uttrekk") { UttrekkApi() }
                 route("query") { OppgaveQueryApis() }
             }
-
-            route("ko") { OppgaveKoApis() } //TODO: splitt i admin- og saksbehandleroperasjoner
         }
     }
 }

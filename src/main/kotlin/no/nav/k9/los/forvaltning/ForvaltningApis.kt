@@ -57,7 +57,6 @@ fun Route.forvaltningApis() {
 
 
     get("/index_oversikt", {
-        tags("Forvaltning")
         description = "index_oversikt"
         response {
             HttpStatusCode.OK to {
@@ -113,7 +112,6 @@ fun Route.forvaltningApis() {
     }
 
     get("/{system}/{saksnummer}/finnEksternId", {
-        tags("Forvaltning")
         description = "Søk opp eksternId for saksnummer eller journalpostId"
         request {
             pathParameter<Fagsystem>("system") {
@@ -200,7 +198,6 @@ fun Route.forvaltningApis() {
     }
 
     get("/oppgaveV3/{oppgavetype}/{oppgaveEksternId}/aktiv", {
-        tags("Forvaltning")
         description = "Hent ut nåtilstand for en oppgave"
         request {
             pathParameter<K9Oppgavetypenavn>("oppgavetype") {
@@ -230,7 +227,6 @@ fun Route.forvaltningApis() {
     }
 
     get("/oppgaveV3/{oppgavetype}/{oppgaveEksternId}", {
-        tags("Forvaltning")
         description = "Hent ut oppgavehistorikk for en oppgave"
         request {
             pathParameter<K9Oppgavetypenavn>("oppgavetype") {
@@ -267,7 +263,6 @@ fun Route.forvaltningApis() {
     }
 
     get("/oppgaveV3/{omrade}/{oppgavetype}/{oppgaveEksternId}/reservasjoner", {
-        tags("Forvaltning")
         description = "Hent ut reservasjonshistorikk for en oppgave"
         request {
             pathParameter<String>("omrade") {
@@ -322,7 +317,6 @@ fun Route.forvaltningApis() {
     }
 
     get("/avstemming/{fagsystem}", {
-        tags("Forvaltning")
         description =
             "Hent ut liste med åpne behandlinger/journalposter i spesifisert fagsystem og kontroller opp mot åpne oppgaver i los. Returnerer en avviksrapport"
         request {
@@ -349,7 +343,7 @@ fun Route.forvaltningApis() {
     }
 
     route("/ytelse") {
-        get("/oppgaveko/antall", { tags("Forvaltning") }) {
+        get("/oppgaveko/antall") {
             requestContextService.withRequestContext(call) {
                 if (pepClient.kanLeggeUtDriftsmelding()) {
                     val antall = oppgaveKoTjeneste.hentOppgavekøer(skjermet = false).map {
@@ -366,7 +360,7 @@ fun Route.forvaltningApis() {
             }
         }
 
-        get("/oppgaveko", { tags("Forvaltning") }) {
+        get("/oppgaveko") {
             requestContextService.withRequestContext(call) {
                 if (pepClient.kanLeggeUtDriftsmelding()) {
                     call.respond(oppgaveKoTjeneste.hentOppgavekøer(skjermet = false).map { it.id })
@@ -376,7 +370,7 @@ fun Route.forvaltningApis() {
             }
         }
 
-        get("/oppgaveko/{ko}/antall", { tags("Forvaltning") }) {
+        get("/oppgaveko/{ko}/antall") {
             requestContextService.withRequestContext(call) {
                 if (pepClient.kanLeggeUtDriftsmelding()) {
                     val køId = call.parameters["ko"]!!.toLong()
@@ -395,7 +389,6 @@ fun Route.forvaltningApis() {
     }
 
     get("/feltdefinisjon/{omrade}/{kode}/bruk", {
-        tags("Forvaltning")
         description = "Hent oppgavekøer og lagrede søk som bruker et spesifikt felt som kriterie"
         request {
             pathParameter<String>("omrade") {
@@ -441,7 +434,6 @@ fun Route.forvaltningApis() {
     }
 
     get("/feltdefinisjon/bruk", {
-        tags("Forvaltning")
         description =
             "Hent oversikt over alle feltdefinisjoner som er brukt som kriterie i oppgavekøer og lagrede søk, med antall for hver"
     }) {
@@ -485,7 +477,6 @@ fun Route.forvaltningApis() {
     }
 
     post("/bestillHistorikkvaskFraQuery/{fagsystem}", {
-        tags("Forvaltning")
         description = "Bestill historikkvask for oppgaver truffet av oppgavequery"
         request {
             pathParameter<Fagsystem>("fagsystem") {
@@ -531,7 +522,6 @@ fun Route.forvaltningApis() {
     }
 
     post("/bestillDvhSendingFraQuery/{fagsystem}", {
-        tags("Forvaltning")
         description = "Bestill DVH-sending for oppgaver truffet av oppgavequery"
         request {
             pathParameter<DvhSendingFagsystem>("fagsystem") {
@@ -585,7 +575,6 @@ fun Route.forvaltningApis() {
     }
 
     get("/omrade/kobling/status", {
-        tags("Forvaltning")
         description = "Viser om fremmednøklene mot OMRADE er validert og om indeksene på omrade_id er bygget. " +
                 "Migrering V1.0_0107 gjør kun metadataoperasjoner; det som krever full tabellgjennomgang utløses her."
     }) {
@@ -599,7 +588,6 @@ fun Route.forvaltningApis() {
     }
 
     post("/omrade/kobling/valider-fremmednokler", {
-        tags("Forvaltning")
         description = "Validerer fremmednøklene mot OMRADE som ennå ikke er validert. " +
                 "Tar SHARE UPDATE EXCLUSIVE og blokkerer verken lesing eller skriving, " +
                 "men kan ta tid på store tabeller. Idempotent."
@@ -616,7 +604,6 @@ fun Route.forvaltningApis() {
     }
 
     post("/omrade/kobling/opprett-indekser", {
-        tags("Forvaltning")
         description = "Bygger indeks på omrade_id for reservasjon_v3, event_nokkel og oppgave_pep_cache " +
                 "med CREATE INDEX CONCURRENTLY, som ikke blokkerer skriving. Idempotent."
     }) {

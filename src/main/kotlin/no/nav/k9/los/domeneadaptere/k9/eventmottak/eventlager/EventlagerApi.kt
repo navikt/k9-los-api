@@ -30,7 +30,6 @@ internal fun Route.EventlagerApi() {
     val pepClient by inject<IPepClient>()
 
     get("/eventer/{fagsystem}/{eksternId}", {
-        tags("Forvaltning")
         description = "Hent ut eventhistorikk for en oppgave, nytt eventlager"
         request {
             pathParameter<Fagsystem>("fagsystem") {
@@ -84,7 +83,6 @@ internal fun Route.EventlagerApi() {
     }
 
     put("/spillAvDirtyEventer", {
-        tags("Forvaltning")
     }) {
         requestContextService.withRequestContext(call) {
             thread(
@@ -100,7 +98,6 @@ internal fun Route.EventlagerApi() {
     }
 
     put("/{fagsystem}/bestillHistorikkvask", {
-        tags("Forvaltning")
         request {
             pathParameter<Fagsystem>("fagsystem") {
                 description = "Fagsystemet man vil ha eventkonvertering for"
@@ -119,7 +116,6 @@ internal fun Route.EventlagerApi() {
     }
 
     put("bestillHistorikkvaskForEnkeltoppgave", {
-        tags("Forvaltning")
         request {
             queryParameter<Fagsystem>("fagsystem") {
                 description = "Fagsystemet for oppgaven man vil ha historikkvask for"
