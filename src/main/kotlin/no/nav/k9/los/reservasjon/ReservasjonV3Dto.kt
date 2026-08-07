@@ -23,13 +23,13 @@ data class ReservasjonV3Dto(
     ) : this(
         reserverteV3Oppgaver = oppgaver,
         reservasjonsnøkkel = reservasjonV3.reservasjonsnøkkel,
+        reservertAvNavn = reservertAv.navn,
         reservertAvIdent = reservertAv.navident!!,
         reservertAvEpost = reservertAv.epost,
         reservertAvId = reservertAv.id!!,
-        reservertAvNavn = reservertAv.navn,
         kommentar = reservasjonV3.kommentar ?: "",
         reservertFra = reservasjonV3.gyldigFra,
         reservertTil = reservasjonV3.gyldigTil,
-        endretAvNavn = endretAvNavn
+        endretAvNavn = endretAvNavn,
     )
 }

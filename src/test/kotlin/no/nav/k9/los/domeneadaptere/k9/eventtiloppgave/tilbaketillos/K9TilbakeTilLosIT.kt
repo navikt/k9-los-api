@@ -102,7 +102,7 @@ class K9TilbakeTilLosIT : AbstractK9LosIntegrationTest() {
         assertThat(reservasjon).hasSize(1)
         reservasjon.first().let {
             assertThat(it.reserverteV3Oppgaver).hasSize(antallReserverteOppgaver)
-            it.reserverteV3Oppgaver.forEach {oppgave -> assertThat(oppgave.oppgaveNøkkel.oppgaveTypeEksternId).isEqualTo("k9tilbake")}
+            it.reserverteV3Oppgaver.forEach { oppgave -> assertThat(oppgave.oppgaveNøkkel.oppgaveTypeEksternId).isEqualTo("k9tilbake")}
         }
     }
 }
