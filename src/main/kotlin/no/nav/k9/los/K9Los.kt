@@ -63,20 +63,24 @@ import no.nav.k9.los.innloggetbruker.InnloggetBrukerApi
 import no.nav.k9.los.ko.KøpåvirkendeHendelse
 import no.nav.k9.los.ko.OppgaveKoApis
 import no.nav.k9.los.ko.OppgaveKoAvdelingslederApis
-import no.nav.k9.los.ko.OppgaveKoSaksbehandlerApis
+import no.nav.k9.los.ko.OppgaveKoSaksbehandlerApisNy
 import no.nav.k9.los.lagretsok.LagretSøkApi
 import no.nav.k9.los.nøkkeltall.NøkkeltallV3Apis
 import no.nav.k9.los.nøkkeltall.saksbehandler.nyeogferdigstilte.NyeOgFerdigstilteApi
+import no.nav.k9.los.nøkkeltall.saksbehandler.nyeogferdigstilte.NyeOgFerdigstilteApiNy
 import no.nav.k9.los.nøkkeltall.saksbehandler.nyeogferdigstilte.NyeOgFerdigstilteService
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.FeltdefinisjonApi
 import no.nav.k9.los.oppgavedefinisjon.oppgavetype.OppgavetypeApi
 import no.nav.k9.los.oppgavemottak.OppgaveV3Api
 import no.nav.k9.los.oppgaveuthenting.query.OppgaveQueryApis
 import no.nav.k9.los.reservasjon.ReservasjonApis
+import no.nav.k9.los.reservasjon.ReservasjonApisNy
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerAdminApis
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerAdminApisNy
 import no.nav.k9.los.sisteoppgaver.SisteOppgaverApi
+import no.nav.k9.los.sisteoppgaver.SisteOppgaverApiNy
 import no.nav.k9.los.søkeboks.SøkeboksApi
+import no.nav.k9.los.søkeboks.SøkeboksApiNy
 import no.nav.k9.los.tjenester.mock.localSetup
 import no.nav.k9.los.uttrekk.MigrerUttrekkResultatJobb
 import no.nav.k9.los.uttrekk.UttrekkApi
@@ -283,13 +287,10 @@ private fun Route.apiUnderConstruction() {
     route("driftsmeldinger", { tags("Driftsmelding") }) { DriftsmeldingerApis() }
     route("innloggetbruker") { InnloggetBrukerApi() }
     områdeApi {
-        route("openapi.json") {
-            openApi()
-        }
         swaggerUI("openapi.json")
-        route("/forvaltning", {
-            tags("Forvaltning")
-        }) {
+        route("openapi.json") { openApi() }
+
+        route("/forvaltning", { tags("Forvaltning") }) {
             route("eventlager") { EventlagerApiNy() }
             forvaltningApisNy()
             route("statistikk") { StatistikkApiNy() }
@@ -297,11 +298,11 @@ private fun Route.apiUnderConstruction() {
 
         //TODO: tagge alle under her med "applikasjon"
         route("saksbehandler", { tags("Saksbehandler") } ) {
-            route("sok") { SøkeboksApi() }
-            route("oppgaveko") { OppgaveKoSaksbehandlerApis() }
-            route("reservasjoner") { ReservasjonApis() } //TODO: alle reservasjoner til egen fil under avdelingsleder
-            route("siste-oppgaver") { SisteOppgaverApi() }
-            route("nye-og-ferdigstilte") { NyeOgFerdigstilteApi() }
+            route("sok") { SøkeboksApiNy() }
+            route("oppgaveko") { OppgaveKoSaksbehandlerApisNy() }
+            route("reservasjoner") { ReservasjonApisNy() } //TODO: alle reservasjoner til egen fil under avdelingsleder
+            route("siste-oppgaver") { SisteOppgaverApiNy() }
+            route("nye-og-ferdigstilte") { NyeOgFerdigstilteApiNy() }
         }
 
         route("avdelingsleder", { tags("Avdelingsleder") } ) {
