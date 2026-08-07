@@ -1,12 +1,12 @@
 package no.nav.k9.los.ko
 
-import io.ktor.http.HttpStatusCode
-import io.ktor.server.request.receive
-import io.ktor.server.response.respond
-import io.ktor.server.routing.Route
-import io.ktor.server.routing.delete
-import io.ktor.server.routing.get
-import io.ktor.server.routing.post
+import io.github.smiley4.ktoropenapi.delete
+import io.github.smiley4.ktoropenapi.get
+import io.github.smiley4.ktoropenapi.post
+import io.ktor.http.*
+import io.ktor.server.request.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.rest.RequestContextService
 import no.nav.k9.los.ko.dto.KopierOppgaveKoDto
@@ -17,19 +17,31 @@ import no.nav.k9.los.ko.dto.OppgaveKoListeelement
 import no.nav.k9.los.ko.dto.OpprettOppgaveKoDto
 import no.nav.k9.los.ko.dto.SaksbehandlerForKolisteDto
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
+import no.nav.k9.los.område
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
 import org.koin.ktor.ext.inject
-import kotlin.text.toLong
 
-fun Route.OppgaveKoAvdelingslederApis() {
+fun Route.OppgaveKoAvdelingslederApisNy() {
     val requestContextService by inject<RequestContextService>()
     val oppgaveKoTjeneste by inject<OppgaveKoTjeneste>()
     val saksbehandlerRepository by inject<SaksbehandlerRepository>()
     val pepClient by inject<IPepClient>()
 
-    get("/hentKoliste") {
+    get("/hentKoliste", {
+        description = "Hent liste over alle oppgavekøer."
+        request {
+            pathParameter<Områder>("omrade") {
+                description = "Området API-kallet gjelder for"
+                example("K9") { value = Områder.K9 }
+            }
+        }
+        response {
+            HttpStatusCode.OK to { body<OppgaveKoListeDto>() }
+        }
+    }) {
         requestContextService.withRequestContext(call) {
             if (pepClient.erOppgaveStyrer()) {
+                val område = call.område // TODO: bruk område når tjenesten er oppdatert til å ta hensyn til område
                 val oppgavekøer = oppgaveKoTjeneste.hentOppgavekøer(skjermet = pepClient.harTilgangTilKode6())
                     .map { oppgaveko ->
                         OppgaveKoListeelement(
@@ -47,9 +59,21 @@ fun Route.OppgaveKoAvdelingslederApis() {
         }
     }
 
-    post("/endreKo") {
+    post("/endreKo", {
+        description = "Endre en eksisterende oppgavekø."
+        request {
+            pathParameter<Områder>("omrade") {
+                description = "Området API-kallet gjelder for"
+                example("K9") { value = Områder.K9 }
+            }
+            body<OppgaveKo> {
+                description = "Oppgavekøen med de nye verdiene"
+            }
+        }
+    }) {
         requestContextService.withRequestContext(call) {
             if (pepClient.erOppgaveStyrer()) {
+                val område = call.område // TODO: bruk område når tjenesten er oppdatert til å ta hensyn til område
                 val oppgaveKo = call.receive<OppgaveKo>()
                 call.respond(oppgaveKoTjeneste.endre(oppgaveKo, pepClient.harTilgangTilKode6()))
             } else {
@@ -58,9 +82,21 @@ fun Route.OppgaveKoAvdelingslederApis() {
         }
     }
 
-    post("/kopier") {
+    post("/kopier", {
+        description = "Kopier en eksisterende oppgavekø."
+        request {
+            pathParameter<Områder>("omrade") {
+                description = "Området API-kallet gjelder for"
+                example("K9") { value = Områder.K9 }
+            }
+            body<KopierOppgaveKoDto> {
+                description = "Hvilken kø som skal kopieres, ny tittel, og hva som skal tas med"
+            }
+        }
+    }) {
         requestContextService.withRequestContext(call) {
             if (pepClient.erOppgaveStyrer()) {
+                val område = call.område // TODO: bruk område når tjenesten er oppdatert til å ta hensyn til område
                 val kopierOppgaveKoDto = call.receive<KopierOppgaveKoDto>()
                 call.respond(
                     oppgaveKoTjeneste.kopier(
@@ -77,9 +113,21 @@ fun Route.OppgaveKoAvdelingslederApis() {
         }
     }
 
-    get("/saksbehandlere") {
+    get("/saksbehandlere", {
+        description = "Hent alle saksbehandlere, for bruk ved administrasjon av oppgavekøer."
+        request {
+            pathParameter<Områder>("omrade") {
+                description = "Området API-kallet gjelder for"
+                example("K9") { value = Områder.K9 }
+            }
+        }
+        response {
+            HttpStatusCode.OK to { body<List<SaksbehandlerForKolisteDto>>() }
+        }
+    }) {
         requestContextService.withRequestContext(call) {
             if (pepClient.erOppgaveStyrer()) {
+                val område = call.område // TODO: bruk område når tjenesten er oppdatert til å ta hensyn til område
                 val alleSaksbehandlere = saksbehandlerRepository.hentAlleSaksbehandlere()
                     .map { saksbehandler ->
                         SaksbehandlerForKolisteDto(saksbehandler)
@@ -91,9 +139,21 @@ fun Route.OppgaveKoAvdelingslederApis() {
         }
     }
 
-    post("/opprett") {
+    post("/opprett", {
+        description = "Opprett en ny oppgavekø."
+        request {
+            pathParameter<Områder>("omrade") {
+                description = "Området API-kallet gjelder for"
+                example("K9") { value = Områder.K9 }
+            }
+            body<OpprettOppgaveKoDto> {
+                description = "Tittel på den nye oppgavekøen"
+            }
+        }
+    }) {
         requestContextService.withRequestContext(call) {
             if (pepClient.erOppgaveStyrer()) {
+                val område = call.område // TODO: bruk område når tjenesten er oppdatert til å ta hensyn til område
                 val opprettOppgaveKoDto = call.receive<OpprettOppgaveKoDto>()
                 val harSkjermetTilgang = pepClient.harTilgangTilKode6()
                 // OpprettOppgaveKoDto bærer ikke område ennå. Skal det opprettes køer utenfor K9,
@@ -111,9 +171,21 @@ fun Route.OppgaveKoAvdelingslederApis() {
         }
     }
 
-    get("/{id}") {
+    get("/{id}", {
+        description = "Hent en oppgavekø."
+        request {
+            pathParameter<Områder>("omrade") {
+                description = "Området API-kallet gjelder for"
+                example("K9") { value = Områder.K9 }
+            }
+            pathParameter<Long>("id") {
+                description = "Id til oppgavekøen"
+            }
+        }
+    }) {
         requestContextService.withRequestContext(call) {
             if (pepClient.erOppgaveStyrer()) {
+                val område = call.område // TODO: bruk område når tjenesten er oppdatert til å ta hensyn til område
                 val oppgavekøId = call.parameters["id"]!!
                 call.respond(oppgaveKoTjeneste.hent(oppgavekøId.toLong(), pepClient.harTilgangTilKode6()))
             } else {
@@ -122,9 +194,21 @@ fun Route.OppgaveKoAvdelingslederApis() {
         }
     }
 
-    delete("/{id}") {
+    delete("/{id}", {
+        description = "Slett en oppgavekø."
+        request {
+            pathParameter<Områder>("omrade") {
+                description = "Området API-kallet gjelder for"
+                example("K9") { value = Områder.K9 }
+            }
+            pathParameter<Long>("id") {
+                description = "Id til oppgavekøen"
+            }
+        }
+    }) {
         requestContextService.withRequestContext(call) {
             if (pepClient.erOppgaveStyrer()) {
+                val område = call.område // TODO: bruk område når tjenesten er oppdatert til å ta hensyn til område
                 val oppgavekøId = call.parameters["id"]!!
                 call.respond(oppgaveKoTjeneste.slett(oppgavekøId.toLong()))
             } else {
@@ -133,9 +217,21 @@ fun Route.OppgaveKoAvdelingslederApis() {
         }
     }
 
-    get("/{id}/antall") {
+    get("/{id}/antall", {
+        description = "Hent antall oppgaver, med og uten reserverte, for en oppgavekø."
+        request {
+            pathParameter<Områder>("omrade") {
+                description = "Området API-kallet gjelder for"
+                example("K9") { value = Områder.K9 }
+            }
+            pathParameter<Long>("id") {
+                description = "Id til oppgavekøen"
+            }
+        }
+    }) {
         requestContextService.withRequestContext(call) {
             if (pepClient.erOppgaveStyrer()) {
+                val område = call.område // TODO: bruk område når tjenesten er oppdatert til å ta hensyn til område
                 val oppgavekøId = call.parameters["id"]!!
                 val skjermet = pepClient.harTilgangTilKode6()
                 call.respond(oppgaveKoTjeneste.hentAntallMedOgUtenReserverteForKø(oppgavekøId.toLong(), skjermet))
@@ -145,9 +241,25 @@ fun Route.OppgaveKoAvdelingslederApis() {
         }
     }
 
-    get("/andre-saksbehandleres-koer") {
+    get("/andre-saksbehandleres-koer", {
+        description = "Hent oppgavekøer en gitt saksbehandler er medlem av."
+        request {
+            pathParameter<Områder>("omrade") {
+                description = "Området API-kallet gjelder for"
+                example("K9") { value = Områder.K9 }
+            }
+            queryParameter<Long>("id") {
+                description = "Id til saksbehandleren"
+                required = true
+            }
+        }
+        response {
+            HttpStatusCode.OK to { body<List<OppgaveKoIdOgTittel>>() }
+        }
+    }) {
         requestContextService.withRequestContext(call) {
             if (pepClient.erOppgaveStyrer()) {
+                val område = call.område // TODO: bruk område når tjenesten er oppdatert til å ta hensyn til område
                 call.respond(
                     oppgaveKoTjeneste.hentKøerForSaksbehandler(
                         call.parameters["id"]?.toLong()!!,
@@ -164,5 +276,5 @@ fun Route.OppgaveKoAvdelingslederApis() {
             }
         }
     }
-
 }
+
