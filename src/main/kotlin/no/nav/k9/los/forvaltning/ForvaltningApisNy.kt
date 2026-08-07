@@ -20,6 +20,8 @@ import no.nav.k9.los.infrastruktur.rest.RequestContextService
 import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.ko.OppgaveKoTjeneste
 import no.nav.k9.los.kodeverk.Fagsystem
+import no.nav.k9.los.område
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgavedefinisjon.oppgavetype.OppgavetypeRepository
 import no.nav.k9.los.oppgaveuthenting.Oppgave
 import no.nav.k9.los.oppgaveuthenting.enkeltoppslag.AktivOppgaveOppslag
@@ -36,7 +38,7 @@ import org.koin.ktor.ext.inject
 import org.slf4j.LoggerFactory
 
 
-fun Route.forvaltningApis() {
+fun Route.forvaltningApisNy() {
     val log = LoggerFactory.getLogger("ForvaltningApis")
     val oppgaveOppslagTjeneste by inject<AktivOppgaveOppslag>()
     val oppgaveTypeRepository by inject<OppgavetypeRepository>()
@@ -58,6 +60,12 @@ fun Route.forvaltningApis() {
 
     get("/index_oversikt", {
         description = "index_oversikt"
+        request {
+            pathParameter<Områder>("omrade") {
+                description = "Området API-kallet gjelder for"
+                example("K9") { value = "K9" }
+            }
+        }
         response {
             HttpStatusCode.OK to {
                 description = "test test test"
@@ -114,6 +122,10 @@ fun Route.forvaltningApis() {
     get("/{system}/{saksnummer}/finnEksternId", {
         description = "Søk opp eksternId for saksnummer eller journalpostId"
         request {
+            pathParameter<Områder>("omrade") {
+                description = "Området API-kallet gjelder for"
+                example("K9") { value = "K9" }
+            }
             pathParameter<Fagsystem>("system") {
                 description = "Kildesystem som har sendt inn oppgaven"
                 example("k9sak") {
@@ -200,6 +212,10 @@ fun Route.forvaltningApis() {
     get("/oppgaveV3/{oppgavetype}/{oppgaveEksternId}/aktiv", {
         description = "Hent ut nåtilstand for en oppgave"
         request {
+            pathParameter<Områder>("omrade") {
+                description = "Området API-kallet gjelder for"
+                example("K9") { value = "K9" }
+            }
             pathParameter<K9Oppgavetypenavn>("oppgavetype") {
                 description = "Navnet på oppgavetypen."
                 example("k9sak") {
@@ -229,6 +245,10 @@ fun Route.forvaltningApis() {
     get("/oppgaveV3/{oppgavetype}/{oppgaveEksternId}", {
         description = "Hent ut oppgavehistorikk for en oppgave"
         request {
+            pathParameter<Områder>("omrade") {
+                description = "Området API-kallet gjelder for"
+                example("K9") { value = "K9" }
+            }
             pathParameter<K9Oppgavetypenavn>("oppgavetype") {
                 description = "Navnet på oppgavetypen."
                 example("k9sak") {
@@ -262,15 +282,12 @@ fun Route.forvaltningApis() {
         }
     }
 
-    get("/oppgaveV3/{omrade}/{oppgavetype}/{oppgaveEksternId}/reservasjoner", {
+    get("/oppgaveV3/{oppgavetype}/{oppgaveEksternId}/reservasjoner", {
         description = "Hent ut reservasjonshistorikk for en oppgave"
         request {
-            pathParameter<String>("omrade") {
-                description = "Området oppgavetypen er definert i. Pr i dag er kun K9 implementert"
-                example("K9") {
-                    value = "K9"
-                    description = "Oppgaver definert innenfor K9"
-                }
+            pathParameter<Områder>("omrade") {
+                description = "Området API-kallet gjelder for"
+                example("K9") { value = "K9" }
             }
             pathParameter<K9Oppgavetypenavn>("oppgavetype") {
                 description = "Navnet på oppgavetypen."
@@ -286,7 +303,7 @@ fun Route.forvaltningApis() {
     }) {
         requestContextService.withRequestContext(call) {
             if (pepClient.kanLeggeUtDriftsmelding()) {
-                val område = call.parameters["omrade"]!!
+                val område = call.område.eksternId
                 val oppgavetypeEksternId = call.parameters["oppgavetype"]!!
                 val oppgaveEksternId = call.parameters["oppgaveEksternId"]!!
 
@@ -320,6 +337,10 @@ fun Route.forvaltningApis() {
         description =
             "Hent ut liste med åpne behandlinger/journalposter i spesifisert fagsystem og kontroller opp mot åpne oppgaver i los. Returnerer en avviksrapport"
         request {
+            pathParameter<Områder>("omrade") {
+                description = "Området API-kallet gjelder for"
+                example("K9") { value = "K9" }
+            }
             pathParameter<Fagsystem>("fagsystem") {
                 description = "Kildesystem som har levert eventene"
             }
@@ -388,11 +409,11 @@ fun Route.forvaltningApis() {
         }
     }
 
-    get("/feltdefinisjon/{omrade}/{kode}/bruk", {
+    get("/feltdefinisjon/{kode}/bruk", {
         description = "Hent oppgavekøer og lagrede søk som bruker et spesifikt felt som kriterie"
         request {
-            pathParameter<String>("omrade") {
-                description = "Området feltdefinisjonen tilhører"
+            pathParameter<Områder>("omrade") {
+                description = "Området API-kallet gjelder for"
                 example("K9") { value = "K9" }
             }
             pathParameter<String>("kode") {
@@ -403,7 +424,7 @@ fun Route.forvaltningApis() {
     }) {
         requestContextService.withRequestContext(call) {
             if (pepClient.kanLeggeUtDriftsmelding()) {
-                val område = call.parameters["omrade"].let { if (it == "null" || it == null) null else it }
+                val område = call.område.eksternId
                 val kode = call.parameters["kode"]!!
 
                 val (køer, lagredeSøk) = transactionalManager.transaction { tx ->
@@ -436,6 +457,12 @@ fun Route.forvaltningApis() {
     get("/feltdefinisjon/bruk", {
         description =
             "Hent oversikt over alle feltdefinisjoner som er brukt som kriterie i oppgavekøer og lagrede søk, med antall for hver"
+        request {
+            pathParameter<Områder>("omrade") {
+                description = "Området API-kallet gjelder for"
+                example("K9") { value = "K9" }
+            }
+        }
     }) {
         requestContextService.withRequestContext(call) {
             if (pepClient.kanLeggeUtDriftsmelding()) {
@@ -479,6 +506,10 @@ fun Route.forvaltningApis() {
     post("/bestillHistorikkvaskFraQuery/{fagsystem}", {
         description = "Bestill historikkvask for oppgaver truffet av oppgavequery"
         request {
+            pathParameter<Områder>("omrade") {
+                description = "Området API-kallet gjelder for"
+                example("K9") { value = "K9" }
+            }
             pathParameter<Fagsystem>("fagsystem") {
                 description = "Fagsystemet oppgavene tilhører"
             }
@@ -524,6 +555,10 @@ fun Route.forvaltningApis() {
     post("/bestillDvhSendingFraQuery/{fagsystem}", {
         description = "Bestill DVH-sending for oppgaver truffet av oppgavequery"
         request {
+            pathParameter<Områder>("omrade") {
+                description = "Området API-kallet gjelder for"
+                example("K9") { value = "K9" }
+            }
             pathParameter<DvhSendingFagsystem>("fagsystem") {
                 description = "Fagsystemet oppgavene skal begrenses til"
                 example("k9sak") {
@@ -577,6 +612,12 @@ fun Route.forvaltningApis() {
     get("/omrade/kobling/status", {
         description = "Viser om fremmednøklene mot OMRADE er validert og om indeksene på omrade_id er bygget. " +
                 "Migrering V1.0_0107 gjør kun metadataoperasjoner; det som krever full tabellgjennomgang utløses her."
+        request {
+            pathParameter<Områder>("omrade") {
+                description = "Området API-kallet gjelder for"
+                example("K9") { value = "K9" }
+            }
+        }
     }) {
         requestContextService.withRequestContext(call) {
             if (pepClient.kanLeggeUtDriftsmelding()) {
@@ -591,6 +632,12 @@ fun Route.forvaltningApis() {
         description = "Validerer fremmednøklene mot OMRADE som ennå ikke er validert. " +
                 "Tar SHARE UPDATE EXCLUSIVE og blokkerer verken lesing eller skriving, " +
                 "men kan ta tid på store tabeller. Idempotent."
+        request {
+            pathParameter<Områder>("omrade") {
+                description = "Området API-kallet gjelder for"
+                example("K9") { value = "K9" }
+            }
+        }
     }) {
         requestContextService.withRequestContext(call) {
             if (pepClient.kanLeggeUtDriftsmelding()) {
@@ -606,6 +653,12 @@ fun Route.forvaltningApis() {
     post("/omrade/kobling/opprett-indekser", {
         description = "Bygger indeks på omrade_id for reservasjon_v3, event_nokkel og oppgave_pep_cache " +
                 "med CREATE INDEX CONCURRENTLY, som ikke blokkerer skriving. Idempotent."
+        request {
+            pathParameter<Områder>("omrade") {
+                description = "Området API-kallet gjelder for"
+                example("K9") { value = "K9" }
+            }
+        }
     }) {
         requestContextService.withRequestContext(call) {
             if (pepClient.kanLeggeUtDriftsmelding()) {
@@ -619,3 +672,56 @@ fun Route.forvaltningApis() {
     }
 
 }
+
+fun utledReservasjonsnøkkel(oppgave: Oppgave, erTilBeslutter: Boolean): String {
+    return when (FagsakYtelseType.fraKode(oppgave.hentVerdi("ytelsestype"))) {
+        FagsakYtelseType.PLEIEPENGER_SYKT_BARN,
+        FagsakYtelseType.PLEIEPENGER_NÆRSTÅENDE,
+        FagsakYtelseType.OMSORGSPENGER_KS,
+        FagsakYtelseType.OMSORGSPENGER_AO,
+        FagsakYtelseType.OPPLÆRINGSPENGER -> lagNøkkelPleietrengendeAktør(oppgave, erTilBeslutter)
+
+        else -> lagNøkkelAktør(oppgave, erTilBeslutter)
+    }
+}
+
+fun lagNøkkelPleietrengendeAktør(oppgave: Oppgave, tilBeslutter: Boolean): String {
+    return if (tilBeslutter)
+        "K9_b_${oppgave.hentVerdi("ytelsestype")}_${oppgave.hentVerdi("pleietrengendeAktorId")}_beslutter"
+    else {
+        "K9_b_${oppgave.hentVerdi("ytelsestype")}_${oppgave.hentVerdi("pleietrengendeAktorId")}"
+    }
+}
+
+fun lagNøkkelAktør(oppgave: Oppgave, tilBeslutter: Boolean): String {
+    return if (tilBeslutter) {
+        "K9_b_${oppgave.hentVerdi("ytelsestype")}_${oppgave.hentVerdi("aktorId")}_beslutter"
+    } else {
+        "K9_b_${oppgave.hentVerdi("ytelsestype")}_${oppgave.hentVerdi("aktorId")}"
+    }
+}
+
+data class FinnEksternIdResponse(
+    val område: String,
+    val eksternId: String,
+    val opprettetTidspunkt: String?,
+)
+
+data class BestillingFraQueryResponse(
+    val antallEksternIder: Int,
+)
+
+enum class DvhSendingFagsystem(@JsonValue val oppgavetypeKode: String) {
+    K9SAK("k9sak"),
+    K9KLAGE("k9klage");
+
+    companion object {
+        @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
+        @JvmStatic
+        fun fraKode(kode: String): DvhSendingFagsystem {
+            return entries.find { it.oppgavetypeKode == kode }
+                ?: throw IllegalStateException("Kjenner ikke igjen DVH-fagsystem=$kode")
+        }
+    }
+}
+

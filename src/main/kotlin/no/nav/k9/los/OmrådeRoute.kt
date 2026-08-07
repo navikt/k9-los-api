@@ -1,6 +1,8 @@
 package no.nav.k9.los
 
+import io.ktor.http.*
 import io.ktor.server.application.*
+import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.util.*
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
@@ -8,16 +10,28 @@ import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 private val områdeAttributeKey = AttributeKey<Områder>("los-omrade")
 
 /**
- * Registrerer et rotpunkt for API-et til et [Områder], f.eks. `k9/los/api` eller `ung/los/api`.
+ * Registrerer et templatisert rotpunkt for område-API, f.eks. `k9/los/api/{omrade}/...`.
  *
- * Området legges på kallet slik at endepunkter under ruten kan lese det via [ApplicationCall.område]
- * uten å måtte tråkle parameteret gjennom alle route-funksjonene.
+ * Området leses fra path-parameteren `omrade` og legges på kallet slik at endepunkter under
+ * ruten kan lese det via [ApplicationCall.område] uten å måtte tråkle parameteret gjennom alle route-funksjonene.
  */
-fun Route.områdeApi(område: Områder, build: Route.() -> Unit): Route =
-    route("${område.urlSegment}/") {
+fun Route.områdeApi(build: Route.() -> Unit): Route =
+    route("{omrade}/") {
         install(
-            createRouteScopedPlugin("OmrådeKontekst-${område.eksternId}") {
-                onCall { call -> call.attributes.put(områdeAttributeKey, område) }
+            createRouteScopedPlugin("OmrådeKontekstDynamisk") {
+                onCall { call ->
+                    val urlSegment = call.parameters["omrade"]
+                    val område = try {
+                        urlSegment?.let(Områder::fraUrlSegment)
+                    } catch (_: IllegalArgumentException) {
+                        null
+                    }
+                    if (område == null) {
+                        call.respond(HttpStatusCode.NotFound)
+                        return@onCall
+                    }
+                    call.attributes.put(områdeAttributeKey, område)
+                }
             }
         )
         build()
