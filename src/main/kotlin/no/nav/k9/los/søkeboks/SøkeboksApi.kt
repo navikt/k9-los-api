@@ -7,6 +7,7 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.rest.RequestContextService
+import no.nav.k9.los.område
 import org.koin.ktor.ext.inject
 
 
@@ -28,7 +29,8 @@ fun Route.SøkeboksApi() {
         requestContextService.withRequestContext(call) {
             if (pepClient.harBasisTilgang()) {
                 val (søkeord) = call.receive<SøkRequest>()
-                call.respond(søkeboksTjeneste.finnOppgaver(søkeord))
+                val område = call.område
+                call.respond(søkeboksTjeneste.finnOppgaver(søkeord, område))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }

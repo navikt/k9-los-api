@@ -2,6 +2,9 @@ package no.nav.k9.los.infrastruktur.idtoken
 
 
 import com.fasterxml.jackson.annotation.JsonProperty
+import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
+import java.nio.charset.Charset
+import java.util.*
 
 data class JWTToken(
     val NAVident : String, // Z994048
@@ -23,4 +26,19 @@ data class JWTToken(
     val tid: String, // 966ac572-f5b7-4bbe-aa88-c76419c0f851
     val uti: String, // IpDIBSCX2Uqc5uaHvNlUAA
     val ver: String // 2.0
-)
+) {
+    companion object {
+        /**
+         * Eneste stedet en rå JWT-streng tolkes. Område-implementasjonene av [IIdToken] deler
+         * resultatet seg imellom (se IdTokenForOmråde.forOmråde), slik at et token bare parses
+         * én gang per request.
+         */
+        fun fra(value: String): JWTToken = try {
+            val payload = value.split(".")[1]
+            val json = String(Base64.getDecoder().decode(payload), Charset.defaultCharset())
+            LosObjectMapper.instance.readValue(json, JWTToken::class.java)
+        } catch (cause: Throwable) {
+            throw IdTokenInvalidFormatException(cause)
+        }
+    }
+}

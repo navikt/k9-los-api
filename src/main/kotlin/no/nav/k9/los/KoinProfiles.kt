@@ -732,7 +732,7 @@ fun preprodConfig(config: Configuration) = module {
     }
 
     single<ISifAbacPdpKlient> {
-        SifAbacPdpKlient(
+        SifAbacPdpKlientK9(
             configuration = get(),
             accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
             scope = "api://dev-fss.k9saksbehandling.sif-abac-pdp/.default",
@@ -810,7 +810,7 @@ fun prodConfig(config: Configuration) = module {
     }
 
     single<ISifAbacPdpKlient> {
-        SifAbacPdpKlient(
+        SifAbacPdpKlientK9(
             configuration = get(),
             accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
             scope = "api://prod-fss.k9saksbehandling.sif-abac-pdp/.default",

@@ -59,6 +59,7 @@ import no.nav.k9.los.infrastruktur.jobbplanlegger.Jobbplanlegger
 import no.nav.k9.los.infrastruktur.jobbplanlegger.PlanlagtJobb
 import no.nav.k9.los.infrastruktur.jobbplanlegger.Tidsvindu
 import no.nav.k9.los.infrastruktur.metrikker.EventlagerNokkeltallPrometheusCollector
+import no.nav.k9.los.innloggetbruker.BrukersområderApi
 import no.nav.k9.los.innloggetbruker.InnloggetBrukerApi
 import no.nav.k9.los.ko.KøpåvirkendeHendelse
 import no.nav.k9.los.ko.OppgaveKoApis
@@ -290,8 +291,9 @@ private fun Route.legacyApi() {
 
 private fun Route.apiUnderConstruction() {
     route("driftsmeldinger", { tags("Driftsmelding") }) { DriftsmeldingerApis() }
-    route("innloggetbruker") { InnloggetBrukerApi() }
+    route("brukersområder") { BrukersområderApi() }
     områdeApi {
+        route("innloggetbruker") { InnloggetBrukerApi() }
         swaggerUI("openapi.json")
         route("openapi.json") { openApi() }
 

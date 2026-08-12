@@ -1,5 +1,7 @@
 package no.nav.k9.los.infrastruktur.idtoken
 
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
+
 data class IdTokenLocal(
     override val value: String = "",
 
@@ -16,4 +18,7 @@ data class IdTokenLocal(
     override fun erVeileder(): Boolean = true
     override fun erDrifter(): Boolean = true
     override fun harBasistilgang(): Boolean = true
+
+    // Lokalt kjøres alt uten faktiske grupper, så samme token brukes for alle områder
+    override fun forOmråde(område: Områder): IIdToken = this
 }

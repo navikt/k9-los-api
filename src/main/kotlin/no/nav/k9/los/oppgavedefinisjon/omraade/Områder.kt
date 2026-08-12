@@ -16,7 +16,8 @@ import no.nav.k9.los.kodeverk.Fagsystem
  * [urlSegment] er området sitt prefiks i API-URLene (f.eks. `k9/los/api`).
  */
 enum class Områder(val eksternId: String, val urlSegment: String) {
-    K9("K9", "k9");
+    K9("K9", "k9"),
+    UNG("UNG", "ung");
 
     companion object {
         fun fraEksternId(eksternId: String): Områder =

@@ -6,6 +6,7 @@ import no.nav.k9.los.infrastruktur.pdl.navn
 import no.nav.k9.los.kodeverk.BehandlingStatus
 import no.nav.k9.los.kodeverk.FagsakYtelseType
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.query.OppgaveQueryService
 import no.nav.k9.los.oppgaveuthenting.query.QueryRequest
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.EnkelOrderFelt
@@ -21,7 +22,7 @@ class SøkeboksTjeneste(
     private val pdlService: IPdlService,
     private val pepClient: IPepClient,
 ) {
-    suspend fun finnOppgaver(søkeord: String): Søkeresultat {
+    suspend fun finnOppgaver(søkeord: String, område: Områder): Søkeresultat {
         val oppgaver = when (søkeord.length) {
             11 -> {
                 val pdlResponse = pdlService.identifikator(søkeord)

@@ -26,7 +26,7 @@ import java.time.Duration
 import java.util.*
 import kotlin.coroutines.coroutineContext
 
-class SifAbacPdpKlient(
+class SifAbacPdpKlientK9(
     configuration: Configuration,
     accessTokenClient: AccessTokenClient,
     scope: String,
