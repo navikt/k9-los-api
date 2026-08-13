@@ -56,6 +56,9 @@ import no.nav.k9.los.oppgavedefinisjon.oppgavetype.OppgavetypeTjeneste
 import no.nav.k9.los.nøkkeltall.saksbehandler.nyeogferdigstilte.NyeOgFerdigstilteService
 import no.nav.k9.los.oppgaveuthenting.query.OppgaveQueryService
 import no.nav.k9.los.oppgaveuthenting.query.db.OppgaveQueryRepository
+import no.nav.k9.los.oppgaveuthenting.sammendrag.K9OppgaveSammendragMapper
+import no.nav.k9.los.oppgaveuthenting.sammendrag.OppgaveSammendragDtoBuilder
+import no.nav.k9.los.oppgaveuthenting.sammendrag.OppgaveSammendragMapper
 import no.nav.k9.los.reservasjon.ReservasjonApisTjeneste
 import no.nav.k9.los.reservasjon.ReservasjonV3DtoBuilder
 import no.nav.k9.los.reservasjon.ReservasjonV3Repository
@@ -401,6 +404,9 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
         )
     }
 
+    single<OppgaveSammendragMapper> { K9OppgaveSammendragMapper() }
+    single { OppgaveSammendragDtoBuilder(getAll(), get()) }
+
     single {
         OppgaveKoTjeneste(
             transactionalManager = get(),
@@ -412,6 +418,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             pdlService = get(),
             køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
             feltdefinisjonTjeneste = get(),
+            oppgaveSammendragDtoBuilder = get(),
         )
     }
 
@@ -447,6 +454,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             aktivOppgaveOppslag = get(),
             pepClient = get(),
             azureGraphService = get(),
+            oppgaveSammendragDtoBuilder = get(),
         )
     }
 
@@ -504,6 +512,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             queryService = get(),
             pdlService = get(),
             pepClient = get(),
+            oppgaveSammendragDtoBuilder = get(),
         )
     }
 

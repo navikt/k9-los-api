@@ -15,12 +15,14 @@ import no.nav.k9.los.oppgaveuthenting.query.dto.query.OppgaveQuery
 import no.nav.k9.los.oppgaveuthenting.query.mapping.EksternFeltverdiOperator
 import no.nav.k9.los.oppgaveuthenting.Oppgave
 import no.nav.k9.los.oppgaveuthenting.OppgaveNøkkelDto
+import no.nav.k9.los.oppgaveuthenting.sammendrag.OppgaveSammendragDtoBuilder
 import java.time.LocalDateTime
 
 class SøkeboksTjeneste(
     private val queryService: OppgaveQueryService,
     private val pdlService: IPdlService,
     private val pepClient: IPepClient,
+    private val oppgaveSammendragDtoBuilder: OppgaveSammendragDtoBuilder,
 ) {
     suspend fun finnOppgaver(søkeord: String, område: Områder): Søkeresultat {
         val oppgaver = when (søkeord.length) {
@@ -38,6 +40,21 @@ class SøkeboksTjeneste(
             else -> finnOppgaverForSaksnummer(søkeord)
         }
         return transformerTilSøkeresultat(oppgaver)
+    }
+
+    suspend fun finnOppgaverSammendrag(søkeord: String, område: Områder): SøkeresultatSammendrag {
+        val oppgaver = when (søkeord.length) {
+            11 -> {
+                val pdlResponse = pdlService.identifikator(søkeord)
+                if (pdlResponse.ikkeTilgang) return SøkeresultatSammendrag.IkkeTilgang
+                val aktørIder = pdlResponse.aktorId?.data?.hentIdenter?.identer?.map { it.ident } ?: emptyList()
+                finnOppgaverForAktørId(aktørIder + søkeord)
+            }
+
+            9 -> finnOppgaverForJournalpostId(søkeord)
+            else -> finnOppgaverForSaksnummer(søkeord)
+        }
+        return transformerTilSøkeresultatSammendrag(oppgaver)
     }
 
     private fun finnOppgaverForJournalpostId(journalpostId: String): List<Oppgave> {
@@ -129,6 +146,30 @@ class SøkeboksTjeneste(
             oppgaver = filtrertForTilgang.mapNotNull { oppgave ->
                 transformerOppgave(oppgave, person.navn())
             }
+        )
+    }
+
+    private suspend fun transformerTilSøkeresultatSammendrag(
+        oppgaver: List<Oppgave>,
+    ): SøkeresultatSammendrag {
+        if (oppgaver.isEmpty()) return SøkeresultatSammendrag.TomtResultat
+
+        val aktørId = oppgaver.first().hentVerdi("aktorId")
+            ?: return SøkeresultatSammendrag.TomtResultat
+        val (ikkeTilgang, person) = pdlService.person(aktørId)
+        if (ikkeTilgang || person == null) return SøkeresultatSammendrag.IkkeTilgang
+
+        val filtrertForTilgang = filtrerOppgaverBasertPåSaksnummer(oppgaver).filter {
+            pepClient.harTilgangTilOppgaveV3(it)
+        }
+        if (filtrertForTilgang.isEmpty()) return SøkeresultatSammendrag.IkkeTilgang
+
+        val synligeOppgaver = filtrertForTilgang.filter { it.hentVerdi("ytelsestype") != "OBSOLETE" }
+        return SøkeresultatSammendrag.MedResultat(
+            oppgaver = oppgaveSammendragDtoBuilder.bygg(
+                synligeOppgaver,
+                alleredeHentedePersoner = mapOf(aktørId to person),
+            ),
         )
     }
 

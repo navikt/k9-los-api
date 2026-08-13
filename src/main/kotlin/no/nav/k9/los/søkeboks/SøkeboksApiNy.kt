@@ -29,7 +29,7 @@ fun Route.SøkeboksApiNy() {
                 body<SøkRequest>()
             }
             response {
-                HttpStatusCode.OK to { body<Søkeresultat>() }
+                HttpStatusCode.OK to { body<SøkeresultatSammendrag>() }
             }
         }
     ) {
@@ -37,11 +37,10 @@ fun Route.SøkeboksApiNy() {
             if (pepClient.harBasisTilgang()) {
                 val område = call.område // TODO: bruk område når søketjenesten er oppdatert til å ta hensyn til område
                 val (søkeord) = call.receive<SøkRequest>()
-                call.respond(søkeboksTjeneste.finnOppgaver(søkeord, område))
+                call.respond(søkeboksTjeneste.finnOppgaverSammendrag(søkeord, område))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
         }
     }
 }
-
