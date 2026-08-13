@@ -91,7 +91,6 @@ class OppgaveKoTjeneste(
         return OppgaverFraKøDto(oppgaveSammendragDtoBuilder.bygg(oppgaver))
     }
 
-
     private suspend fun hentTilgjengeligeOppgaverFraKø(
         kø: OppgaveKo,
         ønsketAntallOppgaver: Long,

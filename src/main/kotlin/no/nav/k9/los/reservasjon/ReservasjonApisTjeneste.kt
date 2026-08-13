@@ -211,15 +211,22 @@ class ReservasjonApisTjeneste(
         saksbehandler: Saksbehandler,
     ): List<ReservasjonSammendragDto> {
         val reservasjoner = reservasjonV3Tjeneste.hentReservasjonerForSaksbehandler(saksbehandler.id!!)
-        val oppgaver = oppgaveSammendragDtoBuilder.bygg(reservasjoner.flatMap { it.oppgaverV3 }).iterator()
+        // Bygger alle oppgavene i ett kall for å dele PDL-oppslag, og deler resultatet
+        // tilbake per reservasjon. Forutsetter at builderen returnerer ett sammendrag
+        // per oppgave i samme rekkefølge.
+        val alleOppgaver = oppgaveSammendragDtoBuilder.bygg(reservasjoner.flatMap { it.oppgaverV3 })
+        var indeks = 0
 
         return reservasjoner.map { reservasjonMedOppgaver ->
+            val oppgaver = alleOppgaver.subList(indeks, indeks + reservasjonMedOppgaver.oppgaverV3.size)
+            indeks += reservasjonMedOppgaver.oppgaverV3.size
+
             val endretAvNavn = reservasjonMedOppgaver.reservasjonV3.endretAv?.let {
                 saksbehandlerRepository.finnSaksbehandlerMedId(it)?.navn
             }
             ReservasjonSammendragDto(
                 reservasjon = reservasjonMedOppgaver.reservasjonV3,
-                oppgaver = List(reservasjonMedOppgaver.oppgaverV3.size) { oppgaver.next() },
+                oppgaver = oppgaver,
                 reservertAv = saksbehandler,
                 endretAvNavn = endretAvNavn,
             )

@@ -25,36 +25,32 @@ class SøkeboksTjeneste(
     private val oppgaveSammendragDtoBuilder: OppgaveSammendragDtoBuilder,
 ) {
     suspend fun finnOppgaver(søkeord: String, område: Områder): Søkeresultat {
-        val oppgaver = when (søkeord.length) {
-            11 -> {
-                val pdlResponse = pdlService.identifikator(søkeord)
-                if (pdlResponse.ikkeTilgang) return Søkeresultat.IkkeTilgang
-                val aktørIder = pdlResponse.aktorId?.data?.hentIdenter?.identer?.map { it.ident } ?: emptyList()
-                finnOppgaverForAktørId(aktørIder + søkeord)
-            }
-
-            9 -> {
-                finnOppgaverForJournalpostId(søkeord)
-            }
-
-            else -> finnOppgaverForSaksnummer(søkeord)
-        }
+        val oppgaver = finnOppgaverFor(søkeord) ?: return Søkeresultat.IkkeTilgang
         return transformerTilSøkeresultat(oppgaver)
     }
 
     suspend fun finnOppgaverSammendrag(søkeord: String, område: Områder): SøkeresultatSammendrag {
-        val oppgaver = when (søkeord.length) {
-            11 -> {
-                val pdlResponse = pdlService.identifikator(søkeord)
-                if (pdlResponse.ikkeTilgang) return SøkeresultatSammendrag.IkkeTilgang
+        val oppgaver = finnOppgaverFor(søkeord) ?: return SøkeresultatSammendrag.IkkeTilgang
+        return transformerTilSøkeresultatSammendrag(oppgaver)
+    }
+
+    /**
+     * Slår opp oppgaver basert på hva søkeordet ser ut som. Returnerer null dersom
+     * innlogget bruker ikke har tilgang til personen bak søkeordet.
+     */
+    private suspend fun finnOppgaverFor(søkeord: String): List<Oppgave>? = when (søkeord.length) {
+        11 -> {
+            val pdlResponse = pdlService.identifikator(søkeord)
+            if (pdlResponse.ikkeTilgang) {
+                null
+            } else {
                 val aktørIder = pdlResponse.aktorId?.data?.hentIdenter?.identer?.map { it.ident } ?: emptyList()
                 finnOppgaverForAktørId(aktørIder + søkeord)
             }
-
-            9 -> finnOppgaverForJournalpostId(søkeord)
-            else -> finnOppgaverForSaksnummer(søkeord)
         }
-        return transformerTilSøkeresultatSammendrag(oppgaver)
+
+        9 -> finnOppgaverForJournalpostId(søkeord)
+        else -> finnOppgaverForSaksnummer(søkeord)
     }
 
     private fun finnOppgaverForJournalpostId(journalpostId: String): List<Oppgave> {

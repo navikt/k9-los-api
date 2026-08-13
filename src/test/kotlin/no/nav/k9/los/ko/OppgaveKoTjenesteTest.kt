@@ -60,8 +60,19 @@ class OppgaveKoTjenesteTest {
             område = Områder.K9,
         )
         val sammendrag = OppgaveSammendragDto(
-            OppgaveNøkkelDto(oppgave), oppgave.reservasjonsnøkkel, null, null, null, "SAK-1", null, null,
-            null, KodeOgNavnDto("AAPEN", "Åpen"), null, null, false,
+            oppgaveNøkkel = OppgaveNøkkelDto(oppgave),
+            reservasjonsnøkkel = oppgave.reservasjonsnøkkel,
+            person = null,
+            ytelse = null,
+            behandlingstype = null,
+            saksnummer = "SAK-1",
+            journalpostId = null,
+            fagsakÅr = null,
+            opprettetTidspunkt = null,
+            oppgavestatus = KodeOgNavnDto("AAPEN", "Åpen"),
+            behandlingsstatus = null,
+            oppgavebehandlingsUrl = null,
+            hastesak = false,
         )
         coEvery { pepClient.harTilgangTilKode6() } returns false
         every { oppgaveKoRepository.hent(1L, false) } returns kø
@@ -69,9 +80,16 @@ class OppgaveKoTjenesteTest {
         coEvery { pepClient.harTilgangTilOppgaveV3(oppgave, Action.read, null) } returns true
         coEvery { builder.bygg(listOf(oppgave), emptyMap()) } returns listOf(sammendrag)
         val tjeneste = OppgaveKoTjeneste(
-            mockk(relaxed = true), oppgaveKoRepository, oppgaveQueryService, mockk(relaxed = true),
-            mockk(relaxed = true), mockk(relaxed = true), pepClient, Channel(Channel.UNLIMITED),
-            mockk(relaxed = true), builder,
+            transactionalManager = mockk<TransactionalManager>(relaxed = true),
+            oppgaveKoRepository = oppgaveKoRepository,
+            oppgaveQueryService = oppgaveQueryService,
+            reservasjonV3Tjeneste = mockk<ReservasjonV3Tjeneste>(relaxed = true),
+            saksbehandlerRepository = mockk<SaksbehandlerRepository>(relaxed = true),
+            pdlService = mockk<IPdlService>(relaxed = true),
+            pepClient = pepClient,
+            køpåvirkendeHendelseChannel = Channel(Channel.UNLIMITED),
+            feltdefinisjonTjeneste = mockk<FeltdefinisjonTjeneste>(relaxed = true),
+            oppgaveSammendragDtoBuilder = builder,
         )
 
         val resultat = tjeneste.hentOppgaverFraKøSammendrag(1L, 10L, true)
