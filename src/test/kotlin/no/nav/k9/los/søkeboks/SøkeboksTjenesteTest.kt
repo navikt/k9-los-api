@@ -37,7 +37,8 @@ class SøkeboksTjenesteTest {
         coEvery { pdlService.person("aktor-1") } returns PersonPdlResponse(false, person)
         coEvery { pepClient.harTilgangTilOppgaveV3(any()) } returns true
         coEvery { builder.bygg(listOf(åpen), mapOf("aktor-1" to person)) } returns emptyList()
-        val tjeneste = SøkeboksTjeneste(queryService, pdlService, pepClient, builder)
+        val søkeboksQueryFactory = K9SøkeboksQueryFactory(pdlService = mockk(), queryService = queryService)
+        val tjeneste = SøkeboksTjeneste(pdlService, pepClient, builder, søkeboksQueryFactory)
 
         val resultat = tjeneste.finnOppgaverSammendrag("123456789", Områder.K9)
 

@@ -9,14 +9,11 @@ import no.nav.k9.los.kodeverk.BehandlingStatus
 import no.nav.k9.los.kodeverk.BehandlingType
 import no.nav.k9.los.kodeverk.FagsakYtelseType
 import no.nav.k9.los.kodeverk.Kodeverdi
-import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.Oppgave
 import no.nav.k9.los.oppgaveuthenting.OppgaveNøkkelDto
 import java.time.LocalDateTime
 
 class K9OppgaveSammendragMapper : OppgaveSammendragMapper {
-    override val område = Områder.K9
-
     override fun map(oppgave: Oppgave, person: PersonPdl?) = OppgaveSammendragDto(
         oppgaveNøkkel = OppgaveNøkkelDto(oppgave),
         reservasjonsnøkkel = oppgave.reservasjonsnøkkel,

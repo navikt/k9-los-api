@@ -58,7 +58,6 @@ import no.nav.k9.los.oppgaveuthenting.query.OppgaveQueryService
 import no.nav.k9.los.oppgaveuthenting.query.db.OppgaveQueryRepository
 import no.nav.k9.los.oppgaveuthenting.sammendrag.K9OppgaveSammendragMapper
 import no.nav.k9.los.oppgaveuthenting.sammendrag.OppgaveSammendragDtoBuilder
-import no.nav.k9.los.oppgaveuthenting.sammendrag.OppgaveSammendragMapper
 import no.nav.k9.los.reservasjon.ReservasjonApisTjeneste
 import no.nav.k9.los.reservasjon.ReservasjonV3DtoBuilder
 import no.nav.k9.los.reservasjon.ReservasjonV3Repository
@@ -67,6 +66,7 @@ import no.nav.k9.los.saksbehandleradmin.SaksbehandlerAdminTjeneste
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
 import no.nav.k9.los.sisteoppgaver.SisteOppgaverRepository
 import no.nav.k9.los.sisteoppgaver.SisteOppgaverTjeneste
+import no.nav.k9.los.søkeboks.K9SøkeboksQueryFactory
 import no.nav.k9.los.søkeboks.SøkeboksTjeneste
 import no.nav.k9.los.uttrekk.UttrekkCsvGenerator
 import no.nav.k9.los.uttrekk.UttrekkJobb
@@ -404,8 +404,8 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
         )
     }
 
-    single<OppgaveSammendragMapper> { K9OppgaveSammendragMapper() }
-    single { OppgaveSammendragDtoBuilder(getAll(), get()) }
+    single { K9OppgaveSammendragMapper() }
+    single { OppgaveSammendragDtoBuilder(k9Mapper = get(), pdlService = get()) }
 
     single {
         OppgaveKoTjeneste(
@@ -508,11 +508,18 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     }
 
     single {
-        SøkeboksTjeneste(
+        K9SøkeboksQueryFactory(
+            pdlService = get(),
             queryService = get(),
+        )
+    }
+
+    single {
+        SøkeboksTjeneste(
             pdlService = get(),
             pepClient = get(),
             oppgaveSammendragDtoBuilder = get(),
+            søkeboksQueryFactory = get(),
         )
     }
 

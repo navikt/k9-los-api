@@ -5,11 +5,22 @@ import no.nav.k9.los.infrastruktur.pdl.PersonPdl
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.Oppgave
 
+/**
+ * Bygger sammendrags-DTO-er for oppgaver, uavhengig av hvilket område oppgavene hører til.
+ *
+ * Ruting til områdets [OppgaveSammendragMapper] skjer i [mapperFor] med et uttømmende `when`
+ * framfor et oppslag i en map bygget av alle registrerte mappere. Grunnen er at `when` uten
+ * else-gren feiler ved kompilering når [Områder] utvides, mens et map-oppslag først feiler i
+ * runtime på første request for det nye området. Samme mønster som PepClient.tilgangKlientFor.
+ */
 class OppgaveSammendragDtoBuilder(
-    mappere: List<OppgaveSammendragMapper>,
+    private val k9Mapper: K9OppgaveSammendragMapper,
     private val pdlService: IPdlService,
 ) {
-    private val mappere = mappere.associateBy { it.område }
+    private fun mapperFor(område: Områder): OppgaveSammendragMapper = when (område) {
+        Områder.K9 -> k9Mapper
+        Områder.UNG -> throw NotImplementedError("Oppgavesammendrag for område UNG er ikke implementert ennå")
+    }
 
     suspend fun bygg(
         oppgaver: List<Oppgave>,
@@ -18,8 +29,7 @@ class OppgaveSammendragDtoBuilder(
         val personer = alleredeHentedePersoner.toMutableMap()
         return oppgaver.map { oppgave ->
             val område = Områder.fraEksternId(oppgave.oppgavetype.område.eksternId)
-            val mapper = mappere[område]
-                ?: throw IllegalStateException("Mangler OppgaveSammendragMapper for område ${område.eksternId}")
+            val mapper = mapperFor(område)
             val aktørId = oppgave.hentVerdi("aktorId")
             val person = aktørId?.let {
                 if (personer.containsKey(it)) personer[it] else pdlService.person(it).person.also { person ->

@@ -43,7 +43,7 @@ class OppgaveSammendragTest {
         val pdlService = mockk<IPdlService>()
         val person = person()
         coEvery { pdlService.person("aktor-1") } returns PersonPdlResponse(false, person)
-        val builder = OppgaveSammendragDtoBuilder(listOf(K9OppgaveSammendragMapper()), pdlService)
+        val builder = OppgaveSammendragDtoBuilder(K9OppgaveSammendragMapper(), pdlService)
 
         val resultat = builder.bygg(listOf(oppgave("K9"), oppgave("K9", "oppgave-2")))
 
@@ -54,7 +54,7 @@ class OppgaveSammendragTest {
     @Test
     fun `builder bruker allerede hentet person`() = runBlocking {
         val pdlService = mockk<IPdlService>()
-        val builder = OppgaveSammendragDtoBuilder(listOf(K9OppgaveSammendragMapper()), pdlService)
+        val builder = OppgaveSammendragDtoBuilder(K9OppgaveSammendragMapper(), pdlService)
 
         val resultat = builder.bygg(listOf(oppgave("K9")), mapOf("aktor-1" to person()))
 
@@ -64,9 +64,9 @@ class OppgaveSammendragTest {
 
     @Test
     fun `builder faller ikke tilbake til K9 når område mangler mapper`() {
-        val builder = OppgaveSammendragDtoBuilder(listOf(K9OppgaveSammendragMapper()), mockk())
+        val builder = OppgaveSammendragDtoBuilder(K9OppgaveSammendragMapper(), mockk())
 
-        val feil = assertThrows<IllegalStateException> {
+        val feil = assertThrows<NotImplementedError> {
             runBlocking { builder.bygg(listOf(oppgave("UNG"))) }
         }
 
