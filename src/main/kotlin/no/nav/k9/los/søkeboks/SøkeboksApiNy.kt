@@ -34,10 +34,9 @@ fun Route.SøkeboksApiNy() {
         }
     ) {
         requestContextService.withRequestContext(call) {
-            if (pepClient.harBasisTilgang()) {
-                val område = call.område // TODO: bruk område når søketjenesten er oppdatert til å ta hensyn til område
+            if (pepClient.harBasisTilgang(call.område)) {
                 val (søkeord) = call.receive<SøkRequest>()
-                call.respond(søkeboksTjeneste.finnOppgaverSammendrag(søkeord, område))
+                call.respond(søkeboksTjeneste.finnOppgaverSammendrag(søkeord, call.område))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }

@@ -95,7 +95,7 @@ class PartisjonertOppgaveQuerySqlBuilder(
         LEFT JOIN oppgave_pep_cache opc ON (opc.kildeomrade = 'K9' AND o.oppgave_ekstern_id = opc.ekstern_id)
     """.trimIndent()
 
-    private var whereClause = "WHERE o.oppgavestatus IN ($oppgavestatusPlaceholder) ${ferdigstiltDatoBetingelse("o")}"
+    private var whereClause = "WHERE o.omrade = :område AND o.oppgavestatus IN ($oppgavestatusPlaceholder) ${ferdigstiltDatoBetingelse("o")}"
     private val orderByClauses = mutableListOf<String>()
     private val orderByClause get() = if (orderByClauses.isNotEmpty()) "ORDER BY " + orderByClauses.joinToString(", ") else ""
     private var groupByClause = ""

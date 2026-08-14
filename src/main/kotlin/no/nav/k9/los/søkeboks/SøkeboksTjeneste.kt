@@ -19,18 +19,18 @@ import no.nav.k9.los.oppgaveuthenting.sammendrag.OppgaveSammendragDtoBuilder
 import java.time.LocalDateTime
 
 class SøkeboksTjeneste(
-    private val queryService: OppgaveQueryService,
     private val pdlService: IPdlService,
     private val pepClient: IPepClient,
     private val oppgaveSammendragDtoBuilder: OppgaveSammendragDtoBuilder,
+    private val søkeboksQueryFactory: K9SøkeboksQueryFactory,
 ) {
     suspend fun finnOppgaver(søkeord: String, område: Områder): Søkeresultat {
-        val oppgaver = finnOppgaverFor(søkeord) ?: return Søkeresultat.IkkeTilgang
+        val oppgaver = finnOppgaverFor(søkeord, område) ?: return Søkeresultat.IkkeTilgang
         return transformerTilSøkeresultat(oppgaver)
     }
 
     suspend fun finnOppgaverSammendrag(søkeord: String, område: Områder): SøkeresultatSammendrag {
-        val oppgaver = finnOppgaverFor(søkeord) ?: return SøkeresultatSammendrag.IkkeTilgang
+        val oppgaver = finnOppgaverFor(søkeord, område) ?: return SøkeresultatSammendrag.IkkeTilgang
         return transformerTilSøkeresultatSammendrag(oppgaver)
     }
 
@@ -38,77 +38,10 @@ class SøkeboksTjeneste(
      * Slår opp oppgaver basert på hva søkeordet ser ut som. Returnerer null dersom
      * innlogget bruker ikke har tilgang til personen bak søkeordet.
      */
-    private suspend fun finnOppgaverFor(søkeord: String): List<Oppgave>? = when (søkeord.length) {
-        11 -> {
-            val pdlResponse = pdlService.identifikator(søkeord)
-            if (pdlResponse.ikkeTilgang) {
-                null
-            } else {
-                val aktørIder = pdlResponse.aktorId?.data?.hentIdenter?.identer?.map { it.ident } ?: emptyList()
-                finnOppgaverForAktørId(aktørIder + søkeord)
-            }
-        }
-
-        9 -> finnOppgaverForJournalpostId(søkeord)
-        else -> finnOppgaverForSaksnummer(søkeord)
-    }
-
-    private fun finnOppgaverForJournalpostId(journalpostId: String): List<Oppgave> {
-        val query = OppgaveQuery(
-            filtere = listOf(
-                FeltverdiOppgavefilter(
-                    område = "K9",
-                    kode = "journalpostId",
-                    operator = EksternFeltverdiOperator.EQUALS,
-                    verdi = listOf(journalpostId)
-                )
-            ), order = listOf(EnkelOrderFelt("K9", "mottattDato", false))
-        )
-        return queryService.queryForOppgave(QueryRequest(oppgaveQuery = query))
-    }
-
-    private suspend fun finnOppgaverForSøkersFnr(fnr: String): List<Oppgave> {
-        val aktørId =
-            pdlService.identifikator(fnr).aktorId?.data?.hentIdenter?.identer?.get(0)?.ident ?: return emptyList()
-        val query = OppgaveQuery(
-            filtere = listOf(
-                FeltverdiOppgavefilter(
-                    område = "K9",
-                    kode = "aktorId",
-                    operator = EksternFeltverdiOperator.IN,
-                    verdi = listOf(aktørId, fnr)
-                )
-            ), order = listOf(EnkelOrderFelt("K9", "mottattDato", false))
-        )
-        return queryService.queryForOppgave(QueryRequest(oppgaveQuery = query))
-    }
-
-    private fun finnOppgaverForAktørId(aktørIder: List<String>): List<Oppgave> {
-        val query = OppgaveQuery(
-            filtere = listOf(
-                FeltverdiOppgavefilter(
-                    område = "K9",
-                    kode = "aktorId",
-                    operator = EksternFeltverdiOperator.IN,
-                    verdi = aktørIder
-                )
-            ), order = listOf(EnkelOrderFelt("K9", "mottattDato", false))
-        )
-        return queryService.queryForOppgave(QueryRequest(oppgaveQuery = query))
-    }
-
-    private fun finnOppgaverForSaksnummer(saksnummer: String): List<Oppgave> {
-        val query = OppgaveQuery(
-            filtere = listOf(
-                FeltverdiOppgavefilter(
-                    område = "K9",
-                    kode = "saksnummer",
-                    operator = EksternFeltverdiOperator.EQUALS,
-                    verdi = listOf(saksnummer.uppercase().replace("O", "o").replace("I", "i"))
-                )
-            ), order = listOf(EnkelOrderFelt("K9", "mottattDato", false))
-        )
-        return queryService.queryForOppgave(QueryRequest(oppgaveQuery = query))
+    private fun finnOppgaverFor(søkeord: String, område: Områder): List<Oppgave>? = when (søkeord.length) {
+        11 -> søkeboksQueryFactory.finnOppgaverForFnr(søkeord)
+        9 -> søkeboksQueryFactory.finnOppgaverForJournalpostId(søkeord)
+        else -> søkeboksQueryFactory.finnOppgaverForSaksnummer(søkeord)
     }
 
     private suspend fun transformerTilSøkeresultat(
