@@ -15,29 +15,42 @@ import no.nav.k9.los.oppgaveuthenting.query.dto.query.OppgaveQuery
 import no.nav.k9.los.oppgaveuthenting.query.mapping.EksternFeltverdiOperator
 import no.nav.k9.los.oppgaveuthenting.Oppgave
 import no.nav.k9.los.oppgaveuthenting.OppgaveNøkkelDto
+import no.nav.k9.los.oppgaveuthenting.sammendrag.OppgaveSammendragDtoBuilder
 import java.time.LocalDateTime
 
 class SøkeboksTjeneste(
     private val queryService: OppgaveQueryService,
     private val pdlService: IPdlService,
     private val pepClient: IPepClient,
+    private val oppgaveSammendragDtoBuilder: OppgaveSammendragDtoBuilder,
 ) {
     suspend fun finnOppgaver(søkeord: String, område: Områder): Søkeresultat {
-        val oppgaver = when (søkeord.length) {
-            11 -> {
-                val pdlResponse = pdlService.identifikator(søkeord)
-                if (pdlResponse.ikkeTilgang) return Søkeresultat.IkkeTilgang
+        val oppgaver = finnOppgaverFor(søkeord) ?: return Søkeresultat.IkkeTilgang
+        return transformerTilSøkeresultat(oppgaver)
+    }
+
+    suspend fun finnOppgaverSammendrag(søkeord: String, område: Områder): SøkeresultatSammendrag {
+        val oppgaver = finnOppgaverFor(søkeord) ?: return SøkeresultatSammendrag.IkkeTilgang
+        return transformerTilSøkeresultatSammendrag(oppgaver)
+    }
+
+    /**
+     * Slår opp oppgaver basert på hva søkeordet ser ut som. Returnerer null dersom
+     * innlogget bruker ikke har tilgang til personen bak søkeordet.
+     */
+    private suspend fun finnOppgaverFor(søkeord: String): List<Oppgave>? = when (søkeord.length) {
+        11 -> {
+            val pdlResponse = pdlService.identifikator(søkeord)
+            if (pdlResponse.ikkeTilgang) {
+                null
+            } else {
                 val aktørIder = pdlResponse.aktorId?.data?.hentIdenter?.identer?.map { it.ident } ?: emptyList()
                 finnOppgaverForAktørId(aktørIder + søkeord)
             }
-
-            9 -> {
-                finnOppgaverForJournalpostId(søkeord)
-            }
-
-            else -> finnOppgaverForSaksnummer(søkeord)
         }
-        return transformerTilSøkeresultat(oppgaver)
+
+        9 -> finnOppgaverForJournalpostId(søkeord)
+        else -> finnOppgaverForSaksnummer(søkeord)
     }
 
     private fun finnOppgaverForJournalpostId(journalpostId: String): List<Oppgave> {
@@ -129,6 +142,30 @@ class SøkeboksTjeneste(
             oppgaver = filtrertForTilgang.mapNotNull { oppgave ->
                 transformerOppgave(oppgave, person.navn())
             }
+        )
+    }
+
+    private suspend fun transformerTilSøkeresultatSammendrag(
+        oppgaver: List<Oppgave>,
+    ): SøkeresultatSammendrag {
+        if (oppgaver.isEmpty()) return SøkeresultatSammendrag.TomtResultat
+
+        val aktørId = oppgaver.first().hentVerdi("aktorId")
+            ?: return SøkeresultatSammendrag.TomtResultat
+        val (ikkeTilgang, person) = pdlService.person(aktørId)
+        if (ikkeTilgang || person == null) return SøkeresultatSammendrag.IkkeTilgang
+
+        val filtrertForTilgang = filtrerOppgaverBasertPåSaksnummer(oppgaver).filter {
+            pepClient.harTilgangTilOppgaveV3(it)
+        }
+        if (filtrertForTilgang.isEmpty()) return SøkeresultatSammendrag.IkkeTilgang
+
+        val synligeOppgaver = filtrertForTilgang.filter { it.hentVerdi("ytelsestype") != "OBSOLETE" }
+        return SøkeresultatSammendrag.MedResultat(
+            oppgaver = oppgaveSammendragDtoBuilder.bygg(
+                synligeOppgaver,
+                alleredeHentedePersoner = mapOf(aktørId to person),
+            ),
         )
     }
 

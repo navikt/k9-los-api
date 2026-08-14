@@ -63,7 +63,7 @@ fun Route.OppgaveKoSaksbehandlerApisNy() {
                 val område = call.område // TODO: bruk område når tjenesten er oppdatert til å ta hensyn til område
                 val oppgavekøId = call.parameters["id"]!!
                 call.respond(
-                    oppgaveKoTjeneste.hentOppgaverFraKø(
+                    oppgaveKoTjeneste.hentOppgaverFraKøSammendrag(
                         oppgavekøId.toLong(),
                         10,
                         fjernReserverte = true
@@ -173,7 +173,6 @@ fun Route.OppgaveKoSaksbehandlerApisNy() {
         }
     }
 }
-
 
 
 

@@ -79,6 +79,9 @@ import no.nav.k9.los.oppgaveuthenting.enkeltoppslag.TemporalOppgaveOppslag
 import no.nav.k9.los.oppgaveuthenting.enkeltoppslag.TemporalOppgaveOppslagOppgaveV3
 import no.nav.k9.los.oppgaveuthenting.query.OppgaveQueryService
 import no.nav.k9.los.oppgaveuthenting.query.db.OppgaveQueryRepository
+import no.nav.k9.los.oppgaveuthenting.sammendrag.K9OppgaveSammendragMapper
+import no.nav.k9.los.oppgaveuthenting.sammendrag.OppgaveSammendragDtoBuilder
+import no.nav.k9.los.oppgaveuthenting.sammendrag.OppgaveSammendragMapper
 import no.nav.k9.los.reservasjon.ReservasjonApisTjeneste
 import no.nav.k9.los.reservasjon.ReservasjonV3DtoBuilder
 import no.nav.k9.los.reservasjon.ReservasjonV3Repository
@@ -261,6 +264,9 @@ fun common(app: Application, config: Configuration) = module {
         )
     }
 
+    single<OppgaveSammendragMapper> { K9OppgaveSammendragMapper() }
+    single { OppgaveSammendragDtoBuilder(getAll(), get()) }
+
     single {
         DriftsmeldingTjeneste(driftsmeldingRepository = get())
     }
@@ -438,6 +444,7 @@ fun common(app: Application, config: Configuration) = module {
             pdlService = get(),
             køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
             feltdefinisjonTjeneste = get(),
+            oppgaveSammendragDtoBuilder = get(),
         )
     }
 
@@ -500,6 +507,7 @@ fun common(app: Application, config: Configuration) = module {
             aktivOppgaveOppslag = get(),
             pepClient = get(),
             azureGraphService = get(),
+            oppgaveSammendragDtoBuilder = get(),
         )
     }
 
@@ -544,6 +552,7 @@ fun common(app: Application, config: Configuration) = module {
             queryService = get(),
             pdlService = get(),
             pepClient = get(),
+            oppgaveSammendragDtoBuilder = get(),
         )
     }
 

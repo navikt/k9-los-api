@@ -78,8 +78,8 @@ internal fun Route.ReservasjonApisNy() {
                 val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedIdent(innloggetBrukerNavIdent)
 
                 if (innloggetBruker != null) {
-                    val reservasjonV3Dtos = reservasjonApisTjeneste.hentReserverteOppgaverForSaksbehandler(innloggetBruker)
-                    call.respond(reservasjonV3Dtos)
+                    val reservasjoner = reservasjonApisTjeneste.hentReserverteOppgaverSammendragForSaksbehandler(innloggetBruker)
+                    call.respond(reservasjoner)
                 } else {
                     log.info("Innlogger bruker med brukernavn $innloggetBrukerNavIdent finnes ikke i saksbehandlertabellen")
                     call.respond(
@@ -332,7 +332,6 @@ internal fun Route.ReservasjonApisNy() {
         }
     }
 }
-
 
 
 

@@ -30,10 +30,73 @@ import no.nav.k9.los.reservasjon.ReservasjonV3Tjeneste
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
 import no.nav.k9.los.oppgaveuthenting.Oppgave
 import no.nav.k9.los.oppgaveuthenting.Oppgavefelt
+import no.nav.k9.los.oppgaveuthenting.sammendrag.OppgaveSammendragDtoBuilder
+import no.nav.k9.los.oppgaveuthenting.sammendrag.KodeOgNavnDto
+import no.nav.k9.los.oppgaveuthenting.sammendrag.OppgaveSammendragDto
+import no.nav.k9.los.oppgaveuthenting.OppgaveNøkkelDto
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 
 class OppgaveKoTjenesteTest {
+
+    @Test
+    fun `hentOppgaverFraKøSammendrag bruker felles builder etter pep-filtrering`() = runBlocking {
+        val oppgaveKoRepository = mockk<OppgaveKoRepository>()
+        val oppgaveQueryService = mockk<OppgaveQueryService>()
+        val pepClient = mockk<IPepClient>()
+        val builder = mockk<OppgaveSammendragDtoBuilder>()
+        val oppgave = oppgave("med-tilgang", "SAK-1")
+        val kø = OppgaveKo(
+            id = 1L,
+            versjon = 1L,
+            tittel = "Testkø",
+            beskrivelse = "",
+            oppgaveQuery = OppgaveQuery(filtere = emptyList(), order = emptyList()),
+            frittValgAvOppgave = false,
+            saksbehandlerIds = emptyList(),
+            saksbehandlere = emptyList(),
+            endretTidspunkt = null,
+            skjermet = false,
+            område = Områder.K9,
+        )
+        val sammendrag = OppgaveSammendragDto(
+            oppgaveNøkkel = OppgaveNøkkelDto(oppgave),
+            reservasjonsnøkkel = oppgave.reservasjonsnøkkel,
+            person = null,
+            ytelse = null,
+            behandlingstype = null,
+            saksnummer = "SAK-1",
+            journalpostId = null,
+            fagsakÅr = null,
+            opprettetTidspunkt = null,
+            oppgavestatus = KodeOgNavnDto("AAPEN", "Åpen"),
+            behandlingsstatus = null,
+            oppgavebehandlingsUrl = null,
+            hastesak = false,
+        )
+        coEvery { pepClient.harTilgangTilKode6() } returns false
+        every { oppgaveKoRepository.hent(1L, false) } returns kø
+        every { oppgaveQueryService.queryForOppgave(any()) } returns listOf(oppgave)
+        coEvery { pepClient.harTilgangTilOppgaveV3(oppgave, Action.read, null) } returns true
+        coEvery { builder.bygg(listOf(oppgave), emptyMap()) } returns listOf(sammendrag)
+        val tjeneste = OppgaveKoTjeneste(
+            transactionalManager = mockk<TransactionalManager>(relaxed = true),
+            oppgaveKoRepository = oppgaveKoRepository,
+            oppgaveQueryService = oppgaveQueryService,
+            reservasjonV3Tjeneste = mockk<ReservasjonV3Tjeneste>(relaxed = true),
+            saksbehandlerRepository = mockk<SaksbehandlerRepository>(relaxed = true),
+            pdlService = mockk<IPdlService>(relaxed = true),
+            pepClient = pepClient,
+            køpåvirkendeHendelseChannel = Channel(Channel.UNLIMITED),
+            feltdefinisjonTjeneste = mockk<FeltdefinisjonTjeneste>(relaxed = true),
+            oppgaveSammendragDtoBuilder = builder,
+        )
+
+        val resultat = tjeneste.hentOppgaverFraKøSammendrag(1L, 10L, true)
+
+        assertThat(resultat.oppgaver).containsExactly(sammendrag)
+        coVerify(exactly = 1) { builder.bygg(listOf(oppgave), emptyMap()) }
+    }
 
     @Test
     fun `hentOppgaverFraKø filtrerer med pep`() = runBlocking {
@@ -51,6 +114,7 @@ class OppgaveKoTjenesteTest {
             pepClient = pepClient,
             køpåvirkendeHendelseChannel = Channel(Channel.UNLIMITED),
             feltdefinisjonTjeneste = mockk<FeltdefinisjonTjeneste>(relaxed = true),
+            oppgaveSammendragDtoBuilder = mockk<OppgaveSammendragDtoBuilder>(relaxed = true),
         )
 
         val kø = OppgaveKo(
