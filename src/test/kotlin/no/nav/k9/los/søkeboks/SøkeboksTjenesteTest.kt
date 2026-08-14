@@ -18,6 +18,8 @@ import no.nav.k9.los.oppgavedefinisjon.oppgavetype.Oppgavetype
 import no.nav.k9.los.oppgaveuthenting.Oppgave
 import no.nav.k9.los.oppgaveuthenting.Oppgavefelt
 import no.nav.k9.los.oppgaveuthenting.query.OppgaveQueryService
+import no.nav.k9.los.oppgaveuthenting.omraade.OmrådeAdaptere
+import no.nav.k9.los.oppgaveuthenting.omraade.k9.K9OmrådeAdapter
 import no.nav.k9.los.oppgaveuthenting.sammendrag.OppgaveSammendragDtoBuilder
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
@@ -37,8 +39,8 @@ class SøkeboksTjenesteTest {
         coEvery { pdlService.person("aktor-1") } returns PersonPdlResponse(false, person)
         coEvery { pepClient.harTilgangTilOppgaveV3(any()) } returns true
         coEvery { builder.bygg(listOf(åpen), mapOf("aktor-1" to person)) } returns emptyList()
-        val søkeboksQueryFactory = K9SøkeboksQueryFactory(pdlService = mockk(), queryService = queryService)
-        val tjeneste = SøkeboksTjeneste(pdlService, pepClient, builder, søkeboksQueryFactory)
+        val områdeAdaptere = OmrådeAdaptere(K9OmrådeAdapter())
+        val tjeneste = SøkeboksTjeneste(pdlService, pepClient, builder, queryService, områdeAdaptere)
 
         val resultat = tjeneste.finnOppgaverSammendrag("123456789", Områder.K9)
 

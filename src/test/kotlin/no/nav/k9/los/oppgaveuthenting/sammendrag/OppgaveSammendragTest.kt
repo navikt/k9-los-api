@@ -18,6 +18,8 @@ import no.nav.k9.los.kodeverk.FagsakYtelseType
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.oppgavedefinisjon.omraade.Område
 import no.nav.k9.los.oppgavedefinisjon.oppgavetype.Oppgavetype
+import no.nav.k9.los.oppgaveuthenting.omraade.OmrådeAdaptere
+import no.nav.k9.los.oppgaveuthenting.omraade.k9.K9OmrådeAdapter
 import no.nav.k9.los.oppgaveuthenting.Oppgave
 import no.nav.k9.los.oppgaveuthenting.Oppgavefelt
 import org.junit.jupiter.api.Test
@@ -26,8 +28,8 @@ import java.time.LocalDateTime
 
 class OppgaveSammendragTest {
     @Test
-    fun `K9-mapper mapper faste sammendragsfelt`() {
-        val resultat = K9OppgaveSammendragMapper().map(oppgave("K9"), person())
+    fun `K9-adapter mapper faste sammendragsfelt`() {
+        val resultat = K9OmrådeAdapter().tilSammendrag(oppgave("K9"), person())
 
         assertThat(resultat.oppgaveNøkkel.oppgaveEksternId).isEqualTo("oppgave-1")
         assertThat(resultat.person?.navn).isEqualTo("Ola Nordmann")
@@ -43,7 +45,7 @@ class OppgaveSammendragTest {
         val pdlService = mockk<IPdlService>()
         val person = person()
         coEvery { pdlService.person("aktor-1") } returns PersonPdlResponse(false, person)
-        val builder = OppgaveSammendragDtoBuilder(K9OppgaveSammendragMapper(), pdlService)
+        val builder = OppgaveSammendragDtoBuilder(OmrådeAdaptere(K9OmrådeAdapter()), pdlService)
 
         val resultat = builder.bygg(listOf(oppgave("K9"), oppgave("K9", "oppgave-2")))
 
@@ -54,7 +56,7 @@ class OppgaveSammendragTest {
     @Test
     fun `builder bruker allerede hentet person`() = runBlocking {
         val pdlService = mockk<IPdlService>()
-        val builder = OppgaveSammendragDtoBuilder(K9OppgaveSammendragMapper(), pdlService)
+        val builder = OppgaveSammendragDtoBuilder(OmrådeAdaptere(K9OmrådeAdapter()), pdlService)
 
         val resultat = builder.bygg(listOf(oppgave("K9")), mapOf("aktor-1" to person()))
 
@@ -63,8 +65,8 @@ class OppgaveSammendragTest {
     }
 
     @Test
-    fun `builder faller ikke tilbake til K9 når område mangler mapper`() {
-        val builder = OppgaveSammendragDtoBuilder(K9OppgaveSammendragMapper(), mockk())
+    fun `builder faller ikke tilbake til K9 når område mangler adapter`() {
+        val builder = OppgaveSammendragDtoBuilder(OmrådeAdaptere(K9OmrådeAdapter()), mockk())
 
         val feil = assertThrows<NotImplementedError> {
             runBlocking { builder.bygg(listOf(oppgave("UNG"))) }

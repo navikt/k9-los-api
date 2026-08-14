@@ -79,7 +79,8 @@ import no.nav.k9.los.oppgaveuthenting.enkeltoppslag.TemporalOppgaveOppslag
 import no.nav.k9.los.oppgaveuthenting.enkeltoppslag.TemporalOppgaveOppslagOppgaveV3
 import no.nav.k9.los.oppgaveuthenting.query.OppgaveQueryService
 import no.nav.k9.los.oppgaveuthenting.query.db.OppgaveQueryRepository
-import no.nav.k9.los.oppgaveuthenting.sammendrag.K9OppgaveSammendragMapper
+import no.nav.k9.los.oppgaveuthenting.omraade.OmrådeAdaptere
+import no.nav.k9.los.oppgaveuthenting.omraade.k9.K9OmrådeAdapter
 import no.nav.k9.los.oppgaveuthenting.sammendrag.OppgaveSammendragDtoBuilder
 import no.nav.k9.los.reservasjon.ReservasjonApisTjeneste
 import no.nav.k9.los.reservasjon.ReservasjonV3DtoBuilder
@@ -89,7 +90,6 @@ import no.nav.k9.los.saksbehandleradmin.SaksbehandlerAdminTjeneste
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
 import no.nav.k9.los.sisteoppgaver.SisteOppgaverRepository
 import no.nav.k9.los.sisteoppgaver.SisteOppgaverTjeneste
-import no.nav.k9.los.søkeboks.K9SøkeboksQueryFactory
 import no.nav.k9.los.søkeboks.SøkeboksTjeneste
 import no.nav.k9.los.uttrekk.UttrekkCsvGenerator
 import no.nav.k9.los.uttrekk.UttrekkJobb
@@ -264,8 +264,9 @@ fun common(app: Application, config: Configuration) = module {
         )
     }
 
-    single { K9OppgaveSammendragMapper() }
-    single { OppgaveSammendragDtoBuilder(k9Mapper = get(), pdlService = get()) }
+    single { K9OmrådeAdapter() }
+    single { OmrådeAdaptere(k9Adapter = get()) }
+    single { OppgaveSammendragDtoBuilder(områdeAdaptere = get(), pdlService = get()) }
 
     single {
         DriftsmeldingTjeneste(driftsmeldingRepository = get())
@@ -548,18 +549,12 @@ fun common(app: Application, config: Configuration) = module {
     }
 
     single {
-        K9SøkeboksQueryFactory(
-            pdlService = get(),
-            queryService = get(),
-        )
-    }
-
-    single {
         SøkeboksTjeneste(
             pdlService = get(),
             pepClient = get(),
             oppgaveSammendragDtoBuilder = get(),
-            søkeboksQueryFactory = get(),
+            queryService = get(),
+            områdeAdaptere = get(),
         )
     }
 
