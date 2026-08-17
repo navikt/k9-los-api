@@ -122,7 +122,7 @@ class OppgaveKoTjenesteTest {
             versjon = 1L,
             tittel = "Testkø",
             beskrivelse = "",
-            oppgaveQuery = OppgaveQuery(filtere = emptyList(), order = listOf(EnkelOrderFelt(område = "K9", kode = "mottattDato", økende = false))),
+            oppgaveQuery = OppgaveQuery(filtere = emptyList(), order = listOf(EnkelOrderFelt(område = Områder.K9, kode = "mottattDato", økende = false))),
             frittValgAvOppgave = false,
             saksbehandlerIds = emptyList(),
             saksbehandlere = emptyList(),
@@ -182,7 +182,7 @@ class OppgaveKoTjenesteTest {
             felter = listOf(
                 Oppgavefelt(
                     eksternId = "saksnummer",
-                    område = "K9",
+                    område = Områder.K9,
                     listetype = false,
                     påkrevd = false,
                     verdi = saksnummer,
@@ -190,7 +190,7 @@ class OppgaveKoTjenesteTest {
                 ),
                 Oppgavefelt(
                     eksternId = "behandlingTypekode",
-                    område = "K9",
+                    område = Områder.K9,
                     listetype = false,
                     påkrevd = false,
                     verdi = BehandlingType.FORSTEGANGSSOKNAD.kode,

@@ -1,9 +1,9 @@
-package no.nav.k9.los.oppgaveuthenting.omraade.ung
+package no.nav.k9.los.søkeboks.ung
 
 import no.nav.k9.los.infrastruktur.pdl.PersonPdl
 import no.nav.k9.los.oppgaveuthenting.Oppgave
-import no.nav.k9.los.oppgaveuthenting.omraade.Oppgavesøk
-import no.nav.k9.los.oppgaveuthenting.omraade.Søkeord
+import no.nav.k9.los.søkeboks.Oppgavesøk
+import no.nav.k9.los.søkeboks.Søkeord
 import no.nav.k9.los.oppgaveuthenting.sammendrag.OppgaveSammendragDto
 
 /**
@@ -19,9 +19,9 @@ class UngOppgavesøk : Oppgavesøk {
 
     override fun aktørId(oppgave: Oppgave): Nothing = ikkeImplementert("aktørId")
 
-    override fun sakId(oppgave: Oppgave): Nothing = ikkeImplementert("sakId")
+    override fun saksnummer(oppgave: Oppgave): Nothing = ikkeImplementert("saksnummer")
 
-    override fun erSynlig(oppgave: Oppgave): Nothing = ikkeImplementert("synlighet")
+    override fun erSynlig(oppgave: Oppgave) = true
 
     override fun tilSammendrag(oppgave: Oppgave, person: PersonPdl?): OppgaveSammendragDto =
         ikkeImplementert("sammendrag")

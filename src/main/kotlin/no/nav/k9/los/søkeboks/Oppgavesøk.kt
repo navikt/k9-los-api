@@ -1,4 +1,4 @@
-package no.nav.k9.los.oppgaveuthenting.omraade
+package no.nav.k9.los.søkeboks
 
 import no.nav.k9.los.infrastruktur.pdl.PersonPdl
 import no.nav.k9.los.oppgaveuthenting.Oppgave
@@ -35,7 +35,7 @@ interface Oppgavesøk {
     fun aktørId(oppgave: Oppgave): String?
 
     /** Identifikator for saken oppgaven hører til, brukt til å gruppere oppgaver per sak. */
-    fun sakId(oppgave: Oppgave): String?
+    fun saksnummer(oppgave: Oppgave): String?
 
     /** Om oppgaven skal vises for sluttbruker. K9 skjuler f.eks. oppgaver med ytelsestype OBSOLETE. */
     fun erSynlig(oppgave: Oppgave): Boolean

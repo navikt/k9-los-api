@@ -4,8 +4,8 @@ import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.infrastruktur.azuregraph.IAzureGraphService
 import no.nav.k9.los.infrastruktur.rest.idToken
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
-import no.nav.k9.los.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.oppgaveuthenting.Oppgave
+import no.nav.k9.los.saksbehandleradmin.Saksbehandler
 import no.nav.sif.abac.kontrakt.abac.Diskresjonskode
 import no.nav.sif.abac.kontrakt.abac.dto.SaksnummerDto
 import no.nav.sif.abac.kontrakt.person.AktørId
@@ -14,29 +14,13 @@ import org.slf4j.LoggerFactory
 import java.util.*
 import kotlin.coroutines.coroutineContext
 
-/**
- * Ruting-laget for tilgangskontroll.
- *
- * PepClient er selv ruteren, framfor at det finnes en egen ruterklasse foran flere PepClient-
- * implementasjoner:
- * - rollesjekker rutes i [no.nav.k9.los.infrastruktur.idtoken.IIdToken.forOmråde], siden det bare
- *   er tolkningen av gruppene i tokenet som skiller områdene
- * - oppslag mot PDP rutes til klienten for området, se [tilgangKlientFor]. For K9 er det
- *   [SifAbacPdpKlientK9], for UNG [SifAbacPdpKlientUng].
- */
 class PepClient(
     private val azureGraphService: IAzureGraphService,
-    private val sifAbacPdpKlient: ISifAbacPdpKlient,
-    private val sifAbacPdpKlientUng: ISifAbacPdpKlient = SifAbacPdpKlientUng()
+    private val sifAbacPdpKlienter: SifAbacPdpKlienter,
 ) : IPepClient {
     private val log: Logger = LoggerFactory.getLogger(PepClient::class.java)
 
-    private fun tilgangKlientFor(område: Områder): ISifAbacPdpKlient = when (område) {
-        Områder.K9 -> sifAbacPdpKlient
-        Områder.UNG -> sifAbacPdpKlientUng
-    }
-
-    private suspend fun idToken(område: Områder) = coroutineContext.idToken().forOmråde(område)
+    private suspend fun idToken(område: Områder) = coroutineContext.idToken()
 
     override suspend fun erOppgaveStyrer(område: Områder): Boolean {
         //TODO inline metode
@@ -77,30 +61,30 @@ class PepClient(
     }
 
     override suspend fun erSakKode6(fagsakNummer: String, område: Områder): Boolean {
-        val diskresjonskoder = tilgangKlientFor(område).diskresjonskoderSak(SaksnummerDto(fagsakNummer))
+        val diskresjonskoder = sifAbacPdpKlienter.forOmråde(område).diskresjonskoderSak(SaksnummerDto(fagsakNummer))
         return diskresjonskoder.contains(Diskresjonskode.KODE6)
     }
 
     override suspend fun erAktørKode6(aktørid: String, område: Områder): Boolean {
-        val diskresjonskoder = tilgangKlientFor(område).diskresjonskoderPerson(AktørId(aktørid))
+        val diskresjonskoder = sifAbacPdpKlienter.forOmråde(område).diskresjonskoderPerson(AktørId(aktørid))
         return diskresjonskoder.contains(Diskresjonskode.KODE6)
     }
 
     override suspend fun diskresjonskoderForSak(fagsakNummer: String, område: Områder): Set<Diskresjonskode> {
-        return tilgangKlientFor(område).diskresjonskoderSak(SaksnummerDto(fagsakNummer))
+        return sifAbacPdpKlienter.forOmråde(område).diskresjonskoderSak(SaksnummerDto(fagsakNummer))
     }
 
     override suspend fun diskresjonskoderForPerson(aktørId: String, område: Områder): Set<Diskresjonskode> {
-        return tilgangKlientFor(område).diskresjonskoderPerson(AktørId(aktørId))
+        return sifAbacPdpKlienter.forOmråde(område).diskresjonskoderPerson(AktørId(aktørId))
     }
 
     override suspend fun erSakKode7EllerEgenAnsatt(fagsakNummer: String, område: Områder): Boolean {
-        val diskresjonskoder = tilgangKlientFor(område).diskresjonskoderSak(SaksnummerDto(fagsakNummer))
+        val diskresjonskoder = sifAbacPdpKlienter.forOmråde(område).diskresjonskoderSak(SaksnummerDto(fagsakNummer))
         return diskresjonskoder.contains(Diskresjonskode.KODE7) || diskresjonskoder.contains(Diskresjonskode.SKJERMET)
     }
 
     override suspend fun erAktørKode7EllerEgenAnsatt(aktørid: String, område: Områder): Boolean {
-        val diskresjonskoder = tilgangKlientFor(område).diskresjonskoderPerson(AktørId(aktørid))
+        val diskresjonskoder = sifAbacPdpKlienter.forOmråde(område).diskresjonskoderPerson(AktørId(aktørid))
         return diskresjonskoder.contains(Diskresjonskode.KODE7) || diskresjonskoder.contains(Diskresjonskode.SKJERMET)
     }
 
@@ -175,7 +159,7 @@ class PepClient(
         aktørIdPleietrengende: String?,
         grupperForSaksbehandler: Set<UUID>? = null
     ): Boolean {
-        val klient = tilgangKlientFor(Områder.K9)
+        val klient = sifAbacPdpKlienter.forOmråde(Områder.K9)
         return when (oppgavetype) {
             "k9sak", "k9klage", "k9tilbake" -> {
                 //TODO når abac-k9 er ryddet bort: vurder å bruk sifAbacPdpKlient.harTilgangTilSak(action, saksnummer) de steder hvor vi sjekker innlogget bruker

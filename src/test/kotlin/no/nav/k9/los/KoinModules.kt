@@ -56,9 +56,9 @@ import no.nav.k9.los.oppgavedefinisjon.oppgavetype.OppgavetypeTjeneste
 import no.nav.k9.los.nøkkeltall.saksbehandler.nyeogferdigstilte.NyeOgFerdigstilteService
 import no.nav.k9.los.oppgaveuthenting.query.OppgaveQueryService
 import no.nav.k9.los.oppgaveuthenting.query.db.OppgaveQueryRepository
-import no.nav.k9.los.oppgaveuthenting.omraade.Oppgavesøkere
-import no.nav.k9.los.oppgaveuthenting.omraade.k9.K9Oppgavesøk
-import no.nav.k9.los.oppgaveuthenting.omraade.ung.UngOppgavesøk
+import no.nav.k9.los.søkeboks.Oppgavesøkere
+import no.nav.k9.los.søkeboks.k9.K9Oppgavesøk
+import no.nav.k9.los.søkeboks.ung.UngOppgavesøk
 import no.nav.k9.los.oppgaveuthenting.sammendrag.OppgaveSammendragDtoBuilder
 import no.nav.k9.los.reservasjon.ReservasjonApisTjeneste
 import no.nav.k9.los.reservasjon.ReservasjonV3DtoBuilder

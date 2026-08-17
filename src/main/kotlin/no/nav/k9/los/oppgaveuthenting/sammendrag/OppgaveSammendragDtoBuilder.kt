@@ -3,8 +3,7 @@ package no.nav.k9.los.oppgaveuthenting.sammendrag
 import no.nav.k9.los.infrastruktur.pdl.IPdlService
 import no.nav.k9.los.infrastruktur.pdl.PersonPdl
 import no.nav.k9.los.oppgaveuthenting.Oppgave
-import no.nav.k9.los.oppgaveuthenting.omraade.Oppgavesøkere
-import no.nav.k9.los.oppgaveuthenting.omraade.forOppgave
+import no.nav.k9.los.søkeboks.Oppgavesøkere
 
 /**
  * Bygger sammendrags-DTO-er for oppgaver på tvers av områder.
@@ -22,7 +21,7 @@ class OppgaveSammendragDtoBuilder(
     ): List<OppgaveSammendragDto> {
         val personer = alleredeHentedePersoner.toMutableMap()
         return oppgaver.map { oppgave ->
-            val adapter = oppgavesøkere.forOppgave(oppgave)
+            val adapter = oppgavesøkere.forOmråde(oppgave.oppgavetype.område)
             val aktørId = adapter.aktørId(oppgave)
             val person = aktørId?.let {
                 if (personer.containsKey(it)) personer[it] else pdlService.person(it).person.also { person ->

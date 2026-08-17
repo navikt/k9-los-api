@@ -29,7 +29,7 @@ data class JWTToken(
 ) {
     companion object {
         /**
-         * Eneste stedet en rå JWT-streng tolkes. Område-implementasjonene av [IIdToken] deler
+         * Eneste stedet en rå JWT-streng tolkes. Område-implementasjonene av [IdToken] deler
          * resultatet seg imellom (se IdTokenForOmråde.forOmråde), slik at et token bare parses
          * én gang per request.
          */

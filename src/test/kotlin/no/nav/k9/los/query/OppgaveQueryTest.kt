@@ -1,7 +1,8 @@
-package no.nav.k9.los.oppgaveuthenting.query
+package no.nav.k9.los.query
 
 import assertk.assertThat
 import assertk.assertions.*
+import assertk.assertions.isEqualTo
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
@@ -34,6 +35,10 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
+import no.nav.k9.los.oppgaveuthenting.query.Avgrensning
+import no.nav.k9.los.oppgaveuthenting.query.OppgaveQueryService
+import no.nav.k9.los.oppgaveuthenting.query.QueryRequest
+import kotlin.collections.first
 
 class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
 
@@ -48,14 +53,14 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
                 FeltverdiOppgavefilter(null, "kildeområde", EksternFeltverdiOperator.EQUALS, listOf("K9")),
                 FeltverdiOppgavefilter(null, "oppgavetype", EksternFeltverdiOperator.EQUALS, listOf("aksjonspunkt")),
                 FeltverdiOppgavefilter(null, "oppgaveområde", EksternFeltverdiOperator.EQUALS, listOf("aksjonspunkt")),
-                FeltverdiOppgavefilter("K9", "fagsystem", EksternFeltverdiOperator.NOT_EQUALS, listOf("Tullball")),
+                FeltverdiOppgavefilter(Områder.K9, "fagsystem", EksternFeltverdiOperator.NOT_EQUALS, listOf("Tullball")),
                 CombineOppgavefilter(
                     CombineOperator.OR, listOf(
-                        FeltverdiOppgavefilter("K9", "helautomatiskBehandlet", EksternFeltverdiOperator.NOT_EQUALS, listOf("false")),
-                        FeltverdiOppgavefilter("K9", "mottattDato", EksternFeltverdiOperator.LESS_THAN, listOf(LocalDate.of(2022, 1, 1))),
+                        FeltverdiOppgavefilter(Områder.K9, "helautomatiskBehandlet", EksternFeltverdiOperator.NOT_EQUALS, listOf("false")),
+                        FeltverdiOppgavefilter(Områder.K9, "mottattDato", EksternFeltverdiOperator.LESS_THAN, listOf(LocalDate.of(2022, 1, 1))),
                         CombineOppgavefilter(
                             CombineOperator.AND, listOf(
-                                FeltverdiOppgavefilter("K9", "totrinnskontroll", EksternFeltverdiOperator.EQUALS, listOf("true")),
+                                FeltverdiOppgavefilter(Områder.K9, "totrinnskontroll", EksternFeltverdiOperator.EQUALS, listOf("true")),
                             )
                         )
                     )
@@ -119,7 +124,11 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
                 QueryRequest(
                     OppgaveQuery(
                         listOf(
-                            byggFilter(FeltType.MOTTATT_DATO, EksternFeltverdiOperator.LESS_THAN, "2023-05-15T00:00:00.000"),
+                            byggFilter(
+                                FeltType.MOTTATT_DATO,
+                                EksternFeltverdiOperator.LESS_THAN,
+                                "2023-05-15T00:00:00.000"
+                            ),
                         )
                     )
                 )
@@ -147,7 +156,11 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
                 QueryRequest(
                     OppgaveQuery(
                         listOf(
-                            byggFilter(FeltType.MOTTATT_DATO, EksternFeltverdiOperator.LESS_THAN, "2023-05-16T00:00:00.000"),
+                            byggFilter(
+                                FeltType.MOTTATT_DATO,
+                                EksternFeltverdiOperator.LESS_THAN,
+                                "2023-05-16T00:00:00.000"
+                            ),
                         )
                     )
                 )
@@ -183,7 +196,11 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
                 QueryRequest(
                     OppgaveQuery(
                         listOf(
-                            byggFilter(FeltType.MOTTATT_DATO, EksternFeltverdiOperator.EQUALS, "2023-05-15T00:00:00.000"),
+                            byggFilter(
+                                FeltType.MOTTATT_DATO,
+                                EksternFeltverdiOperator.EQUALS,
+                                "2023-05-15T00:00:00.000"
+                            ),
                         )
                     )
                 )
@@ -220,7 +237,11 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
                 QueryRequest(
                     OppgaveQuery(
                         listOf(
-                            byggFilter(FeltType.MOTTATT_DATO, EksternFeltverdiOperator.LESS_THAN_OR_EQUALS, "2023-05-16"),
+                            byggFilter(
+                                FeltType.MOTTATT_DATO,
+                                EksternFeltverdiOperator.LESS_THAN_OR_EQUALS,
+                                "2023-05-16"
+                            ),
                         )
                     )
                 )
@@ -245,7 +266,11 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
                 QueryRequest(
                     OppgaveQuery(
                         listOf(
-                            byggFilter(FeltType.MOTTATT_DATO, EksternFeltverdiOperator.GREATER_THAN_OR_EQUALS, "2023-05-14"),
+                            byggFilter(
+                                FeltType.MOTTATT_DATO,
+                                EksternFeltverdiOperator.GREATER_THAN_OR_EQUALS,
+                                "2023-05-14"
+                            ),
                         )
                     )
                 )
@@ -523,7 +548,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
 
         val oppgaveQuery = OppgaveQuery(
             listOf(
-                FeltverdiOppgavefilter("K9", "fagsystem", EksternFeltverdiOperator.NOT_EQUALS, listOf("K9PUNSJ"))
+                FeltverdiOppgavefilter(Områder.K9, "fagsystem", EksternFeltverdiOperator.NOT_EQUALS, listOf("K9PUNSJ"))
             )
         )
 
@@ -540,7 +565,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
 
         val oppgaveQuery = OppgaveQuery(
             listOf(
-                FeltverdiOppgavefilter("K9", "fagsystem", EksternFeltverdiOperator.NOT_EQUALS, listOf("K9PUNSJ"))
+                FeltverdiOppgavefilter(Områder.K9, "fagsystem", EksternFeltverdiOperator.NOT_EQUALS, listOf("K9PUNSJ"))
             )
         )
 
@@ -557,7 +582,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
 
         val oppgaveQuery = OppgaveQuery(
             listOf(
-                FeltverdiOppgavefilter("K9", "fagsystem", EksternFeltverdiOperator.NOT_EQUALS, listOf("K9PUNSJ"))
+                FeltverdiOppgavefilter(Områder.K9, "fagsystem", EksternFeltverdiOperator.NOT_EQUALS, listOf("K9PUNSJ"))
             )
         )
 
@@ -787,7 +812,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
                 )
             ),
             order = listOf(
-                EnkelOrderFelt(område = "K9", kode = FeltType.MOTTATT_DATO.eksternId, økende = true)
+                EnkelOrderFelt(område = Områder.K9, kode = FeltType.MOTTATT_DATO.eksternId, økende = true)
             )
         )
 
@@ -925,7 +950,8 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
                     ),
                     select = listOf(),
                 )
-            ))
+            )
+        )
         assertThat(resultat.map { it.eksternId }).containsOnly(oppgaveLukketFørsteJanuar.eksternId)
     }
 
@@ -969,7 +995,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
                 byggFilter(FeltType.OPPGAVE_STATUS, EksternFeltverdiOperator.IN, Oppgavestatus.AAPEN.kode)
             ),
             select = listOf(
-                EnkelSelectFelt("K9", "behandlingTypekode"),
+                EnkelSelectFelt(Områder.K9, "behandlingTypekode"),
                 AggregertSelectFelt(Aggregeringsfunksjon.ANTALL),
             ),
         )
@@ -1025,11 +1051,11 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
                 byggFilter(FeltType.OPPGAVE_STATUS, EksternFeltverdiOperator.IN, Oppgavestatus.AAPEN.kode)
             ),
             select = listOf(
-                EnkelSelectFelt("K9", "behandlingTypekode"),
+                EnkelSelectFelt(Områder.K9, "behandlingTypekode"),
                 AggregertSelectFelt(Aggregeringsfunksjon.ANTALL),
             ),
             order = listOf(
-                EnkelOrderFelt("K9", "behandlingTypekode", true),
+                EnkelOrderFelt(Områder.K9, "behandlingTypekode", true),
             ),
         )
 
@@ -1049,11 +1075,11 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
                 byggFilter(FeltType.OPPGAVE_STATUS, EksternFeltverdiOperator.IN, Oppgavestatus.AAPEN.kode)
             ),
             select = listOf(
-                EnkelSelectFelt("K9", "behandlingTypekode"),
+                EnkelSelectFelt(Områder.K9, "behandlingTypekode"),
                 AggregertSelectFelt(Aggregeringsfunksjon.ANTALL),
             ),
             order = listOf(
-                EnkelOrderFelt("K9", "behandlingTypekode", true),
+                EnkelOrderFelt(Områder.K9, "behandlingTypekode", true),
             ),
         )
 
@@ -1079,7 +1105,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
                 byggFilter(FeltType.OPPGAVE_STATUS, EksternFeltverdiOperator.IN, Oppgavestatus.AAPEN.kode)
             ),
             select = listOf(
-                EnkelSelectFelt("K9", "behandlingTypekode"),
+                EnkelSelectFelt(Områder.K9, "behandlingTypekode"),
                 AggregertSelectFelt(Aggregeringsfunksjon.ANTALL),
             ),
             order = listOf(
@@ -1108,12 +1134,12 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
                 byggFilter(FeltType.OPPGAVE_STATUS, EksternFeltverdiOperator.IN, Oppgavestatus.AAPEN.kode)
             ),
             select = listOf(
-                EnkelSelectFelt("K9", "behandlingTypekode"),
+                EnkelSelectFelt(Områder.K9, "behandlingTypekode"),
                 AggregertSelectFelt(Aggregeringsfunksjon.ANTALL),
             ),
             order = listOf(
                 AggregertOrderFelt(Aggregeringsfunksjon.ANTALL, økende = false),
-                EnkelOrderFelt("K9", "behandlingTypekode", true),
+                EnkelOrderFelt(Områder.K9, "behandlingTypekode", true),
             ),
         )
 
@@ -1134,13 +1160,13 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
                 byggFilter(FeltType.OPPGAVE_STATUS, EksternFeltverdiOperator.IN, Oppgavestatus.AAPEN.kode)
             ),
             select = listOf(
-                EnkelSelectFelt("K9", "behandlingTypekode"),
+                EnkelSelectFelt(Områder.K9, "behandlingTypekode"),
                 AggregertSelectFelt(Aggregeringsfunksjon.ANTALL),
             ),
             order = listOf(
                 AggregertOrderFelt(
                     funksjon = Aggregeringsfunksjon.SUM,
-                    område = "K9",
+                    område = Områder.K9,
                     kode = FeltType.FEILUTBETALT_BELØP.eksternId,
                     økende = false
                 )
@@ -1164,7 +1190,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
                 byggFilter(FeltType.OPPGAVE_STATUS, EksternFeltverdiOperator.IN, Oppgavestatus.AAPEN.kode)
             ),
             select = listOf(
-                EnkelSelectFelt("K9", "behandlingTypekode"),
+                EnkelSelectFelt(Områder.K9, "behandlingTypekode"),
                 AggregertSelectFelt(Aggregeringsfunksjon.ANTALL),
                 AggregertSelectFelt(Aggregeringsfunksjon.ANTALL),
             ),
@@ -1190,10 +1216,10 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
                 byggFilter(FeltType.OPPGAVE_STATUS, EksternFeltverdiOperator.EQUALS, Oppgavestatus.AAPEN.kode)
             ),
             select = listOf(
-                AggregertSelectFelt(Aggregeringsfunksjon.SUM, "K9", FeltType.FEILUTBETALT_BELØP.eksternId),
-                AggregertSelectFelt(Aggregeringsfunksjon.GJENNOMSNITT, "K9", FeltType.FEILUTBETALT_BELØP.eksternId),
-                AggregertSelectFelt(Aggregeringsfunksjon.MIN, "K9", FeltType.FEILUTBETALT_BELØP.eksternId),
-                AggregertSelectFelt(Aggregeringsfunksjon.MAKS, "K9", FeltType.FEILUTBETALT_BELØP.eksternId),
+                AggregertSelectFelt(Aggregeringsfunksjon.SUM, Områder.K9, FeltType.FEILUTBETALT_BELØP.eksternId),
+                AggregertSelectFelt(Aggregeringsfunksjon.GJENNOMSNITT, Områder.K9, FeltType.FEILUTBETALT_BELØP.eksternId),
+                AggregertSelectFelt(Aggregeringsfunksjon.MIN, Områder.K9, FeltType.FEILUTBETALT_BELØP.eksternId),
+                AggregertSelectFelt(Aggregeringsfunksjon.MAKS, Områder.K9, FeltType.FEILUTBETALT_BELØP.eksternId),
             ),
         )
 
@@ -1217,8 +1243,8 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
                 byggFilter(FeltType.OPPGAVE_STATUS, EksternFeltverdiOperator.EQUALS, Oppgavestatus.AAPEN.kode)
             ),
             select = listOf(
-                AggregertSelectFelt(Aggregeringsfunksjon.MIN, "K9", FeltType.MOTTATT_DATO.eksternId),
-                AggregertSelectFelt(Aggregeringsfunksjon.MAKS, "K9", FeltType.MOTTATT_DATO.eksternId),
+                AggregertSelectFelt(Aggregeringsfunksjon.MIN, Områder.K9, FeltType.MOTTATT_DATO.eksternId),
+                AggregertSelectFelt(Aggregeringsfunksjon.MAKS, Områder.K9, FeltType.MOTTATT_DATO.eksternId),
             ),
         )
 
@@ -1239,7 +1265,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
                 byggFilter(FeltType.OPPGAVE_STATUS, EksternFeltverdiOperator.EQUALS, Oppgavestatus.AAPEN.kode)
             ),
             select = listOf(
-                AggregertSelectFelt(Aggregeringsfunksjon.SUM, "K9", FeltType.MOTTATT_DATO.eksternId),
+                AggregertSelectFelt(Aggregeringsfunksjon.SUM, Områder.K9, FeltType.MOTTATT_DATO.eksternId),
             ),
         )
 
@@ -1349,11 +1375,11 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
                 byggFilter(FeltType.OPPGAVE_STATUS, EksternFeltverdiOperator.EQUALS, Oppgavestatus.AAPEN.kode)
             ),
             select = listOf(
-                EnkelSelectFelt("K9", "behandlingTypekode"),
+                EnkelSelectFelt(Områder.K9, "behandlingTypekode"),
                 AggregertSelectFelt(Aggregeringsfunksjon.ANTALL),
             ),
             order = listOf(
-                EnkelOrderFelt("K9", "behandlingTypekode", true),
+                EnkelOrderFelt(Områder.K9, "behandlingTypekode", true),
                 AggregertOrderFelt(Aggregeringsfunksjon.ANTALL, økende = false),
             )
         )
@@ -1386,7 +1412,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
                         eksternId
                     ).felter.joinToString(", ") { it.eksternId + "-" + it.verdi })
                 logger.info(
-                    "Pep: " + pepCache.hent("K9", eksternId, tx)
+                    "Pep: " + pepCache.hent(Områder.K9, eksternId, tx)
                         ?.run { "kode6-$kode6, kode7-$kode7, egenansatt-$egenAnsatt, oppdater-$oppdatert" })
             }
         }

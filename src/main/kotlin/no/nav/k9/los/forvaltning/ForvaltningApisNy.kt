@@ -166,7 +166,7 @@ fun Route.forvaltningApisNy() {
                                 verdi = listOf(oppgavetypeKode)
                             ),
                             FeltverdiOppgavefilter(
-                                område = "K9",
+                                område = Områder.K9,
                                 kode = sokefelt,
                                 operator = EksternFeltverdiOperator.EQUALS,
                                 verdi = listOf(saksnummer)
@@ -174,13 +174,13 @@ fun Route.forvaltningApisNy() {
                         ),
                         select = listOf(
                             EnkelSelectFelt(
-                                område = "K9",
+                                område = Områder.K9,
                                 kode = "opprettetTidspunkt"
                             )
                         ),
                         order = listOf(
                             EnkelOrderFelt(
-                                område = "K9",
+                                område = Områder.K9,
                                 kode = "opprettetTidspunkt",
                                 økende = true
                             )
@@ -197,7 +197,7 @@ fun Route.forvaltningApisNy() {
                         område = eksternOppgaveId.område,
                         eksternId = eksternOppgaveId.eksternId,
                         opprettetTidspunkt = rad.feltverdier
-                            .firstOrNull { it.område == "K9" && it.kode == "opprettetTidspunkt" }
+                            .firstOrNull { it.område == Områder.K9 && it.kode == "opprettetTidspunkt" }
                             ?.verdi
                             ?.toString()
                     )
@@ -424,7 +424,7 @@ fun Route.forvaltningApisNy() {
     }) {
         requestContextService.withRequestContext(call) {
             if (pepClient.kanLeggeUtDriftsmelding()) {
-                val område = call.område.eksternId
+                val område = call.område
                 val kode = call.parameters["kode"]!!
 
                 val (køer, lagredeSøk) = transactionalManager.transaction { tx ->

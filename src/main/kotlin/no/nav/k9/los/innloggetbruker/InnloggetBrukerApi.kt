@@ -6,9 +6,8 @@ import no.nav.k9.los.Configuration
 import no.nav.k9.los.KoinProfile
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.azuregraph.IAzureGraphService
-import no.nav.k9.los.infrastruktur.idtoken.idToken
 import no.nav.k9.los.infrastruktur.rest.RequestContextService
-import no.nav.k9.los.område
+import no.nav.k9.los.infrastruktur.rest.idToken
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
@@ -27,7 +26,7 @@ internal fun Route.InnloggetBrukerApi() {
     get("/saksbehandler") {
         if (configuration.koinProfile() != KoinProfile.LOCAL) {
             requestContextService.withRequestContext(call) {
-                val token = call.idToken().forOmråde(call.område)
+                val token = call.coroutineContext.idToken()
                 log.info("Henter innlogget saksbehandler med epost ${token.getUsername()} og navn ${token.getName()}")
                 val saksbehandlerIdent = azureGraphService.hentIdentTilInnloggetBruker()
                 val saksbehandler =
@@ -62,7 +61,7 @@ internal fun Route.InnloggetBrukerApi() {
                             navn = token.getName(),
                             epost = token.getUsername(),
                             enhet = azureGraphService.hentEnhetForInnloggetBruker(),
-                            områder = saksbehandler!!.områder
+                            områder = saksbehandler.områder
                         )
                     )
                 }

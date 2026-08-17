@@ -1,13 +1,14 @@
 package no.nav.k9.los.forvaltning
 
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.CombineOppgavefilter
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.OppgaveQuery
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.Oppgavefilter
 
-data class Feltreferanse(val område: String?, val kode: String)
+data class Feltreferanse(val område: Områder?, val kode: String)
 
-internal fun OppgaveQuery.inneholderFelt(område: String?, kode: String): Boolean {
+internal fun OppgaveQuery.inneholderFelt(område: Områder?, kode: String): Boolean {
     return filtere.inneholderFelt(område, kode)
 }
 
@@ -15,7 +16,7 @@ internal fun OppgaveQuery.hentAlleFeltreferanser(): Set<Feltreferanse> {
     return filtere.hentAlleFeltreferanser()
 }
 
-private fun List<Oppgavefilter>.inneholderFelt(område: String?, kode: String): Boolean {
+private fun List<Oppgavefilter>.inneholderFelt(område: Områder?, kode: String): Boolean {
     return any { filter ->
         when (filter) {
             is FeltverdiOppgavefilter -> filter.område == område && filter.kode == kode

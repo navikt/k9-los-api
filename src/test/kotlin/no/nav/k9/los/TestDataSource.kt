@@ -3,6 +3,7 @@ package no.nav.k9.los
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import no.nav.k9.los.infrastruktur.db.runMigration
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import org.junit.jupiter.api.AfterEach
 import org.testcontainers.containers.PostgreSQLContainer
 import javax.sql.DataSource
@@ -63,6 +64,37 @@ const val TØM_DATA_SQL = """
         """
 
 
+/**
+ * Fjerner områder som tester har opprettet, sammen med de strukturelle radene som henger på dem.
+ *
+ * Tester som trenger en egen oppgavemodell (se RedusertOppgaveTestmodellBuilder) oppretter sitt eget
+ * område i OMRADE. Den tabellen bevares av opprydningen mellom testene, så uten dette ville
+ * testområdet blitt liggende og lekket inn i etterfølgende tester — som feiler når rader fra
+ * databasen mappes til [Områder].
+ *
+ * Kjøres etter at datatabellene er tømt, siden oppgave_v3 m.fl. har fremmednøkkel mot OPPGAVETYPE.
+ */
+fun slettTestområder(dataSource: DataSource) {
+    val kjenteOmråder = Områder.entries.joinToString(", ") { "'${it.eksternId}'" }
+    val testområder = "select id from omrade where ekstern_id not in ($kjenteOmråder)"
+
+    val slettinger = listOf(
+        "delete from oppgavefelt where oppgavetype_id in (select id from oppgavetype where omrade_id in ($testområder))",
+        "delete from oppgavetype where omrade_id in ($testområder)",
+        "delete from feltdefinisjon where omrade_id in ($testområder)",
+        "delete from kodeverk_verdi where kodeverk_id in (select id from kodeverk where omrade_id in ($testområder))",
+        "delete from kodeverk where omrade_id in ($testområder)",
+        "delete from omrade where id in ($testområder)",
+    )
+
+    dataSource.connection.use { connection ->
+        connection.createStatement().use { statement ->
+            slettinger.forEach { statement.execute(it) }
+        }
+    }
+}
+
+
 abstract class AbstractPostgresTest {
     companion object {
         private val postgresContainer = KPostgreSQLContainer("postgres:16-alpine")
@@ -86,7 +118,7 @@ abstract class AbstractPostgresTest {
         dataSource.connection.use {
             it.createStatement().execute(TØM_DATA_SQL)
         }
-
+        slettTestområder(dataSource)
     }
 }
 

@@ -11,12 +11,11 @@ import no.nav.helse.dusseldorf.ktor.metrics.Operation
 import no.nav.helse.dusseldorf.oauth2.client.AccessToken
 import no.nav.helse.dusseldorf.oauth2.client.AccessTokenClient
 import no.nav.helse.dusseldorf.oauth2.client.CachedAccessTokenClient
-import no.nav.k9.los.infrastruktur.idtoken.IIdToken
+import no.nav.k9.los.infrastruktur.idtoken.IdToken
 import no.nav.k9.los.infrastruktur.rest.idToken
 import no.nav.k9.los.infrastruktur.utils.Cache
 import no.nav.k9.los.infrastruktur.utils.CacheObject
 import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
-import no.nav.k9.los.infrastruktur.azuregraph.EnheterSomSkalUtelatesFraLos
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.LocalDateTime
@@ -66,7 +65,7 @@ open class AzureGraphService(
         }
     }
 
-    private suspend fun hentEnhetForBruker(brukernavn: String, onBehalfOf: IIdToken? = null): String {
+    private suspend fun hentEnhetForBruker(brukernavn: String, onBehalfOf: IdToken? = null): String {
         val key = brukernavn + "_office_location"
         val cachedOfficeLocation = officeLocationCache.get(key)
         if (cachedOfficeLocation == null) {
@@ -226,7 +225,7 @@ open class AzureGraphService(
     }
 
 
-    private fun accessToken(onBehalfOf: IIdToken? = null): AccessToken {
+    private fun accessToken(onBehalfOf: IdToken? = null): AccessToken {
         return onBehalfOf?.run {
             cachedAccessTokenClient.getOnBehalfOfAccessToken(setOf("https://graph.microsoft.com/user.read"), this.value)
         } ?: cachedAccessTokenClient.getClientCredentialsAccessToken(setOf("https://graph.microsoft.com/.default"))

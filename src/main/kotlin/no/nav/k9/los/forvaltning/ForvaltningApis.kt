@@ -1,7 +1,5 @@
 package no.nav.k9.los.forvaltning
 
-import com.fasterxml.jackson.annotation.JsonCreator
-import com.fasterxml.jackson.annotation.JsonValue
 import io.github.smiley4.ktoropenapi.get
 import io.github.smiley4.ktoropenapi.post
 import io.ktor.http.*
@@ -9,7 +7,6 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotliquery.queryOf
-import no.nav.k9.kodeverk.behandling.FagsakYtelseType
 import no.nav.k9.los.domeneadaptere.k9.K9Oppgavetypenavn
 import no.nav.k9.los.domeneadaptere.k9.avstemming.AvstemmingsTjeneste
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.eventlager.EventRepository
@@ -20,8 +17,8 @@ import no.nav.k9.los.infrastruktur.rest.RequestContextService
 import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.ko.OppgaveKoTjeneste
 import no.nav.k9.los.kodeverk.Fagsystem
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgavedefinisjon.oppgavetype.OppgavetypeRepository
-import no.nav.k9.los.oppgaveuthenting.Oppgave
 import no.nav.k9.los.oppgaveuthenting.enkeltoppslag.AktivOppgaveOppslag
 import no.nav.k9.los.oppgaveuthenting.enkeltoppslag.TemporalOppgaveOppslag
 import no.nav.k9.los.oppgaveuthenting.query.OppgaveQueryService
@@ -154,7 +151,7 @@ fun Route.forvaltningApis() {
                                 verdi = listOf(oppgavetypeKode)
                             ),
                             FeltverdiOppgavefilter(
-                                område = "K9",
+                                område = Områder.K9,
                                 kode = sokefelt,
                                 operator = EksternFeltverdiOperator.EQUALS,
                                 verdi = listOf(saksnummer)
@@ -162,13 +159,13 @@ fun Route.forvaltningApis() {
                         ),
                         select = listOf(
                             EnkelSelectFelt(
-                                område = "K9",
+                                område = Områder.K9,
                                 kode = "opprettetTidspunkt"
                             )
                         ),
                         order = listOf(
                             EnkelOrderFelt(
-                                område = "K9",
+                                område = Områder.K9,
                                 kode = "opprettetTidspunkt",
                                 økende = true
                             )
@@ -185,7 +182,7 @@ fun Route.forvaltningApis() {
                         område = eksternOppgaveId.område,
                         eksternId = eksternOppgaveId.eksternId,
                         opprettetTidspunkt = rad.feltverdier
-                            .firstOrNull { it.område == "K9" && it.kode == "opprettetTidspunkt" }
+                            .firstOrNull { it.område == Områder.K9 && it.kode == "opprettetTidspunkt" }
                             ?.verdi
                             ?.toString()
                     )
@@ -403,7 +400,7 @@ fun Route.forvaltningApis() {
     }) {
         requestContextService.withRequestContext(call) {
             if (pepClient.kanLeggeUtDriftsmelding()) {
-                val område = call.parameters["omrade"].let { if (it == "null" || it == null) null else it }
+                val område = call.parameters["omrade"]?.let { Områder.fraEksternId(it) }
                 val kode = call.parameters["kode"]!!
 
                 val (køer, lagredeSøk) = transactionalManager.transaction { tx ->

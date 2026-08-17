@@ -8,6 +8,7 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.testing.*
 import no.nav.k9.los.KoinProfile
+import no.nav.k9.los.områdeApi
 import no.nav.k9.los.infrastruktur.rest.RequestContextService
 import no.nav.k9.los.infrastruktur.rest.idToken
 import org.junit.jupiter.api.Test
@@ -22,10 +23,10 @@ internal class RequestContextServiceTest {
                 testApp()
             }
             
-            var response = client.get("/med-request-context")
+            var response = client.get("/k9/med-request-context")
             assertEquals(HttpStatusCode.InternalServerError, response.status)
 
-            response = client.get("/med-request-context") {
+            response = client.get("/k9/med-request-context") {
                 header(HttpHeaders.Authorization, authorizationHeader(username = "Erik"))
             }
             assertEquals(HttpStatusCode.OK, response.status)
@@ -37,20 +38,22 @@ internal class RequestContextServiceTest {
         requestContextService: RequestContextService = RequestContextService(profile = KoinProfile.PROD)
     ) {
         routing {
-            route("med-request-context") {
-                get {
-                    kotlin.runCatching {
-                        requestContextService.withRequestContext(call) {
-                            coroutineContext.idToken()
-                        }
-                    }.fold(
-                        onSuccess = {
-                            call.respondText("Hei ${it.getUsername()}")
-                        },
-                        onFailure = {
-                            call.respond(HttpStatusCode.InternalServerError)
-                        }
-                    )
+            områdeApi {
+                route("med-request-context") {
+                    get {
+                        kotlin.runCatching {
+                            requestContextService.withRequestContext(call) {
+                                coroutineContext.idToken()
+                            }
+                        }.fold(
+                            onSuccess = {
+                                call.respondText("Hei ${it.getUsername()}")
+                            },
+                            onFailure = {
+                                call.respond(HttpStatusCode.InternalServerError)
+                            }
+                        )
+                    }
                 }
             }
         }

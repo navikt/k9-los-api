@@ -15,7 +15,7 @@ fun Route.OppgaveQueryApis() {
     val oppgaveQueryService by inject<OppgaveQueryService>()
     val pepClient by KoinJavaComponent.inject<IPepClient>(IPepClient::class.java)
 
-    post("/antall") {
+    post("/query/antall") {
         requestContextService.withRequestContext(call) {
             if (pepClient.harBasisTilgang()) {
                 val oppgaveQuery = call.receive<OppgaveQuery>()

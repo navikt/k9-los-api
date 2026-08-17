@@ -1,11 +1,8 @@
 package no.nav.k9.los.infrastruktur.idtoken
 
-import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
-
 data class IdTokenLocal(
     override val value: String = "",
-
-) : IIdToken {
+) : IdToken {
     override val jwt: Nothing? = null
     override fun getNavIdent(): String = "Z123456"
     override fun getName(): String = "saksbehandler@nav.no"
@@ -18,7 +15,4 @@ data class IdTokenLocal(
     override fun erVeileder(): Boolean = true
     override fun erDrifter(): Boolean = true
     override fun harBasistilgang(): Boolean = true
-
-    // Lokalt kjøres alt uten faktiske grupper, så samme token brukes for alle områder
-    override fun forOmråde(område: Områder): IIdToken = this
 }

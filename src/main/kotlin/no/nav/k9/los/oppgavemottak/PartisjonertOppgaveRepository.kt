@@ -5,6 +5,7 @@ import kotliquery.Row
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgavedefinisjon.oppgavetype.Oppgavetype
 import no.nav.k9.los.oppgavedefinisjon.oppgavetype.OppgavetypeRepository
 import no.nav.k9.los.oppgaveuthenting.query.db.PartisjonertOppgaveId
@@ -304,7 +305,7 @@ class PartisjonertOppgaveRepository(val oppgavetypeRepository: OppgavetypeReposi
             ).map { row ->
                 Oppgavefelt(
                     eksternId = row.string("ekstern_id"),
-                    område = "K9",
+                    område = Områder.fraEksternId(oppgavetype.område.eksternId),
                     listetype = row.boolean("liste_type"),
                     påkrevd = row.boolean("pakrevd"),
                     verdi = row.string("verdi"),

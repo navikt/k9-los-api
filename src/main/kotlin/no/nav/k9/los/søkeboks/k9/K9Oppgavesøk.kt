@@ -1,4 +1,4 @@
-package no.nav.k9.los.oppgaveuthenting.omraade.k9
+package no.nav.k9.los.søkeboks.k9
 
 import no.nav.k9.los.infrastruktur.pdl.PersonPdl
 import no.nav.k9.los.infrastruktur.pdl.doedsdato
@@ -12,8 +12,8 @@ import no.nav.k9.los.kodeverk.Kodeverdi
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.Oppgave
 import no.nav.k9.los.oppgaveuthenting.OppgaveNøkkelDto
-import no.nav.k9.los.oppgaveuthenting.omraade.Oppgavesøk
-import no.nav.k9.los.oppgaveuthenting.omraade.Søkeord
+import no.nav.k9.los.søkeboks.Oppgavesøk
+import no.nav.k9.los.søkeboks.Søkeord
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.EnkelOrderFelt
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.OppgaveQuery
@@ -28,8 +28,6 @@ import java.time.LocalDateTime
  * og ikke deles med andre områder.
  */
 class K9Oppgavesøk : Oppgavesøk {
-    private val område = Områder.K9.eksternId
-
     override fun lagQuery(søkeord: Søkeord): OppgaveQuery = when (søkeord) {
         is Søkeord.Person -> query("aktorId", EksternFeltverdiOperator.IN, søkeord.aktørIder + søkeord.fnr)
         is Søkeord.Journalpost -> query("journalpostId", EksternFeltverdiOperator.EQUALS, listOf(søkeord.journalpostId))
@@ -38,7 +36,7 @@ class K9Oppgavesøk : Oppgavesøk {
 
     override fun aktørId(oppgave: Oppgave) = oppgave.hentVerdi("aktorId")
 
-    override fun sakId(oppgave: Oppgave) = oppgave.hentVerdi("saksnummer")
+    override fun saksnummer(oppgave: Oppgave) = oppgave.hentVerdi("saksnummer")
 
     override fun erSynlig(oppgave: Oppgave) = oppgave.hentVerdi("ytelsestype") != "OBSOLETE"
 
@@ -66,8 +64,8 @@ class K9Oppgavesøk : Oppgavesøk {
     )
 
     private fun query(feltkode: String, operator: EksternFeltverdiOperator, verdi: List<String>) = OppgaveQuery(
-        filtere = listOf(FeltverdiOppgavefilter(område, feltkode, operator, verdi)),
-        order = listOf(EnkelOrderFelt(område, "mottattDato", false)),
+        filtere = listOf(FeltverdiOppgavefilter(Områder.K9, feltkode, operator, verdi)),
+        order = listOf(EnkelOrderFelt(Områder.K9, "mottattDato", false)),
     )
 
     /** Saksnummer skrives med stor forbokstav, men O og I er små for å skille dem fra 0 og 1. */

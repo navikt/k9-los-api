@@ -269,7 +269,7 @@ class EventTilOppgaveAdapterSpec : KoinTest, FreeSpec() {
                             OppgaveQuery(
                                 listOf(
                                     FeltverdiOppgavefilter(
-                                        "K9",
+                                        Områder.K9,
                                         "saksnummer",
                                         EksternFeltverdiOperator.EQUALS,
                                         listOf("76")

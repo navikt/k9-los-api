@@ -1,4 +1,4 @@
-package no.nav.k9.los.oppgaveuthenting.omraade
+package no.nav.k9.los.søkeboks
 
 /**
  * Et søkeord klassifisert etter hva det ser ut som.

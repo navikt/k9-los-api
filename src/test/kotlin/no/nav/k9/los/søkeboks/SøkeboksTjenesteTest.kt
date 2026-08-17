@@ -18,9 +18,8 @@ import no.nav.k9.los.oppgavedefinisjon.oppgavetype.Oppgavetype
 import no.nav.k9.los.oppgaveuthenting.Oppgave
 import no.nav.k9.los.oppgaveuthenting.Oppgavefelt
 import no.nav.k9.los.oppgaveuthenting.query.OppgaveQueryService
-import no.nav.k9.los.oppgaveuthenting.omraade.Oppgavesøkere
-import no.nav.k9.los.oppgaveuthenting.omraade.k9.K9Oppgavesøk
-import no.nav.k9.los.oppgaveuthenting.omraade.ung.UngOppgavesøk
+import no.nav.k9.los.søkeboks.k9.K9Oppgavesøk
+import no.nav.k9.los.søkeboks.ung.UngOppgavesøk
 import no.nav.k9.los.oppgaveuthenting.sammendrag.OppgaveSammendragDtoBuilder
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
@@ -63,9 +62,9 @@ class SøkeboksTjenesteTest {
         return Oppgave(
             eksternId, "1", eksternId, oppgavetype, status, LocalDateTime.now(),
             listOf(
-                Oppgavefelt("aktorId", "K9", false, false, "aktor-1", null),
-                Oppgavefelt("saksnummer", "K9", false, false, saksnummer, null),
-                Oppgavefelt("ytelsestype", "K9", false, false, ytelse, null),
+                Oppgavefelt("aktorId", Områder.K9, false, false, "aktor-1", null),
+                Oppgavefelt("saksnummer", Områder.K9, false, false, saksnummer, null),
+                Oppgavefelt("ytelsestype", Områder.K9, false, false, ytelse, null),
             ),
         )
     }

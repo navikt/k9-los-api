@@ -5,9 +5,6 @@ import no.nav.k9.los.infrastruktur.pdl.IPdlService
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.Oppgave
-import no.nav.k9.los.oppgaveuthenting.omraade.Oppgavesøk
-import no.nav.k9.los.oppgaveuthenting.omraade.Oppgavesøkere
-import no.nav.k9.los.oppgaveuthenting.omraade.Søkeord
 import no.nav.k9.los.oppgaveuthenting.query.OppgaveQueryService
 import no.nav.k9.los.oppgaveuthenting.query.QueryRequest
 import no.nav.k9.los.oppgaveuthenting.sammendrag.OppgaveSammendragDtoBuilder
@@ -30,9 +27,9 @@ class SøkeboksTjeneste(
     }
 
     suspend fun finnOppgaverSammendrag(søkeord: String, område: Områder): SøkeresultatSammendrag {
-        val adapter = oppgavesøkere.forOmråde(område)
-        val oppgaver = finnOppgaverFor(søkeord, område, adapter) ?: return SøkeresultatSammendrag.IkkeTilgang
-        return transformerTilSøkeresultatSammendrag(oppgaver, adapter)
+        val adapterForOmråde = oppgavesøkere.forOmråde(område)
+        val oppgaver = finnOppgaverFor(søkeord, område, adapterForOmråde) ?: return SøkeresultatSammendrag.IkkeTilgang
+        return transformerTilSøkeresultatSammendrag(oppgaver, adapterForOmråde)
     }
 
     /**
@@ -129,9 +126,9 @@ class SøkeboksTjeneste(
 
     /** Beholder den åpne oppgaven per sak, eller den første dersom alle er lukket. */
     private fun énOppgavePerSak(oppgaver: List<Oppgave>, adapter: Oppgavesøk): List<Oppgave> {
-        val (oppgaverMedSak, oppgaverUtenSak) = oppgaver.partition { adapter.sakId(it) != null }
+        val (oppgaverMedSak, oppgaverUtenSak) = oppgaver.partition { adapter.saksnummer(it) != null }
 
-        val filtrerteMedSak = oppgaverMedSak.groupBy { adapter.sakId(it)!! }.values.map { oppgaverISak ->
+        val filtrerteMedSak = oppgaverMedSak.groupBy { adapter.saksnummer(it)!! }.values.map { oppgaverISak ->
             oppgaverISak.find { it.status != Oppgavestatus.LUKKET }
                 ?: oppgaverISak.first()
         }

@@ -1,5 +1,6 @@
 package no.nav.k9.los.oppgaveuthenting.query.mapping.transientfeltutleder
 
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.query.db.OmrådeOgKode
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -14,7 +15,7 @@ import java.time.temporal.ChronoUnit
 class K9SakAntallOmsøkteDagerSomErPassertUtleder : TransientFeltutleder {
 
     companion object {
-        private val PERIODER_FELT = OmrådeOgKode("K9", "relevanteSøknadsperioder")
+        private val PERIODER_FELT = OmrådeOgKode(Områder.K9, "relevanteSøknadsperioder")
 
         fun antallDagerFørDato(perioder: List<String>, dato: LocalDate): Long {
             return perioder.sumOf { periodeStr ->
@@ -41,8 +42,8 @@ class K9SakAntallOmsøkteDagerSomErPassertUtleder : TransientFeltutleder {
         val subquery = antallPasserteDagerSql(input.spørringstrategi.verditabell, input.now)
         val query = "(${subquery.query}) ${input.operator.sql} (:inputVerdi)"
         val inputVerdi = when (input.feltverdi) {
-            is String -> (input.feltverdi as String).toLong()
-            is Number -> (input.feltverdi as Number).toLong()
+            is String -> input.feltverdi.toLong()
+            is Number -> input.feltverdi.toLong()
             else -> input.feltverdi
         }
         return SqlMedParams(query, subquery.queryParams + mapOf("inputVerdi" to inputVerdi))

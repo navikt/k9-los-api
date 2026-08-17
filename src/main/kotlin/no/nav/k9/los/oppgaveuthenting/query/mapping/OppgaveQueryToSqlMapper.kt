@@ -68,16 +68,6 @@ object OppgaveQueryToSqlMapper {
         }
     }
 
-    private fun traverserFiltereOgFinnSpørringsstrategi(request: QueryRequest): Spørringstrategi? {
-        val verdierFunnet = mutableSetOf<Spørringstrategi>()
-        rekursivtSøk(
-            request.oppgaveQuery.filtere,
-            verdierFunnet,
-            { verdi -> Spørringstrategi.fraKode(verdi.toString()) },
-            { filter -> filter.kode == "spørringstrategi" })
-        return verdierFunnet.firstOrNull()
-    }
-
     private fun traverserFiltereOgFinnFerdigstiltDatofilter(queryRequest: QueryRequest): FeltverdiOppgavefilter? {
         for (filter in queryRequest.oppgaveQuery.filtere) {
             if (filter is FeltverdiOppgavefilter && filter.kode == "ferdigstiltDato") {
