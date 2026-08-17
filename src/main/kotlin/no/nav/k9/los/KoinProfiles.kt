@@ -79,8 +79,9 @@ import no.nav.k9.los.oppgaveuthenting.enkeltoppslag.TemporalOppgaveOppslag
 import no.nav.k9.los.oppgaveuthenting.enkeltoppslag.TemporalOppgaveOppslagOppgaveV3
 import no.nav.k9.los.oppgaveuthenting.query.OppgaveQueryService
 import no.nav.k9.los.oppgaveuthenting.query.db.OppgaveQueryRepository
-import no.nav.k9.los.oppgaveuthenting.omraade.OmrådeAdaptere
-import no.nav.k9.los.oppgaveuthenting.omraade.k9.K9OmrådeAdapter
+import no.nav.k9.los.oppgaveuthenting.omraade.Oppgavesøkere
+import no.nav.k9.los.oppgaveuthenting.omraade.k9.K9Oppgavesøk
+import no.nav.k9.los.oppgaveuthenting.omraade.ung.UngOppgavesøk
 import no.nav.k9.los.oppgaveuthenting.sammendrag.OppgaveSammendragDtoBuilder
 import no.nav.k9.los.reservasjon.ReservasjonApisTjeneste
 import no.nav.k9.los.reservasjon.ReservasjonV3DtoBuilder
@@ -264,9 +265,10 @@ fun common(app: Application, config: Configuration) = module {
         )
     }
 
-    single { K9OmrådeAdapter() }
-    single { OmrådeAdaptere(k9Adapter = get()) }
-    single { OppgaveSammendragDtoBuilder(områdeAdaptere = get(), pdlService = get()) }
+    single { K9Oppgavesøk() }
+    single { UngOppgavesøk() }
+    single { Oppgavesøkere(k9 = get(), ung = get()) }
+    single { OppgaveSammendragDtoBuilder(oppgavesøkere = get(), pdlService = get()) }
 
     single {
         DriftsmeldingTjeneste(driftsmeldingRepository = get())
@@ -554,7 +556,7 @@ fun common(app: Application, config: Configuration) = module {
             pepClient = get(),
             oppgaveSammendragDtoBuilder = get(),
             queryService = get(),
-            områdeAdaptere = get(),
+            oppgavesøkere = get(),
         )
     }
 

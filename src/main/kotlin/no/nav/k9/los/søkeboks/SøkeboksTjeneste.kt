@@ -5,8 +5,8 @@ import no.nav.k9.los.infrastruktur.pdl.IPdlService
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.Oppgave
-import no.nav.k9.los.oppgaveuthenting.omraade.OmrådeAdapter
-import no.nav.k9.los.oppgaveuthenting.omraade.OmrådeAdaptere
+import no.nav.k9.los.oppgaveuthenting.omraade.Oppgavesøk
+import no.nav.k9.los.oppgaveuthenting.omraade.Oppgavesøkere
 import no.nav.k9.los.oppgaveuthenting.omraade.Søkeord
 import no.nav.k9.los.oppgaveuthenting.query.OppgaveQueryService
 import no.nav.k9.los.oppgaveuthenting.query.QueryRequest
@@ -14,23 +14,23 @@ import no.nav.k9.los.oppgaveuthenting.sammendrag.OppgaveSammendragDtoBuilder
 
 /**
  * Felles søkelogikk for alle områder. Klassen kjenner ingen feltkoder — all tolkning av
- * søkeord og oppgaver skjer i områdets [OmrådeAdapter].
+ * søkeord og oppgaver skjer i områdets [Oppgavesøk].
  */
 class SøkeboksTjeneste(
     private val pdlService: IPdlService,
     private val pepClient: IPepClient,
     private val oppgaveSammendragDtoBuilder: OppgaveSammendragDtoBuilder,
     private val queryService: OppgaveQueryService,
-    private val områdeAdaptere: OmrådeAdaptere,
+    private val oppgavesøkere: Oppgavesøkere,
 ) {
     suspend fun finnOppgaver(søkeord: String, område: Områder): Søkeresultat {
-        val adapter = områdeAdaptere.adapterFor(område)
+        val adapter = oppgavesøkere.forOmråde(område)
         val oppgaver = finnOppgaverFor(søkeord, område, adapter) ?: return Søkeresultat.IkkeTilgang
         return transformerTilSøkeresultat(oppgaver, adapter)
     }
 
     suspend fun finnOppgaverSammendrag(søkeord: String, område: Områder): SøkeresultatSammendrag {
-        val adapter = områdeAdaptere.adapterFor(område)
+        val adapter = oppgavesøkere.forOmråde(område)
         val oppgaver = finnOppgaverFor(søkeord, område, adapter) ?: return SøkeresultatSammendrag.IkkeTilgang
         return transformerTilSøkeresultatSammendrag(oppgaver, adapter)
     }
@@ -42,7 +42,7 @@ class SøkeboksTjeneste(
     private suspend fun finnOppgaverFor(
         søkeord: String,
         område: Områder,
-        adapter: OmrådeAdapter,
+        adapter: Oppgavesøk,
     ): List<Oppgave>? {
         val klassifisert = klassifiser(søkeord) ?: return null
         val query = adapter.lagQuery(klassifisert) ?: return emptyList()
@@ -71,7 +71,7 @@ class SøkeboksTjeneste(
 
     private suspend fun transformerTilSøkeresultat(
         oppgaver: List<Oppgave>,
-        adapter: OmrådeAdapter,
+        adapter: Oppgavesøk,
     ): Søkeresultat {
         if (oppgaver.isEmpty()) {
             return Søkeresultat.TomtResultat
@@ -105,7 +105,7 @@ class SøkeboksTjeneste(
 
     private suspend fun transformerTilSøkeresultatSammendrag(
         oppgaver: List<Oppgave>,
-        adapter: OmrådeAdapter,
+        adapter: Oppgavesøk,
     ): SøkeresultatSammendrag {
         if (oppgaver.isEmpty()) return SøkeresultatSammendrag.TomtResultat
 
@@ -128,7 +128,7 @@ class SøkeboksTjeneste(
     }
 
     /** Beholder den åpne oppgaven per sak, eller den første dersom alle er lukket. */
-    private fun énOppgavePerSak(oppgaver: List<Oppgave>, adapter: OmrådeAdapter): List<Oppgave> {
+    private fun énOppgavePerSak(oppgaver: List<Oppgave>, adapter: Oppgavesøk): List<Oppgave> {
         val (oppgaverMedSak, oppgaverUtenSak) = oppgaver.partition { adapter.sakId(it) != null }
 
         val filtrerteMedSak = oppgaverMedSak.groupBy { adapter.sakId(it)!! }.values.map { oppgaverISak ->

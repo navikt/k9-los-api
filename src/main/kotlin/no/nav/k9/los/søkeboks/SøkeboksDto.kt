@@ -53,7 +53,7 @@ data class SøkeresultatOppgaveDto(
 ) {
     /**
      * Denne DTO-en er en flatere visning av [OppgaveSammendragDto] og utledes fra den,
-     * slik at feltkodene bare tolkes ett sted (i områdets OmrådeAdapter).
+     * slik at feltkodene bare tolkes ett sted (i områdets Oppgavesøk).
      */
     constructor(sammendrag: OppgaveSammendragDto) : this(
         navn = sammendrag.person?.navn ?: "Uten navn",

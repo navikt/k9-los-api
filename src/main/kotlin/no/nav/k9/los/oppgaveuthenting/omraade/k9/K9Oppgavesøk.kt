@@ -12,7 +12,7 @@ import no.nav.k9.los.kodeverk.Kodeverdi
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.Oppgave
 import no.nav.k9.los.oppgaveuthenting.OppgaveNøkkelDto
-import no.nav.k9.los.oppgaveuthenting.omraade.OmrådeAdapter
+import no.nav.k9.los.oppgaveuthenting.omraade.Oppgavesøk
 import no.nav.k9.los.oppgaveuthenting.omraade.Søkeord
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.EnkelOrderFelt
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.FeltverdiOppgavefilter
@@ -24,10 +24,10 @@ import no.nav.k9.los.oppgaveuthenting.sammendrag.PersonSammendragDto
 import java.time.LocalDateTime
 
 /**
- * Feltvokabularet til område K9. Se [OmrådeAdapter] for hvorfor feltkodene er samlet her
+ * Feltvokabularet til område K9. Se [Oppgavesøk] for hvorfor feltkodene er samlet her
  * og ikke deles med andre områder.
  */
-class K9OmrådeAdapter : OmrådeAdapter {
+class K9Oppgavesøk : Oppgavesøk {
     private val område = Områder.K9.eksternId
 
     override fun lagQuery(søkeord: Søkeord): OppgaveQuery = when (søkeord) {

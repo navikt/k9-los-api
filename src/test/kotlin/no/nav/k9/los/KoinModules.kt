@@ -56,8 +56,9 @@ import no.nav.k9.los.oppgavedefinisjon.oppgavetype.OppgavetypeTjeneste
 import no.nav.k9.los.nøkkeltall.saksbehandler.nyeogferdigstilte.NyeOgFerdigstilteService
 import no.nav.k9.los.oppgaveuthenting.query.OppgaveQueryService
 import no.nav.k9.los.oppgaveuthenting.query.db.OppgaveQueryRepository
-import no.nav.k9.los.oppgaveuthenting.omraade.OmrådeAdaptere
-import no.nav.k9.los.oppgaveuthenting.omraade.k9.K9OmrådeAdapter
+import no.nav.k9.los.oppgaveuthenting.omraade.Oppgavesøkere
+import no.nav.k9.los.oppgaveuthenting.omraade.k9.K9Oppgavesøk
+import no.nav.k9.los.oppgaveuthenting.omraade.ung.UngOppgavesøk
 import no.nav.k9.los.oppgaveuthenting.sammendrag.OppgaveSammendragDtoBuilder
 import no.nav.k9.los.reservasjon.ReservasjonApisTjeneste
 import no.nav.k9.los.reservasjon.ReservasjonV3DtoBuilder
@@ -404,9 +405,10 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
         )
     }
 
-    single { K9OmrådeAdapter() }
-    single { OmrådeAdaptere(k9Adapter = get()) }
-    single { OppgaveSammendragDtoBuilder(områdeAdaptere = get(), pdlService = get()) }
+    single { K9Oppgavesøk() }
+    single { UngOppgavesøk() }
+    single { Oppgavesøkere(k9 = get(), ung = get()) }
+    single { OppgaveSammendragDtoBuilder(oppgavesøkere = get(), pdlService = get()) }
 
     single {
         OppgaveKoTjeneste(
@@ -514,7 +516,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             pepClient = get(),
             oppgaveSammendragDtoBuilder = get(),
             queryService = get(),
-            områdeAdaptere = get(),
+            oppgavesøkere = get(),
         )
     }
 

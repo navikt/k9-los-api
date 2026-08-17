@@ -6,21 +6,22 @@ import no.nav.k9.los.oppgaveuthenting.query.dto.query.OppgaveQuery
 import no.nav.k9.los.oppgaveuthenting.sammendrag.OppgaveSammendragDto
 
 /**
- * Oversetter mellom ett områdes feltvokabular og resten av applikasjonen.
+ * Søk etter og tolkning av oppgaver for ett område.
  *
- * Feltdefinisjonene er uavhengige per område: at K9 har feltet `saksnummer` sier ingenting
- * om at UNG har det, eller om at det betyr det samme. Derfor er dette den eneste typen der
- * feltkoder skal forekomme — felleskode skal aldri kalle [Oppgave.hentVerdi] eller bygge et
+ * Feltdefinisjonene er uavhengige per område: at K9 har feltet `saksnummer` sier ingenting om
+ * at UNG har det, eller om at det betyr det samme. Implementasjonene av dette grensesnittet er
+ * derfor de eneste stedene feltkoder skal forekomme — felleskode skal aldri kalle
+ * [Oppgave.hentVerdi] eller bygge et
  * [no.nav.k9.los.oppgaveuthenting.query.dto.query.FeltverdiOppgavefilter] direkte.
  *
- * Konsekvensen er bevisst duplisering mellom implementasjonene: to områder som tilfeldigvis
- * har like feltkoder skal likevel ha hver sin implementasjon. Å trekke ut fellesnevneren og
+ * Konsekvensen er bevisst duplisering mellom implementasjonene: to områder som tilfeldigvis har
+ * like feltkoder skal likevel ha hver sin implementasjon. Å trekke ut fellesnevneren og
  * parametrisere den på område ville gjenopprette nettopp den skjulte koblingen dette
  * grensesnittet finnes for å hindre.
  *
- * Implementasjonen for et område velges av [OmrådeAdaptere.adapterFor].
+ * Implementasjonen for et område velges av [Oppgavesøkere].
  */
-interface OmrådeAdapter {
+interface Oppgavesøk {
     /**
      * Bygger spørringen som besvarer [søkeord] for dette området, eller null dersom området
      * ikke har felt som kan besvare varianten (f.eks. et område uten journalpostbegrep).

@@ -5,10 +5,10 @@ package no.nav.k9.los.oppgaveuthenting.omraade
  *
  * Klassifiseringen er områdeuavhengig: den handler om formatet på det brukeren skrev inn,
  * ikke om hvilke felt et område har. Hvorvidt et område faktisk støtter å søke på en gitt
- * variant avgjøres av [OmrådeAdapter.lagQuery], som returnerer null når varianten ikke
+ * variant avgjøres av [Oppgavesøk.lagQuery], som returnerer null når varianten ikke
  * kan besvares.
  *
- * Nye varianter her vil bryte kompileringen i hver [OmrådeAdapter], som er meningen.
+ * Nye varianter her vil bryte kompileringen i hver [Oppgavesøk], som er meningen.
  */
 sealed interface Søkeord {
     /** Fødselsnummer, sammen med aktørId-ene PDL kjenner for personen. */
