@@ -72,7 +72,7 @@ class OppgaveQueryToSqlMapperTest {
         )
 
         assertThat(sqlBuilder.getQuery()).contains(sqlBuilder.getParams().keys)
-        assertThat(sqlBuilder.getParams()).hasSize(11) // Antallet er spesifikt for partisjonerte tabeller
+        assertThat(sqlBuilder.getParams()).hasSize(12) // Antallet er spesifikt for partisjonerte tabeller. Inkluderer :område
     }
 
     @Test
@@ -100,7 +100,7 @@ class OppgaveQueryToSqlMapperTest {
         )
 
         assertThat(sqlBuilder.getQuery()).contains(sqlBuilder.getParams().keys)
-        assertThat(sqlBuilder.getParams()).hasSize(12)
+        assertThat(sqlBuilder.getParams()).hasSize(13) // Inkluderer :område
     }
 
     private fun byggFilter(

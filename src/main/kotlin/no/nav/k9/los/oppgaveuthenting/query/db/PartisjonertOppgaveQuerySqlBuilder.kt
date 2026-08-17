@@ -7,6 +7,7 @@ import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.kodeverk.PersonBeskyttelseType
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.Datatype
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.*
 import no.nav.k9.los.oppgaveuthenting.query.dto.resultat.Aggregertverdi
 import no.nav.k9.los.oppgaveuthenting.query.dto.resultat.OppgaveQueryRad
@@ -26,7 +27,14 @@ class PartisjonertOppgaveQuerySqlBuilder(
     oppgavestatusFilter: List<Oppgavestatus>,
     val now: LocalDateTime,
     ferdigstiltDatoFilter: FeltverdiOppgavefilter?,
+    private val område: Områder,
 ) : OppgaveQuerySqlBuilder {
+    /**
+     * Området bindes som egen parametermap og ikke i [queryParams], siden queryParams.size
+     * brukes til å generere unike parameternavn og ville forskjøvet nummereringen.
+     */
+    private val områdeParams = mapOf("område" to område.eksternId)
+
     private val log = LoggerFactory.getLogger(PartisjonertOppgaveQuerySqlBuilder::class.java)
 
     private val oppgavefelterKodeOgType = felter.mapValues { Datatype.fraKode(it.value.oppgavefelt.tolkes_som) }
@@ -92,10 +100,10 @@ class PartisjonertOppgaveQuerySqlBuilder(
     private var selectClause = "SELECT o.id, o.oppgave_ekstern_id, o.oppgave_ekstern_versjon"
     private var fromClause = """
         FROM oppgave_v3_part o
-        LEFT JOIN oppgave_pep_cache opc ON (opc.kildeomrade = 'K9' AND o.oppgave_ekstern_id = opc.ekstern_id)
+        LEFT JOIN oppgave_pep_cache opc ON (opc.kildeomrade = :område AND o.oppgave_ekstern_id = opc.ekstern_id)
     """.trimIndent()
 
-    private var whereClause = "WHERE o.omrade = :område AND o.oppgavestatus IN ($oppgavestatusPlaceholder) ${ferdigstiltDatoBetingelse("o")}"
+    private var whereClause = "WHERE o.omrade_ekstern_id = :område AND o.oppgavestatus IN ($oppgavestatusPlaceholder) ${ferdigstiltDatoBetingelse("o")}"
     private val orderByClauses = mutableListOf<String>()
     private val orderByClause get() = if (orderByClauses.isNotEmpty()) "ORDER BY " + orderByClauses.joinToString(", ") else ""
     private var groupByClause = ""
@@ -354,7 +362,7 @@ class PartisjonertOppgaveQuerySqlBuilder(
 
         return OppgaveQueryRad(
             oppgaveId = PartisjonertOppgaveId(row.long("id")),
-            eksternOppgaveId = EksternOppgaveId("K9", row.string("oppgave_ekstern_id")),
+            eksternOppgaveId = EksternOppgaveId(område.eksternId, row.string("oppgave_ekstern_id")),
             feltverdier = feltverdier,
         )
     }
@@ -798,6 +806,7 @@ class PartisjonertOppgaveQuerySqlBuilder(
             putAll(ferdigstiltDatoParams)
             putAll(selectFeltParams)
             putAll(grupperingParams)
+            putAll(områdeParams)
         }
     }
 }

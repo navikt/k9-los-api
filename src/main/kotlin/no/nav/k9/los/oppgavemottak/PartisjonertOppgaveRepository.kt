@@ -154,14 +154,15 @@ class PartisjonertOppgaveRepository(val oppgavetypeRepository: OppgavetypeReposi
         tx.run(
             queryOf(
                 """
-                    insert into oppgave_v3_part(id, oppgave_ekstern_id, oppgave_ekstern_versjon, oppgavetype_ekstern_id, reservasjonsnokkel, endret_tidspunkt, oppgavestatus, ferdigstilt_dato)
-                    VALUES (:oppgave_id, :oppgave_ekstern_id, :oppgave_ekstern_versjon, :oppgavetype_ekstern_id, :reservasjonsnokkel, :endret_tidspunkt, :oppgavestatus, :ferdigstilt_dato)
+                    insert into oppgave_v3_part(id, oppgave_ekstern_id, oppgave_ekstern_versjon, oppgavetype_ekstern_id, omrade_ekstern_id, reservasjonsnokkel, endret_tidspunkt, oppgavestatus, ferdigstilt_dato)
+                    VALUES (:oppgave_id, :oppgave_ekstern_id, :oppgave_ekstern_versjon, :oppgavetype_ekstern_id, :omrade_ekstern_id, :reservasjonsnokkel, :endret_tidspunkt, :oppgavestatus, :ferdigstilt_dato)
                 """.trimIndent(),
                 mapOf(
                     "oppgave_id" to partisjonertOppgaveId.id,
                     "oppgave_ekstern_id" to oppgave.eksternId,
                     "oppgave_ekstern_versjon" to oppgave.eksternVersjon,
                     "oppgavetype_ekstern_id" to oppgave.oppgavetype.eksternId,
+                    "omrade_ekstern_id" to oppgave.oppgavetype.område.eksternId,
                     "reservasjonsnokkel" to oppgave.reservasjonsnøkkel,
                     "endret_tidspunkt" to oppgave.endretTidspunkt,
                     "oppgavestatus" to oppgave.status.kode,
