@@ -298,9 +298,7 @@ private fun Route.legacyApi() {
 }
 
 private fun Route.apiUnderConstruction() {
-    områdeApi(Områder.K9) {
-        route("driftsmeldinger", { tags("Driftsmelding") }) { DriftsmeldingerApis() }
-    }
+    route("driftsmeldinger", { tags("Driftsmelding") }) { DriftsmeldingerApis() }
     route("brukersområder") { BrukersområderApi() }
     områdeApi {
         route("innloggetbruker") { InnloggetBrukerApi() }

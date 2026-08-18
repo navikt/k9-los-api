@@ -16,7 +16,6 @@
   "ung_group_id_kode6": "00000000-0000-0000-0000-000000000000",
   "ung_group_id_saksbehandler": "00000000-0000-0000-0000-000000000000",
   "ung_group_id_veileder": "00000000-0000-0000-0000-000000000000",
-  "ung_group_id_drift": "00000000-0000-0000-0000-000000000000",
   "ung_group_id_oppgavestyrer": "00000000-0000-0000-0000-000000000000",
   "cluster_name": "prod-gcp",
   "cluster_name_punsj": "prod-fss",

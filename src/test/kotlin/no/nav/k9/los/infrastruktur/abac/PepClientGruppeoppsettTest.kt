@@ -19,14 +19,14 @@ class PepClientGruppeoppsettTest {
     private val ungVeileder = UUID.randomUUID()
     private val k9Oppgavestyrer = UUID.randomUUID()
     private val ungOppgavestyrer = UUID.randomUUID()
-    private val k9Drift = UUID.randomUUID()
-    private val ungDrift = UUID.randomUUID()
+    private val drift = UUID.randomUUID()
     private val k9Kode6 = UUID.randomUUID()
     private val ungKode6 = UUID.randomUUID()
 
     private val oppsett = Gruppeoppsett(
-        k9 = GrupperForOmråde(k9Saksbehandler, k9Veileder, k9Oppgavestyrer, k9Drift, k9Kode6),
-        ung = GrupperForOmråde(ungSaksbehandler, ungVeileder, ungOppgavestyrer, ungDrift, ungKode6),
+        k9 = GrupperForOmråde(k9Saksbehandler, k9Veileder, k9Oppgavestyrer, k9Kode6),
+        ung = GrupperForOmråde(ungSaksbehandler, ungVeileder, ungOppgavestyrer, ungKode6),
+        drift = drift,
     )
 
     @Test
@@ -44,13 +44,24 @@ class PepClientGruppeoppsettTest {
     fun `bruker separate tokenbaserte grupper for alle roller`() {
         runBlocking {
             val pepClient = pepClient()
-            val ungGrupper = listOf(ungSaksbehandler, ungVeileder, ungOppgavestyrer, ungDrift, ungKode6)
+            val ungGrupper = listOf(ungSaksbehandler, ungVeileder, ungOppgavestyrer, ungKode6)
 
             for (gruppe in ungGrupper) {
                 val token = token(setOf(gruppe))
                 medContext(token, Områder.K9) { harRolle(pepClient, gruppe) } shouldBe false
                 medContext(token, Områder.UNG) { harRolle(pepClient, gruppe) } shouldBe true
             }
+        }
+    }
+
+    @Test
+    fun `drift-gruppen er global og gir tilgang til driftsmeldinger uavhengig av område`() {
+        runBlocking {
+            val pepClient = pepClient()
+            val token = token(setOf(drift))
+
+            medContext(token, Områder.K9) { pepClient.kanLeggeUtDriftsmelding() } shouldBe true
+            medContext(token, Områder.UNG) { pepClient.kanLeggeUtDriftsmelding() } shouldBe true
         }
     }
 
@@ -81,7 +92,6 @@ class PepClientGruppeoppsettTest {
         ungSaksbehandler -> pepClient.harTilgangTilReserveringAvOppgaver()
         ungVeileder -> pepClient.harBasisTilgang()
         ungOppgavestyrer -> pepClient.erOppgaveStyrer()
-        ungDrift -> pepClient.kanLeggeUtDriftsmelding()
         ungKode6 -> pepClient.harTilgangTilKode6()
         else -> error("Ukjent testgruppe")
     }

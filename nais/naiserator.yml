@@ -83,7 +83,6 @@ spec:
           - id: "{{ung_group_id_kode6}}"
           - id: "{{ung_group_id_saksbehandler}}"
           - id: "{{ung_group_id_veileder}}"
-          - id: "{{ung_group_id_drift}}"
           - id: "{{ung_group_id_oppgavestyrer}}"
         extra:
           - "NAVident"
@@ -195,8 +194,6 @@ spec:
       value: "{{ung_group_id_saksbehandler}}"
     - name: UNG_VEILEDER_GRUPPE_ID
       value: "{{ung_group_id_veileder}}"
-    - name: UNG_DRIFT_GRUPPE_ID
-      value: "{{ung_group_id_drift}}"
     - name: UNG_OPPGAVESTYRER_GRUPPE_ID
       value: "{{ung_group_id_oppgavestyrer}}"
 

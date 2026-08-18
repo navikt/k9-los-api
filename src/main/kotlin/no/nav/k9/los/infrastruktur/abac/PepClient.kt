@@ -34,8 +34,8 @@ class PepClient internal constructor(
     }
 
     override suspend fun kanLeggeUtDriftsmelding(): Boolean {
-        val område = coroutineContext.område()
-        return iGruppe(gruppeoppsett.forOmråde(område).drift)
+        // Drift-gruppen er global for Los og ikke knyttet til området ruten kjører under.
+        return iGruppe(gruppeoppsett.drift)
     }
 
     override suspend fun harTilgangTilReserveringAvOppgaver(): Boolean {
