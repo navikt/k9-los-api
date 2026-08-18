@@ -15,28 +15,32 @@ import org.slf4j.LoggerFactory
 import java.util.*
 import kotlin.coroutines.coroutineContext
 
-class PepClient(
+class PepClient internal constructor(
     private val azureGraphService: IAzureGraphService,
     private val sifAbacPdpKlienter: SifAbacPdpKlienter,
+    private val gruppeoppsett: Gruppeoppsett = Gruppeoppsett()
 ) : IPepClient {
     private val log: Logger = LoggerFactory.getLogger(PepClient::class.java)
 
     override suspend fun erOppgaveStyrer(): Boolean {
-        return iGruppe(coroutineContext.område(), "BRUKER_GRUPPE_ID_OPPGAVESTYRER")
+        val område = coroutineContext.område()
+        return iGruppe(gruppeoppsett.forOmråde(område).oppgavestyrer)
     }
 
     override suspend fun harBasisTilgang(): Boolean {
         val område = coroutineContext.område()
-        return iGruppe(område, "BRUKER_GRUPPE_ID_SAKSBEHANDLER") ||
-            iGruppe(område, "BRUKER_GRUPPE_ID_VEILEDER")
+        val grupper = gruppeoppsett.forOmråde(område)
+        return iGruppe(grupper.saksbehandler) || iGruppe(grupper.veileder)
     }
 
     override suspend fun kanLeggeUtDriftsmelding(): Boolean {
-        return iGruppe(coroutineContext.område(), "BRUKER_GRUPPE_ID_DRIFT")
+        val område = coroutineContext.område()
+        return iGruppe(gruppeoppsett.forOmråde(område).drift)
     }
 
     override suspend fun harTilgangTilReserveringAvOppgaver(): Boolean {
-        return iGruppe(coroutineContext.område(), "BRUKER_GRUPPE_ID_SAKSBEHANDLER")
+        val område = coroutineContext.område()
+        return iGruppe(gruppeoppsett.forOmråde(område).saksbehandler)
     }
 
     override suspend fun harTilgangTilKode6(ident: String): Boolean {
@@ -44,22 +48,18 @@ class PepClient(
         if (ident == coroutineContext.idToken().getNavIdent()) {
             return harTilgangTilKode6()
         }
-        if (område == Områder.UNG) return false
+        val kode6Gruppe = gruppeoppsett.forOmråde(område).kode6 ?: return false
         val grupper = azureGraphService.hentGrupperForSaksbehandler(ident)
-        return grupper.contains(UUID.fromString(kode6GruppeId()))
+        return grupper.contains(kode6Gruppe)
     }
-
-    private fun kode6GruppeId(): String = System.getenv("BRUKER_GRUPPE_ID_KODE6")
 
     override suspend fun harTilgangTilKode6(): Boolean {
-        return iGruppe(coroutineContext.område(), "BRUKER_GRUPPE_ID_KODE6")
+        val område = coroutineContext.område()
+        return iGruppe(gruppeoppsett.forOmråde(område).kode6)
     }
 
-    private suspend fun iGruppe(område: Områder, miljøvariabel: String): Boolean {
-        if (område == Områder.UNG) return false
-        val gruppeId = System.getenv(miljøvariabel) ?: return false
-        return coroutineContext.idToken().groups.contains(gruppeId)
-    }
+    private suspend fun iGruppe(gruppeId: UUID?): Boolean =
+        gruppeId?.toString()?.let(coroutineContext.idToken().groups::contains) ?: false
 
     override suspend fun erSakKode6(fagsakNummer: String): Boolean {
         val område = coroutineContext.område()
@@ -180,7 +180,8 @@ class PepClient(
         return when (oppgavetype) {
             "k9sak", "k9klage", "k9tilbake" -> {
                 //TODO når abac-k9 er ryddet bort: vurder å bruk sifAbacPdpKlient.harTilgangTilSak(action, saksnummer) de steder hvor vi sjekker innlogget bruker
-                val saksbehandlersGrupper = grupperForSaksbehandler ?: azureGraphService.hentGrupperForSaksbehandler(identTilInnloggetBruker)
+                val saksbehandlersGrupper =
+                    grupperForSaksbehandler ?: azureGraphService.hentGrupperForSaksbehandler(identTilInnloggetBruker)
                 val tilgang = klient.harTilgangTilSak(
                     action = action,
                     saksnummerDto = SaksnummerDto(saksnummer!!),
@@ -194,7 +195,8 @@ class PepClient(
             "k9punsj" -> {
                 val berørteAktørId = setOfNotNull(aktørIdSøker, aktørIdPleietrengende)
                 val aktørIder = berørteAktørId.map { AktørId(it) }
-                val saksbehandlersGrupper = grupperForSaksbehandler ?: azureGraphService.hentGrupperForSaksbehandler(identTilInnloggetBruker)
+                val saksbehandlersGrupper =
+                    grupperForSaksbehandler ?: azureGraphService.hentGrupperForSaksbehandler(identTilInnloggetBruker)
                 val tilgang = if (aktørIder.isNotEmpty()) klient.harTilgangTilPersoner(
                     action = action,
                     aktørIder = aktørIder,
