@@ -29,12 +29,6 @@ class PartisjonertOppgaveQuerySqlBuilder(
     ferdigstiltDatoFilter: FeltverdiOppgavefilter?,
     private val område: Områder,
 ) : OppgaveQuerySqlBuilder {
-    /**
-     * Området bindes som egen parametermap og ikke i [queryParams], siden queryParams.size
-     * brukes til å generere unike parameternavn og ville forskjøvet nummereringen.
-     */
-    private val områdeParams = mapOf("omrade" to område.eksternId)
-
     private val log = LoggerFactory.getLogger(PartisjonertOppgaveQuerySqlBuilder::class.java)
 
     private val oppgavefelterKodeOgType = felter.mapValues { Datatype.fraKode(it.value.oppgavefelt.tolkes_som) }
@@ -800,13 +794,13 @@ class PartisjonertOppgaveQuerySqlBuilder(
 
     override fun getParams(): Map<String, Any?> {
         return buildMap {
+            put("omrade", område.eksternId)
             putAll(queryParams)
             putAll(orderByParams)
             putAll(oppgavestatusParams)
             putAll(ferdigstiltDatoParams)
             putAll(selectFeltParams)
             putAll(grupperingParams)
-            putAll(områdeParams)
         }
     }
 }

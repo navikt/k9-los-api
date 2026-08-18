@@ -41,8 +41,8 @@ class SøkeboksTjeneste(
         område: Områder,
         adapter: Oppgavesøk,
     ): List<Oppgave>? {
-        val klassifisert = klassifiser(søkeord) ?: return null
-        val query = adapter.lagQuery(klassifisert) ?: return emptyList()
+        val klassifisertSøkeord = klassifiser(søkeord) ?: return null
+        val query = adapter.lagQuery(klassifisertSøkeord) ?: return emptyList()
         return queryService.queryForOppgave(QueryRequest(oppgaveQuery = query, område = område))
     }
 
