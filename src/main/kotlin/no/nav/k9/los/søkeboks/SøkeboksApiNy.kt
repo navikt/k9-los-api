@@ -34,7 +34,7 @@ fun Route.SøkeboksApiNy() {
         }
     ) {
         requestContextService.withRequestContext(call) {
-            if (pepClient.harBasisTilgang(call.område)) {
+            if (pepClient.harBasisTilgang()) {
                 val (søkeord) = call.receive<SøkRequest>()
                 call.respond(søkeboksTjeneste.finnOppgaverSammendrag(søkeord, call.område))
             } else {

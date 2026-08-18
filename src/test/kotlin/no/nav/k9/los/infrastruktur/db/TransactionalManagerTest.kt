@@ -7,6 +7,7 @@ import kotlinx.coroutines.withContext
 import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.domeneadaptere.k9.OmrådeSetup
 import no.nav.k9.los.infrastruktur.idtoken.IdToken
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.infrastruktur.rest.CoroutineRequestContext
 import no.nav.k9.los.infrastruktur.rest.idToken
 import org.junit.jupiter.api.BeforeEach
@@ -30,7 +31,7 @@ class TransactionalManagerTest : AbstractK9LosIntegrationTest() {
         every { idToken.getUsername() } returns "foobar"
 
         val username = runBlocking {
-            withContext(CoroutineRequestContext(idToken)) {
+            withContext(CoroutineRequestContext(idToken, Områder.K9)) {
                 transactionalManager.transactionSuspend {
                     coroutineContext.idToken().getUsername()
                 }

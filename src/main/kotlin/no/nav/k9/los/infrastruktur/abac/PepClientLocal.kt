@@ -7,59 +7,66 @@ import no.nav.sif.abac.kontrakt.abac.Diskresjonskode
 import java.util.*
 
 class PepClientLocal : IPepClient {
-    override suspend fun erOppgaveStyrer(område: Områder): Boolean {
+    override suspend fun erOppgaveStyrer(): Boolean {
         return true
     }
 
-    override suspend fun harBasisTilgang(område: Områder): Boolean {
+    override suspend fun harBasisTilgang(): Boolean {
         return true
     }
 
-    override suspend fun kanLeggeUtDriftsmelding(område: Områder): Boolean {
+    override suspend fun kanLeggeUtDriftsmelding(): Boolean {
         return true
     }
 
-    override suspend fun harTilgangTilReserveringAvOppgaver(område: Områder): Boolean {
+    override suspend fun harTilgangTilReserveringAvOppgaver(): Boolean {
         return true
     }
 
-    override suspend fun harTilgangTilKode6(område: Områder): Boolean {
+    override suspend fun harTilgangTilKode6(): Boolean {
         return false
     }
 
-    override suspend fun harTilgangTilKode6(ident: String, område: Områder): Boolean {
+    override suspend fun harTilgangTilKode6(ident: String): Boolean {
         return false
+    }
+
+    override suspend fun diskresjonskoderForSak(fagsakNummer: String): Set<Diskresjonskode> {
+        return setOf()
     }
 
     override suspend fun diskresjonskoderForSak(fagsakNummer: String, område: Områder): Set<Diskresjonskode> {
         return setOf()
     }
 
-    override suspend fun erSakKode6(fagsakNummer: String, område: Områder): Boolean {
+    override suspend fun erSakKode6(fagsakNummer: String): Boolean {
         return false
     }
 
-    override suspend fun erSakKode7EllerEgenAnsatt(fagsakNummer: String, område: Områder): Boolean {
+    override suspend fun erSakKode7EllerEgenAnsatt(fagsakNummer: String): Boolean {
         return false
+    }
+
+    override suspend fun diskresjonskoderForPerson(aktørId: String): Set<Diskresjonskode> {
+        return setOf()
     }
 
     override suspend fun diskresjonskoderForPerson(aktørId: String, område: Områder): Set<Diskresjonskode> {
         return setOf()
     }
 
-    override suspend fun erAktørKode6(aktørid: String, område: Områder): Boolean {
+    override suspend fun erAktørKode6(aktørid: String): Boolean {
         return false
     }
 
-    override suspend fun erAktørKode7EllerEgenAnsatt(aktørid: String, område: Områder): Boolean {
+    override suspend fun erAktørKode7EllerEgenAnsatt(aktørid: String): Boolean {
         return false
     }
 
     override suspend fun harTilgangTilOppgaveV3(
         oppgave: Oppgave,
         action: Action,
-        grupperForSaksbehandler: Set<UUID>?,
-        område: Områder
+        grupperForSaksbehandler: Set<UUID>?
     ): Boolean {
         return true
     }
@@ -67,8 +74,7 @@ class PepClientLocal : IPepClient {
     override fun harTilgangTilOppgaveV3(
         oppgave: Oppgave,
         saksbehandler: Saksbehandler,
-        action: Action,
-        område: Områder
+        action: Action
     ): Boolean {
         return true
     }

@@ -12,7 +12,7 @@ import no.nav.k9.los.oppgaveuthenting.sammendrag.OppgaveSammendragDto
  *
  * Klassen finnes for at [no.nav.k9.los.oppgavedefinisjon.omraade.OmrådeRuter] skal kunne kreve
  * en implementasjon per område, og for at det skal være ett greppbart sted som viser hva som
- * gjenstår. Samme mønster som SifAbacPdpKlientUng og IdTokenUng.
+ * gjenstår. Samme mønster som SifAbacPdpKlientUng.
  */
 class UngOppgavesøk : Oppgavesøk {
     override fun lagQuery(søkeord: Søkeord): Nothing = ikkeImplementert("søk")

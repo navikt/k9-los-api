@@ -17,6 +17,7 @@ import no.nav.k9.los.domeneadaptere.k9.eventmottak.builder
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.sak.K9SakEventHandler
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.idtoken.IdToken
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.infrastruktur.rest.CoroutineRequestContext
 import no.nav.k9.los.ko.OppgaveKoTjeneste
 import no.nav.k9.los.ko.OppgaveMuligReservert
@@ -155,7 +156,7 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         val resultat = oppgaveKøTjeneste.taReservasjonFraKø(
             TestSaksbehandler.SARA.id!!,
             kø.id,
-            CoroutineRequestContext(mockk<IdToken>(relaxed = true))
+            CoroutineRequestContext(mockk<IdToken>(relaxed = true), Områder.K9)
         )
         assertThat(resultat is OppgaveMuligReservert.IkkeReservert).isTrue()
     }
@@ -434,7 +435,7 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         return oppgaveKøTjeneste.taReservasjonFraKø(
             saksbehandler.id!!,
             kø.id,
-            CoroutineRequestContext(mockk<IdToken>(relaxed = true))
+            CoroutineRequestContext(mockk<IdToken>(relaxed = true), Områder.K9)
         )
     }
 

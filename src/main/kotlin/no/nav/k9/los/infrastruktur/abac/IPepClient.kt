@@ -12,32 +12,30 @@ import java.util.*
  * område-spesifikt. [PepClient] er ruting-laget som velger riktig implementasjon per område: for
  * K9 brukes sif-abac-pdp, for UNG kommer en egen løsning.
  *
- * Området har inntil videre default [Områder.K9] slik at eksisterende kallsteder (som p.t. kun
- * håndterer K9) er uendret. Defaulten skal fjernes når kallerne er område-bevisste.
  */
 interface IPepClient {
-    suspend fun erOppgaveStyrer(område: Områder = Områder.K9): Boolean
-    suspend fun harTilgangTilKode6(område: Områder = Områder.K9): Boolean
-    suspend fun harTilgangTilKode6(ident: String, område: Områder = Områder.K9): Boolean
-    suspend fun harBasisTilgang(område: Områder = Områder.K9): Boolean
-    suspend fun kanLeggeUtDriftsmelding(område: Områder = Områder.K9): Boolean
-    suspend fun harTilgangTilReserveringAvOppgaver(område: Områder = Områder.K9): Boolean
-    suspend fun erSakKode6(fagsakNummer: String, område: Områder = Områder.K9): Boolean
-    suspend fun erSakKode7EllerEgenAnsatt(fagsakNummer: String, område: Områder = Områder.K9): Boolean
-    suspend fun diskresjonskoderForSak(fagsakNummer: String, område: Områder = Områder.K9): Set<Diskresjonskode>
-    suspend fun diskresjonskoderForPerson(aktørId: String, område: Områder = Områder.K9): Set<Diskresjonskode>
-    suspend fun erAktørKode6(aktørid: String, område: Områder = Områder.K9): Boolean
-    suspend fun erAktørKode7EllerEgenAnsatt(aktørid: String, område: Områder = Områder.K9): Boolean
+    suspend fun erOppgaveStyrer(): Boolean
+    suspend fun harTilgangTilKode6(): Boolean
+    suspend fun harTilgangTilKode6(ident: String): Boolean
+    suspend fun harBasisTilgang(): Boolean
+    suspend fun kanLeggeUtDriftsmelding(): Boolean
+    suspend fun harTilgangTilReserveringAvOppgaver(): Boolean
+    suspend fun erSakKode6(fagsakNummer: String): Boolean
+    suspend fun erSakKode7EllerEgenAnsatt(fagsakNummer: String): Boolean
+    suspend fun diskresjonskoderForSak(fagsakNummer: String): Set<Diskresjonskode>
+    suspend fun diskresjonskoderForSak(fagsakNummer: String, område: Områder): Set<Diskresjonskode>
+    suspend fun diskresjonskoderForPerson(aktørId: String): Set<Diskresjonskode>
+    suspend fun diskresjonskoderForPerson(aktørId: String, område: Områder): Set<Diskresjonskode>
+    suspend fun erAktørKode6(aktørid: String): Boolean
+    suspend fun erAktørKode7EllerEgenAnsatt(aktørid: String): Boolean
     suspend fun harTilgangTilOppgaveV3(
         oppgave: no.nav.k9.los.oppgaveuthenting.Oppgave,
         action: Action = Action.read,
-        grupperForSaksbehandler: Set<UUID>? = null,
-        område: Områder = Områder.K9
+        grupperForSaksbehandler: Set<UUID>? = null
     ) : Boolean
     fun harTilgangTilOppgaveV3(
         oppgave: no.nav.k9.los.oppgaveuthenting.Oppgave,
         saksbehandler: Saksbehandler,
-        action: Action,
-        område: Områder = Områder.K9
+        action: Action
     ) : Boolean
 }

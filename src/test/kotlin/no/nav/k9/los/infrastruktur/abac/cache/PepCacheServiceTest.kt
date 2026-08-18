@@ -84,6 +84,7 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
             coEvery { pepClient.erSakKode6(eq(saksnummer)) } returns true
             coEvery { pepClient.erSakKode7EllerEgenAnsatt(eq(saksnummer)) } returns false
             coEvery { pepClient.diskresjonskoderForSak(eq(saksnummer)) } returns setOf(Diskresjonskode.KODE6)
+            coEvery { pepClient.diskresjonskoderForSak(eq(saksnummer), Områder.K9) } returns setOf(Diskresjonskode.KODE6)
         }
     }
 
@@ -92,6 +93,7 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
             coEvery { pepClient.erSakKode6(eq(saksnummer)) } returns false
             coEvery { pepClient.erSakKode7EllerEgenAnsatt(eq(saksnummer)) } returns false
             coEvery { pepClient.diskresjonskoderForSak(eq(saksnummer)) } returns setOf()
+            coEvery { pepClient.diskresjonskoderForSak(eq(saksnummer), Områder.K9) } returns setOf()
         }
     }
 
@@ -100,6 +102,7 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
             coEvery { pepClient.erAktørKode6(eq(aktørId)) } returns true
             coEvery { pepClient.erAktørKode7EllerEgenAnsatt(eq(aktørId)) } returns false
             coEvery { pepClient.diskresjonskoderForPerson(eq(aktørId)) } returns setOf(Diskresjonskode.KODE6)
+            coEvery { pepClient.diskresjonskoderForPerson(eq(aktørId), Områder.K9) } returns setOf(Diskresjonskode.KODE6)
         }
     }
 
@@ -108,6 +111,7 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
             coEvery { pepClient.erAktørKode6(eq(aktørId)) } returns false
             coEvery { pepClient.erAktørKode7EllerEgenAnsatt(eq(aktørId)) } returns true
             coEvery { pepClient.diskresjonskoderForPerson(eq(aktørId)) } returns setOf(Diskresjonskode.KODE7)
+            coEvery { pepClient.diskresjonskoderForPerson(eq(aktørId), Områder.K9) } returns setOf(Diskresjonskode.KODE7)
         }
     }
 
@@ -116,6 +120,7 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
             coEvery { pepClient.erAktørKode6(eq(aktørId)) } returns false
             coEvery { pepClient.erAktørKode7EllerEgenAnsatt(eq(aktørId)) } returns false
             coEvery { pepClient.diskresjonskoderForPerson(eq(aktørId)) } returns setOf()
+            coEvery { pepClient.diskresjonskoderForPerson(eq(aktørId), Områder.K9) } returns setOf()
         }
     }
 
