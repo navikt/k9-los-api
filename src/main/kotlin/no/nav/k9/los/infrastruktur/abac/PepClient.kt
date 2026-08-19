@@ -33,6 +33,13 @@ class PepClient internal constructor(
         return iGruppe(grupper.saksbehandler) || iGruppe(grupper.veileder)
     }
 
+    override suspend fun harBasisTilgangIEttEllerFlereOmråder(): Boolean {
+        return Områder.entries.any { område ->
+            val grupper = gruppeoppsett.forOmråde(område)
+            iGruppe(grupper.saksbehandler) || iGruppe(grupper.veileder)
+        }
+    }
+
     override suspend fun kanLeggeUtDriftsmelding(): Boolean {
         // Drift-gruppen er global for Los og ikke knyttet til området ruten kjører under.
         return iGruppe(gruppeoppsett.drift)
@@ -56,6 +63,10 @@ class PepClient internal constructor(
     override suspend fun harTilgangTilKode6(): Boolean {
         val område = coroutineContext.område()
         return iGruppe(gruppeoppsett.forOmråde(område).kode6)
+    }
+
+    override suspend fun erKode6Bruker(): Boolean {
+        return Områder.entries.any { område -> iGruppe(gruppeoppsett.forOmråde(område).kode6) }
     }
 
     private suspend fun iGruppe(gruppeId: UUID?): Boolean =

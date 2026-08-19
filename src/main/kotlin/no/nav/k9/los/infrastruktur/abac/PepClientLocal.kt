@@ -15,6 +15,10 @@ class PepClientLocal : IPepClient {
         return true
     }
 
+    override suspend fun harBasisTilgangIEttEllerFlereOmråder(): Boolean {
+        return true
+    }
+
     override suspend fun kanLeggeUtDriftsmelding(): Boolean {
         return true
     }
@@ -28,6 +32,10 @@ class PepClientLocal : IPepClient {
     }
 
     override suspend fun harTilgangTilKode6(ident: String): Boolean {
+        return false
+    }
+
+    override suspend fun erKode6Bruker(): Boolean {
         return false
     }
 

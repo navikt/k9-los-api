@@ -16,7 +16,8 @@ fun Route.DriftsmeldingerApis() {
 
     get {
         requestContextService.withRequestContext(call) {
-            if (pepClient.harBasisTilgang()) {
+            // Driftsmeldinger er globale (se Gruppeoppsett), så basistilgang i minst ett område er tilstrekkelig
+            if (pepClient.harBasisTilgangIEttEllerFlereOmråder()) {
                 call.respond(driftsmeldingTjeneste.hentDriftsmeldinger())
             } else {
                 call.respond(HttpStatusCode.Forbidden)

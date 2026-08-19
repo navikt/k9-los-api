@@ -17,7 +17,20 @@ interface IPepClient {
     suspend fun erOppgaveStyrer(): Boolean
     suspend fun harTilgangTilKode6(): Boolean
     suspend fun harTilgangTilKode6(ident: String): Boolean
+
+    /**
+     * Er dette en kode6-konto? Global egenskap ved brukerkontoen — union over alle områder.
+     * Styrer hvilken saksbehandler-rad som gjelder. Til forskjell fra [harTilgangTilKode6],
+     * som besvarer om brukeren har tilgang til kode6-saker i området kallet kjører under.
+     */
+    suspend fun erKode6Bruker(): Boolean
     suspend fun harBasisTilgang(): Boolean
+
+    /**
+     * Har brukeren basistilgang i minst ett område? For endepunkter som ikke er
+     * områdespesifikke (f.eks. globale driftsmeldinger).
+     */
+    suspend fun harBasisTilgangIEttEllerFlereOmråder(): Boolean
     suspend fun kanLeggeUtDriftsmelding(): Boolean
     suspend fun harTilgangTilReserveringAvOppgaver(): Boolean
     suspend fun erSakKode6(fagsakNummer: String): Boolean

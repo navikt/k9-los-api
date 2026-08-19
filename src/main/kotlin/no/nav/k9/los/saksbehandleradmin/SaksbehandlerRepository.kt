@@ -74,7 +74,7 @@ class SaksbehandlerRepository(
      * forbrukt en sekvensverdi på id-kolonnen ved konflikt, og forskjøvet genererte id-er.
      */
     suspend fun vedlikeholdSaksbehandler(saksbehandler: Saksbehandler): Long {
-        val erSkjermet = pepClient.harTilgangTilKode6()
+        val erSkjermet = pepClient.erKode6Bruker()
 
         return using(sessionOf(dataSource)) {
             it.transaction { tx ->
@@ -116,7 +116,7 @@ class SaksbehandlerRepository(
     }
 
     suspend fun finnSaksbehandlerMedEpost(epost: String): Saksbehandler? {
-        val skjermet = pepClient.harTilgangTilKode6()
+        val skjermet = pepClient.erKode6Bruker()
 
         val saksbehandler = using(sessionOf(dataSource)) { session ->
             session.transaction { tx ->
@@ -134,7 +134,7 @@ class SaksbehandlerRepository(
     }
 
     suspend fun finnSaksbehandlerMedIdent(ident: String): Saksbehandler? {
-        val skjermet = pepClient.harTilgangTilKode6()
+        val skjermet = pepClient.erKode6Bruker()
 
         val saksbehandler = using(sessionOf(dataSource)) {
             it.transaction { tx ->
@@ -342,7 +342,7 @@ class SaksbehandlerRepository(
     }
 
     suspend fun hentAlleSaksbehandlere(tx: TransactionalSession): List<Saksbehandler> {
-        val skjermet = pepClient.harTilgangTilKode6()
+        val skjermet = pepClient.erKode6Bruker()
         val identer = using(sessionOf(dataSource)) {
             tx.run(
                 queryOf(
