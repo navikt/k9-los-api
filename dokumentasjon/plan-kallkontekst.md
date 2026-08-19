@@ -1,6 +1,7 @@
 # Plan: eksplisitt Kallkontekst erstatter implisitt kontekstpropagering
 
-Status: planlagt, ikke påbegynt.
+Status: commit 1 (`e089cdca`) og 2 (`f3d82201`) er ferdige. Første del av commit 3-5 er lagret som
+`30963f3`: produksjonskoden kompilerer, men test-fixtures er ikke ferdig migrert. Ingen commits er pushet.
 Skrevet mot branch-tilstand ved commit `b1c23139`.
 
 ## Hvorfor
@@ -63,7 +64,28 @@ suspend fun harTilgangTilKode6(): Boolean     // per område
 
 Områder skal aldri blandes. En avdelingsleder som ser på avdelingslederpanelet i K9 skal bare se K9-saksbehandlere, også hvis vedkommende selv har tilgang til UNG.
 
-## Åpent punkt: context parameters
+## Avklaring etter commit 2: kontekstmatrise
+
+Den første modellen gjorde `område` obligatorisk i `Kallkontekst`. Det blander sammen to uavhengige akser:
+
+| Kalltype | Uten område | Med område |
+|---|---|---|
+| Bruker | globale autentiserte kall, for eksempel driftsmeldinger og brukers områder | områdeavgrensede API-kall |
+| System | globale jobber eller systemoperasjoner | områdeavgrensede jobber, Kafka-kall og PEP-oppslag |
+
+`InnloggetBruker` er identiteten, ikke hele kallkonteksten. Neste steg må derfor modellere bruker/system og
+med/uten område som separate egenskaper i typesystemet. Unngå nullable `område`: en funksjon som trenger område,
+skal kreve en områdetype. Repository-metoder skal fortsatt ta `Områder` eksplisitt.
+
+Nåværende `Systemkontekst.kilde: String` har ingen konkret konsument. Fjern feltet når modellen justeres. Legg det
+bare tilbake som en egen type eller enum hvis logging eller sporing får et dokumentert behov for det. Ikke bruk
+feltet til autorisasjon eller domenelogikk.
+
+En mulig form er små kapabilitetsgrensesnitt (`Brukerkall`, `Systemkall`, `Områdekall`) og fire konkrete
+kombinasjoner. Avklar navnene før flere signaturer migreres. Dagens `Brukerkontekst` betyr «bruker med område»;
+det navnet blir misvisende når bruker uten område også er en kallkontekst.
+
+## Avklart punkt: context parameters
 
 Context parameters er Stable i Kotlin 2.4.0 (unntatt context arguments og callable references). Prosjektet kjører 2.4.10, så basisfunksjonaliteten krever ikke kompilatorflagg.
 
@@ -73,7 +95,7 @@ De passer ikke for `område` i tjeneste- og repository-laget. Der er det en quer
 
 **Anbefaling: eksplisitte parametre først, context parameters som vurdert oppfølging.** Poenget med commit 3-8 er å finne stedene hvor område er stille feil. Med eksplisitte parametre må hvert kallsted gjennomgås bevisst. Med context parameters kompilerer de fleste kallstedene videre uendret, og den tvungne gjennomgangen forsvinner. Konvertering av `IPepClient` til context parameters etterpå er en isolert signaturendring uten arkitekturarbeid.
 
-**Spike i commit 2 (30 min):** verifiser om `medBrukerkontekst` kan deklarere lambdaen sin med context parameter:
+**Resultat fra spike i commit 2:** Maven-kompilatoren med Kotlin 2.4.10 parser ikke denne suspend-lambdatypen:
 
 ```kotlin
 suspend fun <T> RoutingContext.medBrukerkontekst(
@@ -81,7 +103,9 @@ suspend fun <T> RoutingContext.medBrukerkontekst(
 ): T
 ```
 
-Fungerer det, blir kallstedene rene. Fungerer det ikke, må hvert handler-legeme pakkes i `context(kontekst) { … }`, og gevinsten spises opp. Rapporter resultatet før commit 3.
+Spiken feilet med syntaksfeil ved `context(Brukerkontekst) suspend () -> T`. Videre arbeid bruker derfor
+eksplisitte parametre. Ikke legg til kompilatorflagg eller pakk hvert handler-legeme i `context(...)` som del av
+denne refaktoreringen.
 
 ## Gjennomføring
 
@@ -96,11 +120,18 @@ Fungerer det, blir kallstedene rene. Fungerer det ikke, må hvert handler-legeme
 
 Testen skal feile før de tre endringene over og passere etter.
 
+**Erfaringer fra gjennomført commit 1 (`e089cdca`):**
+
+- `RuteSmokeTest` traverserer _ikke_ det reelle routing-treet — `K9Los.kt` har `apiUnderConstruction` som `private`, og full oppstart krever Kafka og hele Koin-grafen. Testen replikerer i stedet strukturen fra `K9Los.kt:301-304` med de berørte rutene registrert utenfor `områdeApi {}`. Konsekvens: den fanger de tre kjente feilene, men oppdager ikke nye feilregistrerte ruter automatisk. Vurder ekte tre-traversering igjen i commit 11, eventuelt ved å gjøre rutetreet synlig for tester.
+- Kotest-engine kjører `ProjectConfig.beforeProject()` (som gjør `startKoin`) også når man kjører én enkelt JUnit-test med `-Dtest=X`. Kolliderer med Koin fra Ktor-pluginen i testen → `KoinApplicationAlreadyStartedException` under "Before Project Error". JUnit-testene selv kjører fint — feilen er støy fra engine-parallelliteten, ikke testfeil.
+- `call.respond(HttpStatusCode.X)` inni `StatusPages { exception<T> { … } }` krever eksplisitt `import io.ktor.server.response.*` med Ktor 3.5.1 og Kotlin 2.4.10 (reified-resolusjon treffer ellers ikke).
+- `Gruppeoppsett` leser gruppe-UUID-er fra env ved konstruksjon. I tester uten env satt blir alle grupper `null` — real `PepClient` gir da deterministisk `false` på alle tilgangsspørsmål, uten mocking. Nyttig mønster for å teste "konteksten etableres" separat fra "tilgang gis".
+
 ### Commit 2 — Kontekst-typene
 
 Bare tillegg, ingen kallsteder endres.
 
-`infrastruktur/kontekst/Kallkontekst.kt`:
+`infrastruktur/kontekst/Kallkontekst.kt` ble først lagt til slik:
 
 ```kotlin
 data class InnloggetBruker(
@@ -117,22 +148,35 @@ data class Systemkontekst(override val område: Områder, val kilde: String) : K
 
 `infrastruktur/kontekst/KtorKallkontekst.kt` med `medBrukerkontekst { }` og `medInnloggetBruker { }`. Begge wrapper i `withContext(Span.current().asContextElement())`. `call.område` leses bare i `medBrukerkontekst`.
 
-`Systemkontekst` konstrueres eksplisitt i `konfigurerJobber` (`K9Los.kt:335+`) med jobbnavnet som `kilde`, og i Kafka-konsumentene via `Områder.fraFagsystem`.
+Denne modellen er et mellomsteg og skal justeres til kontekstmatrisen over før migreringen fortsetter.
+`Systemkontekst` skal ikke forutsette område, og `kilde: String` skal fjernes.
 
-`InnloggetBruker` er skilt ut som eget verdiobjekt fordi de globale endepunktene trenger bruker uten område. `Kallkontekst.område` forblir non-null.
+`InnloggetBruker` ble skilt ut som eget verdiobjekt fordi de globale endepunktene trenger bruker uten område.
+Selve kallkonteksten skal nå omarbeides etter matrisen over; bare områdetypene skal ha et non-null `område`.
 
-Kjør context-parameter-spiken her.
+Context-parameter-spiken feilet. Eksplisitte parametre er valgt.
 
 ### Commit 3-5 — IPepClient blir eksplisitt
 
 Kompilatordrevet. Endre interfacet først, arbeid deretter utenfra og inn: api-laget, så tjeneste- og klientlaget.
 
+**Status etter `30963f3`:** `IPepClient`, implementasjonene og produksjonskallstedene har eksplisitte parametre.
+`mvn -DskipTests compile` passerer. Commiten er et kontrollpunkt, ikke en ferdig commit 3-5: `mvn test-compile
+-DskipTests` feiler fordi eldre test-fixtures fortsatt bruker gamle PEP- og reservasjonssignaturer. Feilene ligger
+blant annet i `TestSaksbehandler`, `K9SakTilLosIT`, `OppgaveKoTest`, `OppgaveKoTjenesteTest`,
+`SisteOppgaverTjenesteTest`, `SøkeboksTjenesteTest`, `PepCacheServiceTest`, `TransactionalManagerTest` og tester
+som nå kaller suspend-funksjoner uten coroutine. Migrer testene etter at kontekstmatrisen er landet, og krev at
+`mvn test-compile -DskipTests` passerer før neste funksjonelle commit.
+
+Globale ruter skal ikke få et kunstig område. `DriftsmeldingerApis` og `BrukersområderApi` bruker nå
+`medInnloggetBruker`; i den nye modellen skal de få en bruker-kallkontekst uten område.
+
 | Metode | Kontekst |
 |---|---|
-| `erKode6Bruker`, `kanLeggeUtDriftsmelding`, `harBasisTilgangIEttEllerFlereOmråder` | `InnloggetBruker` |
-| `harBasisTilgang`, `erOppgaveStyrer`, `harTilgangTilReserveringAvOppgaver`, `harTilgangTilKode6()`, `harTilgangTilKode6(ident)`, `harTilgangTilOppgaveV3(oppgave, action)` | `Brukerkontekst` |
-| `diskresjonskoderForSak/Person`, `erSakKode6/7`, `erAktørKode6/7` | `Kallkontekst` |
-| `harTilgangTilOppgaveV3(oppgave, saksbehandler, action)` | `Systemkontekst` + `Saksbehandler`, blir `suspend` |
+| `erKode6Bruker`, `kanLeggeUtDriftsmelding`, `harBasisTilgangIEttEllerFlereOmråder` | bruker-kallkontekst uten krav om område |
+| `harBasisTilgang`, `erOppgaveStyrer`, `harTilgangTilReserveringAvOppgaver`, `harTilgangTilKode6()`, `harTilgangTilKode6(ident)`, `harTilgangTilOppgaveV3(oppgave, action)` | bruker-kallkontekst med område |
+| `diskresjonskoderForSak/Person`, `erSakKode6/7`, `erAktørKode6/7` | kallkontekst med område, bruker eller system |
+| `harTilgangTilOppgaveV3(oppgave, saksbehandler, action)` | system-kallkontekst med område + `Saksbehandler`, blir `suspend` |
 
 Følger av dette:
 
