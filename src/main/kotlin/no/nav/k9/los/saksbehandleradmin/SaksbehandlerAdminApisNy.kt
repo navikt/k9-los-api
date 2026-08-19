@@ -6,12 +6,11 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.k9.los.område
 import no.nav.k9.los.infrastruktur.abac.IPepClient
-import no.nav.k9.los.infrastruktur.rest.RequestContextService
+import no.nav.k9.los.infrastruktur.kontekst.medBrukerkontekst
 import no.nav.k9.los.reservasjon.ReservasjonApisTjeneste
 import org.koin.ktor.ext.inject
 
 internal fun Route.SaksbehandlerAdminApisNy() {
-    val requestContextService by inject<RequestContextService>()
     val saksbehandlerAdminTjeneste by inject<SaksbehandlerAdminTjeneste>()
     val pepClient by inject<IPepClient>()
 
@@ -19,8 +18,8 @@ internal fun Route.SaksbehandlerAdminApisNy() {
     val reservasjonApisTjeneste by inject<ReservasjonApisTjeneste>()
 
     get("/saksbehandlere") {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.erOppgaveStyrer()) {
+        medBrukerkontekst { kontekst ->
+            if (pepClient.erOppgaveStyrer(kontekst)) {
                 call.respond(saksbehandlerAdminTjeneste.hentSaksbehandlere())
             } else {
                 call.respond(HttpStatusCode.Forbidden)
@@ -30,8 +29,8 @@ internal fun Route.SaksbehandlerAdminApisNy() {
 
     // TODO: slett når frontend har begynt å bruke nytt endepunkt
     post("/saksbehandlere/sok") {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.erOppgaveStyrer()) {
+        medBrukerkontekst { kontekst ->
+            if (pepClient.erOppgaveStyrer(kontekst)) {
                 val epost = call.receive<EpostDto>()
                 call.respond(saksbehandlerAdminTjeneste.søkSaksbehandler(epost, call.område))
             } else {
@@ -41,8 +40,8 @@ internal fun Route.SaksbehandlerAdminApisNy() {
     }
 
     post("/saksbehandlere/legg-til") {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.erOppgaveStyrer()) {
+        medBrukerkontekst { kontekst ->
+            if (pepClient.erOppgaveStyrer(kontekst)) {
                 val request = call.receive<EpostDto>()
                 call.respond(saksbehandlerAdminTjeneste.leggTilSaksbehandlerForEpost(request.epost, call.område))
             } else {
@@ -52,10 +51,10 @@ internal fun Route.SaksbehandlerAdminApisNy() {
     }
 
     post("/saksbehandlere/slett") {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.erOppgaveStyrer()) {
+        medBrukerkontekst { kontekst ->
+            if (pepClient.erOppgaveStyrer(kontekst)) {
                 val request = call.receive<EpostDto>()
-                call.respond(saksbehandlerAdminTjeneste.slettSaksbehandler(request.epost, call.område))
+                call.respond(saksbehandlerAdminTjeneste.slettSaksbehandler(request.epost, kontekst.område, kontekst))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
@@ -63,10 +62,10 @@ internal fun Route.SaksbehandlerAdminApisNy() {
     }
 
     post("/saksbehandlere/slettForId") {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.erOppgaveStyrer()) {
+        medBrukerkontekst { kontekst ->
+            if (pepClient.erOppgaveStyrer(kontekst)) {
                 val id = call.receive<Long>()
-                call.respond(saksbehandlerAdminTjeneste.slettSaksbehandlerForId(id))
+                call.respond(saksbehandlerAdminTjeneste.slettSaksbehandlerForId(id, kontekst))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
@@ -75,13 +74,12 @@ internal fun Route.SaksbehandlerAdminApisNy() {
 
     // TODO: slett når frontend har begynt å bruke nytt endepunkt i ReservasjonApis
     get("reservasjoner") {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.erOppgaveStyrer()) {
-                call.respond(reservasjonApisTjeneste.hentAlleAktiveReservasjoner())
+        medBrukerkontekst { kontekst ->
+            if (pepClient.erOppgaveStyrer(kontekst)) {
+                call.respond(reservasjonApisTjeneste.hentAlleAktiveReservasjoner(kontekst))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
         }
     }
 }
-

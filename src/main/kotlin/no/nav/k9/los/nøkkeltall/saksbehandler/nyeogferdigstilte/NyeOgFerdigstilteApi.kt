@@ -4,6 +4,7 @@ import io.ktor.http.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.k9.los.infrastruktur.abac.IPepClient
+import no.nav.k9.los.infrastruktur.kontekst.medBrukerkontekst
 import no.nav.k9.los.infrastruktur.rest.RequestContextService
 import org.koin.ktor.ext.inject
 
@@ -13,8 +14,8 @@ fun Route.NyeOgFerdigstilteApi() {
     val nyeOgFerdigstilteService by inject<NyeOgFerdigstilteService>()
 
     get {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.harBasisTilgang()) {
+        medBrukerkontekst { kontekst ->
+            if (pepClient.harBasisTilgang(kontekst)) {
                 call.respond(nyeOgFerdigstilteService.hentCachetVerdi(call.parameters["gruppe"]?.let { NyeOgFerdigstilteGruppe.valueOf(it) } ?: NyeOgFerdigstilteGruppe.ALLE))
             } else {
                 call.respond(HttpStatusCode.Forbidden)

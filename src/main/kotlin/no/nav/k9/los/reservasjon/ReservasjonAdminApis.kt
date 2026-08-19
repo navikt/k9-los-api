@@ -4,6 +4,7 @@ import io.ktor.http.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.k9.los.infrastruktur.abac.IPepClient
+import no.nav.k9.los.infrastruktur.kontekst.medBrukerkontekst
 import no.nav.k9.los.infrastruktur.rest.RequestContextService
 import org.koin.ktor.ext.inject
 import org.slf4j.Logger
@@ -20,9 +21,9 @@ internal fun Route.ReservasjonAdminApis() {
     val reservasjonApisTjeneste by inject<ReservasjonApisTjeneste>()
 
     get("/alle-reservasjoner") {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.erOppgaveStyrer()) {
-                call.respond(reservasjonApisTjeneste.hentAlleAktiveReservasjoner())
+        medBrukerkontekst { kontekst ->
+            if (pepClient.erOppgaveStyrer(kontekst)) {
+                call.respond(reservasjonApisTjeneste.hentAlleAktiveReservasjoner(kontekst))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }

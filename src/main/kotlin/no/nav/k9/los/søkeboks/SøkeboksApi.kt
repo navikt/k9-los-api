@@ -6,13 +6,12 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.k9.los.infrastruktur.abac.IPepClient
-import no.nav.k9.los.infrastruktur.rest.RequestContextService
+import no.nav.k9.los.infrastruktur.kontekst.medBrukerkontekst
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import org.koin.ktor.ext.inject
 
 
 fun Route.SøkeboksApi() {
-    val requestContextService by inject<RequestContextService>()
     val søkeboksTjeneste by inject<SøkeboksTjeneste>()
     val pepClient by inject<IPepClient>()
 
@@ -26,12 +25,12 @@ fun Route.SøkeboksApi() {
             }
         }
     ) {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.harBasisTilgang()) {
+        medBrukerkontekst { kontekst ->
+            if (pepClient.harBasisTilgang(kontekst)) {
                 val (søkeord) = call.receive<SøkRequest>()
                 // Legacy-ruten ligger utenfor områdeApi og har derfor ikke noe {omrade}-segment
                 // å lese. Den betjener kun K9; nye områder skal bruke SøkeboksApiNy.
-                call.respond(søkeboksTjeneste.finnOppgaver(søkeord, Områder.K9))
+                call.respond(søkeboksTjeneste.finnOppgaver(søkeord, Områder.K9, kontekst))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }

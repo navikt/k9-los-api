@@ -1,5 +1,6 @@
 package no.nav.k9.los.domeneadaptere.k9.adhocjobber.reservasjonkonvertering
 
+import kotlinx.coroutines.runBlocking
 import kotliquery.queryOf
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
@@ -53,12 +54,12 @@ class ReservasjonKonverteringJobb(
                 isDaemon = true,
                 name = TRÅDNAVN,
             ) {
-                spillAvReservasjoner()
+                runBlocking { spillAvReservasjoner() }
             }
         }
     }
 
-    fun spillAvReservasjoner() {
+    suspend fun spillAvReservasjoner() {
         log.info("Starter avspilling av reservasjoner")
 
         val reservasjonsnøkler = finnLegacyreservasjoner()
@@ -66,7 +67,7 @@ class ReservasjonKonverteringJobb(
         var reservasjonTeller = 0L
 
         for (nokkel in reservasjonsnøkler) {
-            transactionalManager.transaction { tx ->
+            transactionalManager.transactionSuspend { tx ->
                 val legacyReservasjon = reservasjonV3Tjeneste.hentAktivReservasjonForReservasjonsnøkkel(nokkel, tx)!!
                 try {
                     reservasjonV3Tjeneste.annullerReservasjonHvisFinnes(nokkel, "Annullert av konvertering", legacyReservasjon.reservertAv, tx = tx)

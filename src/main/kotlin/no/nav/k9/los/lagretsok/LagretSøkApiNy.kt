@@ -9,6 +9,8 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.k9.los.infrastruktur.abac.IPepClient
+import no.nav.k9.los.infrastruktur.kontekst.medBrukerkontekst
+import kotlin.coroutines.coroutineContext
 import no.nav.k9.los.infrastruktur.rest.RequestContextService
 import no.nav.k9.los.infrastruktur.rest.idToken
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
@@ -36,9 +38,9 @@ fun Route.LagretSøkApiNy() {
             HttpStatusCode.OK to { body<List<LagretSøk>>() }
         }
     }) {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.harBasisTilgang()) {
-                val område = call.område // TODO: bruk område når tjenesten er oppdatert til å ta hensyn til område
+        medBrukerkontekst { kontekst ->
+            if (pepClient.harBasisTilgang(kontekst)) {
+                val område = kontekst.område
                 val innloggetSaksbehandler = coroutineContext.idToken().getNavIdent().let {
                     saksbehandlerRepository.finnSaksbehandlerMedIdent(it)
                 }
@@ -70,9 +72,9 @@ fun Route.LagretSøkApiNy() {
             HttpStatusCode.OK to { body<LagretSøk>() }
         }
     }) {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.harBasisTilgang()) {
-                val område = call.område // TODO: bruk område når tjenesten er oppdatert til å ta hensyn til område
+        medBrukerkontekst { kontekst ->
+            if (pepClient.harBasisTilgang(kontekst)) {
+                val område = kontekst.område
                 val id = call.parameters["id"]!!.toLong()
                 val innloggetSaksbehandler = coroutineContext.idToken().getNavIdent().let {
                     saksbehandlerRepository.finnSaksbehandlerMedIdent(it)
@@ -112,9 +114,9 @@ fun Route.LagretSøkApiNy() {
             HttpStatusCode.Created to { body<Long>() }
         }
     }) {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.erOppgaveStyrer()) {
-                val område = call.område // TODO: bruk område når tjenesten er oppdatert til å ta hensyn til område
+        medBrukerkontekst { kontekst ->
+            if (pepClient.erOppgaveStyrer(kontekst)) {
+                val område = kontekst.område
                 val navIdent = coroutineContext.idToken().getNavIdent()
                 val request = call.receive<NyttLagretSøkRequest>()
                 val lagretSøk = lagretSøkTjeneste.nytt(navIdent, request)
@@ -137,10 +139,10 @@ fun Route.LagretSøkApiNy() {
             HttpStatusCode.OK to { body<OppgaveQuery>() }
         }
     }) {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.erOppgaveStyrer()) {
-                val område = call.område // TODO: bruk område når tjenesten er oppdatert til å ta hensyn til område
-                val harKode6Tilgang = pepClient.harTilgangTilKode6()
+        medBrukerkontekst { kontekst ->
+            if (pepClient.erOppgaveStyrer(kontekst)) {
+                val område = kontekst.område
+                val harKode6Tilgang = pepClient.harTilgangTilKode6(kontekst)
                 call.respond(LagretSøk.defaultQuery(harKode6Tilgang))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
@@ -167,9 +169,9 @@ fun Route.LagretSøkApiNy() {
             HttpStatusCode.OK to { body<LagretSøk>() }
         }
     }) {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.harBasisTilgang()) {
-                val område = call.område // TODO: bruk område når tjenesten er oppdatert til å ta hensyn til område
+        medBrukerkontekst { kontekst ->
+            if (pepClient.harBasisTilgang(kontekst)) {
+                val område = kontekst.område
                 val innloggetSaksbehandler = coroutineContext.idToken().getNavIdent().let {
                     saksbehandlerRepository.finnSaksbehandlerMedIdent(it)
                 }
@@ -205,9 +207,9 @@ fun Route.LagretSøkApiNy() {
             HttpStatusCode.OK to { body<Long>() }
         }
     }) {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.harBasisTilgang()) {
-                val område = call.område // TODO: bruk område når tjenesten er oppdatert til å ta hensyn til område
+        medBrukerkontekst { kontekst ->
+            if (pepClient.harBasisTilgang(kontekst)) {
+                val område = kontekst.område
                 val innloggetSaksbehandler = coroutineContext.idToken().getNavIdent().let {
                     saksbehandlerRepository.finnSaksbehandlerMedIdent(it)
                 }
@@ -241,9 +243,9 @@ fun Route.LagretSøkApiNy() {
             HttpStatusCode.OK to { body<Unit>() }
         }
     }) {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.harBasisTilgang()) {
-                val område = call.område // TODO: bruk område når tjenesten er oppdatert til å ta hensyn til område
+        medBrukerkontekst { kontekst ->
+            if (pepClient.harBasisTilgang(kontekst)) {
+                val område = kontekst.område
                 val innloggetSaksbehandler = coroutineContext.idToken().getNavIdent().let {
                     saksbehandlerRepository.finnSaksbehandlerMedIdent(it)
                 }
@@ -273,9 +275,9 @@ fun Route.LagretSøkApiNy() {
             }
         }
     }) {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.harBasisTilgang()) {
-                val område = call.område // TODO: bruk område når tjenesten er oppdatert til å ta hensyn til område
+        medBrukerkontekst { kontekst ->
+            if (pepClient.harBasisTilgang(kontekst)) {
+                val område = kontekst.område
                 val lagretSøkId = call.parameters["id"]!!
                 val innloggetSaksbehandler = coroutineContext.idToken().getNavIdent().let {
                     saksbehandlerRepository.finnSaksbehandlerMedIdent(it)
@@ -298,4 +300,3 @@ fun Route.LagretSøkApiNy() {
         }
     }
 }
-

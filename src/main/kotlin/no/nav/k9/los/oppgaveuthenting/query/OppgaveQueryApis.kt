@@ -5,6 +5,7 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.k9.los.infrastruktur.abac.IPepClient
+import no.nav.k9.los.infrastruktur.kontekst.medBrukerkontekst
 import no.nav.k9.los.infrastruktur.rest.RequestContextService
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.OppgaveQuery
 import org.koin.java.KoinJavaComponent
@@ -16,8 +17,8 @@ fun Route.OppgaveQueryApis() {
     val pepClient by KoinJavaComponent.inject<IPepClient>(IPepClient::class.java)
 
     post("/query/antall") {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.harBasisTilgang()) {
+        medBrukerkontekst { kontekst ->
+            if (pepClient.harBasisTilgang(kontekst)) {
                 val oppgaveQuery = call.receive<OppgaveQuery>()
                 call.respond(oppgaveQueryService.queryForAntall(QueryRequest(oppgaveQuery, false)))
             } else {
@@ -27,8 +28,8 @@ fun Route.OppgaveQueryApis() {
     }
 
     post("/validate") {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.harBasisTilgang()) {
+        medBrukerkontekst { kontekst ->
+            if (pepClient.harBasisTilgang(kontekst)) {
                 val oppgaveQuery = call.receive<OppgaveQuery>()
                 call.respond(oppgaveQueryService.validate(QueryRequest(oppgaveQuery)))
             } else {
@@ -38,8 +39,8 @@ fun Route.OppgaveQueryApis() {
     }
 
     get("/felter") {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.harBasisTilgang()) {
+        medBrukerkontekst { kontekst ->
+            if (pepClient.harBasisTilgang(kontekst)) {
                 call.respond(oppgaveQueryService.hentAlleFelter())
             } else {
                 call.respond(HttpStatusCode.Forbidden)

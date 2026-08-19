@@ -7,7 +7,7 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.k9.los.infrastruktur.abac.IPepClient
-import no.nav.k9.los.infrastruktur.rest.RequestContextService
+import no.nav.k9.los.infrastruktur.kontekst.medBrukerkontekst
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.OppgaveNøkkelDto
 import no.nav.k9.los.område
@@ -15,7 +15,6 @@ import org.koin.ktor.ext.inject
 
 fun Route.SisteOppgaverApiNy() {
     val sisteOppgaverTjeneste by inject<SisteOppgaverTjeneste>()
-    val requestContextService by inject<RequestContextService>()
     val pepClient by inject<IPepClient>()
 
 
@@ -31,10 +30,9 @@ fun Route.SisteOppgaverApiNy() {
             HttpStatusCode.OK to { body<List<SisteOppgaverDto>>() }
         }
     }) {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.harBasisTilgang()) {
-                val område = call.område // TODO: bruk område når tjenesten er oppdatert til å ta hensyn til område
-                call.respond(sisteOppgaverTjeneste.hentSisteOppgaver())
+        medBrukerkontekst { kontekst ->
+            if (pepClient.harBasisTilgang(kontekst)) {
+                call.respond(sisteOppgaverTjeneste.hentSisteOppgaver(kontekst))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
@@ -52,9 +50,8 @@ fun Route.SisteOppgaverApiNy() {
             body<OppgaveNøkkelDto>()
         }
     }) {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.harBasisTilgang()) {
-                val område = call.område // TODO: bruk område når tjenesten er oppdatert til å ta hensyn til område
+        medBrukerkontekst { kontekst ->
+            if (pepClient.harBasisTilgang(kontekst)) {
                 val oppgaveNøkkel = call.receive<OppgaveNøkkelDto>()
                 sisteOppgaverTjeneste.lagreSisteOppgave(oppgaveNøkkel)
                 call.respond(HttpStatusCode.OK)
@@ -64,4 +61,3 @@ fun Route.SisteOppgaverApiNy() {
         }
     }
 }
-

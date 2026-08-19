@@ -6,6 +6,7 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.k9.los.feilhandtering.FinnerIkkeDataException
 import no.nav.k9.los.infrastruktur.abac.IPepClient
+import no.nav.k9.los.infrastruktur.kontekst.medBrukerkontekst
 import no.nav.k9.los.infrastruktur.rest.RequestContextService
 import no.nav.k9.los.infrastruktur.rest.idToken
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
@@ -26,8 +27,8 @@ internal fun Route.ReservasjonApis() {
     val reservasjonApisTjeneste by inject<ReservasjonApisTjeneste>()
 
     post("/reserver") {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.harTilgangTilReserveringAvOppgaver()) {
+        medBrukerkontekst { kontekst ->
+            if (pepClient.harTilgangTilReserveringAvOppgaver(kontekst)) {
                 val oppgaveIdMedOverstyringDto = call.receive<OppgaveIdMedOverstyringDto>()
                 val navident = kotlin.coroutines.coroutineContext.idToken().getNavIdent()
                 val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedIdent(navident)
@@ -47,8 +48,8 @@ internal fun Route.ReservasjonApis() {
     }
 
     get("/reserverte") {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.harBasisTilgang()) {
+        medBrukerkontekst { kontekst ->
+            if (pepClient.harBasisTilgang(kontekst)) {
                 val innloggetBrukerNavIdent = kotlin.coroutines.coroutineContext.idToken().getNavIdent()
                 val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedIdent(innloggetBrukerNavIdent)
 
@@ -69,8 +70,8 @@ internal fun Route.ReservasjonApis() {
     }
 
     post("/opphev") {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.harBasisTilgang()) {
+        medBrukerkontekst { kontekst ->
+            if (pepClient.harBasisTilgang(kontekst)) {
                 val params = call.receive<List<AnnullerReservasjonDto>>()
                 val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedIdent(kotlin.coroutines.coroutineContext.idToken().getNavIdent())!!
 
@@ -92,8 +93,8 @@ internal fun Route.ReservasjonApis() {
     }
 
     post("/forleng") {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.harBasisTilgang()) {
+        medBrukerkontekst { kontekst ->
+            if (pepClient.harBasisTilgang(kontekst)) {
                 val forlengReservasjonDto = call.receive<ForlengReservasjonDto>()
                 val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedIdent(
                     kotlin.coroutines.coroutineContext.idToken().getNavIdent()
@@ -111,8 +112,8 @@ internal fun Route.ReservasjonApis() {
     }
 
     post("/flytt") {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.harBasisTilgang()) {
+        medBrukerkontekst { kontekst ->
+            if (pepClient.harBasisTilgang(kontekst)) {
                 val params = call.receive<FlyttReservasjonDto>()
 
                 val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedIdent(
@@ -132,8 +133,8 @@ internal fun Route.ReservasjonApis() {
     }
 
     post("/reservasjon/endre") {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.harBasisTilgang()) {
+        medBrukerkontekst { kontekst ->
+            if (pepClient.harBasisTilgang(kontekst)) {
                 val reservasjonEndringDto = call.receive<List<ReservasjonEndringDto>>()
                 val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedIdent(
                     kotlin.coroutines.coroutineContext.idToken().getNavIdent()
@@ -150,8 +151,8 @@ internal fun Route.ReservasjonApis() {
     }
 
     post("/flytt/sok") {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.harBasisTilgang()) {
+        medBrukerkontekst { kontekst ->
+            if (pepClient.harBasisTilgang(kontekst)) {
                 val params = call.receive<BrukerIdentDto>()
                 val sokSaksbehandlerMedIdent = saksbehandlerRepository.sokSaksbehandler(params.brukerIdent)
                 call.respond(sokSaksbehandlerMedIdent)
@@ -162,8 +163,8 @@ internal fun Route.ReservasjonApis() {
     }
 
     get("/saksbehandlere") {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.harBasisTilgang()) {
+        medBrukerkontekst { kontekst ->
+            if (pepClient.harBasisTilgang(kontekst)) {
                 val alleSaksbehandlere = saksbehandlerRepository.hentAlleSaksbehandlere()
                 val saksbehandlerDtoListe =
                     alleSaksbehandlere.filter { saksbehandler -> !saksbehandler.navn.isNullOrBlank() && !saksbehandler.navident.isNullOrBlank() }
@@ -178,14 +179,14 @@ internal fun Route.ReservasjonApis() {
     }
 
     get("/aktiv-reservasjon") {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.harBasisTilgang()) {
+        medBrukerkontekst { kontekst ->
+            if (pepClient.harBasisTilgang(kontekst)) {
                 val oppgaveNøkkel = OppgaveNøkkelDto(
                     call.queryParameters["oppgaveEksternId"]!!,
                     call.queryParameters["oppgaveTypeEksternId"]!!,
                     call.queryParameters["områdeEksternId"]!!
                 )
-                val aktivReservasjon = reservasjonApisTjeneste.hentAktivReservasjon(oppgaveNøkkel)
+                val aktivReservasjon = reservasjonApisTjeneste.hentAktivReservasjon(oppgaveNøkkel, kontekst)
                 if (aktivReservasjon != null) {
                     call.respond(aktivReservasjon)
                 } else {
@@ -199,9 +200,9 @@ internal fun Route.ReservasjonApis() {
 
     // TODO: Fjernes herfra med overgang til ny API-struktur. Erstattet i ReservasjonAdminApis
     get("/alle-reservasjoner") {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.erOppgaveStyrer()) {
-                call.respond(reservasjonApisTjeneste.hentAlleAktiveReservasjoner())
+        medBrukerkontekst { kontekst ->
+            if (pepClient.erOppgaveStyrer(kontekst)) {
+                call.respond(reservasjonApisTjeneste.hentAlleAktiveReservasjoner(kontekst))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }

@@ -6,7 +6,7 @@ import io.ktor.http.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.k9.los.infrastruktur.abac.IPepClient
-import no.nav.k9.los.infrastruktur.rest.RequestContextService
+import no.nav.k9.los.infrastruktur.kontekst.medBrukerkontekst
 import no.nav.k9.los.infrastruktur.rest.idToken
 import no.nav.k9.los.infrastruktur.utils.OpentelemetrySpanUtil
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
@@ -15,7 +15,6 @@ import no.nav.k9.los.område
 import org.koin.ktor.ext.inject
 
 fun Route.OppgaveKoSaksbehandlerApisNy() {
-    val requestContextService by inject<RequestContextService>()
     val oppgaveKoTjeneste by inject<OppgaveKoTjeneste>()
     val saksbehandlerRepository by inject<SaksbehandlerRepository>()
     val pepClient by inject<IPepClient>()
@@ -28,16 +27,15 @@ fun Route.OppgaveKoSaksbehandlerApisNy() {
             }
         }
     }) {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.harBasisTilgang()) {
-                val område = call.område // TODO: bruk område når tjenesten er oppdatert til å ta hensyn til område
+        medBrukerkontekst { kontekst ->
+            if (pepClient.harBasisTilgang(kontekst)) {
                 val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedIdent(
                     kotlin.coroutines.coroutineContext.idToken().getNavIdent()
                 )!!
                 call.respond(
                     oppgaveKoTjeneste.hentKøerForSaksbehandler(
                         saksbehandler.id!!,
-                        pepClient.harTilgangTilKode6()
+                        pepClient.harTilgangTilKode6(kontekst)
                     )
                 )
             } else {
@@ -58,12 +56,12 @@ fun Route.OppgaveKoSaksbehandlerApisNy() {
             }
         }
     }) {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.harBasisTilgang()) {
-                val område = call.område // TODO: bruk område når tjenesten er oppdatert til å ta hensyn til område
+        medBrukerkontekst { kontekst ->
+            if (pepClient.harBasisTilgang(kontekst)) {
                 val oppgavekøId = call.parameters["id"]!!
                 call.respond(
                     oppgaveKoTjeneste.hentOppgaverFraKøSammendrag(
+                        kontekst,
                         oppgavekøId.toLong(),
                         10,
                         fjernReserverte = true
@@ -87,12 +85,11 @@ fun Route.OppgaveKoSaksbehandlerApisNy() {
             }
         }
     }) {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.harBasisTilgang()) {
-                val område = call.område // TODO: bruk område når tjenesten er oppdatert til å ta hensyn til område
+        medBrukerkontekst { kontekst ->
+            if (pepClient.harBasisTilgang(kontekst)) {
                 val oppgavekøId = call.parameters["id"]!!
                 call.respond(
-                    oppgaveKoTjeneste.hentSaksbehandlereForKo(oppgavekøId.toLong())
+                    oppgaveKoTjeneste.hentSaksbehandlereForKo(oppgavekøId.toLong(), kontekst)
                 )
             } else {
                 call.respond(HttpStatusCode.Forbidden)
@@ -112,11 +109,10 @@ fun Route.OppgaveKoSaksbehandlerApisNy() {
             }
         }
     }) {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.harBasisTilgang()) {
-                val område = call.område // TODO: bruk område når tjenesten er oppdatert til å ta hensyn til område
+        medBrukerkontekst { kontekst ->
+            if (pepClient.harBasisTilgang(kontekst)) {
                 val oppgavekøId = call.parameters["id"]!!
-                val skjermet = pepClient.harTilgangTilKode6()
+                val skjermet = pepClient.harTilgangTilKode6(kontekst)
                 val antallUtenReserverte = OpentelemetrySpanUtil.span("OppgaveKoTjeneste.hentAntallOppgaverForKø") {
                     oppgaveKoTjeneste.hentAntallOppgaverForKø(
                         oppgaveKoId = oppgavekøId.toLong(),
@@ -143,9 +139,8 @@ fun Route.OppgaveKoSaksbehandlerApisNy() {
             }
         }
     }) {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.harTilgangTilReserveringAvOppgaver()) {
-                val område = call.område // TODO: bruk område når tjenesten er oppdatert til å ta hensyn til område
+        medBrukerkontekst { kontekst ->
+            if (pepClient.harTilgangTilReserveringAvOppgaver(kontekst)) {
                 val oppgavekøId = call.parameters["id"]!!
                 val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedIdent(
                     kotlin.coroutines.coroutineContext.idToken().getNavIdent()
@@ -153,7 +148,7 @@ fun Route.OppgaveKoSaksbehandlerApisNy() {
                 val oppgaveMuligReservert = oppgaveKoTjeneste.taReservasjonFraKø(
                     innloggetBrukerId = innloggetBruker.id!!,
                     oppgaveKoId = oppgavekøId.toLong(),
-                    kotlin.coroutines.coroutineContext
+                    kontekst
                 )
                 call.respond(
                     when (oppgaveMuligReservert) {
@@ -173,7 +168,6 @@ fun Route.OppgaveKoSaksbehandlerApisNy() {
         }
     }
 }
-
 
 
 

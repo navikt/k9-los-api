@@ -4,6 +4,7 @@ import io.ktor.http.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.k9.los.infrastruktur.abac.IPepClient
+import no.nav.k9.los.infrastruktur.kontekst.medBrukerkontekst
 import no.nav.k9.los.infrastruktur.rest.RequestContextService
 import no.nav.k9.los.nøkkeltall.avdelingsleder.dagenstall.DagensTallService
 import no.nav.k9.los.nøkkeltall.avdelingsleder.ferdigstilteperenhet.FerdigstiltePerEnhetGruppe
@@ -21,9 +22,9 @@ fun Route.NøkkeltallV3Apis() {
     val pepClient by inject<IPepClient>()
 
     get("status") {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.erOppgaveStyrer()) {
-                call.respond(statusService.hentStatus(pepClient.harTilgangTilKode6()))
+        medBrukerkontekst { kontekst ->
+            if (pepClient.erOppgaveStyrer(kontekst)) {
+                call.respond(statusService.hentStatus(pepClient.harTilgangTilKode6(kontekst)))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
@@ -31,9 +32,9 @@ fun Route.NøkkeltallV3Apis() {
     }
 
     get("statusfordeling") {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.erOppgaveStyrer()) {
-                val kode6 = pepClient.harTilgangTilKode6()
+        medBrukerkontekst { kontekst ->
+            if (pepClient.erOppgaveStyrer(kontekst)) {
+                val kode6 = pepClient.harTilgangTilKode6(kontekst)
                 call.respond(statusFordelingService.hentVerdi(kode6))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
@@ -42,8 +43,8 @@ fun Route.NøkkeltallV3Apis() {
     }
 
     get("dagens-tall") {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.erOppgaveStyrer()) {
+        medBrukerkontekst { kontekst ->
+            if (pepClient.erOppgaveStyrer(kontekst)) {
                 call.respond(dagensTallService.hentCachetVerdi())
             } else {
                 call.respond(HttpStatusCode.Forbidden)
@@ -52,8 +53,8 @@ fun Route.NøkkeltallV3Apis() {
     }
 
     get("ferdigstilte-per-enhet") {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.erOppgaveStyrer()) {
+        medBrukerkontekst { kontekst ->
+            if (pepClient.erOppgaveStyrer(kontekst)) {
                 val gruppe = call.parameters["gruppe"]?.let { FerdigstiltePerEnhetGruppe.valueOf(it) }
                     ?: FerdigstiltePerEnhetGruppe.ALLE
                 val uker = call.parameters["uker"]?.toInt() ?: 2

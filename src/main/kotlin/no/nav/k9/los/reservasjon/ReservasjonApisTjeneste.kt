@@ -1,6 +1,7 @@
 package no.nav.k9.los.reservasjon
 
 import no.nav.k9.los.infrastruktur.abac.IPepClient
+import no.nav.k9.los.infrastruktur.kontekst.Brukerkontekst
 import no.nav.k9.los.infrastruktur.azuregraph.IAzureGraphService
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.infrastruktur.utils.leggTilDagerHoppOverHelg
@@ -43,7 +44,7 @@ class ReservasjonApisTjeneste(
             oppgaveIdMedOverstyringDto.overstyrIdent ?: innloggetBruker.navident!!
         )!!
 
-        val reservasjonV3 = transactionalManager.transaction { tx ->
+        val reservasjonV3 = transactionalManager.transactionSuspend { tx ->
             val oppgave = aktivOppgaveOppslag.hentAktivOppgave(
                 oppgaveNøkkel.oppgaveEksternId,
                 oppgaveNøkkel.oppgaveTypeEksternId,
@@ -233,13 +234,14 @@ class ReservasjonApisTjeneste(
         }
     }
 
-    suspend fun hentAktivReservasjon(oppgaveNøkkel: OppgaveNøkkelDto): ReservasjonV3Dto? {
+    suspend fun hentAktivReservasjon(oppgaveNøkkel: OppgaveNøkkelDto, kontekst: Brukerkontekst): ReservasjonV3Dto? {
         val oppgave = aktivOppgaveOppslag.hentAktivOppgave(
                 oppgaveNøkkel.oppgaveEksternId,
                 oppgaveNøkkel.oppgaveTypeEksternId,
             )
         if (!pepClient.harTilgangTilOppgaveV3(
                 oppgave = oppgave,
+                kontekst = kontekst,
                 grupperForSaksbehandler = azureGraphService.hentGrupperForInnloggetSaksbehandler()
             )
         ) {
@@ -257,13 +259,13 @@ class ReservasjonApisTjeneste(
         )
     }
 
-    suspend fun hentAlleAktiveReservasjoner(): List<ReservasjonDto> {
-        val innloggetBrukerHarKode6Tilgang = pepClient.harTilgangTilKode6()
+    suspend fun hentAlleAktiveReservasjoner(kontekst: Brukerkontekst): List<ReservasjonDto> {
+        val innloggetBrukerHarKode6Tilgang = pepClient.harTilgangTilKode6(kontekst)
 
         return reservasjonV3Tjeneste.hentAlleAktiveReservasjoner().flatMap { reservasjonMedOppgaver ->
             val saksbehandler =
                 saksbehandlerRepository.finnSaksbehandlerMedId(reservasjonMedOppgaver.reservasjonV3.reservertAv)!!
-            val saksbehandlerHarKode6Tilgang = pepClient.harTilgangTilKode6(saksbehandler.navident!!)
+            val saksbehandlerHarKode6Tilgang = pepClient.harTilgangTilKode6(saksbehandler.navident!!, kontekst)
 
             if (innloggetBrukerHarKode6Tilgang != saksbehandlerHarKode6Tilgang) {
                 emptyList()

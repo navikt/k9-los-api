@@ -4,10 +4,10 @@ import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withContext
 import no.nav.k9.los.infrastruktur.azuregraph.IAzureGraphService
 import no.nav.k9.los.infrastruktur.idtoken.IdToken
-import no.nav.k9.los.infrastruktur.rest.CoroutineRequestContext
+import no.nav.k9.los.infrastruktur.kontekst.Brukerkontekst
+import no.nav.k9.los.infrastruktur.kontekst.InnloggetBruker
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import org.junit.jupiter.api.Test
 import java.util.UUID
@@ -35,8 +35,8 @@ class PepClientGruppeoppsettTest {
             val pepClient = pepClient()
             val token = token(setOf(ungSaksbehandler))
 
-            medContext(token, Områder.K9) { pepClient.harBasisTilgang() } shouldBe false
-            medContext(token, Områder.UNG) { pepClient.harBasisTilgang() } shouldBe true
+            pepClient.harBasisTilgang(kontekst(token, Områder.K9)) shouldBe false
+            pepClient.harBasisTilgang(kontekst(token, Områder.UNG)) shouldBe true
         }
     }
 
@@ -48,8 +48,8 @@ class PepClientGruppeoppsettTest {
 
             for (gruppe in ungGrupper) {
                 val token = token(setOf(gruppe))
-                medContext(token, Områder.K9) { harRolle(pepClient, gruppe) } shouldBe false
-                medContext(token, Områder.UNG) { harRolle(pepClient, gruppe) } shouldBe true
+                harRolle(pepClient, gruppe, kontekst(token, Områder.K9)) shouldBe false
+                harRolle(pepClient, gruppe, kontekst(token, Områder.UNG)) shouldBe true
             }
         }
     }
@@ -60,8 +60,8 @@ class PepClientGruppeoppsettTest {
             val pepClient = pepClient()
             val token = token(setOf(drift))
 
-            medContext(token, Områder.K9) { pepClient.kanLeggeUtDriftsmelding() } shouldBe true
-            medContext(token, Områder.UNG) { pepClient.kanLeggeUtDriftsmelding() } shouldBe true
+            pepClient.kanLeggeUtDriftsmelding(kontekst(token, Områder.K9).bruker) shouldBe true
+            pepClient.kanLeggeUtDriftsmelding(kontekst(token, Områder.UNG).bruker) shouldBe true
         }
     }
 
@@ -72,8 +72,8 @@ class PepClientGruppeoppsettTest {
             coEvery { azureGraphService.hentGrupperForSaksbehandler("Z999999") } returns setOf(ungKode6)
             val pepClient = pepClient(azureGraphService)
 
-            medContext(token(emptySet()), Områder.K9) { pepClient.harTilgangTilKode6("Z999999") } shouldBe false
-            medContext(token(emptySet()), Områder.UNG) { pepClient.harTilgangTilKode6("Z999999") } shouldBe true
+            pepClient.harTilgangTilKode6("Z999999", kontekst(token(emptySet()), Områder.K9)) shouldBe false
+            pepClient.harTilgangTilKode6("Z999999", kontekst(token(emptySet()), Områder.UNG)) shouldBe true
         }
     }
 
@@ -88,14 +88,16 @@ class PepClientGruppeoppsettTest {
         coEvery { getNavIdent() } returns "Z123456"
     }
 
-    private suspend fun harRolle(pepClient: PepClient, gruppe: UUID): Boolean = when (gruppe) {
-        ungSaksbehandler -> pepClient.harTilgangTilReserveringAvOppgaver()
-        ungVeileder -> pepClient.harBasisTilgang()
-        ungOppgavestyrer -> pepClient.erOppgaveStyrer()
-        ungKode6 -> pepClient.harTilgangTilKode6()
+    private suspend fun harRolle(pepClient: PepClient, gruppe: UUID, kontekst: Brukerkontekst): Boolean = when (gruppe) {
+        ungSaksbehandler -> pepClient.harTilgangTilReserveringAvOppgaver(kontekst)
+        ungVeileder -> pepClient.harBasisTilgang(kontekst)
+        ungOppgavestyrer -> pepClient.erOppgaveStyrer(kontekst)
+        ungKode6 -> pepClient.harTilgangTilKode6(kontekst)
         else -> error("Ukjent testgruppe")
     }
 
-    private suspend fun <T> medContext(token: IdToken, område: Områder, block: suspend () -> T): T =
-        withContext(CoroutineRequestContext(token, område)) { block() }
+    private fun kontekst(token: IdToken, område: Områder) = Brukerkontekst(
+        område,
+        InnloggetBruker(token.getNavIdent(), token.groups.map(UUID::fromString).toSet(), token),
+    )
 }

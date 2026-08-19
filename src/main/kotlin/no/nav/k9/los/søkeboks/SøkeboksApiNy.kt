@@ -6,14 +6,13 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.k9.los.infrastruktur.abac.IPepClient
-import no.nav.k9.los.infrastruktur.rest.RequestContextService
+import no.nav.k9.los.infrastruktur.kontekst.medBrukerkontekst
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.område
 import org.koin.ktor.ext.inject
 
 
 fun Route.SøkeboksApiNy() {
-    val requestContextService by inject<RequestContextService>()
     val søkeboksTjeneste by inject<SøkeboksTjeneste>()
     val pepClient by inject<IPepClient>()
 
@@ -33,10 +32,10 @@ fun Route.SøkeboksApiNy() {
             }
         }
     ) {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.harBasisTilgang()) {
+        medBrukerkontekst { kontekst ->
+            if (pepClient.harBasisTilgang(kontekst)) {
                 val (søkeord) = call.receive<SøkRequest>()
-                call.respond(søkeboksTjeneste.finnOppgaverSammendrag(søkeord, call.område))
+                call.respond(søkeboksTjeneste.finnOppgaverSammendrag(søkeord, kontekst.område, kontekst))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }

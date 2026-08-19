@@ -6,6 +6,7 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
 import no.nav.k9.los.infrastruktur.abac.IPepClient
+import no.nav.k9.los.infrastruktur.kontekst.medBrukerkontekst
 import no.nav.k9.los.infrastruktur.rest.RequestContextService
 import no.nav.k9.los.infrastruktur.rest.idToken
 import no.nav.k9.los.ko.dto.*
@@ -22,9 +23,9 @@ fun Route.OppgaveKoApis() {
     val pepClient by inject<IPepClient>()
 
     get("/") {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.erOppgaveStyrer()) {
-                val oppgavekøer = oppgaveKoTjeneste.hentOppgavekøer(skjermet = pepClient.harTilgangTilKode6())
+        medBrukerkontekst { kontekst ->
+            if (pepClient.erOppgaveStyrer(kontekst)) {
+                val oppgavekøer = oppgaveKoTjeneste.hentOppgavekøer(skjermet = pepClient.harTilgangTilKode6(kontekst))
                     .map { oppgaveko ->
                         OppgaveKoListeelement(
                             id = oppgaveko.id,
@@ -42,8 +43,8 @@ fun Route.OppgaveKoApis() {
     }
 
     post("/kopier") {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.erOppgaveStyrer()) {
+        medBrukerkontekst { kontekst ->
+            if (pepClient.erOppgaveStyrer(kontekst)) {
                 val kopierOppgaveKoDto = call.receive<KopierOppgaveKoDto>()
                 call.respond(
                     oppgaveKoTjeneste.kopier(
@@ -51,7 +52,7 @@ fun Route.OppgaveKoApis() {
                         kopierOppgaveKoDto.tittel,
                         kopierOppgaveKoDto.taMedQuery,
                         kopierOppgaveKoDto.taMedSaksbehandlere,
-                        pepClient.harTilgangTilKode6()
+                        pepClient.harTilgangTilKode6(kontekst)
                     )
                 )
             } else {
@@ -61,8 +62,8 @@ fun Route.OppgaveKoApis() {
     }
 
     get("/saksbehandlere") {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.erOppgaveStyrer()) {
+        medBrukerkontekst { kontekst ->
+            if (pepClient.erOppgaveStyrer(kontekst)) {
                 val alleSaksbehandlere = saksbehandlerRepository.hentAlleSaksbehandlere()
                     .map { saksbehandler ->
                         SaksbehandlerForKolisteDto(saksbehandler)
@@ -75,10 +76,10 @@ fun Route.OppgaveKoApis() {
     }
 
     post("/opprett") {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.erOppgaveStyrer()) {
+        medBrukerkontekst { kontekst ->
+            if (pepClient.erOppgaveStyrer(kontekst)) {
                 val opprettOppgaveKoDto = call.receive<OpprettOppgaveKoDto>()
-                val harSkjermetTilgang = pepClient.harTilgangTilKode6()
+                val harSkjermetTilgang = pepClient.harTilgangTilKode6(kontekst)
                 // OpprettOppgaveKoDto bærer ikke område ennå. Skal det opprettes køer utenfor K9,
                 // må feltet inn i DTO-en og settes av klienten.
                 call.respond(
@@ -95,10 +96,10 @@ fun Route.OppgaveKoApis() {
     }
 
     get("/{id}") {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.erOppgaveStyrer()) {
+        medBrukerkontekst { kontekst ->
+            if (pepClient.erOppgaveStyrer(kontekst)) {
                 val oppgavekøId = call.parameters["id"]!!
-                call.respond(oppgaveKoTjeneste.hent(oppgavekøId.toLong(), pepClient.harTilgangTilKode6()))
+                call.respond(oppgaveKoTjeneste.hent(oppgavekøId.toLong(), pepClient.harTilgangTilKode6(kontekst)))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
@@ -106,8 +107,8 @@ fun Route.OppgaveKoApis() {
     }
 
     delete("/{id}") {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.erOppgaveStyrer()) {
+        medBrukerkontekst { kontekst ->
+            if (pepClient.erOppgaveStyrer(kontekst)) {
                 val oppgavekøId = call.parameters["id"]!!
                 call.respond(oppgaveKoTjeneste.slett(oppgavekøId.toLong()))
             } else {
@@ -117,15 +118,15 @@ fun Route.OppgaveKoApis() {
     }
 
     get("/saksbehandlerskoer") {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.harBasisTilgang()) {
+        medBrukerkontekst { kontekst ->
+            if (pepClient.harBasisTilgang(kontekst)) {
                 val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedIdent(
                     kotlin.coroutines.coroutineContext.idToken().getNavIdent()
                 )!!
                 call.respond(
                     oppgaveKoTjeneste.hentKøerForSaksbehandler(
                         saksbehandler.id!!,
-                        pepClient.harTilgangTilKode6()
+                        pepClient.harTilgangTilKode6(kontekst)
                     )
                 )
             } else {
@@ -135,12 +136,12 @@ fun Route.OppgaveKoApis() {
     }
 
     get("/andre-saksbehandleres-koer") {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.erOppgaveStyrer()) {
+        medBrukerkontekst { kontekst ->
+            if (pepClient.erOppgaveStyrer(kontekst)) {
                 call.respond(
                     oppgaveKoTjeneste.hentKøerForSaksbehandler(
                         call.parameters["id"]?.toLong()!!,
-                        pepClient.harTilgangTilKode6()
+                        pepClient.harTilgangTilKode6(kontekst)
                     ).map {
                         OppgaveKoIdOgTittel(
                             id = it.id,
@@ -155,11 +156,12 @@ fun Route.OppgaveKoApis() {
     }
 
     get("/{id}/oppgaver") {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.harBasisTilgang()) {
+        medBrukerkontekst { kontekst ->
+            if (pepClient.harBasisTilgang(kontekst)) {
                 val oppgavekøId = call.parameters["id"]!!
                 call.respond(
                     oppgaveKoTjeneste.hentOppgaverFraKø(
+                        kontekst,
                         oppgavekøId.toLong(),
                         10,
                         fjernReserverte = true
@@ -173,11 +175,11 @@ fun Route.OppgaveKoApis() {
 
 
     get("/{id}/saksbehandlere") {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.harBasisTilgang()) {
+        medBrukerkontekst { kontekst ->
+            if (pepClient.harBasisTilgang(kontekst)) {
                 val oppgavekøId = call.parameters["id"]!!
                 call.respond(
-                    oppgaveKoTjeneste.hentSaksbehandlereForKo(oppgavekøId.toLong())
+                    oppgaveKoTjeneste.hentSaksbehandlereForKo(oppgavekøId.toLong(), kontekst)
                 )
             } else {
                 call.respond(HttpStatusCode.Forbidden)
@@ -186,10 +188,10 @@ fun Route.OppgaveKoApis() {
     }
 
     get("/{id}/antall") {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.harBasisTilgang()) {
+        medBrukerkontekst { kontekst ->
+            if (pepClient.harBasisTilgang(kontekst)) {
                 val oppgavekøId = call.parameters["id"]!!
-                val skjermet = pepClient.harTilgangTilKode6()
+                val skjermet = pepClient.harTilgangTilKode6(kontekst)
                 call.respond(oppgaveKoTjeneste.hentAntallMedOgUtenReserverteForKø(oppgavekøId.toLong(), skjermet))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
@@ -198,10 +200,10 @@ fun Route.OppgaveKoApis() {
     }
 
     get("/{id}/antall-uten-reserverte") {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.harBasisTilgang()) {
+        medBrukerkontekst { kontekst ->
+            if (pepClient.harBasisTilgang(kontekst)) {
                 val oppgavekøId = call.parameters["id"]!!
-                val skjermet = pepClient.harTilgangTilKode6()
+                val skjermet = pepClient.harTilgangTilKode6(kontekst)
                 val antallUtenReserverte = OpentelemetrySpanUtil.span("OppgaveKoTjeneste.hentAntallOppgaverForKø") {
                         oppgaveKoTjeneste.hentAntallOppgaverForKø(
                             oppgaveKoId = oppgavekøId.toLong(),
@@ -217,8 +219,8 @@ fun Route.OppgaveKoApis() {
     }
 
     post("/{id}/fa-oppgave") {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.harTilgangTilReserveringAvOppgaver()) {
+        medBrukerkontekst { kontekst ->
+            if (pepClient.harTilgangTilReserveringAvOppgaver(kontekst)) {
                 val oppgavekøId = call.parameters["id"]!!
                 val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedIdent(
                     kotlin.coroutines.coroutineContext.idToken().getNavIdent()
@@ -226,7 +228,7 @@ fun Route.OppgaveKoApis() {
                 val oppgaveMuligReservert = oppgaveKoTjeneste.taReservasjonFraKø(
                     innloggetBrukerId = innloggetBruker.id!!,
                     oppgaveKoId = oppgavekøId.toLong(),
-                    kotlin.coroutines.coroutineContext
+                    kontekst
                 )
                 call.respond(
                     when (oppgaveMuligReservert) {
@@ -247,10 +249,10 @@ fun Route.OppgaveKoApis() {
     }
 
     post("") {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.erOppgaveStyrer()) {
+        medBrukerkontekst { kontekst ->
+            if (pepClient.erOppgaveStyrer(kontekst)) {
                 val oppgaveKo = call.receive<OppgaveKo>()
-                call.respond(oppgaveKoTjeneste.endre(oppgaveKo, pepClient.harTilgangTilKode6()))
+                call.respond(oppgaveKoTjeneste.endre(oppgaveKo, pepClient.harTilgangTilKode6(kontekst)))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }

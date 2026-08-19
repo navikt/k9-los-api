@@ -5,6 +5,8 @@ import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.k9.los.infrastruktur.abac.IPepClient
+import no.nav.k9.los.infrastruktur.rest.innloggetBruker
+import kotlin.coroutines.coroutineContext
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.oppgavedefinisjon.omraade.OmrådeRepository
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
@@ -74,7 +76,7 @@ class SaksbehandlerRepository(
      * forbrukt en sekvensverdi på id-kolonnen ved konflikt, og forskjøvet genererte id-er.
      */
     suspend fun vedlikeholdSaksbehandler(saksbehandler: Saksbehandler): Long {
-        val erSkjermet = pepClient.erKode6Bruker()
+        val erSkjermet = pepClient.erKode6Bruker(coroutineContext.innloggetBruker())
 
         return using(sessionOf(dataSource)) {
             it.transaction { tx ->
@@ -116,7 +118,7 @@ class SaksbehandlerRepository(
     }
 
     suspend fun finnSaksbehandlerMedEpost(epost: String): Saksbehandler? {
-        val skjermet = pepClient.erKode6Bruker()
+        val skjermet = pepClient.erKode6Bruker(coroutineContext.innloggetBruker())
 
         val saksbehandler = using(sessionOf(dataSource)) { session ->
             session.transaction { tx ->
@@ -134,7 +136,7 @@ class SaksbehandlerRepository(
     }
 
     suspend fun finnSaksbehandlerMedIdent(ident: String): Saksbehandler? {
-        val skjermet = pepClient.erKode6Bruker()
+        val skjermet = pepClient.erKode6Bruker(coroutineContext.innloggetBruker())
 
         val saksbehandler = using(sessionOf(dataSource)) {
             it.transaction { tx ->
@@ -342,7 +344,7 @@ class SaksbehandlerRepository(
     }
 
     suspend fun hentAlleSaksbehandlere(tx: TransactionalSession): List<Saksbehandler> {
-        val skjermet = pepClient.erKode6Bruker()
+        val skjermet = pepClient.erKode6Bruker(coroutineContext.innloggetBruker())
         val identer = using(sessionOf(dataSource)) {
             tx.run(
                 queryOf(

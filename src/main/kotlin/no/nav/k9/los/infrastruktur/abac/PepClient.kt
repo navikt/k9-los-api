@@ -1,9 +1,10 @@
 package no.nav.k9.los.infrastruktur.abac
 
-import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.infrastruktur.azuregraph.IAzureGraphService
-import no.nav.k9.los.infrastruktur.rest.idToken
-import no.nav.k9.los.infrastruktur.rest.område
+import no.nav.k9.los.infrastruktur.kontekst.Brukerkontekst
+import no.nav.k9.los.infrastruktur.kontekst.InnloggetBruker
+import no.nav.k9.los.infrastruktur.kontekst.Kallkontekst
+import no.nav.k9.los.infrastruktur.kontekst.Systemkontekst
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.Oppgave
 import no.nav.k9.los.saksbehandleradmin.Saksbehandler
@@ -13,7 +14,6 @@ import no.nav.sif.abac.kontrakt.person.AktørId
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.*
-import kotlin.coroutines.coroutineContext
 
 class PepClient internal constructor(
     private val azureGraphService: IAzureGraphService,
@@ -22,112 +22,95 @@ class PepClient internal constructor(
 ) : IPepClient {
     private val log: Logger = LoggerFactory.getLogger(PepClient::class.java)
 
-    override suspend fun erOppgaveStyrer(): Boolean {
-        val område = coroutineContext.område()
-        return iGruppe(gruppeoppsett.forOmråde(område).oppgavestyrer)
+    override suspend fun erOppgaveStyrer(kontekst: Brukerkontekst): Boolean {
+        return iGruppe(gruppeoppsett.forOmråde(kontekst.område).oppgavestyrer, kontekst.bruker)
     }
 
-    override suspend fun harBasisTilgang(): Boolean {
-        val område = coroutineContext.område()
-        val grupper = gruppeoppsett.forOmråde(område)
-        return iGruppe(grupper.saksbehandler) || iGruppe(grupper.veileder)
+    override suspend fun harBasisTilgang(kontekst: Brukerkontekst): Boolean {
+        val grupper = gruppeoppsett.forOmråde(kontekst.område)
+        return iGruppe(grupper.saksbehandler, kontekst.bruker) || iGruppe(grupper.veileder, kontekst.bruker)
     }
 
-    override suspend fun harBasisTilgangIEttEllerFlereOmråder(): Boolean {
+    override suspend fun harBasisTilgangIEttEllerFlereOmråder(bruker: InnloggetBruker): Boolean {
         return Områder.entries.any { område ->
             val grupper = gruppeoppsett.forOmråde(område)
-            iGruppe(grupper.saksbehandler) || iGruppe(grupper.veileder)
+            iGruppe(grupper.saksbehandler, bruker) || iGruppe(grupper.veileder, bruker)
         }
     }
 
-    override suspend fun kanLeggeUtDriftsmelding(): Boolean {
+    override suspend fun kanLeggeUtDriftsmelding(bruker: InnloggetBruker): Boolean {
         // Drift-gruppen er global for Los og ikke knyttet til området ruten kjører under.
-        return iGruppe(gruppeoppsett.drift)
+        return iGruppe(gruppeoppsett.drift, bruker)
     }
 
-    override suspend fun harTilgangTilReserveringAvOppgaver(): Boolean {
-        val område = coroutineContext.område()
-        return iGruppe(gruppeoppsett.forOmråde(område).saksbehandler)
+    override suspend fun harTilgangTilReserveringAvOppgaver(kontekst: Brukerkontekst): Boolean {
+        return iGruppe(gruppeoppsett.forOmråde(kontekst.område).saksbehandler, kontekst.bruker)
     }
 
-    override suspend fun harTilgangTilKode6(ident: String): Boolean {
-        val område = coroutineContext.område()
-        if (ident == coroutineContext.idToken().getNavIdent()) {
-            return harTilgangTilKode6()
+    override suspend fun harTilgangTilKode6(ident: String, kontekst: Brukerkontekst): Boolean {
+        if (ident == kontekst.bruker.navIdent) {
+            return harTilgangTilKode6(kontekst)
         }
-        val kode6Gruppe = gruppeoppsett.forOmråde(område).kode6 ?: return false
+        val kode6Gruppe = gruppeoppsett.forOmråde(kontekst.område).kode6 ?: return false
         val grupper = azureGraphService.hentGrupperForSaksbehandler(ident)
         return grupper.contains(kode6Gruppe)
     }
 
-    override suspend fun harTilgangTilKode6(): Boolean {
-        val område = coroutineContext.område()
-        return iGruppe(gruppeoppsett.forOmråde(område).kode6)
+    override suspend fun harTilgangTilKode6(kontekst: Brukerkontekst): Boolean {
+        return iGruppe(gruppeoppsett.forOmråde(kontekst.område).kode6, kontekst.bruker)
     }
 
-    override suspend fun erKode6Bruker(): Boolean {
-        return Områder.entries.any { område -> iGruppe(gruppeoppsett.forOmråde(område).kode6) }
+    override suspend fun erKode6Bruker(bruker: InnloggetBruker): Boolean {
+        return Områder.entries.any { område -> iGruppe(gruppeoppsett.forOmråde(område).kode6, bruker) }
     }
 
-    private suspend fun iGruppe(gruppeId: UUID?): Boolean =
-        gruppeId?.toString()?.let(coroutineContext.idToken().groups::contains) ?: false
+    private fun iGruppe(gruppeId: UUID?, bruker: InnloggetBruker): Boolean =
+        gruppeId?.let(bruker.grupper::contains) ?: false
 
-    override suspend fun erSakKode6(fagsakNummer: String): Boolean {
-        val område = coroutineContext.område()
-        krevTilgjengelig(område)
-        val diskresjonskoder = sifAbacPdpKlienter.forOmråde(område).diskresjonskoderSak(SaksnummerDto(fagsakNummer))
+    override suspend fun erSakKode6(fagsakNummer: String, kontekst: Kallkontekst): Boolean {
+        krevTilgjengelig(kontekst.område)
+        val diskresjonskoder = sifAbacPdpKlienter.forOmråde(kontekst.område).diskresjonskoderSak(SaksnummerDto(fagsakNummer))
         return diskresjonskoder.contains(Diskresjonskode.KODE6)
     }
 
-    override suspend fun erAktørKode6(aktørid: String): Boolean {
-        val område = coroutineContext.område()
-        krevTilgjengelig(område)
-        val diskresjonskoder = sifAbacPdpKlienter.forOmråde(område).diskresjonskoderPerson(AktørId(aktørid))
+    override suspend fun erAktørKode6(aktørid: String, kontekst: Kallkontekst): Boolean {
+        krevTilgjengelig(kontekst.område)
+        val diskresjonskoder = sifAbacPdpKlienter.forOmråde(kontekst.område).diskresjonskoderPerson(AktørId(aktørid))
         return diskresjonskoder.contains(Diskresjonskode.KODE6)
     }
 
-    override suspend fun diskresjonskoderForSak(fagsakNummer: String): Set<Diskresjonskode> {
-        return diskresjonskoderForSak(fagsakNummer, coroutineContext.område())
+    override suspend fun diskresjonskoderForSak(fagsakNummer: String, kontekst: Kallkontekst): Set<Diskresjonskode> {
+        krevTilgjengelig(kontekst.område)
+        return sifAbacPdpKlienter.forOmråde(kontekst.område).diskresjonskoderSak(SaksnummerDto(fagsakNummer))
     }
 
-    override suspend fun diskresjonskoderForSak(fagsakNummer: String, område: Områder): Set<Diskresjonskode> {
-        krevTilgjengelig(område)
-        return sifAbacPdpKlienter.forOmråde(område).diskresjonskoderSak(SaksnummerDto(fagsakNummer))
+    override suspend fun diskresjonskoderForPerson(aktørId: String, kontekst: Kallkontekst): Set<Diskresjonskode> {
+        krevTilgjengelig(kontekst.område)
+        return sifAbacPdpKlienter.forOmråde(kontekst.område).diskresjonskoderPerson(AktørId(aktørId))
     }
 
-    override suspend fun diskresjonskoderForPerson(aktørId: String): Set<Diskresjonskode> {
-        return diskresjonskoderForPerson(aktørId, coroutineContext.område())
-    }
-
-    override suspend fun diskresjonskoderForPerson(aktørId: String, område: Områder): Set<Diskresjonskode> {
-        krevTilgjengelig(område)
-        return sifAbacPdpKlienter.forOmråde(område).diskresjonskoderPerson(AktørId(aktørId))
-    }
-
-    override suspend fun erSakKode7EllerEgenAnsatt(fagsakNummer: String): Boolean {
-        val område = coroutineContext.område()
-        krevTilgjengelig(område)
-        val diskresjonskoder = sifAbacPdpKlienter.forOmråde(område).diskresjonskoderSak(SaksnummerDto(fagsakNummer))
+    override suspend fun erSakKode7EllerEgenAnsatt(fagsakNummer: String, kontekst: Kallkontekst): Boolean {
+        krevTilgjengelig(kontekst.område)
+        val diskresjonskoder = sifAbacPdpKlienter.forOmråde(kontekst.område).diskresjonskoderSak(SaksnummerDto(fagsakNummer))
         return diskresjonskoder.contains(Diskresjonskode.KODE7) || diskresjonskoder.contains(Diskresjonskode.SKJERMET)
     }
 
-    override suspend fun erAktørKode7EllerEgenAnsatt(aktørid: String): Boolean {
-        val område = coroutineContext.område()
-        krevTilgjengelig(område)
-        val diskresjonskoder = sifAbacPdpKlienter.forOmråde(område).diskresjonskoderPerson(AktørId(aktørid))
+    override suspend fun erAktørKode7EllerEgenAnsatt(aktørid: String, kontekst: Kallkontekst): Boolean {
+        krevTilgjengelig(kontekst.område)
+        val diskresjonskoder = sifAbacPdpKlienter.forOmråde(kontekst.område).diskresjonskoderPerson(AktørId(aktørid))
         return diskresjonskoder.contains(Diskresjonskode.KODE7) || diskresjonskoder.contains(Diskresjonskode.SKJERMET)
     }
 
     override suspend fun harTilgangTilOppgaveV3(
         oppgave: Oppgave,
+        kontekst: Brukerkontekst,
         action: Action,
         grupperForSaksbehandler: Set<UUID>?,
     ): Boolean {
-        val område = coroutineContext.område()
         return harTilgang(
-            område = område,
+            område = kontekst.område,
             oppgavetype = oppgave.oppgavetype.eksternId,
-            identTilInnloggetBruker = azureGraphService.hentIdentTilInnloggetBruker(),
+            identTilInnloggetBruker = kontekst.bruker.navIdent,
             action = action,
             saksnummer = oppgave.hentVerdi("saksnummer"),
             aktørIdSøker = oppgave.hentVerdi("aktorId"),
@@ -136,15 +119,14 @@ class PepClient internal constructor(
         )
     }
 
-    override fun harTilgangTilOppgaveV3(
+    override suspend fun harTilgangTilOppgaveV3(
         oppgave: Oppgave,
+        kontekst: Systemkontekst,
         saksbehandler: Saksbehandler,
         action: Action
     ): Boolean {
-        val område = oppgave.oppgavetype.område.tilOmrådeEnum()
-        return runBlocking {
-            harTilgang(
-                område = område,
+        return harTilgang(
+                område = kontekst.område,
                 oppgavetype = oppgave.oppgavetype.eksternId,
                 identTilInnloggetBruker = saksbehandler.navident!!,
                 action = action,
@@ -152,7 +134,6 @@ class PepClient internal constructor(
                 aktørIdSøker = oppgave.hentVerdi("aktorId"),
                 aktørIdPleietrengende = oppgave.hentVerdi("pleietrengendeAktorId"),
             )
-        }
     }
 
     private suspend fun harTilgang(

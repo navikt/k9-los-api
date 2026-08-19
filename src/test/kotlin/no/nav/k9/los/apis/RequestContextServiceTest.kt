@@ -21,7 +21,7 @@ import no.nav.k9.los.infrastruktur.abac.SifAbacPdpKlienter
 import no.nav.k9.los.infrastruktur.azuregraph.IAzureGraphService
 import no.nav.k9.los.infrastruktur.rest.RequestContextService
 import no.nav.k9.los.infrastruktur.rest.idToken
-import no.nav.k9.los.infrastruktur.rest.område
+import no.nav.k9.los.infrastruktur.kontekst.medBrukerkontekst
 import no.nav.k9.los.områdeApi
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import org.junit.jupiter.api.Test
@@ -99,21 +99,21 @@ internal class RequestContextServiceTest {
             authenticate(*issuers.allIssuers()) {
                 områdeApi {
                     get("med-request-context") {
-                        requestContextService.withRequestContext(call) {
-                            call.respondText("Hei ${coroutineContext.idToken().getUsername()} fra ${coroutineContext.område()}")
+                        medBrukerkontekst { kontekst ->
+                            call.respondText("Hei ${kontekst.bruker.idToken.getUsername()} fra ${kontekst.område}")
                         }
                     }
                     get("tilgang") {
-                        requestContextService.withRequestContext(call) {
-                            pepClient.diskresjonskoderForSak("sak")
+                        medBrukerkontekst { kontekst ->
+                            pepClient.diskresjonskoderForSak("sak", kontekst)
                             call.respond(HttpStatusCode.OK)
                         }
                     }
                 }
                 områdeApi(Områder.K9) {
                     get("legacy") {
-                        requestContextService.withRequestContext(call) {
-                            call.respondText("Hei ${coroutineContext.idToken().getUsername()} fra ${coroutineContext.område()}")
+                        medBrukerkontekst { kontekst ->
+                            call.respondText("Hei ${kontekst.bruker.idToken.getUsername()} fra ${kontekst.område}")
                         }
                     }
                 }

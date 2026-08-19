@@ -7,6 +7,7 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.k9.los.infrastruktur.abac.IPepClient
+import no.nav.k9.los.infrastruktur.kontekst.medBrukerkontekst
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.infrastruktur.rest.RequestContextService
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.OppgaveQuery
@@ -31,9 +32,9 @@ fun Route.OppgaveQueryApisNy() {
             }
         }
     }) {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.harBasisTilgang()) {
-                val område = call.område // TODO: bruk område når tjenesten er oppdatert til å ta hensyn til område
+        medBrukerkontekst { kontekst ->
+            if (pepClient.harBasisTilgang(kontekst)) {
+                val område = kontekst.område
                 val oppgaveQuery = call.receive<OppgaveQuery>()
                 call.respond(oppgaveQueryService.queryForAntall(QueryRequest(oppgaveQuery, false)))
             } else {
@@ -54,9 +55,9 @@ fun Route.OppgaveQueryApisNy() {
             }
         }
     }) {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.harBasisTilgang()) {
-                val område = call.område // TODO: bruk område når tjenesten er oppdatert til å ta hensyn til område
+        medBrukerkontekst { kontekst ->
+            if (pepClient.harBasisTilgang(kontekst)) {
+                val område = kontekst.område
                 val oppgaveQuery = call.receive<OppgaveQuery>()
                 call.respond(oppgaveQueryService.validate(QueryRequest(oppgaveQuery)))
             } else {
@@ -74,9 +75,9 @@ fun Route.OppgaveQueryApisNy() {
             }
         }
     }) {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.harBasisTilgang()) {
-                val område = call.område // TODO: bruk område når tjenesten er oppdatert til å ta hensyn til område
+        medBrukerkontekst { kontekst ->
+            if (pepClient.harBasisTilgang(kontekst)) {
+                val område = kontekst.område
                 call.respond(oppgaveQueryService.hentAlleFelter())
             } else {
                 call.respond(HttpStatusCode.Forbidden)
@@ -84,4 +85,3 @@ fun Route.OppgaveQueryApisNy() {
         }
     }
 }
-

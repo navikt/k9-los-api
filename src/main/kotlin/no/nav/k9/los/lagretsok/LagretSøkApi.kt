@@ -10,6 +10,8 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.routing.get
 import no.nav.k9.los.infrastruktur.abac.IPepClient
+import no.nav.k9.los.infrastruktur.kontekst.medBrukerkontekst
+import kotlin.coroutines.coroutineContext
 import no.nav.k9.los.infrastruktur.rest.RequestContextService
 import no.nav.k9.los.infrastruktur.rest.idToken
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.OppgaveQuery
@@ -28,8 +30,8 @@ fun Route.LagretSøkApi() {
             HttpStatusCode.OK to { body<List<LagretSøk>>() }
         }
     }) {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.harBasisTilgang()) {
+        medBrukerkontekst { kontekst ->
+            if (pepClient.harBasisTilgang(kontekst)) {
                 val innloggetSaksbehandler = coroutineContext.idToken().getNavIdent().let {
                     saksbehandlerRepository.finnSaksbehandlerMedIdent(it)
                 }
@@ -55,8 +57,8 @@ fun Route.LagretSøkApi() {
             HttpStatusCode.OK to { body<LagretSøk>() }
         }
     }) {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.harBasisTilgang()) {
+        medBrukerkontekst { kontekst ->
+            if (pepClient.harBasisTilgang(kontekst)) {
                 val id = call.parameters["id"]!!.toLong()
                 val innloggetSaksbehandler = coroutineContext.idToken().getNavIdent().let {
                     saksbehandlerRepository.finnSaksbehandlerMedIdent(it)
@@ -89,8 +91,8 @@ fun Route.LagretSøkApi() {
             HttpStatusCode.Created to { body<Long>() }
         }
     }) {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.erOppgaveStyrer()) {
+        medBrukerkontekst { kontekst ->
+            if (pepClient.erOppgaveStyrer(kontekst)) {
                 val navIdent = coroutineContext.idToken().getNavIdent()
                 val request = call.receive<NyttLagretSøkRequest>()
                 val lagretSøk = lagretSøkTjeneste.nytt(navIdent, request)
@@ -106,9 +108,9 @@ fun Route.LagretSøkApi() {
             HttpStatusCode.OK to { body<OppgaveQuery>() }
         }
     }) {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.erOppgaveStyrer()) {
-                val harKode6Tilgang = pepClient.harTilgangTilKode6()
+        medBrukerkontekst { kontekst ->
+            if (pepClient.erOppgaveStyrer(kontekst)) {
+                val harKode6Tilgang = pepClient.harTilgangTilKode6(kontekst)
                 call.respond(LagretSøk.defaultQuery(harKode6Tilgang))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
@@ -124,8 +126,8 @@ fun Route.LagretSøkApi() {
             HttpStatusCode.OK to { body<LagretSøk>() }
         }
     }) {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.harBasisTilgang()) {
+        medBrukerkontekst { kontekst ->
+            if (pepClient.harBasisTilgang(kontekst)) {
                 val innloggetSaksbehandler = coroutineContext.idToken().getNavIdent().let {
                     saksbehandlerRepository.finnSaksbehandlerMedIdent(it)
                 }
@@ -150,8 +152,8 @@ fun Route.LagretSøkApi() {
             HttpStatusCode.OK to { body<Long>() }
         }
     }) {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.harBasisTilgang()) {
+        medBrukerkontekst { kontekst ->
+            if (pepClient.harBasisTilgang(kontekst)) {
                 val innloggetSaksbehandler = coroutineContext.idToken().getNavIdent().let {
                     saksbehandlerRepository.finnSaksbehandlerMedIdent(it)
                 }
@@ -179,8 +181,8 @@ fun Route.LagretSøkApi() {
             HttpStatusCode.OK to { body<Unit>() }
         }
     }) {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.harBasisTilgang()) {
+        medBrukerkontekst { kontekst ->
+            if (pepClient.harBasisTilgang(kontekst)) {
                 val innloggetSaksbehandler = coroutineContext.idToken().getNavIdent().let {
                     saksbehandlerRepository.finnSaksbehandlerMedIdent(it)
                 }
@@ -198,8 +200,8 @@ fun Route.LagretSøkApi() {
     }
 
     get("/{id}/antall") {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.harBasisTilgang()) {
+        medBrukerkontekst { kontekst ->
+            if (pepClient.harBasisTilgang(kontekst)) {
                 val lagretSøkId = call.parameters["id"]!!
                 val innloggetSaksbehandler = coroutineContext.idToken().getNavIdent().let {
                     saksbehandlerRepository.finnSaksbehandlerMedIdent(it)
