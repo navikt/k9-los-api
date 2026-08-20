@@ -1,25 +1,23 @@
 package no.nav.k9.los.infrastruktur.abac
 
-import no.nav.k9.los.infrastruktur.kontekst.Brukerkontekst
+import no.nav.k9.los.infrastruktur.kontekst.BrukerkontekstMedOmråde
 import no.nav.k9.los.infrastruktur.kontekst.BrukerkontekstUtenOmråde
-import no.nav.k9.los.infrastruktur.kontekst.InnloggetBruker
-import no.nav.k9.los.infrastruktur.kontekst.Områdekontekst
 import no.nav.k9.los.infrastruktur.kontekst.Systemkontekst
-import no.nav.k9.los.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.oppgaveuthenting.Oppgave
+import no.nav.k9.los.saksbehandleradmin.Saksbehandler
 import no.nav.sif.abac.kontrakt.abac.Diskresjonskode
 import java.util.*
 
 class PepClientLocal : IPepClient {
-    override suspend fun erOppgaveStyrer(kontekst: Brukerkontekst): Boolean {
+    override suspend fun erOppgaveStyrer(kontekst: BrukerkontekstMedOmråde): Boolean {
         return true
     }
 
-    override suspend fun harBasisTilgang(kontekst: Brukerkontekst): Boolean {
+    override suspend fun harBasisTilgang(kontekst: BrukerkontekstMedOmråde): Boolean {
         return true
     }
 
-    override suspend fun harBasisTilgangIEttEllerFlereOmråder(bruker: InnloggetBruker): Boolean {
+    override suspend fun harBasisTilgangIEttEllerFlereOmråder(kontekst: BrukerkontekstUtenOmråde): Boolean {
         return true
     }
 
@@ -27,33 +25,37 @@ class PepClientLocal : IPepClient {
         return true
     }
 
-    override suspend fun harTilgangTilReserveringAvOppgaver(kontekst: Brukerkontekst): Boolean {
+    override suspend fun kanLeggeUtDriftsmelding(kontekst: BrukerkontekstMedOmråde): Boolean {
         return true
     }
 
-    override suspend fun harTilgangTilKode6(kontekst: Brukerkontekst): Boolean {
+    override suspend fun harTilgangTilReserveringAvOppgaver(kontekst: BrukerkontekstMedOmråde): Boolean {
+        return true
+    }
+
+    override suspend fun harTilgangTilKode6(kontekst: BrukerkontekstMedOmråde): Boolean {
         return false
     }
 
-    override suspend fun harTilgangTilKode6(ident: String, kontekst: Brukerkontekst): Boolean {
+    override suspend fun harTilgangTilKode6(ident: String, kontekst: BrukerkontekstMedOmråde): Boolean {
         return false
     }
 
-    override suspend fun erKode6Bruker(kontekst: BrukerkontekstUtenOmråde): Boolean {
+    override suspend fun harKode6TilgangIEttEllerFlereOmråder(kontekst: BrukerkontekstUtenOmråde): Boolean {
         return false
     }
 
-    override suspend fun diskresjonskoderForSak(fagsakNummer: String, kontekst: Områdekontekst): Set<Diskresjonskode> {
+    override suspend fun diskresjonskoderForSak(fagsakNummer: String, kontekst: Systemkontekst): Set<Diskresjonskode> {
         return setOf()
     }
 
-    override suspend fun diskresjonskoderForPerson(aktørId: String, kontekst: Områdekontekst): Set<Diskresjonskode> {
+    override suspend fun diskresjonskoderForPerson(aktørId: String, kontekst: Systemkontekst): Set<Diskresjonskode> {
         return setOf()
     }
 
     override suspend fun harTilgangTilOppgaveV3(
         oppgave: Oppgave,
-        kontekst: Brukerkontekst,
+        kontekst: BrukerkontekstMedOmråde,
         action: Action,
         grupperForSaksbehandler: Set<UUID>?
     ): Boolean {

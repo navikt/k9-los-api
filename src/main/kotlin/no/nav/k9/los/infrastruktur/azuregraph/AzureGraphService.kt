@@ -12,7 +12,7 @@ import no.nav.helse.dusseldorf.oauth2.client.AccessToken
 import no.nav.helse.dusseldorf.oauth2.client.AccessTokenClient
 import no.nav.helse.dusseldorf.oauth2.client.CachedAccessTokenClient
 import no.nav.k9.los.infrastruktur.idtoken.IdToken
-import no.nav.k9.los.infrastruktur.kontekst.InnloggetBruker
+import no.nav.k9.los.infrastruktur.kontekst.BrukerkontekstMedOmråde
 import no.nav.k9.los.infrastruktur.utils.Cache
 import no.nav.k9.los.infrastruktur.utils.CacheObject
 import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
@@ -20,7 +20,6 @@ import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.LocalDateTime
 import java.util.*
-import kotlin.coroutines.coroutineContext
 
 open class AzureGraphService(
     accessTokenClient: AccessTokenClient,
@@ -31,10 +30,6 @@ open class AzureGraphService(
     private val saksbehandlerUserIdCache = Cache<String, UUID>(cacheSizeLimit = 1000)
     private val saksbehandlerGrupperCache = Cache<String, Set<UUID>>(cacheSizeLimit = 1000)
     private val log = LoggerFactory.getLogger("AzureGraphService")!!
-
-    override suspend fun hentIdentTilInnloggetBruker(bruker: InnloggetBruker): String {
-        return bruker.navIdent
-    }
 
     private suspend fun håndterResultat(
         response: HttpResponse
@@ -50,14 +45,14 @@ open class AzureGraphService(
         }
     }
 
-    override suspend fun hentEnhetForInnloggetBruker(bruker: InnloggetBruker): String {
-        val token = bruker.idToken
+    override suspend fun hentEnhet(kontekst: BrukerkontekstMedOmråde): String {
+        val token = kontekst.bruker.idToken
         return hentEnhetForBruker(brukernavn = token.getUsername(), onBehalfOf = token)
     }
 
-    override suspend fun hentEnhetForBrukerMedSystemToken(brukernavn: String): String? {
+    override suspend fun hentEnhet(brukernavn: String): String? {
         return try {
-            hentEnhetForBruker(brukernavn = brukernavn)
+            hentEnhet(brukernavn)
                 .takeIf { EnheterSomSkalUtelatesFraLos.sjekkKanBrukes(it) }
         } catch (e: Exception) {
             log.warn("Klarte ikke å hente behandlende enhet for $brukernavn", e)
@@ -85,11 +80,11 @@ open class AzureGraphService(
                     httpClient.get {
                         if (onBehalfOf != null) {
                             url("https://graph.microsoft.com/v1.0/me")
-                            parameter("\$select", "officeLocation")
+                            parameter($$"$select", "officeLocation")
                         } else {
                             url("https://graph.microsoft.com/v1.0/users")
-                            parameter("\$filter", "mailNickname eq '$brukernavn'")
-                            parameter("\$select", "officeLocation")
+                            parameter($$"$filter", "mailNickname eq '$brukernavn'")
+                            parameter($$"$select", "officeLocation")
                         }
                         header(HttpHeaders.Accept, "application/json")
                         header(HttpHeaders.Authorization, "Bearer ${accessToken.token}")
@@ -124,14 +119,14 @@ open class AzureGraphService(
         }
     }
 
-    override suspend fun hentGrupperForSaksbehandler(saksbehandlerIdent: String): Set<UUID> {
-        val userId = hentUserIdForSaksbehandler(saksbehandlerIdent)
-        return hentGrupperForSaksbehandler(userId, saksbehandlerIdent)
+    override suspend fun hentGrupper(brukerIdent: String): Set<UUID> {
+        val userId = hentUserIdForSaksbehandler(brukerIdent)
+        return hentGrupperForSaksbehandler(userId, brukerIdent)
     }
 
-    override suspend fun hentGrupperForInnloggetSaksbehandler(bruker: InnloggetBruker): Set<UUID> {
-        val token = bruker.idToken
-        return saksbehandlerGrupperCache.hent(bruker.navIdent) {
+    override suspend fun hentGrupper(kontekst: BrukerkontekstMedOmråde): Set<UUID> {
+        val token = kontekst.bruker.idToken
+        return saksbehandlerGrupperCache.hent(kontekst.bruker.navIdent) {
             val accessToken = accessToken(token)
             val json = runBlocking {
                 Retry.retry(
@@ -176,9 +171,9 @@ open class AzureGraphService(
                     ) {
                         httpClient.get {
                             url("https://graph.microsoft.com/v1.0/users")
-                            parameter("\$filter", "onPremisesSamAccountName eq '$saksbehandlerIdent'")
-                            parameter("\$count", "true")
-                            parameter("\$select", "id")
+                            parameter($$"$filter", "onPremisesSamAccountName eq '$saksbehandlerIdent'")
+                            parameter($$"$count", "true")
+                            parameter($$"$select", "id")
                             header(HttpHeaders.Accept, "application/json")
                             header(HttpHeaders.Authorization, "Bearer ${accessToken.token}")
                             header("ConsistencyLevel", "eventual")

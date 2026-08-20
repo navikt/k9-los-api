@@ -46,7 +46,7 @@ internal fun Route.EventlagerApi() {
         }
     }) {
         medBrukerkontekstUtenOmråde { kontekst ->
-            if (pepClient.kanLeggeUtDriftsmelding(kontekst.bruker)) {
+            if (pepClient.kanLeggeUtDriftsmelding(kontekst)) {
                 val fagsystem = Fagsystem.fraKode(call.parameters["fagsystem"]!!)
                 val eksternId = call.parameters["eksternId"]!!
 

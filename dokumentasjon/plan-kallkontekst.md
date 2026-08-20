@@ -83,7 +83,7 @@ bare tilbake som en egen type eller enum hvis logging eller sporing får et doku
 feltet til autorisasjon eller domenelogikk.
 
 En mulig form er små kapabilitetsgrensesnitt (`Brukerkall`, `Systemkall`, `Områdekall`) og fire konkrete
-kombinasjoner. Avklar navnene før flere signaturer migreres. Dagens `Brukerkontekst` betyr «bruker med område»;
+kombinasjoner. Avklar navnene før flere signaturer migreres. Dagens `BrukerkontekstMedOmråde` betyr «bruker med område»;
 det navnet blir misvisende når bruker uten område også er en kallkontekst.
 
 ## Avklart punkt: context parameters
@@ -172,9 +172,9 @@ som nå kaller suspend-funksjoner uten coroutine. Migrer testene etter at kontek
 **Gjennomført etter kontrollpunktet:**
 
 - Kontekstmatrisen er landet med kapabilitetsgrensesnittene `Brukerkall`, `Systemkall` og `Områdekall`, og de
-  konkrete typene `Brukerkontekst`, `Områdebrukerkontekst`, `Systemkontekst` og `Områdesystemkontekst`.
+  konkrete typene `BrukerkontekstMedOmråde`, `Områdebrukerkontekst`, `Systemkontekst` og `Områdesystemkontekst`.
 - `Systemkontekst.kilde` er fjernet. Bare områdetypene har `område`.
-- Globale PEP-operasjoner tar `Brukerkontekst`, områdeavhengige brukeroperasjoner tar
+- Globale PEP-operasjoner tar `BrukerkontekstMedOmråde`, områdeavhengige brukeroperasjoner tar
   `Områdebrukerkontekst`, og PEP-oppslag som kan kjøres av bruker eller system tar `Områdekall`.
 - `SaksbehandlerRepository` har ikke lenger `IPepClient` og leser ikke token fra `coroutineContext`.
   `skjermet` sendes eksplisitt inn etter at tjeneste- eller API-laget har tatt tilgangsbeslutningen.
@@ -201,7 +201,7 @@ Globale ruter skal ikke få et kunstig område. `DriftsmeldingerApis` og `Bruker
 
 | Metode | Kontekst |
 |---|---|
-| `erKode6Bruker`, `kanLeggeUtDriftsmelding`, `harBasisTilgangIEttEllerFlereOmråder` | bruker-kallkontekst uten krav om område |
+| `harKode6TilgangIEttEllerFlereOmråder`, `kanLeggeUtDriftsmelding`, `harBasisTilgangIEttEllerFlereOmråder` | bruker-kallkontekst uten krav om område |
 | `harBasisTilgang`, `erOppgaveStyrer`, `harTilgangTilReserveringAvOppgaver`, `harTilgangTilKode6()`, `harTilgangTilKode6(ident)`, `harTilgangTilOppgaveV3(oppgave, action)` | bruker-kallkontekst med område |
 | `diskresjonskoderForSak/Person`, `erSakKode6/7`, `erAktørKode6/7` | kallkontekst med område, bruker eller system |
 | `harTilgangTilOppgaveV3(oppgave, saksbehandler, action)` | system-kallkontekst med område + `Saksbehandler`, blir `suspend` |
@@ -211,7 +211,7 @@ Følger av dette:
 - Slett `CoroutineContext.område()` og `område`-feltet i `CoroutineRequestContext`. Koblingen `RequestContextService.kt:53` → `call.attributes` brytes
 - Duplikat-overloadene `PepClient.kt:78-94` kollapser til én
 - Nøstet `runBlocking`-kjede `OppgaveKoTjeneste.kt:246` → `ReservasjonV3Tjeneste.kt:329` → `PepClient.kt:134` forsvinner, sammen med risikoen for tråd-sult
-- `taReservasjonFraKø(…, coroutineContext: CoroutineContext)` (`:214-217`) tar `Brukerkontekst`. Kallstedene i `OppgaveKoSaksbehandlerpanelApis.kt:93-97`, `…ApisNy.kt:153-157` og `OppgaveKoApis.kt:226` slutter å sende `kotlin.coroutines.coroutineContext`
+- `taReservasjonFraKø(…, coroutineContext: CoroutineContext)` (`:214-217`) tar `BrukerkontekstMedOmråde`. Kallstedene i `OppgaveKoSaksbehandlerpanelApis.kt:93-97`, `…ApisNy.kt:153-157` og `OppgaveKoApis.kt:226` slutter å sende `kotlin.coroutines.coroutineContext`
 - De ~50 `// TODO: bruk område`-linjene fjernes ved å sende `kontekst` videre
 - `PepCacheService.kt:52` får `Systemkontekst`
 - Rett KDoc-en i `IPepClient.kt`, som i dag påstår at alle operasjoner allerede tar område
@@ -282,7 +282,7 @@ Regex over kildefiler er mindre presist enn AST, men alle seks reglene er import
 | Mekanisme | Status |
 |---|---|
 | `CoroutineRequestContext` | slettet |
-| `call.attributes` + route-plugin | beholdt som edge-mekanisme. Leses ett sted og konverteres straks til `Brukerkontekst` |
+| `call.attributes` + route-plugin | beholdt som edge-mekanisme. Leses ett sted og konverteres straks til `BrukerkontekstMedOmråde` |
 | Eksplisitt `Områder` | `Kallkontekst` i tjeneste- og klientlag, `Områder` i repository-signaturer |
 | Manuell `coroutineContext`-videreføring | slettet |
 | Systemtoken-klienter | uendret, men typemessig knyttet til `Systemkontekst` |

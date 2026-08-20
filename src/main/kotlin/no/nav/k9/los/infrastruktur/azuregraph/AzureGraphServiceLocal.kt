@@ -1,27 +1,22 @@
 package no.nav.k9.los.infrastruktur.azuregraph
 
-import no.nav.k9.los.infrastruktur.kontekst.InnloggetBruker
+import no.nav.k9.los.infrastruktur.kontekst.BrukerkontekstMedOmråde
 import java.util.*
 
 open class AzureGraphServiceLocal : IAzureGraphService {
-
-    override suspend fun hentIdentTilInnloggetBruker(bruker: InnloggetBruker): String {
-        return "Z123456"
-    }
-
-    override suspend fun hentEnhetForInnloggetBruker(bruker: InnloggetBruker): String {
+    override suspend fun hentEnhet(kontekst: BrukerkontekstMedOmråde): String {
         return "3450"
     }
 
-    override suspend fun hentEnhetForBrukerMedSystemToken(brukernavn: String): String {
+    override suspend fun hentEnhet(brukernavn: String): String {
         return "3450"
     }
 
-    override suspend fun hentGrupperForSaksbehandler(saksbehandlerIdent: String): Set<UUID> {
+    override suspend fun hentGrupper(brukerIdent: String): Set<UUID> {
         return emptySet()
     }
 
-    override suspend fun hentGrupperForInnloggetSaksbehandler(bruker: InnloggetBruker): Set<UUID> {
+    override suspend fun hentGrupper(kontekst: BrukerkontekstMedOmråde): Set<UUID> {
         return emptySet()
     }
 }

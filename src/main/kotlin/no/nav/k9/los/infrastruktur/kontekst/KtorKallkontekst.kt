@@ -13,12 +13,13 @@ import no.nav.k9.los.områdeAttributeKey
 import org.koin.ktor.ext.getKoin
 import java.util.*
 
+// Unnlater å kalle denne medBrukerkontekstMedOmråde siden med område er standard
 suspend fun <T> RoutingContext.medBrukerkontekst(
-    block: suspend (Brukerkontekst) -> T,
+    block: suspend (BrukerkontekstMedOmråde) -> T,
 ): T {
     val område = call.attributes.getOrNull(områdeAttributeKey)
         ?: throw IllegalStateException("Endepunktet er ikke registrert under en områdeApi-rute")
-    val kontekst = Brukerkontekst(område, innloggetBruker())
+    val kontekst = BrukerkontekstMedOmråde(område, innloggetBruker())
     return withContext(Span.current().asContextElement()) {
         block(kontekst)
     }
@@ -35,7 +36,7 @@ suspend fun <T> RoutingContext.medBrukerkontekstUtenOmråde(
 
 internal fun systemkontekst(område: no.nav.k9.los.oppgavedefinisjon.omraade.Områder) = Systemkontekst(område)
 
-internal fun systemkontekstUtenOmråde() = SystemkontekstUtenOmråde()
+internal fun systemkontekstUtenOmråde() = SystemkontekstUtenOmråde
 
 private fun RoutingContext.innloggetBruker(): InnloggetBruker {
     val principal = call.principal<JWTPrincipal>()

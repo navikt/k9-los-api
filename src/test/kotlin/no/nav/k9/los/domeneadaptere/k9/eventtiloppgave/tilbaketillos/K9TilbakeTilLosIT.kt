@@ -9,7 +9,7 @@ import no.nav.k9.los.OppgaveTestDataBuilder
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.K9TilbakeEventDtoBuilder
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.TestSaksbehandler
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.tilbakekrav.K9TilbakeEventHandler
-import no.nav.k9.los.infrastruktur.kontekst.Brukerkontekst
+import no.nav.k9.los.infrastruktur.kontekst.BrukerkontekstMedOmråde
 import no.nav.k9.los.infrastruktur.kontekst.TestKontekstFactory
 import no.nav.k9.los.ko.OppgaveKoTjeneste
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
@@ -92,7 +92,7 @@ class K9TilbakeTilLosIT : AbstractK9LosIntegrationTest() {
         }
     }
 
-    private fun kontekst(saksbehandler: Saksbehandler): Brukerkontekst =
+    private fun kontekst(saksbehandler: Saksbehandler): BrukerkontekstMedOmråde =
         TestKontekstFactory.brukerkontekst(Områder.K9, navIdent = saksbehandler.navident!!)
 
     private fun assertIngenReservasjon(saksbehandler: Saksbehandler) {

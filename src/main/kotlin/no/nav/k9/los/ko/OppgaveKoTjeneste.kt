@@ -11,7 +11,7 @@ import kotlinx.coroutines.runBlocking
 import kotliquery.TransactionalSession
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
-import no.nav.k9.los.infrastruktur.kontekst.Brukerkontekst
+import no.nav.k9.los.infrastruktur.kontekst.BrukerkontekstMedOmråde
 import no.nav.k9.los.infrastruktur.metrikker.DetaljerMetrikker
 import no.nav.k9.los.infrastruktur.pdl.IPdlService
 import no.nav.k9.los.infrastruktur.pdl.fnr
@@ -64,7 +64,7 @@ class OppgaveKoTjeneste(
 
     @WithSpan
     suspend fun hentOppgaverFraKø(
-        kontekst: Brukerkontekst,
+        kontekst: BrukerkontekstMedOmråde,
         oppgaveKoId: Long,
         ønsketAntallOppgaver: Long,
         fjernReserverte: Boolean = false
@@ -84,7 +84,7 @@ class OppgaveKoTjeneste(
 
     @WithSpan
     suspend fun hentOppgaverFraKøSammendrag(
-        kontekst: Brukerkontekst,
+        kontekst: BrukerkontekstMedOmråde,
         oppgaveKoId: Long,
         ønsketAntallOppgaver: Long,
         fjernReserverte: Boolean = false,
@@ -98,7 +98,7 @@ class OppgaveKoTjeneste(
         kø: OppgaveKo,
         ønsketAntallOppgaver: Long,
         fjernReserverte: Boolean,
-        kontekst: Brukerkontekst,
+        kontekst: BrukerkontekstMedOmråde,
     ): List<Oppgave> {
         val kandidatOppgaver = oppgaveQueryService.queryForOppgave(
             QueryRequest(
@@ -122,7 +122,7 @@ class OppgaveKoTjeneste(
     private suspend fun byggDto(
         oppgaver: List<Oppgave>,
         orderFelt: EnkelOrderFelt?,
-        kontekst: Brukerkontekst,
+        kontekst: BrukerkontekstMedOmråde,
     ): NesteOppgaverFraKoDto {
 
         val visningskolonner = buildMap {
@@ -220,7 +220,7 @@ class OppgaveKoTjeneste(
     suspend fun taReservasjonFraKø(
         innloggetBrukerId: Long,
         oppgaveKoId: Long,
-        kontekst: Brukerkontekst,
+        kontekst: BrukerkontekstMedOmråde,
     ): OppgaveMuligReservert {
         return doTaReservasjonFraKø(innloggetBrukerId, oppgaveKoId, kontekst)
                 .also {
@@ -244,7 +244,7 @@ class OppgaveKoTjeneste(
     private suspend fun doTaReservasjonFraKø(
         innloggetBrukerId: Long,
         oppgaveKoId: Long,
-        kontekst: Brukerkontekst,
+        kontekst: BrukerkontekstMedOmråde,
     ): OppgaveMuligReservert {
         log.info("taReservasjonFraKø, oppgaveKøId: $oppgaveKoId")
         val skjermet = pepClient.harTilgangTilKode6(kontekst)
@@ -313,7 +313,7 @@ class OppgaveKoTjeneste(
     }
 
     @WithSpan
-    suspend fun hentSaksbehandlereForKo(oppgaveKoId: Long, kontekst: Brukerkontekst): List<Saksbehandler> {
+    suspend fun hentSaksbehandlereForKo(oppgaveKoId: Long, kontekst: BrukerkontekstMedOmråde): List<Saksbehandler> {
         val skjermet = pepClient.harTilgangTilKode6(kontekst)
         val oppgaveKo = oppgaveKoRepository.hent(oppgaveKoId, skjermet)
         return oppgaveKo.saksbehandlere.mapNotNull { saksbehandlerEpost: String ->

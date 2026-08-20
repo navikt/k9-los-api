@@ -11,7 +11,7 @@ object TestKontekstFactory {
         idToken: IdToken = IdTokenLocal(),
         navIdent: String = idToken.getNavIdent(),
         grupper: Set<UUID> = idToken.groups.mapTo(mutableSetOf(), UUID::fromString),
-    ) = Brukerkontekst(område, InnloggetBruker(navIdent, grupper, idToken))
+    ) = BrukerkontekstMedOmråde(område, InnloggetBruker(navIdent, grupper, idToken))
 
     fun systemkontekst(område: Områder) = Systemkontekst(område)
 
@@ -21,5 +21,5 @@ object TestKontekstFactory {
         grupper: Set<UUID> = idToken.groups.mapTo(mutableSetOf(), UUID::fromString),
     ) = BrukerkontekstUtenOmråde(InnloggetBruker(navIdent, grupper, idToken))
 
-    fun systemkontekstUtenOmråde() = SystemkontekstUtenOmråde()
+    fun systemkontekstUtenOmråde() = SystemkontekstUtenOmråde
 }

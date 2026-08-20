@@ -14,9 +14,9 @@ fun Route.DriftsmeldingerApis() {
     val driftsmeldingTjeneste by inject<DriftsmeldingTjeneste>()
 
     get {
-        medBrukerkontekstUtenOmråde { bruker ->
+        medBrukerkontekstUtenOmråde { kontekst ->
             // Driftsmeldinger er globale (se Gruppeoppsett), så basistilgang i minst ett område er tilstrekkelig
-            if (pepClient.harBasisTilgangIEttEllerFlereOmråder(bruker.bruker)) {
+            if (pepClient.harBasisTilgangIEttEllerFlereOmråder(kontekst)) {
                 call.respond(driftsmeldingTjeneste.hentDriftsmeldinger())
             } else {
                 call.respond(HttpStatusCode.Forbidden)
@@ -25,8 +25,8 @@ fun Route.DriftsmeldingerApis() {
     }
 
     post {
-        medBrukerkontekstUtenOmråde { bruker ->
-            if (pepClient.kanLeggeUtDriftsmelding(bruker.bruker)) {
+        medBrukerkontekstUtenOmråde { kontekst ->
+            if (pepClient.kanLeggeUtDriftsmelding(kontekst)) {
                 val melding = call.receive<Driftsmelding>()
                 call.respond(driftsmeldingTjeneste.leggTilDriftsmelding(melding.driftsmelding))
             } else {
@@ -36,8 +36,8 @@ fun Route.DriftsmeldingerApis() {
     }
 
     post("/slett") {
-        medBrukerkontekstUtenOmråde { bruker ->
-            if (pepClient.kanLeggeUtDriftsmelding(bruker.bruker)) {
+        medBrukerkontekstUtenOmråde { kontekst ->
+            if (pepClient.kanLeggeUtDriftsmelding(kontekst)) {
                 val param = call.receive<IdDto>()
                 call.respond(driftsmeldingTjeneste.slettDriftsmelding(UUID.fromString(param.id)))
             } else {
@@ -47,8 +47,8 @@ fun Route.DriftsmeldingerApis() {
     }
 
     post("/toggle") {
-        medBrukerkontekstUtenOmråde { bruker ->
-            if (pepClient.kanLeggeUtDriftsmelding(bruker.bruker)) {
+        medBrukerkontekstUtenOmråde { kontekst ->
+            if (pepClient.kanLeggeUtDriftsmelding(kontekst)) {
                 val param = call.receive<DriftsmeldingSwitch>()
                 call.respond(driftsmeldingTjeneste.toggleDriftsmelding(param))
             } else {

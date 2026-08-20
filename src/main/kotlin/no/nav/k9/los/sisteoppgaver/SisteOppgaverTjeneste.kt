@@ -6,7 +6,7 @@ import kotlinx.coroutines.*
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.azuregraph.IAzureGraphService
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
-import no.nav.k9.los.infrastruktur.kontekst.Brukerkontekst
+import no.nav.k9.los.infrastruktur.kontekst.BrukerkontekstMedOmråde
 import no.nav.k9.los.infrastruktur.pdl.IPdlService
 import no.nav.k9.los.infrastruktur.pdl.fnr
 import no.nav.k9.los.infrastruktur.pdl.navn
@@ -25,9 +25,9 @@ class SisteOppgaverTjeneste(
 ) {
     private val log = LoggerFactory.getLogger(SisteOppgaverTjeneste::class.java)
 
-    suspend fun hentSisteOppgaver(kontekst: Brukerkontekst): List<SisteOppgaverDto> {
+    suspend fun hentSisteOppgaver(kontekst: BrukerkontekstMedOmråde): List<SisteOppgaverDto> {
         return try {
-            val saksbehandlerIdent = azureGraphService.hentIdentTilInnloggetBruker(kontekst.bruker)
+            val saksbehandlerIdent = kontekst.bruker.navIdent
 
             val oppgaver =
                 transactionalManager.transaction { tx ->
@@ -43,7 +43,7 @@ class SisteOppgaverTjeneste(
 
             if (oppgaver.isEmpty()) return emptyList()
 
-            val grupperForSaksbehandler = azureGraphService.hentGrupperForInnloggetSaksbehandler(kontekst.bruker)
+            val grupperForSaksbehandler = azureGraphService.hentGrupper(kontekst)
 
             val innhentinger = try {
                 withContext(Dispatchers.IO + Span.current().asContextElement()) {
@@ -99,8 +99,8 @@ class SisteOppgaverTjeneste(
         }
     }
 
-    suspend fun lagreSisteOppgave(oppgaveNøkkelDto: OppgaveNøkkelDto, kontekst: Brukerkontekst) {
-        val brukerIdent = azureGraphService.hentIdentTilInnloggetBruker(kontekst.bruker)
+    fun lagreSisteOppgave(oppgaveNøkkelDto: OppgaveNøkkelDto, kontekst: BrukerkontekstMedOmråde) {
+        val brukerIdent = kontekst.bruker.navIdent
         transactionalManager.transaction { tx ->
             sisteOppgaverRepository.lagreSisteOppgave(
                 tx,

@@ -117,14 +117,15 @@ fun Route.OppgaveKoApis() {
     get("/saksbehandlerskoer") {
         medBrukerkontekst { kontekst ->
             if (pepClient.harBasisTilgang(kontekst)) {
+                val harTilgangTilKode6 = pepClient.harTilgangTilKode6(kontekst)
                 val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedIdent(
                     kontekst.bruker.navIdent,
-                    pepClient.erKode6Bruker(kontekst.bruker)
+                    harTilgangTilKode6
                 )!!
                 call.respond(
                     oppgaveKoTjeneste.hentKøerForSaksbehandler(
                         saksbehandler.id!!,
-                        pepClient.harTilgangTilKode6(kontekst)
+                        harTilgangTilKode6
                     )
                 )
             } else {
@@ -222,7 +223,7 @@ fun Route.OppgaveKoApis() {
                 val oppgavekøId = call.parameters["id"]!!
                 val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedIdent(
                     kontekst.bruker.navIdent,
-                    pepClient.erKode6Bruker(kontekst.bruker)
+                    pepClient.harTilgangTilKode6(kontekst)
                 )!!
                 val oppgaveMuligReservert = oppgaveKoTjeneste.taReservasjonFraKø(
                     innloggetBrukerId = innloggetBruker.id!!,

@@ -16,6 +16,7 @@ import no.nav.k9.los.infrastruktur.abac.Action
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.azuregraph.IAzureGraphService
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
+import no.nav.k9.los.infrastruktur.kontekst.BrukerkontekstMedOmråde
 import no.nav.k9.los.infrastruktur.kontekst.TestKontekstFactory
 import no.nav.k9.los.infrastruktur.pdl.IPdlService
 import no.nav.k9.los.infrastruktur.pdl.PersonPdl
@@ -59,8 +60,7 @@ class SisteOppgaverTjenesteTest : AbstractK9LosIntegrationTest() {
         pdlService = mockk(relaxed = true)
         azureGraphService = mockk(relaxed = true)
         
-        coEvery { azureGraphService.hentIdentTilInnloggetBruker(any()) } returns "test@nav.no"
-        coEvery { azureGraphService.hentGrupperForSaksbehandler(any()) } returns setOf(UUID.randomUUID())
+        coEvery { azureGraphService.hentGrupper(any<BrukerkontekstMedOmråde>()) } returns setOf(UUID.randomUUID())
 
         sisteOppgaverTjeneste = SisteOppgaverTjeneste(
             sisteOppgaverRepository = sisteOppgaverRepository,

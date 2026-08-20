@@ -5,7 +5,6 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.kontekst.medBrukerkontekst
-import no.nav.k9.los.infrastruktur.kontekst.Brukerkontekst
 import no.nav.k9.los.infrastruktur.utils.OpentelemetrySpanUtil
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
 import org.koin.ktor.ext.inject
@@ -18,14 +17,15 @@ fun Route.OppgaveKoSaksbehandlerApis() {
     get("/saksbehandlerskoer") {
         medBrukerkontekst { kontekst ->
             if (pepClient.harBasisTilgang(kontekst)) {
+                val harTilgangTilKode6 = pepClient.harTilgangTilKode6(kontekst)
                 val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedIdent(
                     kontekst.bruker.navIdent,
-                    pepClient.erKode6Bruker(kontekst.bruker)
+                    harTilgangTilKode6
                 )!!
                 call.respond(
                     oppgaveKoTjeneste.hentKøerForSaksbehandler(
                         saksbehandler.id!!,
-                        pepClient.harTilgangTilKode6(kontekst)
+                        harTilgangTilKode6
                     )
                 )
             } else {
@@ -90,7 +90,7 @@ fun Route.OppgaveKoSaksbehandlerApis() {
                 val oppgavekøId = call.parameters["id"]!!
                 val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedIdent(
                     kontekst.bruker.navIdent,
-                    pepClient.erKode6Bruker(kontekst.bruker)
+                    pepClient.harTilgangTilKode6(kontekst)
                 )!!
                 val oppgaveMuligReservert = oppgaveKoTjeneste.taReservasjonFraKø(
                     innloggetBrukerId = innloggetBruker.id!!,

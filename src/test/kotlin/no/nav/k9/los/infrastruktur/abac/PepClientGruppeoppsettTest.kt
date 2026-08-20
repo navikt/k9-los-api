@@ -6,7 +6,7 @@ import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.infrastruktur.azuregraph.IAzureGraphService
 import no.nav.k9.los.infrastruktur.idtoken.IdToken
-import no.nav.k9.los.infrastruktur.kontekst.Brukerkontekst
+import no.nav.k9.los.infrastruktur.kontekst.BrukerkontekstMedOmråde
 import no.nav.k9.los.infrastruktur.kontekst.TestKontekstFactory
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import org.junit.jupiter.api.Test
@@ -60,7 +60,7 @@ class PepClientGruppeoppsettTest {
             val pepClient = pepClient()
             val token = token(setOf(drift))
 
-            pepClient.kanLeggeUtDriftsmelding(globalKontekst(token).bruker) shouldBe true
+            pepClient.kanLeggeUtDriftsmelding(globalKontekst(token)) shouldBe true
         }
     }
 
@@ -68,7 +68,7 @@ class PepClientGruppeoppsettTest {
     fun `bruker separat kode6-gruppe ved oppslag av annen saksbehandler`() {
         runBlocking {
             val azureGraphService = mockk<IAzureGraphService>()
-            coEvery { azureGraphService.hentGrupperForSaksbehandler("Z999999") } returns setOf(ungKode6)
+            coEvery { azureGraphService.hentGrupper("Z999999") } returns setOf(ungKode6)
             val pepClient = pepClient(azureGraphService)
 
             pepClient.harTilgangTilKode6("Z999999", kontekst(token(emptySet()), Områder.K9)) shouldBe false
@@ -87,7 +87,7 @@ class PepClientGruppeoppsettTest {
         coEvery { getNavIdent() } returns "Z123456"
     }
 
-    private suspend fun harRolle(pepClient: PepClient, gruppe: UUID, kontekst: Brukerkontekst): Boolean = when (gruppe) {
+    private suspend fun harRolle(pepClient: PepClient, gruppe: UUID, kontekst: BrukerkontekstMedOmråde): Boolean = when (gruppe) {
         ungSaksbehandler -> pepClient.harTilgangTilReserveringAvOppgaver(kontekst)
         ungVeileder -> pepClient.harBasisTilgang(kontekst)
         ungOppgavestyrer -> pepClient.erOppgaveStyrer(kontekst)

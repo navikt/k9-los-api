@@ -21,7 +21,6 @@ import java.net.URI
 import java.time.Duration
 import java.time.LocalDateTime
 import java.util.*
-import kotlin.coroutines.coroutineContext
 
 class PdlService(
     baseUrl: URI,
@@ -56,7 +55,7 @@ class PdlService(
             mapOf("ident" to aktorId)
         )
 
-        val saksbehandlerIdent = azureGraphService.hentIdentTilInnloggetBruker(bruker)
+        val saksbehandlerIdent = bruker.navIdent
         val cacheKey = AktørIdTilPersonCacheKey(saksbehandlerIdent, aktorId)
         val cachedObject = aktørIdTilPersonCache.get(cacheKey)
         if (cachedObject != null) {
@@ -130,7 +129,7 @@ class PdlService(
             )
         )
 
-        val saksbehandlerIdent = azureGraphService.hentIdentTilInnloggetBruker(bruker)
+        val saksbehandlerIdent = bruker.navIdent
         val cacheKey = FrnTilAktørIdCacheKey(saksbehandlerIdent, fnummer)
         val cachedObject = fnrTilAktørIdCache.get(cacheKey)
         if (cachedObject != null) {

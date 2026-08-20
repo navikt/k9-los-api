@@ -100,7 +100,7 @@ class OppgaveKoTest : AbstractK9LosIntegrationTest() {
         val pepClient = mockk<IPepClient>()
         val saksbehandlerRepository = SaksbehandlerRepository(dataSource, transactionalManager = get(), områdeRepository = get())
         coEvery {
-            pepClient.erKode6Bruker(any())
+            pepClient.harKode6TilgangIEttEllerFlereOmråder(any())
         } returns true
 
         return runBlocking {

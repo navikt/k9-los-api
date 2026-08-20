@@ -1,10 +1,9 @@
 package no.nav.k9.los.infrastruktur.abac
 
 import no.nav.k9.los.infrastruktur.azuregraph.IAzureGraphService
-import no.nav.k9.los.infrastruktur.kontekst.Brukerkontekst
+import no.nav.k9.los.infrastruktur.kontekst.BrukerkontekstMedOmråde
 import no.nav.k9.los.infrastruktur.kontekst.BrukerkontekstUtenOmråde
 import no.nav.k9.los.infrastruktur.kontekst.InnloggetBruker
-import no.nav.k9.los.infrastruktur.kontekst.Områdekontekst
 import no.nav.k9.los.infrastruktur.kontekst.Systemkontekst
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.Oppgave
@@ -19,68 +18,69 @@ import java.util.*
 class PepClient internal constructor(
     private val azureGraphService: IAzureGraphService,
     private val sifAbacPdpKlienter: SifAbacPdpKlienter,
-    private val gruppeoppsett: Gruppeoppsett = Gruppeoppsett()
+    private val gruppeoppsett: Gruppeoppsett
 ) : IPepClient {
     private val log: Logger = LoggerFactory.getLogger(PepClient::class.java)
 
-    override suspend fun erOppgaveStyrer(kontekst: Brukerkontekst): Boolean {
+    override suspend fun erOppgaveStyrer(kontekst: BrukerkontekstMedOmråde): Boolean {
         return iGruppe(gruppeoppsett.forOmråde(kontekst.område).oppgavestyrer, kontekst.bruker)
     }
 
-    override suspend fun harBasisTilgang(kontekst: Brukerkontekst): Boolean {
+    override suspend fun harBasisTilgang(kontekst: BrukerkontekstMedOmråde): Boolean {
         val grupper = gruppeoppsett.forOmråde(kontekst.område)
         return iGruppe(grupper.saksbehandler, kontekst.bruker) || iGruppe(grupper.veileder, kontekst.bruker)
     }
 
-    override suspend fun harBasisTilgangIEttEllerFlereOmråder(bruker: InnloggetBruker): Boolean {
+    override suspend fun harBasisTilgangIEttEllerFlereOmråder(kontekst: BrukerkontekstUtenOmråde): Boolean {
         return Områder.entries.any { område ->
             val grupper = gruppeoppsett.forOmråde(område)
-            iGruppe(grupper.saksbehandler, bruker) || iGruppe(grupper.veileder, bruker)
+            iGruppe(grupper.saksbehandler, kontekst.bruker) || iGruppe(grupper.veileder, kontekst.bruker)
         }
     }
 
     override suspend fun kanLeggeUtDriftsmelding(kontekst: BrukerkontekstUtenOmråde): Boolean {
-        // Drift-gruppen er global for Los og ikke knyttet til området ruten kjører under.
         return iGruppe(gruppeoppsett.drift, kontekst.bruker)
     }
 
-    override suspend fun harTilgangTilReserveringAvOppgaver(kontekst: Brukerkontekst): Boolean {
+    override suspend fun kanLeggeUtDriftsmelding(kontekst: BrukerkontekstMedOmråde): Boolean {
+        return iGruppe(gruppeoppsett.drift, kontekst.bruker)
+    }
+
+    override suspend fun harTilgangTilReserveringAvOppgaver(kontekst: BrukerkontekstMedOmråde): Boolean {
         return iGruppe(gruppeoppsett.forOmråde(kontekst.område).saksbehandler, kontekst.bruker)
     }
 
-    override suspend fun harTilgangTilKode6(ident: String, kontekst: Brukerkontekst): Boolean {
+    override suspend fun harTilgangTilKode6(ident: String, kontekst: BrukerkontekstMedOmråde): Boolean {
         if (ident == kontekst.bruker.navIdent) {
             return harTilgangTilKode6(kontekst)
         }
         val kode6Gruppe = gruppeoppsett.forOmråde(kontekst.område).kode6 ?: return false
-        val grupper = azureGraphService.hentGrupperForSaksbehandler(ident)
+        val grupper = azureGraphService.hentGrupper(ident)
         return grupper.contains(kode6Gruppe)
     }
 
-    override suspend fun harTilgangTilKode6(kontekst: Brukerkontekst): Boolean {
+    override suspend fun harTilgangTilKode6(kontekst: BrukerkontekstMedOmråde): Boolean {
         return iGruppe(gruppeoppsett.forOmråde(kontekst.område).kode6, kontekst.bruker)
     }
 
-    override suspend fun erKode6Bruker(kontekst: BrukerkontekstUtenOmråde): Boolean {
+    override suspend fun harKode6TilgangIEttEllerFlereOmråder(kontekst: BrukerkontekstUtenOmråde): Boolean {
         return Områder.entries.any { område -> iGruppe(gruppeoppsett.forOmråde(område).kode6, kontekst.bruker) }
     }
 
     private fun iGruppe(gruppeId: UUID?, bruker: InnloggetBruker): Boolean =
         gruppeId?.let(bruker.grupper::contains) ?: false
 
-    override suspend fun diskresjonskoderForSak(fagsakNummer: String, kontekst: Områdekontekst): Set<Diskresjonskode> {
-        krevTilgjengelig(kontekst.område)
+    override suspend fun diskresjonskoderForSak(fagsakNummer: String, kontekst: Systemkontekst): Set<Diskresjonskode> {
         return sifAbacPdpKlienter.forOmråde(kontekst.område).diskresjonskoderSak(SaksnummerDto(fagsakNummer))
     }
 
-    override suspend fun diskresjonskoderForPerson(aktørId: String, kontekst: Områdekontekst): Set<Diskresjonskode> {
-        krevTilgjengelig(kontekst.område)
+    override suspend fun diskresjonskoderForPerson(aktørId: String, kontekst: Systemkontekst): Set<Diskresjonskode> {
         return sifAbacPdpKlienter.forOmråde(kontekst.område).diskresjonskoderPerson(AktørId(aktørId))
     }
 
     override suspend fun harTilgangTilOppgaveV3(
         oppgave: Oppgave,
-        kontekst: Brukerkontekst,
+        kontekst: BrukerkontekstMedOmråde,
         action: Action,
         grupperForSaksbehandler: Set<UUID>?,
     ): Boolean {
@@ -150,7 +150,7 @@ class PepClient internal constructor(
             "k9sak", "k9klage", "k9tilbake" -> {
                 //TODO når abac-k9 er ryddet bort: vurder å bruk sifAbacPdpKlient.harTilgangTilSak(action, saksnummer) de steder hvor vi sjekker innlogget bruker
                 val saksbehandlersGrupper =
-                    grupperForSaksbehandler ?: azureGraphService.hentGrupperForSaksbehandler(identTilInnloggetBruker)
+                    grupperForSaksbehandler ?: azureGraphService.hentGrupper(identTilInnloggetBruker)
                 val tilgang = klient.harTilgangTilSak(
                     action = action,
                     saksnummerDto = SaksnummerDto(saksnummer!!),
@@ -165,7 +165,7 @@ class PepClient internal constructor(
                 val berørteAktørId = setOfNotNull(aktørIdSøker, aktørIdPleietrengende)
                 val aktørIder = berørteAktørId.map { AktørId(it) }
                 val saksbehandlersGrupper =
-                    grupperForSaksbehandler ?: azureGraphService.hentGrupperForSaksbehandler(identTilInnloggetBruker)
+                    grupperForSaksbehandler ?: azureGraphService.hentGrupper(identTilInnloggetBruker)
                 val tilgang = if (aktørIder.isNotEmpty()) klient.harTilgangTilPersoner(
                     action = action,
                     aktørIder = aktørIder,
@@ -182,9 +182,4 @@ class PepClient internal constructor(
             else -> throw NotImplementedError("Støtter kun tilgangsoppslag på k9klage, k9sak, k9tilbake og k9punsj")
         }
     }
-
-    private fun krevTilgjengelig(område: Områder) {
-        if (område == Områder.UNG) throw OmrådeIkkeTilgjengeligException(område)
-    }
-
 }

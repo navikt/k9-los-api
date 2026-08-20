@@ -2,7 +2,7 @@ package no.nav.k9.los.saksbehandleradmin
 
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
-import no.nav.k9.los.infrastruktur.kontekst.Brukerkontekst
+import no.nav.k9.los.infrastruktur.kontekst.BrukerkontekstMedOmråde
 import no.nav.k9.los.ko.db.OppgaveKoRepository
 import no.nav.k9.los.lagretsok.LagretSøkTjeneste
 import no.nav.k9.los.reservasjon.ReservasjonV3Tjeneste
@@ -36,7 +36,7 @@ class SaksbehandlerAdminTjeneste(
         saksbehandlerRepository.addSaksbehandler(epost, område)
     }
 
-    suspend fun slettSaksbehandlerForId(id: Long, kontekst: Brukerkontekst) {
+    suspend fun slettSaksbehandlerForId(id: Long, kontekst: BrukerkontekstMedOmråde) {
         val skjermet = pepClient.harTilgangTilKode6(kontekst)
 
         val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedId(id)
@@ -60,7 +60,7 @@ class SaksbehandlerAdminTjeneste(
     suspend fun slettSaksbehandler(
         epost: String,
         område: Områder,
-        kontekst: Brukerkontekst,
+        kontekst: BrukerkontekstMedOmråde,
     ) {
         val skjermet = pepClient.harTilgangTilKode6(kontekst)
 

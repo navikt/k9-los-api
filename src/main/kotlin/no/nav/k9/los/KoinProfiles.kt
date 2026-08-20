@@ -696,7 +696,7 @@ fun naisCommonConfig(config: Configuration) = module {
     }
 
     single<IPepClient> {
-        PepClient(azureGraphService = get(), get())
+        PepClient(azureGraphService = get(), get(), get())
     }
 }
 

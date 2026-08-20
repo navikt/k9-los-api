@@ -14,7 +14,7 @@ internal fun Route.BrukersområderApi() {
 
     get {
         medBrukerkontekstUtenOmråde { kontekst ->
-            val skjermet = pepClient.erKode6Bruker(kontekst)
+            val skjermet = pepClient.harKode6TilgangIEttEllerFlereOmråder(kontekst)
             val områder: List<Områder> = (
                     saksbehandlerRepository.finnSaksbehandlerMedIdent(kontekst.bruker.navIdent, skjermet)
                         ?: saksbehandlerRepository.finnSaksbehandlerMedEpost(kontekst.bruker.idToken.getUsername(), skjermet)
