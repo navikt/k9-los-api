@@ -28,7 +28,7 @@ fun Route.NyeOgFerdigstilteApiNy() {
         }
     }) {
         medBrukerkontekst { kontekst ->
-            if (with(kontekst) { pepClient.harBasisTilgang() }) {
+            if (pepClient.harBasisTilgang(kontekst)) {
                 call.respond(nyeOgFerdigstilteService.hentCachetVerdi(call.parameters["gruppe"]?.let { NyeOgFerdigstilteGruppe.valueOf(it) } ?: NyeOgFerdigstilteGruppe.ALLE))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
@@ -36,4 +36,3 @@ fun Route.NyeOgFerdigstilteApiNy() {
         }
     }
 }
-

@@ -64,15 +64,14 @@ class PepCacheService(
         )
 
         return if (oppgaveIdOgAktører.saksnummer != null) {
-            with(kontekst) { pep.oppdater(oppgaveIdOgAktører.saksnummer) }
+            pep.oppdater(oppgaveIdOgAktører.saksnummer, kontekst)
         } else {
-            with(kontekst) { pep.oppdater(oppgaveIdOgAktører.aktører) }
+            pep.oppdater(oppgaveIdOgAktører.aktører, kontekst)
         }
     }
 
-    context(ctx: Systemkontekst)
-    private suspend fun PepCache.oppdater(saksnummer: String): PepCache {
-        val diskresjonskoder = pepClient.diskresjonskoderForSak(saksnummer)
+    private suspend fun PepCache.oppdater(saksnummer: String, kontekst: Systemkontekst): PepCache {
+        val diskresjonskoder = pepClient.diskresjonskoderForSak(saksnummer, kontekst)
 
         //TODO ikke sette kode7 og egenansatt til samme verdi, det er misvisende ifht modellen som finnes. Det fungerer funksjonelt p.t fordi kode7 og egen ansatt (skjermet) håndteres samlet i køene
         val kode7ellerEgenAnsatt =
@@ -84,15 +83,14 @@ class PepCacheService(
         )
     }
 
-    context(ctx: Systemkontekst)
-    private suspend fun PepCache.oppdater(aktører: List<String>): PepCache {
+    private suspend fun PepCache.oppdater(aktører: List<String>, kontekst: Systemkontekst): PepCache {
         if (aktører.isEmpty()) {
             return oppdater(kode6 = false, kode7 = false, egenAnsatt = false)
         }
         return coroutineScope {
             val requests = aktører.map {
                 async(Span.current().asContextElement()) {
-                    pepClient.diskresjonskoderForPerson(it)
+                    pepClient.diskresjonskoderForPerson(it, kontekst)
                 }
             }
 

@@ -30,7 +30,7 @@ fun Route.OppgaveQueryApisNy() {
         }
     }) {
         medBrukerkontekst { kontekst ->
-            if (with(kontekst) { pepClient.harBasisTilgang() }) {
+            if (pepClient.harBasisTilgang(kontekst)) {
                 val område = kontekst.område
                 val oppgaveQuery = call.receive<OppgaveQuery>()
                 call.respond(oppgaveQueryService.queryForAntall(QueryRequest(oppgaveQuery, false, område = område)))
@@ -53,7 +53,7 @@ fun Route.OppgaveQueryApisNy() {
         }
     }) {
         medBrukerkontekst { kontekst ->
-            if (with(kontekst) { pepClient.harBasisTilgang() }) {
+            if (pepClient.harBasisTilgang(kontekst)) {
                 val område = kontekst.område
                 val oppgaveQuery = call.receive<OppgaveQuery>()
                 call.respond(oppgaveQueryService.validate(QueryRequest(oppgaveQuery, område = område)))
@@ -73,7 +73,7 @@ fun Route.OppgaveQueryApisNy() {
         }
     }) {
         medBrukerkontekst { kontekst ->
-            if (with(kontekst) { pepClient.harBasisTilgang() }) {
+            if (pepClient.harBasisTilgang(kontekst)) {
                 val område = kontekst.område
                 call.respond(oppgaveQueryService.hentAlleFelter())
             } else {

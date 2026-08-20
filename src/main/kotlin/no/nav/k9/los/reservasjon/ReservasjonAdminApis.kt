@@ -20,7 +20,7 @@ internal fun Route.ReservasjonAdminApis() {
 
     get("/alle-reservasjoner") {
         medBrukerkontekst { kontekst ->
-            if (with(kontekst) { pepClient.erOppgaveStyrer() }) {
+            if (pepClient.erOppgaveStyrer(kontekst)) {
                 call.respond(reservasjonApisTjeneste.hentAlleAktiveReservasjoner(kontekst))
             } else {
                 call.respond(HttpStatusCode.Forbidden)

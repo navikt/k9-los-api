@@ -23,7 +23,7 @@ fun Route.SisteOppgaverApi() {
         }
     }) {
         medBrukerkontekst { kontekst ->
-            if (with(kontekst) { pepClient.harBasisTilgang() }) {
+            if (pepClient.harBasisTilgang(kontekst)) {
                 call.respond(sisteOppgaverTjeneste.hentSisteOppgaver(kontekst))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
@@ -37,7 +37,7 @@ fun Route.SisteOppgaverApi() {
         request { body<OppgaveNøkkelDto>() }
     }) {
         medBrukerkontekst { kontekst ->
-            if (with(kontekst) { pepClient.harBasisTilgang() }) {
+            if (pepClient.harBasisTilgang(kontekst)) {
                 val oppgaveNøkkel = call.receive<OppgaveNøkkelDto>()
                 sisteOppgaverTjeneste.lagreSisteOppgave(oppgaveNøkkel, kontekst)
                 call.respond(HttpStatusCode.OK)

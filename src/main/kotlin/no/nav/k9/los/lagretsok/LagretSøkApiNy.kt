@@ -34,7 +34,7 @@ fun Route.LagretSøkApiNy() {
         }
     }) {
         medBrukerkontekst { kontekst ->
-            if (with(kontekst) { pepClient.harBasisTilgang() }) {
+            if (pepClient.harBasisTilgang(kontekst)) {
                 val område = kontekst.område
                 val innloggetSaksbehandler = kontekst.bruker.navIdent.let {
                     saksbehandlerRepository.finnSaksbehandlerMedIdent(it, pepClient.erKode6Bruker(kontekst.bruker))
@@ -68,7 +68,7 @@ fun Route.LagretSøkApiNy() {
         }
     }) {
         medBrukerkontekst { kontekst ->
-            if (with(kontekst) { pepClient.harBasisTilgang() }) {
+            if (pepClient.harBasisTilgang(kontekst)) {
                 val område = kontekst.område
                 val id = call.parameters["id"]!!.toLong()
                 val innloggetSaksbehandler = kontekst.bruker.navIdent.let {
@@ -110,7 +110,7 @@ fun Route.LagretSøkApiNy() {
         }
     }) {
         medBrukerkontekst { kontekst ->
-            if (with(kontekst) { pepClient.erOppgaveStyrer() }) {
+            if (pepClient.erOppgaveStyrer(kontekst)) {
                 val område = kontekst.område
                 val navIdent = kontekst.bruker.navIdent
                 val request = call.receive<NyttLagretSøkRequest>()
@@ -135,9 +135,9 @@ fun Route.LagretSøkApiNy() {
         }
     }) {
         medBrukerkontekst { kontekst ->
-            if (with(kontekst) { pepClient.erOppgaveStyrer() }) {
+            if (pepClient.erOppgaveStyrer(kontekst)) {
                 val område = kontekst.område
-                val harKode6Tilgang = with(kontekst) { pepClient.harTilgangTilKode6() }
+                val harKode6Tilgang = pepClient.harTilgangTilKode6(kontekst)
                 call.respond(LagretSøk.defaultQuery(harKode6Tilgang))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
@@ -165,7 +165,7 @@ fun Route.LagretSøkApiNy() {
         }
     }) {
         medBrukerkontekst { kontekst ->
-            if (with(kontekst) { pepClient.harBasisTilgang() }) {
+            if (pepClient.harBasisTilgang(kontekst)) {
                 val område = kontekst.område
                 val innloggetSaksbehandler = kontekst.bruker.navIdent.let {
                     saksbehandlerRepository.finnSaksbehandlerMedIdent(it, pepClient.erKode6Bruker(kontekst.bruker))
@@ -203,7 +203,7 @@ fun Route.LagretSøkApiNy() {
         }
     }) {
         medBrukerkontekst { kontekst ->
-            if (with(kontekst) { pepClient.harBasisTilgang() }) {
+            if (pepClient.harBasisTilgang(kontekst)) {
                 val område = kontekst.område
                 val innloggetSaksbehandler = kontekst.bruker.navIdent.let {
                     saksbehandlerRepository.finnSaksbehandlerMedIdent(it, pepClient.erKode6Bruker(kontekst.bruker))
@@ -239,7 +239,7 @@ fun Route.LagretSøkApiNy() {
         }
     }) {
         medBrukerkontekst { kontekst ->
-            if (with(kontekst) { pepClient.harBasisTilgang() }) {
+            if (pepClient.harBasisTilgang(kontekst)) {
                 val område = kontekst.område
                 val innloggetSaksbehandler = kontekst.bruker.navIdent.let {
                     saksbehandlerRepository.finnSaksbehandlerMedIdent(it, pepClient.erKode6Bruker(kontekst.bruker))
@@ -271,7 +271,7 @@ fun Route.LagretSøkApiNy() {
         }
     }) {
         medBrukerkontekst { kontekst ->
-            if (with(kontekst) { pepClient.harBasisTilgang() }) {
+            if (pepClient.harBasisTilgang(kontekst)) {
                 val område = kontekst.område
                 val lagretSøkId = call.parameters["id"]!!
                 val innloggetSaksbehandler = kontekst.bruker.navIdent.let {

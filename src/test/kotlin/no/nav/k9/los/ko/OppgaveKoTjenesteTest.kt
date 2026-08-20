@@ -76,10 +76,10 @@ class OppgaveKoTjenesteTest {
             oppgavebehandlingsUrl = null,
             hastesak = false,
         )
-        coEvery { with(kontekst) { pepClient.harTilgangTilKode6() } } returns false
+        coEvery { pepClient.harTilgangTilKode6(kontekst) } returns false
         every { oppgaveKoRepository.hent(1L, false) } returns kø
         every { oppgaveQueryService.queryForOppgave(any()) } returns listOf(oppgave)
-        coEvery { with(kontekst) { pepClient.harTilgangTilOppgaveV3(oppgave, Action.read, null) } } returns true
+        coEvery { pepClient.harTilgangTilOppgaveV3(oppgave, kontekst, Action.read, null) } returns true
         coEvery { builder.bygg(listOf(oppgave), kontekst.bruker, emptyMap()) } returns listOf(sammendrag)
         val tjeneste = OppgaveKoTjeneste(
             transactionalManager = mockk<TransactionalManager>(relaxed = true),
@@ -137,7 +137,7 @@ class OppgaveKoTjenesteTest {
         val utenTilgang = oppgave("uten-tilgang", "SAK-1")
         val førsteMedTilgang = oppgave("med-tilgang-1", "SAK-2")
 
-        coEvery { with(kontekst) { pepClient.harTilgangTilKode6() } } returns false
+        coEvery { pepClient.harTilgangTilKode6(kontekst) } returns false
         every { oppgaveKoRepository.hent(1L, false) } returns kø
         every {
             oppgaveQueryService.queryForOppgave(
@@ -148,8 +148,8 @@ class OppgaveKoTjenesteTest {
                 )
             )
         } returns listOf(utenTilgang, førsteMedTilgang)
-        coEvery { with(kontekst) { pepClient.harTilgangTilOppgaveV3(utenTilgang, Action.read, null) } } returns false
-        coEvery { with(kontekst) { pepClient.harTilgangTilOppgaveV3(førsteMedTilgang, Action.read, null) } } returns true
+        coEvery { pepClient.harTilgangTilOppgaveV3(utenTilgang, kontekst, Action.read, null) } returns false
+        coEvery { pepClient.harTilgangTilOppgaveV3(førsteMedTilgang, kontekst, Action.read, null) } returns true
 
         val resultat = tjeneste.hentOppgaverFraKø(
             kontekst = kontekst,

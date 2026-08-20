@@ -24,11 +24,10 @@ internal fun Route.InnloggetBrukerApi() {
     get("/saksbehandler") {
         if (configuration.koinProfile() != KoinProfile.LOCAL) {
             medBrukerkontekst { kontekst ->
-                val bruker = kontekst.bruker
-                val token = bruker.idToken
-                val skjermet = pepClient.erKode6Bruker(bruker)
+                val token = kontekst.bruker.idToken
+                val skjermet = pepClient.harTilgangTilKode6(kontekst)
                 log.info("Henter innlogget saksbehandler med epost ${token.getUsername()} og navn ${token.getName()}")
-                val saksbehandlerIdent = azureGraphService.hentIdentTilInnloggetBruker(bruker)
+                val saksbehandlerIdent = azureGraphService.hentIdentTilInnloggetBruker(kontekst.bruker)
                 val saksbehandler =
                     saksbehandlerRepository.finnSaksbehandlerMedIdent(token.getNavIdent(), skjermet)
                         ?: saksbehandlerRepository.finnSaksbehandlerMedEpost(token.getUsername(), skjermet)
@@ -42,10 +41,10 @@ internal fun Route.InnloggetBrukerApi() {
                     token.getName(),
                     brukerIdent = saksbehandlerIdent,
                     id = saksbehandler?.let { saksbehandler.id },
-                    kanSaksbehandle = with(kontekst) { pepClient.harBasisTilgang() }, //TODO mismatch mellom navnet 'kanSaksbehandle' og at alle som har tilgang til systemet har basistilgang
-                    kanOppgavestyre = with(kontekst) { pepClient.erOppgaveStyrer() },
-                    kanReservere = with(kontekst) { pepClient.harTilgangTilReserveringAvOppgaver() },
-                    kanDrifte = pepClient.kanLeggeUtDriftsmelding(bruker),
+                    kanSaksbehandle = pepClient.harBasisTilgang(kontekst), //TODO mismatch mellom navnet 'kanSaksbehandle' og at alle som har tilgang til systemet har basistilgang
+                    kanOppgavestyre = pepClient.erOppgaveStyrer(kontekst),
+                    kanReservere = pepClient.harTilgangTilReserveringAvOppgaver(kontekst),
+                    kanDrifte = pepClient.kanLeggeUtDriftsmelding(kontekst),
                     finnesISaksbehandlerTabell = finnesISaksbehandlerTabell,
                     områder = saksbehandler?.områder ?: emptyList()
                 )

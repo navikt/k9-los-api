@@ -86,7 +86,7 @@ class SøkeboksTjeneste(
         }
 
         val filtrertForTilgang = énOppgavePerSak(oppgaver, adapter).filter {
-            with(kontekst) { pepClient.harTilgangTilOppgaveV3(it) }
+            pepClient.harTilgangTilOppgaveV3(it, kontekst)
         }
 
         if (filtrertForTilgang.isEmpty()) {
@@ -115,7 +115,7 @@ class SøkeboksTjeneste(
         if (ikkeTilgang || person == null) return SøkeresultatSammendrag.IkkeTilgang
 
         val filtrertForTilgang = énOppgavePerSak(oppgaver, adapter).filter {
-            with(kontekst) { pepClient.harTilgangTilOppgaveV3(it) }
+            pepClient.harTilgangTilOppgaveV3(it, kontekst)
         }
         if (filtrertForTilgang.isEmpty()) return SøkeresultatSammendrag.IkkeTilgang
 

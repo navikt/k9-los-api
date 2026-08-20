@@ -36,9 +36,8 @@ class SaksbehandlerAdminTjeneste(
         saksbehandlerRepository.addSaksbehandler(epost, område)
     }
 
-    context(ctx: Brukerkontekst)
-    suspend fun slettSaksbehandlerForId(id: Long) {
-        val skjermet = pepClient.harTilgangTilKode6()
+    suspend fun slettSaksbehandlerForId(id: Long, kontekst: Brukerkontekst) {
+        val skjermet = pepClient.harTilgangTilKode6(kontekst)
 
         val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedId(id)
 
@@ -58,12 +57,12 @@ class SaksbehandlerAdminTjeneste(
         }
     }
 
-    context(ctx: Brukerkontekst)
     suspend fun slettSaksbehandler(
         epost: String,
         område: Områder,
+        kontekst: Brukerkontekst,
     ) {
-        val skjermet = pepClient.harTilgangTilKode6()
+        val skjermet = pepClient.harTilgangTilKode6(kontekst)
 
         val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedEpost(epost, skjermet) ?: throw IllegalStateException("Kunne ikke finne saksbehandler med epost")
         if (!saksbehandler.områder.contains(område)) {

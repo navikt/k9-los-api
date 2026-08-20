@@ -28,7 +28,7 @@ fun Route.UttrekkApi() {
         }
     }) {
         medBrukerkontekst { kontekst ->
-            if (with(kontekst) { pepClient.harBasisTilgang() }) {
+            if (pepClient.harBasisTilgang(kontekst)) {
                 val innloggetSaksbehandler = kontekst.bruker.navIdent.let {
                     saksbehandlerRepository.finnSaksbehandlerMedIdent(it, pepClient.erKode6Bruker(kontekst.bruker))
                 }
@@ -56,7 +56,7 @@ fun Route.UttrekkApi() {
         }
     }) {
         medBrukerkontekst { kontekst ->
-            if (with(kontekst) { pepClient.harBasisTilgang() }) {
+            if (pepClient.harBasisTilgang(kontekst)) {
                 val id = call.parameters["id"]?.toLongOrNull()
                 if (id == null) {
                     call.respond(HttpStatusCode.BadRequest, "Ugyldig uttrekk-id")
@@ -83,7 +83,7 @@ fun Route.UttrekkApi() {
         }
     }) {
         medBrukerkontekst { kontekst ->
-            if (with(kontekst) { pepClient.harBasisTilgang() }) {
+            if (pepClient.harBasisTilgang(kontekst)) {
                 val innloggetSaksbehandler = kontekst.bruker.navIdent.let {
                     saksbehandlerRepository.finnSaksbehandlerMedIdent(it, pepClient.erKode6Bruker(kontekst.bruker))
                 }
@@ -113,7 +113,7 @@ fun Route.UttrekkApi() {
         }
     }) {
         medBrukerkontekst { kontekst ->
-            if (with(kontekst) { pepClient.harBasisTilgang() }) {
+            if (pepClient.harBasisTilgang(kontekst)) {
                 val id = call.parameters["id"]?.toLongOrNull()
                 if (id == null) {
                     call.respond(HttpStatusCode.BadRequest, "Ugyldig uttrekk-id")
@@ -145,7 +145,7 @@ fun Route.UttrekkApi() {
         }
     }) {
         medBrukerkontekst { kontekst ->
-            if (with(kontekst) { pepClient.harBasisTilgang() }) {
+            if (pepClient.harBasisTilgang(kontekst)) {
                 try {
                     val id = call.parameters["id"]?.toLongOrNull()
                     if (id == null) {
@@ -176,7 +176,7 @@ fun Route.UttrekkApi() {
         }
     }) {
         medBrukerkontekst { kontekst ->
-            if (with(kontekst) { pepClient.harBasisTilgang() }) {
+            if (pepClient.harBasisTilgang(kontekst)) {
                 val lagretSokId = call.parameters["lagretSokId"]?.toLongOrNull()
                 if (lagretSokId == null) {
                     call.respond(HttpStatusCode.BadRequest, "Ugyldig lagretSokId")
@@ -202,7 +202,7 @@ fun Route.UttrekkApi() {
         }
     }) {
         medBrukerkontekst { kontekst ->
-            if (with(kontekst) { pepClient.harBasisTilgang() }) {
+            if (pepClient.harBasisTilgang(kontekst)) {
                 val id = call.parameters["id"]?.toLongOrNull()
                 if (id == null) {
                     call.respond(HttpStatusCode.BadRequest, "Ugyldig uttrekk-id")
@@ -256,7 +256,7 @@ fun Route.UttrekkApi() {
         }
     }) {
         medBrukerkontekst { kontekst ->
-            if (with(kontekst) { pepClient.harBasisTilgang() }) {
+            if (pepClient.harBasisTilgang(kontekst)) {
                 val id = call.parameters["id"]?.toLongOrNull()
                 if (id == null) {
                     call.respond(HttpStatusCode.BadRequest, "Ugyldig uttrekk-id")

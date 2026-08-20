@@ -21,11 +21,11 @@ import no.nav.k9.los.domeneadaptere.k9.eventmottak.sak.K9SakEventHandler
 import no.nav.k9.los.domeneadaptere.k9.eventtiloppgave.EventTilOppgaveAdapter
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
-import no.nav.k9.los.infrastruktur.kontekst.Brukerkontekst
-import no.nav.k9.los.infrastruktur.kontekst.TestKontekstFactory
 import no.nav.k9.los.infrastruktur.jobbplanlegger.Jobbplanlegger
 import no.nav.k9.los.infrastruktur.jobbplanlegger.PlanlagtJobb
 import no.nav.k9.los.infrastruktur.jobbplanlegger.Tidsvindu
+import no.nav.k9.los.infrastruktur.kontekst.Brukerkontekst
+import no.nav.k9.los.infrastruktur.kontekst.TestKontekstFactory
 import no.nav.k9.los.kodeverk.BehandlingStatus
 import no.nav.k9.los.kodeverk.Fagsystem
 import no.nav.k9.los.kodeverk.PersonBeskyttelseType
@@ -74,9 +74,9 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
 
         runBlocking {
             // Gir tilgang til kode6 for å isolere testing av cache-oppdatering
-            with(TestKontekstFactory.brukerkontekst(Områder.K9)) {
-                coEvery { pepClient.harTilgangTilOppgaveV3(any(), any(), any()) } returns true
-            }
+            coEvery {
+                pepClient.harTilgangTilOppgaveV3(any(), any<Brukerkontekst>(), any(), any())
+            } returns true
         }
 
         val områdeSetup = get<OmrådeSetup>()
@@ -84,53 +84,38 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
     }
 
     fun gjørSakKode6(saksnummer: String) {
-        runBlocking {
-            with(TestKontekstFactory.systemkontekst(Områder.K9)) {
-                coEvery { pepClient.erSakKode6(saksnummer) } returns true
-                coEvery { pepClient.erSakKode7EllerEgenAnsatt(saksnummer) } returns false
-                coEvery { pepClient.diskresjonskoderForSak(saksnummer) } returns setOf(Diskresjonskode.KODE6)
-            }
-        }
+        val systemkontekst = TestKontekstFactory.systemkontekst(Områder.K9)
+        coEvery { pepClient.diskresjonskoderForSak(saksnummer, systemkontekst) } returns setOf(Diskresjonskode.KODE6)
     }
 
     fun gjørSakOrdinær(saksnummer: String) {
-        runBlocking {
-            with(TestKontekstFactory.systemkontekst(Områder.K9)) {
-                coEvery { pepClient.erSakKode6(saksnummer) } returns false
-                coEvery { pepClient.erSakKode7EllerEgenAnsatt(saksnummer) } returns false
-                coEvery { pepClient.diskresjonskoderForSak(saksnummer) } returns setOf()
-            }
-        }
+        val systemkontekst = TestKontekstFactory.systemkontekst(Områder.K9)
+        coEvery { pepClient.diskresjonskoderForSak(saksnummer, systemkontekst) } returns setOf()
     }
 
     fun gjørAktørKode6(aktørId: String) {
-        runBlocking {
-            with(TestKontekstFactory.systemkontekst(Områder.K9)) {
-                coEvery { pepClient.erAktørKode6(aktørId) } returns true
-                coEvery { pepClient.erAktørKode7EllerEgenAnsatt(aktørId) } returns false
-                coEvery { pepClient.diskresjonskoderForPerson(aktørId) } returns setOf(Diskresjonskode.KODE6)
-            }
-        }
+        val systemkontekst = TestKontekstFactory.systemkontekst(Områder.K9)
+        coEvery {
+            pepClient.diskresjonskoderForPerson(
+                aktørId,
+                systemkontekst
+            )
+        } returns setOf(Diskresjonskode.KODE6)
     }
 
     fun gjørAktørKode7(aktørId: String) {
-        runBlocking {
-            with(TestKontekstFactory.systemkontekst(Områder.K9)) {
-                coEvery { pepClient.erAktørKode6(aktørId) } returns false
-                coEvery { pepClient.erAktørKode7EllerEgenAnsatt(aktørId) } returns true
-                coEvery { pepClient.diskresjonskoderForPerson(aktørId) } returns setOf(Diskresjonskode.KODE7)
-            }
-        }
+        val systemkontekst = TestKontekstFactory.systemkontekst(Områder.K9)
+        coEvery {
+            pepClient.diskresjonskoderForPerson(
+                aktørId,
+                systemkontekst
+            )
+        } returns setOf(Diskresjonskode.KODE7)
     }
 
     fun gjørAktørOrdinær(aktørId: String) {
-        runBlocking {
-            with(TestKontekstFactory.systemkontekst(Områder.K9)) {
-                coEvery { pepClient.erAktørKode6(aktørId) } returns false
-                coEvery { pepClient.erAktørKode7EllerEgenAnsatt(aktørId) } returns false
-                coEvery { pepClient.diskresjonskoderForPerson(aktørId) } returns setOf()
-            }
-        }
+        val systemkontekst = TestKontekstFactory.systemkontekst(Områder.K9)
+        coEvery { pepClient.diskresjonskoderForPerson(aktørId, systemkontekst) } returns setOf()
     }
 
 
@@ -300,8 +285,8 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
                 PersonBeskyttelseType.UTEN_KODE6
             )
         ).isNotEmpty()
-        with(TestKontekstFactory.brukerkontekst(Områder.K9)) {
-            coVerify(exactly = 2) { pepClient.harTilgangTilOppgaveV3(any(), any(), any()) }
+        coVerify(exactly = 2) {
+            pepClient.harTilgangTilOppgaveV3(any(), any<Brukerkontekst>(), any(), any())
         } //oppgaven hentet ut 2 ganger fra kø, gir to kall til pep klient
         assertThat(
             hentOppgaverMedSikkerhetsklassifisering(
@@ -310,8 +295,8 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
                 PersonBeskyttelseType.KODE6
             )
         ).isEmpty()
-        with(TestKontekstFactory.brukerkontekst(Områder.K9)) {
-            coVerify(exactly = 2) { pepClient.harTilgangTilOppgaveV3(any(), any(), any()) }
+        coVerify(exactly = 2) {
+            pepClient.harTilgangTilOppgaveV3(any(), any<Brukerkontekst>(), any(), any())
         } //oppgaven var ikke i køa, så gjør ikke ekstra kall til pep-klent
 
         gjørSakKode6(saksnummer)
@@ -348,9 +333,7 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
 
         jobbplanlegger.stopp()
         coVerify(exactly = 3) {
-            with(TestKontekstFactory.brukerkontekst(Områder.K9)) {
-                pepClient.harTilgangTilOppgaveV3(any(), any(), any())
-            }
+            pepClient.harTilgangTilOppgaveV3(any(), TestKontekstFactory.brukerkontekst(Områder.K9), any(), any())
         } //oppgaven var bare i kode6-køa, så ble ett ekstra kall til pep-klent
     }
 
@@ -382,24 +365,25 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
         sikkerhetsklassifiseringtype: PersonBeskyttelseType
     ): List<Any> {
         val resultat = oppgaveQueryService.query(
-            QueryRequest(område = Områder.K9, oppgaveQuery = 
-                OppgaveQuery(
-                    select = listOf(EnkelSelectFelt(område = Områder.K9, kode = "ekstern_id")),
-                    filtere = listOf(
-                        FeltverdiOppgavefilter(
-                            område = null,
-                            kode = FeltType.PERSONBESKYTTELSE.eksternId,
-                            operator = EksternFeltverdiOperator.EQUALS,
-                            verdi = listOf(sikkerhetsklassifiseringtype.kode)
-                        ),
-                        FeltverdiOppgavefilter(
-                            område = Områder.K9,
-                            kode = FeltType.BEHANDLINGUUID.eksternId,
-                            operator = EksternFeltverdiOperator.EQUALS,
-                            verdi = listOf(eksternId)
+            QueryRequest(
+                område = Områder.K9, oppgaveQuery =
+                    OppgaveQuery(
+                        select = listOf(EnkelSelectFelt(område = Områder.K9, kode = "ekstern_id")),
+                        filtere = listOf(
+                            FeltverdiOppgavefilter(
+                                område = null,
+                                kode = FeltType.PERSONBESKYTTELSE.eksternId,
+                                operator = EksternFeltverdiOperator.EQUALS,
+                                verdi = listOf(sikkerhetsklassifiseringtype.kode)
+                            ),
+                            FeltverdiOppgavefilter(
+                                område = Områder.K9,
+                                kode = FeltType.BEHANDLINGUUID.eksternId,
+                                operator = EksternFeltverdiOperator.EQUALS,
+                                verdi = listOf(eksternId)
+                            )
                         )
                     )
-                )
             ),
         )
 

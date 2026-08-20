@@ -35,8 +35,8 @@ class PepClientGruppeoppsettTest {
             val pepClient = pepClient()
             val token = token(setOf(ungSaksbehandler))
 
-            with(kontekst(token, Områder.K9)) { pepClient.harBasisTilgang() } shouldBe false
-            with(kontekst(token, Områder.UNG)) { pepClient.harBasisTilgang() } shouldBe true
+            pepClient.harBasisTilgang(kontekst(token, Områder.K9)) shouldBe false
+            pepClient.harBasisTilgang(kontekst(token, Områder.UNG)) shouldBe true
         }
     }
 
@@ -71,8 +71,8 @@ class PepClientGruppeoppsettTest {
             coEvery { azureGraphService.hentGrupperForSaksbehandler("Z999999") } returns setOf(ungKode6)
             val pepClient = pepClient(azureGraphService)
 
-            with(kontekst(token(emptySet()), Områder.K9)) { pepClient.harTilgangTilKode6("Z999999") } shouldBe false
-            with(kontekst(token(emptySet()), Områder.UNG)) { pepClient.harTilgangTilKode6("Z999999") } shouldBe true
+            pepClient.harTilgangTilKode6("Z999999", kontekst(token(emptySet()), Områder.K9)) shouldBe false
+            pepClient.harTilgangTilKode6("Z999999", kontekst(token(emptySet()), Områder.UNG)) shouldBe true
         }
     }
 
@@ -88,10 +88,10 @@ class PepClientGruppeoppsettTest {
     }
 
     private suspend fun harRolle(pepClient: PepClient, gruppe: UUID, kontekst: Brukerkontekst): Boolean = when (gruppe) {
-        ungSaksbehandler -> with(kontekst) { pepClient.harTilgangTilReserveringAvOppgaver() }
-        ungVeileder -> with(kontekst) { pepClient.harBasisTilgang() }
-        ungOppgavestyrer -> with(kontekst) { pepClient.erOppgaveStyrer() }
-        ungKode6 -> with(kontekst) { pepClient.harTilgangTilKode6() }
+        ungSaksbehandler -> pepClient.harTilgangTilReserveringAvOppgaver(kontekst)
+        ungVeileder -> pepClient.harBasisTilgang(kontekst)
+        ungOppgavestyrer -> pepClient.erOppgaveStyrer(kontekst)
+        ungKode6 -> pepClient.harTilgangTilKode6(kontekst)
         else -> error("Ukjent testgruppe")
     }
 

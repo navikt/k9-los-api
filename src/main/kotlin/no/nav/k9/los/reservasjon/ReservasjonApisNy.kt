@@ -40,7 +40,7 @@ internal fun Route.ReservasjonApisNy() {
     }) {
         medBrukerkontekst { kontekst ->
             val skjermet = pepClient.erKode6Bruker(kontekst.bruker)
-            if (with(kontekst) { pepClient.harTilgangTilReserveringAvOppgaver() }) {
+            if (pepClient.harTilgangTilReserveringAvOppgaver(kontekst)) {
                 val område = kontekst.område
                 val oppgaveIdMedOverstyringDto = call.receive<OppgaveIdMedOverstyringDto>()
                 val navident = kontekst.bruker.navIdent
@@ -71,7 +71,7 @@ internal fun Route.ReservasjonApisNy() {
     }) {
         medBrukerkontekst { kontekst ->
             val skjermet = pepClient.erKode6Bruker(kontekst.bruker)
-            if (with(kontekst) { pepClient.harBasisTilgang() }) {
+            if (pepClient.harBasisTilgang(kontekst)) {
                 val område = kontekst.område
                 val innloggetBrukerNavIdent = kontekst.bruker.navIdent
                 val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedIdent(innloggetBrukerNavIdent, skjermet)
@@ -106,7 +106,7 @@ internal fun Route.ReservasjonApisNy() {
     }) {
         medBrukerkontekst { kontekst ->
             val skjermet = pepClient.erKode6Bruker(kontekst.bruker)
-            if (with(kontekst) { pepClient.harBasisTilgang() }) {
+            if (pepClient.harBasisTilgang(kontekst)) {
                 val område = kontekst.område
                 val params = call.receive<List<AnnullerReservasjonDto>>()
                 val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedIdent(kontekst.bruker.navIdent, skjermet)!!
@@ -142,7 +142,7 @@ internal fun Route.ReservasjonApisNy() {
     }) {
         medBrukerkontekst { kontekst ->
             val skjermet = pepClient.erKode6Bruker(kontekst.bruker)
-            if (with(kontekst) { pepClient.harBasisTilgang() }) {
+            if (pepClient.harBasisTilgang(kontekst)) {
                 val område = kontekst.område
                 val forlengReservasjonDto = call.receive<ForlengReservasjonDto>()
                 val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedIdent(
@@ -174,7 +174,7 @@ internal fun Route.ReservasjonApisNy() {
     }) {
         medBrukerkontekst { kontekst ->
             val skjermet = pepClient.erKode6Bruker(kontekst.bruker)
-            if (with(kontekst) { pepClient.harBasisTilgang() }) {
+            if (pepClient.harBasisTilgang(kontekst)) {
                 val område = kontekst.område
                 val params = call.receive<FlyttReservasjonDto>()
 
@@ -208,7 +208,7 @@ internal fun Route.ReservasjonApisNy() {
     }) {
         medBrukerkontekst { kontekst ->
             val skjermet = pepClient.erKode6Bruker(kontekst.bruker)
-            if (with(kontekst) { pepClient.harBasisTilgang() }) {
+            if (pepClient.harBasisTilgang(kontekst)) {
                 val område = kontekst.område
                 val reservasjonEndringDto = call.receive<List<ReservasjonEndringDto>>()
                 val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedIdent(
@@ -238,8 +238,8 @@ internal fun Route.ReservasjonApisNy() {
         }
     }) {
         medBrukerkontekst { kontekst ->
-            val skjermet = with(kontekst) { pepClient.harTilgangTilKode6() }
-            if (with(kontekst) { pepClient.harBasisTilgang() }) {
+            val skjermet = pepClient.harTilgangTilKode6(kontekst)
+            if (pepClient.harBasisTilgang(kontekst)) {
                 val params = call.receive<BrukerIdentDto>()
                 val sokSaksbehandlerMedIdent = saksbehandlerRepository.sokSaksbehandler(params.brukerIdent, kontekst.område, skjermet)
                 call.respond(sokSaksbehandlerMedIdent)
@@ -259,8 +259,8 @@ internal fun Route.ReservasjonApisNy() {
         }
     }) {
         medBrukerkontekst { kontekst ->
-            val skjermet = with(kontekst) { pepClient.harTilgangTilKode6() }
-            if (with(kontekst) { pepClient.harBasisTilgang() }) {
+            val skjermet = pepClient.harTilgangTilKode6(kontekst)
+            if (pepClient.harBasisTilgang(kontekst)) {
                 val alleSaksbehandlere = saksbehandlerRepository.hentAlleSaksbehandlere(kontekst.område, skjermet)
                 val saksbehandlerDtoListe =
                     alleSaksbehandlere.filter { saksbehandler -> !saksbehandler.navn.isNullOrBlank() && !saksbehandler.navident.isNullOrBlank() }
@@ -296,7 +296,7 @@ internal fun Route.ReservasjonApisNy() {
         }
     }) {
         medBrukerkontekst { kontekst ->
-            if (with(kontekst) { pepClient.harBasisTilgang() }) {
+            if (pepClient.harBasisTilgang(kontekst)) {
                 val område = kontekst.område
                 val oppgaveNøkkel = OppgaveNøkkelDto(
                     call.queryParameters["oppgaveEksternId"]!!,
@@ -326,7 +326,7 @@ internal fun Route.ReservasjonApisNy() {
         }
     }) {
         medBrukerkontekst { kontekst ->
-            if (with(kontekst) { pepClient.erOppgaveStyrer() }) {
+            if (pepClient.erOppgaveStyrer(kontekst)) {
                 call.respond(reservasjonApisTjeneste.hentAlleAktiveReservasjoner(kontekst))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
@@ -334,7 +334,6 @@ internal fun Route.ReservasjonApisNy() {
         }
     }
 }
-
 
 
 

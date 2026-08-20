@@ -26,7 +26,7 @@ fun Route.SøkeboksApi() {
         }
     ) {
         medBrukerkontekst { kontekst ->
-            if (with(kontekst) { pepClient.harBasisTilgang() }) {
+            if (pepClient.harBasisTilgang(kontekst)) {
                 val (søkeord) = call.receive<SøkRequest>()
                 // Legacy-ruten ligger utenfor områdeApi og har derfor ikke noe {omrade}-segment
                 // å lese. Den betjener kun K9; nye områder skal bruke SøkeboksApiNy.

@@ -327,13 +327,12 @@ class ReservasjonV3Tjeneste(
                 )
             ) throw ManglerTilgangException("Saksbehandler kan ikke være beslutter på egen behandling")
 
-            with(systemkontekst(oppgave.oppgavetype.område.tilOmrådeEnum())) {
-                pepClient.harTilgangTilOppgaveV3(
-                    oppgave,
-                    saksbehandler,
-                    Action.reserver,
-                )
-            }
+            pepClient.harTilgangTilOppgaveV3(
+                oppgave,
+                systemkontekst(oppgave.oppgavetype.område.tilOmrådeEnum()),
+                saksbehandler,
+                Action.reserver,
+            )
         }
     }
 

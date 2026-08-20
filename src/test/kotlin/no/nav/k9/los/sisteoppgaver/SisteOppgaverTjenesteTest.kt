@@ -100,7 +100,7 @@ class SisteOppgaverTjenesteTest : AbstractK9LosIntegrationTest() {
         coEvery { pdlService.person(aktorId1, any()) } returns PersonPdlResponse(false, mockPerson)
 
         coEvery {
-            with(kontekst) { pepClient.harTilgangTilOppgaveV3(any(), eq(Action.read), any()) }
+            pepClient.harTilgangTilOppgaveV3(any(), kontekst, eq(Action.read), any())
         } returns true
 
         // Lagre oppgaven som siste besøkt
@@ -138,9 +138,9 @@ class SisteOppgaverTjenesteTest : AbstractK9LosIntegrationTest() {
         
         // Bruker har tilgang til oppgave1 men ikke oppgave2
         coEvery {
-            with(kontekst) { pepClient.harTilgangTilOppgaveV3(any(), eq(Action.read), any()) }
+            pepClient.harTilgangTilOppgaveV3(any(), kontekst, eq(Action.read), any())
         } answers {
-            val oppgave = secondArg<Oppgave>()
+            val oppgave = firstArg<Oppgave>()
             oppgave.eksternId == oppgave1.eksternId
         }
         

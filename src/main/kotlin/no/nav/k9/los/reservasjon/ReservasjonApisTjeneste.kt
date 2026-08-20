@@ -250,12 +250,11 @@ class ReservasjonApisTjeneste(
                 oppgaveNøkkel.oppgaveEksternId,
                 oppgaveNøkkel.oppgaveTypeEksternId,
             )
-        if (!with(kontekst) {
-                pepClient.harTilgangTilOppgaveV3(
-                    oppgave = oppgave,
-                    grupperForSaksbehandler = azureGraphService.hentGrupperForInnloggetSaksbehandler(kontekst.bruker)
-                )
-            }
+        if (!pepClient.harTilgangTilOppgaveV3(
+                oppgave = oppgave,
+                kontekst = kontekst,
+                grupperForSaksbehandler = azureGraphService.hentGrupperForInnloggetSaksbehandler(kontekst.bruker)
+            )
         ) {
             throw ManglerTilgangException("Mangler tilgang til oppgave ${oppgave.eksternId}")
         }
@@ -272,12 +271,12 @@ class ReservasjonApisTjeneste(
     }
 
     suspend fun hentAlleAktiveReservasjoner(kontekst: Brukerkontekst): List<ReservasjonDto> {
-        val innloggetBrukerHarKode6Tilgang = with(kontekst) { pepClient.harTilgangTilKode6() }
+        val innloggetBrukerHarKode6Tilgang = pepClient.harTilgangTilKode6(kontekst)
 
         return reservasjonV3Tjeneste.hentAlleAktiveReservasjoner().flatMap { reservasjonMedOppgaver ->
             val saksbehandler =
                 saksbehandlerRepository.finnSaksbehandlerMedId(reservasjonMedOppgaver.reservasjonV3.reservertAv)!!
-            val saksbehandlerHarKode6Tilgang = with(kontekst) { pepClient.harTilgangTilKode6(saksbehandler.navident!!) }
+            val saksbehandlerHarKode6Tilgang = pepClient.harTilgangTilKode6(saksbehandler.navident!!, kontekst)
 
             if (innloggetBrukerHarKode6Tilgang != saksbehandlerHarKode6Tilgang) {
                 emptyList()
