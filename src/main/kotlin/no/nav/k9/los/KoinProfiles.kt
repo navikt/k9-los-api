@@ -56,7 +56,7 @@ import no.nav.k9.los.infrastruktur.metrikker.EventlagerNokkeltallRepository
 import no.nav.k9.los.infrastruktur.pdl.IPdlService
 import no.nav.k9.los.infrastruktur.pdl.PdlService
 import no.nav.k9.los.infrastruktur.pdl.PdlServiceLocal
-import no.nav.k9.los.infrastruktur.rest.RequestContextService
+
 import no.nav.k9.los.ko.KøpåvirkendeHendelse
 import no.nav.k9.los.ko.OppgaveKoTjeneste
 import no.nav.k9.los.ko.db.OppgaveKoRepository
@@ -114,7 +114,6 @@ fun selectModulesBasedOnProfile(application: Application, config: Configuration)
 fun common(app: Application, config: Configuration) = module {
     single { config.koinProfile() }
     single { config }
-    single { RequestContextService(profile = get()) }
     single<DataSource> { app.hikariConfig(config) }
 
     single(named("oppgaveKøOppdatert")) {

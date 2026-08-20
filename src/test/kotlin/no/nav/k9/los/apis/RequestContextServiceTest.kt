@@ -14,14 +14,12 @@ import no.nav.helse.dusseldorf.ktor.auth.*
 import no.nav.helse.dusseldorf.testsupport.jws.Azure
 import no.nav.helse.dusseldorf.testsupport.wiremock.WireMockBuilder
 import no.nav.helse.dusseldorf.testsupport.wiremock.getAzureV2JwksUrl
-import no.nav.k9.los.KoinProfile
 import no.nav.k9.los.infrastruktur.abac.PepClient
 import no.nav.k9.los.infrastruktur.abac.OmrådeIkkeTilgjengeligException
 import no.nav.k9.los.infrastruktur.abac.SifAbacPdpKlienter
 import no.nav.k9.los.infrastruktur.azuregraph.IAzureGraphService
-import no.nav.k9.los.infrastruktur.rest.RequestContextService
-import no.nav.k9.los.infrastruktur.rest.idToken
 import no.nav.k9.los.infrastruktur.kontekst.medBrukerkontekst
+import no.nav.k9.los.infrastruktur.kontekst.medInnloggetBruker
 import no.nav.k9.los.områdeApi
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import org.junit.jupiter.api.Test
@@ -29,7 +27,7 @@ import java.net.URI
 import kotlin.test.assertEquals
 import io.mockk.mockk
 
-internal class RequestContextServiceTest {
+internal class KallkonteksmTest {
 
     @Test
     fun `bruker claims fra validert principal for dynamisk og fast område`() = medTestApp { client ->
@@ -92,7 +90,6 @@ internal class RequestContextServiceTest {
             }
         }
 
-        val requestContextService = RequestContextService(KoinProfile.PROD)
         val pepClient = PepClient(mockk<IAzureGraphService>(), mockk<SifAbacPdpKlienter>())
 
         routing {
@@ -118,8 +115,8 @@ internal class RequestContextServiceTest {
                     }
                 }
                 get("uten-område") {
-                    requestContextService.withRequestContext(call) {
-                        call.respondText("Hei ${coroutineContext.idToken().getUsername()}")
+                    medInnloggetBruker { kontekst ->
+                        call.respondText("Hei ${kontekst.bruker.idToken.getUsername()}")
                     }
                 }
             }

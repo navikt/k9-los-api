@@ -5,7 +5,6 @@ import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.OppgaveTestDataBuilder
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.infrastruktur.idtoken.IdTokenLocal
-import no.nav.k9.los.infrastruktur.rest.CoroutineRequestContext
 import no.nav.k9.los.oppgaveuthenting.query.equalsWithPrecision
 import no.nav.k9.los.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
@@ -19,7 +18,7 @@ import java.time.temporal.ChronoUnit
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 
 class ReservasjonV3TjenesteTest : AbstractK9LosIntegrationTest() {
-    private val requestContext = CoroutineRequestContext(IdTokenLocal())
+    
     private lateinit var saksbehandlerInnlogget: Saksbehandler
     private lateinit var saksbehandler1: Saksbehandler
 
@@ -27,12 +26,12 @@ class ReservasjonV3TjenesteTest : AbstractK9LosIntegrationTest() {
     fun setup() {
         val saksbehandlerRepository = get<SaksbehandlerRepository>()
 
-        saksbehandlerInnlogget = runBlocking(requestContext) {
+        saksbehandlerInnlogget = runBlocking {
             saksbehandlerRepository.addSaksbehandler("saksbehandler@nav.no", Områder.K9)
             saksbehandlerRepository.finnSaksbehandlerMedEpost("saksbehandler@nav.no", skjermet = false)!!
         }
 
-        saksbehandler1 = runBlocking(requestContext) {
+        saksbehandler1 = runBlocking {
             saksbehandlerRepository.addSaksbehandler("test1@test.no", Områder.K9)
             saksbehandlerRepository.finnSaksbehandlerMedEpost("test1@test.no", skjermet = false)!!
         }
@@ -118,7 +117,7 @@ class ReservasjonV3TjenesteTest : AbstractK9LosIntegrationTest() {
         val transactionalManager = get<TransactionalManager>()
         val saksbehandlerRepository = get<SaksbehandlerRepository>()
 
-        val saksbehandler2 = runBlocking(requestContext) {
+        val saksbehandler2 = runBlocking {
             saksbehandlerRepository.addSaksbehandler("test2@test.no", Områder.K9)
             saksbehandlerRepository.finnSaksbehandlerMedEpost("test2@test.no", skjermet = false)!!
         }

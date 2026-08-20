@@ -13,15 +13,12 @@ import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.kontekst.medBrukerkontekst
 import no.nav.k9.los.infrastruktur.kontekst.Brukerkontekst
 import kotlin.coroutines.coroutineContext
-import no.nav.k9.los.infrastruktur.rest.RequestContextService
-import no.nav.k9.los.infrastruktur.rest.idToken
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.OppgaveQuery
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
 import org.koin.ktor.ext.inject
 
 fun Route.LagretSøkApi() {
     val pepClient by inject<IPepClient>()
-    val requestContextService by inject<RequestContextService>()
     val lagretSøkTjeneste by inject<LagretSøkTjeneste>()
     val lagretSøkRepository by inject<LagretSøkRepository>()
     val saksbehandlerRepository by inject<SaksbehandlerRepository>()
@@ -33,7 +30,7 @@ fun Route.LagretSøkApi() {
     }) {
         medBrukerkontekst { kontekst ->
             if (pepClient.harBasisTilgang(kontekst)) {
-                val innloggetSaksbehandler = coroutineContext.idToken().getNavIdent().let {
+                val innloggetSaksbehandler = kontekst.bruker.navIdent.let {
                     saksbehandlerRepository.finnSaksbehandlerMedIdent(it, pepClient.erKode6Bruker(Brukerkontekst(kontekst.bruker)))
                 }
                 if (innloggetSaksbehandler == null) {
@@ -61,7 +58,7 @@ fun Route.LagretSøkApi() {
         medBrukerkontekst { kontekst ->
             if (pepClient.harBasisTilgang(kontekst)) {
                 val id = call.parameters["id"]!!.toLong()
-                val innloggetSaksbehandler = coroutineContext.idToken().getNavIdent().let {
+                val innloggetSaksbehandler = kontekst.bruker.navIdent.let {
                     saksbehandlerRepository.finnSaksbehandlerMedIdent(it, pepClient.erKode6Bruker(Brukerkontekst(kontekst.bruker)))
                 }
                 if (innloggetSaksbehandler == null) {
@@ -94,7 +91,7 @@ fun Route.LagretSøkApi() {
     }) {
         medBrukerkontekst { kontekst ->
             if (pepClient.erOppgaveStyrer(kontekst)) {
-                val navIdent = coroutineContext.idToken().getNavIdent()
+                val navIdent = kontekst.bruker.navIdent
                 val request = call.receive<NyttLagretSøkRequest>()
                 val lagretSøk = lagretSøkTjeneste.nytt(navIdent, request, pepClient.erKode6Bruker(Brukerkontekst(kontekst.bruker)))
                 call.respond(HttpStatusCode.Created, lagretSøk)
@@ -129,14 +126,14 @@ fun Route.LagretSøkApi() {
     }) {
         medBrukerkontekst { kontekst ->
             if (pepClient.harBasisTilgang(kontekst)) {
-                val innloggetSaksbehandler = coroutineContext.idToken().getNavIdent().let {
+                val innloggetSaksbehandler = kontekst.bruker.navIdent.let {
                     saksbehandlerRepository.finnSaksbehandlerMedIdent(it, pepClient.erKode6Bruker(Brukerkontekst(kontekst.bruker)))
                 }
                 if (innloggetSaksbehandler == null) {
                     call.respond(HttpStatusCode.Forbidden, "Innlogget bruker er ikke i saksbehandler-tabellen.")
                 } else {
                     val endreLagretSøk = call.receive<EndreLagretSøkRequest>()
-                    val lagretSøk = lagretSøkTjeneste.endre(coroutineContext.idToken().getNavIdent(), endreLagretSøk, pepClient.erKode6Bruker(Brukerkontekst(kontekst.bruker)))
+                    val lagretSøk = lagretSøkTjeneste.endre(kontekst.bruker.navIdent, endreLagretSøk, pepClient.erKode6Bruker(Brukerkontekst(kontekst.bruker)))
                     call.respond(HttpStatusCode.OK, lagretSøk)
                 }
             } else {
@@ -155,7 +152,7 @@ fun Route.LagretSøkApi() {
     }) {
         medBrukerkontekst { kontekst ->
             if (pepClient.harBasisTilgang(kontekst)) {
-                val innloggetSaksbehandler = coroutineContext.idToken().getNavIdent().let {
+                val innloggetSaksbehandler = kontekst.bruker.navIdent.let {
                     saksbehandlerRepository.finnSaksbehandlerMedIdent(it, pepClient.erKode6Bruker(Brukerkontekst(kontekst.bruker)))
                 }
                 if (innloggetSaksbehandler == null) {
@@ -163,7 +160,7 @@ fun Route.LagretSøkApi() {
                 } else {
                     val (tittel) = call.receive<KopierLagretSøkRequest>()
                     val lagretSøkId = call.parameters["id"]!!.toLong()
-                    val nyttLagretSøk = lagretSøkTjeneste.kopier(coroutineContext.idToken().getNavIdent(), lagretSøkId, tittel, pepClient.erKode6Bruker(Brukerkontekst(kontekst.bruker)))
+                    val nyttLagretSøk = lagretSøkTjeneste.kopier(kontekst.bruker.navIdent, lagretSøkId, tittel, pepClient.erKode6Bruker(Brukerkontekst(kontekst.bruker)))
                     call.respond(HttpStatusCode.OK, nyttLagretSøk)
                 }
             } else {
@@ -184,14 +181,14 @@ fun Route.LagretSøkApi() {
     }) {
         medBrukerkontekst { kontekst ->
             if (pepClient.harBasisTilgang(kontekst)) {
-                val innloggetSaksbehandler = coroutineContext.idToken().getNavIdent().let {
+                val innloggetSaksbehandler = kontekst.bruker.navIdent.let {
                     saksbehandlerRepository.finnSaksbehandlerMedIdent(it, pepClient.erKode6Bruker(Brukerkontekst(kontekst.bruker)))
                 }
                 if (innloggetSaksbehandler == null) {
                     call.respond(HttpStatusCode.Forbidden, "Innlogget bruker er ikke i saksbehandler-tabellen.")
                 } else {
                     val lagretSøkId = call.parameters["id"]!!.toLong()
-                    lagretSøkTjeneste.slett(coroutineContext.idToken().getNavIdent(), lagretSøkId, pepClient.erKode6Bruker(Brukerkontekst(kontekst.bruker)))
+                    lagretSøkTjeneste.slett(kontekst.bruker.navIdent, lagretSøkId, pepClient.erKode6Bruker(Brukerkontekst(kontekst.bruker)))
                     call.respond(HttpStatusCode.OK)
                 }
             } else {
@@ -204,7 +201,7 @@ fun Route.LagretSøkApi() {
         medBrukerkontekst { kontekst ->
             if (pepClient.harBasisTilgang(kontekst)) {
                 val lagretSøkId = call.parameters["id"]!!
-                val innloggetSaksbehandler = coroutineContext.idToken().getNavIdent().let {
+                val innloggetSaksbehandler = kontekst.bruker.navIdent.let {
                     saksbehandlerRepository.finnSaksbehandlerMedIdent(it, pepClient.erKode6Bruker(Brukerkontekst(kontekst.bruker)))
                 }
                 if (innloggetSaksbehandler == null) {

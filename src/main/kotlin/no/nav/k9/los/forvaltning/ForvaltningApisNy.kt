@@ -17,7 +17,6 @@ import no.nav.k9.los.domeneadaptere.k9.statistikk.StatistikkRepository
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.kontekst.medInnloggetBruker
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
-import no.nav.k9.los.infrastruktur.rest.RequestContextService
 import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.ko.OppgaveKoTjeneste
 import no.nav.k9.los.kodeverk.Fagsystem
@@ -56,7 +55,6 @@ fun Route.forvaltningApisNy() {
     val områdeKoblingRepository by inject<OmrådeKoblingRepository>()
 
     val pepClient by inject<IPepClient>()
-    val requestContextService by inject<RequestContextService>()
 
 
     get("/index_oversikt", {

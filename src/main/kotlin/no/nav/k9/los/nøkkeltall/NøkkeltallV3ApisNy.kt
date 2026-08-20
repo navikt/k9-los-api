@@ -6,7 +6,6 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.kontekst.medBrukerkontekst
-import no.nav.k9.los.infrastruktur.rest.RequestContextService
 import no.nav.k9.los.nøkkeltall.avdelingsleder.dagenstall.DagensTallService
 import no.nav.k9.los.nøkkeltall.avdelingsleder.ferdigstilteperenhet.FerdigstiltePerEnhetGruppe
 import no.nav.k9.los.nøkkeltall.avdelingsleder.ferdigstilteperenhet.FerdigstiltePerEnhetService
@@ -21,7 +20,6 @@ fun Route.NøkkeltallV3ApisNy() {
     val statusService by inject<StatusService>()
     val dagensTallService by inject<DagensTallService>()
     val perEnhetService by inject<FerdigstiltePerEnhetService>()
-    val requestContextService by inject<RequestContextService>()
     val pepClient by inject<IPepClient>()
 
     get("status", {

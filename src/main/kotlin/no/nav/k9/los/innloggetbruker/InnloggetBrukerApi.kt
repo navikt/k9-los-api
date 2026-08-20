@@ -6,13 +6,10 @@ import no.nav.k9.los.Configuration
 import no.nav.k9.los.KoinProfile
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.azuregraph.IAzureGraphService
-import no.nav.k9.los.infrastruktur.rest.RequestContextService
-import no.nav.k9.los.infrastruktur.rest.idToken
-import no.nav.k9.los.infrastruktur.rest.innloggetBruker
 import no.nav.k9.los.infrastruktur.kontekst.Brukerkontekst
 import no.nav.k9.los.infrastruktur.kontekst.Områdebrukerkontekst
+import no.nav.k9.los.infrastruktur.kontekst.medBrukerkontekst
 import no.nav.k9.los.område
-import kotlin.coroutines.coroutineContext
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
@@ -21,7 +18,6 @@ import org.slf4j.LoggerFactory
 
 internal fun Route.InnloggetBrukerApi() {
     val pepClient by inject<IPepClient>()
-    val requestContextService by inject<RequestContextService>()
     val saksbehandlerRepository by inject<SaksbehandlerRepository>()
     val azureGraphService by inject<IAzureGraphService>()
     val configuration by inject<Configuration>()
@@ -30,11 +26,10 @@ internal fun Route.InnloggetBrukerApi() {
 
     get("/saksbehandler") {
         if (configuration.koinProfile() != KoinProfile.LOCAL) {
-            requestContextService.withRequestContext(call) {
-                val token = coroutineContext.idToken()
-                val bruker = coroutineContext.innloggetBruker()
+            medBrukerkontekst { kontekst ->
+                val bruker = kontekst.bruker
+                val token = bruker.idToken
                 val brukerkontekst = Brukerkontekst(bruker)
-                val kontekst = Områdebrukerkontekst(call.område, bruker)
                 val skjermet = pepClient.erKode6Bruker(brukerkontekst)
                 log.info("Henter innlogget saksbehandler med epost ${token.getUsername()} og navn ${token.getName()}")
                 val saksbehandlerIdent = azureGraphService.hentIdentTilInnloggetBruker(bruker)

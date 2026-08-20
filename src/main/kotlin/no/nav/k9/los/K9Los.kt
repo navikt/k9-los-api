@@ -583,7 +583,7 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
 
     val jobbplanlegger = Jobbplanlegger(
         innkommendeJobber = planlagteJobber,
-        coroutineContext = Dispatchers.IO.limitedParallelism(DB_AWARE_PARALLELISM) + Span.current().asContextElement(),
+        coroutineContext = Dispatchers.IO.limitedParallelism(DB_AWARE_PARALLELISM),
     )
 
     monitor.subscribe(ApplicationStarted) {

@@ -19,7 +19,6 @@ import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.infrastruktur.idtoken.IdTokenLocal
 import no.nav.k9.los.infrastruktur.kontekst.InnloggetBruker
 import no.nav.k9.los.infrastruktur.kontekst.Områdebrukerkontekst
-import no.nav.k9.los.infrastruktur.rest.CoroutineRequestContext
 import no.nav.k9.los.infrastruktur.pdl.IPdlService
 import no.nav.k9.los.infrastruktur.pdl.PersonPdl
 import no.nav.k9.los.infrastruktur.pdl.PersonPdlResponse
@@ -78,7 +77,7 @@ class SisteOppgaverTjenesteTest : AbstractK9LosIntegrationTest() {
             transactionalManager = transactionalManager
         )
         
-        runBlocking(CoroutineRequestContext(token)) {
+        runBlocking {
             saksbehandlerRepository.addSaksbehandler("test@nav.no", Områder.K9)
             saksbehandlerRepository.vedlikeholdSaksbehandler(
                 Saksbehandler(

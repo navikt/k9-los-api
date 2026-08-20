@@ -17,7 +17,6 @@ import no.nav.k9.los.domeneadaptere.k9.eventmottak.sak.K9SakEventHandler
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.idtoken.IdTokenLocal
 import no.nav.k9.los.infrastruktur.idtoken.IdToken
-import no.nav.k9.los.infrastruktur.rest.CoroutineRequestContext
 import no.nav.k9.los.infrastruktur.kontekst.InnloggetBruker
 import no.nav.k9.los.infrastruktur.kontekst.Områdebrukerkontekst
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
@@ -103,7 +102,7 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         assertThat(antallIKø).isEqualTo(0)
 
         val reservasjonTjeneste = get<ReservasjonApisTjeneste>()
-        val reservasjoner = runBlocking(CoroutineRequestContext(IdTokenLocal())) {
+        val reservasjoner = runBlocking {
             reservasjonTjeneste.reserverOppgave(
                 TestSaksbehandler.SARA,
                 OppgaveIdMedOverstyringDto(

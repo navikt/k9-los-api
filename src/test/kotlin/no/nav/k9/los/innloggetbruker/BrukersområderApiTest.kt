@@ -14,7 +14,6 @@ import no.nav.k9.los.KoinProfile
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.abac.PepClientLocal
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
-import no.nav.k9.los.infrastruktur.rest.RequestContextService
 import no.nav.k9.los.oppgavedefinisjon.omraade.OmrådeRepository
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.saksbehandleradmin.Saksbehandler
@@ -110,7 +109,6 @@ class BrukersområderApiTest : AbstractPostgresTest() {
                             områdeRepository = get(),
                         )
                     }
-                    single { RequestContextService(profile = KoinProfile.LOCAL) }
                 }
             )
         }

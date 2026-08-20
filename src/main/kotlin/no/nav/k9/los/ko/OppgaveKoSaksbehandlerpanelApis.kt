@@ -6,14 +6,11 @@ import io.ktor.server.routing.*
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.kontekst.medBrukerkontekst
 import no.nav.k9.los.infrastruktur.kontekst.Brukerkontekst
-import no.nav.k9.los.infrastruktur.rest.RequestContextService
-import no.nav.k9.los.infrastruktur.rest.idToken
 import no.nav.k9.los.infrastruktur.utils.OpentelemetrySpanUtil
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
 import org.koin.ktor.ext.inject
 
 fun Route.OppgaveKoSaksbehandlerApis() {
-    val requestContextService by inject<RequestContextService>()
     val oppgaveKoTjeneste by inject<OppgaveKoTjeneste>()
     val saksbehandlerRepository by inject<SaksbehandlerRepository>()
     val pepClient by inject<IPepClient>()
@@ -22,7 +19,7 @@ fun Route.OppgaveKoSaksbehandlerApis() {
         medBrukerkontekst { kontekst ->
             if (pepClient.harBasisTilgang(kontekst)) {
                 val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedIdent(
-                    kotlin.coroutines.coroutineContext.idToken().getNavIdent(),
+                    kontekst.bruker.navIdent,
                     pepClient.erKode6Bruker(Brukerkontekst(kontekst.bruker))
                 )!!
                 call.respond(
@@ -92,7 +89,7 @@ fun Route.OppgaveKoSaksbehandlerApis() {
             if (pepClient.harTilgangTilReserveringAvOppgaver(kontekst)) {
                 val oppgavekøId = call.parameters["id"]!!
                 val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedIdent(
-                    kotlin.coroutines.coroutineContext.idToken().getNavIdent(),
+                    kontekst.bruker.navIdent,
                     pepClient.erKode6Bruker(Brukerkontekst(kontekst.bruker))
                 )!!
                 val oppgaveMuligReservert = oppgaveKoTjeneste.taReservasjonFraKø(

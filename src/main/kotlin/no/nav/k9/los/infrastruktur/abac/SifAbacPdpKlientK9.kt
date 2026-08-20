@@ -11,7 +11,6 @@ import no.nav.helse.dusseldorf.oauth2.client.CachedAccessTokenClient
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.KoinProfile
 import no.nav.k9.los.infrastruktur.rest.NavHeaders
-import no.nav.k9.los.infrastruktur.rest.idToken
 import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
 import no.nav.sif.abac.kontrakt.abac.AksjonspunktType
 import no.nav.sif.abac.kontrakt.abac.BeskyttetRessursActionAttributt

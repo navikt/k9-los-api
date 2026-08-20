@@ -10,7 +10,6 @@ import kotlinx.coroutines.withContext
 import no.nav.k9.los.KoinProfile
 import no.nav.k9.los.infrastruktur.idtoken.IdTokenAzure
 import no.nav.k9.los.infrastruktur.idtoken.IdTokenLocal
-import no.nav.k9.los.infrastruktur.rest.CoroutineRequestContext
 import no.nav.k9.los.område
 import org.koin.ktor.ext.getKoin
 import java.util.UUID
@@ -26,7 +25,7 @@ suspend fun <T> RoutingContext.medInnloggetBruker(
     block: suspend (Brukerkontekst) -> T,
 ): T {
     val kontekst = Brukerkontekst(innloggetBruker())
-    return withContext(CoroutineRequestContext(kontekst.bruker.idToken) + Span.current().asContextElement()) {
+    return withContext(Span.current().asContextElement()) {
         block(kontekst)
     }
 }

@@ -5,7 +5,6 @@ import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.OppgaveTestDataBuilder
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.infrastruktur.idtoken.IdTokenLocal
-import no.nav.k9.los.infrastruktur.rest.CoroutineRequestContext
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.reservasjon.ReservasjonV3Tjeneste
 import org.hamcrest.CoreMatchers.equalTo
@@ -16,14 +15,14 @@ import java.time.LocalDateTime
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 
 class SaksbehandlerRepositoryTest : AbstractK9LosIntegrationTest() {
-    private val requestContext = CoroutineRequestContext(IdTokenLocal())
+    
 
     @Test
     fun `addSaksbehandler upserter uten a nullstille eksisterende felter`() {
         val saksbehandlerRepository = get<SaksbehandlerRepository>()
         val epost = "z999999@nav.no"
 
-        runBlocking(requestContext) {
+        runBlocking {
             // Saksbehandler får område via admin, og feltene vedlikeholdes ved innlogging
             saksbehandlerRepository.addSaksbehandler(epost, Områder.K9)
             saksbehandlerRepository.vedlikeholdSaksbehandler(
@@ -42,7 +41,7 @@ class SaksbehandlerRepositoryTest : AbstractK9LosIntegrationTest() {
             saksbehandlerRepository.addSaksbehandler(epost, Områder.K9)
         }
 
-        val lagret = runBlocking(requestContext) {
+        val lagret = runBlocking {
             saksbehandlerRepository.finnSaksbehandlerMedEpost(epost, skjermet = false)
         }!!
 
@@ -58,7 +57,7 @@ class SaksbehandlerRepositoryTest : AbstractK9LosIntegrationTest() {
         val ident = "Z123456"
         val ident2 = "Z234567"
 
-        runBlocking(requestContext) {
+        runBlocking {
             saksbehandlerRepository.addSaksbehandler(ident + "@nav.no", Områder.K9)
             saksbehandlerRepository.vedlikeholdSaksbehandler(
                 Saksbehandler(
@@ -73,7 +72,7 @@ class SaksbehandlerRepositoryTest : AbstractK9LosIntegrationTest() {
             )
         }
 
-        runBlocking(requestContext) {
+        runBlocking {
             saksbehandlerRepository.addSaksbehandler(ident2 + "@nav.no", Områder.K9)
             saksbehandlerRepository.vedlikeholdSaksbehandler(
                 Saksbehandler(
@@ -88,11 +87,11 @@ class SaksbehandlerRepositoryTest : AbstractK9LosIntegrationTest() {
             )
         }
 
-        val saksbehandler = runBlocking(requestContext) {
+        val saksbehandler = runBlocking {
             saksbehandlerRepository.finnSaksbehandlerMedIdent(ident, skjermet = false)
         }!!
 
-        val saksbehandler2 = runBlocking(requestContext) {
+        val saksbehandler2 = runBlocking {
             saksbehandlerRepository.finnSaksbehandlerMedIdent(ident, skjermet = false)
         }!!
 

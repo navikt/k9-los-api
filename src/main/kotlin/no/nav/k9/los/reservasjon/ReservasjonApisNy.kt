@@ -10,8 +10,6 @@ import no.nav.k9.los.feilhandtering.FinnerIkkeDataException
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.kontekst.medBrukerkontekst
 import no.nav.k9.los.infrastruktur.kontekst.Brukerkontekst
-import no.nav.k9.los.infrastruktur.rest.RequestContextService
-import no.nav.k9.los.infrastruktur.rest.idToken
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.OppgaveNøkkelDto
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
@@ -26,7 +24,6 @@ private val log: Logger = LoggerFactory.getLogger("nav.OppgaveApisNy")
 //TODO fjern reservasjonsid fra objekter til frontend
 
 internal fun Route.ReservasjonApisNy() {
-    val requestContextService by inject<RequestContextService>()
     val saksbehandlerRepository by inject<SaksbehandlerRepository>()
     val pepClient by inject<IPepClient>()
     val reservasjonApisTjeneste by inject<ReservasjonApisTjeneste>()
@@ -48,7 +45,7 @@ internal fun Route.ReservasjonApisNy() {
             if (pepClient.harTilgangTilReserveringAvOppgaver(kontekst)) {
                 val område = kontekst.område
                 val oppgaveIdMedOverstyringDto = call.receive<OppgaveIdMedOverstyringDto>()
-                val navident = kotlin.coroutines.coroutineContext.idToken().getNavIdent()
+                val navident = kontekst.bruker.navIdent
                 val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedIdent(navident, skjermet)
                     ?: throw IllegalStateException("Fant ikke saksbehandler $navident ved forsøk på å reservasjon av oppgave")
 
@@ -78,7 +75,7 @@ internal fun Route.ReservasjonApisNy() {
             val skjermet = pepClient.erKode6Bruker(Brukerkontekst(kontekst.bruker))
             if (pepClient.harBasisTilgang(kontekst)) {
                 val område = kontekst.område
-                val innloggetBrukerNavIdent = kotlin.coroutines.coroutineContext.idToken().getNavIdent()
+                val innloggetBrukerNavIdent = kontekst.bruker.navIdent
                 val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedIdent(innloggetBrukerNavIdent, skjermet)
 
                 if (innloggetBruker != null) {
@@ -114,7 +111,7 @@ internal fun Route.ReservasjonApisNy() {
             if (pepClient.harBasisTilgang(kontekst)) {
                 val område = kontekst.område
                 val params = call.receive<List<AnnullerReservasjonDto>>()
-                val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedIdent(kotlin.coroutines.coroutineContext.idToken().getNavIdent(), skjermet)!!
+                val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedIdent(kontekst.bruker.navIdent, skjermet)!!
 
                 try {
                     log.info(
@@ -151,7 +148,7 @@ internal fun Route.ReservasjonApisNy() {
                 val område = kontekst.område
                 val forlengReservasjonDto = call.receive<ForlengReservasjonDto>()
                 val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedIdent(
-                    kotlin.coroutines.coroutineContext.idToken().getNavIdent(), skjermet
+                    kontekst.bruker.navIdent, skjermet
                 )!!
 
                 try {
@@ -184,7 +181,7 @@ internal fun Route.ReservasjonApisNy() {
                 val params = call.receive<FlyttReservasjonDto>()
 
                 val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedIdent(
-                    kotlin.coroutines.coroutineContext.idToken().getNavIdent(), skjermet
+                    kontekst.bruker.navIdent, skjermet
                 )!!
 
                 try {
@@ -217,7 +214,7 @@ internal fun Route.ReservasjonApisNy() {
                 val område = kontekst.område
                 val reservasjonEndringDto = call.receive<List<ReservasjonEndringDto>>()
                 val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedIdent(
-                    kotlin.coroutines.coroutineContext.idToken().getNavIdent(), skjermet
+                    kontekst.bruker.navIdent, skjermet
                 )!!
                 try {
                     call.respond(reservasjonApisTjeneste.endreReservasjoner(reservasjonEndringDto, innloggetBruker, skjermet, kontekst))

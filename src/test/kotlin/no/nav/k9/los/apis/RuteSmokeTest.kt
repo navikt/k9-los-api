@@ -33,7 +33,6 @@ import no.nav.k9.los.infrastruktur.abac.PepClient
 import no.nav.k9.los.infrastruktur.abac.SifAbacPdpKlienter
 import no.nav.k9.los.infrastruktur.azuregraph.IAzureGraphService
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
-import no.nav.k9.los.infrastruktur.rest.RequestContextService
 import no.nav.k9.los.innloggetbruker.BrukersområderApi
 import no.nav.k9.los.innloggetbruker.InnloggetBrukerApi
 import no.nav.k9.los.områdeApi
@@ -169,7 +168,6 @@ internal class RuteSmokeTest : AbstractPostgresTest() {
                         single { saksbehandlerRepository }
                         single { områdeRepository }
                         single { transactionalManager }
-                        single { RequestContextService(profile = KoinProfile.PROD) }
                         single { DriftsmeldingRepository(get()) }
                         single { DriftsmeldingTjeneste(get()) }
                         single<IAzureGraphService> {

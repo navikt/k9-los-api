@@ -6,7 +6,6 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.kontekst.medBrukerkontekst
-import no.nav.k9.los.infrastruktur.rest.RequestContextService
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.område
 import org.koin.ktor.ext.inject
@@ -19,7 +18,6 @@ private val log: Logger = LoggerFactory.getLogger("nav.OppgaveApisNy")
 //TODO fjern reservasjonsid fra objekter til frontend
 
 internal fun Route.ReservasjonAdminApisNy() {
-    val requestContextService by inject<RequestContextService>()
     val pepClient by inject<IPepClient>()
     val reservasjonApisTjeneste by inject<ReservasjonApisTjeneste>()
 

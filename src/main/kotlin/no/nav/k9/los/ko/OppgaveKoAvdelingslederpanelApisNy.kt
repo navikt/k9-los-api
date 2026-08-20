@@ -9,7 +9,6 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.kontekst.medBrukerkontekst
-import no.nav.k9.los.infrastruktur.rest.RequestContextService
 import no.nav.k9.los.ko.dto.KopierOppgaveKoDto
 import no.nav.k9.los.ko.dto.OppgaveKo
 import no.nav.k9.los.ko.dto.OppgaveKoIdOgTittel
@@ -23,7 +22,6 @@ import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
 import org.koin.ktor.ext.inject
 
 fun Route.OppgaveKoAvdelingslederApisNy() {
-    val requestContextService by inject<RequestContextService>()
     val oppgaveKoTjeneste by inject<OppgaveKoTjeneste>()
     val saksbehandlerRepository by inject<SaksbehandlerRepository>()
     val pepClient by inject<IPepClient>()

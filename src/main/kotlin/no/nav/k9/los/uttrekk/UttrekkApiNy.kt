@@ -12,8 +12,6 @@ import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.kontekst.medBrukerkontekst
 import no.nav.k9.los.infrastruktur.kontekst.Brukerkontekst
 import kotlin.coroutines.coroutineContext
-import no.nav.k9.los.infrastruktur.rest.RequestContextService
-import no.nav.k9.los.infrastruktur.rest.idToken
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
 import no.nav.k9.los.område
@@ -21,7 +19,6 @@ import org.koin.ktor.ext.inject
 
 fun Route.UttrekkApiNy() {
     val pepClient by inject<IPepClient>()
-    val requestContextService by inject<RequestContextService>()
     val uttrekkTjeneste by inject<UttrekkTjeneste>()
     val uttrekkRepository by inject<UttrekkRepository>()
     val uttrekkCsvGenerator by inject<UttrekkCsvGenerator>()
@@ -42,7 +39,7 @@ fun Route.UttrekkApiNy() {
         medBrukerkontekst { kontekst ->
             if (pepClient.harBasisTilgang(kontekst)) {
                 val område = kontekst.område
-                val innloggetSaksbehandler = coroutineContext.idToken().getNavIdent().let {
+                val innloggetSaksbehandler = kontekst.bruker.navIdent.let {
                     saksbehandlerRepository.finnSaksbehandlerMedIdent(it, pepClient.erKode6Bruker(Brukerkontekst(kontekst.bruker)))
                 }
                 if (innloggetSaksbehandler == null) {
@@ -112,7 +109,7 @@ fun Route.UttrekkApiNy() {
         medBrukerkontekst { kontekst ->
             if (pepClient.harBasisTilgang(kontekst)) {
                 val område = kontekst.område
-                val innloggetSaksbehandler = coroutineContext.idToken().getNavIdent().let {
+                val innloggetSaksbehandler = kontekst.bruker.navIdent.let {
                     saksbehandlerRepository.finnSaksbehandlerMedIdent(it, pepClient.erKode6Bruker(Brukerkontekst(kontekst.bruker)))
                 }
                 if (innloggetSaksbehandler == null) {
