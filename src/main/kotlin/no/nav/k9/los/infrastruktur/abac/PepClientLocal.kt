@@ -1,6 +1,7 @@
 package no.nav.k9.los.infrastruktur.abac
 
 import no.nav.k9.los.infrastruktur.kontekst.Brukerkontekst
+import no.nav.k9.los.infrastruktur.kontekst.InnloggetBruker
 import no.nav.k9.los.infrastruktur.kontekst.Områdebrukerkontekst
 import no.nav.k9.los.infrastruktur.kontekst.Områdekall
 import no.nav.k9.los.infrastruktur.kontekst.Områdesystemkontekst
@@ -18,11 +19,11 @@ class PepClientLocal : IPepClient {
         return true
     }
 
-    override suspend fun harBasisTilgangIEttEllerFlereOmråder(kontekst: Brukerkontekst): Boolean {
+    override suspend fun harBasisTilgangIEttEllerFlereOmråder(bruker: InnloggetBruker): Boolean {
         return true
     }
 
-    override suspend fun kanLeggeUtDriftsmelding(kontekst: Brukerkontekst): Boolean {
+    override suspend fun kanLeggeUtDriftsmelding(bruker: InnloggetBruker): Boolean {
         return true
     }
 
@@ -38,7 +39,7 @@ class PepClientLocal : IPepClient {
         return false
     }
 
-    override suspend fun erKode6Bruker(kontekst: Brukerkontekst): Boolean {
+    override suspend fun erKode6Bruker(bruker: InnloggetBruker): Boolean {
         return false
     }
 

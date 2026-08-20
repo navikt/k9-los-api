@@ -1,6 +1,7 @@
 package no.nav.k9.los.infrastruktur.abac
 
 import no.nav.k9.los.infrastruktur.kontekst.Brukerkontekst
+import no.nav.k9.los.infrastruktur.kontekst.InnloggetBruker
 import no.nav.k9.los.infrastruktur.kontekst.Områdebrukerkontekst
 import no.nav.k9.los.infrastruktur.kontekst.Områdekall
 import no.nav.k9.los.infrastruktur.kontekst.Områdesystemkontekst
@@ -26,15 +27,15 @@ interface IPepClient {
      * Styrer hvilken saksbehandler-rad som gjelder. Til forskjell fra [harTilgangTilKode6],
      * som besvarer om brukeren har tilgang til kode6-saker i området kallet kjører under.
      */
-    suspend fun erKode6Bruker(kontekst: Brukerkontekst): Boolean
+    suspend fun erKode6Bruker(bruker: InnloggetBruker): Boolean
     suspend fun harBasisTilgang(kontekst: Områdebrukerkontekst): Boolean
 
     /**
      * Har brukeren basistilgang i minst ett område? For endepunkter som ikke er
      * områdespesifikke (f.eks. globale driftsmeldinger).
      */
-    suspend fun harBasisTilgangIEttEllerFlereOmråder(kontekst: Brukerkontekst): Boolean
-    suspend fun kanLeggeUtDriftsmelding(kontekst: Brukerkontekst): Boolean
+    suspend fun harBasisTilgangIEttEllerFlereOmråder(bruker: InnloggetBruker): Boolean
+    suspend fun kanLeggeUtDriftsmelding(bruker: InnloggetBruker): Boolean
     suspend fun harTilgangTilReserveringAvOppgaver(kontekst: Områdebrukerkontekst): Boolean
     suspend fun erSakKode6(fagsakNummer: String, kontekst: Områdekall): Boolean
     suspend fun erSakKode7EllerEgenAnsatt(fagsakNummer: String, kontekst: Områdekall): Boolean

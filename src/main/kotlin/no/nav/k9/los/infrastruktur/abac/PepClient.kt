@@ -32,16 +32,16 @@ class PepClient internal constructor(
         return iGruppe(grupper.saksbehandler, kontekst.bruker) || iGruppe(grupper.veileder, kontekst.bruker)
     }
 
-    override suspend fun harBasisTilgangIEttEllerFlereOmråder(kontekst: Brukerkontekst): Boolean {
+    override suspend fun harBasisTilgangIEttEllerFlereOmråder(bruker: InnloggetBruker): Boolean {
         return Områder.entries.any { område ->
             val grupper = gruppeoppsett.forOmråde(område)
-            iGruppe(grupper.saksbehandler, kontekst.bruker) || iGruppe(grupper.veileder, kontekst.bruker)
+            iGruppe(grupper.saksbehandler, bruker) || iGruppe(grupper.veileder, bruker)
         }
     }
 
-    override suspend fun kanLeggeUtDriftsmelding(kontekst: Brukerkontekst): Boolean {
+    override suspend fun kanLeggeUtDriftsmelding(bruker: InnloggetBruker): Boolean {
         // Drift-gruppen er global for Los og ikke knyttet til området ruten kjører under.
-        return iGruppe(gruppeoppsett.drift, kontekst.bruker)
+        return iGruppe(gruppeoppsett.drift, bruker)
     }
 
     override suspend fun harTilgangTilReserveringAvOppgaver(kontekst: Områdebrukerkontekst): Boolean {
@@ -61,8 +61,8 @@ class PepClient internal constructor(
         return iGruppe(gruppeoppsett.forOmråde(kontekst.område).kode6, kontekst.bruker)
     }
 
-    override suspend fun erKode6Bruker(kontekst: Brukerkontekst): Boolean {
-        return Områder.entries.any { område -> iGruppe(gruppeoppsett.forOmråde(område).kode6, kontekst.bruker) }
+    override suspend fun erKode6Bruker(bruker: InnloggetBruker): Boolean {
+        return Områder.entries.any { område -> iGruppe(gruppeoppsett.forOmråde(område).kode6, bruker) }
     }
 
     private fun iGruppe(gruppeId: UUID?, bruker: InnloggetBruker): Boolean =

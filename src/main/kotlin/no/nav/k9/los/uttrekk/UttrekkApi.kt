@@ -30,7 +30,7 @@ fun Route.UttrekkApi() {
         medBrukerkontekst { kontekst ->
             if (pepClient.harBasisTilgang(kontekst)) {
                 val innloggetSaksbehandler = kontekst.bruker.navIdent.let {
-                    saksbehandlerRepository.finnSaksbehandlerMedIdent(it, pepClient.erKode6Bruker(Brukerkontekst(kontekst.bruker)))
+                    saksbehandlerRepository.finnSaksbehandlerMedIdent(it, pepClient.erKode6Bruker(kontekst.bruker))
                 }
                 if (innloggetSaksbehandler == null) {
                     call.respond(HttpStatusCode.Forbidden, "Innlogget bruker er ikke i saksbehandler-tabellen.")
@@ -85,7 +85,7 @@ fun Route.UttrekkApi() {
         medBrukerkontekst { kontekst ->
             if (pepClient.harBasisTilgang(kontekst)) {
                 val innloggetSaksbehandler = kontekst.bruker.navIdent.let {
-                    saksbehandlerRepository.finnSaksbehandlerMedIdent(it, pepClient.erKode6Bruker(Brukerkontekst(kontekst.bruker)))
+                    saksbehandlerRepository.finnSaksbehandlerMedIdent(it, pepClient.erKode6Bruker(kontekst.bruker))
                 }
                 if (innloggetSaksbehandler == null) {
                     call.respond(HttpStatusCode.Forbidden, "Innlogget bruker er ikke i saksbehandler-tabellen.")

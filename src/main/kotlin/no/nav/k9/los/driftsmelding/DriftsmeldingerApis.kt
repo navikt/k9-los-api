@@ -16,7 +16,7 @@ fun Route.DriftsmeldingerApis() {
     get {
         medInnloggetBruker { bruker ->
             // Driftsmeldinger er globale (se Gruppeoppsett), så basistilgang i minst ett område er tilstrekkelig
-            if (pepClient.harBasisTilgangIEttEllerFlereOmråder(bruker)) {
+            if (pepClient.harBasisTilgangIEttEllerFlereOmråder(bruker.bruker)) {
                 call.respond(driftsmeldingTjeneste.hentDriftsmeldinger())
             } else {
                 call.respond(HttpStatusCode.Forbidden)
@@ -26,7 +26,7 @@ fun Route.DriftsmeldingerApis() {
 
     post {
         medInnloggetBruker { bruker ->
-            if (pepClient.kanLeggeUtDriftsmelding(bruker)) {
+            if (pepClient.kanLeggeUtDriftsmelding(bruker.bruker)) {
                 val melding = call.receive<Driftsmelding>()
                 call.respond(driftsmeldingTjeneste.leggTilDriftsmelding(melding.driftsmelding))
             } else {
@@ -37,7 +37,7 @@ fun Route.DriftsmeldingerApis() {
 
     post("/slett") {
         medInnloggetBruker { bruker ->
-            if (pepClient.kanLeggeUtDriftsmelding(bruker)) {
+            if (pepClient.kanLeggeUtDriftsmelding(bruker.bruker)) {
                 val param = call.receive<IdDto>()
                 call.respond(driftsmeldingTjeneste.slettDriftsmelding(UUID.fromString(param.id)))
             } else {
@@ -48,7 +48,7 @@ fun Route.DriftsmeldingerApis() {
 
     post("/toggle") {
         medInnloggetBruker { bruker ->
-            if (pepClient.kanLeggeUtDriftsmelding(bruker)) {
+            if (pepClient.kanLeggeUtDriftsmelding(bruker.bruker)) {
                 val param = call.receive<DriftsmeldingSwitch>()
                 call.respond(driftsmeldingTjeneste.toggleDriftsmelding(param))
             } else {

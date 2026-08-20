@@ -61,7 +61,7 @@ class PepClientGruppeoppsettTest {
             val pepClient = pepClient()
             val token = token(setOf(drift))
 
-            pepClient.kanLeggeUtDriftsmelding(globalKontekst(token)) shouldBe true
+            pepClient.kanLeggeUtDriftsmelding(globalKontekst(token).bruker) shouldBe true
         }
     }
 

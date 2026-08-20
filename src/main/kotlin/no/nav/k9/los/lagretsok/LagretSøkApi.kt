@@ -31,7 +31,7 @@ fun Route.LagretSøkApi() {
         medBrukerkontekst { kontekst ->
             if (pepClient.harBasisTilgang(kontekst)) {
                 val innloggetSaksbehandler = kontekst.bruker.navIdent.let {
-                    saksbehandlerRepository.finnSaksbehandlerMedIdent(it, pepClient.erKode6Bruker(Brukerkontekst(kontekst.bruker)))
+                    saksbehandlerRepository.finnSaksbehandlerMedIdent(it, pepClient.erKode6Bruker(kontekst.bruker))
                 }
                 if (innloggetSaksbehandler == null) {
                     call.respond(HttpStatusCode.Forbidden, "Innlogget bruker er ikke i saksbehandler-tabellen.")
@@ -59,7 +59,7 @@ fun Route.LagretSøkApi() {
             if (pepClient.harBasisTilgang(kontekst)) {
                 val id = call.parameters["id"]!!.toLong()
                 val innloggetSaksbehandler = kontekst.bruker.navIdent.let {
-                    saksbehandlerRepository.finnSaksbehandlerMedIdent(it, pepClient.erKode6Bruker(Brukerkontekst(kontekst.bruker)))
+                    saksbehandlerRepository.finnSaksbehandlerMedIdent(it, pepClient.erKode6Bruker(kontekst.bruker))
                 }
                 if (innloggetSaksbehandler == null) {
                     call.respond(HttpStatusCode.Forbidden, "Innlogget bruker er ikke i saksbehandler-tabellen.")
@@ -93,7 +93,7 @@ fun Route.LagretSøkApi() {
             if (pepClient.erOppgaveStyrer(kontekst)) {
                 val navIdent = kontekst.bruker.navIdent
                 val request = call.receive<NyttLagretSøkRequest>()
-                val lagretSøk = lagretSøkTjeneste.nytt(navIdent, request, pepClient.erKode6Bruker(Brukerkontekst(kontekst.bruker)))
+                val lagretSøk = lagretSøkTjeneste.nytt(navIdent, request, pepClient.erKode6Bruker(kontekst.bruker))
                 call.respond(HttpStatusCode.Created, lagretSøk)
             } else {
                 call.respond(HttpStatusCode.Forbidden)
@@ -127,13 +127,13 @@ fun Route.LagretSøkApi() {
         medBrukerkontekst { kontekst ->
             if (pepClient.harBasisTilgang(kontekst)) {
                 val innloggetSaksbehandler = kontekst.bruker.navIdent.let {
-                    saksbehandlerRepository.finnSaksbehandlerMedIdent(it, pepClient.erKode6Bruker(Brukerkontekst(kontekst.bruker)))
+                    saksbehandlerRepository.finnSaksbehandlerMedIdent(it, pepClient.erKode6Bruker(kontekst.bruker))
                 }
                 if (innloggetSaksbehandler == null) {
                     call.respond(HttpStatusCode.Forbidden, "Innlogget bruker er ikke i saksbehandler-tabellen.")
                 } else {
                     val endreLagretSøk = call.receive<EndreLagretSøkRequest>()
-                    val lagretSøk = lagretSøkTjeneste.endre(kontekst.bruker.navIdent, endreLagretSøk, pepClient.erKode6Bruker(Brukerkontekst(kontekst.bruker)))
+                    val lagretSøk = lagretSøkTjeneste.endre(kontekst.bruker.navIdent, endreLagretSøk, pepClient.erKode6Bruker(kontekst.bruker))
                     call.respond(HttpStatusCode.OK, lagretSøk)
                 }
             } else {
@@ -153,14 +153,14 @@ fun Route.LagretSøkApi() {
         medBrukerkontekst { kontekst ->
             if (pepClient.harBasisTilgang(kontekst)) {
                 val innloggetSaksbehandler = kontekst.bruker.navIdent.let {
-                    saksbehandlerRepository.finnSaksbehandlerMedIdent(it, pepClient.erKode6Bruker(Brukerkontekst(kontekst.bruker)))
+                    saksbehandlerRepository.finnSaksbehandlerMedIdent(it, pepClient.erKode6Bruker(kontekst.bruker))
                 }
                 if (innloggetSaksbehandler == null) {
                     call.respond(HttpStatusCode.Forbidden, "Innlogget bruker er ikke i saksbehandler-tabellen.")
                 } else {
                     val (tittel) = call.receive<KopierLagretSøkRequest>()
                     val lagretSøkId = call.parameters["id"]!!.toLong()
-                    val nyttLagretSøk = lagretSøkTjeneste.kopier(kontekst.bruker.navIdent, lagretSøkId, tittel, pepClient.erKode6Bruker(Brukerkontekst(kontekst.bruker)))
+                    val nyttLagretSøk = lagretSøkTjeneste.kopier(kontekst.bruker.navIdent, lagretSøkId, tittel, pepClient.erKode6Bruker(kontekst.bruker))
                     call.respond(HttpStatusCode.OK, nyttLagretSøk)
                 }
             } else {
@@ -182,13 +182,13 @@ fun Route.LagretSøkApi() {
         medBrukerkontekst { kontekst ->
             if (pepClient.harBasisTilgang(kontekst)) {
                 val innloggetSaksbehandler = kontekst.bruker.navIdent.let {
-                    saksbehandlerRepository.finnSaksbehandlerMedIdent(it, pepClient.erKode6Bruker(Brukerkontekst(kontekst.bruker)))
+                    saksbehandlerRepository.finnSaksbehandlerMedIdent(it, pepClient.erKode6Bruker(kontekst.bruker))
                 }
                 if (innloggetSaksbehandler == null) {
                     call.respond(HttpStatusCode.Forbidden, "Innlogget bruker er ikke i saksbehandler-tabellen.")
                 } else {
                     val lagretSøkId = call.parameters["id"]!!.toLong()
-                    lagretSøkTjeneste.slett(kontekst.bruker.navIdent, lagretSøkId, pepClient.erKode6Bruker(Brukerkontekst(kontekst.bruker)))
+                    lagretSøkTjeneste.slett(kontekst.bruker.navIdent, lagretSøkId, pepClient.erKode6Bruker(kontekst.bruker))
                     call.respond(HttpStatusCode.OK)
                 }
             } else {
@@ -202,7 +202,7 @@ fun Route.LagretSøkApi() {
             if (pepClient.harBasisTilgang(kontekst)) {
                 val lagretSøkId = call.parameters["id"]!!
                 val innloggetSaksbehandler = kontekst.bruker.navIdent.let {
-                    saksbehandlerRepository.finnSaksbehandlerMedIdent(it, pepClient.erKode6Bruker(Brukerkontekst(kontekst.bruker)))
+                    saksbehandlerRepository.finnSaksbehandlerMedIdent(it, pepClient.erKode6Bruker(kontekst.bruker))
                 }
                 if (innloggetSaksbehandler == null) {
                     call.respond(HttpStatusCode.Forbidden, "Innlogget bruker er ikke i saksbehandler-tabellen.")

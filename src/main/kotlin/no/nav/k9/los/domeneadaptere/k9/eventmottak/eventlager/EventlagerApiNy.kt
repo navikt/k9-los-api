@@ -51,7 +51,7 @@ internal fun Route.EventlagerApiNy() {
         }
     }) {
         medInnloggetBruker { bruker ->
-            if (pepClient.kanLeggeUtDriftsmelding(bruker)) {
+            if (pepClient.kanLeggeUtDriftsmelding(bruker.bruker)) {
                 val fagsystem = Fagsystem.fraKode(call.parameters["fagsystem"]!!)
                 val eksternId = call.parameters["eksternId"]!!
 
