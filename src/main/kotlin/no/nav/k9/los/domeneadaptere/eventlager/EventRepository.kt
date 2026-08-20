@@ -1,9 +1,10 @@
-package no.nav.k9.los.domeneadaptere.k9.eventmottak.eventlager
+package no.nav.k9.los.domeneadaptere.eventlager
 
 import kotliquery.*
 import no.nav.k9.los.infrastruktur.db.util.InClauseHjelper
 import no.nav.k9.los.kodeverk.Fagsystem
 import org.jetbrains.annotations.VisibleForTesting
+import org.slf4j.LoggerFactory
 import javax.sql.DataSource
 
 
@@ -11,7 +12,7 @@ import javax.sql.DataSource
 class EventRepository(
     private val dataSource: DataSource,
 ) {
-    private val log = org.slf4j.LoggerFactory.getLogger(EventRepository::class.java)
+    private val log = LoggerFactory.getLogger(EventRepository::class.java)
 
     fun upsertOgLåsEventnøkkel(fagsystem: Fagsystem, eksternId: String, tx: TransactionalSession): Long {
         val id = tx.run(

@@ -12,7 +12,7 @@ import kotliquery.queryOf
 import no.nav.k9.kodeverk.behandling.FagsakYtelseType
 import no.nav.k9.los.domeneadaptere.k9.K9Oppgavetypenavn
 import no.nav.k9.los.domeneadaptere.k9.avstemming.AvstemmingsTjeneste
-import no.nav.k9.los.domeneadaptere.k9.eventmottak.eventlager.EventRepository
+import no.nav.k9.los.domeneadaptere.eventlager.EventRepository
 import no.nav.k9.los.domeneadaptere.k9.statistikk.StatistikkRepository
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.db.TransactionalManager

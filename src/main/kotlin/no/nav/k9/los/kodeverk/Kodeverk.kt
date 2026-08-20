@@ -140,7 +140,9 @@ enum class Fagsystem(override val kode: String, override val kodeverk: String, o
     K9SAK("K9SAK", "FAGSYSTEM", "K9-sak"),
     K9TILBAKE("K9TILBAKE", "FAGSYSTEM", "K9-tilbake"),
     K9KLAGE("K9KLAGE", "FAGSYSTEM", "K9-klage"),
-    PUNSJ("PUNSJ", "FAGSYSTEM", "K9-punsj");
+    PUNSJ("PUNSJ", "FAGSYSTEM", "K9-punsj"),
+    UNGSAK("UNGSAK", "FAGSYSTEM", "Ung-sak"),
+    UNGTILBAKE("UNGTILBAKE", "FAGSYSTEM", "Ung-tilbake");
 
     companion object {
         @JsonCreator(mode = JsonCreator.Mode.DELEGATING)

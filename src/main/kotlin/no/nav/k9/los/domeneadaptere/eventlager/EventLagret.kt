@@ -1,4 +1,4 @@
-package no.nav.k9.los.domeneadaptere.k9.eventmottak.eventlager
+package no.nav.k9.los.domeneadaptere.eventlager
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.klage.K9KlageEventDto

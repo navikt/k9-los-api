@@ -6,8 +6,8 @@ import no.nav.helse.dusseldorf.ktor.auth.issuers
 import no.nav.helse.dusseldorf.ktor.auth.withoutAdditionalClaimRules
 import no.nav.helse.dusseldorf.ktor.core.getOptionalString
 import no.nav.helse.dusseldorf.ktor.core.getRequiredString
-import no.nav.k9.los.domeneadaptere.k9.eventmottak.kafka.IKafkaConfig
-import no.nav.k9.los.domeneadaptere.k9.eventmottak.kafka.KafkaAivenConfig
+import no.nav.k9.los.domeneadaptere.kafka.IKafkaConfig
+import no.nav.k9.los.domeneadaptere.kafka.KafkaAivenConfig
 import no.nav.k9.los.infrastruktur.db.createHikariConfig
 import org.apache.kafka.clients.consumer.OffsetResetStrategy
 import java.net.URI
@@ -89,6 +89,10 @@ data class Configuration(private val config: ApplicationConfig) {
     internal fun getSakOgBehandlingTopic(): String {
         return config.getOptionalString("nav.kafka.sakOgBehandlingTopic", secret = false)
             ?: ""
+    }
+
+    internal fun getUngSakHendelseTopic(): String {
+        return config.getOptionalString("nav.kafka.ungSakTopic", secret = false) ?: ""
     }
 
     internal fun getÅpenStatistikkSakTopic(): String {

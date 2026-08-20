@@ -1,6 +1,6 @@
 package no.nav.k9.los.domeneadaptere.k9.eventtiloppgave
 
-import no.nav.k9.los.domeneadaptere.k9.eventmottak.eventlager.EventLagret
+import no.nav.k9.los.domeneadaptere.eventlager.EventLagret
 import no.nav.k9.los.domeneadaptere.k9.eventtiloppgave.klagetillos.KlageEventTilOppgaveMapper
 import no.nav.k9.los.domeneadaptere.k9.eventtiloppgave.punsjtillos.PunsjEventTilOppgaveMapper
 import no.nav.k9.los.domeneadaptere.k9.eventtiloppgave.saktillos.SakEventTilOppgaveMapper

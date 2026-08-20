@@ -39,8 +39,8 @@ import no.nav.helse.dusseldorf.ktor.jackson.JacksonStatusPages
 import no.nav.helse.dusseldorf.ktor.jackson.dusseldorfConfigured
 import no.nav.helse.dusseldorf.ktor.metrics.init
 import no.nav.k9.los.domeneadaptere.k9.OmrådeSetup
-import no.nav.k9.los.domeneadaptere.k9.eventmottak.eventlager.EventlagerApi
-import no.nav.k9.los.domeneadaptere.k9.eventmottak.kafka.AsynkronProsesseringV1Service
+import no.nav.k9.los.domeneadaptere.eventlager.EventlagerApi
+import no.nav.k9.los.domeneadaptere.kafka.AsynkronProsesseringV1Service
 import no.nav.k9.los.domeneadaptere.k9.eventtiloppgave.EventTilOppgaveAdapter
 import no.nav.k9.los.domeneadaptere.k9.eventtiloppgave.HistorikkvaskTjeneste
 import no.nav.k9.los.domeneadaptere.k9.refreshk9sakoppgaver.K9sakBehandlingsoppfriskingJobb

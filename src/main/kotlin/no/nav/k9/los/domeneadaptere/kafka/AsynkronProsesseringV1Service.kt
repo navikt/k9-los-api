@@ -1,4 +1,4 @@
-package no.nav.k9.los.domeneadaptere.k9.eventmottak.kafka
+package no.nav.k9.los.domeneadaptere.kafka
 
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.klage.K9KlageEventHandler
