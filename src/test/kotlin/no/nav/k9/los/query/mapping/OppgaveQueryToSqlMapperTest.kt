@@ -43,7 +43,7 @@ class OppgaveQueryToSqlMapperTest {
         )
 
         val oppgavestatuser = OppgaveQueryToSqlMapper.traverserFiltereOgFinnOppgavestatus(
-            QueryRequest(oppgaveQuery),
+            QueryRequest(område = Områder.K9, oppgaveQuery = oppgaveQuery),
         )
 
         assertThat(oppgavestatuser).containsOnly(Oppgavestatus.AAPEN, Oppgavestatus.LUKKET)
@@ -67,7 +67,7 @@ class OppgaveQueryToSqlMapperTest {
             )
         )
         val sqlBuilder = OppgaveQueryToSqlMapper.toSql(
-            QueryRequest(oppgaveQuery),
+            QueryRequest(område = Områder.K9, oppgaveQuery = oppgaveQuery),
             felter,
             LocalDateTime.now()
         )
@@ -95,7 +95,7 @@ class OppgaveQueryToSqlMapperTest {
             )
         )
         val sqlBuilder = OppgaveQueryToSqlMapper.toSql(
-            QueryRequest(oppgaveQuery),
+            QueryRequest(område = Områder.K9, oppgaveQuery = oppgaveQuery),
             felter,
             LocalDateTime.now()
         )

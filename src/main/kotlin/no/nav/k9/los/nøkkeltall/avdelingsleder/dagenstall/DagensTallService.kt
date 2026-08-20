@@ -85,7 +85,7 @@ class DagensTallService(
             add(AggregertSelectFelt(Aggregeringsfunksjon.ANTALL))
         }
         val query = OppgaveQuery(filtere = filtere, select = selectFelter)
-        val resultat = queryService.query(QueryRequest(query))
+        val resultat = queryService.query(QueryRequest(query, område = Områder.K9))
 
         return resultat.map { rad ->
             TelleRad(

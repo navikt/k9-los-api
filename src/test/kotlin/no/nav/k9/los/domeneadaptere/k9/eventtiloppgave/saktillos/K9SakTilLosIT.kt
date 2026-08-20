@@ -67,7 +67,7 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         k9SakEventHandler.prosesser(opprettetUtenÅpneAksjonspunkter)
 
         val oppgaveQueryService = get<OppgaveQueryService>()
-        val antallIDb = oppgaveQueryService.queryForAntall(QueryRequest(querySomKunInneholder(eksternId)))
+        val antallIDb = oppgaveQueryService.queryForAntall(QueryRequest(område = Områder.K9, oppgaveQuery = querySomKunInneholder(eksternId)))
         assertThat(antallIDb).isEqualTo(1)
 
         val skjermet = runBlocking { pepClient.harTilgangTilKode6(kontekst(TestSaksbehandler.SARA.navident!!)) }
@@ -90,7 +90,7 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         k9SakEventHandler.prosesser(opprettetUtenÅpneAksjonspunkter)
 
         val oppgaveQueryService = get<OppgaveQueryService>()
-        val antallIDb = oppgaveQueryService.queryForAntall(QueryRequest(querySomKunInneholder(eksternId)))
+        val antallIDb = oppgaveQueryService.queryForAntall(QueryRequest(område = Områder.K9, oppgaveQuery = querySomKunInneholder(eksternId)))
         assertThat(antallIDb).isEqualTo(1)
 
         val skjermet = runBlocking { pepClient.harTilgangTilKode6(kontekst(TestSaksbehandler.SARA.navident!!)) }
@@ -144,7 +144,7 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         k9SakEventHandler.prosesser(opprettetUtenÅpneAksjonspunkter)
 
         val oppgaveQueryService = get<OppgaveQueryService>()
-        val antallIDb = oppgaveQueryService.queryForAntall(QueryRequest(querySomKunInneholder(eksternId)))
+        val antallIDb = oppgaveQueryService.queryForAntall(QueryRequest(område = Områder.K9, oppgaveQuery = querySomKunInneholder(eksternId)))
         assertThat(antallIDb).isEqualTo(1)
 
         val skjermet = runBlocking { pepClient.harTilgangTilKode6(kontekst(TestSaksbehandler.SARA.navident!!)) }
@@ -174,7 +174,7 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         k9SakEventHandler.prosesser(K9SakEventDtoBuilder(eksternId).vurderSykdom().build())
 
         val oppgaveQueryService = get<OppgaveQueryService>()
-        val antallIDb = oppgaveQueryService.queryForAntall(QueryRequest(querySomKunInneholder(eksternId)))
+        val antallIDb = oppgaveQueryService.queryForAntall(QueryRequest(område = Områder.K9, oppgaveQuery = querySomKunInneholder(eksternId)))
         assertThat(antallIDb).isEqualTo(1)
 
         val skjermet = runBlocking { pepClient.harTilgangTilKode6(kontekst(TestSaksbehandler.SARA.navident!!)) }
@@ -211,7 +211,7 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         )
 
         val oppgaveQueryService = get<OppgaveQueryService>()
-        val antallIDb = oppgaveQueryService.queryForAntall(QueryRequest(querySomKunInneholder(eksternId)))
+        val antallIDb = oppgaveQueryService.queryForAntall(QueryRequest(område = Områder.K9, oppgaveQuery = querySomKunInneholder(eksternId)))
         assertThat(antallIDb).isEqualTo(1)
 
         val skjermet = runBlocking<Boolean> { pepClient.harTilgangTilKode6(kontekst(TestSaksbehandler.SARA.navident!!)) }

@@ -143,10 +143,10 @@ class OppgaveKoTjenesteTest {
         every { oppgaveKoRepository.hent(1L, false) } returns kø
         every {
             oppgaveQueryService.queryForOppgave(
-                QueryRequest(
-                    oppgaveQuery = kø.oppgaveQuery,
+                QueryRequest(oppgaveQuery = kø.oppgaveQuery,
                     fjernReserverte = false,
                     avgrensning = Avgrensning.maxAntall(2),
+                    område = Områder.K9,
                 )
             )
         } returns listOf(utenTilgang, førsteMedTilgang)
@@ -163,10 +163,10 @@ class OppgaveKoTjenesteTest {
         assertThat(resultat.rader.mapNotNull { it["id"] }).containsExactly("SAK-2")
         coVerify(exactly = 1) {
             oppgaveQueryService.queryForOppgave(
-                QueryRequest(
-                    oppgaveQuery = kø.oppgaveQuery,
+                QueryRequest(oppgaveQuery = kø.oppgaveQuery,
                     fjernReserverte = false,
                     avgrensning = Avgrensning.maxAntall(2),
+                    område = Områder.K9,
                 )
             )
         }

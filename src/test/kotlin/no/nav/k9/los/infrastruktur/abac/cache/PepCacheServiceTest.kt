@@ -364,7 +364,7 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
         sikkerhetsklassifiseringtype: PersonBeskyttelseType
     ): List<Any> {
         val resultat = oppgaveQueryService.query(
-            QueryRequest(
+            QueryRequest(område = Områder.K9, oppgaveQuery = 
                 OppgaveQuery(
                     select = listOf(EnkelSelectFelt(område = Områder.K9, kode = "ekstern_id")),
                     filtere = listOf(

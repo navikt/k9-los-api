@@ -105,6 +105,7 @@ class OppgaveKoTjeneste(
                 oppgaveQuery = kø.oppgaveQuery,
                 fjernReserverte = fjernReserverte,
                 avgrensning = Avgrensning.maxAntall(ønsketAntallOppgaver),
+                område = kø.område,
             )
         )
 
@@ -211,7 +212,7 @@ class OppgaveKoTjeneste(
             AntallOppgaverForKøCacheKey(oppgaveKoId, filtrerReserverte),
             antallOppgaverCacheVarighet
         )
-        { oppgaveQueryService.queryForAntall(QueryRequest(ko.oppgaveQuery, fjernReserverte = filtrerReserverte)) }
+        { oppgaveQueryService.queryForAntall(QueryRequest(ko.oppgaveQuery, fjernReserverte = filtrerReserverte, område = ko.område)) }
     }
 
     @WithSpan
@@ -260,7 +261,8 @@ class OppgaveKoTjeneste(
                     QueryRequest(
                         oppgavekø.oppgaveQuery,
                         fjernReserverte = true,
-                        avgrensning = Avgrensning(limit = antallKandidaterEtterspurt.toLong())
+                        avgrensning = Avgrensning(limit = antallKandidaterEtterspurt.toLong()),
+                        område = oppgavekø.område
                     )
                 )
             }

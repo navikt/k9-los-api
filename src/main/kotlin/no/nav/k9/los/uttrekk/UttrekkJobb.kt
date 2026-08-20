@@ -1,5 +1,6 @@
 package no.nav.k9.los.uttrekk
 
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.query.OppgaveQueryService
 import no.nav.k9.los.oppgaveuthenting.query.QueryRequest
 import org.slf4j.LoggerFactory
@@ -15,7 +16,7 @@ class UttrekkJobb(
     fun kjørUttrekk(uttrekkId: Long) {
         try {
             val uttrekk = uttrekkTjeneste.startUttrekk(uttrekkId)
-            var queryRequest = QueryRequest(uttrekk.query, avgrensning = uttrekk.avgrensning)
+            var queryRequest = QueryRequest(uttrekk.query, avgrensning = uttrekk.avgrensning, område = Områder.K9)
 
             val resultat = oppgaveQueryService.query(queryRequest)
 

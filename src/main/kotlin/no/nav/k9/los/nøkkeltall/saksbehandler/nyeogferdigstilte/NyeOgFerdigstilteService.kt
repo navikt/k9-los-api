@@ -88,7 +88,7 @@ class NyeOgFerdigstilteService(
                         )
                     )
                 })
-        )
+        , område = Områder.K9)
         return queryService.queryForAntall(request).toInt()
     }
 
@@ -108,7 +108,7 @@ class NyeOgFerdigstilteService(
                         )
                     )
                 })
-        )
+        , område = Områder.K9)
         return queryService.queryForAntall(request).toInt()
     }
 

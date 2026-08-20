@@ -42,7 +42,7 @@ class StatusService(
                 AggregertSelectFelt(Aggregeringsfunksjon.ANTALL),
             ),
         )
-        val resultat = queryService.query(QueryRequest(oppgaveQuery))
+        val resultat = queryService.query(QueryRequest(oppgaveQuery, område = Områder.K9))
 
         val alleGrupper = resultat.mapNotNull { rad ->
             val behandlingTypeKode = rad.feltverdier.firstOrNull()?.verdi?.toString() ?: return@mapNotNull null

@@ -1,5 +1,6 @@
 package no.nav.k9.los.lagretsok
 
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.query.OppgaveQueryService
 import no.nav.k9.los.oppgaveuthenting.query.QueryRequest
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
@@ -50,7 +51,7 @@ class LagretSøkTjeneste(
         // Gjør ikke sjekk her på om lagret søk tilhører innlogget bruker, regner ikke det som nødvendig
         val lagretSøk = lagretSøkRepository.hent(lagretSøkId)
             ?: throw IllegalStateException("Lagret søk med id $lagretSøkId finnes ikke")
-        return oppgaveQueryService.queryForAntall(QueryRequest(lagretSøk.query))
+        return oppgaveQueryService.queryForAntall(QueryRequest(lagretSøk.query, område = Områder.K9))
     }
 
     suspend fun kopier(navIdent: String, lagretSøkId: Long, tittel: String, skjermet: Boolean): Long {

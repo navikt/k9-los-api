@@ -87,7 +87,7 @@ class StatusFordelingService(val queryService: OppgaveQueryService) {
                 AggregertSelectFelt(Aggregeringsfunksjon.ANTALL),
             ),
         )
-        val resultat = queryService.query(QueryRequest(query))
+        val resultat = queryService.query(QueryRequest(query, område = Områder.K9))
 
         return resultat.associate { rad ->
             val status = rad.feltverdier.first().verdi?.toString() ?: ""
@@ -151,7 +151,7 @@ class StatusFordelingService(val queryService: OppgaveQueryService) {
             ),
             select = listOf(AggregertSelectFelt(Aggregeringsfunksjon.ANTALL)),
         )
-        val venterKabal = queryService.queryForAntall(QueryRequest(venterKabalQuery))
+        val venterKabal = queryService.queryForAntall(QueryRequest(venterKabalQuery, område = Områder.K9))
         val venterAnnet = (statusAntall[Oppgavestatus.VENTER.kode] ?: 0L) - venterKabal
 
         fun kildeQuery(vararg ekstraFiltre: Oppgavefilter) =

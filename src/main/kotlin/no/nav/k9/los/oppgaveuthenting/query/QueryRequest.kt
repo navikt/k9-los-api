@@ -7,7 +7,7 @@ data class QueryRequest(
     val oppgaveQuery: OppgaveQuery,
     val fjernReserverte: Boolean = false,
     val avgrensning: Avgrensning? = null,
-    val område: Områder = Områder.K9
+    val område: Områder
 )
 
 data class Avgrensning (

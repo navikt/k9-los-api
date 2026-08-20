@@ -188,7 +188,8 @@ fun Route.forvaltningApisNy() {
                         )
                     ),
                     fjernReserverte = false,
-                    avgrensning = null
+                    avgrensning = null,
+                    område = Områder.fraFagsystem(fagsystem)
                 )
 
                 val eksternIds = oppgaveQueryService.query(query).map { rad ->
@@ -536,7 +537,7 @@ fun Route.forvaltningApisNy() {
                         verdi = listOf(K9Oppgavetypenavn.fraFagsystem(fagsystem).kode)
                     )
                 )
-                val eksternIder = oppgaveQueryService.queryForOppgaveEksternId(QueryRequest(oppgaveQuery))
+                val eksternIder = oppgaveQueryService.queryForOppgaveEksternId(QueryRequest(oppgaveQuery, område = Områder.fraFagsystem(fagsystem)))
                     .map { it.eksternId }
                     .distinct()
 
@@ -593,7 +594,7 @@ fun Route.forvaltningApisNy() {
                         verdi = listOf(fagsystem.oppgavetypeKode)
                     )
                 )
-                val eksternIder = oppgaveQueryService.queryForOppgaveEksternId(QueryRequest(oppgaveQuery))
+                val eksternIder = oppgaveQueryService.queryForOppgaveEksternId(QueryRequest(oppgaveQuery, område = Områder.K9))
                     .map { it.eksternId }
                     .distinct()
 

@@ -20,7 +20,7 @@ fun Route.OppgaveQueryApis() {
         medBrukerkontekst { kontekst ->
             if (pepClient.harBasisTilgang(kontekst)) {
                 val oppgaveQuery = call.receive<OppgaveQuery>()
-                call.respond(oppgaveQueryService.queryForAntall(QueryRequest(oppgaveQuery, false)))
+                call.respond(oppgaveQueryService.queryForAntall(QueryRequest(oppgaveQuery, false, område = kontekst.område)))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
@@ -31,7 +31,7 @@ fun Route.OppgaveQueryApis() {
         medBrukerkontekst { kontekst ->
             if (pepClient.harBasisTilgang(kontekst)) {
                 val oppgaveQuery = call.receive<OppgaveQuery>()
-                call.respond(oppgaveQueryService.validate(QueryRequest(oppgaveQuery)))
+                call.respond(oppgaveQueryService.validate(QueryRequest(oppgaveQuery, område = kontekst.område)))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
