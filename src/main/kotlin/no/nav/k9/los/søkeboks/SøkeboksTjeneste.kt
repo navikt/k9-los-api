@@ -23,13 +23,13 @@ class SøkeboksTjeneste(
 ) {
     suspend fun finnOppgaver(søkeord: String, område: Områder, kontekst: Områdebrukerkontekst): Søkeresultat {
         val adapter = oppgavesøkere.forOmråde(område)
-        val oppgaver = finnOppgaverFor(søkeord, område, adapter) ?: return Søkeresultat.IkkeTilgang
+        val oppgaver = finnOppgaverFor(søkeord, område, adapter, kontekst) ?: return Søkeresultat.IkkeTilgang
         return transformerTilSøkeresultat(oppgaver, adapter, kontekst)
     }
 
     suspend fun finnOppgaverSammendrag(søkeord: String, område: Områder, kontekst: Områdebrukerkontekst): SøkeresultatSammendrag {
         val adapterForOmråde = oppgavesøkere.forOmråde(område)
-        val oppgaver = finnOppgaverFor(søkeord, område, adapterForOmråde) ?: return SøkeresultatSammendrag.IkkeTilgang
+        val oppgaver = finnOppgaverFor(søkeord, område, adapterForOmråde, kontekst) ?: return SøkeresultatSammendrag.IkkeTilgang
         return transformerTilSøkeresultatSammendrag(oppgaver, adapterForOmråde, kontekst)
     }
 
@@ -41,8 +41,9 @@ class SøkeboksTjeneste(
         søkeord: String,
         område: Områder,
         adapter: Oppgavesøk,
+        kontekst: Områdebrukerkontekst,
     ): List<Oppgave>? {
-        val klassifisertSøkeord = klassifiser(søkeord) ?: return null
+        val klassifisertSøkeord = klassifiser(søkeord, kontekst) ?: return null
         val query = adapter.lagQuery(klassifisertSøkeord) ?: return emptyList()
         return queryService.queryForOppgave(QueryRequest(oppgaveQuery = query, område = område))
     }
@@ -52,9 +53,9 @@ class SøkeboksTjeneste(
      * 9 tegn journalpostId, ellers saksnummer. Returnerer null ved manglende tilgang til
      * personen bak et fødselsnummer.
      */
-    private suspend fun klassifiser(søkeord: String): Søkeord? = when (søkeord.length) {
+    private suspend fun klassifiser(søkeord: String, kontekst: Områdebrukerkontekst): Søkeord? = when (søkeord.length) {
         11 -> {
-            val pdlRespons = pdlService.identifikator(søkeord)
+            val pdlRespons = pdlService.identifikator(søkeord, kontekst.bruker)
             if (pdlRespons.ikkeTilgang) {
                 null
             } else {
@@ -78,7 +79,7 @@ class SøkeboksTjeneste(
 
         val aktørId = adapter.aktørId(oppgaver.first()) ?: return Søkeresultat.TomtResultat
 
-        val (ikkeTilgang, person) = pdlService.person(aktørId)
+        val (ikkeTilgang, person) = pdlService.person(aktørId, kontekst.bruker)
 
         if (ikkeTilgang || person == null) {
             return Søkeresultat.IkkeTilgang
@@ -110,7 +111,7 @@ class SøkeboksTjeneste(
         if (oppgaver.isEmpty()) return SøkeresultatSammendrag.TomtResultat
 
         val aktørId = adapter.aktørId(oppgaver.first()) ?: return SøkeresultatSammendrag.TomtResultat
-        val (ikkeTilgang, person) = pdlService.person(aktørId)
+        val (ikkeTilgang, person) = pdlService.person(aktørId, kontekst.bruker)
         if (ikkeTilgang || person == null) return SøkeresultatSammendrag.IkkeTilgang
 
         val filtrertForTilgang = énOppgavePerSak(oppgaver, adapter).filter {
@@ -122,6 +123,7 @@ class SøkeboksTjeneste(
         return SøkeresultatSammendrag.MedResultat(
             oppgaver = oppgaveSammendragDtoBuilder.bygg(
                 synligeOppgaver,
+                kontekst.bruker,
                 alleredeHentedePersoner = mapOf(aktørId to person),
             ),
         )

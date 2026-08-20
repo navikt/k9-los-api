@@ -5,20 +5,19 @@ import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import no.nav.k9.los.infrastruktur.kontekst.medBrukerkontekst
 import no.nav.k9.los.Configuration
-import no.nav.k9.los.infrastruktur.rest.RequestContextService
 import no.nav.k9.los.feilhandtering.IllegalDeleteException
 import org.koin.ktor.ext.inject
 
 // Må legge til tilgangskontroll dersom disse endepunktene aktiveres
 internal fun Route.FeltdefinisjonApi() {
-    val requestContextService by inject<RequestContextService>()
     val feltdefinisjonTjeneste by inject<FeltdefinisjonTjeneste>()
     val config by inject<Configuration>()
 
     post {
         if (config.nyOppgavestyringRestAktivert()) {
-            requestContextService.withRequestContext(call) {
+            medBrukerkontekst {
                 val innkommendeFeltdefinisjonerDto = call.receive<FeltdefinisjonerDto>()
 
                 try {
@@ -35,7 +34,7 @@ internal fun Route.FeltdefinisjonApi() {
 
     post {
         if (config.nyOppgavestyringRestAktivert()) {
-            requestContextService.withRequestContext(call) {
+            medBrukerkontekst {
                 val kodeverkDto = call.receive<KodeverkDto>()
                 feltdefinisjonTjeneste.oppdater(kodeverkDto)
             }

@@ -37,7 +37,7 @@ internal fun Route.InnloggetBrukerApi() {
                 val kontekst = Områdebrukerkontekst(call.område, bruker)
                 val skjermet = pepClient.erKode6Bruker(brukerkontekst)
                 log.info("Henter innlogget saksbehandler med epost ${token.getUsername()} og navn ${token.getName()}")
-                val saksbehandlerIdent = azureGraphService.hentIdentTilInnloggetBruker()
+                val saksbehandlerIdent = azureGraphService.hentIdentTilInnloggetBruker(bruker)
                 val saksbehandler =
                     saksbehandlerRepository.finnSaksbehandlerMedIdent(token.getNavIdent(), skjermet)
                         ?: saksbehandlerRepository.finnSaksbehandlerMedEpost(token.getUsername(), skjermet)
@@ -69,7 +69,7 @@ internal fun Route.InnloggetBrukerApi() {
                             navident = saksbehandlerIdent,
                             navn = token.getName(),
                             epost = token.getUsername(),
-                            enhet = azureGraphService.hentEnhetForInnloggetBruker(),
+                            enhet = azureGraphService.hentEnhetForInnloggetBruker(bruker),
                             områder = saksbehandler.områder
                         ),
                         skjermet

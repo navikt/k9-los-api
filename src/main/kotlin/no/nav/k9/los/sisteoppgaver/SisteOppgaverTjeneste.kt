@@ -27,7 +27,7 @@ class SisteOppgaverTjeneste(
 
     suspend fun hentSisteOppgaver(kontekst: Områdebrukerkontekst): List<SisteOppgaverDto> {
         return try {
-            val saksbehandlerIdent = azureGraphService.hentIdentTilInnloggetBruker()
+            val saksbehandlerIdent = azureGraphService.hentIdentTilInnloggetBruker(kontekst.bruker)
 
             val oppgaver =
                 transactionalManager.transaction { tx ->
@@ -43,7 +43,7 @@ class SisteOppgaverTjeneste(
 
             if (oppgaver.isEmpty()) return emptyList()
 
-            val grupperForSaksbehandler = azureGraphService.hentGrupperForInnloggetSaksbehandler()
+            val grupperForSaksbehandler = azureGraphService.hentGrupperForInnloggetSaksbehandler(kontekst.bruker)
 
             val innhentinger = try {
                 withContext(Dispatchers.IO + Span.current().asContextElement()) {
@@ -56,7 +56,7 @@ class SisteOppgaverTjeneste(
                                     grupperForSaksbehandler = grupperForSaksbehandler
                                 )
                                 val personPdl = oppgave.hentVerdi("aktorId")?.let {
-                                    pdlService.person(it)
+                                    pdlService.person(it, kontekst.bruker)
                                 }
                                 Triple(harTilgang, personPdl, oppgave)
                             } catch (e: Exception) {
@@ -99,8 +99,8 @@ class SisteOppgaverTjeneste(
         }
     }
 
-    suspend fun lagreSisteOppgave(oppgaveNøkkelDto: OppgaveNøkkelDto) {
-        val brukerIdent = azureGraphService.hentIdentTilInnloggetBruker()
+    suspend fun lagreSisteOppgave(oppgaveNøkkelDto: OppgaveNøkkelDto, kontekst: Områdebrukerkontekst) {
+        val brukerIdent = azureGraphService.hentIdentTilInnloggetBruker(kontekst.bruker)
         transactionalManager.transaction { tx ->
             sisteOppgaverRepository.lagreSisteOppgave(
                 tx,

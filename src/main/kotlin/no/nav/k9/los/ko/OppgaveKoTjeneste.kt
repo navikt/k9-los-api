@@ -79,7 +79,7 @@ class OppgaveKoTjeneste(
 
         // Kun mulig med en enkelt order på køer per i dag. Inkluderer den som kolonne.
         val orderFelt = kø.oppgaveQuery.order.filterIsInstance<EnkelOrderFelt>().firstOrNull()
-        return byggDto(tilgjengeligeOppgaver, orderFelt)
+        return byggDto(tilgjengeligeOppgaver, orderFelt, kontekst)
     }
 
     @WithSpan
@@ -91,7 +91,7 @@ class OppgaveKoTjeneste(
     ): OppgaverFraKøDto {
         val kø = oppgaveKoRepository.hent(oppgaveKoId, pepClient.harTilgangTilKode6(kontekst))
         val oppgaver = hentTilgjengeligeOppgaverFraKø(kø, ønsketAntallOppgaver, fjernReserverte, kontekst)
-        return OppgaverFraKøDto(oppgaveSammendragDtoBuilder.bygg(oppgaver))
+        return OppgaverFraKøDto(oppgaveSammendragDtoBuilder.bygg(oppgaver, kontekst.bruker))
     }
 
     private suspend fun hentTilgjengeligeOppgaverFraKø(
@@ -121,7 +121,8 @@ class OppgaveKoTjeneste(
 
     private suspend fun byggDto(
         oppgaver: List<Oppgave>,
-        orderFelt: EnkelOrderFelt?
+        orderFelt: EnkelOrderFelt?,
+        kontekst: Områdebrukerkontekst,
     ): NesteOppgaverFraKoDto {
 
         val visningskolonner = buildMap {
@@ -139,7 +140,7 @@ class OppgaveKoTjeneste(
             buildMap {
                 oppgave.hentVerdi("aktorId")?.let { aktørId ->
                     put(
-                        "søker", pdlService.person(aktørId).person
+                        "søker", pdlService.person(aktørId, kontekst.bruker).person
                             ?.let { "${it.navn()} ${it.fnr()}" }
                             ?: "Ukjent navn Ukjent fnummer")
                 }

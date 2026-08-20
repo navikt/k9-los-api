@@ -10,8 +10,8 @@ import no.nav.helse.dusseldorf.ktor.metrics.Operation
 import no.nav.helse.dusseldorf.oauth2.client.AccessTokenClient
 import no.nav.helse.dusseldorf.oauth2.client.CachedAccessTokenClient
 import no.nav.k9.los.infrastruktur.azuregraph.IAzureGraphService
+import no.nav.k9.los.infrastruktur.kontekst.InnloggetBruker
 import no.nav.k9.los.infrastruktur.rest.NavHeaders
-import no.nav.k9.los.infrastruktur.rest.idToken
 import no.nav.k9.los.infrastruktur.utils.Cache
 import no.nav.k9.los.infrastruktur.utils.CacheObject
 import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
@@ -45,7 +45,7 @@ class PdlService(
     private data class FrnTilAktørIdCacheKey(val saksbehandlerIdent: String, val fnr: String)
     private val fnrTilAktørIdCache = Cache<FrnTilAktørIdCacheKey, PdlResponse>(10_000)
 
-    override suspend fun person(aktorId: String): PersonPdlResponse {
+    override suspend fun person(aktorId: String, bruker: InnloggetBruker): PersonPdlResponse {
         if (aktorId.isEmpty()) {
             log.info("Forsøker å hente person med tom aktorId")
             return PersonPdlResponse(false, null)
@@ -56,7 +56,7 @@ class PdlService(
             mapOf("ident" to aktorId)
         )
 
-        val saksbehandlerIdent = azureGraphService.hentIdentTilInnloggetBruker()
+        val saksbehandlerIdent = azureGraphService.hentIdentTilInnloggetBruker(bruker)
         val cacheKey = AktørIdTilPersonCacheKey(saksbehandlerIdent, aktorId)
         val cachedObject = aktørIdTilPersonCache.get(cacheKey)
         if (cachedObject != null) {
@@ -76,7 +76,7 @@ class PdlService(
             ) {
                 httpClient.post(personUrl) {
                     setBody(LosObjectMapper.instance.writeValueAsString(queryRequest))
-                    header(HttpHeaders.Authorization, authorizationHeader())
+                    header(HttpHeaders.Authorization, authorizationHeader(bruker))
                     header(HttpHeaders.Accept, "application/json")
                     header(HttpHeaders.ContentType, "application/json")
                     header(NavHeaders.Tema, "OMS")
@@ -90,7 +90,7 @@ class PdlService(
                 response.bodyAsText()
             } else {
                 log.warn("Error response = '${response.bodyAsText()}' fra '${response.request.url}'")
-                log.warn("HTTP ${response.status.value} ${response.status.description} aktorId callId: ${callId} ${coroutineContext.idToken().getUsername()}")
+                log.warn("HTTP ${response.status.value} ${response.status.description} aktorId callId: ${callId} ${bruker.idToken.getUsername()}")
                 null
             }
         }
@@ -120,7 +120,7 @@ class PdlService(
         }
     }
 
-    override suspend fun identifikator(fnummer: String): PdlResponse {
+    override suspend fun identifikator(fnummer: String, bruker: InnloggetBruker): PdlResponse {
         val queryRequest = QueryRequest(
             graphqlQueryHentIdent,
             mapOf(
@@ -130,7 +130,7 @@ class PdlService(
             )
         )
 
-        val saksbehandlerIdent = azureGraphService.hentIdentTilInnloggetBruker()
+        val saksbehandlerIdent = azureGraphService.hentIdentTilInnloggetBruker(bruker)
         val cacheKey = FrnTilAktørIdCacheKey(saksbehandlerIdent, fnummer)
         val cachedObject = fnrTilAktørIdCache.get(cacheKey)
         if (cachedObject != null) {
@@ -151,7 +151,7 @@ class PdlService(
             ) {
                 httpClient.post(personUrl) {
                     setBody(LosObjectMapper.instance.writeValueAsString(queryRequest))
-                    header(HttpHeaders.Authorization, authorizationHeader())
+                    header(HttpHeaders.Authorization, authorizationHeader(bruker))
                     header(HttpHeaders.Accept, "application/json")
                     header(HttpHeaders.ContentType, "application/json")
                     header(NavHeaders.Tema, "OMS")
@@ -203,9 +203,9 @@ class PdlService(
         )
     }
 
-    private suspend fun authorizationHeader() = cachedAccessTokenClient.getOnBehalfOfAccessToken(
+    private suspend fun authorizationHeader(bruker: InnloggetBruker) = cachedAccessTokenClient.getOnBehalfOfAccessToken(
         scopes = scopes,
-        onBehalfOf = coroutineContext.idToken().value
+        onBehalfOf = bruker.idToken.value
     ).asAuthoriationHeader()
 
     private fun getStringFromResource(path: String) =

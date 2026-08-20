@@ -4,19 +4,18 @@ import io.github.smiley4.ktoropenapi.get
 import io.ktor.http.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import no.nav.k9.los.infrastruktur.kontekst.medBrukerkontekst
 import no.nav.k9.los.Configuration
-import no.nav.k9.los.infrastruktur.rest.RequestContextService
 import org.koin.ktor.ext.inject
 import kotlin.concurrent.thread
 
 internal fun Route.StatistikkApi() {
-    val requestContextService by inject<RequestContextService>()
     val oppgavestatistikkTjeneste by inject<OppgavestatistikkTjeneste>()
     val config by inject<Configuration>()
 
     put {
         if (config.nyOppgavestyringRestAktivert()) {
-            requestContextService.withRequestContext(call) {
+            medBrukerkontekst {
                 thread(
                     start = true,
                     isDaemon = true,
@@ -48,7 +47,7 @@ internal fun Route.StatistikkApi() {
             }
         }
     }) {
-        requestContextService.withRequestContext(call) {
+        medBrukerkontekst {
             val oppgavetype = call.parameters["oppgavetype"]!!
             oppgavestatistikkTjeneste.slettStatistikkgrunnlag(oppgavetype)
             call.respond(HttpStatusCode.NoContent)

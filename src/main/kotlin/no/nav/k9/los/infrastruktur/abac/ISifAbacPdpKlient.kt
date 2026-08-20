@@ -9,9 +9,6 @@ interface ISifAbacPdpKlient {
     suspend fun diskresjonskoderPerson(aktørId: AktørId): Set<Diskresjonskode>
     suspend fun diskresjonskoderSak(saksnummerDto: SaksnummerDto): Set<Diskresjonskode>
 
-    suspend fun harTilgangTilSak(action: Action, saksnummerDto: SaksnummerDto): Boolean
-    suspend fun harTilgangTilPersoner(action: Action, aktørIder: List<AktørId>): Boolean
-
     suspend fun harTilgangTilSak(action: Action, saksnummerDto: SaksnummerDto, saksbehandlersIdent : String, saksbehandlersGrupper : Set<UUID>): Boolean
     suspend fun harTilgangTilPersoner(action: Action, aktørIder: List<AktørId>, saksbehandlersIdent : String, saksbehandlersGrupper : Set<UUID>): Boolean
 }

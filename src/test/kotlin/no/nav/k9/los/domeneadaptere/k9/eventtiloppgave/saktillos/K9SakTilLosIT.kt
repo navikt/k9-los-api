@@ -111,7 +111,7 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
                 ),
                 skjermet = false,
             )
-            reservasjonTjeneste.hentReserverteOppgaverForSaksbehandler(TestSaksbehandler.SARA)
+            reservasjonTjeneste.hentReserverteOppgaverForSaksbehandler(TestSaksbehandler.SARA, kontekst(TestSaksbehandler.SARA.navident!!))
         }
 
         assertThat(reservasjoner.isNotEmpty())
@@ -395,7 +395,7 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         k9SakEventHandler.prosesser(avsluttet)
         k9SakEventHandler.prosesser(avsluttes)     // Feil rekkefølge under iverksettelse av behandling i k9-sak
 
-        runBlocking { get<ReservasjonApisTjeneste>().hentReserverteOppgaverForSaksbehandler(TestSaksbehandler.BIRGER_BESLUTTER) }
+        runBlocking { get<ReservasjonApisTjeneste>().hentReserverteOppgaverForSaksbehandler(TestSaksbehandler.BIRGER_BESLUTTER, kontekst(TestSaksbehandler.BIRGER_BESLUTTER.navident!!)) }
         assertIngenReservasjon(TestSaksbehandler.BIRGER_BESLUTTER)
         assertIngenReservasjon(TestSaksbehandler.SARA)
 
@@ -450,7 +450,7 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         val reservasjonApisTjeneste = get<ReservasjonApisTjeneste>()
         runBlocking {
             assertThat(
-                reservasjonApisTjeneste.hentReserverteOppgaverForSaksbehandler(saksbehandler)
+                reservasjonApisTjeneste.hentReserverteOppgaverForSaksbehandler(saksbehandler, kontekst(saksbehandler.navident!!))
             ).isEmpty()
         }
     }
@@ -465,7 +465,7 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
 
     private fun assertReservasjon(saksbehandler: Saksbehandler, antallReservasjoner: Int, antallOppgaver: Int) {
         val reservasjonApisTjeneste = get<ReservasjonApisTjeneste>()
-        val reservasjon = runBlocking { reservasjonApisTjeneste.hentReserverteOppgaverForSaksbehandler(saksbehandler) }
+        val reservasjon = runBlocking { reservasjonApisTjeneste.hentReserverteOppgaverForSaksbehandler(saksbehandler, kontekst(saksbehandler.navident!!)) }
         assertThat(reservasjon).hasSize(antallReservasjoner)
         reservasjon.firstOrNull()?.let {
             assertThat(it.reserverteV3Oppgaver.filter { it.oppgavestatus == Oppgavestatus.AAPEN }).hasSize(

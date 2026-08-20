@@ -66,7 +66,7 @@ class SisteOppgaverTjenesteTest : AbstractK9LosIntegrationTest() {
         pdlService = mockk(relaxed = true)
         azureGraphService = mockk(relaxed = true)
         
-        coEvery { azureGraphService.hentIdentTilInnloggetBruker() } returns "test@nav.no"
+        coEvery { azureGraphService.hentIdentTilInnloggetBruker(any()) } returns "test@nav.no"
         coEvery { azureGraphService.hentGrupperForSaksbehandler(any()) } returns setOf(UUID.randomUUID())
 
         sisteOppgaverTjeneste = SisteOppgaverTjeneste(
@@ -104,7 +104,7 @@ class SisteOppgaverTjenesteTest : AbstractK9LosIntegrationTest() {
             .lagOgLagre()
             
         val mockPerson: PersonPdl = mockk(relaxed = true)
-        coEvery { pdlService.person(aktorId1) } returns PersonPdlResponse(false, mockPerson)
+        coEvery { pdlService.person(aktorId1, any()) } returns PersonPdlResponse(false, mockPerson)
 
         coEvery {
             pepClient.harTilgangTilOppgaveV3(any(), eq(kontekst), eq(Action.read), any())
@@ -116,7 +116,8 @@ class SisteOppgaverTjenesteTest : AbstractK9LosIntegrationTest() {
                 områdeEksternId = "K9",
                 oppgaveEksternId = oppgave1.eksternId,
                 oppgaveTypeEksternId = oppgave1.oppgavetype.eksternId
-            )
+            ),
+            kontekst
         )
         
         // Hent siste oppgaver, og sjekk resultatet
@@ -139,8 +140,8 @@ class SisteOppgaverTjenesteTest : AbstractK9LosIntegrationTest() {
             .lagOgLagre()
 
         val mockPerson: PersonPdl = mockk(relaxed = true)
-        coEvery { pdlService.person(aktorId1) } returns PersonPdlResponse(false, mockPerson)
-        coEvery { pdlService.person(aktorId2) } returns PersonPdlResponse(true, mockPerson)
+        coEvery { pdlService.person(aktorId1, any()) } returns PersonPdlResponse(false, mockPerson)
+        coEvery { pdlService.person(aktorId2, any()) } returns PersonPdlResponse(true, mockPerson)
         
         // Bruker har tilgang til oppgave1 men ikke oppgave2
         coEvery {
@@ -155,15 +156,17 @@ class SisteOppgaverTjenesteTest : AbstractK9LosIntegrationTest() {
                 områdeEksternId = "K9",
                 oppgaveEksternId = oppgave1.eksternId,
                 oppgaveTypeEksternId = "k9sak"
-            )
+            ),
+            kontekst
         )
-        
+
         sisteOppgaverTjeneste.lagreSisteOppgave(
             OppgaveNøkkelDto(
                 områdeEksternId = "K9",
                 oppgaveEksternId = oppgave2.eksternId,
                 oppgaveTypeEksternId = "k9sak"
-            )
+            ),
+            kontekst
         )
 
         // Sjekk resultatet - skal kun få oppgave1 tilbake siden bruker ikke har tilgang til oppgave2

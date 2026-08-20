@@ -6,6 +6,7 @@ import io.github.smiley4.ktoropenapi.put
 import io.ktor.http.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import no.nav.k9.los.infrastruktur.kontekst.medBrukerkontekst
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.klage.K9KlageEventDto
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventDto
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.sak.K9SakEventDto
@@ -17,7 +18,6 @@ import no.nav.k9.los.forvaltning.K9SakEventIkkeSensitiv
 import no.nav.k9.los.forvaltning.K9TilbakeEventIkkeSensitiv
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.kontekst.medInnloggetBruker
-import no.nav.k9.los.infrastruktur.rest.RequestContextService
 import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.kodeverk.Fagsystem
 import org.koin.ktor.ext.inject
@@ -25,7 +25,6 @@ import java.util.*
 import kotlin.concurrent.thread
 
 internal fun Route.EventlagerApi() {
-    val requestContextService by inject<RequestContextService>()
     val eventRepository by inject<EventRepository>()
     val oppgaveAdapter by inject<EventTilOppgaveAdapter>()
     val pepClient by inject<IPepClient>()
@@ -85,7 +84,7 @@ internal fun Route.EventlagerApi() {
 
     put("/spillAvDirtyEventer", {
     }) {
-        requestContextService.withRequestContext(call) {
+        medBrukerkontekst {
             thread(
                 start = true,
                 isDaemon = true,
@@ -134,7 +133,7 @@ internal fun Route.EventlagerApi() {
             }
         }
     }) {
-        requestContextService.withRequestContext(call) {
+        medBrukerkontekst {
             val fagsystem = Fagsystem.fraKode(call.parameters["fagsystem"]!!)
             val eksternId = call.parameters["eksternId"]!!
             eventRepository.bestillHistorikkvask(fagsystem, eksternId)

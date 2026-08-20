@@ -46,13 +46,13 @@ class OppgaveSammendragTest {
     fun `builder henter samme person bare en gang per respons`() = runBlocking {
         val pdlService = mockk<IPdlService>()
         val person = person()
-        coEvery { pdlService.person("aktor-1") } returns PersonPdlResponse(false, person)
+        coEvery { pdlService.person("aktor-1", any()) } returns PersonPdlResponse(false, person)
         val builder = OppgaveSammendragDtoBuilder(Oppgavesøkere(K9Oppgavesøk(), UngOppgavesøk()), pdlService)
 
-        val resultat = builder.bygg(listOf(oppgave(Områder.K9), oppgave(Områder.K9, "oppgave-2")))
+        val resultat = builder.bygg(listOf(oppgave(Områder.K9), oppgave(Områder.K9, "oppgave-2")), mockk())
 
         assertThat(resultat.size).isEqualTo(2)
-        coVerify(exactly = 1) { pdlService.person("aktor-1") }
+        coVerify(exactly = 1) { pdlService.person("aktor-1", any()) }
     }
 
     @Test
@@ -60,10 +60,10 @@ class OppgaveSammendragTest {
         val pdlService = mockk<IPdlService>()
         val builder = OppgaveSammendragDtoBuilder(Oppgavesøkere(K9Oppgavesøk(), UngOppgavesøk()), pdlService)
 
-        val resultat = builder.bygg(listOf(oppgave(Områder.K9)), mapOf("aktor-1" to person()))
+        val resultat = builder.bygg(listOf(oppgave(Områder.K9)), mockk(), mapOf("aktor-1" to person()))
 
         assertThat(resultat.single().person?.fnr).isEqualTo("12345678901")
-        coVerify(exactly = 0) { pdlService.person(any()) }
+        coVerify(exactly = 0) { pdlService.person(any(), any()) }
     }
 
     @Test
@@ -71,7 +71,7 @@ class OppgaveSammendragTest {
         val builder = OppgaveSammendragDtoBuilder(Oppgavesøkere(K9Oppgavesøk(), UngOppgavesøk()), mockk())
 
         val feil = assertThrows<NotImplementedError> {
-            runBlocking { builder.bygg(listOf(oppgave(Områder.UNG))) }
+            runBlocking { builder.bygg(listOf(oppgave(Områder.UNG)), mockk()) }
         }
 
         assertThat(feil.message ?: "").contains("UNG")

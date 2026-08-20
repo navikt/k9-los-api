@@ -72,6 +72,7 @@ class ReservasjonApisTjeneste(
         reservasjonEndringDto: List<ReservasjonEndringDto>,
         innloggetBruker: Saksbehandler,
         skjermet: Boolean,
+        kontekst: Områdebrukerkontekst,
     ) {
         reservasjonEndringDto.forEach {
             endreReservasjon(
@@ -81,6 +82,7 @@ class ReservasjonApisTjeneste(
                 it.reserverTil,
                 it.begrunnelse,
                 skjermet,
+                kontekst,
             )
         }
     }
@@ -92,6 +94,7 @@ class ReservasjonApisTjeneste(
         reserverTil: LocalDate? = null,
         begrunnelse: String? = null,
         skjermet: Boolean,
+        kontekst: Områdebrukerkontekst,
     ): ReservasjonV3Dto {
         val tilSaksbehandler =
             tilBrukerIdent?.let { saksbehandlerRepository.finnSaksbehandlerMedIdent(it, skjermet) }
@@ -116,12 +119,13 @@ class ReservasjonApisTjeneste(
         val reservertAv = saksbehandlerRepository.finnSaksbehandlerMedId(nyReservasjon.reservasjonV3.reservertAv)!!
         log.info("endreReservasjon: ${nyReservasjon.reservasjonV3}, reservertAv: $reservertAv")
 
-        return reservasjonV3DtoBuilder.byggReservasjonV3Dto(nyReservasjon, reservertAv)
+        return reservasjonV3DtoBuilder.byggReservasjonV3Dto(nyReservasjon, reservertAv, kontekst.bruker)
     }
 
     suspend fun forlengReservasjon(
         forlengReservasjonDto: ForlengReservasjonDto,
-        innloggetBruker: Saksbehandler
+        innloggetBruker: Saksbehandler,
+        kontekst: Områdebrukerkontekst,
     ): ReservasjonV3Dto {
         val reservasjonsnøkkel =
             forlengReservasjonDto.reservasjonsnøkkel ?: aktivOppgaveOppslag.hentAktivOppgave(
@@ -141,13 +145,14 @@ class ReservasjonApisTjeneste(
             saksbehandlerRepository.finnSaksbehandlerMedId(forlengetReservasjon.reservasjonV3.reservertAv)!!
         log.info("forlengReservasjon: ${forlengetReservasjon.reservasjonV3}, reservertAv: $reservertAv")
 
-        return reservasjonV3DtoBuilder.byggReservasjonV3Dto(forlengetReservasjon, reservertAv)
+        return reservasjonV3DtoBuilder.byggReservasjonV3Dto(forlengetReservasjon, reservertAv, kontekst.bruker)
     }
 
     suspend fun overførReservasjon(
         params: FlyttReservasjonDto,
         innloggetBruker: Saksbehandler,
         skjermet: Boolean,
+        kontekst: Områdebrukerkontekst,
     ): ReservasjonV3Dto {
         val tilSaksbehandler = saksbehandlerRepository.finnSaksbehandlerMedIdent(
             params.brukerIdent, skjermet
@@ -167,7 +172,7 @@ class ReservasjonApisTjeneste(
         )
         log.info("overførReservasjon: ${nyReservasjon.reservasjonV3}, utførtAv: $innloggetBruker., tilSaksbehandler: $tilSaksbehandler")
 
-        return reservasjonV3DtoBuilder.byggReservasjonV3Dto(nyReservasjon, tilSaksbehandler)
+        return reservasjonV3DtoBuilder.byggReservasjonV3Dto(nyReservasjon, tilSaksbehandler, kontekst.bruker)
     }
 
     private fun annullerReservasjon(
@@ -199,13 +204,13 @@ class ReservasjonApisTjeneste(
         }
     }
 
-    suspend fun hentReserverteOppgaverForSaksbehandler(saksbehandler: Saksbehandler): List<ReservasjonV3Dto> {
+    suspend fun hentReserverteOppgaverForSaksbehandler(saksbehandler: Saksbehandler, kontekst: Områdebrukerkontekst): List<ReservasjonV3Dto> {
         val reservasjonerMedOppgaver =
             reservasjonV3Tjeneste.hentReservasjonerForSaksbehandler(saksbehandler.id!!)
 
         return reservasjonerMedOppgaver.map { reservasjonMedOppgaver ->
             try {
-                reservasjonV3DtoBuilder.byggReservasjonV3Dto(reservasjonMedOppgaver, saksbehandler)
+                reservasjonV3DtoBuilder.byggReservasjonV3Dto(reservasjonMedOppgaver, saksbehandler, kontekst.bruker)
             } catch (e: Exception) {
                 log.warn("Klarte ikke tolke reservasjon med id ${reservasjonMedOppgaver.reservasjonV3.id}, v3-oppgaver: ${reservasjonMedOppgaver.oppgaverV3.map { it.eksternId }}")
                 throw e
@@ -215,12 +220,13 @@ class ReservasjonApisTjeneste(
 
     suspend fun hentReserverteOppgaverSammendragForSaksbehandler(
         saksbehandler: Saksbehandler,
+        kontekst: Områdebrukerkontekst,
     ): List<ReservasjonSammendragDto> {
         val reservasjoner = reservasjonV3Tjeneste.hentReservasjonerForSaksbehandler(saksbehandler.id!!)
         // Bygger alle oppgavene i ett kall for å dele PDL-oppslag, og deler resultatet
         // tilbake per reservasjon. Forutsetter at builderen returnerer ett sammendrag
         // per oppgave i samme rekkefølge.
-        val alleOppgaver = oppgaveSammendragDtoBuilder.bygg(reservasjoner.flatMap { it.oppgaverV3 })
+        val alleOppgaver = oppgaveSammendragDtoBuilder.bygg(reservasjoner.flatMap { it.oppgaverV3 }, kontekst.bruker)
         var indeks = 0
 
         return reservasjoner.map { reservasjonMedOppgaver ->
@@ -247,7 +253,7 @@ class ReservasjonApisTjeneste(
         if (!pepClient.harTilgangTilOppgaveV3(
                 oppgave = oppgave,
                 kontekst = kontekst,
-                grupperForSaksbehandler = azureGraphService.hentGrupperForInnloggetSaksbehandler()
+                grupperForSaksbehandler = azureGraphService.hentGrupperForInnloggetSaksbehandler(kontekst.bruker)
             )
         ) {
             throw ManglerTilgangException("Mangler tilgang til oppgave ${oppgave.eksternId}")

@@ -174,8 +174,8 @@ internal class RuteSmokeTest : AbstractPostgresTest() {
                         single { DriftsmeldingTjeneste(get()) }
                         single<IAzureGraphService> {
                             mockk {
-                                coEvery { hentIdentTilInnloggetBruker() } returns "Z123456"
-                                coEvery { hentEnhetForInnloggetBruker() } returns "3450"
+                                coEvery { hentIdentTilInnloggetBruker(any()) } returns "Z123456"
+                                coEvery { hentEnhetForInnloggetBruker(any()) } returns "3450"
                             }
                         }
                         single {

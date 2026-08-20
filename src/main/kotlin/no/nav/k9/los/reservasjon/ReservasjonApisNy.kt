@@ -82,7 +82,7 @@ internal fun Route.ReservasjonApisNy() {
                 val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedIdent(innloggetBrukerNavIdent, skjermet)
 
                 if (innloggetBruker != null) {
-                    val reservasjoner = reservasjonApisTjeneste.hentReserverteOppgaverSammendragForSaksbehandler(innloggetBruker)
+                    val reservasjoner = reservasjonApisTjeneste.hentReserverteOppgaverSammendragForSaksbehandler(innloggetBruker, kontekst)
                     call.respond(reservasjoner)
                 } else {
                     log.info("Innlogger bruker med brukernavn $innloggetBrukerNavIdent finnes ikke i saksbehandlertabellen")
@@ -155,7 +155,7 @@ internal fun Route.ReservasjonApisNy() {
                 )!!
 
                 try {
-                    call.respond(reservasjonApisTjeneste.forlengReservasjon(forlengReservasjonDto, innloggetBruker))
+                    call.respond(reservasjonApisTjeneste.forlengReservasjon(forlengReservasjonDto, innloggetBruker, kontekst))
                 } catch (e: FinnerIkkeDataException) {
                     call.respond(HttpStatusCode.NotFound, "Fant ingen aktiv reservasjon for angitt reservasjonsnøkkel")
                 }
@@ -189,7 +189,7 @@ internal fun Route.ReservasjonApisNy() {
 
                 try {
                     log.info("Flytter reservasjonen til ${params.brukerIdent} (Gjort av ${innloggetBruker.navident})")
-                    call.respond(reservasjonApisTjeneste.overførReservasjon(params, innloggetBruker, skjermet))
+                    call.respond(reservasjonApisTjeneste.overførReservasjon(params, innloggetBruker, skjermet, kontekst))
                 } catch (e: FinnerIkkeDataException) {
                     call.respond(HttpStatusCode.NotFound, "Fant ingen aktiv reservasjon for angitt reservasjonsnøkkel")
                 }
@@ -220,7 +220,7 @@ internal fun Route.ReservasjonApisNy() {
                     kotlin.coroutines.coroutineContext.idToken().getNavIdent(), skjermet
                 )!!
                 try {
-                    call.respond(reservasjonApisTjeneste.endreReservasjoner(reservasjonEndringDto, innloggetBruker, skjermet))
+                    call.respond(reservasjonApisTjeneste.endreReservasjoner(reservasjonEndringDto, innloggetBruker, skjermet, kontekst))
                 } catch (e: FinnerIkkeDataException) {
                     call.respond(HttpStatusCode.NotFound, "Fant ingen aktiv reservasjon for angitt reservasjonsnøkkel")
                 }

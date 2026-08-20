@@ -12,7 +12,7 @@ import no.nav.helse.dusseldorf.oauth2.client.AccessToken
 import no.nav.helse.dusseldorf.oauth2.client.AccessTokenClient
 import no.nav.helse.dusseldorf.oauth2.client.CachedAccessTokenClient
 import no.nav.k9.los.infrastruktur.idtoken.IdToken
-import no.nav.k9.los.infrastruktur.rest.idToken
+import no.nav.k9.los.infrastruktur.kontekst.InnloggetBruker
 import no.nav.k9.los.infrastruktur.utils.Cache
 import no.nav.k9.los.infrastruktur.utils.CacheObject
 import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
@@ -32,8 +32,8 @@ open class AzureGraphService(
     private val saksbehandlerGrupperCache = Cache<String, Set<UUID>>(cacheSizeLimit = 1000)
     private val log = LoggerFactory.getLogger("AzureGraphService")!!
 
-    override suspend fun hentIdentTilInnloggetBruker(): String {
-        return coroutineContext.idToken().getNavIdent()
+    override suspend fun hentIdentTilInnloggetBruker(bruker: InnloggetBruker): String {
+        return bruker.navIdent
     }
 
     private suspend fun håndterResultat(
@@ -50,8 +50,8 @@ open class AzureGraphService(
         }
     }
 
-    override suspend fun hentEnhetForInnloggetBruker(): String {
-        val token = coroutineContext.idToken()
+    override suspend fun hentEnhetForInnloggetBruker(bruker: InnloggetBruker): String {
+        val token = bruker.idToken
         return hentEnhetForBruker(brukernavn = token.getUsername(), onBehalfOf = token)
     }
 
@@ -129,9 +129,9 @@ open class AzureGraphService(
         return hentGrupperForSaksbehandler(userId, saksbehandlerIdent)
     }
 
-    override suspend fun hentGrupperForInnloggetSaksbehandler(): Set<UUID> {
-        val token = coroutineContext.idToken()
-        return saksbehandlerGrupperCache.hent(coroutineContext.idToken().getNavIdent()) {
+    override suspend fun hentGrupperForInnloggetSaksbehandler(bruker: InnloggetBruker): Set<UUID> {
+        val token = bruker.idToken
+        return saksbehandlerGrupperCache.hent(bruker.navIdent) {
             val accessToken = accessToken(token)
             val json = runBlocking {
                 Retry.retry(

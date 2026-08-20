@@ -17,6 +17,8 @@ import no.nav.k9.los.oppgaveuthenting.sammendrag.OppgaveSammendragDto
 import no.nav.k9.los.oppgaveuthenting.sammendrag.OppgaveSammendragDtoBuilder
 import no.nav.k9.los.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
+import no.nav.k9.los.infrastruktur.kontekst.InnloggetBruker
+import no.nav.k9.los.infrastruktur.kontekst.Områdebrukerkontekst
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 
@@ -30,6 +32,7 @@ class ReservasjonApisTjenesteTest {
         val sammendrag1 = mockk<OppgaveSammendragDto>()
         val sammendrag2 = mockk<OppgaveSammendragDto>()
         val saksbehandler = Saksbehandler(1, "Z123456", "Saks Behandler", "saks@nav.no", null, listOf(Områder.K9))
+        val kontekst = Områdebrukerkontekst(Områder.K9, InnloggetBruker("Z123456", emptySet(), mockk()))
         val nå = LocalDateTime.parse("2026-08-12T09:00:00")
         val reservasjon1 = ReservasjonV3(1, "r1", "", nå, nå.plusDays(1), null, Områder.K9)
         val reservasjon2 = ReservasjonV3(1, "r2", "", nå, nå.plusDays(1), null, Områder.K9)
@@ -37,7 +40,7 @@ class ReservasjonApisTjenesteTest {
             ReservasjonV3MedOppgaver(reservasjon1, listOf(oppgave1)),
             ReservasjonV3MedOppgaver(reservasjon2, listOf(oppgave2)),
         )
-        coEvery { builder.bygg(listOf(oppgave1, oppgave2), emptyMap()) } returns listOf(sammendrag1, sammendrag2)
+        coEvery { builder.bygg(listOf(oppgave1, oppgave2), any(), emptyMap()) } returns listOf(sammendrag1, sammendrag2)
         val tjeneste = ReservasjonApisTjeneste(
             mockk<SaksbehandlerRepository>(relaxed = true),
             reservasjonV3Tjeneste,
@@ -49,9 +52,9 @@ class ReservasjonApisTjenesteTest {
             builder,
         )
 
-        val resultat = tjeneste.hentReserverteOppgaverSammendragForSaksbehandler(saksbehandler)
+        val resultat = tjeneste.hentReserverteOppgaverSammendragForSaksbehandler(saksbehandler, kontekst)
 
         assertThat(resultat.map { it.oppgaver.single() }).isEqualTo(listOf(sammendrag1, sammendrag2))
-        coVerify(exactly = 1) { builder.bygg(listOf(oppgave1, oppgave2), emptyMap()) }
+        coVerify(exactly = 1) { builder.bygg(listOf(oppgave1, oppgave2), kontekst.bruker, emptyMap()) }
     }
 }

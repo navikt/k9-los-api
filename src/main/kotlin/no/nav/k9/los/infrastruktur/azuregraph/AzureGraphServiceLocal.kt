@@ -1,14 +1,15 @@
 package no.nav.k9.los.infrastruktur.azuregraph
 
+import no.nav.k9.los.infrastruktur.kontekst.InnloggetBruker
 import java.util.*
 
 open class AzureGraphServiceLocal : IAzureGraphService {
 
-    override suspend fun hentIdentTilInnloggetBruker(): String {
+    override suspend fun hentIdentTilInnloggetBruker(bruker: InnloggetBruker): String {
         return "Z123456"
     }
 
-    override suspend fun hentEnhetForInnloggetBruker(): String {
+    override suspend fun hentEnhetForInnloggetBruker(bruker: InnloggetBruker): String {
         return "3450"
     }
 
@@ -20,7 +21,7 @@ open class AzureGraphServiceLocal : IAzureGraphService {
         return emptySet()
     }
 
-    override suspend fun hentGrupperForInnloggetSaksbehandler(): Set<UUID> {
+    override suspend fun hentGrupperForInnloggetSaksbehandler(bruker: InnloggetBruker): Set<UUID> {
         return emptySet()
     }
 }

@@ -39,7 +39,7 @@ fun Route.SisteOppgaverApi() {
         medBrukerkontekst { kontekst ->
             if (pepClient.harBasisTilgang(kontekst)) {
                 val oppgaveNøkkel = call.receive<OppgaveNøkkelDto>()
-                sisteOppgaverTjeneste.lagreSisteOppgave(oppgaveNøkkel)
+                sisteOppgaverTjeneste.lagreSisteOppgave(oppgaveNøkkel, kontekst)
                 call.respond(HttpStatusCode.OK)
             } else {
                 call.respond(HttpStatusCode.Forbidden)

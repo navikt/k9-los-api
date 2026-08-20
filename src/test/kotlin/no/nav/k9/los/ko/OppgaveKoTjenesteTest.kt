@@ -82,7 +82,7 @@ class OppgaveKoTjenesteTest {
         every { oppgaveKoRepository.hent(1L, false) } returns kø
         every { oppgaveQueryService.queryForOppgave(any()) } returns listOf(oppgave)
         coEvery { pepClient.harTilgangTilOppgaveV3(oppgave, kontekst, Action.read, null) } returns true
-        coEvery { builder.bygg(listOf(oppgave), emptyMap()) } returns listOf(sammendrag)
+        coEvery { builder.bygg(listOf(oppgave), kontekst.bruker, emptyMap()) } returns listOf(sammendrag)
         val tjeneste = OppgaveKoTjeneste(
             transactionalManager = mockk<TransactionalManager>(relaxed = true),
             oppgaveKoRepository = oppgaveKoRepository,
@@ -99,7 +99,7 @@ class OppgaveKoTjenesteTest {
         val resultat = tjeneste.hentOppgaverFraKøSammendrag(kontekst, 1L, 10L, true)
 
         assertThat(resultat.oppgaver).containsExactly(sammendrag)
-        coVerify(exactly = 1) { builder.bygg(listOf(oppgave), emptyMap()) }
+        coVerify(exactly = 1) { builder.bygg(listOf(oppgave), kontekst.bruker, emptyMap()) }
     }
 
     @Test
