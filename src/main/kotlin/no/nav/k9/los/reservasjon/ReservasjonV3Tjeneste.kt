@@ -6,7 +6,7 @@ import kotliquery.TransactionalSession
 import no.nav.k9.los.feilhandtering.FinnerIkkeDataException
 import no.nav.k9.los.infrastruktur.abac.Action
 import no.nav.k9.los.infrastruktur.abac.IPepClient
-import no.nav.k9.los.infrastruktur.kontekst.Systemkontekst
+import no.nav.k9.los.infrastruktur.kontekst.Områdesystemkontekst
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.infrastruktur.utils.leggTilDagerHoppOverHelg
 import no.nav.k9.los.ko.KøpåvirkendeHendelse
@@ -329,7 +329,7 @@ class ReservasjonV3Tjeneste(
 
             pepClient.harTilgangTilOppgaveV3(
                 oppgave,
-                Systemkontekst(oppgave.oppgavetype.område.tilOmrådeEnum(), "reservasjon"),
+                Områdesystemkontekst(oppgave.oppgavetype.område.tilOmrådeEnum()),
                 saksbehandler,
                 Action.reserver,
             )

@@ -7,6 +7,7 @@ import io.ktor.server.routing.*
 import no.nav.k9.los.feilhandtering.FinnerIkkeDataException
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.kontekst.medBrukerkontekst
+import no.nav.k9.los.infrastruktur.kontekst.Brukerkontekst
 import no.nav.k9.los.infrastruktur.rest.RequestContextService
 import no.nav.k9.los.infrastruktur.rest.idToken
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
@@ -28,15 +29,16 @@ internal fun Route.ReservasjonApis() {
 
     post("/reserver") {
         medBrukerkontekst { kontekst ->
+            val skjermet = pepClient.erKode6Bruker(Brukerkontekst(kontekst.bruker))
             if (pepClient.harTilgangTilReserveringAvOppgaver(kontekst)) {
                 val oppgaveIdMedOverstyringDto = call.receive<OppgaveIdMedOverstyringDto>()
                 val navident = kotlin.coroutines.coroutineContext.idToken().getNavIdent()
-                val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedIdent(navident)
+                val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedIdent(navident, skjermet)
                     ?: throw IllegalStateException("Fant ikke saksbehandler $navident ved forsøk på å reservasjon av oppgave")
 
                 try {
                     log.info("Forsøker å ta reservasjon direkte på ${oppgaveIdMedOverstyringDto.oppgaveNøkkel.oppgaveEksternId} for ${innloggetBruker.navident}")
-                    val oppgave = reservasjonApisTjeneste.reserverOppgave(innloggetBruker, oppgaveIdMedOverstyringDto)
+                    val oppgave = reservasjonApisTjeneste.reserverOppgave(innloggetBruker, oppgaveIdMedOverstyringDto, skjermet)
                     call.respond(oppgave)
                 } catch (e: ManglerTilgangException) {
                     call.respond(HttpStatusCode.Forbidden, e.message!!)
@@ -49,9 +51,10 @@ internal fun Route.ReservasjonApis() {
 
     get("/reserverte") {
         medBrukerkontekst { kontekst ->
+            val skjermet = pepClient.erKode6Bruker(Brukerkontekst(kontekst.bruker))
             if (pepClient.harBasisTilgang(kontekst)) {
                 val innloggetBrukerNavIdent = kotlin.coroutines.coroutineContext.idToken().getNavIdent()
-                val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedIdent(innloggetBrukerNavIdent)
+                val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedIdent(innloggetBrukerNavIdent, skjermet)
 
                 if (innloggetBruker != null) {
                     val reservasjonV3Dtos = reservasjonApisTjeneste.hentReserverteOppgaverForSaksbehandler(innloggetBruker)
@@ -71,9 +74,10 @@ internal fun Route.ReservasjonApis() {
 
     post("/opphev") {
         medBrukerkontekst { kontekst ->
+            val skjermet = pepClient.erKode6Bruker(Brukerkontekst(kontekst.bruker))
             if (pepClient.harBasisTilgang(kontekst)) {
                 val params = call.receive<List<AnnullerReservasjonDto>>()
-                val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedIdent(kotlin.coroutines.coroutineContext.idToken().getNavIdent())!!
+                val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedIdent(kotlin.coroutines.coroutineContext.idToken().getNavIdent(), skjermet)!!
 
                 try {
                     log.info(
@@ -94,10 +98,11 @@ internal fun Route.ReservasjonApis() {
 
     post("/forleng") {
         medBrukerkontekst { kontekst ->
+            val skjermet = pepClient.erKode6Bruker(Brukerkontekst(kontekst.bruker))
             if (pepClient.harBasisTilgang(kontekst)) {
                 val forlengReservasjonDto = call.receive<ForlengReservasjonDto>()
                 val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedIdent(
-                    kotlin.coroutines.coroutineContext.idToken().getNavIdent()
+                    kotlin.coroutines.coroutineContext.idToken().getNavIdent(), skjermet
                 )!!
 
                 try {
@@ -113,16 +118,17 @@ internal fun Route.ReservasjonApis() {
 
     post("/flytt") {
         medBrukerkontekst { kontekst ->
+            val skjermet = pepClient.erKode6Bruker(Brukerkontekst(kontekst.bruker))
             if (pepClient.harBasisTilgang(kontekst)) {
                 val params = call.receive<FlyttReservasjonDto>()
 
                 val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedIdent(
-                    kotlin.coroutines.coroutineContext.idToken().getNavIdent()
+                    kotlin.coroutines.coroutineContext.idToken().getNavIdent(), skjermet
                 )!!
 
                 try {
                     log.info("Flytter reservasjonen til ${params.brukerIdent} (Gjort av ${innloggetBruker.navident})")
-                    call.respond(reservasjonApisTjeneste.overførReservasjon(params, innloggetBruker))
+                    call.respond(reservasjonApisTjeneste.overførReservasjon(params, innloggetBruker, skjermet))
                 } catch (e: FinnerIkkeDataException) {
                     call.respond(HttpStatusCode.NotFound, "Fant ingen aktiv reservasjon for angitt reservasjonsnøkkel")
                 }
@@ -134,13 +140,14 @@ internal fun Route.ReservasjonApis() {
 
     post("/reservasjon/endre") {
         medBrukerkontekst { kontekst ->
+            val skjermet = pepClient.erKode6Bruker(Brukerkontekst(kontekst.bruker))
             if (pepClient.harBasisTilgang(kontekst)) {
                 val reservasjonEndringDto = call.receive<List<ReservasjonEndringDto>>()
                 val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedIdent(
-                    kotlin.coroutines.coroutineContext.idToken().getNavIdent()
+                    kotlin.coroutines.coroutineContext.idToken().getNavIdent(), skjermet
                 )!!
                 try {
-                    call.respond(reservasjonApisTjeneste.endreReservasjoner(reservasjonEndringDto, innloggetBruker))
+                    call.respond(reservasjonApisTjeneste.endreReservasjoner(reservasjonEndringDto, innloggetBruker, skjermet))
                 } catch (e: FinnerIkkeDataException) {
                     call.respond(HttpStatusCode.NotFound, "Fant ingen aktiv reservasjon for angitt reservasjonsnøkkel")
                 }
@@ -152,9 +159,10 @@ internal fun Route.ReservasjonApis() {
 
     post("/flytt/sok") {
         medBrukerkontekst { kontekst ->
+            val skjermet = pepClient.harTilgangTilKode6(kontekst)
             if (pepClient.harBasisTilgang(kontekst)) {
                 val params = call.receive<BrukerIdentDto>()
-                val sokSaksbehandlerMedIdent = saksbehandlerRepository.sokSaksbehandler(params.brukerIdent)
+                val sokSaksbehandlerMedIdent = saksbehandlerRepository.sokSaksbehandler(params.brukerIdent, skjermet)
                 call.respond(sokSaksbehandlerMedIdent)
             } else {
                 call.respond(HttpStatusCode.Forbidden)
@@ -164,8 +172,9 @@ internal fun Route.ReservasjonApis() {
 
     get("/saksbehandlere") {
         medBrukerkontekst { kontekst ->
+            val skjermet = pepClient.harTilgangTilKode6(kontekst)
             if (pepClient.harBasisTilgang(kontekst)) {
-                val alleSaksbehandlere = saksbehandlerRepository.hentAlleSaksbehandlere()
+                val alleSaksbehandlere = saksbehandlerRepository.hentAlleSaksbehandlere(skjermet)
                 val saksbehandlerDtoListe =
                     alleSaksbehandlere.filter { saksbehandler -> !saksbehandler.navn.isNullOrBlank() && !saksbehandler.navident.isNullOrBlank() }
                         .map { saksbehandler ->

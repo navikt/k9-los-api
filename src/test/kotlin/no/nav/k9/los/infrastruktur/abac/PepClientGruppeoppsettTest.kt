@@ -8,6 +8,7 @@ import no.nav.k9.los.infrastruktur.azuregraph.IAzureGraphService
 import no.nav.k9.los.infrastruktur.idtoken.IdToken
 import no.nav.k9.los.infrastruktur.kontekst.Brukerkontekst
 import no.nav.k9.los.infrastruktur.kontekst.InnloggetBruker
+import no.nav.k9.los.infrastruktur.kontekst.Områdebrukerkontekst
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import org.junit.jupiter.api.Test
 import java.util.UUID
@@ -60,8 +61,7 @@ class PepClientGruppeoppsettTest {
             val pepClient = pepClient()
             val token = token(setOf(drift))
 
-            pepClient.kanLeggeUtDriftsmelding(kontekst(token, Områder.K9).bruker) shouldBe true
-            pepClient.kanLeggeUtDriftsmelding(kontekst(token, Områder.UNG).bruker) shouldBe true
+            pepClient.kanLeggeUtDriftsmelding(globalKontekst(token)) shouldBe true
         }
     }
 
@@ -88,7 +88,7 @@ class PepClientGruppeoppsettTest {
         coEvery { getNavIdent() } returns "Z123456"
     }
 
-    private suspend fun harRolle(pepClient: PepClient, gruppe: UUID, kontekst: Brukerkontekst): Boolean = when (gruppe) {
+    private suspend fun harRolle(pepClient: PepClient, gruppe: UUID, kontekst: Områdebrukerkontekst): Boolean = when (gruppe) {
         ungSaksbehandler -> pepClient.harTilgangTilReserveringAvOppgaver(kontekst)
         ungVeileder -> pepClient.harBasisTilgang(kontekst)
         ungOppgavestyrer -> pepClient.erOppgaveStyrer(kontekst)
@@ -96,8 +96,12 @@ class PepClientGruppeoppsettTest {
         else -> error("Ukjent testgruppe")
     }
 
-    private fun kontekst(token: IdToken, område: Områder) = Brukerkontekst(
+    private fun kontekst(token: IdToken, område: Områder) = Områdebrukerkontekst(
         område,
+        InnloggetBruker(token.getNavIdent(), token.groups.map(UUID::fromString).toSet(), token),
+    )
+
+    private fun globalKontekst(token: IdToken) = Brukerkontekst(
         InnloggetBruker(token.getNavIdent(), token.groups.map(UUID::fromString).toSet(), token),
     )
 }

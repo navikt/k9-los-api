@@ -137,7 +137,6 @@ fun common(app: Application, config: Configuration) = module {
     single {
         SaksbehandlerRepository(
             dataSource = get(),
-            pepClient = get(),
             transactionalManager = get(),
             områdeRepository = get(),
         )

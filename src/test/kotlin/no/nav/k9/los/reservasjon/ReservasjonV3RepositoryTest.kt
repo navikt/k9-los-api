@@ -24,7 +24,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
         val saksbehandler = runBlocking {
             saksbehandlerRepository.addSaksbehandler("test1@test.no", Områder.K9)
 
-            saksbehandlerRepository.finnSaksbehandlerMedEpost("test1@test.no")!!
+            saksbehandlerRepository.finnSaksbehandlerMedEpost("test1@test.no", skjermet = false)!!
         }
 
         val reservasjon = ReservasjonV3(
@@ -62,12 +62,12 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
         val saksbehandler1 = runBlocking {
             saksbehandlerRepository.addSaksbehandler("test1@test.no", Områder.K9)
 
-            saksbehandlerRepository.finnSaksbehandlerMedEpost("test1@test.no")!!
+            saksbehandlerRepository.finnSaksbehandlerMedEpost("test1@test.no", skjermet = false)!!
         }
 
         val saksbehandler2 = runBlocking {
             saksbehandlerRepository.addSaksbehandler("test2@test.no", Områder.K9)
-            saksbehandlerRepository.finnSaksbehandlerMedEpost("test2@test.no")!!
+            saksbehandlerRepository.finnSaksbehandlerMedEpost("test2@test.no", skjermet = false)!!
         }
 
         val reservasjon1 = ReservasjonV3(
@@ -108,7 +108,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
         val saksbehandler1 = runBlocking {
             saksbehandlerRepository.addSaksbehandler("test1@test.no", Områder.K9)
 
-            saksbehandlerRepository.finnSaksbehandlerMedEpost("test1@test.no")!!
+            saksbehandlerRepository.finnSaksbehandlerMedEpost("test1@test.no", skjermet = false)!!
         }
 
         val reservasjon1 = ReservasjonV3(
@@ -159,12 +159,12 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
         val saksbehandler1 = runBlocking {
             saksbehandlerRepository.addSaksbehandler("test1@test.no", Områder.K9)
 
-            saksbehandlerRepository.finnSaksbehandlerMedEpost("test1@test.no")!!
+            saksbehandlerRepository.finnSaksbehandlerMedEpost("test1@test.no", skjermet = false)!!
         }
 
         val saksbehandler2 = runBlocking {
             saksbehandlerRepository.addSaksbehandler("test2@test.no", Områder.K9)
-            saksbehandlerRepository.finnSaksbehandlerMedEpost("test2@test.no")!!
+            saksbehandlerRepository.finnSaksbehandlerMedEpost("test2@test.no", skjermet = false)!!
         }
 
         val reservasjon1 = ReservasjonV3(
@@ -210,12 +210,12 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
         val saksbehandler1 = runBlocking {
             saksbehandlerRepository.addSaksbehandler("test1@test.no", Områder.K9)
 
-            saksbehandlerRepository.finnSaksbehandlerMedEpost("test1@test.no")!!
+            saksbehandlerRepository.finnSaksbehandlerMedEpost("test1@test.no", skjermet = false)!!
         }
 
         val saksbehandler2 = runBlocking {
             saksbehandlerRepository.addSaksbehandler("test2@test.no", Områder.K9)
-            saksbehandlerRepository.finnSaksbehandlerMedEpost("test2@test.no")!!
+            saksbehandlerRepository.finnSaksbehandlerMedEpost("test2@test.no", skjermet = false)!!
         }
 
         val reservasjon1 = ReservasjonV3(
@@ -240,7 +240,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
 
         val saksbehandlerInnlogget = runBlocking {
             saksbehandlerRepository.addSaksbehandler("saksbehandler@nav.no", Områder.K9)
-            saksbehandlerRepository.finnSaksbehandlerMedEpost("saksbehandler@nav.no")!!
+            saksbehandlerRepository.finnSaksbehandlerMedEpost("saksbehandler@nav.no", skjermet = false)!!
         }
 
         transactionalManager.transaction { tx ->
@@ -262,7 +262,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
         val saksbehandler = runBlocking {
             saksbehandlerRepository.addSaksbehandler("test1@test.no", Områder.K9)
 
-            saksbehandlerRepository.finnSaksbehandlerMedEpost("test1@test.no")!!
+            saksbehandlerRepository.finnSaksbehandlerMedEpost("test1@test.no", skjermet = false)!!
         }
 
         val reservasjon = ReservasjonV3(
@@ -303,15 +303,15 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
 
         val saksbehandler1 = runBlocking {
             saksbehandlerRepository.addSaksbehandler("test1@test.no", Områder.K9)
-            saksbehandlerRepository.finnSaksbehandlerMedEpost("test1@test.no")!!
+            saksbehandlerRepository.finnSaksbehandlerMedEpost("test1@test.no", skjermet = false)!!
         }
         val saksbehandler2 = runBlocking {
             saksbehandlerRepository.addSaksbehandler("test2@test.no", Områder.K9)
-            saksbehandlerRepository.finnSaksbehandlerMedEpost("test2@test.no")!!
+            saksbehandlerRepository.finnSaksbehandlerMedEpost("test2@test.no", skjermet = false)!!
         }
         val saksbehandler3skjermet = runBlocking {
             saksbehandlerRepository.addSaksbehandler("test3@test.no", Områder.K9)
-            saksbehandlerRepository.finnSaksbehandlerMedEpost("test3@test.no")!!
+            saksbehandlerRepository.finnSaksbehandlerMedEpost("test3@test.no", skjermet = false)!!
         }
 
         val reservasjon1 = ReservasjonV3(

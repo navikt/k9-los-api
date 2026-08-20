@@ -4,9 +4,6 @@ import kotliquery.*
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
-import no.nav.k9.los.infrastruktur.abac.IPepClient
-import no.nav.k9.los.infrastruktur.rest.innloggetBruker
-import kotlin.coroutines.coroutineContext
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.oppgavedefinisjon.omraade.OmrådeRepository
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
@@ -17,7 +14,6 @@ import javax.sql.DataSource
 
 class SaksbehandlerRepository(
     private val dataSource: DataSource,
-    private val pepClient: IPepClient,
     private val transactionalManager: TransactionalManager,
     private val områdeRepository: OmrådeRepository
 ) {
@@ -75,9 +71,7 @@ class SaksbehandlerRepository(
      * av [addSaksbehandler] når avdelingsleder registrerer eposten. En upsert her ville dessuten
      * forbrukt en sekvensverdi på id-kolonnen ved konflikt, og forskjøvet genererte id-er.
      */
-    suspend fun vedlikeholdSaksbehandler(saksbehandler: Saksbehandler): Long {
-        val erSkjermet = pepClient.erKode6Bruker(coroutineContext.innloggetBruker())
-
+    fun vedlikeholdSaksbehandler(saksbehandler: Saksbehandler, skjermet: Boolean): Long {
         return using(sessionOf(dataSource)) {
             it.transaction { tx ->
                 tx.run(
@@ -96,7 +90,7 @@ class SaksbehandlerRepository(
                             "epost" to saksbehandler.epost.lowercase(getDefault()),
                             "navn" to saksbehandler.navn,
                             "enhet" to saksbehandler.enhet,
-                            "skjermet" to erSkjermet,
+                            "skjermet" to skjermet,
                         )
                     ).map { row -> row.long("id") }.asSingle
                 ) ?: throw IllegalStateException("Fant ikke saksbehandler med epost ${saksbehandler.epost} for vedlikehold")
@@ -117,9 +111,7 @@ class SaksbehandlerRepository(
         }!!
     }
 
-    suspend fun finnSaksbehandlerMedEpost(epost: String): Saksbehandler? {
-        val skjermet = pepClient.erKode6Bruker(coroutineContext.innloggetBruker())
-
+    fun finnSaksbehandlerMedEpost(epost: String, skjermet: Boolean): Saksbehandler? {
         val saksbehandler = using(sessionOf(dataSource)) { session ->
             session.transaction { tx ->
                 tx.run(
@@ -135,9 +127,7 @@ class SaksbehandlerRepository(
         return saksbehandler
     }
 
-    suspend fun finnSaksbehandlerMedIdent(ident: String): Saksbehandler? {
-        val skjermet = pepClient.erKode6Bruker(coroutineContext.innloggetBruker())
-
+    fun finnSaksbehandlerMedIdent(ident: String, skjermet: Boolean): Saksbehandler? {
         val saksbehandler = using(sessionOf(dataSource)) {
             it.transaction { tx ->
                 tx.run(
@@ -337,14 +327,13 @@ class SaksbehandlerRepository(
         }
     }
 
-    suspend fun hentAlleSaksbehandlere(): List<Saksbehandler> {
-        return transactionalManager.transactionSuspend { tx ->
-            hentAlleSaksbehandlere(tx)
+    fun hentAlleSaksbehandlere(skjermet: Boolean): List<Saksbehandler> {
+        return transactionalManager.transaction { tx ->
+            hentAlleSaksbehandlere(tx, skjermet)
         }
     }
 
-    suspend fun hentAlleSaksbehandlere(tx: TransactionalSession): List<Saksbehandler> {
-        val skjermet = pepClient.erKode6Bruker(coroutineContext.innloggetBruker())
+    fun hentAlleSaksbehandlere(tx: TransactionalSession, skjermet: Boolean): List<Saksbehandler> {
         val identer = using(sessionOf(dataSource)) {
             tx.run(
                 queryOf(
@@ -359,8 +348,8 @@ class SaksbehandlerRepository(
         return identer
     }
 
-    suspend fun sokSaksbehandler(søkestreng: String): Saksbehandler {
-        val alleSaksbehandlere = hentAlleSaksbehandlere()
+    fun sokSaksbehandler(søkestreng: String, skjermet: Boolean): Saksbehandler {
+        val alleSaksbehandlere = hentAlleSaksbehandlere(skjermet)
 
         fun levenshtein(lhs: CharSequence, rhs: CharSequence): Double {
             return LevenshteinDistance().apply(lhs, rhs).toDouble()

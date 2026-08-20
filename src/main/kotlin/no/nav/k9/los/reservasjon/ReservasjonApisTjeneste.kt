@@ -1,7 +1,7 @@
 package no.nav.k9.los.reservasjon
 
 import no.nav.k9.los.infrastruktur.abac.IPepClient
-import no.nav.k9.los.infrastruktur.kontekst.Brukerkontekst
+import no.nav.k9.los.infrastruktur.kontekst.Områdebrukerkontekst
 import no.nav.k9.los.infrastruktur.azuregraph.IAzureGraphService
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.infrastruktur.utils.leggTilDagerHoppOverHelg
@@ -35,13 +35,14 @@ class ReservasjonApisTjeneste(
 
     suspend fun reserverOppgave(
         innloggetBruker: Saksbehandler,
-        oppgaveIdMedOverstyringDto: OppgaveIdMedOverstyringDto
+        oppgaveIdMedOverstyringDto: OppgaveIdMedOverstyringDto,
+        skjermet: Boolean,
     ): OppgaveStatusDto {
         val reserverFra = LocalDateTime.now()
         val oppgaveNøkkel = oppgaveIdMedOverstyringDto.oppgaveNøkkel
 
         val reserverForSaksbehandler = saksbehandlerRepository.finnSaksbehandlerMedIdent(
-            oppgaveIdMedOverstyringDto.overstyrIdent ?: innloggetBruker.navident!!
+            oppgaveIdMedOverstyringDto.overstyrIdent ?: innloggetBruker.navident!!, skjermet
         )!!
 
         val reservasjonV3 = transactionalManager.transactionSuspend { tx ->
@@ -69,7 +70,8 @@ class ReservasjonApisTjeneste(
 
     suspend fun endreReservasjoner(
         reservasjonEndringDto: List<ReservasjonEndringDto>,
-        innloggetBruker: Saksbehandler
+        innloggetBruker: Saksbehandler,
+        skjermet: Boolean,
     ) {
         reservasjonEndringDto.forEach {
             endreReservasjon(
@@ -77,7 +79,8 @@ class ReservasjonApisTjeneste(
                 it,
                 it.brukerIdent,
                 it.reserverTil,
-                it.begrunnelse
+                it.begrunnelse,
+                skjermet,
             )
         }
     }
@@ -87,10 +90,11 @@ class ReservasjonApisTjeneste(
         endringDto: ReservasjonEndringDto,
         tilBrukerIdent: String? = null,
         reserverTil: LocalDate? = null,
-        begrunnelse: String? = null
+        begrunnelse: String? = null,
+        skjermet: Boolean,
     ): ReservasjonV3Dto {
         val tilSaksbehandler =
-            tilBrukerIdent?.let { saksbehandlerRepository.finnSaksbehandlerMedIdent(it) }
+            tilBrukerIdent?.let { saksbehandlerRepository.finnSaksbehandlerMedIdent(it, skjermet) }
 
         val reservasjonsnøkkel = endringDto.reservasjonsnøkkel ?: aktivOppgaveOppslag.hentAktivOppgave(
             endringDto.oppgaveNøkkel!!.oppgaveEksternId,
@@ -142,10 +146,11 @@ class ReservasjonApisTjeneste(
 
     suspend fun overførReservasjon(
         params: FlyttReservasjonDto,
-        innloggetBruker: Saksbehandler
+        innloggetBruker: Saksbehandler,
+        skjermet: Boolean,
     ): ReservasjonV3Dto {
         val tilSaksbehandler = saksbehandlerRepository.finnSaksbehandlerMedIdent(
-            params.brukerIdent
+            params.brukerIdent, skjermet
         )!!
 
         val reservasjonsnøkkel = params.reservasjonsnøkkel ?: aktivOppgaveOppslag.hentAktivOppgave(
@@ -234,7 +239,7 @@ class ReservasjonApisTjeneste(
         }
     }
 
-    suspend fun hentAktivReservasjon(oppgaveNøkkel: OppgaveNøkkelDto, kontekst: Brukerkontekst): ReservasjonV3Dto? {
+    suspend fun hentAktivReservasjon(oppgaveNøkkel: OppgaveNøkkelDto, kontekst: Områdebrukerkontekst): ReservasjonV3Dto? {
         val oppgave = aktivOppgaveOppslag.hentAktivOppgave(
                 oppgaveNøkkel.oppgaveEksternId,
                 oppgaveNøkkel.oppgaveTypeEksternId,
@@ -259,7 +264,7 @@ class ReservasjonApisTjeneste(
         )
     }
 
-    suspend fun hentAlleAktiveReservasjoner(kontekst: Brukerkontekst): List<ReservasjonDto> {
+    suspend fun hentAlleAktiveReservasjoner(kontekst: Områdebrukerkontekst): List<ReservasjonDto> {
         val innloggetBrukerHarKode6Tilgang = pepClient.harTilgangTilKode6(kontekst)
 
         return reservasjonV3Tjeneste.hentAlleAktiveReservasjoner().flatMap { reservasjonMedOppgaver ->

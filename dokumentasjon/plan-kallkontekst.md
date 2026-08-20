@@ -1,7 +1,8 @@
 # Plan: eksplisitt Kallkontekst erstatter implisitt kontekstpropagering
 
 Status: commit 1 (`e089cdca`) og 2 (`f3d82201`) er ferdige. Første del av commit 3-5 er lagret som
-`30963f3`: produksjonskoden kompilerer, men test-fixtures er ikke ferdig migrert. Ingen commits er pushet.
+`30963f3`. Kontekstmatrisen, eksplisitte PEP-signaturer og test-fixtures er nå ferdig migrert i neste commit.
+`mvn test` passerer med 452 tester, 0 feil og 7 deaktiverte. Ingen commits er pushet.
 Skrevet mot branch-tilstand ved commit `b1c23139`.
 
 ## Hvorfor
@@ -167,6 +168,33 @@ blant annet i `TestSaksbehandler`, `K9SakTilLosIT`, `OppgaveKoTest`, `OppgaveKoT
 `SisteOppgaverTjenesteTest`, `SøkeboksTjenesteTest`, `PepCacheServiceTest`, `TransactionalManagerTest` og tester
 som nå kaller suspend-funksjoner uten coroutine. Migrer testene etter at kontekstmatrisen er landet, og krev at
 `mvn test-compile -DskipTests` passerer før neste funksjonelle commit.
+
+**Gjennomført etter kontrollpunktet:**
+
+- Kontekstmatrisen er landet med kapabilitetsgrensesnittene `Brukerkall`, `Systemkall` og `Områdekall`, og de
+  konkrete typene `Brukerkontekst`, `Områdebrukerkontekst`, `Systemkontekst` og `Områdesystemkontekst`.
+- `Systemkontekst.kilde` er fjernet. Bare områdetypene har `område`.
+- Globale PEP-operasjoner tar `Brukerkontekst`, områdeavhengige brukeroperasjoner tar
+  `Områdebrukerkontekst`, og PEP-oppslag som kan kjøres av bruker eller system tar `Områdekall`.
+- `SaksbehandlerRepository` har ikke lenger `IPepClient` og leser ikke token fra `coroutineContext`.
+  `skjermet` sendes eksplisitt inn etter at tjeneste- eller API-laget har tatt tilgangsbeslutningen.
+- `vedlikeholdSaksbehandler`, `finnSaksbehandlerMedEpost`, `finnSaksbehandlerMedIdent`,
+  `hentAlleSaksbehandlere` og `sokSaksbehandler` tar nå eksplisitt `skjermet`.
+- Test-fixtures er migrert. Full `mvn test` passerer med 452 tester, 0 feil og 7 deaktiverte.
+- `medInnloggetBruker` bruker validert `JWTPrincipal` når den finnes. Lokal token-fallback krever eksplisitt
+  `KoinProfile.LOCAL`; manglende profil gir ikke lenger implisitt lokal identitet.
+
+**Neste iterasjon starter her:**
+
+1. Fullfør commit 6 ved å flytte eventuelle gjenværende tilgangsbeslutninger ut av repository-laget. Søk etter
+   repository-importer av `IPepClient`, `IdToken` og `infrastruktur.rest` før endringer.
+2. Gjennomfør commit 7: legg områdefilter på `hentAlleSaksbehandlere(område, skjermet)` med `exists` som beskrevet
+   nedenfor. Behold hele områdeaggregatet i responsen.
+3. Gjennomfør commit 8: fjern standardverdien `Områder.K9` fra `QueryRequest` og vurder hvert kallsted manuelt.
+4. Kjør full `mvn test`, ikke bare `test-compile`, før hver commit. Målrettede `-Dtest`-kjøringer kan fortsatt få
+   Kotest/Koin-kollisjonen beskrevet under commit 1; full suite er fasit.
+5. Verifiser at LOCAL ikke kan velges ved manglende produksjonskonfigurasjon. `medInnloggetBruker` tillater lokal
+   token-fallback når `KoinProfile.LOCAL` er eksplisitt registrert; feil profilvalg må derfor stoppe ved oppstart.
 
 Globale ruter skal ikke få et kunstig område. `DriftsmeldingerApis` og `BrukersområderApi` bruker nå
 `medInnloggetBruker`; i den nye modellen skal de få en bruker-kallkontekst uten område.

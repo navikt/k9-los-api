@@ -136,7 +136,6 @@ internal class RuteSmokeTest : AbstractPostgresTest() {
         val områdeRepository = OmrådeRepository(dataSource)
         val saksbehandlerRepository = SaksbehandlerRepository(
             dataSource = dataSource,
-            pepClient = pepClient,
             transactionalManager = TransactionalManager(dataSource),
             områdeRepository = områdeRepository,
         )

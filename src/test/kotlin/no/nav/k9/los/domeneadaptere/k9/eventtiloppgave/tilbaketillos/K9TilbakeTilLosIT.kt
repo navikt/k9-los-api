@@ -83,7 +83,8 @@ class K9TilbakeTilLosIT : AbstractK9LosIntegrationTest() {
                         oppgaveTypeEksternId = "k9tilbake",
                         områdeEksternId = "K9"
                     )
-                )
+                ),
+                skjermet = false,
             )
         }
     }

@@ -81,7 +81,7 @@ object localSetup : KoinComponent {
                     saksbehandler.områder.forEach { område ->
                         saksbehandlerRepository.addSaksbehandler(saksbehandler.epost, område)
                     }
-                    saksbehandlerRepository.vedlikeholdSaksbehandler(saksbehandler)
+                    saksbehandlerRepository.vedlikeholdSaksbehandler(saksbehandler, false)
                 }
             }
         }

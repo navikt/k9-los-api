@@ -7,6 +7,7 @@ import io.ktor.server.routing.*
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.kontekst.medBrukerkontekst
+import no.nav.k9.los.infrastruktur.kontekst.Brukerkontekst
 import no.nav.k9.los.infrastruktur.rest.RequestContextService
 import no.nav.k9.los.infrastruktur.rest.idToken
 import no.nav.k9.los.ko.dto.*
@@ -64,7 +65,7 @@ fun Route.OppgaveKoApis() {
     get("/saksbehandlere") {
         medBrukerkontekst { kontekst ->
             if (pepClient.erOppgaveStyrer(kontekst)) {
-                val alleSaksbehandlere = saksbehandlerRepository.hentAlleSaksbehandlere()
+                val alleSaksbehandlere = saksbehandlerRepository.hentAlleSaksbehandlere(pepClient.harTilgangTilKode6(kontekst))
                     .map { saksbehandler ->
                         SaksbehandlerForKolisteDto(saksbehandler)
                     }
@@ -121,7 +122,8 @@ fun Route.OppgaveKoApis() {
         medBrukerkontekst { kontekst ->
             if (pepClient.harBasisTilgang(kontekst)) {
                 val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedIdent(
-                    kotlin.coroutines.coroutineContext.idToken().getNavIdent()
+                    kotlin.coroutines.coroutineContext.idToken().getNavIdent(),
+                    pepClient.erKode6Bruker(Brukerkontekst(kontekst.bruker))
                 )!!
                 call.respond(
                     oppgaveKoTjeneste.hentKøerForSaksbehandler(
@@ -223,7 +225,8 @@ fun Route.OppgaveKoApis() {
             if (pepClient.harTilgangTilReserveringAvOppgaver(kontekst)) {
                 val oppgavekøId = call.parameters["id"]!!
                 val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedIdent(
-                    kotlin.coroutines.coroutineContext.idToken().getNavIdent()
+                    kotlin.coroutines.coroutineContext.idToken().getNavIdent(),
+                    pepClient.erKode6Bruker(Brukerkontekst(kontekst.bruker))
                 )!!
                 val oppgaveMuligReservert = oppgaveKoTjeneste.taReservasjonFraKø(
                     innloggetBrukerId = innloggetBruker.id!!,

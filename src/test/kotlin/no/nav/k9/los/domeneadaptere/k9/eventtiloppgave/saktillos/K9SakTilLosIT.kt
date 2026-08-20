@@ -2,7 +2,6 @@ package no.nav.k9.los.domeneadaptere.k9.eventtiloppgave.saktillos
 
 import assertk.assertThat
 import assertk.assertions.*
-import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.kodeverk.behandling.BehandlingStegType
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
@@ -16,9 +15,12 @@ import no.nav.k9.los.domeneadaptere.k9.eventmottak.TestSaksbehandler
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.builder
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.sak.K9SakEventHandler
 import no.nav.k9.los.infrastruktur.abac.IPepClient
+import no.nav.k9.los.infrastruktur.idtoken.IdTokenLocal
 import no.nav.k9.los.infrastruktur.idtoken.IdToken
-import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.infrastruktur.rest.CoroutineRequestContext
+import no.nav.k9.los.infrastruktur.kontekst.InnloggetBruker
+import no.nav.k9.los.infrastruktur.kontekst.Områdebrukerkontekst
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.ko.OppgaveKoTjeneste
 import no.nav.k9.los.ko.OppgaveMuligReservert
 import no.nav.k9.los.ko.db.OppgaveKoRepository
@@ -68,7 +70,7 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         val antallIDb = oppgaveQueryService.queryForAntall(QueryRequest(querySomKunInneholder(eksternId)))
         assertThat(antallIDb).isEqualTo(1)
 
-        val skjermet = runBlocking { pepClient.harTilgangTilKode6() }
+        val skjermet = runBlocking { pepClient.harTilgangTilKode6(kontekst(TestSaksbehandler.SARA.navident!!)) }
         val filtrerReserverte = true
         val antallIKø = oppgaveKøTjeneste.hentAntallOppgaverForKø(
             oppgaveKoId = kø.id,
@@ -91,7 +93,7 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         val antallIDb = oppgaveQueryService.queryForAntall(QueryRequest(querySomKunInneholder(eksternId)))
         assertThat(antallIDb).isEqualTo(1)
 
-        val skjermet = runBlocking { pepClient.harTilgangTilKode6() }
+        val skjermet = runBlocking { pepClient.harTilgangTilKode6(kontekst(TestSaksbehandler.SARA.navident!!)) }
         val filtrerReserverte = true
         val antallIKø = oppgaveKøTjeneste.hentAntallOppgaverForKø(
             oppgaveKoId = kø.id,
@@ -101,12 +103,13 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         assertThat(antallIKø).isEqualTo(0)
 
         val reservasjonTjeneste = get<ReservasjonApisTjeneste>()
-        val reservasjoner = runBlocking {
+        val reservasjoner = runBlocking(CoroutineRequestContext(IdTokenLocal())) {
             reservasjonTjeneste.reserverOppgave(
                 TestSaksbehandler.SARA,
                 OppgaveIdMedOverstyringDto(
                     oppgaveNøkkel = TestOppgaveNøkkel.forK9sak(eksternId)
-                )
+                ),
+                skjermet = false,
             )
             reservasjonTjeneste.hentReserverteOppgaverForSaksbehandler(TestSaksbehandler.SARA)
         }
@@ -144,7 +147,7 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         val antallIDb = oppgaveQueryService.queryForAntall(QueryRequest(querySomKunInneholder(eksternId)))
         assertThat(antallIDb).isEqualTo(1)
 
-        val skjermet = runBlocking { pepClient.harTilgangTilKode6() }
+        val skjermet = runBlocking { pepClient.harTilgangTilKode6(kontekst(TestSaksbehandler.SARA.navident!!)) }
         val filtrerReserverte = true
         val antallIKø = oppgaveKøTjeneste.hentAntallOppgaverForKø(
             oppgaveKoId = kø.id,
@@ -153,11 +156,13 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         )
         assertThat(antallIKø).isEqualTo(0)
 
-        val resultat = oppgaveKøTjeneste.taReservasjonFraKø(
-            TestSaksbehandler.SARA.id!!,
-            kø.id,
-            CoroutineRequestContext(mockk<IdToken>(relaxed = true), Områder.K9)
-        )
+        val resultat = runBlocking {
+            oppgaveKøTjeneste.taReservasjonFraKø(
+                TestSaksbehandler.SARA.id!!,
+                kø.id,
+                kontekst(TestSaksbehandler.SARA.navident!!),
+            )
+        }
         assertThat(resultat is OppgaveMuligReservert.IkkeReservert).isTrue()
     }
 
@@ -172,7 +177,7 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         val antallIDb = oppgaveQueryService.queryForAntall(QueryRequest(querySomKunInneholder(eksternId)))
         assertThat(antallIDb).isEqualTo(1)
 
-        val skjermet = runBlocking { pepClient.harTilgangTilKode6() }
+        val skjermet = runBlocking { pepClient.harTilgangTilKode6(kontekst(TestSaksbehandler.SARA.navident!!)) }
         val filtrerReserverte = true
         val antallIKø = oppgaveKøTjeneste.hentAntallOppgaverForKø(
             oppgaveKoId = kø.id,
@@ -184,7 +189,7 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         val resultat = taReservasjonFra(kø, TestSaksbehandler.SARA)
         assertThat(resultat is OppgaveMuligReservert.Reservert).isTrue()
 
-        val skjermet1 = runBlocking { pepClient.harTilgangTilKode6() }
+        val skjermet1 = runBlocking { pepClient.harTilgangTilKode6(kontekst(TestSaksbehandler.SARA.navident!!)) }
         val filtrerReserverte1 = true
         val antallIKøEtterRes = oppgaveKøTjeneste.hentAntallOppgaverForKø(
             kø.id,
@@ -209,7 +214,7 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         val antallIDb = oppgaveQueryService.queryForAntall(QueryRequest(querySomKunInneholder(eksternId)))
         assertThat(antallIDb).isEqualTo(1)
 
-        val skjermet = runBlocking<Boolean> { pepClient.harTilgangTilKode6() }
+        val skjermet = runBlocking<Boolean> { pepClient.harTilgangTilKode6(kontekst(TestSaksbehandler.SARA.navident!!)) }
         val filtrerReserverte = true
         val antallIKø = oppgaveKøTjeneste.hentAntallOppgaverForKø(
             oppgaveKoId = kø.id,
@@ -421,7 +426,7 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
 
     private fun assertAntallIKø(kø: OppgaveKo, forventetAntall: Int) {
         oppgaveKøTjeneste.clearCache()
-        val skjermet = runBlocking { pepClient.harTilgangTilKode6() }
+        val skjermet = runBlocking { pepClient.harTilgangTilKode6(kontekst(TestSaksbehandler.SARA.navident!!)) }
         val filtrerReserverte = true
         val antallIKøEtterRes = oppgaveKøTjeneste.hentAntallOppgaverForKø(
             oppgaveKoId = kø.id,
@@ -432,11 +437,13 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
     }
 
     private fun taReservasjonFra(kø: OppgaveKo, saksbehandler: Saksbehandler): OppgaveMuligReservert {
-        return oppgaveKøTjeneste.taReservasjonFraKø(
-            saksbehandler.id!!,
-            kø.id,
-            CoroutineRequestContext(mockk<IdToken>(relaxed = true), Områder.K9)
-        )
+        return runBlocking {
+            oppgaveKøTjeneste.taReservasjonFraKø(
+                saksbehandler.id!!,
+                kø.id,
+                kontekst(saksbehandler.navident!!),
+            )
+        }
     }
 
     private fun assertIngenReservasjon(saksbehandler: Saksbehandler) {
@@ -470,12 +477,22 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
     private fun opprettKøFor(saksbehandler: Saksbehandler, oppgaveQuery: OppgaveQuery): OppgaveKo {
         val oppgaveKoRepository = get<OppgaveKoRepository>()
         val pepClient = get<IPepClient>()
-        val skjermet = runBlocking { pepClient.harTilgangTilKode6() }
+        val skjermet = runBlocking { pepClient.harTilgangTilKode6(kontekst(saksbehandler.navident!!)) }
         val nyKø = oppgaveKoRepository.leggTil("Test", skjermet = skjermet, område = saksbehandler.områder.first()).copy(
             saksbehandlere = listOf(saksbehandler.epost),
             oppgaveQuery = oppgaveQuery
         )
         return oppgaveKoRepository.endre(nyKø, skjermet)
+    }
+
+    private fun kontekst(navIdent: String): Områdebrukerkontekst {
+        val idToken = object : IdToken by IdTokenLocal() {
+            override fun getNavIdent() = navIdent
+        }
+        return Områdebrukerkontekst(
+            Områder.K9,
+            InnloggetBruker(navIdent, emptySet(), idToken),
+        )
     }
 
     private fun querySomKunInneholder(eksternId: UUID, vararg status: Oppgavestatus = emptyArray()): OppgaveQuery {

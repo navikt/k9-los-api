@@ -15,6 +15,8 @@ import no.nav.k9.los.infrastruktur.abac.cache.PepCache
 import no.nav.k9.los.infrastruktur.abac.cache.PepCacheRepository
 import no.nav.k9.los.infrastruktur.abac.cache.TestRepository
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
+import no.nav.k9.los.infrastruktur.idtoken.IdTokenLocal
+import no.nav.k9.los.infrastruktur.rest.CoroutineRequestContext
 import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.kodeverk.PersonBeskyttelseType
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
@@ -750,35 +752,36 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
     fun `queryRequest som vil fjerne reserverte oppgaver skal kun få ureserverte`() {
         val saksbehandlerRepository = get<SaksbehandlerRepository>()
 
-        val saksbehandler = runBlocking {
-            val ident = "test"
-            saksbehandlerRepository.addSaksbehandler(ident + "@nav.no", Områder.K9)
-            saksbehandlerRepository.vedlikeholdSaksbehandler(
-                Saksbehandler(
-                    null,
-                    ident,
-                    ident,
-                    ident + "@nav.no",
-                    enhet = "1234",
-                    områder = listOf(Områder.K9)
-                )
-            )
-            saksbehandlerRepository.hentAlleSaksbehandlere()
-        }.get(0)
+        val ident = "test"
+        saksbehandlerRepository.addSaksbehandler(ident + "@nav.no", Områder.K9)
+        saksbehandlerRepository.vedlikeholdSaksbehandler(
+            Saksbehandler(
+                null,
+                ident,
+                ident,
+                ident + "@nav.no",
+                enhet = "1234",
+                områder = listOf(Områder.K9)
+            ),
+            skjermet = false,
+        )
+        val saksbehandler = saksbehandlerRepository.hentAlleSaksbehandlere(skjermet = false).get(0)
 
         val builder = OppgaveTestDataBuilder()
         builder.lagOgLagre(Oppgavestatus.AAPEN)
         builder.lagre(builder.lag(reservasjonsnøkkel = "test"))
 
         val reservasjonstjeneste = get<ReservasjonV3Tjeneste>()
-        reservasjonstjeneste.taReservasjon(
-            "test",
-            saksbehandler.id!!,
-            saksbehandler.id!!,
-            "test",
-            LocalDateTime.now(),
-            LocalDateTime.now().plusDays(2)
-        )
+        runBlocking {
+            reservasjonstjeneste.taReservasjon(
+                "test",
+                saksbehandler.id!!,
+                saksbehandler.id!!,
+                "test",
+                LocalDateTime.now(),
+                LocalDateTime.now().plusDays(2)
+            )
+        }
 
         val query = OppgaveQuery(
             listOf(

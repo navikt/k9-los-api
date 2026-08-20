@@ -7,7 +7,7 @@ import kotlinx.coroutines.*
 import kotliquery.TransactionalSession
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
-import no.nav.k9.los.infrastruktur.kontekst.Systemkontekst
+import no.nav.k9.los.infrastruktur.kontekst.Områdesystemkontekst
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.sif.abac.kontrakt.abac.Diskresjonskode
 import java.time.Duration
@@ -50,7 +50,7 @@ class PepCacheService(
         // PepCacheInput kommer i dag utelukkende fra K9-oppgaver, jf. spørringen i
         // PepCacheRepository.hentOppgaverMedStatusOgPepCacheEldreEnn som filtrerer på kildeomrade
         // = 'K9'. Når UNG-oppgaver skal pep-caches må området følge med fra oppgaven.
-        val kontekst = Systemkontekst(Områder.K9, "pep-cache")
+        val kontekst = Områdesystemkontekst(Områder.K9)
         val område = kontekst.område
         val pep = PepCache(
             eksternId = oppgaveIdOgAktører.eksternId,
@@ -69,7 +69,7 @@ class PepCacheService(
         }
     }
 
-    private suspend fun PepCache.oppdater(saksnummer: String, kontekst: Systemkontekst): PepCache {
+    private suspend fun PepCache.oppdater(saksnummer: String, kontekst: Områdesystemkontekst): PepCache {
         val diskresjonskoder = pepClient.diskresjonskoderForSak(saksnummer, kontekst)
 
         //TODO ikke sette kode7 og egenansatt til samme verdi, det er misvisende ifht modellen som finnes. Det fungerer funksjonelt p.t fordi kode7 og egen ansatt (skjermet) håndteres samlet i køene
@@ -82,7 +82,7 @@ class PepCacheService(
         )
     }
 
-    private suspend fun PepCache.oppdater(aktører: List<String>, kontekst: Systemkontekst): PepCache {
+    private suspend fun PepCache.oppdater(aktører: List<String>, kontekst: Områdesystemkontekst): PepCache {
         if (aktører.isEmpty()) {
             return oppdater(kode6 = false, kode7 = false, egenAnsatt = false)
         }

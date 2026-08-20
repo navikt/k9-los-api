@@ -16,6 +16,10 @@ import no.nav.k9.los.infrastruktur.abac.Action
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.azuregraph.IAzureGraphService
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
+import no.nav.k9.los.infrastruktur.idtoken.IdTokenLocal
+import no.nav.k9.los.infrastruktur.kontekst.InnloggetBruker
+import no.nav.k9.los.infrastruktur.kontekst.Områdebrukerkontekst
+import no.nav.k9.los.infrastruktur.rest.CoroutineRequestContext
 import no.nav.k9.los.infrastruktur.pdl.IPdlService
 import no.nav.k9.los.infrastruktur.pdl.PersonPdl
 import no.nav.k9.los.infrastruktur.pdl.PersonPdlResponse
@@ -31,6 +35,12 @@ import java.util.*
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 
 class SisteOppgaverTjenesteTest : AbstractK9LosIntegrationTest() {
+
+    private val token = IdTokenLocal()
+    private val kontekst = Områdebrukerkontekst(
+        Områder.K9,
+        InnloggetBruker(token.getNavIdent(), emptySet(), token),
+    )
 
     private lateinit var sisteOppgaverRepository: SisteOppgaverRepository
     private lateinit var oppgaveRepository: OppgaveRepository
@@ -68,7 +78,7 @@ class SisteOppgaverTjenesteTest : AbstractK9LosIntegrationTest() {
             transactionalManager = transactionalManager
         )
         
-        runBlocking {
+        runBlocking(CoroutineRequestContext(token)) {
             saksbehandlerRepository.addSaksbehandler("test@nav.no", Områder.K9)
             saksbehandlerRepository.vedlikeholdSaksbehandler(
                 Saksbehandler(
@@ -78,9 +88,10 @@ class SisteOppgaverTjenesteTest : AbstractK9LosIntegrationTest() {
                     epost = "test@nav.no",
                     enhet = null,
                     områder = listOf(Områder.K9),
-                )
+                ),
+                skjermet = false,
             )
-            saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedEpost("test@nav.no")!!
+            saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedEpost("test@nav.no", skjermet = false)!!
         }
     }
 
@@ -96,7 +107,7 @@ class SisteOppgaverTjenesteTest : AbstractK9LosIntegrationTest() {
         coEvery { pdlService.person(aktorId1) } returns PersonPdlResponse(false, mockPerson)
 
         coEvery {
-            pepClient.harTilgangTilOppgaveV3(any(), eq(Action.read), any())
+            pepClient.harTilgangTilOppgaveV3(any(), eq(kontekst), eq(Action.read), any())
         } returns true
 
         // Lagre oppgaven som siste besøkt
@@ -109,7 +120,7 @@ class SisteOppgaverTjenesteTest : AbstractK9LosIntegrationTest() {
         )
         
         // Hent siste oppgaver, og sjekk resultatet
-        val sisteOppgaver = sisteOppgaverTjeneste.hentSisteOppgaver()
+        val sisteOppgaver = sisteOppgaverTjeneste.hentSisteOppgaver(kontekst)
         assertThat(sisteOppgaver).hasSize(1)
         assertThat(sisteOppgaver[0].oppgaveEksternId).isEqualTo(oppgave1.eksternId)
     }
@@ -133,7 +144,7 @@ class SisteOppgaverTjenesteTest : AbstractK9LosIntegrationTest() {
         
         // Bruker har tilgang til oppgave1 men ikke oppgave2
         coEvery {
-            pepClient.harTilgangTilOppgaveV3(any(), eq(Action.read), any())
+            pepClient.harTilgangTilOppgaveV3(any(), eq(kontekst), eq(Action.read), any())
         } answers {
             val oppgave = firstArg<Oppgave>()
             oppgave.eksternId == oppgave1.eksternId
@@ -156,7 +167,7 @@ class SisteOppgaverTjenesteTest : AbstractK9LosIntegrationTest() {
         )
 
         // Sjekk resultatet - skal kun få oppgave1 tilbake siden bruker ikke har tilgang til oppgave2
-        val sisteOppgaver = sisteOppgaverTjeneste.hentSisteOppgaver()
+        val sisteOppgaver = sisteOppgaverTjeneste.hentSisteOppgaver(kontekst)
         assertThat(sisteOppgaver).hasSize(1)
         assertThat(sisteOppgaver[0].oppgaveEksternId).isEqualTo(oppgave1.eksternId)
     }

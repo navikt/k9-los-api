@@ -10,6 +10,7 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.kontekst.medBrukerkontekst
+import no.nav.k9.los.infrastruktur.kontekst.Brukerkontekst
 import kotlin.coroutines.coroutineContext
 import no.nav.k9.los.infrastruktur.rest.RequestContextService
 import no.nav.k9.los.infrastruktur.rest.idToken
@@ -42,7 +43,7 @@ fun Route.UttrekkApiNy() {
             if (pepClient.harBasisTilgang(kontekst)) {
                 val område = kontekst.område
                 val innloggetSaksbehandler = coroutineContext.idToken().getNavIdent().let {
-                    saksbehandlerRepository.finnSaksbehandlerMedIdent(it)
+                    saksbehandlerRepository.finnSaksbehandlerMedIdent(it, pepClient.erKode6Bruker(Brukerkontekst(kontekst.bruker)))
                 }
                 if (innloggetSaksbehandler == null) {
                     call.respond(HttpStatusCode.Forbidden, "Innlogget bruker er ikke i saksbehandler-tabellen.")
@@ -112,7 +113,7 @@ fun Route.UttrekkApiNy() {
             if (pepClient.harBasisTilgang(kontekst)) {
                 val område = kontekst.område
                 val innloggetSaksbehandler = coroutineContext.idToken().getNavIdent().let {
-                    saksbehandlerRepository.finnSaksbehandlerMedIdent(it)
+                    saksbehandlerRepository.finnSaksbehandlerMedIdent(it, pepClient.erKode6Bruker(Brukerkontekst(kontekst.bruker)))
                 }
                 if (innloggetSaksbehandler == null) {
                     call.respond(HttpStatusCode.Forbidden, "Innlogget bruker er ikke i saksbehandler-tabellen.")

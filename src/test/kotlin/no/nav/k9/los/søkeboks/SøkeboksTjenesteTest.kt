@@ -8,6 +8,9 @@ import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.infrastruktur.abac.IPepClient
+import no.nav.k9.los.infrastruktur.idtoken.IdTokenLocal
+import no.nav.k9.los.infrastruktur.kontekst.InnloggetBruker
+import no.nav.k9.los.infrastruktur.kontekst.Områdebrukerkontekst
 import no.nav.k9.los.infrastruktur.pdl.IPdlService
 import no.nav.k9.los.infrastruktur.pdl.PersonPdl
 import no.nav.k9.los.infrastruktur.pdl.PersonPdlResponse
@@ -35,14 +38,19 @@ class SøkeboksTjenesteTest {
         val åpen = oppgave("åpen", "SAK-1", Oppgavestatus.AAPEN)
         val obsolete = oppgave("obsolete", "SAK-2", Oppgavestatus.AAPEN, "OBSOLETE")
         val person = person()
+        val token = IdTokenLocal()
+        val kontekst = Områdebrukerkontekst(
+            Områder.K9,
+            InnloggetBruker(token.getNavIdent(), emptySet(), token),
+        )
         every { queryService.queryForOppgave(any()) } returns listOf(lukket, åpen, obsolete)
         coEvery { pdlService.person("aktor-1") } returns PersonPdlResponse(false, person)
-        coEvery { pepClient.harTilgangTilOppgaveV3(any()) } returns true
+        coEvery { pepClient.harTilgangTilOppgaveV3(any(), kontekst, any(), any()) } returns true
         coEvery { builder.bygg(listOf(åpen), mapOf("aktor-1" to person)) } returns emptyList()
         val oppgavesøkere = Oppgavesøkere(K9Oppgavesøk(), UngOppgavesøk())
         val tjeneste = SøkeboksTjeneste(pdlService, pepClient, builder, queryService, oppgavesøkere)
 
-        val resultat = tjeneste.finnOppgaverSammendrag("123456789", Områder.K9)
+        val resultat = tjeneste.finnOppgaverSammendrag("123456789", Områder.K9, kontekst)
 
         assertThat(resultat).isEqualTo(SøkeresultatSammendrag.MedResultat(emptyList()))
         coVerify(exactly = 1) { pdlService.person("aktor-1") }

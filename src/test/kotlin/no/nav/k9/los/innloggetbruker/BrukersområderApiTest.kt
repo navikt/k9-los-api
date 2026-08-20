@@ -44,7 +44,8 @@ class BrukersområderApiTest : AbstractPostgresTest() {
                     epost = "saksbehandler@nav.no",
                     enhet = "3450",
                     områder = listOf(Områder.K9, Områder.UNG)
-                )
+                ),
+                skjermet = false,
             )
         }
 
@@ -85,7 +86,6 @@ class BrukersområderApiTest : AbstractPostgresTest() {
         val områdeRepository = OmrådeRepository(dataSource)
         return SaksbehandlerRepository(
             dataSource = dataSource,
-            pepClient = pepClient,
             transactionalManager = TransactionalManager(dataSource),
             områdeRepository = områdeRepository,
         )
@@ -99,13 +99,13 @@ class BrukersområderApiTest : AbstractPostgresTest() {
         install(Koin) {
             modules(
                 module {
+                    single { KoinProfile.LOCAL }
                     single<IPepClient> { PepClientLocal() }
                     single { OmrådeRepository(dataSource) }
                     single { TransactionalManager(dataSource) }
                     single {
                         SaksbehandlerRepository(
                             dataSource = dataSource,
-                            pepClient = get(),
                             transactionalManager = get(),
                             områdeRepository = get(),
                         )

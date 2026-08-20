@@ -10,6 +10,7 @@ import no.nav.k9.los.infrastruktur.rest.RequestContextService
 import no.nav.k9.los.infrastruktur.rest.idToken
 import no.nav.k9.los.infrastruktur.rest.innloggetBruker
 import no.nav.k9.los.infrastruktur.kontekst.Brukerkontekst
+import no.nav.k9.los.infrastruktur.kontekst.Områdebrukerkontekst
 import no.nav.k9.los.område
 import kotlin.coroutines.coroutineContext
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
@@ -32,12 +33,14 @@ internal fun Route.InnloggetBrukerApi() {
             requestContextService.withRequestContext(call) {
                 val token = coroutineContext.idToken()
                 val bruker = coroutineContext.innloggetBruker()
-                val kontekst = Brukerkontekst(call.område, bruker)
+                val brukerkontekst = Brukerkontekst(bruker)
+                val kontekst = Områdebrukerkontekst(call.område, bruker)
+                val skjermet = pepClient.erKode6Bruker(brukerkontekst)
                 log.info("Henter innlogget saksbehandler med epost ${token.getUsername()} og navn ${token.getName()}")
                 val saksbehandlerIdent = azureGraphService.hentIdentTilInnloggetBruker()
                 val saksbehandler =
-                    saksbehandlerRepository.finnSaksbehandlerMedIdent(token.getNavIdent())
-                        ?: saksbehandlerRepository.finnSaksbehandlerMedEpost(token.getUsername())
+                    saksbehandlerRepository.finnSaksbehandlerMedIdent(token.getNavIdent(), skjermet)
+                        ?: saksbehandlerRepository.finnSaksbehandlerMedEpost(token.getUsername(), skjermet)
                 if (saksbehandler == null) {
                     log.warn("Saksbehandler med epost ${token.getUsername()} finnes ikke i saksbehandlertabell, og kan derfor ikke oppdateres")
                 }
@@ -51,7 +54,7 @@ internal fun Route.InnloggetBrukerApi() {
                     kanSaksbehandle = pepClient.harBasisTilgang(kontekst), //TODO mismatch mellom navnet 'kanSaksbehandle' og at alle som har tilgang til systemet har basistilgang
                     kanOppgavestyre = pepClient.erOppgaveStyrer(kontekst),
                     kanReservere = pepClient.harTilgangTilReserveringAvOppgaver(kontekst),
-                    kanDrifte = pepClient.kanLeggeUtDriftsmelding(bruker),
+                    kanDrifte = pepClient.kanLeggeUtDriftsmelding(brukerkontekst),
                     finnesISaksbehandlerTabell = finnesISaksbehandlerTabell,
                     områder = saksbehandler?.områder ?: emptyList()
                 )
@@ -68,7 +71,8 @@ internal fun Route.InnloggetBrukerApi() {
                             epost = token.getUsername(),
                             enhet = azureGraphService.hentEnhetForInnloggetBruker(),
                             områder = saksbehandler.områder
-                        )
+                        ),
+                        skjermet
                     )
                 }
                 call.respond(

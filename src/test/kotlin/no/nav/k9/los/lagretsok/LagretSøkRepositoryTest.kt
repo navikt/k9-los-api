@@ -37,9 +37,10 @@ class LagretSøkRepositoryTest : AbstractK9LosIntegrationTest() {
                     epost = "test@nav.no",
                     enhet = null,
                     områder = listOf(Områder.K9),
-                )
+                ),
+                skjermet = false,
             )
-            saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedEpost("test@nav.no")!!
+            saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedEpost("test@nav.no", skjermet = false)!!
         }
     }
 
@@ -145,9 +146,10 @@ class LagretSøkRepositoryTest : AbstractK9LosIntegrationTest() {
                     epost = "annen@nav.no",
                     enhet = null,
                     områder = listOf(Områder.K9),
-                )
+                ),
+                skjermet = false,
             )
-            val annenSaksbehandler = saksbehandlerRepository.finnSaksbehandlerMedEpost("annen@nav.no")!!
+            val annenSaksbehandler = saksbehandlerRepository.finnSaksbehandlerMedEpost("annen@nav.no", skjermet = false)!!
 
             // Opprett søk for begge saksbehandlere
             val søkForFørsteSaksbehandler = LagretSøk.nyttSøk(

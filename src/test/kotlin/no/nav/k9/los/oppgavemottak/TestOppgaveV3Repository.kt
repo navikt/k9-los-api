@@ -31,7 +31,7 @@ class TestOppgaveV3Repository(
             dataSource,
             feltdefinisjonRepository,
             områdeRepository,
-            GyldigeFeltutledere(SaksbehandlerRepository(dataSource, pepClient, transactionalManager, områdeRepository))
+            GyldigeFeltutledere(SaksbehandlerRepository(dataSource, transactionalManager, områdeRepository))
         )
         return TransactionalManager(dataSource).transaction { tx ->
             tx.run(

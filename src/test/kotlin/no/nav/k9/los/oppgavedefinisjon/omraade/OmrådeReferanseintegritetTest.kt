@@ -91,7 +91,8 @@ class OmrådeReferanseintegritetTest : AbstractK9LosIntegrationTest() {
                     epost = "referanseintegritet@test.no",
                     enhet = null,
                     områder = listOf(Områder.K9),
-                )
+                ),
+                skjermet = false,
             )
         }
 
@@ -190,7 +191,6 @@ class OmrådeReferanseintegritetTest : AbstractK9LosIntegrationTest() {
         assertThat(andreKjøring).isEmpty()
     }
 }
-
 
 
 

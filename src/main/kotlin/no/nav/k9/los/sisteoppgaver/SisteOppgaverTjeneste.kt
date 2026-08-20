@@ -6,7 +6,7 @@ import kotlinx.coroutines.*
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.azuregraph.IAzureGraphService
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
-import no.nav.k9.los.infrastruktur.kontekst.Brukerkontekst
+import no.nav.k9.los.infrastruktur.kontekst.Områdebrukerkontekst
 import no.nav.k9.los.infrastruktur.pdl.IPdlService
 import no.nav.k9.los.infrastruktur.pdl.fnr
 import no.nav.k9.los.infrastruktur.pdl.navn
@@ -25,7 +25,7 @@ class SisteOppgaverTjeneste(
 ) {
     private val log = LoggerFactory.getLogger(SisteOppgaverTjeneste::class.java)
 
-    suspend fun hentSisteOppgaver(kontekst: Brukerkontekst): List<SisteOppgaverDto> {
+    suspend fun hentSisteOppgaver(kontekst: Områdebrukerkontekst): List<SisteOppgaverDto> {
         return try {
             val saksbehandlerIdent = azureGraphService.hentIdentTilInnloggetBruker()
 

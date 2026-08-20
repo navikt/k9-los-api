@@ -16,31 +16,32 @@ import org.koin.ktor.ext.getKoin
 import java.util.UUID
 
 suspend fun <T> RoutingContext.medBrukerkontekst(
-    block: suspend (Brukerkontekst) -> T,
-): T = medInnloggetBruker { bruker ->
-    val kontekst = Brukerkontekst(område = call.område, bruker = bruker)
+    block: suspend (Områdebrukerkontekst) -> T,
+): T = medInnloggetBruker { brukerkontekst ->
+    val kontekst = Områdebrukerkontekst(område = call.område, bruker = brukerkontekst.bruker)
     block(kontekst)
 }
 
 suspend fun <T> RoutingContext.medInnloggetBruker(
-    block: suspend (InnloggetBruker) -> T,
+    block: suspend (Brukerkontekst) -> T,
 ): T {
-    val bruker = innloggetBruker()
-    return withContext(CoroutineRequestContext(bruker.idToken) + Span.current().asContextElement()) {
-        block(bruker)
+    val kontekst = Brukerkontekst(innloggetBruker())
+    return withContext(CoroutineRequestContext(kontekst.bruker.idToken) + Span.current().asContextElement()) {
+        block(kontekst)
     }
 }
 
 private fun RoutingContext.innloggetBruker(): InnloggetBruker {
-    val idToken = if (call.application.getKoin().get<KoinProfile>() == KoinProfile.LOCAL) {
-        IdTokenLocal()
-    } else {
+    val principal = call.principal<JWTPrincipal>()
+    val idToken = if (principal != null) {
         val authorizationHeader = call.request.parseAuthorizationHeader()?.render()
             ?: throw IllegalStateException("Token ikke satt")
         val jwt = authorizationHeader.substringAfter("Bearer ")
-        val principal = call.principal<JWTPrincipal>()
-            ?: throw IllegalStateException("Validert principal ikke satt")
         IdTokenAzure.fra(jwt, principal)
+    } else {
+        val profile = call.application.getKoin().getOrNull<KoinProfile>()
+        check(profile == KoinProfile.LOCAL) { "Validert principal ikke satt" }
+        IdTokenLocal()
     }
 
     return InnloggetBruker(

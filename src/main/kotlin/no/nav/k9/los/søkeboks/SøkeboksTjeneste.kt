@@ -1,7 +1,7 @@
 package no.nav.k9.los.søkeboks
 
 import no.nav.k9.los.infrastruktur.abac.IPepClient
-import no.nav.k9.los.infrastruktur.kontekst.Brukerkontekst
+import no.nav.k9.los.infrastruktur.kontekst.Områdebrukerkontekst
 import no.nav.k9.los.infrastruktur.pdl.IPdlService
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
@@ -21,13 +21,13 @@ class SøkeboksTjeneste(
     private val queryService: OppgaveQueryService,
     private val oppgavesøkere: Oppgavesøkere,
 ) {
-    suspend fun finnOppgaver(søkeord: String, område: Områder, kontekst: Brukerkontekst): Søkeresultat {
+    suspend fun finnOppgaver(søkeord: String, område: Områder, kontekst: Områdebrukerkontekst): Søkeresultat {
         val adapter = oppgavesøkere.forOmråde(område)
         val oppgaver = finnOppgaverFor(søkeord, område, adapter) ?: return Søkeresultat.IkkeTilgang
         return transformerTilSøkeresultat(oppgaver, adapter, kontekst)
     }
 
-    suspend fun finnOppgaverSammendrag(søkeord: String, område: Områder, kontekst: Brukerkontekst): SøkeresultatSammendrag {
+    suspend fun finnOppgaverSammendrag(søkeord: String, område: Områder, kontekst: Områdebrukerkontekst): SøkeresultatSammendrag {
         val adapterForOmråde = oppgavesøkere.forOmråde(område)
         val oppgaver = finnOppgaverFor(søkeord, område, adapterForOmråde) ?: return SøkeresultatSammendrag.IkkeTilgang
         return transformerTilSøkeresultatSammendrag(oppgaver, adapterForOmråde, kontekst)
@@ -70,7 +70,7 @@ class SøkeboksTjeneste(
     private suspend fun transformerTilSøkeresultat(
         oppgaver: List<Oppgave>,
         adapter: Oppgavesøk,
-        kontekst: Brukerkontekst,
+        kontekst: Områdebrukerkontekst,
     ): Søkeresultat {
         if (oppgaver.isEmpty()) {
             return Søkeresultat.TomtResultat
@@ -105,7 +105,7 @@ class SøkeboksTjeneste(
     private suspend fun transformerTilSøkeresultatSammendrag(
         oppgaver: List<Oppgave>,
         adapter: Oppgavesøk,
-        kontekst: Brukerkontekst,
+        kontekst: Områdebrukerkontekst,
     ): SøkeresultatSammendrag {
         if (oppgaver.isEmpty()) return SøkeresultatSammendrag.TomtResultat
 
