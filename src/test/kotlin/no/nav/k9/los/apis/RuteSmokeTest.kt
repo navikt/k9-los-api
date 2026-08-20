@@ -29,6 +29,7 @@ import no.nav.k9.los.driftsmelding.DriftsmeldingerApis
 import no.nav.k9.los.infrastruktur.abac.Gruppeoppsett
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.abac.OmrådeIkkeTilgjengeligException
+import no.nav.k9.los.reservasjon.ManglerTilgangException
 import no.nav.k9.los.infrastruktur.abac.PepClient
 import no.nav.k9.los.infrastruktur.abac.SifAbacPdpKlienter
 import no.nav.k9.los.infrastruktur.azuregraph.IAzureGraphService
@@ -153,6 +154,9 @@ internal class RuteSmokeTest : AbstractPostgresTest() {
             install(StatusPages) {
                 AuthStatusPages()
                 exception<OmrådeIkkeTilgjengeligException> { call, _ ->
+                    call.respond(HttpStatusCode.Forbidden)
+                }
+                exception<ManglerTilgangException> { call, _ ->
                     call.respond(HttpStatusCode.Forbidden)
                 }
             }

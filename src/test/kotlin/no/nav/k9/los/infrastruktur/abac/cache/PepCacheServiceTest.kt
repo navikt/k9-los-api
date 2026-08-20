@@ -21,8 +21,8 @@ import no.nav.k9.los.domeneadaptere.k9.eventmottak.sak.K9SakEventHandler
 import no.nav.k9.los.domeneadaptere.k9.eventtiloppgave.EventTilOppgaveAdapter
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
-import no.nav.k9.los.infrastruktur.kontekst.Områdebrukerkontekst
-import no.nav.k9.los.infrastruktur.kontekst.Områdesystemkontekst
+import no.nav.k9.los.infrastruktur.kontekst.Brukerkontekst
+import no.nav.k9.los.infrastruktur.kontekst.TestKontekstFactory
 import no.nav.k9.los.infrastruktur.jobbplanlegger.Jobbplanlegger
 import no.nav.k9.los.infrastruktur.jobbplanlegger.PlanlagtJobb
 import no.nav.k9.los.infrastruktur.jobbplanlegger.Tidsvindu
@@ -74,7 +74,9 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
 
         runBlocking {
             // Gir tilgang til kode6 for å isolere testing av cache-oppdatering
-            coEvery { pepClient.harTilgangTilOppgaveV3(any(), any<Områdebrukerkontekst>(), any(), any()) } returns true
+            with(TestKontekstFactory.brukerkontekst(Områder.K9)) {
+                coEvery { pepClient.harTilgangTilOppgaveV3(any(), any(), any()) } returns true
+            }
         }
 
         val områdeSetup = get<OmrådeSetup>()
@@ -83,41 +85,51 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
 
     fun gjørSakKode6(saksnummer: String) {
         runBlocking {
-            coEvery { pepClient.erSakKode6(saksnummer, Områdesystemkontekst(Områder.K9)) } returns true
-            coEvery { pepClient.erSakKode7EllerEgenAnsatt(saksnummer, Områdesystemkontekst(Områder.K9)) } returns false
-            coEvery { pepClient.diskresjonskoderForSak(saksnummer, Områdesystemkontekst(Områder.K9)) } returns setOf(Diskresjonskode.KODE6)
+            with(TestKontekstFactory.systemkontekst(Områder.K9)) {
+                coEvery { pepClient.erSakKode6(saksnummer) } returns true
+                coEvery { pepClient.erSakKode7EllerEgenAnsatt(saksnummer) } returns false
+                coEvery { pepClient.diskresjonskoderForSak(saksnummer) } returns setOf(Diskresjonskode.KODE6)
+            }
         }
     }
 
     fun gjørSakOrdinær(saksnummer: String) {
         runBlocking {
-            coEvery { pepClient.erSakKode6(saksnummer, Områdesystemkontekst(Områder.K9)) } returns false
-            coEvery { pepClient.erSakKode7EllerEgenAnsatt(saksnummer, Områdesystemkontekst(Områder.K9)) } returns false
-            coEvery { pepClient.diskresjonskoderForSak(saksnummer, Områdesystemkontekst(Områder.K9)) } returns setOf()
+            with(TestKontekstFactory.systemkontekst(Områder.K9)) {
+                coEvery { pepClient.erSakKode6(saksnummer) } returns false
+                coEvery { pepClient.erSakKode7EllerEgenAnsatt(saksnummer) } returns false
+                coEvery { pepClient.diskresjonskoderForSak(saksnummer) } returns setOf()
+            }
         }
     }
 
     fun gjørAktørKode6(aktørId: String) {
         runBlocking {
-            coEvery { pepClient.erAktørKode6(aktørId, Områdesystemkontekst(Områder.K9)) } returns true
-            coEvery { pepClient.erAktørKode7EllerEgenAnsatt(aktørId, Områdesystemkontekst(Områder.K9)) } returns false
-            coEvery { pepClient.diskresjonskoderForPerson(aktørId, Områdesystemkontekst(Områder.K9)) } returns setOf(Diskresjonskode.KODE6)
+            with(TestKontekstFactory.systemkontekst(Områder.K9)) {
+                coEvery { pepClient.erAktørKode6(aktørId) } returns true
+                coEvery { pepClient.erAktørKode7EllerEgenAnsatt(aktørId) } returns false
+                coEvery { pepClient.diskresjonskoderForPerson(aktørId) } returns setOf(Diskresjonskode.KODE6)
+            }
         }
     }
 
     fun gjørAktørKode7(aktørId: String) {
         runBlocking {
-            coEvery { pepClient.erAktørKode6(aktørId, Områdesystemkontekst(Områder.K9)) } returns false
-            coEvery { pepClient.erAktørKode7EllerEgenAnsatt(aktørId, Områdesystemkontekst(Områder.K9)) } returns true
-            coEvery { pepClient.diskresjonskoderForPerson(aktørId, Områdesystemkontekst(Områder.K9)) } returns setOf(Diskresjonskode.KODE7)
+            with(TestKontekstFactory.systemkontekst(Områder.K9)) {
+                coEvery { pepClient.erAktørKode6(aktørId) } returns false
+                coEvery { pepClient.erAktørKode7EllerEgenAnsatt(aktørId) } returns true
+                coEvery { pepClient.diskresjonskoderForPerson(aktørId) } returns setOf(Diskresjonskode.KODE7)
+            }
         }
     }
 
     fun gjørAktørOrdinær(aktørId: String) {
         runBlocking {
-            coEvery { pepClient.erAktørKode6(aktørId, Områdesystemkontekst(Områder.K9)) } returns false
-            coEvery { pepClient.erAktørKode7EllerEgenAnsatt(aktørId, Områdesystemkontekst(Områder.K9)) } returns false
-            coEvery { pepClient.diskresjonskoderForPerson(aktørId, Områdesystemkontekst(Områder.K9)) } returns setOf()
+            with(TestKontekstFactory.systemkontekst(Områder.K9)) {
+                coEvery { pepClient.erAktørKode6(aktørId) } returns false
+                coEvery { pepClient.erAktørKode7EllerEgenAnsatt(aktørId) } returns false
+                coEvery { pepClient.diskresjonskoderForPerson(aktørId) } returns setOf()
+            }
         }
     }
 
@@ -288,7 +300,9 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
                 PersonBeskyttelseType.UTEN_KODE6
             )
         ).isNotEmpty()
-        coVerify(exactly = 2) { pepClient.harTilgangTilOppgaveV3(any(), any<Områdebrukerkontekst>(), any(), any()) } //oppgaven hentet ut 2 ganger fra kø, gir to kall til pep klient
+        with(TestKontekstFactory.brukerkontekst(Områder.K9)) {
+            coVerify(exactly = 2) { pepClient.harTilgangTilOppgaveV3(any(), any(), any()) }
+        } //oppgaven hentet ut 2 ganger fra kø, gir to kall til pep klient
         assertThat(
             hentOppgaverMedSikkerhetsklassifisering(
                 oppgaveQueryService,
@@ -296,7 +310,9 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
                 PersonBeskyttelseType.KODE6
             )
         ).isEmpty()
-        coVerify(exactly = 2) { pepClient.harTilgangTilOppgaveV3(any(), any<Områdebrukerkontekst>(), any(), any()) } //oppgaven var ikke i køa, så gjør ikke ekstra kall til pep-klent
+        with(TestKontekstFactory.brukerkontekst(Områder.K9)) {
+            coVerify(exactly = 2) { pepClient.harTilgangTilOppgaveV3(any(), any(), any()) }
+        } //oppgaven var ikke i køa, så gjør ikke ekstra kall til pep-klent
 
         gjørSakKode6(saksnummer)
         ventPåAntallForsøk(10, "Pepcache") { pepRepository.hent(Områder.K9, eksternId)?.kode6 == true }
@@ -332,7 +348,9 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
 
         jobbplanlegger.stopp()
         coVerify(exactly = 3) {
-            pepClient.harTilgangTilOppgaveV3(any(), any<Områdebrukerkontekst>(), any(), any())
+            with(TestKontekstFactory.brukerkontekst(Områder.K9)) {
+                pepClient.harTilgangTilOppgaveV3(any(), any(), any())
+            }
         } //oppgaven var bare i kode6-køa, så ble ett ekstra kall til pep-klent
     }
 

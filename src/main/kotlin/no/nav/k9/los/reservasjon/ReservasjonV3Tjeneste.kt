@@ -6,7 +6,7 @@ import kotliquery.TransactionalSession
 import no.nav.k9.los.feilhandtering.FinnerIkkeDataException
 import no.nav.k9.los.infrastruktur.abac.Action
 import no.nav.k9.los.infrastruktur.abac.IPepClient
-import no.nav.k9.los.infrastruktur.kontekst.Områdesystemkontekst
+import no.nav.k9.los.infrastruktur.kontekst.systemkontekst
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.infrastruktur.utils.leggTilDagerHoppOverHelg
 import no.nav.k9.los.ko.KøpåvirkendeHendelse
@@ -327,12 +327,13 @@ class ReservasjonV3Tjeneste(
                 )
             ) throw ManglerTilgangException("Saksbehandler kan ikke være beslutter på egen behandling")
 
-            pepClient.harTilgangTilOppgaveV3(
-                oppgave,
-                Områdesystemkontekst(oppgave.oppgavetype.område.tilOmrådeEnum()),
-                saksbehandler,
-                Action.reserver,
-            )
+            with(systemkontekst(oppgave.oppgavetype.område.tilOmrådeEnum())) {
+                pepClient.harTilgangTilOppgaveV3(
+                    oppgave,
+                    saksbehandler,
+                    Action.reserver,
+                )
+            }
         }
     }
 

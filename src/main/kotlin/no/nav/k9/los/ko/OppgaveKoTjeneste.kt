@@ -11,7 +11,7 @@ import kotlinx.coroutines.runBlocking
 import kotliquery.TransactionalSession
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
-import no.nav.k9.los.infrastruktur.kontekst.Områdebrukerkontekst
+import no.nav.k9.los.infrastruktur.kontekst.Brukerkontekst
 import no.nav.k9.los.infrastruktur.metrikker.DetaljerMetrikker
 import no.nav.k9.los.infrastruktur.pdl.IPdlService
 import no.nav.k9.los.infrastruktur.pdl.fnr
@@ -64,12 +64,12 @@ class OppgaveKoTjeneste(
 
     @WithSpan
     suspend fun hentOppgaverFraKø(
-        kontekst: Områdebrukerkontekst,
+        kontekst: Brukerkontekst,
         oppgaveKoId: Long,
         ønsketAntallOppgaver: Long,
         fjernReserverte: Boolean = false
     ): NesteOppgaverFraKoDto {
-        val kø = oppgaveKoRepository.hent(oppgaveKoId, pepClient.harTilgangTilKode6(kontekst))
+        val kø = oppgaveKoRepository.hent(oppgaveKoId, with(kontekst) { pepClient.harTilgangTilKode6() })
         val tilgjengeligeOppgaver = hentTilgjengeligeOppgaverFraKø(
             kø = kø,
             ønsketAntallOppgaver = ønsketAntallOppgaver,
@@ -84,12 +84,12 @@ class OppgaveKoTjeneste(
 
     @WithSpan
     suspend fun hentOppgaverFraKøSammendrag(
-        kontekst: Områdebrukerkontekst,
+        kontekst: Brukerkontekst,
         oppgaveKoId: Long,
         ønsketAntallOppgaver: Long,
         fjernReserverte: Boolean = false,
     ): OppgaverFraKøDto {
-        val kø = oppgaveKoRepository.hent(oppgaveKoId, pepClient.harTilgangTilKode6(kontekst))
+        val kø = oppgaveKoRepository.hent(oppgaveKoId, with(kontekst) { pepClient.harTilgangTilKode6() })
         val oppgaver = hentTilgjengeligeOppgaverFraKø(kø, ønsketAntallOppgaver, fjernReserverte, kontekst)
         return OppgaverFraKøDto(oppgaveSammendragDtoBuilder.bygg(oppgaver, kontekst.bruker))
     }
@@ -98,7 +98,7 @@ class OppgaveKoTjeneste(
         kø: OppgaveKo,
         ønsketAntallOppgaver: Long,
         fjernReserverte: Boolean,
-        kontekst: Områdebrukerkontekst,
+        kontekst: Brukerkontekst,
     ): List<Oppgave> {
         val kandidatOppgaver = oppgaveQueryService.queryForOppgave(
             QueryRequest(
@@ -109,7 +109,7 @@ class OppgaveKoTjeneste(
             )
         )
 
-        val tilgjengeligeOppgaver = kandidatOppgaver.filter { pepClient.harTilgangTilOppgaveV3(it, kontekst) }
+        val tilgjengeligeOppgaver = kandidatOppgaver.filter { with(kontekst) { pepClient.harTilgangTilOppgaveV3(it) } }
         val filtrertBort = kandidatOppgaver.size - tilgjengeligeOppgaver.size
         if (filtrertBort > 0) {
             log.info("Filtrerte bort {} oppgaver fra kø {} etter pepClient-kall", filtrertBort, kø.id)
@@ -122,7 +122,7 @@ class OppgaveKoTjeneste(
     private suspend fun byggDto(
         oppgaver: List<Oppgave>,
         orderFelt: EnkelOrderFelt?,
-        kontekst: Områdebrukerkontekst,
+        kontekst: Brukerkontekst,
     ): NesteOppgaverFraKoDto {
 
         val visningskolonner = buildMap {
@@ -220,7 +220,7 @@ class OppgaveKoTjeneste(
     suspend fun taReservasjonFraKø(
         innloggetBrukerId: Long,
         oppgaveKoId: Long,
-        kontekst: Områdebrukerkontekst,
+        kontekst: Brukerkontekst,
     ): OppgaveMuligReservert {
         return doTaReservasjonFraKø(innloggetBrukerId, oppgaveKoId, kontekst)
                 .also {
@@ -244,10 +244,10 @@ class OppgaveKoTjeneste(
     private suspend fun doTaReservasjonFraKø(
         innloggetBrukerId: Long,
         oppgaveKoId: Long,
-        kontekst: Områdebrukerkontekst,
+        kontekst: Brukerkontekst,
     ): OppgaveMuligReservert {
         log.info("taReservasjonFraKø, oppgaveKøId: $oppgaveKoId")
-        val skjermet = pepClient.harTilgangTilKode6(kontekst)
+        val skjermet = with(kontekst) { pepClient.harTilgangTilKode6() }
         val oppgavekø = DetaljerMetrikker.time("taReservasjonFraKø", "hentKø", "$oppgaveKoId") {
             oppgaveKoRepository.hent(
                 oppgaveKoId,
@@ -313,8 +313,8 @@ class OppgaveKoTjeneste(
     }
 
     @WithSpan
-    suspend fun hentSaksbehandlereForKo(oppgaveKoId: Long, kontekst: Områdebrukerkontekst): List<Saksbehandler> {
-        val skjermet = pepClient.harTilgangTilKode6(kontekst)
+    suspend fun hentSaksbehandlereForKo(oppgaveKoId: Long, kontekst: Brukerkontekst): List<Saksbehandler> {
+        val skjermet = with(kontekst) { pepClient.harTilgangTilKode6() }
         val oppgaveKo = oppgaveKoRepository.hent(oppgaveKoId, skjermet)
         return oppgaveKo.saksbehandlere.mapNotNull { saksbehandlerEpost: String ->
             saksbehandlerRepository.finnSaksbehandlerMedEpost(saksbehandlerEpost, skjermet).also {

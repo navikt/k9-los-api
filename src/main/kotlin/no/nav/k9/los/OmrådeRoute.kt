@@ -7,7 +7,7 @@ import io.ktor.server.routing.*
 import io.ktor.util.*
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 
-private val områdeAttributeKey = AttributeKey<Områder>("los-omrade")
+val områdeAttributeKey = AttributeKey<Områder>("los-omrade")
 
 private fun Route.medOmrådePlugin(områdeProvider: suspend (ApplicationCall) -> Områder?): Route = apply {
     install(
@@ -49,14 +49,3 @@ fun Route.områdeApi(område: Områder, build: Route.() -> Unit): Route =
         medOmrådePlugin { område }
         build()
     }
-
-/** Området ruten kallet traff ble registrert under. Se [områdeApi]. */
-val ApplicationCall.område: Områder
-    get() = områdeOrNull
-        ?: throw IllegalStateException("Endepunktet er ikke registrert under en områdeApi-rute")
-
-val ApplicationCall.områdeOrNull: Områder?
-    get() = attributes.getOrNull(områdeAttributeKey)
-
-val RoutingContext.område: Områder
-    get() = call.område

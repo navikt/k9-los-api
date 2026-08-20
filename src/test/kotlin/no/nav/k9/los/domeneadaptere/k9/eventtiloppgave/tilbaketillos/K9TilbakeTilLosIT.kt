@@ -9,9 +9,8 @@ import no.nav.k9.los.OppgaveTestDataBuilder
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.K9TilbakeEventDtoBuilder
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.TestSaksbehandler
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.tilbakekrav.K9TilbakeEventHandler
-import no.nav.k9.los.infrastruktur.kontekst.InnloggetBruker
-import no.nav.k9.los.infrastruktur.kontekst.Områdebrukerkontekst
-import no.nav.k9.los.infrastruktur.idtoken.IdTokenLocal
+import no.nav.k9.los.infrastruktur.kontekst.Brukerkontekst
+import no.nav.k9.los.infrastruktur.kontekst.TestKontekstFactory
 import no.nav.k9.los.ko.OppgaveKoTjeneste
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.reservasjon.OppgaveIdMedOverstyringDto
@@ -93,13 +92,8 @@ class K9TilbakeTilLosIT : AbstractK9LosIntegrationTest() {
         }
     }
 
-    private fun kontekst(saksbehandler: Saksbehandler): Områdebrukerkontekst {
-        val idToken = IdTokenLocal()
-        return Områdebrukerkontekst(
-            Områder.K9,
-            InnloggetBruker(saksbehandler.navident!!, emptySet(), idToken),
-        )
-    }
+    private fun kontekst(saksbehandler: Saksbehandler): Brukerkontekst =
+        TestKontekstFactory.brukerkontekst(Områder.K9, navIdent = saksbehandler.navident!!)
 
     private fun assertIngenReservasjon(saksbehandler: Saksbehandler) {
         val reservasjonApisTjeneste = get<ReservasjonApisTjeneste>()

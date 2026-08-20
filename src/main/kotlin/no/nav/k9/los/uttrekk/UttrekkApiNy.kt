@@ -37,7 +37,7 @@ fun Route.UttrekkApiNy() {
         }
     }) {
         medBrukerkontekst { kontekst ->
-            if (pepClient.harBasisTilgang(kontekst)) {
+            if (with(kontekst) { pepClient.harBasisTilgang() }) {
                 val område = kontekst.område
                 val innloggetSaksbehandler = kontekst.bruker.navIdent.let {
                     saksbehandlerRepository.finnSaksbehandlerMedIdent(it, pepClient.erKode6Bruker(kontekst.bruker))
@@ -72,7 +72,7 @@ fun Route.UttrekkApiNy() {
         }
     }) {
         medBrukerkontekst { kontekst ->
-            if (pepClient.harBasisTilgang(kontekst)) {
+            if (with(kontekst) { pepClient.harBasisTilgang() }) {
                 val område = kontekst.område
                 val id = call.parameters["id"]?.toLongOrNull()
                 if (id == null) {
@@ -107,7 +107,7 @@ fun Route.UttrekkApiNy() {
         }
     }) {
         medBrukerkontekst { kontekst ->
-            if (pepClient.harBasisTilgang(kontekst)) {
+            if (with(kontekst) { pepClient.harBasisTilgang() }) {
                 val område = kontekst.område
                 val innloggetSaksbehandler = kontekst.bruker.navIdent.let {
                     saksbehandlerRepository.finnSaksbehandlerMedIdent(it, pepClient.erKode6Bruker(kontekst.bruker))
@@ -149,7 +149,7 @@ fun Route.UttrekkApiNy() {
         }
     }) {
         medBrukerkontekst { kontekst ->
-            if (pepClient.harBasisTilgang(kontekst)) {
+            if (with(kontekst) { pepClient.harBasisTilgang() }) {
                 val område = kontekst.område
                 val id = call.parameters["id"]?.toLongOrNull()
                 if (id == null) {
@@ -188,7 +188,7 @@ fun Route.UttrekkApiNy() {
         }
     }) {
         medBrukerkontekst { kontekst ->
-            if (pepClient.harBasisTilgang(kontekst)) {
+            if (with(kontekst) { pepClient.harBasisTilgang() }) {
                 val område = kontekst.område
                 try {
                     val id = call.parameters["id"]?.toLongOrNull()
@@ -226,7 +226,7 @@ fun Route.UttrekkApiNy() {
         }
     }) {
         medBrukerkontekst { kontekst ->
-            if (pepClient.harBasisTilgang(kontekst)) {
+            if (with(kontekst) { pepClient.harBasisTilgang() }) {
                 val område = kontekst.område
                 val lagretSokId = call.parameters["lagretSokId"]?.toLongOrNull()
                 if (lagretSokId == null) {
@@ -259,7 +259,7 @@ fun Route.UttrekkApiNy() {
         }
     }) {
         medBrukerkontekst { kontekst ->
-            if (pepClient.harBasisTilgang(kontekst)) {
+            if (with(kontekst) { pepClient.harBasisTilgang() }) {
                 val område = kontekst.område
                 val id = call.parameters["id"]?.toLongOrNull()
                 if (id == null) {
@@ -322,7 +322,7 @@ fun Route.UttrekkApiNy() {
         }
     }) {
         medBrukerkontekst { kontekst ->
-            if (pepClient.harBasisTilgang(kontekst)) {
+            if (with(kontekst) { pepClient.harBasisTilgang() }) {
                 val område = kontekst.område
                 val id = call.parameters["id"]?.toLongOrNull()
                 if (id == null) {

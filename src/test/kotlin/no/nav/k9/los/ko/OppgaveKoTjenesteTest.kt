@@ -12,9 +12,7 @@ import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.infrastruktur.abac.Action
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
-import no.nav.k9.los.infrastruktur.idtoken.IdTokenLocal
-import no.nav.k9.los.infrastruktur.kontekst.InnloggetBruker
-import no.nav.k9.los.infrastruktur.kontekst.Områdebrukerkontekst
+import no.nav.k9.los.infrastruktur.kontekst.TestKontekstFactory
 import no.nav.k9.los.infrastruktur.pdl.IPdlService
 import no.nav.k9.los.ko.db.OppgaveKoRepository
 import no.nav.k9.los.ko.dto.OppgaveKo
@@ -78,10 +76,10 @@ class OppgaveKoTjenesteTest {
             oppgavebehandlingsUrl = null,
             hastesak = false,
         )
-        coEvery { pepClient.harTilgangTilKode6(kontekst) } returns false
+        coEvery { with(kontekst) { pepClient.harTilgangTilKode6() } } returns false
         every { oppgaveKoRepository.hent(1L, false) } returns kø
         every { oppgaveQueryService.queryForOppgave(any()) } returns listOf(oppgave)
-        coEvery { pepClient.harTilgangTilOppgaveV3(oppgave, kontekst, Action.read, null) } returns true
+        coEvery { with(kontekst) { pepClient.harTilgangTilOppgaveV3(oppgave, Action.read, null) } } returns true
         coEvery { builder.bygg(listOf(oppgave), kontekst.bruker, emptyMap()) } returns listOf(sammendrag)
         val tjeneste = OppgaveKoTjeneste(
             transactionalManager = mockk<TransactionalManager>(relaxed = true),
@@ -139,7 +137,7 @@ class OppgaveKoTjenesteTest {
         val utenTilgang = oppgave("uten-tilgang", "SAK-1")
         val førsteMedTilgang = oppgave("med-tilgang-1", "SAK-2")
 
-        coEvery { pepClient.harTilgangTilKode6(kontekst) } returns false
+        coEvery { with(kontekst) { pepClient.harTilgangTilKode6() } } returns false
         every { oppgaveKoRepository.hent(1L, false) } returns kø
         every {
             oppgaveQueryService.queryForOppgave(
@@ -150,8 +148,8 @@ class OppgaveKoTjenesteTest {
                 )
             )
         } returns listOf(utenTilgang, førsteMedTilgang)
-        coEvery { pepClient.harTilgangTilOppgaveV3(utenTilgang, kontekst, Action.read, null) } returns false
-        coEvery { pepClient.harTilgangTilOppgaveV3(førsteMedTilgang, kontekst, Action.read, null) } returns true
+        coEvery { with(kontekst) { pepClient.harTilgangTilOppgaveV3(utenTilgang, Action.read, null) } } returns false
+        coEvery { with(kontekst) { pepClient.harTilgangTilOppgaveV3(førsteMedTilgang, Action.read, null) } } returns true
 
         val resultat = tjeneste.hentOppgaverFraKø(
             kontekst = kontekst,
@@ -206,8 +204,5 @@ class OppgaveKoTjenesteTest {
         )
     }
 
-    private fun kontekst(navIdent: String) = Områdebrukerkontekst(
-        Områder.K9,
-        InnloggetBruker(navIdent, emptySet(), IdTokenLocal()),
-    )
+    private fun kontekst(navIdent: String) = TestKontekstFactory.brukerkontekst(Områder.K9, navIdent = navIdent)
 }

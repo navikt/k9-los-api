@@ -7,8 +7,7 @@ import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.infrastruktur.azuregraph.IAzureGraphService
 import no.nav.k9.los.infrastruktur.idtoken.IdToken
 import no.nav.k9.los.infrastruktur.kontekst.Brukerkontekst
-import no.nav.k9.los.infrastruktur.kontekst.InnloggetBruker
-import no.nav.k9.los.infrastruktur.kontekst.Områdebrukerkontekst
+import no.nav.k9.los.infrastruktur.kontekst.TestKontekstFactory
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import org.junit.jupiter.api.Test
 import java.util.UUID
@@ -36,8 +35,8 @@ class PepClientGruppeoppsettTest {
             val pepClient = pepClient()
             val token = token(setOf(ungSaksbehandler))
 
-            pepClient.harBasisTilgang(kontekst(token, Områder.K9)) shouldBe false
-            pepClient.harBasisTilgang(kontekst(token, Områder.UNG)) shouldBe true
+            with(kontekst(token, Områder.K9)) { pepClient.harBasisTilgang() } shouldBe false
+            with(kontekst(token, Områder.UNG)) { pepClient.harBasisTilgang() } shouldBe true
         }
     }
 
@@ -72,8 +71,8 @@ class PepClientGruppeoppsettTest {
             coEvery { azureGraphService.hentGrupperForSaksbehandler("Z999999") } returns setOf(ungKode6)
             val pepClient = pepClient(azureGraphService)
 
-            pepClient.harTilgangTilKode6("Z999999", kontekst(token(emptySet()), Områder.K9)) shouldBe false
-            pepClient.harTilgangTilKode6("Z999999", kontekst(token(emptySet()), Områder.UNG)) shouldBe true
+            with(kontekst(token(emptySet()), Områder.K9)) { pepClient.harTilgangTilKode6("Z999999") } shouldBe false
+            with(kontekst(token(emptySet()), Områder.UNG)) { pepClient.harTilgangTilKode6("Z999999") } shouldBe true
         }
     }
 
@@ -88,20 +87,15 @@ class PepClientGruppeoppsettTest {
         coEvery { getNavIdent() } returns "Z123456"
     }
 
-    private suspend fun harRolle(pepClient: PepClient, gruppe: UUID, kontekst: Områdebrukerkontekst): Boolean = when (gruppe) {
-        ungSaksbehandler -> pepClient.harTilgangTilReserveringAvOppgaver(kontekst)
-        ungVeileder -> pepClient.harBasisTilgang(kontekst)
-        ungOppgavestyrer -> pepClient.erOppgaveStyrer(kontekst)
-        ungKode6 -> pepClient.harTilgangTilKode6(kontekst)
+    private suspend fun harRolle(pepClient: PepClient, gruppe: UUID, kontekst: Brukerkontekst): Boolean = when (gruppe) {
+        ungSaksbehandler -> with(kontekst) { pepClient.harTilgangTilReserveringAvOppgaver() }
+        ungVeileder -> with(kontekst) { pepClient.harBasisTilgang() }
+        ungOppgavestyrer -> with(kontekst) { pepClient.erOppgaveStyrer() }
+        ungKode6 -> with(kontekst) { pepClient.harTilgangTilKode6() }
         else -> error("Ukjent testgruppe")
     }
 
-    private fun kontekst(token: IdToken, område: Områder) = Områdebrukerkontekst(
-        område,
-        InnloggetBruker(token.getNavIdent(), token.groups.map(UUID::fromString).toSet(), token),
-    )
+    private fun kontekst(token: IdToken, område: Områder) = TestKontekstFactory.brukerkontekst(område, token)
 
-    private fun globalKontekst(token: IdToken) = Brukerkontekst(
-        InnloggetBruker(token.getNavIdent(), token.groups.map(UUID::fromString).toSet(), token),
-    )
+    private fun globalKontekst(token: IdToken) = TestKontekstFactory.brukerkontekstUtenOmråde(token)
 }

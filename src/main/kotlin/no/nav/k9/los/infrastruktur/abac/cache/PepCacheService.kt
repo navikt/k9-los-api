@@ -7,7 +7,8 @@ import kotlinx.coroutines.*
 import kotliquery.TransactionalSession
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
-import no.nav.k9.los.infrastruktur.kontekst.Områdesystemkontekst
+import no.nav.k9.los.infrastruktur.kontekst.Systemkontekst
+import no.nav.k9.los.infrastruktur.kontekst.systemkontekst
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.sif.abac.kontrakt.abac.Diskresjonskode
 import java.time.Duration
@@ -50,7 +51,7 @@ class PepCacheService(
         // PepCacheInput kommer i dag utelukkende fra K9-oppgaver, jf. spørringen i
         // PepCacheRepository.hentOppgaverMedStatusOgPepCacheEldreEnn som filtrerer på kildeomrade
         // = 'K9'. Når UNG-oppgaver skal pep-caches må området følge med fra oppgaven.
-        val kontekst = Områdesystemkontekst(Områder.K9)
+        val kontekst = systemkontekst(Områder.K9)
         val område = kontekst.område
         val pep = PepCache(
             eksternId = oppgaveIdOgAktører.eksternId,
@@ -63,14 +64,15 @@ class PepCacheService(
         )
 
         return if (oppgaveIdOgAktører.saksnummer != null) {
-            pep.oppdater(oppgaveIdOgAktører.saksnummer, kontekst)
+            with(kontekst) { pep.oppdater(oppgaveIdOgAktører.saksnummer) }
         } else {
-            pep.oppdater(oppgaveIdOgAktører.aktører, kontekst)
+            with(kontekst) { pep.oppdater(oppgaveIdOgAktører.aktører) }
         }
     }
 
-    private suspend fun PepCache.oppdater(saksnummer: String, kontekst: Områdesystemkontekst): PepCache {
-        val diskresjonskoder = pepClient.diskresjonskoderForSak(saksnummer, kontekst)
+    context(ctx: Systemkontekst)
+    private suspend fun PepCache.oppdater(saksnummer: String): PepCache {
+        val diskresjonskoder = pepClient.diskresjonskoderForSak(saksnummer)
 
         //TODO ikke sette kode7 og egenansatt til samme verdi, det er misvisende ifht modellen som finnes. Det fungerer funksjonelt p.t fordi kode7 og egen ansatt (skjermet) håndteres samlet i køene
         val kode7ellerEgenAnsatt =
@@ -82,14 +84,15 @@ class PepCacheService(
         )
     }
 
-    private suspend fun PepCache.oppdater(aktører: List<String>, kontekst: Områdesystemkontekst): PepCache {
+    context(ctx: Systemkontekst)
+    private suspend fun PepCache.oppdater(aktører: List<String>): PepCache {
         if (aktører.isEmpty()) {
             return oppdater(kode6 = false, kode7 = false, egenAnsatt = false)
         }
         return coroutineScope {
             val requests = aktører.map {
                 async(Span.current().asContextElement()) {
-                    pepClient.diskresjonskoderForPerson(it, kontekst)
+                    pepClient.diskresjonskoderForPerson(it)
                 }
             }
 

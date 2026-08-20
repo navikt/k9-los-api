@@ -32,9 +32,9 @@ fun Route.NøkkeltallV3ApisNy() {
         }
     }) {
         medBrukerkontekst { kontekst ->
-            if (pepClient.erOppgaveStyrer(kontekst)) {
+            if (with(kontekst) { pepClient.erOppgaveStyrer() }) {
                 val område = kontekst.område
-                call.respond(statusService.hentStatus(pepClient.harTilgangTilKode6(kontekst)))
+                call.respond(statusService.hentStatus(with(kontekst) { pepClient.harTilgangTilKode6() }))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
@@ -51,9 +51,9 @@ fun Route.NøkkeltallV3ApisNy() {
         }
     }) {
         medBrukerkontekst { kontekst ->
-            if (pepClient.erOppgaveStyrer(kontekst)) {
+            if (with(kontekst) { pepClient.erOppgaveStyrer() }) {
                 val område = kontekst.område
-                val kode6 = pepClient.harTilgangTilKode6(kontekst)
+                val kode6 = with(kontekst) { pepClient.harTilgangTilKode6() }
                 call.respond(statusFordelingService.hentVerdi(kode6))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
@@ -71,7 +71,7 @@ fun Route.NøkkeltallV3ApisNy() {
         }
     }) {
         medBrukerkontekst { kontekst ->
-            if (pepClient.erOppgaveStyrer(kontekst)) {
+            if (with(kontekst) { pepClient.erOppgaveStyrer() }) {
                 val område = kontekst.område
                 call.respond(dagensTallService.hentCachetVerdi())
             } else {
@@ -100,7 +100,7 @@ fun Route.NøkkeltallV3ApisNy() {
         }
     }) {
         medBrukerkontekst { kontekst ->
-            if (pepClient.erOppgaveStyrer(kontekst)) {
+            if (with(kontekst) { pepClient.erOppgaveStyrer() }) {
                 val område = kontekst.område
                 val gruppe = call.parameters["gruppe"]?.let { FerdigstiltePerEnhetGruppe.valueOf(it) }
                     ?: FerdigstiltePerEnhetGruppe.ALLE

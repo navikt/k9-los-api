@@ -1,34 +1,43 @@
 package no.nav.k9.los.infrastruktur.kontekst
 
 import io.ktor.server.auth.*
-import io.ktor.server.auth.jwt.JWTPrincipal
-import io.ktor.server.application.*
-import io.ktor.server.routing.RoutingContext
+import io.ktor.server.auth.jwt.*
+import io.ktor.server.routing.*
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.extension.kotlin.asContextElement
 import kotlinx.coroutines.withContext
 import no.nav.k9.los.KoinProfile
+import no.nav.k9.los.infrastruktur.abac.Gruppeoppsett
 import no.nav.k9.los.infrastruktur.idtoken.IdTokenAzure
 import no.nav.k9.los.infrastruktur.idtoken.IdTokenLocal
-import no.nav.k9.los.område
+import no.nav.k9.los.områdeAttributeKey
+import no.nav.k9.los.reservasjon.ManglerTilgangException
 import org.koin.ktor.ext.getKoin
-import java.util.UUID
+import java.util.*
 
 suspend fun <T> RoutingContext.medBrukerkontekst(
-    block: suspend (Områdebrukerkontekst) -> T,
-): T = medInnloggetBruker { brukerkontekst ->
-    val kontekst = Områdebrukerkontekst(område = call.område, bruker = brukerkontekst.bruker)
-    block(kontekst)
-}
-
-suspend fun <T> RoutingContext.medInnloggetBruker(
     block: suspend (Brukerkontekst) -> T,
 ): T {
-    val kontekst = Brukerkontekst(innloggetBruker())
+    val område = call.attributes.getOrNull(områdeAttributeKey)
+        ?: throw IllegalStateException("Endepunktet er ikke registrert under en områdeApi-rute")
+    val kontekst = Brukerkontekst(område, innloggetBruker())
     return withContext(Span.current().asContextElement()) {
         block(kontekst)
     }
 }
+
+suspend fun <T> RoutingContext.medBrukerkontekstUtenOmråde(
+    block: suspend (BrukerkontekstUtenOmråde) -> T,
+): T {
+    val kontekst = BrukerkontekstUtenOmråde(innloggetBruker())
+    return withContext(Span.current().asContextElement()) {
+        block(kontekst)
+    }
+}
+
+internal fun systemkontekst(område: no.nav.k9.los.oppgavedefinisjon.omraade.Områder) = Systemkontekst(område)
+
+internal fun systemkontekstUtenOmråde() = SystemkontekstUtenOmråde()
 
 private fun RoutingContext.innloggetBruker(): InnloggetBruker {
     val principal = call.principal<JWTPrincipal>()

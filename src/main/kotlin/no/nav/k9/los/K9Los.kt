@@ -53,6 +53,7 @@ import no.nav.k9.los.driftsmelding.DriftsmeldingerApis
 import no.nav.k9.los.forvaltning.forvaltningApis
 import no.nav.k9.los.forvaltning.forvaltningApisNy
 import no.nav.k9.los.infrastruktur.abac.OmrådeIkkeTilgjengeligException
+import no.nav.k9.los.reservasjon.ManglerTilgangException
 import no.nav.k9.los.infrastruktur.abac.cache.PepCacheService
 import no.nav.k9.los.infrastruktur.db.DB_AWARE_PARALLELISM
 import no.nav.k9.los.infrastruktur.db.migrate
@@ -142,6 +143,9 @@ fun Application.k9Los() {
         JacksonStatusPages()
         AuthStatusPages()
         exception<OmrådeIkkeTilgjengeligException> { call, _ ->
+            call.respond(HttpStatusCode.Forbidden)
+        }
+        exception<ManglerTilgangException> { call, _ ->
             call.respond(HttpStatusCode.Forbidden)
         }
     }

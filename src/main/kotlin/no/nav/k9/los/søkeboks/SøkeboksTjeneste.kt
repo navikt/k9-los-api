@@ -1,7 +1,7 @@
 package no.nav.k9.los.søkeboks
 
 import no.nav.k9.los.infrastruktur.abac.IPepClient
-import no.nav.k9.los.infrastruktur.kontekst.Områdebrukerkontekst
+import no.nav.k9.los.infrastruktur.kontekst.Brukerkontekst
 import no.nav.k9.los.infrastruktur.pdl.IPdlService
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
@@ -21,13 +21,13 @@ class SøkeboksTjeneste(
     private val queryService: OppgaveQueryService,
     private val oppgavesøkere: Oppgavesøkere,
 ) {
-    suspend fun finnOppgaver(søkeord: String, område: Områder, kontekst: Områdebrukerkontekst): Søkeresultat {
+    suspend fun finnOppgaver(søkeord: String, område: Områder, kontekst: Brukerkontekst): Søkeresultat {
         val adapter = oppgavesøkere.forOmråde(område)
         val oppgaver = finnOppgaverFor(søkeord, område, adapter, kontekst) ?: return Søkeresultat.IkkeTilgang
         return transformerTilSøkeresultat(oppgaver, adapter, kontekst)
     }
 
-    suspend fun finnOppgaverSammendrag(søkeord: String, område: Områder, kontekst: Områdebrukerkontekst): SøkeresultatSammendrag {
+    suspend fun finnOppgaverSammendrag(søkeord: String, område: Områder, kontekst: Brukerkontekst): SøkeresultatSammendrag {
         val adapterForOmråde = oppgavesøkere.forOmråde(område)
         val oppgaver = finnOppgaverFor(søkeord, område, adapterForOmråde, kontekst) ?: return SøkeresultatSammendrag.IkkeTilgang
         return transformerTilSøkeresultatSammendrag(oppgaver, adapterForOmråde, kontekst)
@@ -41,7 +41,7 @@ class SøkeboksTjeneste(
         søkeord: String,
         område: Områder,
         adapter: Oppgavesøk,
-        kontekst: Områdebrukerkontekst,
+        kontekst: Brukerkontekst,
     ): List<Oppgave>? {
         val klassifisertSøkeord = klassifiser(søkeord, kontekst) ?: return null
         val query = adapter.lagQuery(klassifisertSøkeord) ?: return emptyList()
@@ -53,7 +53,7 @@ class SøkeboksTjeneste(
      * 9 tegn journalpostId, ellers saksnummer. Returnerer null ved manglende tilgang til
      * personen bak et fødselsnummer.
      */
-    private suspend fun klassifiser(søkeord: String, kontekst: Områdebrukerkontekst): Søkeord? = when (søkeord.length) {
+    private suspend fun klassifiser(søkeord: String, kontekst: Brukerkontekst): Søkeord? = when (søkeord.length) {
         11 -> {
             val pdlRespons = pdlService.identifikator(søkeord, kontekst.bruker)
             if (pdlRespons.ikkeTilgang) {
@@ -71,7 +71,7 @@ class SøkeboksTjeneste(
     private suspend fun transformerTilSøkeresultat(
         oppgaver: List<Oppgave>,
         adapter: Oppgavesøk,
-        kontekst: Områdebrukerkontekst,
+        kontekst: Brukerkontekst,
     ): Søkeresultat {
         if (oppgaver.isEmpty()) {
             return Søkeresultat.TomtResultat
@@ -86,7 +86,7 @@ class SøkeboksTjeneste(
         }
 
         val filtrertForTilgang = énOppgavePerSak(oppgaver, adapter).filter {
-            pepClient.harTilgangTilOppgaveV3(it, kontekst)
+            with(kontekst) { pepClient.harTilgangTilOppgaveV3(it) }
         }
 
         if (filtrertForTilgang.isEmpty()) {
@@ -106,7 +106,7 @@ class SøkeboksTjeneste(
     private suspend fun transformerTilSøkeresultatSammendrag(
         oppgaver: List<Oppgave>,
         adapter: Oppgavesøk,
-        kontekst: Områdebrukerkontekst,
+        kontekst: Brukerkontekst,
     ): SøkeresultatSammendrag {
         if (oppgaver.isEmpty()) return SøkeresultatSammendrag.TomtResultat
 
@@ -115,7 +115,7 @@ class SøkeboksTjeneste(
         if (ikkeTilgang || person == null) return SøkeresultatSammendrag.IkkeTilgang
 
         val filtrertForTilgang = énOppgavePerSak(oppgaver, adapter).filter {
-            pepClient.harTilgangTilOppgaveV3(it, kontekst)
+            with(kontekst) { pepClient.harTilgangTilOppgaveV3(it) }
         }
         if (filtrertForTilgang.isEmpty()) return SøkeresultatSammendrag.IkkeTilgang
 

@@ -1,10 +1,9 @@
 package no.nav.k9.los.infrastruktur.abac
 
-import no.nav.k9.los.infrastruktur.kontekst.Brukerkontekst
 import no.nav.k9.los.infrastruktur.kontekst.InnloggetBruker
-import no.nav.k9.los.infrastruktur.kontekst.Områdebrukerkontekst
-import no.nav.k9.los.infrastruktur.kontekst.Områdekall
-import no.nav.k9.los.infrastruktur.kontekst.Områdesystemkontekst
+import no.nav.k9.los.infrastruktur.kontekst.Brukerkontekst
+import no.nav.k9.los.infrastruktur.kontekst.Kallkontekst
+import no.nav.k9.los.infrastruktur.kontekst.Systemkontekst
 import no.nav.k9.los.saksbehandleradmin.Saksbehandler
 import no.nav.sif.abac.kontrakt.abac.Diskresjonskode
 import java.util.*
@@ -12,15 +11,18 @@ import java.util.*
 /**
  * Tilgangskontroll (PEP) for Los.
  *
- * Globale brukeroperasjoner tar [Brukerkontekst], områdeavhengige brukeroperasjoner tar
- * [Områdebrukerkontekst], og operasjoner som også kan kjøres av system tar [Områdekall].
+ * Globale brukeroperasjoner tar [InnloggetBruker], områdeavhengige brukeroperasjoner tar
+ * [Brukerkontekst], og operasjoner som også kan kjøres av system tar [Kallkontekst.MedOmråde].
  * [PepClient] velger riktig tilgangsløsning ut fra kontekstens område.
  *
  */
 interface IPepClient {
-    suspend fun erOppgaveStyrer(kontekst: Områdebrukerkontekst): Boolean
-    suspend fun harTilgangTilKode6(kontekst: Områdebrukerkontekst): Boolean
-    suspend fun harTilgangTilKode6(ident: String, kontekst: Områdebrukerkontekst): Boolean
+    context(ctx: Brukerkontekst)
+    suspend fun erOppgaveStyrer(): Boolean
+    context(ctx: Brukerkontekst)
+    suspend fun harTilgangTilKode6(): Boolean
+    context(ctx: Brukerkontekst)
+    suspend fun harTilgangTilKode6(ident: String): Boolean
 
     /**
      * Er dette en kode6-konto? Global egenskap ved brukerkontoen — union over alle områder.
@@ -28,7 +30,8 @@ interface IPepClient {
      * som besvarer om brukeren har tilgang til kode6-saker i området kallet kjører under.
      */
     suspend fun erKode6Bruker(bruker: InnloggetBruker): Boolean
-    suspend fun harBasisTilgang(kontekst: Områdebrukerkontekst): Boolean
+    context(ctx: Brukerkontekst)
+    suspend fun harBasisTilgang(): Boolean
 
     /**
      * Har brukeren basistilgang i minst ett område? For endepunkter som ikke er
@@ -36,22 +39,29 @@ interface IPepClient {
      */
     suspend fun harBasisTilgangIEttEllerFlereOmråder(bruker: InnloggetBruker): Boolean
     suspend fun kanLeggeUtDriftsmelding(bruker: InnloggetBruker): Boolean
-    suspend fun harTilgangTilReserveringAvOppgaver(kontekst: Områdebrukerkontekst): Boolean
-    suspend fun erSakKode6(fagsakNummer: String, kontekst: Områdekall): Boolean
-    suspend fun erSakKode7EllerEgenAnsatt(fagsakNummer: String, kontekst: Områdekall): Boolean
-    suspend fun diskresjonskoderForSak(fagsakNummer: String, kontekst: Områdekall): Set<Diskresjonskode>
-    suspend fun diskresjonskoderForPerson(aktørId: String, kontekst: Områdekall): Set<Diskresjonskode>
-    suspend fun erAktørKode6(aktørid: String, kontekst: Områdekall): Boolean
-    suspend fun erAktørKode7EllerEgenAnsatt(aktørid: String, kontekst: Områdekall): Boolean
+    context(ctx: Brukerkontekst)
+    suspend fun harTilgangTilReserveringAvOppgaver(): Boolean
+    context(ctx: Kallkontekst.MedOmråde)
+    suspend fun erSakKode6(fagsakNummer: String): Boolean
+    context(ctx: Kallkontekst.MedOmråde)
+    suspend fun erSakKode7EllerEgenAnsatt(fagsakNummer: String): Boolean
+    context(ctx: Kallkontekst.MedOmråde)
+    suspend fun diskresjonskoderForSak(fagsakNummer: String): Set<Diskresjonskode>
+    context(ctx: Kallkontekst.MedOmråde)
+    suspend fun diskresjonskoderForPerson(aktørId: String): Set<Diskresjonskode>
+    context(ctx: Kallkontekst.MedOmråde)
+    suspend fun erAktørKode6(aktørid: String): Boolean
+    context(ctx: Kallkontekst.MedOmråde)
+    suspend fun erAktørKode7EllerEgenAnsatt(aktørid: String): Boolean
+    context(ctx: Brukerkontekst)
     suspend fun harTilgangTilOppgaveV3(
         oppgave: no.nav.k9.los.oppgaveuthenting.Oppgave,
-        kontekst: Områdebrukerkontekst,
         action: Action = Action.read,
         grupperForSaksbehandler: Set<UUID>? = null
     ) : Boolean
+    context(ctx: Systemkontekst)
     suspend fun harTilgangTilOppgaveV3(
         oppgave: no.nav.k9.los.oppgaveuthenting.Oppgave,
-        kontekst: Områdesystemkontekst,
         saksbehandler: Saksbehandler,
         action: Action
     ) : Boolean

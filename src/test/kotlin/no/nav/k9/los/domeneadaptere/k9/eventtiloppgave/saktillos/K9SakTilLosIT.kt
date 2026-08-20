@@ -17,8 +17,8 @@ import no.nav.k9.los.domeneadaptere.k9.eventmottak.sak.K9SakEventHandler
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.idtoken.IdTokenLocal
 import no.nav.k9.los.infrastruktur.idtoken.IdToken
-import no.nav.k9.los.infrastruktur.kontekst.InnloggetBruker
-import no.nav.k9.los.infrastruktur.kontekst.Områdebrukerkontekst
+import no.nav.k9.los.infrastruktur.kontekst.Brukerkontekst
+import no.nav.k9.los.infrastruktur.kontekst.TestKontekstFactory
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.ko.OppgaveKoTjeneste
 import no.nav.k9.los.ko.OppgaveMuligReservert
@@ -69,7 +69,7 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         val antallIDb = oppgaveQueryService.queryForAntall(QueryRequest(område = Områder.K9, oppgaveQuery = querySomKunInneholder(eksternId)))
         assertThat(antallIDb).isEqualTo(1)
 
-        val skjermet = runBlocking { pepClient.harTilgangTilKode6(kontekst(TestSaksbehandler.SARA.navident!!)) }
+        val skjermet = runBlocking { with(kontekst(TestSaksbehandler.SARA.navident!!)) { pepClient.harTilgangTilKode6() } }
         val filtrerReserverte = true
         val antallIKø = oppgaveKøTjeneste.hentAntallOppgaverForKø(
             oppgaveKoId = kø.id,
@@ -92,7 +92,7 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         val antallIDb = oppgaveQueryService.queryForAntall(QueryRequest(område = Områder.K9, oppgaveQuery = querySomKunInneholder(eksternId)))
         assertThat(antallIDb).isEqualTo(1)
 
-        val skjermet = runBlocking { pepClient.harTilgangTilKode6(kontekst(TestSaksbehandler.SARA.navident!!)) }
+        val skjermet = runBlocking { with(kontekst(TestSaksbehandler.SARA.navident!!)) { pepClient.harTilgangTilKode6() } }
         val filtrerReserverte = true
         val antallIKø = oppgaveKøTjeneste.hentAntallOppgaverForKø(
             oppgaveKoId = kø.id,
@@ -146,7 +146,7 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         val antallIDb = oppgaveQueryService.queryForAntall(QueryRequest(område = Områder.K9, oppgaveQuery = querySomKunInneholder(eksternId)))
         assertThat(antallIDb).isEqualTo(1)
 
-        val skjermet = runBlocking { pepClient.harTilgangTilKode6(kontekst(TestSaksbehandler.SARA.navident!!)) }
+        val skjermet = runBlocking { with(kontekst(TestSaksbehandler.SARA.navident!!)) { pepClient.harTilgangTilKode6() } }
         val filtrerReserverte = true
         val antallIKø = oppgaveKøTjeneste.hentAntallOppgaverForKø(
             oppgaveKoId = kø.id,
@@ -176,7 +176,7 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         val antallIDb = oppgaveQueryService.queryForAntall(QueryRequest(område = Områder.K9, oppgaveQuery = querySomKunInneholder(eksternId)))
         assertThat(antallIDb).isEqualTo(1)
 
-        val skjermet = runBlocking { pepClient.harTilgangTilKode6(kontekst(TestSaksbehandler.SARA.navident!!)) }
+        val skjermet = runBlocking { with(kontekst(TestSaksbehandler.SARA.navident!!)) { pepClient.harTilgangTilKode6() } }
         val filtrerReserverte = true
         val antallIKø = oppgaveKøTjeneste.hentAntallOppgaverForKø(
             oppgaveKoId = kø.id,
@@ -188,7 +188,7 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         val resultat = taReservasjonFra(kø, TestSaksbehandler.SARA)
         assertThat(resultat is OppgaveMuligReservert.Reservert).isTrue()
 
-        val skjermet1 = runBlocking { pepClient.harTilgangTilKode6(kontekst(TestSaksbehandler.SARA.navident!!)) }
+        val skjermet1 = runBlocking { with(kontekst(TestSaksbehandler.SARA.navident!!)) { pepClient.harTilgangTilKode6() } }
         val filtrerReserverte1 = true
         val antallIKøEtterRes = oppgaveKøTjeneste.hentAntallOppgaverForKø(
             kø.id,
@@ -213,7 +213,7 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         val antallIDb = oppgaveQueryService.queryForAntall(QueryRequest(område = Områder.K9, oppgaveQuery = querySomKunInneholder(eksternId)))
         assertThat(antallIDb).isEqualTo(1)
 
-        val skjermet = runBlocking<Boolean> { pepClient.harTilgangTilKode6(kontekst(TestSaksbehandler.SARA.navident!!)) }
+        val skjermet = runBlocking<Boolean> { with(kontekst(TestSaksbehandler.SARA.navident!!)) { pepClient.harTilgangTilKode6() } }
         val filtrerReserverte = true
         val antallIKø = oppgaveKøTjeneste.hentAntallOppgaverForKø(
             oppgaveKoId = kø.id,
@@ -425,7 +425,7 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
 
     private fun assertAntallIKø(kø: OppgaveKo, forventetAntall: Int) {
         oppgaveKøTjeneste.clearCache()
-        val skjermet = runBlocking { pepClient.harTilgangTilKode6(kontekst(TestSaksbehandler.SARA.navident!!)) }
+        val skjermet = runBlocking { with(kontekst(TestSaksbehandler.SARA.navident!!)) { pepClient.harTilgangTilKode6() } }
         val filtrerReserverte = true
         val antallIKøEtterRes = oppgaveKøTjeneste.hentAntallOppgaverForKø(
             oppgaveKoId = kø.id,
@@ -476,7 +476,7 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
     private fun opprettKøFor(saksbehandler: Saksbehandler, oppgaveQuery: OppgaveQuery): OppgaveKo {
         val oppgaveKoRepository = get<OppgaveKoRepository>()
         val pepClient = get<IPepClient>()
-        val skjermet = runBlocking { pepClient.harTilgangTilKode6(kontekst(saksbehandler.navident!!)) }
+        val skjermet = runBlocking { with(kontekst(saksbehandler.navident!!)) { pepClient.harTilgangTilKode6() } }
         val nyKø = oppgaveKoRepository.leggTil("Test", skjermet = skjermet, område = saksbehandler.områder.first()).copy(
             saksbehandlere = listOf(saksbehandler.epost),
             oppgaveQuery = oppgaveQuery
@@ -484,14 +484,11 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         return oppgaveKoRepository.endre(nyKø, skjermet)
     }
 
-    private fun kontekst(navIdent: String): Områdebrukerkontekst {
+    private fun kontekst(navIdent: String): Brukerkontekst {
         val idToken = object : IdToken by IdTokenLocal() {
             override fun getNavIdent() = navIdent
         }
-        return Områdebrukerkontekst(
-            Områder.K9,
-            InnloggetBruker(navIdent, emptySet(), idToken),
-        )
+        return TestKontekstFactory.brukerkontekst(Områder.K9, idToken)
     }
 
     private fun querySomKunInneholder(eksternId: UUID, vararg status: Oppgavestatus = emptyArray()): OppgaveQuery {

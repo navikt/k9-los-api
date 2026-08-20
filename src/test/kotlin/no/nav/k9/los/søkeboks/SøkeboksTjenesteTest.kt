@@ -8,9 +8,7 @@ import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.infrastruktur.abac.IPepClient
-import no.nav.k9.los.infrastruktur.idtoken.IdTokenLocal
-import no.nav.k9.los.infrastruktur.kontekst.InnloggetBruker
-import no.nav.k9.los.infrastruktur.kontekst.Områdebrukerkontekst
+import no.nav.k9.los.infrastruktur.kontekst.TestKontekstFactory
 import no.nav.k9.los.infrastruktur.pdl.IPdlService
 import no.nav.k9.los.infrastruktur.pdl.PersonPdl
 import no.nav.k9.los.infrastruktur.pdl.PersonPdlResponse
@@ -38,14 +36,10 @@ class SøkeboksTjenesteTest {
         val åpen = oppgave("åpen", "SAK-1", Oppgavestatus.AAPEN)
         val obsolete = oppgave("obsolete", "SAK-2", Oppgavestatus.AAPEN, "OBSOLETE")
         val person = person()
-        val token = IdTokenLocal()
-        val kontekst = Områdebrukerkontekst(
-            Områder.K9,
-            InnloggetBruker(token.getNavIdent(), emptySet(), token),
-        )
+        val kontekst = TestKontekstFactory.brukerkontekst(Områder.K9)
         every { queryService.queryForOppgave(any()) } returns listOf(lukket, åpen, obsolete)
         coEvery { pdlService.person("aktor-1", any()) } returns PersonPdlResponse(false, person)
-        coEvery { pepClient.harTilgangTilOppgaveV3(any(), kontekst, any(), any()) } returns true
+        coEvery { with(kontekst) { pepClient.harTilgangTilOppgaveV3(any(), any(), any()) } } returns true
         coEvery { builder.bygg(listOf(åpen), kontekst.bruker, mapOf("aktor-1" to person)) } returns emptyList()
         val oppgavesøkere = Oppgavesøkere(K9Oppgavesøk(), UngOppgavesøk())
         val tjeneste = SøkeboksTjeneste(pdlService, pepClient, builder, queryService, oppgavesøkere)

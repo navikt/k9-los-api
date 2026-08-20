@@ -6,7 +6,6 @@ import no.nav.k9.los.Configuration
 import no.nav.k9.los.KoinProfile
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.azuregraph.IAzureGraphService
-import no.nav.k9.los.infrastruktur.kontekst.Brukerkontekst
 import no.nav.k9.los.infrastruktur.kontekst.medBrukerkontekst
 import no.nav.k9.los.område
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
@@ -44,9 +43,9 @@ internal fun Route.InnloggetBrukerApi() {
                     token.getName(),
                     brukerIdent = saksbehandlerIdent,
                     id = saksbehandler?.let { saksbehandler.id },
-                    kanSaksbehandle = pepClient.harBasisTilgang(kontekst), //TODO mismatch mellom navnet 'kanSaksbehandle' og at alle som har tilgang til systemet har basistilgang
-                    kanOppgavestyre = pepClient.erOppgaveStyrer(kontekst),
-                    kanReservere = pepClient.harTilgangTilReserveringAvOppgaver(kontekst),
+                    kanSaksbehandle = with(kontekst) { pepClient.harBasisTilgang() }, //TODO mismatch mellom navnet 'kanSaksbehandle' og at alle som har tilgang til systemet har basistilgang
+                    kanOppgavestyre = with(kontekst) { pepClient.erOppgaveStyrer() },
+                    kanReservere = with(kontekst) { pepClient.harTilgangTilReserveringAvOppgaver() },
                     kanDrifte = pepClient.kanLeggeUtDriftsmelding(bruker),
                     finnesISaksbehandlerTabell = finnesISaksbehandlerTabell,
                     områder = saksbehandler?.områder ?: emptyList()

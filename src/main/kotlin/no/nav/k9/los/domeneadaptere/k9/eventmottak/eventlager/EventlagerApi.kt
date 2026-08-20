@@ -17,7 +17,7 @@ import no.nav.k9.los.forvaltning.K9PunsjEventIkkeSensitiv
 import no.nav.k9.los.forvaltning.K9SakEventIkkeSensitiv
 import no.nav.k9.los.forvaltning.K9TilbakeEventIkkeSensitiv
 import no.nav.k9.los.infrastruktur.abac.IPepClient
-import no.nav.k9.los.infrastruktur.kontekst.medInnloggetBruker
+import no.nav.k9.los.infrastruktur.kontekst.medBrukerkontekstUtenOmråde
 import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.kodeverk.Fagsystem
 import org.koin.ktor.ext.inject
@@ -45,8 +45,8 @@ internal fun Route.EventlagerApi() {
             }
         }
     }) {
-        medInnloggetBruker { bruker ->
-            if (pepClient.kanLeggeUtDriftsmelding(bruker.bruker)) {
+        medBrukerkontekstUtenOmråde { kontekst ->
+            if (pepClient.kanLeggeUtDriftsmelding(kontekst.bruker)) {
                 val fagsystem = Fagsystem.fraKode(call.parameters["fagsystem"]!!)
                 val eksternId = call.parameters["eksternId"]!!
 
@@ -54,7 +54,7 @@ internal fun Route.EventlagerApi() {
                     eventRepository.hentAlleEventer(fagsystem, eksternId).map { it.eventJson }
                 } catch (e: NullPointerException) {
                     call.respond(HttpStatusCode.NotFound)
-                    return@medInnloggetBruker
+                    return@medBrukerkontekstUtenOmråde
                 }
 
                 val eventerIkkeSensitive = when (fagsystem) {

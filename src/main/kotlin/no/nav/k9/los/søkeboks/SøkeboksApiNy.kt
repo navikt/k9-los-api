@@ -8,7 +8,6 @@ import io.ktor.server.routing.*
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.kontekst.medBrukerkontekst
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
-import no.nav.k9.los.område
 import org.koin.ktor.ext.inject
 
 
@@ -33,7 +32,7 @@ fun Route.SøkeboksApiNy() {
         }
     ) {
         medBrukerkontekst { kontekst ->
-            if (pepClient.harBasisTilgang(kontekst)) {
+            if (with(kontekst) { pepClient.harBasisTilgang() }) {
                 val (søkeord) = call.receive<SøkRequest>()
                 call.respond(søkeboksTjeneste.finnOppgaverSammendrag(søkeord, kontekst.område, kontekst))
             } else {

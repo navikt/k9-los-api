@@ -16,9 +16,7 @@ import no.nav.k9.los.infrastruktur.abac.Action
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.azuregraph.IAzureGraphService
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
-import no.nav.k9.los.infrastruktur.idtoken.IdTokenLocal
-import no.nav.k9.los.infrastruktur.kontekst.InnloggetBruker
-import no.nav.k9.los.infrastruktur.kontekst.Områdebrukerkontekst
+import no.nav.k9.los.infrastruktur.kontekst.TestKontekstFactory
 import no.nav.k9.los.infrastruktur.pdl.IPdlService
 import no.nav.k9.los.infrastruktur.pdl.PersonPdl
 import no.nav.k9.los.infrastruktur.pdl.PersonPdlResponse
@@ -35,11 +33,7 @@ import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 
 class SisteOppgaverTjenesteTest : AbstractK9LosIntegrationTest() {
 
-    private val token = IdTokenLocal()
-    private val kontekst = Områdebrukerkontekst(
-        Områder.K9,
-        InnloggetBruker(token.getNavIdent(), emptySet(), token),
-    )
+    private val kontekst = TestKontekstFactory.brukerkontekst(Områder.K9)
 
     private lateinit var sisteOppgaverRepository: SisteOppgaverRepository
     private lateinit var oppgaveRepository: OppgaveRepository
@@ -106,7 +100,7 @@ class SisteOppgaverTjenesteTest : AbstractK9LosIntegrationTest() {
         coEvery { pdlService.person(aktorId1, any()) } returns PersonPdlResponse(false, mockPerson)
 
         coEvery {
-            pepClient.harTilgangTilOppgaveV3(any(), eq(kontekst), eq(Action.read), any())
+            with(kontekst) { pepClient.harTilgangTilOppgaveV3(any(), eq(Action.read), any()) }
         } returns true
 
         // Lagre oppgaven som siste besøkt
@@ -144,9 +138,9 @@ class SisteOppgaverTjenesteTest : AbstractK9LosIntegrationTest() {
         
         // Bruker har tilgang til oppgave1 men ikke oppgave2
         coEvery {
-            pepClient.harTilgangTilOppgaveV3(any(), eq(kontekst), eq(Action.read), any())
+            with(kontekst) { pepClient.harTilgangTilOppgaveV3(any(), eq(Action.read), any()) }
         } answers {
-            val oppgave = firstArg<Oppgave>()
+            val oppgave = secondArg<Oppgave>()
             oppgave.eksternId == oppgave1.eksternId
         }
         

@@ -10,29 +10,39 @@ data class InnloggetBruker(
     val idToken: IdToken,
 )
 
-sealed interface Kallkontekst
+sealed interface Kallkontekst {
+    sealed interface MedBruker : Kallkontekst {
+        val bruker: InnloggetBruker
+    }
 
-sealed interface Brukerkall : Kallkontekst {
-    val bruker: InnloggetBruker
+    sealed interface MedOmråde : Kallkontekst {
+        val område: Områder
+    }
 }
 
-sealed interface Systemkall : Kallkontekst
+@ConsistentCopyVisibility
+data class Brukerkontekst internal constructor(
+    override val område: Områder,
+    override val bruker: InnloggetBruker,
+) : Kallkontekst.MedBruker, Kallkontekst.MedOmråde
 
-sealed interface Områdekall : Kallkontekst {
-    val område: Områder
+@ConsistentCopyVisibility
+data class Systemkontekst internal constructor(
+    override val område: Områder,
+) : Kallkontekst.MedOmråde
+
+@ConsistentCopyVisibility
+data class BrukerkontekstUtenOmråde internal constructor(
+    override val bruker: InnloggetBruker,
+) : Kallkontekst.MedBruker
+
+class SystemkontekstUtenOmråde internal constructor() : Kallkontekst {
+    // equals og hashCode ihht. identitet, implementert for å unngå warning
+    override fun equals(other: Any?): Boolean {
+        return this === other
+    }
+
+    override fun hashCode(): Int {
+        return System.identityHashCode(this)
+    }
 }
-
-data class Brukerkontekst(
-    override val bruker: InnloggetBruker,
-) : Brukerkall
-
-data class Områdebrukerkontekst(
-    override val område: Områder,
-    override val bruker: InnloggetBruker,
-) : Brukerkall, Områdekall
-
-data object Systemkontekst : Systemkall
-
-data class Områdesystemkontekst(
-    override val område: Områder,
-) : Systemkall, Områdekall

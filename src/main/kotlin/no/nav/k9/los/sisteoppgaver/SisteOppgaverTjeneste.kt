@@ -6,7 +6,7 @@ import kotlinx.coroutines.*
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.azuregraph.IAzureGraphService
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
-import no.nav.k9.los.infrastruktur.kontekst.Områdebrukerkontekst
+import no.nav.k9.los.infrastruktur.kontekst.Brukerkontekst
 import no.nav.k9.los.infrastruktur.pdl.IPdlService
 import no.nav.k9.los.infrastruktur.pdl.fnr
 import no.nav.k9.los.infrastruktur.pdl.navn
@@ -25,7 +25,7 @@ class SisteOppgaverTjeneste(
 ) {
     private val log = LoggerFactory.getLogger(SisteOppgaverTjeneste::class.java)
 
-    suspend fun hentSisteOppgaver(kontekst: Områdebrukerkontekst): List<SisteOppgaverDto> {
+    suspend fun hentSisteOppgaver(kontekst: Brukerkontekst): List<SisteOppgaverDto> {
         return try {
             val saksbehandlerIdent = azureGraphService.hentIdentTilInnloggetBruker(kontekst.bruker)
 
@@ -50,11 +50,12 @@ class SisteOppgaverTjeneste(
                     oppgaver.map { oppgave ->
                         async {
                             try {
-                                val harTilgang = pepClient.harTilgangTilOppgaveV3(
-                                    oppgave,
-                                    kontekst,
-                                    grupperForSaksbehandler = grupperForSaksbehandler
-                                )
+                                val harTilgang = with(kontekst) {
+                                    pepClient.harTilgangTilOppgaveV3(
+                                        oppgave,
+                                        grupperForSaksbehandler = grupperForSaksbehandler
+                                    )
+                                }
                                 val personPdl = oppgave.hentVerdi("aktorId")?.let {
                                     pdlService.person(it, kontekst.bruker)
                                 }
@@ -99,7 +100,7 @@ class SisteOppgaverTjeneste(
         }
     }
 
-    suspend fun lagreSisteOppgave(oppgaveNøkkelDto: OppgaveNøkkelDto, kontekst: Områdebrukerkontekst) {
+    suspend fun lagreSisteOppgave(oppgaveNøkkelDto: OppgaveNøkkelDto, kontekst: Brukerkontekst) {
         val brukerIdent = azureGraphService.hentIdentTilInnloggetBruker(kontekst.bruker)
         transactionalManager.transaction { tx ->
             sisteOppgaverRepository.lagreSisteOppgave(
