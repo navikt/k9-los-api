@@ -245,9 +245,8 @@ internal fun Route.ReservasjonApisNy() {
         medBrukerkontekst { kontekst ->
             val skjermet = pepClient.harTilgangTilKode6(kontekst)
             if (pepClient.harBasisTilgang(kontekst)) {
-                val område = kontekst.område
                 val params = call.receive<BrukerIdentDto>()
-                val sokSaksbehandlerMedIdent = saksbehandlerRepository.sokSaksbehandler(params.brukerIdent, skjermet)
+                val sokSaksbehandlerMedIdent = saksbehandlerRepository.sokSaksbehandler(params.brukerIdent, kontekst.område, skjermet)
                 call.respond(sokSaksbehandlerMedIdent)
             } else {
                 call.respond(HttpStatusCode.Forbidden)
@@ -267,8 +266,7 @@ internal fun Route.ReservasjonApisNy() {
         medBrukerkontekst { kontekst ->
             val skjermet = pepClient.harTilgangTilKode6(kontekst)
             if (pepClient.harBasisTilgang(kontekst)) {
-                val område = kontekst.område
-                val alleSaksbehandlere = saksbehandlerRepository.hentAlleSaksbehandlere(skjermet)
+                val alleSaksbehandlere = saksbehandlerRepository.hentAlleSaksbehandlere(kontekst.område, skjermet)
                 val saksbehandlerDtoListe =
                     alleSaksbehandlere.filter { saksbehandler -> !saksbehandler.navn.isNullOrBlank() && !saksbehandler.navident.isNullOrBlank() }
                         .map { saksbehandler ->

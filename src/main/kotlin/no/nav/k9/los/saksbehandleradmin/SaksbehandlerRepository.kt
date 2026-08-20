@@ -327,18 +327,27 @@ class SaksbehandlerRepository(
         }
     }
 
-    fun hentAlleSaksbehandlere(skjermet: Boolean): List<Saksbehandler> {
+    fun hentAlleSaksbehandlere(område: Områder, skjermet: Boolean): List<Saksbehandler> {
         return transactionalManager.transaction { tx ->
-            hentAlleSaksbehandlere(tx, skjermet)
+            hentAlleSaksbehandlere(tx, område, skjermet)
         }
     }
 
-    fun hentAlleSaksbehandlere(tx: TransactionalSession, skjermet: Boolean): List<Saksbehandler> {
+    fun hentAlleSaksbehandlere(tx: TransactionalSession, område: Områder, skjermet: Boolean): List<Saksbehandler> {
         val identer = using(sessionOf(dataSource)) {
             tx.run(
                 queryOf(
-                    "$SAKSBEHANDLER_SELECT where s.skjermet = :skjermet",
-                    mapOf("skjermet" to skjermet)
+                    """
+                    $SAKSBEHANDLER_SELECT
+                    where s.skjermet = :skjermet
+                      and exists (select 1 from saksbehandler_omrade so2
+                                  join omrade o2 on o2.id = so2.omrade_id
+                                  where so2.saksbehandler_id = s.id and o2.ekstern_id = :omradeEksternId)
+                    """.trimIndent(),
+                    mapOf(
+                        "skjermet" to skjermet,
+                        "omradeEksternId" to område.eksternId
+                    )
                 )
                     .map { row ->
                         mapSaksbehandler(row)
@@ -348,8 +357,8 @@ class SaksbehandlerRepository(
         return identer
     }
 
-    fun sokSaksbehandler(søkestreng: String, skjermet: Boolean): Saksbehandler {
-        val alleSaksbehandlere = hentAlleSaksbehandlere(skjermet)
+    fun sokSaksbehandler(søkestreng: String, område: Områder, skjermet: Boolean): Saksbehandler {
+        val alleSaksbehandlere = hentAlleSaksbehandlere(område, skjermet)
 
         fun levenshtein(lhs: CharSequence, rhs: CharSequence): Double {
             return LevenshteinDistance().apply(lhs, rhs).toDouble()

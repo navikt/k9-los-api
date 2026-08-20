@@ -125,7 +125,7 @@ fun Route.OppgaveKoAvdelingslederApisNy() {
     }) {
         medBrukerkontekst { kontekst ->
             if (pepClient.erOppgaveStyrer(kontekst)) {
-                val alleSaksbehandlere = saksbehandlerRepository.hentAlleSaksbehandlere(pepClient.harTilgangTilKode6(kontekst))
+                val alleSaksbehandlere = saksbehandlerRepository.hentAlleSaksbehandlere(kontekst.område, pepClient.harTilgangTilKode6(kontekst))
                     .map { saksbehandler ->
                         SaksbehandlerForKolisteDto(saksbehandler)
                     }

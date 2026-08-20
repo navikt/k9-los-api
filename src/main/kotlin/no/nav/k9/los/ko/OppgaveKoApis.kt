@@ -65,7 +65,7 @@ fun Route.OppgaveKoApis() {
     get("/saksbehandlere") {
         medBrukerkontekst { kontekst ->
             if (pepClient.erOppgaveStyrer(kontekst)) {
-                val alleSaksbehandlere = saksbehandlerRepository.hentAlleSaksbehandlere(pepClient.harTilgangTilKode6(kontekst))
+                val alleSaksbehandlere = saksbehandlerRepository.hentAlleSaksbehandlere(kontekst.område, pepClient.harTilgangTilKode6(kontekst))
                     .map { saksbehandler ->
                         SaksbehandlerForKolisteDto(saksbehandler)
                     }

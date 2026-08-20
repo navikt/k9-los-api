@@ -765,7 +765,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
             ),
             skjermet = false,
         )
-        val saksbehandler = saksbehandlerRepository.hentAlleSaksbehandlere(skjermet = false).get(0)
+        val saksbehandler = saksbehandlerRepository.hentAlleSaksbehandlere(område = Områder.K9, skjermet = false).get(0)
 
         val builder = OppgaveTestDataBuilder()
         builder.lagOgLagre(Oppgavestatus.AAPEN)

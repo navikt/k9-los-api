@@ -20,7 +20,7 @@ internal fun Route.SaksbehandlerAdminApisNy() {
     get("/saksbehandlere") {
         medBrukerkontekst { kontekst ->
             if (pepClient.erOppgaveStyrer(kontekst)) {
-                call.respond(saksbehandlerAdminTjeneste.hentSaksbehandlere(pepClient.harTilgangTilKode6(kontekst)))
+                call.respond(saksbehandlerAdminTjeneste.hentSaksbehandlere(kontekst.område, pepClient.harTilgangTilKode6(kontekst)))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
