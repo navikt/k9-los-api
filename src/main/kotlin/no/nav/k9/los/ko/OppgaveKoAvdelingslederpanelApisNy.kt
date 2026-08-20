@@ -17,7 +17,6 @@ import no.nav.k9.los.ko.dto.OppgaveKoListeelement
 import no.nav.k9.los.ko.dto.OpprettOppgaveKoDto
 import no.nav.k9.los.ko.dto.SaksbehandlerForKolisteDto
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
-import no.nav.k9.los.område
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
 import org.koin.ktor.ext.inject
 

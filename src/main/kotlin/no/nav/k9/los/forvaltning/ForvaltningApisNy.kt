@@ -21,7 +21,6 @@ import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.ko.OppgaveKoTjeneste
 import no.nav.k9.los.kodeverk.Fagsystem
-import no.nav.k9.los.område
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgavedefinisjon.oppgavetype.OppgavetypeRepository
 import no.nav.k9.los.oppgaveuthenting.Oppgave

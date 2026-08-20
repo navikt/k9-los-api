@@ -10,31 +10,31 @@ data class InnloggetBruker(
     val idToken: IdToken,
 )
 
-sealed interface Kallkontekst {
-    sealed interface MedBruker : Kallkontekst {
-        val bruker: InnloggetBruker
-    }
+sealed interface Kallkontekst
 
-    sealed interface MedOmråde : Kallkontekst {
-        val område: Områder
-    }
+private sealed interface Brukererkontekst : Kallkontekst {
+    val bruker: InnloggetBruker
+}
+
+sealed interface Områdekontekst : Kallkontekst {
+    val område: Områder
 }
 
 @ConsistentCopyVisibility
 data class Brukerkontekst internal constructor(
     override val område: Områder,
     override val bruker: InnloggetBruker,
-) : Kallkontekst.MedBruker, Kallkontekst.MedOmråde
+) : Brukererkontekst, Områdekontekst
 
 @ConsistentCopyVisibility
 data class Systemkontekst internal constructor(
     override val område: Områder,
-) : Kallkontekst.MedOmråde
+) : Områdekontekst
 
 @ConsistentCopyVisibility
 data class BrukerkontekstUtenOmråde internal constructor(
     override val bruker: InnloggetBruker,
-) : Kallkontekst.MedBruker
+) : Brukererkontekst
 
 class SystemkontekstUtenOmråde internal constructor() : Kallkontekst {
     // equals og hashCode ihht. identitet, implementert for å unngå warning

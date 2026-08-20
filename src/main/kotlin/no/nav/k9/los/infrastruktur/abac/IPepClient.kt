@@ -1,8 +1,8 @@
 package no.nav.k9.los.infrastruktur.abac
 
-import no.nav.k9.los.infrastruktur.kontekst.InnloggetBruker
 import no.nav.k9.los.infrastruktur.kontekst.Brukerkontekst
-import no.nav.k9.los.infrastruktur.kontekst.Kallkontekst
+import no.nav.k9.los.infrastruktur.kontekst.InnloggetBruker
+import no.nav.k9.los.infrastruktur.kontekst.Områdekontekst
 import no.nav.k9.los.infrastruktur.kontekst.Systemkontekst
 import no.nav.k9.los.saksbehandleradmin.Saksbehandler
 import no.nav.sif.abac.kontrakt.abac.Diskresjonskode
@@ -12,7 +12,7 @@ import java.util.*
  * Tilgangskontroll (PEP) for Los.
  *
  * Globale brukeroperasjoner tar [InnloggetBruker], områdeavhengige brukeroperasjoner tar
- * [Brukerkontekst], og operasjoner som også kan kjøres av system tar [Kallkontekst.MedOmråde].
+ * [Brukerkontekst], og operasjoner som også kan kjøres av system tar [MedOmråde].
  * [PepClient] velger riktig tilgangsløsning ut fra kontekstens område.
  *
  */
@@ -41,17 +41,17 @@ interface IPepClient {
     suspend fun kanLeggeUtDriftsmelding(bruker: InnloggetBruker): Boolean
     context(ctx: Brukerkontekst)
     suspend fun harTilgangTilReserveringAvOppgaver(): Boolean
-    context(ctx: Kallkontekst.MedOmråde)
+    context(ctx: Områdekontekst)
     suspend fun erSakKode6(fagsakNummer: String): Boolean
-    context(ctx: Kallkontekst.MedOmråde)
+    context(ctx: Områdekontekst)
     suspend fun erSakKode7EllerEgenAnsatt(fagsakNummer: String): Boolean
-    context(ctx: Kallkontekst.MedOmråde)
+    context(ctx: Områdekontekst)
     suspend fun diskresjonskoderForSak(fagsakNummer: String): Set<Diskresjonskode>
-    context(ctx: Kallkontekst.MedOmråde)
+    context(ctx: Områdekontekst)
     suspend fun diskresjonskoderForPerson(aktørId: String): Set<Diskresjonskode>
-    context(ctx: Kallkontekst.MedOmråde)
+    context(ctx: Områdekontekst)
     suspend fun erAktørKode6(aktørid: String): Boolean
-    context(ctx: Kallkontekst.MedOmråde)
+    context(ctx: Områdekontekst)
     suspend fun erAktørKode7EllerEgenAnsatt(aktørid: String): Boolean
     context(ctx: Brukerkontekst)
     suspend fun harTilgangTilOppgaveV3(

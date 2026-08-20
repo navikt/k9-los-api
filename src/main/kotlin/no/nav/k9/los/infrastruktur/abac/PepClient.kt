@@ -4,6 +4,7 @@ import no.nav.k9.los.infrastruktur.azuregraph.IAzureGraphService
 import no.nav.k9.los.infrastruktur.kontekst.Brukerkontekst
 import no.nav.k9.los.infrastruktur.kontekst.InnloggetBruker
 import no.nav.k9.los.infrastruktur.kontekst.Kallkontekst
+import no.nav.k9.los.infrastruktur.kontekst.Områdekontekst
 import no.nav.k9.los.infrastruktur.kontekst.Systemkontekst
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.Oppgave
@@ -72,40 +73,40 @@ class PepClient internal constructor(
     private fun iGruppe(gruppeId: UUID?, bruker: InnloggetBruker): Boolean =
         gruppeId?.let(bruker.grupper::contains) ?: false
 
-    context(ctx: Kallkontekst.MedOmråde)
+    context(ctx: Områdekontekst)
     override suspend fun erSakKode6(fagsakNummer: String): Boolean {
         krevTilgjengelig(ctx.område)
         val diskresjonskoder = sifAbacPdpKlienter.forOmråde(ctx.område).diskresjonskoderSak(SaksnummerDto(fagsakNummer))
         return diskresjonskoder.contains(Diskresjonskode.KODE6)
     }
 
-    context(ctx: Kallkontekst.MedOmråde)
+    context(ctx: Områdekontekst)
     override suspend fun erAktørKode6(aktørid: String): Boolean {
         krevTilgjengelig(ctx.område)
         val diskresjonskoder = sifAbacPdpKlienter.forOmråde(ctx.område).diskresjonskoderPerson(AktørId(aktørid))
         return diskresjonskoder.contains(Diskresjonskode.KODE6)
     }
 
-    context(ctx: Kallkontekst.MedOmråde)
+    context(ctx: Områdekontekst)
     override suspend fun diskresjonskoderForSak(fagsakNummer: String): Set<Diskresjonskode> {
         krevTilgjengelig(ctx.område)
         return sifAbacPdpKlienter.forOmråde(ctx.område).diskresjonskoderSak(SaksnummerDto(fagsakNummer))
     }
 
-    context(ctx: Kallkontekst.MedOmråde)
+    context(ctx: Områdekontekst)
     override suspend fun diskresjonskoderForPerson(aktørId: String): Set<Diskresjonskode> {
         krevTilgjengelig(ctx.område)
         return sifAbacPdpKlienter.forOmråde(ctx.område).diskresjonskoderPerson(AktørId(aktørId))
     }
 
-    context(ctx: Kallkontekst.MedOmråde)
+    context(ctx: Områdekontekst)
     override suspend fun erSakKode7EllerEgenAnsatt(fagsakNummer: String): Boolean {
         krevTilgjengelig(ctx.område)
         val diskresjonskoder = sifAbacPdpKlienter.forOmråde(ctx.område).diskresjonskoderSak(SaksnummerDto(fagsakNummer))
         return diskresjonskoder.contains(Diskresjonskode.KODE7) || diskresjonskoder.contains(Diskresjonskode.SKJERMET)
     }
 
-    context(ctx: Kallkontekst.MedOmråde)
+    context(ctx: Områdekontekst)
     override suspend fun erAktørKode7EllerEgenAnsatt(aktørid: String): Boolean {
         krevTilgjengelig(ctx.område)
         val diskresjonskoder = sifAbacPdpKlienter.forOmråde(ctx.område).diskresjonskoderPerson(AktørId(aktørid))

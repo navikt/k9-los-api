@@ -7,11 +7,9 @@ import io.opentelemetry.api.trace.Span
 import io.opentelemetry.extension.kotlin.asContextElement
 import kotlinx.coroutines.withContext
 import no.nav.k9.los.KoinProfile
-import no.nav.k9.los.infrastruktur.abac.Gruppeoppsett
 import no.nav.k9.los.infrastruktur.idtoken.IdTokenAzure
 import no.nav.k9.los.infrastruktur.idtoken.IdTokenLocal
 import no.nav.k9.los.områdeAttributeKey
-import no.nav.k9.los.reservasjon.ManglerTilgangException
 import org.koin.ktor.ext.getKoin
 import java.util.*
 

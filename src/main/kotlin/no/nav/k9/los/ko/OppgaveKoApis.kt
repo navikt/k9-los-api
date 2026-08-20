@@ -4,14 +4,13 @@ import io.ktor.http.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.kontekst.medBrukerkontekst
-import no.nav.k9.los.infrastruktur.kontekst.Brukerkontekst
-import no.nav.k9.los.ko.dto.*
 import no.nav.k9.los.infrastruktur.utils.OpentelemetrySpanUtil
-import org.koin.ktor.ext.inject
+import no.nav.k9.los.ko.dto.*
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
+import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
+import org.koin.ktor.ext.inject
 
 //TODO: Splitte i OppgaveKoAvdelingslederpanelApis og OppgaveKoSaksbehandlerpanelApis
 

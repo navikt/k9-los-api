@@ -12,7 +12,6 @@ import no.nav.k9.los.nøkkeltall.avdelingsleder.ferdigstilteperenhet.Ferdigstilt
 import no.nav.k9.los.nøkkeltall.avdelingsleder.status.StatusService
 import no.nav.k9.los.nøkkeltall.avdelingsleder.statusfordeling.StatusFordelingService
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
-import no.nav.k9.los.område
 import org.koin.ktor.ext.inject
 
 fun Route.NøkkeltallV3ApisNy() {

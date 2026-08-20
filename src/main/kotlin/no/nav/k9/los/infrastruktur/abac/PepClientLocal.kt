@@ -3,6 +3,7 @@ package no.nav.k9.los.infrastruktur.abac
 import no.nav.k9.los.infrastruktur.kontekst.Brukerkontekst
 import no.nav.k9.los.infrastruktur.kontekst.InnloggetBruker
 import no.nav.k9.los.infrastruktur.kontekst.Kallkontekst
+import no.nav.k9.los.infrastruktur.kontekst.Områdekontekst
 import no.nav.k9.los.infrastruktur.kontekst.Systemkontekst
 import no.nav.k9.los.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.oppgaveuthenting.Oppgave
@@ -47,32 +48,32 @@ class PepClientLocal : IPepClient {
         return false
     }
 
-    context(ctx: Kallkontekst.MedOmråde)
+    context(ctx: Områdekontekst)
     override suspend fun diskresjonskoderForSak(fagsakNummer: String): Set<Diskresjonskode> {
         return setOf()
     }
 
-    context(ctx: Kallkontekst.MedOmråde)
+    context(ctx: Områdekontekst)
     override suspend fun erSakKode6(fagsakNummer: String): Boolean {
         return false
     }
 
-    context(ctx: Kallkontekst.MedOmråde)
+    context(ctx: Områdekontekst)
     override suspend fun erSakKode7EllerEgenAnsatt(fagsakNummer: String): Boolean {
         return false
     }
 
-    context(ctx: Kallkontekst.MedOmråde)
+    context(ctx: Områdekontekst)
     override suspend fun diskresjonskoderForPerson(aktørId: String): Set<Diskresjonskode> {
         return setOf()
     }
 
-    context(ctx: Kallkontekst.MedOmråde)
+    context(ctx: Områdekontekst)
     override suspend fun erAktørKode6(aktørid: String): Boolean {
         return false
     }
 
-    context(ctx: Kallkontekst.MedOmråde)
+    context(ctx: Områdekontekst)
     override suspend fun erAktørKode7EllerEgenAnsatt(aktørid: String): Boolean {
         return false
     }

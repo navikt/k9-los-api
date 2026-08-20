@@ -10,7 +10,6 @@ import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.kontekst.medBrukerkontekst
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.OppgaveNøkkelDto
-import no.nav.k9.los.område
 import org.koin.ktor.ext.inject
 
 fun Route.SisteOppgaverApiNy() {
