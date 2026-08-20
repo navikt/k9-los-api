@@ -20,7 +20,18 @@ class EventTilOppgaveMapper(
             is EventLagret.K9Tilbake -> tilbakeEventTilOppgaveMapper.lagOppgaveDto(eventLagret, forrigeOppgaveversjon, eventnummer)
             is EventLagret.K9Klage -> klageEventTilOppgaveMapper.lagOppgaveDto(eventLagret, forrigeOppgaveversjon, eventnummer)
             is EventLagret.K9Punsj -> punsjEventTilOppgaveMapper.lagOppgaveDto(eventLagret, forrigeOppgaveversjon)
+            is EventLagret.UngSak -> throw UnsupportedOperationException("UngSak-eventer skal ikke behandles av K9-pipeline")
         }
+    }
+
+    internal fun oppgavetypeKode(eventLagret: EventLagret): String = when (eventLagret) {
+        is EventLagret.K9Sak     -> "k9sak"
+        is EventLagret.K9Tilbake -> "k9tilbake"
+        is EventLagret.K9Klage   -> "k9klage"
+        is EventLagret.K9Punsj   -> "k9punsj"
+        is EventLagret.UngSak    -> throw UnsupportedOperationException(
+            "UngSak-eventer skal ikke behandles av K9-pipeline"
+        )
     }
 
     internal fun utledReservasjonsnøkkel(eventLagret: EventLagret, erTilBeslutter: Boolean): String {
@@ -29,6 +40,7 @@ class EventTilOppgaveMapper(
             is EventLagret.K9Klage -> KlageEventTilOppgaveMapper.utledReservasjonsnøkkel(eventLagret, erTilBeslutter)
             is EventLagret.K9Punsj -> PunsjEventTilOppgaveMapper.utledReservasjonsnøkkel(eventLagret)
             is EventLagret.K9Tilbake -> TilbakeEventTilOppgaveMapper.utledReservasjonsnøkkel(eventLagret, erTilBeslutter)
+            is EventLagret.UngSak -> throw UnsupportedOperationException("UngSak-eventer skal ikke behandles av K9-pipeline")
         }
     }
 }

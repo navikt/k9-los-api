@@ -23,6 +23,7 @@ enum class K9Oppgavetypenavn(@JsonValue val kode: String) {
                 Fagsystem.K9TILBAKE -> TILBAKE
                 Fagsystem.K9KLAGE -> KLAGE
                 Fagsystem.PUNSJ -> PUNSJ
+                Fagsystem.UNGSAK, Fagsystem.UNGTILBAKE -> throw NotImplementedError("Fagsystem $fagsystem is not implemented yet")
             }
         }
     }

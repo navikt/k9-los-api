@@ -143,6 +143,11 @@ fun Route.forvaltningApis() {
                     Fagsystem.K9KLAGE -> "saksnummer"
 
                     Fagsystem.PUNSJ -> "journalpostId"
+
+                    Fagsystem.UNGSAK,
+                    Fagsystem.UNGTILBAKE -> throw NotImplementedError(
+                        "Fagsystem $fagsystem er ikke støttet i dette endepunktet"
+                    )
                 }
 
                 val query = QueryRequest(

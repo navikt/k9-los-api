@@ -62,10 +62,13 @@ class OppgaveOppdatertHandler(
         }
 
         when (eventLagret) {
-            is EventLagret.K9Sak -> håndterSakOppdatert(eventLagret, oppgave, tx)
+            is EventLagret.K9Sak    -> håndterSakOppdatert(eventLagret, oppgave, tx)
             is EventLagret.K9Tilbake -> håndterTilbakeOppdatert(eventLagret, oppgave, tx)
-            is EventLagret.K9Klage -> håndterKlageOppdatert(eventLagret, oppgave, tx)
-            is EventLagret.K9Punsj -> håndterPunsjOppdatert(oppgave, tx)
+            is EventLagret.K9Klage  -> håndterKlageOppdatert(eventLagret, oppgave, tx)
+            is EventLagret.K9Punsj  -> håndterPunsjOppdatert(oppgave, tx)
+            is EventLagret.UngSak   -> throw UnsupportedOperationException(
+                "UngSak-eventer skal ikke behandles av K9-pipeline"
+            )
         }
     }
 
