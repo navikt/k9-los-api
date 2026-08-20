@@ -9,6 +9,10 @@ import no.nav.k9.los.domeneadaptere.k9.eventmottak.sak.K9SakEventHandler
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.sak.K9SakKafkaStream
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.tilbakekrav.K9TilbakeEventHandler
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.tilbakekrav.K9TilbakeKafkaStream
+import no.nav.k9.los.domeneadaptere.ungsak.eventmottak.ungsak.UngSakEventHandler
+import no.nav.k9.los.domeneadaptere.ungsak.eventmottak.ungsak.UngSakKafkaStream
+import no.nav.k9.los.domeneadaptere.ungsak.eventmottak.ungtilbake.UngTilbakeEventHandler
+import no.nav.k9.los.domeneadaptere.ungsak.eventmottak.ungtilbake.UngTilbakeKafkaStream
 import org.slf4j.LoggerFactory
 
 internal class AsynkronProsesseringV1Service(
@@ -18,6 +22,8 @@ internal class AsynkronProsesseringV1Service(
     k9KlageEventHandler: K9KlageEventHandler,
     k9TilbakeEventHandler: K9TilbakeEventHandler,
     k9PunsjEventHandler: K9PunsjEventHandler,
+    ungSakEventHandler: UngSakEventHandler,
+    ungTilbakeEventHandler: UngTilbakeEventHandler,
 ) {
 
     private companion object {
@@ -48,18 +54,34 @@ internal class AsynkronProsesseringV1Service(
         k9PunsjEventHandler = k9PunsjEventHandler
     )
 
+    private val ungSakStream = UngSakKafkaStream(
+        kafkaConfig = kafkaAivenConfig,
+        configuration = configuration,
+        ungSakEventHandler = ungSakEventHandler
+    )
+
+    private val ungTilbakeStream = UngTilbakeKafkaStream(
+        kafkaConfig = kafkaAivenConfig,
+        configuration = configuration,
+        ungTilbakeEventHandler = ungTilbakeEventHandler
+    )
+
     private val healthChecks = setOf(
         aksjonspunktStream.healthy,
         k9KlageStream.healthy,
         aksjonspunkTilbakeStream.healthy,
-        aksjonspunkPunsjStream.healthy
+        aksjonspunkPunsjStream.healthy,
+        ungSakStream.healthy,
+        ungTilbakeStream.healthy,
     )
 
     private val isReadyChecks = setOf(
         aksjonspunktStream.ready,
         k9KlageStream.ready,
         aksjonspunkTilbakeStream.ready,
-        aksjonspunkPunsjStream.ready
+        aksjonspunkPunsjStream.ready,
+        ungSakStream.ready,
+        ungTilbakeStream.ready,
     )
 
     internal fun stop() {
@@ -67,6 +89,8 @@ internal class AsynkronProsesseringV1Service(
         aksjonspunktStream.stop()
         aksjonspunkTilbakeStream.stop()
         aksjonspunkPunsjStream.stop()
+        ungSakStream.stop()
+        ungTilbakeStream.stop()
         logger.info("Alle streams stoppet.")
     }
 

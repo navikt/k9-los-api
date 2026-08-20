@@ -7,7 +7,6 @@ import no.nav.k9.los.domeneadaptere.kafka.ManagedStreamHealthy
 import no.nav.k9.los.domeneadaptere.kafka.ManagedStreamReady
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.AksjonspunktLaget
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.Topic
-import no.nav.k9.los.domeneadaptere.k9.eventmottak.sak.K9SakEventHandler
 import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.infrastruktur.utils.OpentelemetrySpanUtil
 import no.nav.k9.los.infrastruktur.utils.TransientFeilHåndterer
@@ -25,7 +24,7 @@ import kotlin.time.toDuration
 internal class UngTilbakeKafkaStream constructor(
     kafkaConfig: IKafkaConfig,
     configuration: Configuration,
-    k9sakEventHandler: K9SakEventHandler
+    ungTilbakeEventHandler: UngTilbakeEventHandler
 ) {
 
     private val stream = ManagedKafkaStreams(
@@ -35,7 +34,7 @@ internal class UngTilbakeKafkaStream constructor(
         },
         topology = topology(
             configuration = configuration,
-            k9sakEventHandler = k9sakEventHandler
+            ungTilbakeEventHandler = ungTilbakeEventHandler
         ),
         unreadyAfterStreamStoppedIn = kafkaConfig.unreadyAfterStreamStoppedIn
     )
@@ -44,17 +43,17 @@ internal class UngTilbakeKafkaStream constructor(
     internal val healthy = ManagedStreamHealthy(stream)
 
     private companion object {
-        private const val NAME = "AksjonspunktLagetV1"
+        private const val NAME = "UngTilbakeKafkaStream"
 
         private val log = LoggerFactory.getLogger(UngTilbakeKafkaStream::class.java)
 
         private fun topology(
             configuration: Configuration,
-            k9sakEventHandler: K9SakEventHandler
+            ungTilbakeEventHandler: UngTilbakeEventHandler
         ): Topology {
             val builder = StreamsBuilder()
             val fromTopic = Topic(
-                name = configuration.getAksjonspunkthendelseTopic(),
+                name = configuration.getUngTilbakeHendelseTopic(),
                 serDes = AksjonspunktLaget()
             )
             builder
@@ -68,19 +67,19 @@ internal class UngTilbakeKafkaStream constructor(
                         val eksternVersjon = tree.get("eventTid").asText()
                         val saksnummer = tree.get("saksnummer").asText()
 
-                        log.info("Mottar Behandlingsprosesshendelse fra k9sak for ${saksnummer}-${eksternId}")
+                        log.info("Mottar Behandlingsprosesshendelse fra ung-tilbake for ${saksnummer}-${eksternId}")
 
                         OpentelemetrySpanUtil.span(NAME, mapOf("saksnummer" to saksnummer)) {
                             val tid = measureTimeMillis {
                                 TransientFeilHåndterer(warningEtter = 5.toDuration(DurationUnit.SECONDS)).utfør(NAME) {
-                                    k9sakEventHandler.prosesser(eksternId, eksternVersjon, event)
+                                    ungTilbakeEventHandler.prosesser(eksternId, eksternVersjon, event)
                                 }
                             }
                             if (tid > 5000) {
                                 // Logger som warning ved over 5sekunder fordi det kan oppleves som at oppgaver blir liggende igjen på benken
-                                log.warn("Prosessering av Behandlingsprosesshendelse fra k9sak for ${saksnummer}-${eksternId} tok $tid")
+                                log.warn("Prosessering av Behandlingsprosesshendelse fra ung-tilbake for ${saksnummer}-${eksternId} tok $tid")
                             } else {
-                                log.info("Prosessering av Behandlingsprosesshendelse fra k9sak for ${saksnummer}-${eksternId} tok $tid")
+                                log.info("Prosessering av Behandlingsprosesshendelse fra ung-tilbake for ${saksnummer}-${eksternId} tok $tid")
                             }
                         }
                     }

@@ -43,7 +43,7 @@ internal class UngSakKafkaStream constructor(
     internal val healthy = ManagedStreamHealthy(stream)
 
     private companion object {
-        private const val NAME = "AksjonspunktLagetV1"
+        private const val NAME = "UngsakKafkaStream"
 
         private val log = LoggerFactory.getLogger(UngSakKafkaStream::class.java)
 
@@ -67,7 +67,7 @@ internal class UngSakKafkaStream constructor(
                         val eksternVersjon = tree.get("eventTid").asText()
                         val saksnummer = tree.get("saksnummer").asText()
 
-                        log.info("Mottar Behandlingsprosesshendelse fra k9sak for ${saksnummer}-${eksternId}")
+                        log.info("Mottar Behandlingsprosesshendelse fra ungsak for ${saksnummer}-${eksternId}")
 
                         OpentelemetrySpanUtil.span(NAME, mapOf("saksnummer" to saksnummer)) {
                             val tid = measureTimeMillis {
@@ -77,9 +77,9 @@ internal class UngSakKafkaStream constructor(
                             }
                             if (tid > 5000) {
                                 // Logger som warning ved over 5sekunder fordi det kan oppleves som at oppgaver blir liggende igjen på benken
-                                log.warn("Prosessering av Behandlingsprosesshendelse fra k9sak for ${saksnummer}-${eksternId} tok $tid")
+                                log.warn("Prosessering av Behandlingsprosesshendelse fra ungsak for ${saksnummer}-${eksternId} tok $tid")
                             } else {
-                                log.info("Prosessering av Behandlingsprosesshendelse fra k9sak for ${saksnummer}-${eksternId} tok $tid")
+                                log.info("Prosessering av Behandlingsprosesshendelse fra ungsak for ${saksnummer}-${eksternId} tok $tid")
                             }
                         }
                     }
