@@ -225,13 +225,13 @@ fun Route.forvaltningApisNy() {
             }
         }
     }) {
-        medBrukerkontekstUtenOmråde { bruker ->
+        medBrukerkontekst { bruker ->
             if (bruker.kanLeggeUtDriftsmelding) {
                 val oppgavetype = call.parameters["oppgavetype"]!!
                 val oppgaveEksternId = call.parameters["oppgaveEksternId"]!!
 
                 val oppgave =
-                    oppgaveOppslagTjeneste.hentAktivOppgave(oppgaveEksternId, oppgavetype)
+                    oppgaveOppslagTjeneste.hentAktivOppgave(oppgaveEksternId, oppgavetype, bruker.område)
                 call.respond(objectMapper.writeValueAsString(OppgaveIkkeSensitiv(oppgave)))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
@@ -311,7 +311,7 @@ fun Route.forvaltningApisNy() {
                     return@medBrukerkontekst
                 }
 
-                val oppgave = oppgaveOppslagTjeneste.hentAktivOppgave(oppgaveEksternId, oppgavetypeEksternId)
+                val oppgave = oppgaveOppslagTjeneste.hentAktivOppgave(oppgaveEksternId, oppgavetypeEksternId, bruker.område)
                 val reservasjonsnøkkel = utledReservasjonsnøkkel(oppgave, false)
                 val reservasjonsnøkkel_beslutter = utledReservasjonsnøkkel(oppgave, true)
                 val reservasjonerOrdinær = transactionalManager.transaction { tx ->

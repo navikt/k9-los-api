@@ -8,6 +8,7 @@ import no.nav.k9.los.kodeverk.BehandlingType
 import no.nav.k9.los.kodeverk.FagsakYtelseType
 import no.nav.k9.los.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.enkeltoppslag.AktivOppgaveOppslag
 import no.nav.k9.los.oppgaveuthenting.OppgaveNøkkelDto
 import no.nav.k9.los.oppgaveuthenting.sammendrag.OppgaveSammendragDtoBuilder
@@ -35,6 +36,7 @@ class ReservasjonApisTjeneste(
         innloggetBruker: Saksbehandler,
         oppgaveIdMedOverstyringDto: OppgaveIdMedOverstyringDto,
         skjermet: Boolean,
+        område: Områder,
     ): OppgaveStatusDto {
         val reserverFra = LocalDateTime.now()
         val oppgaveNøkkel = oppgaveIdMedOverstyringDto.oppgaveNøkkel
@@ -47,6 +49,7 @@ class ReservasjonApisTjeneste(
             val oppgave = aktivOppgaveOppslag.hentAktivOppgave(
                 oppgaveNøkkel.oppgaveEksternId,
                 oppgaveNøkkel.oppgaveTypeEksternId,
+                område,
                 tx
             )
 
@@ -99,7 +102,8 @@ class ReservasjonApisTjeneste(
 
         val reservasjonsnøkkel = endringDto.reservasjonsnøkkel ?: aktivOppgaveOppslag.hentAktivOppgave(
             endringDto.oppgaveNøkkel!!.oppgaveEksternId,
-            endringDto.oppgaveNøkkel.oppgaveTypeEksternId
+            endringDto.oppgaveNøkkel.oppgaveTypeEksternId,
+            brukerkontekst.område
         ).reservasjonsnøkkel
         val nyReservasjon = reservasjonV3Tjeneste.endreReservasjon(
             reservasjonsnøkkel = reservasjonsnøkkel,
@@ -128,7 +132,8 @@ class ReservasjonApisTjeneste(
         val reservasjonsnøkkel =
             forlengReservasjonDto.reservasjonsnøkkel ?: aktivOppgaveOppslag.hentAktivOppgave(
                 forlengReservasjonDto.oppgaveNøkkel!!.oppgaveEksternId,
-                forlengReservasjonDto.oppgaveNøkkel.oppgaveTypeEksternId
+                forlengReservasjonDto.oppgaveNøkkel.oppgaveTypeEksternId,
+                brukerkontekst.område
             ).reservasjonsnøkkel
 
         val forlengetReservasjon =
@@ -158,7 +163,8 @@ class ReservasjonApisTjeneste(
 
         val reservasjonsnøkkel = params.reservasjonsnøkkel ?: aktivOppgaveOppslag.hentAktivOppgave(
             params.oppgaveNøkkel!!.oppgaveEksternId,
-            params.oppgaveNøkkel.oppgaveTypeEksternId
+            params.oppgaveNøkkel.oppgaveTypeEksternId,
+            brukerkontekst.område
         ).reservasjonsnøkkel
 
         val nyReservasjon = reservasjonV3Tjeneste.overførReservasjon(
@@ -176,10 +182,12 @@ class ReservasjonApisTjeneste(
     private fun annullerReservasjon(
         innloggetBruker: Saksbehandler,
         annullerReservasjon: AnnullerReservasjonDto,
+        område: Områder,
     ) {
         val reservasjonsnøkkel = annullerReservasjon.reservasjonsnøkkel ?: aktivOppgaveOppslag.hentAktivOppgave(
             annullerReservasjon.oppgaveNøkkel!!.oppgaveEksternId,
-            annullerReservasjon.oppgaveNøkkel.oppgaveTypeEksternId
+            annullerReservasjon.oppgaveNøkkel.oppgaveTypeEksternId,
+            område
         ).reservasjonsnøkkel
 
         val annulleringUtført = reservasjonV3Tjeneste.annullerReservasjonHvisFinnes(
@@ -192,12 +200,14 @@ class ReservasjonApisTjeneste(
 
     fun annullerReservasjoner(
         params: List<AnnullerReservasjonDto>,
-        innloggetBruker: Saksbehandler
+        innloggetBruker: Saksbehandler,
+        område: Områder,
     ) {
         params.forEach {
             annullerReservasjon(
                 innloggetBruker,
                 it,
+                område,
             )
         }
     }
@@ -247,6 +257,7 @@ class ReservasjonApisTjeneste(
         val oppgave = aktivOppgaveOppslag.hentAktivOppgave(
                 oppgaveNøkkel.oppgaveEksternId,
                 oppgaveNøkkel.oppgaveTypeEksternId,
+                brukerkontekst.område,
             )
         if (!pepClient.harTilgangTilOppgaveV3(
                 oppgave = oppgave,

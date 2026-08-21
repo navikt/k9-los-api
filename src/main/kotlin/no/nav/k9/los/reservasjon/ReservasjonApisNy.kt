@@ -47,7 +47,7 @@ internal fun Route.ReservasjonApisNy() {
 
                 try {
                     log.info("Forsøker å ta reservasjon direkte på ${oppgaveIdMedOverstyringDto.oppgaveNøkkel.oppgaveEksternId} for ${innloggetBruker.navident}")
-                    val oppgave = reservasjonApisTjeneste.reserverOppgave(innloggetBruker, oppgaveIdMedOverstyringDto, skjermet)
+                    val oppgave = reservasjonApisTjeneste.reserverOppgave(innloggetBruker, oppgaveIdMedOverstyringDto, skjermet, bruker.område)
                     call.respond(oppgave)
                 } catch (e: ManglerTilgangException) {
                     call.respond(HttpStatusCode.Forbidden, e.message!!)
@@ -115,7 +115,7 @@ internal fun Route.ReservasjonApisNy() {
                             params.map { it.oppgaveNøkkel }.joinToString(", ")
                         } (Gjort av ${innloggetBruker.navident})"
                     )
-                    reservasjonApisTjeneste.annullerReservasjoner(params, innloggetBruker)
+                    reservasjonApisTjeneste.annullerReservasjoner(params, innloggetBruker, bruker.område)
                     call.respond(HttpStatusCode.OK) //TODO: Hva er evt meningsfullt å returnere her?
                 } catch (e: FinnerIkkeDataException) {
                     call.respond(HttpStatusCode.NotFound, "Fant ingen aktiv reservasjon for angitte reservasjonsnøkler")

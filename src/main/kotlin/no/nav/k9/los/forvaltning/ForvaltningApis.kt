@@ -11,6 +11,7 @@ import no.nav.k9.los.domeneadaptere.k9.K9Oppgavetypenavn
 import no.nav.k9.los.domeneadaptere.k9.avstemming.AvstemmingsTjeneste
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.eventlager.EventRepository
 import no.nav.k9.los.domeneadaptere.k9.statistikk.StatistikkRepository
+import no.nav.k9.los.infrastruktur.brukerkontekst.medBrukerkontekst
 import no.nav.k9.los.infrastruktur.brukerkontekst.medBrukerkontekstUtenOmråde
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
@@ -206,13 +207,13 @@ fun Route.forvaltningApis() {
             }
         }
     }) {
-        medBrukerkontekstUtenOmråde { bruker ->
+        medBrukerkontekst { bruker ->
             if (bruker.kanLeggeUtDriftsmelding) {
                 val oppgavetype = call.parameters["oppgavetype"]!!
                 val oppgaveEksternId = call.parameters["oppgaveEksternId"]!!
 
                 val oppgave =
-                    oppgaveOppslagTjeneste.hentAktivOppgave(oppgaveEksternId, oppgavetype)
+                    oppgaveOppslagTjeneste.hentAktivOppgave(oppgaveEksternId, oppgavetype, bruker.område)
                 call.respond(objectMapper.writeValueAsString(OppgaveIkkeSensitiv(oppgave)))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
@@ -278,9 +279,9 @@ fun Route.forvaltningApis() {
             }
         }
     }) {
-        medBrukerkontekstUtenOmråde { bruker ->
+        medBrukerkontekst { bruker ->
             if (bruker.kanLeggeUtDriftsmelding) {
-                val område = call.parameters["omrade"]!!
+                val område = bruker.område.eksternId
                 val oppgavetypeEksternId = call.parameters["oppgavetype"]!!
                 val oppgaveEksternId = call.parameters["oppgaveEksternId"]!!
 
@@ -288,10 +289,10 @@ fun Route.forvaltningApis() {
                     oppgaveTypeRepository.hentOppgavetype(område, oppgavetypeEksternId)
                 } catch (e: IllegalArgumentException) {
                     call.respond(HttpStatusCode.NotFound, e.message.toString())
-                    return@medBrukerkontekstUtenOmråde
+                    return@medBrukerkontekst
                 }
 
-                val oppgave = oppgaveOppslagTjeneste.hentAktivOppgave(oppgaveEksternId, oppgavetypeEksternId)
+                val oppgave = oppgaveOppslagTjeneste.hentAktivOppgave(oppgaveEksternId, oppgavetypeEksternId, bruker.område)
                 val reservasjonsnøkkel = utledReservasjonsnøkkel(oppgave, false)
                 val reservasjonsnøkkel_beslutter = utledReservasjonsnøkkel(oppgave, true)
                 val reservasjonerOrdinær = transactionalManager.transaction { tx ->

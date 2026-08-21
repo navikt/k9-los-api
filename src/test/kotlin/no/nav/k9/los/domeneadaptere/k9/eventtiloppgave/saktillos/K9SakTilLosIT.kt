@@ -111,6 +111,7 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
                     oppgaveNøkkel = TestOppgaveNøkkel.forK9sak(eksternId)
                 ),
                 skjermet = false,
+                område = Områder.K9,
             )
             reservasjonTjeneste.hentReserverteOppgaverForSaksbehandler(TestSaksbehandler.SARA, kontekst(TestSaksbehandler.SARA.navident!!))
         }

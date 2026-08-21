@@ -88,6 +88,7 @@ class K9TilbakeTilLosIT : AbstractK9LosIntegrationTest() {
                     )
                 ),
                 skjermet = false,
+                område = Områder.K9,
             )
         }
     }

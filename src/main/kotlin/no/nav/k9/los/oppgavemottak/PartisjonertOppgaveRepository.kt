@@ -277,7 +277,7 @@ class PartisjonertOppgaveRepository(val oppgavetypeRepository: OppgavetypeReposi
         tx: TransactionalSession
     ): Oppgave {
         val oppgavetypeEksternId = row.string("oppgavetype_ekstern_id")
-        val oppgavetype = oppgavetypeRepository.hentOppgavetype("K9", oppgavetypeEksternId, tx)
+        val oppgavetype = oppgavetypeRepository.hentOppgavetype(row.string("omrade_ekstern_id"), oppgavetypeEksternId, tx)
         val oppgavefelter = hentOppgavefelter(tx, row.long("id"), oppgavetype)
         return Oppgave(
             eksternId = row.string("oppgave_ekstern_id"),

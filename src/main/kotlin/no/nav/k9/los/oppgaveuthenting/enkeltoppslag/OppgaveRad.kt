@@ -12,6 +12,7 @@ internal data class OppgaveRad(
     val oppgavestatus: Oppgavestatus,
     val endretTidspunkt: LocalDateTime,
     val reservasjonsnokkel: String,
+    val omradeEksternId: String,
 ) {
     companion object {
         internal fun Row.tilOppgaveRad() = OppgaveRad(
@@ -22,6 +23,7 @@ internal data class OppgaveRad(
             oppgavestatus = Oppgavestatus.fraKode(this.string("oppgavestatus")),
             endretTidspunkt = this.localDateTime("endret_tidspunkt"),
             reservasjonsnokkel = this.string("reservasjonsnokkel"),
+            omradeEksternId = this.string("omrade_ekstern_id"),
         )
     }
 }
