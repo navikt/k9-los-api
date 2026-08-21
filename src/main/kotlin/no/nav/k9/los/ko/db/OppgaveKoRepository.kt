@@ -3,6 +3,8 @@ package no.nav.k9.los.ko.db
 import com.fasterxml.jackson.databind.ObjectMapper
 import kotliquery.*
 import no.nav.k9.los.ko.dto.OppgaveKo
+import no.nav.k9.los.oppgavedefinisjon.omraade.OmrådeRepository
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.OppgaveQuery
 import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
 import org.slf4j.LoggerFactory
@@ -10,12 +12,19 @@ import java.time.LocalDateTime
 import javax.sql.DataSource
 
 class OppgaveKoRepository(
-    private val datasource: DataSource
+    private val datasource: DataSource,
+    private val områdeRepository: OmrådeRepository
 ) {
 
     companion object {
         val objectMapper = LosObjectMapper.instance
         private val log = LoggerFactory.getLogger(OppgaveKoRepository::class.java)
+
+        private const val OPPGAVEKO_SELECT =
+            """SELECT ko.id, ko.versjon, ko.tittel, ko.beskrivelse, ko.query, ko.fritt_valg_av_oppgave, 
+                      ko.endret_tidspunkt, ko.skjermet, o.ekstern_id as omrade_ekstern_id
+               FROM OPPGAVEKO_V3 ko
+               JOIN OMRADE o ON o.id = ko.omrade_id"""
     }
 
     private val standardOppgaveString: String by lazy {
@@ -42,8 +51,7 @@ class OppgaveKoRepository(
     fun hentListe(tx: TransactionalSession, medSaksbehandlere: Boolean, skjermet: Boolean): List<OppgaveKo> {
         return tx.run(
             queryOf(
-                """SELECT id, versjon, tittel, beskrivelse, query, fritt_valg_av_oppgave, endret_tidspunkt, skjermet 
-                    FROM OPPGAVEKO_V3 WHERE skjermet = :medSkjermet""",
+                """$OPPGAVEKO_SELECT WHERE ko.skjermet = :medSkjermet""",
                 mapOf("medSkjermet" to skjermet)
             ).map { row -> row.tilOppgaveKo(objectMapper, medSaksbehandlere, tx) }.asList
         )
@@ -58,9 +66,8 @@ class OppgaveKoRepository(
     fun hent(tx: TransactionalSession, oppgaveKoId: Long, skjermet: Boolean): OppgaveKo {
         return tx.run(
             queryOf(
-                """SELECT id, versjon, tittel, beskrivelse, query, fritt_valg_av_oppgave, endret_tidspunkt, skjermet
-                        FROM OPPGAVEKO_V3 
-                        WHERE id = :id AND skjermet = :skjermet""",
+                """$OPPGAVEKO_SELECT
+                        WHERE ko.id = :id AND ko.skjermet = :skjermet""",
                 mapOf(
                     "id" to oppgaveKoId,
                     "skjermet" to skjermet
@@ -78,9 +85,8 @@ class OppgaveKoRepository(
     fun hentInkluderKode6(tx: TransactionalSession, oppgaveKoId: Long): Pair<OppgaveKo, Boolean> {
         return tx.run(
             queryOf(
-                """SELECT id, versjon, tittel, beskrivelse, query, fritt_valg_av_oppgave, endret_tidspunkt, skjermet
-                        FROM OPPGAVEKO_V3 
-                        WHERE id = :id""",
+                """$OPPGAVEKO_SELECT
+                        WHERE ko.id = :id""",
                 mapOf(
                     "id" to oppgaveKoId,
                 )
@@ -99,28 +105,30 @@ class OppgaveKoRepository(
             saksbehandlerIds = if (medSaksbehandlere) hentKoSaksbehandlerIds(tx, long("id")) else emptyList(),
             saksbehandlere = if (medSaksbehandlere) hentKoSaksbehandlere(tx, long("id")) else emptyList(),
             endretTidspunkt = localDateTimeOrNull("endret_tidspunkt"),
-            skjermet = boolean("skjermet")
+            skjermet = boolean("skjermet"),
+            område = Områder.fraEksternId(string("omrade_ekstern_id"))
         )
     }
 
-    fun leggTil(tittel: String, skjermet: Boolean): OppgaveKo {
+    fun leggTil(tittel: String, skjermet: Boolean, område: Områder): OppgaveKo {
         return using(sessionOf(datasource)) { session ->
-            session.transaction { tx -> leggTil(tx, tittel, skjermet) }
+            session.transaction { tx -> leggTil(tx, tittel, skjermet, område) }
         }
     }
 
-    fun leggTil(tx: TransactionalSession, tittel: String, skjermet: Boolean): OppgaveKo {
+    fun leggTil(tx: TransactionalSession, tittel: String, skjermet: Boolean, område: Områder): OppgaveKo {
         val queryString = if (skjermet) kode6OppgaveString else standardOppgaveString
         val oppgaveKoId = tx.run(
             queryOf(
                 """
-                INSERT INTO OPPGAVEKO_V3 (versjon, tittel, beskrivelse, query, fritt_valg_av_oppgave, endret_tidspunkt, skjermet) 
-                VALUES (0, :tittel, '', :query, false, :endret_tidspunkt, :skjermet) RETURNING ID""",
+                INSERT INTO OPPGAVEKO_V3 (versjon, tittel, beskrivelse, query, fritt_valg_av_oppgave, endret_tidspunkt, skjermet, omrade_id) 
+                VALUES (0, :tittel, '', :query, false, :endret_tidspunkt, :skjermet, :omradeId) RETURNING ID""",
                 mapOf(
                     "tittel" to tittel,
                     "query" to queryString,
                     "endret_tidspunkt" to LocalDateTime.now(),
-                    "skjermet" to skjermet
+                    "skjermet" to skjermet,
+                    "omradeId" to områdeRepository.hentOmråde(område, tx).id
                 )
             ).map { row -> row.long(1) }.asSingle
         ) ?: throw IllegalStateException("Feil ved opprettelse av ny oppgavekø.")
@@ -191,9 +199,8 @@ class OppgaveKoRepository(
         return tx.run(
             queryOf(
                 """
-                    select id, versjon, tittel, beskrivelse, query, fritt_valg_av_oppgave, endret_tidspunkt, skjermet
-                    from OPPGAVEKO_V3 ko
-                    where skjermet = :skjermet AND      
+                    $OPPGAVEKO_SELECT
+                    where ko.skjermet = :skjermet AND      
                     exists (
                         select 1
                         from oppgaveko_saksbehandler os
@@ -298,7 +305,7 @@ class OppgaveKoRepository(
         skjermet: Boolean
     ): OppgaveKo {
         val gammelOppgaveKo = hent(tx, kopierFraOppgaveId, skjermet)
-        val nyOppgaveKo = leggTil(tx, tittel, skjermet)
+        val nyOppgaveKo = leggTil(tx, tittel, skjermet, gammelOppgaveKo.område)
 
         val oppdatertNyOppgaveko = nyOppgaveKo.copy(
             oppgaveQuery = if (taMedQuery) gammelOppgaveKo.oppgaveQuery else nyOppgaveKo.oppgaveQuery,

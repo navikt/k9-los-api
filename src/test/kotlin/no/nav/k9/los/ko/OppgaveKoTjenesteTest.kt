@@ -12,6 +12,7 @@ import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.infrastruktur.abac.Action
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
+import no.nav.k9.los.infrastruktur.brukerkontekst.TestKontekstFactory
 import no.nav.k9.los.infrastruktur.pdl.IPdlService
 import no.nav.k9.los.ko.db.OppgaveKoRepository
 import no.nav.k9.los.ko.dto.OppgaveKo
@@ -19,6 +20,7 @@ import no.nav.k9.los.kodeverk.BehandlingType
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.FeltdefinisjonTjeneste
 import no.nav.k9.los.oppgavedefinisjon.omraade.Område
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgavedefinisjon.oppgavetype.Oppgavetype
 import no.nav.k9.los.oppgaveuthenting.query.Avgrensning
 import no.nav.k9.los.oppgaveuthenting.query.OppgaveQueryService
@@ -29,16 +31,80 @@ import no.nav.k9.los.reservasjon.ReservasjonV3Tjeneste
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
 import no.nav.k9.los.oppgaveuthenting.Oppgave
 import no.nav.k9.los.oppgaveuthenting.Oppgavefelt
+import no.nav.k9.los.oppgaveuthenting.sammendrag.OppgaveSammendragDtoBuilder
+import no.nav.k9.los.oppgaveuthenting.sammendrag.KodeOgNavnDto
+import no.nav.k9.los.oppgaveuthenting.sammendrag.OppgaveSammendragDto
+import no.nav.k9.los.oppgaveuthenting.OppgaveNøkkelDto
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 
 class OppgaveKoTjenesteTest {
 
     @Test
+    fun `hentOppgaverFraKøSammendrag bruker felles builder etter pep-filtrering`() = runBlocking {
+        val oppgaveKoRepository = mockk<OppgaveKoRepository>()
+        val oppgaveQueryService = mockk<OppgaveQueryService>()
+        val pepClient = mockk<IPepClient>()
+        val builder = mockk<OppgaveSammendragDtoBuilder>()
+        val brukerkontekst = kontekst("Z123456")
+        val oppgave = oppgave("med-tilgang", "SAK-1")
+        val kø = OppgaveKo(
+            id = 1L,
+            versjon = 1L,
+            tittel = "Testkø",
+            beskrivelse = "",
+            oppgaveQuery = OppgaveQuery(filtere = emptyList(), order = emptyList()),
+            frittValgAvOppgave = false,
+            saksbehandlerIds = emptyList(),
+            saksbehandlere = emptyList(),
+            endretTidspunkt = null,
+            skjermet = false,
+            område = Områder.K9,
+        )
+        val sammendrag = OppgaveSammendragDto(
+            oppgaveNøkkel = OppgaveNøkkelDto(oppgave),
+            reservasjonsnøkkel = oppgave.reservasjonsnøkkel,
+            person = null,
+            ytelse = null,
+            behandlingstype = null,
+            saksnummer = "SAK-1",
+            journalpostId = null,
+            fagsakÅr = null,
+            opprettetTidspunkt = null,
+            oppgavestatus = KodeOgNavnDto("AAPEN", "Åpen"),
+            behandlingsstatus = null,
+            oppgavebehandlingsUrl = null,
+            hastesak = false,
+        )
+        every { oppgaveKoRepository.hent(1L, false) } returns kø
+        every { oppgaveQueryService.queryForOppgave(any()) } returns listOf(oppgave)
+        coEvery { pepClient.harTilgangTilOppgaveV3(oppgave, brukerkontekst, Action.read) } returns true
+        coEvery { builder.bygg(listOf(oppgave), brukerkontekst, emptyMap()) } returns listOf(sammendrag)
+        val tjeneste = OppgaveKoTjeneste(
+            transactionalManager = mockk<TransactionalManager>(relaxed = true),
+            oppgaveKoRepository = oppgaveKoRepository,
+            oppgaveQueryService = oppgaveQueryService,
+            reservasjonV3Tjeneste = mockk<ReservasjonV3Tjeneste>(relaxed = true),
+            saksbehandlerRepository = mockk<SaksbehandlerRepository>(relaxed = true),
+            pdlService = mockk<IPdlService>(relaxed = true),
+            pepClient = pepClient,
+            køpåvirkendeHendelseChannel = Channel(Channel.UNLIMITED),
+            feltdefinisjonTjeneste = mockk<FeltdefinisjonTjeneste>(relaxed = true),
+            oppgaveSammendragDtoBuilder = builder,
+        )
+
+        val resultat = tjeneste.hentOppgaverFraKøSammendrag(brukerkontekst, 1L, 10L, true)
+
+        assertThat(resultat.oppgaver).containsExactly(sammendrag)
+        coVerify(exactly = 1) { builder.bygg(listOf(oppgave), brukerkontekst, emptyMap()) }
+    }
+
+    @Test
     fun `hentOppgaverFraKø filtrerer med pep`() = runBlocking {
         val oppgaveKoRepository = mockk<OppgaveKoRepository>()
         val oppgaveQueryService = mockk<OppgaveQueryService>()
         val pepClient = mockk<IPepClient>()
+        val kontekst = kontekst("Z123456")
 
         val tjeneste = OppgaveKoTjeneste(
             transactionalManager = mockk<TransactionalManager>(relaxed = true),
@@ -50,6 +116,7 @@ class OppgaveKoTjenesteTest {
             pepClient = pepClient,
             køpåvirkendeHendelseChannel = Channel(Channel.UNLIMITED),
             feltdefinisjonTjeneste = mockk<FeltdefinisjonTjeneste>(relaxed = true),
+            oppgaveSammendragDtoBuilder = mockk<OppgaveSammendragDtoBuilder>(relaxed = true),
         )
 
         val kø = OppgaveKo(
@@ -57,32 +124,33 @@ class OppgaveKoTjenesteTest {
             versjon = 1L,
             tittel = "Testkø",
             beskrivelse = "",
-            oppgaveQuery = OppgaveQuery(filtere = emptyList(), order = listOf(EnkelOrderFelt(område = "K9", kode = "mottattDato", økende = false))),
+            oppgaveQuery = OppgaveQuery(filtere = emptyList(), order = listOf(EnkelOrderFelt(område = Områder.K9, kode = "mottattDato", økende = false))),
             frittValgAvOppgave = false,
             saksbehandlerIds = emptyList(),
             saksbehandlere = emptyList(),
             endretTidspunkt = null,
             skjermet = false,
+            område = Områder.K9,
         )
 
         val utenTilgang = oppgave("uten-tilgang", "SAK-1")
         val førsteMedTilgang = oppgave("med-tilgang-1", "SAK-2")
 
-        coEvery { pepClient.harTilgangTilKode6() } returns false
         every { oppgaveKoRepository.hent(1L, false) } returns kø
         every {
             oppgaveQueryService.queryForOppgave(
-                QueryRequest(
-                    oppgaveQuery = kø.oppgaveQuery,
+                QueryRequest(oppgaveQuery = kø.oppgaveQuery,
                     fjernReserverte = false,
                     avgrensning = Avgrensning.maxAntall(2),
+                    område = Områder.K9,
                 )
             )
         } returns listOf(utenTilgang, førsteMedTilgang)
-        coEvery { pepClient.harTilgangTilOppgaveV3(utenTilgang, Action.read, null) } returns false
-        coEvery { pepClient.harTilgangTilOppgaveV3(førsteMedTilgang, Action.read, null) } returns true
+        coEvery { pepClient.harTilgangTilOppgaveV3(utenTilgang, kontekst, Action.read) } returns false
+        coEvery { pepClient.harTilgangTilOppgaveV3(førsteMedTilgang, kontekst, Action.read) } returns true
 
         val resultat = tjeneste.hentOppgaverFraKø(
+            brukerkontekst = kontekst,
             oppgaveKoId = 1L,
             ønsketAntallOppgaver = 2L,
         )
@@ -91,10 +159,10 @@ class OppgaveKoTjenesteTest {
         assertThat(resultat.rader.mapNotNull { it["id"] }).containsExactly("SAK-2")
         coVerify(exactly = 1) {
             oppgaveQueryService.queryForOppgave(
-                QueryRequest(
-                    oppgaveQuery = kø.oppgaveQuery,
+                QueryRequest(oppgaveQuery = kø.oppgaveQuery,
                     fjernReserverte = false,
                     avgrensning = Avgrensning.maxAntall(2),
+                    område = Områder.K9,
                 )
             )
         }
@@ -116,7 +184,7 @@ class OppgaveKoTjenesteTest {
             felter = listOf(
                 Oppgavefelt(
                     eksternId = "saksnummer",
-                    område = "K9",
+                    område = Områder.K9,
                     listetype = false,
                     påkrevd = false,
                     verdi = saksnummer,
@@ -124,7 +192,7 @@ class OppgaveKoTjenesteTest {
                 ),
                 Oppgavefelt(
                     eksternId = "behandlingTypekode",
-                    område = "K9",
+                    område = Områder.K9,
                     listetype = false,
                     påkrevd = false,
                     verdi = BehandlingType.FORSTEGANGSSOKNAD.kode,
@@ -133,4 +201,6 @@ class OppgaveKoTjenesteTest {
             ),
         )
     }
+
+    private fun kontekst(navIdent: String) = TestKontekstFactory.brukerkontekst(Områder.K9)
 }

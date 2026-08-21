@@ -1,10 +1,11 @@
 package no.nav.k9.los.oppgaveuthenting.query.dto.resultat
 
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.Aggregeringsfunksjon
 
 data class Aggregertverdi(
     val type: Aggregeringsfunksjon,
-    val område: String?,
+    val område: Områder?,
     val kode: String?,
     /**
      * Typekontrakten for [verdi] bestemmes av [type] og feltets datatype:

@@ -9,7 +9,10 @@ import no.nav.k9.los.OppgaveTestDataBuilder
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.K9TilbakeEventDtoBuilder
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.TestSaksbehandler
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.tilbakekrav.K9TilbakeEventHandler
+import no.nav.k9.los.infrastruktur.brukerkontekst.BrukerkontekstMedOmråde
+import no.nav.k9.los.infrastruktur.brukerkontekst.TestKontekstFactory
 import no.nav.k9.los.ko.OppgaveKoTjeneste
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.reservasjon.OppgaveIdMedOverstyringDto
 import no.nav.k9.los.reservasjon.ReservasjonApisTjeneste
 import no.nav.k9.los.oppgaveuthenting.OppgaveNøkkelDto
@@ -83,21 +86,25 @@ class K9TilbakeTilLosIT : AbstractK9LosIntegrationTest() {
                         oppgaveTypeEksternId = "k9tilbake",
                         områdeEksternId = "K9"
                     )
-                )
+                ),
+                skjermet = false,
             )
         }
     }
 
+    private fun kontekst(saksbehandler: Saksbehandler): BrukerkontekstMedOmråde =
+        TestKontekstFactory.brukerkontekst(Områder.K9)
+
     private fun assertIngenReservasjon(saksbehandler: Saksbehandler) {
         val reservasjonApisTjeneste = get<ReservasjonApisTjeneste>()
         runBlocking { assertThat(
-            reservasjonApisTjeneste.hentReserverteOppgaverForSaksbehandler(saksbehandler)
+            reservasjonApisTjeneste.hentReserverteOppgaverForSaksbehandler(saksbehandler, kontekst(saksbehandler))
         ).isEmpty() }
     }
 
     private fun assertReservasjon(saksbehandler: Saksbehandler, antallReserverteOppgaver: Int) {
         val reservasjonApisTjeneste = get<ReservasjonApisTjeneste>()
-        val reservasjon = runBlocking { reservasjonApisTjeneste.hentReserverteOppgaverForSaksbehandler(saksbehandler) }
+        val reservasjon = runBlocking { reservasjonApisTjeneste.hentReserverteOppgaverForSaksbehandler(saksbehandler, kontekst(saksbehandler)) }
         assertThat(reservasjon).isNotEmpty()
         assertThat(reservasjon).hasSize(1)
         reservasjon.first().let {

@@ -21,10 +21,9 @@ class TransactionalManager(
 
     suspend fun <A> transactionSuspend(operation: suspend (TransactionalSession) -> A): A {
         return withContext(Dispatchers.IO) {
-            val context = coroutineContext
             using(sessionOf(dataSource, returnGeneratedKey = true)) { session ->
                 session.transaction {
-                    runBlocking(context) {
+                    runBlocking {
                         operation(it)
                     }
                 }

@@ -6,15 +6,12 @@ import io.ktor.http.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import no.nav.k9.los.infrastruktur.abac.IPepClient
-import no.nav.k9.los.infrastruktur.rest.RequestContextService
+import no.nav.k9.los.infrastruktur.brukerkontekst.medBrukerkontekst
 import no.nav.k9.los.oppgaveuthenting.OppgaveNøkkelDto
 import org.koin.ktor.ext.inject
 
 fun Route.SisteOppgaverApi() {
     val sisteOppgaverTjeneste by inject<SisteOppgaverTjeneste>()
-    val requestContextService by inject<RequestContextService>()
-    val pepClient by inject<IPepClient>()
 
 
     get({
@@ -23,9 +20,9 @@ fun Route.SisteOppgaverApi() {
             HttpStatusCode.OK to { body<List<SisteOppgaverDto>>() }
         }
     }) {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.harBasisTilgang()) {
-                call.respond(sisteOppgaverTjeneste.hentSisteOppgaver())
+        medBrukerkontekst { bruker ->
+            if (bruker.harBasisTilgang) {
+                call.respond(sisteOppgaverTjeneste.hentSisteOppgaver(bruker))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
@@ -37,10 +34,10 @@ fun Route.SisteOppgaverApi() {
             "Legge til siste oppgave i listen over oppgaver innlogget bruker har besøkt, og vil slette eldste oppgave i listen. Dersom oppgave ligger i listen fra før, vil den bli flyttet til toppen av listen."
         request { body<OppgaveNøkkelDto>() }
     }) {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.harBasisTilgang()) {
+        medBrukerkontekst { bruker ->
+            if (bruker.harBasisTilgang) {
                 val oppgaveNøkkel = call.receive<OppgaveNøkkelDto>()
-                sisteOppgaverTjeneste.lagreSisteOppgave(oppgaveNøkkel)
+                sisteOppgaverTjeneste.lagreSisteOppgave(oppgaveNøkkel, bruker)
                 call.respond(HttpStatusCode.OK)
             } else {
                 call.respond(HttpStatusCode.Forbidden)

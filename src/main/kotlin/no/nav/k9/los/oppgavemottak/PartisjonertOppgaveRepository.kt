@@ -5,6 +5,7 @@ import kotliquery.Row
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgavedefinisjon.oppgavetype.Oppgavetype
 import no.nav.k9.los.oppgavedefinisjon.oppgavetype.OppgavetypeRepository
 import no.nav.k9.los.oppgaveuthenting.query.db.PartisjonertOppgaveId
@@ -154,14 +155,15 @@ class PartisjonertOppgaveRepository(val oppgavetypeRepository: OppgavetypeReposi
         tx.run(
             queryOf(
                 """
-                    insert into oppgave_v3_part(id, oppgave_ekstern_id, oppgave_ekstern_versjon, oppgavetype_ekstern_id, reservasjonsnokkel, endret_tidspunkt, oppgavestatus, ferdigstilt_dato)
-                    VALUES (:oppgave_id, :oppgave_ekstern_id, :oppgave_ekstern_versjon, :oppgavetype_ekstern_id, :reservasjonsnokkel, :endret_tidspunkt, :oppgavestatus, :ferdigstilt_dato)
+                    insert into oppgave_v3_part(id, oppgave_ekstern_id, oppgave_ekstern_versjon, oppgavetype_ekstern_id, omrade_ekstern_id, reservasjonsnokkel, endret_tidspunkt, oppgavestatus, ferdigstilt_dato)
+                    VALUES (:oppgave_id, :oppgave_ekstern_id, :oppgave_ekstern_versjon, :oppgavetype_ekstern_id, :omrade_ekstern_id, :reservasjonsnokkel, :endret_tidspunkt, :oppgavestatus, :ferdigstilt_dato)
                 """.trimIndent(),
                 mapOf(
                     "oppgave_id" to partisjonertOppgaveId.id,
                     "oppgave_ekstern_id" to oppgave.eksternId,
                     "oppgave_ekstern_versjon" to oppgave.eksternVersjon,
                     "oppgavetype_ekstern_id" to oppgave.oppgavetype.eksternId,
+                    "omrade_ekstern_id" to oppgave.oppgavetype.område.eksternId,
                     "reservasjonsnokkel" to oppgave.reservasjonsnøkkel,
                     "endret_tidspunkt" to oppgave.endretTidspunkt,
                     "oppgavestatus" to oppgave.status.kode,
@@ -303,7 +305,7 @@ class PartisjonertOppgaveRepository(val oppgavetypeRepository: OppgavetypeReposi
             ).map { row ->
                 Oppgavefelt(
                     eksternId = row.string("ekstern_id"),
-                    område = "K9",
+                    område = Områder.fraEksternId(oppgavetype.område.eksternId),
                     listetype = row.boolean("liste_type"),
                     påkrevd = row.boolean("pakrevd"),
                     verdi = row.string("verdi"),

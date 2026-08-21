@@ -9,9 +9,9 @@ import no.nav.helse.dusseldorf.ktor.core.Retry
 import no.nav.helse.dusseldorf.ktor.metrics.Operation
 import no.nav.helse.dusseldorf.oauth2.client.AccessTokenClient
 import no.nav.helse.dusseldorf.oauth2.client.CachedAccessTokenClient
-import no.nav.k9.los.infrastruktur.azuregraph.IAzureGraphService
+import no.nav.k9.los.infrastruktur.brukerkontekst.BrukerkontekstMedOmråde
+import no.nav.k9.los.infrastruktur.idtoken.IdToken
 import no.nav.k9.los.infrastruktur.rest.NavHeaders
-import no.nav.k9.los.infrastruktur.rest.idToken
 import no.nav.k9.los.infrastruktur.utils.Cache
 import no.nav.k9.los.infrastruktur.utils.CacheObject
 import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
@@ -21,13 +21,11 @@ import java.net.URI
 import java.time.Duration
 import java.time.LocalDateTime
 import java.util.*
-import kotlin.coroutines.coroutineContext
 
 class PdlService(
     baseUrl: URI,
     accessTokenClient: AccessTokenClient,
     scope: String,
-    val azureGraphService : IAzureGraphService,
     private val httpClient: HttpClient
 ) : IPdlService {
     private val log: Logger = LoggerFactory.getLogger(PdlService::class.java)
@@ -45,7 +43,7 @@ class PdlService(
     private data class FrnTilAktørIdCacheKey(val saksbehandlerIdent: String, val fnr: String)
     private val fnrTilAktørIdCache = Cache<FrnTilAktørIdCacheKey, PdlResponse>(10_000)
 
-    override suspend fun person(aktorId: String): PersonPdlResponse {
+    override suspend fun person(aktorId: String, brukerkontekst: BrukerkontekstMedOmråde): PersonPdlResponse {
         if (aktorId.isEmpty()) {
             log.info("Forsøker å hente person med tom aktorId")
             return PersonPdlResponse(false, null)
@@ -56,7 +54,7 @@ class PdlService(
             mapOf("ident" to aktorId)
         )
 
-        val saksbehandlerIdent = azureGraphService.hentIdentTilInnloggetBruker()
+        val saksbehandlerIdent = brukerkontekst.navIdent
         val cacheKey = AktørIdTilPersonCacheKey(saksbehandlerIdent, aktorId)
         val cachedObject = aktørIdTilPersonCache.get(cacheKey)
         if (cachedObject != null) {
@@ -76,7 +74,7 @@ class PdlService(
             ) {
                 httpClient.post(personUrl) {
                     setBody(LosObjectMapper.instance.writeValueAsString(queryRequest))
-                    header(HttpHeaders.Authorization, authorizationHeader())
+                    header(HttpHeaders.Authorization, authorizationHeader(brukerkontekst.idToken))
                     header(HttpHeaders.Accept, "application/json")
                     header(HttpHeaders.ContentType, "application/json")
                     header(NavHeaders.Tema, "OMS")
@@ -90,7 +88,7 @@ class PdlService(
                 response.bodyAsText()
             } else {
                 log.warn("Error response = '${response.bodyAsText()}' fra '${response.request.url}'")
-                log.warn("HTTP ${response.status.value} ${response.status.description} aktorId callId: ${callId} ${coroutineContext.idToken().getUsername()}")
+                log.warn("HTTP ${response.status.value} ${response.status.description} aktorId callId: ${callId} ${brukerkontekst.idToken.getUsername()}")
                 null
             }
         }
@@ -120,7 +118,7 @@ class PdlService(
         }
     }
 
-    override suspend fun identifikator(fnummer: String): PdlResponse {
+    override suspend fun identifikator(fnummer: String, brukerkontekst: BrukerkontekstMedOmråde): PdlResponse {
         val queryRequest = QueryRequest(
             graphqlQueryHentIdent,
             mapOf(
@@ -130,7 +128,7 @@ class PdlService(
             )
         )
 
-        val saksbehandlerIdent = azureGraphService.hentIdentTilInnloggetBruker()
+        val saksbehandlerIdent = brukerkontekst.navIdent
         val cacheKey = FrnTilAktørIdCacheKey(saksbehandlerIdent, fnummer)
         val cachedObject = fnrTilAktørIdCache.get(cacheKey)
         if (cachedObject != null) {
@@ -151,7 +149,7 @@ class PdlService(
             ) {
                 httpClient.post(personUrl) {
                     setBody(LosObjectMapper.instance.writeValueAsString(queryRequest))
-                    header(HttpHeaders.Authorization, authorizationHeader())
+                    header(HttpHeaders.Authorization, authorizationHeader(brukerkontekst.idToken))
                     header(HttpHeaders.Accept, "application/json")
                     header(HttpHeaders.ContentType, "application/json")
                     header(NavHeaders.Tema, "OMS")
@@ -203,9 +201,9 @@ class PdlService(
         )
     }
 
-    private suspend fun authorizationHeader() = cachedAccessTokenClient.getOnBehalfOfAccessToken(
+    private fun authorizationHeader(idToken: IdToken) = cachedAccessTokenClient.getOnBehalfOfAccessToken(
         scopes = scopes,
-        onBehalfOf = coroutineContext.idToken().value
+        onBehalfOf = idToken.value
     ).asAuthoriationHeader()
 
     private fun getStringFromResource(path: String) =

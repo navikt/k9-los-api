@@ -15,6 +15,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.koin.test.get
 import java.util.*
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 
 class SisteOppgaverRepositoryTest : AbstractK9LosIntegrationTest() {
 
@@ -31,16 +32,19 @@ class SisteOppgaverRepositoryTest : AbstractK9LosIntegrationTest() {
         transactionalManager = get()
 
         runBlocking {
-            saksbehandlerRepository.addSaksbehandler(
+            saksbehandlerRepository.addSaksbehandler("test@nav.no", Områder.K9)
+            saksbehandlerRepository.vedlikeholdSaksbehandler(
                 Saksbehandler(
                     id = null,
                     navident = "test",
                     navn = "Test Testersen",
                     epost = "test@nav.no",
                     enhet = null,
-                )
+                    områder = listOf(Områder.K9),
+                ),
+                skjermet = false,
             )
-            saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedEpost("test@nav.no")!!
+            saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedEpost("test@nav.no", skjermet = false)!!
         }
     }
 

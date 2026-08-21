@@ -11,6 +11,7 @@ import kotlinx.coroutines.runBlocking
 import kotliquery.TransactionalSession
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
+import no.nav.k9.los.infrastruktur.brukerkontekst.BrukerkontekstMedOmråde
 import no.nav.k9.los.infrastruktur.metrikker.DetaljerMetrikker
 import no.nav.k9.los.infrastruktur.pdl.IPdlService
 import no.nav.k9.los.infrastruktur.pdl.fnr
@@ -19,6 +20,7 @@ import no.nav.k9.los.infrastruktur.utils.Cache
 import no.nav.k9.los.infrastruktur.utils.leggTilDagerHoppOverHelg
 import no.nav.k9.los.ko.db.OppgaveKoRepository
 import no.nav.k9.los.ko.dto.NesteOppgaverFraKoDto
+import no.nav.k9.los.ko.dto.OppgaverFraKøDto
 import no.nav.k9.los.ko.dto.OppgaveKo
 import no.nav.k9.los.kodeverk.BehandlingType
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.FeltdefinisjonTjeneste
@@ -32,10 +34,11 @@ import no.nav.k9.los.reservasjon.ReservasjonV3Tjeneste
 import no.nav.k9.los.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
 import no.nav.k9.los.oppgaveuthenting.Oppgave
+import no.nav.k9.los.oppgaveuthenting.sammendrag.OppgaveSammendragDtoBuilder
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.LocalDateTime
-import kotlin.coroutines.CoroutineContext
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 
 class OppgaveKoTjeneste(
     private val transactionalManager: TransactionalManager,
@@ -47,6 +50,7 @@ class OppgaveKoTjeneste(
     private val pepClient: IPepClient,
     private val køpåvirkendeHendelseChannel: Channel<KøpåvirkendeHendelse>,
     private val feltdefinisjonTjeneste: FeltdefinisjonTjeneste,
+    private val oppgaveSammendragDtoBuilder: OppgaveSammendragDtoBuilder,
 ) {
     private val log = LoggerFactory.getLogger(OppgaveKoTjeneste::class.java)
 
@@ -60,37 +64,52 @@ class OppgaveKoTjeneste(
 
     @WithSpan
     suspend fun hentOppgaverFraKø(
+        brukerkontekst: BrukerkontekstMedOmråde,
         oppgaveKoId: Long,
         ønsketAntallOppgaver: Long,
         fjernReserverte: Boolean = false
     ): NesteOppgaverFraKoDto {
-        val kø = oppgaveKoRepository.hent(oppgaveKoId, pepClient.harTilgangTilKode6())
+        val kø = oppgaveKoRepository.hent(oppgaveKoId, brukerkontekst.harTilgangTilKode6)
         val tilgjengeligeOppgaver = hentTilgjengeligeOppgaverFraKø(
             kø = kø,
             ønsketAntallOppgaver = ønsketAntallOppgaver,
             fjernReserverte = fjernReserverte,
+            brukerkontekst = brukerkontekst,
         )
 
         // Kun mulig med en enkelt order på køer per i dag. Inkluderer den som kolonne.
         val orderFelt = kø.oppgaveQuery.order.filterIsInstance<EnkelOrderFelt>().firstOrNull()
-        return byggDto(tilgjengeligeOppgaver, orderFelt)
+        return byggDto(tilgjengeligeOppgaver, orderFelt, brukerkontekst)
     }
 
+    @WithSpan
+    suspend fun hentOppgaverFraKøSammendrag(
+        brukerkontekst: BrukerkontekstMedOmråde,
+        oppgaveKoId: Long,
+        ønsketAntallOppgaver: Long,
+        fjernReserverte: Boolean = false,
+    ): OppgaverFraKøDto {
+        val kø = oppgaveKoRepository.hent(oppgaveKoId, brukerkontekst.harTilgangTilKode6)
+        val oppgaver = hentTilgjengeligeOppgaverFraKø(kø, ønsketAntallOppgaver, fjernReserverte, brukerkontekst)
+        return OppgaverFraKøDto(oppgaveSammendragDtoBuilder.bygg(oppgaver, brukerkontekst))
+    }
 
     private suspend fun hentTilgjengeligeOppgaverFraKø(
         kø: OppgaveKo,
         ønsketAntallOppgaver: Long,
         fjernReserverte: Boolean,
+        brukerkontekst: BrukerkontekstMedOmråde,
     ): List<Oppgave> {
         val kandidatOppgaver = oppgaveQueryService.queryForOppgave(
             QueryRequest(
                 oppgaveQuery = kø.oppgaveQuery,
                 fjernReserverte = fjernReserverte,
                 avgrensning = Avgrensning.maxAntall(ønsketAntallOppgaver),
+                område = kø.område,
             )
         )
 
-        val tilgjengeligeOppgaver = kandidatOppgaver.filter { pepClient.harTilgangTilOppgaveV3(it) }
+        val tilgjengeligeOppgaver = kandidatOppgaver.filter { pepClient.harTilgangTilOppgaveV3(it, brukerkontekst) }
         val filtrertBort = kandidatOppgaver.size - tilgjengeligeOppgaver.size
         if (filtrertBort > 0) {
             log.info("Filtrerte bort {} oppgaver fra kø {} etter pepClient-kall", filtrertBort, kø.id)
@@ -102,7 +121,8 @@ class OppgaveKoTjeneste(
 
     private suspend fun byggDto(
         oppgaver: List<Oppgave>,
-        orderFelt: EnkelOrderFelt?
+        orderFelt: EnkelOrderFelt?,
+        brukerkontekst: BrukerkontekstMedOmråde,
     ): NesteOppgaverFraKoDto {
 
         val visningskolonner = buildMap {
@@ -120,7 +140,7 @@ class OppgaveKoTjeneste(
             buildMap {
                 oppgave.hentVerdi("aktorId")?.let { aktørId ->
                     put(
-                        "søker", pdlService.person(aktørId).person
+                        "søker", pdlService.person(aktørId, brukerkontekst).person
                             ?.let { "${it.navn()} ${it.fnr()}" }
                             ?: "Ukjent navn Ukjent fnummer")
                 }
@@ -193,17 +213,16 @@ class OppgaveKoTjeneste(
             AntallOppgaverForKøCacheKey(oppgaveKoId, filtrerReserverte),
             antallOppgaverCacheVarighet
         )
-        { oppgaveQueryService.queryForAntall(QueryRequest(ko.oppgaveQuery, fjernReserverte = filtrerReserverte)) }
+        { oppgaveQueryService.queryForAntall(QueryRequest(ko.oppgaveQuery, fjernReserverte = filtrerReserverte, område = ko.område)) }
     }
 
     @WithSpan
-    fun taReservasjonFraKø(
+    suspend fun taReservasjonFraKø(
         innloggetBrukerId: Long,
         oppgaveKoId: Long,
-        coroutineContext: CoroutineContext
+        brukerkontekst: BrukerkontekstMedOmråde,
     ): OppgaveMuligReservert {
-        return DetaljerMetrikker.time("taReservasjonFraKø", "hele", "$oppgaveKoId") {
-            doTaReservasjonFraKø(innloggetBrukerId, oppgaveKoId, coroutineContext)
+        return doTaReservasjonFraKø(innloggetBrukerId, oppgaveKoId, brukerkontekst)
                 .also {
                     when (it) {
                         is OppgaveMuligReservert.Reservert ->
@@ -220,16 +239,15 @@ class OppgaveKoTjeneste(
                         }
                     }
                 }
-        }
     }
 
-    private fun doTaReservasjonFraKø(
+    private suspend fun doTaReservasjonFraKø(
         innloggetBrukerId: Long,
         oppgaveKoId: Long,
-        coroutineContext: CoroutineContext
+        brukerkontekst: BrukerkontekstMedOmråde,
     ): OppgaveMuligReservert {
         log.info("taReservasjonFraKø, oppgaveKøId: $oppgaveKoId")
-        val skjermet = runBlocking(coroutineContext) { pepClient.harTilgangTilKode6() }
+        val skjermet = brukerkontekst.harTilgangTilKode6
         val oppgavekø = DetaljerMetrikker.time("taReservasjonFraKø", "hentKø", "$oppgaveKoId") {
             oppgaveKoRepository.hent(
                 oppgaveKoId,
@@ -244,15 +262,14 @@ class OppgaveKoTjeneste(
                     QueryRequest(
                         oppgavekø.oppgaveQuery,
                         fjernReserverte = true,
-                        avgrensning = Avgrensning(limit = antallKandidaterEtterspurt.toLong())
+                        avgrensning = Avgrensning(limit = antallKandidaterEtterspurt.toLong()),
+                        område = oppgavekø.område
                     )
                 )
             }
             log.info("Spurte etter $antallKandidaterEtterspurt kandidater fra køen med id $oppgaveKoId, fikk ${kandidatOppgaver.size}")
-            val muligReservert = DetaljerMetrikker.time("taReservasjonFraKø", "finnReservasjonFraKø", "$oppgaveKoId") {
-                transactionalManager.transaction { tx ->
-                    finnReservasjonFraKø(kandidatOppgaver, tx, innloggetBrukerId)
-                }
+            val muligReservert = transactionalManager.transactionSuspend { tx ->
+                finnReservasjonFraKø(kandidatOppgaver, tx, innloggetBrukerId)
             }
             if (muligReservert is OppgaveMuligReservert.Reservert) {
                 return muligReservert
@@ -267,7 +284,7 @@ class OppgaveKoTjeneste(
     }
 
     @WithSpan
-    private fun finnReservasjonFraKø(
+    private suspend fun finnReservasjonFraKø(
         kandidatoppgaver: List<Oppgave>,
         tx: TransactionalSession,
         innloggetBrukerId: Long,
@@ -296,10 +313,11 @@ class OppgaveKoTjeneste(
     }
 
     @WithSpan
-    suspend fun hentSaksbehandlereForKo(oppgaveKoId: Long): List<Saksbehandler> {
-        val oppgaveKo = oppgaveKoRepository.hent(oppgaveKoId, pepClient.harTilgangTilKode6())
+    suspend fun hentSaksbehandlereForKo(oppgaveKoId: Long, brukerkontekst: BrukerkontekstMedOmråde): List<Saksbehandler> {
+        val skjermet = brukerkontekst.harTilgangTilKode6
+        val oppgaveKo = oppgaveKoRepository.hent(oppgaveKoId, skjermet)
         return oppgaveKo.saksbehandlere.mapNotNull { saksbehandlerEpost: String ->
-            saksbehandlerRepository.finnSaksbehandlerMedEpost(saksbehandlerEpost).also {
+            saksbehandlerRepository.finnSaksbehandlerMedEpost(saksbehandlerEpost, skjermet).also {
                 if (it == null) {
                     log.info("Køen $oppgaveKoId inneholder saksbehandler som ikke finnes")
                 }
@@ -323,8 +341,8 @@ class OppgaveKoTjeneste(
     }
 
     @WithSpan
-    fun leggTil(tittel: String, skjermet: Boolean): OppgaveKo {
-        val kø = oppgaveKoRepository.leggTil(tittel, skjermet)
+    fun leggTil(tittel: String, skjermet: Boolean, område: Områder): OppgaveKo {
+        val kø = oppgaveKoRepository.leggTil(tittel, skjermet, område)
         runBlocking {
             køpåvirkendeHendelseChannel.send(Kødefinisjon(kø.id))
         }

@@ -14,6 +14,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.koin.test.get
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 
 class LagretSøkRepositoryTest : AbstractK9LosIntegrationTest() {
 
@@ -27,16 +28,19 @@ class LagretSøkRepositoryTest : AbstractK9LosIntegrationTest() {
         saksbehandlerRepository = get()
 
         runBlocking {
-            saksbehandlerRepository.addSaksbehandler(
+            saksbehandlerRepository.addSaksbehandler("test@nav.no", Områder.K9)
+            saksbehandlerRepository.vedlikeholdSaksbehandler(
                 Saksbehandler(
                     id = null,
                     navident = "test",
                     navn = "Test Testersen",
                     epost = "test@nav.no",
                     enhet = null,
-                )
+                    områder = listOf(Områder.K9),
+                ),
+                skjermet = false,
             )
-            saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedEpost("test@nav.no")!!
+            saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedEpost("test@nav.no", skjermet = false)!!
         }
     }
 
@@ -44,7 +48,7 @@ class LagretSøkRepositoryTest : AbstractK9LosIntegrationTest() {
     fun `skal opprette og hente lagret søk`() {
         val opprettLagretSøk = NyttLagretSøkRequest(
             tittel = "Test søk",
-            query = LagretSøk.defaultQuery(false)
+            query = LagretSøk.defaultQuery(Områder.K9, false)
         )
 
         val lagretSøk = LagretSøk.nyttSøk(opprettLagretSøk, saksbehandler)
@@ -69,7 +73,7 @@ class LagretSøkRepositoryTest : AbstractK9LosIntegrationTest() {
     fun `skal endre eksisterende lagret søk`() {
         val opprettLagretSøk = NyttLagretSøkRequest(
             tittel = "Opprinnelig tittel",
-            query = LagretSøk.defaultQuery(false)
+            query = LagretSøk.defaultQuery(Områder.K9, false)
         )
 
         val lagretSøk = LagretSøk.nyttSøk(opprettLagretSøk, saksbehandler)
@@ -97,7 +101,7 @@ class LagretSøkRepositoryTest : AbstractK9LosIntegrationTest() {
     fun `skal slette lagret søk`() {
         val opprettLagretSøk = NyttLagretSøkRequest(
             tittel = "Søk som skal slettes",
-            query = LagretSøk.defaultQuery(false)
+            query = LagretSøk.defaultQuery(Områder.K9, false)
         )
 
         val lagretSøk = LagretSøk.nyttSøk(opprettLagretSøk, saksbehandler)
@@ -113,11 +117,11 @@ class LagretSøkRepositoryTest : AbstractK9LosIntegrationTest() {
     @Test
     fun `skal hente alle lagrede søk for en saksbehandler`() {
         val søk1 = LagretSøk.nyttSøk(
-            NyttLagretSøkRequest("Søk 1", LagretSøk.defaultQuery(false)),
+            NyttLagretSøkRequest("Søk 1", LagretSøk.defaultQuery(Områder.K9, false)),
             saksbehandler,
         )
         val søk2 = LagretSøk.nyttSøk(
-            NyttLagretSøkRequest("Søk 2", LagretSøk.defaultQuery(false)),
+            NyttLagretSøkRequest("Søk 2", LagretSøk.defaultQuery(Områder.K9, false)),
             saksbehandler,
         )
 
@@ -133,24 +137,27 @@ class LagretSøkRepositoryTest : AbstractK9LosIntegrationTest() {
     fun `skal kun hente søk som tilhører saksbehandleren`() {
         runBlocking {
             // Opprett en annen saksbehandler
-            saksbehandlerRepository.addSaksbehandler(
+            saksbehandlerRepository.addSaksbehandler("annen@nav.no", Områder.K9)
+            saksbehandlerRepository.vedlikeholdSaksbehandler(
                 Saksbehandler(
                     id = null,
                     navident = "annen",
                     navn = "Annen Testersen",
                     epost = "annen@nav.no",
                     enhet = null,
-                )
+                    områder = listOf(Områder.K9),
+                ),
+                skjermet = false,
             )
-            val annenSaksbehandler = saksbehandlerRepository.finnSaksbehandlerMedEpost("annen@nav.no")!!
+            val annenSaksbehandler = saksbehandlerRepository.finnSaksbehandlerMedEpost("annen@nav.no", skjermet = false)!!
 
             // Opprett søk for begge saksbehandlere
             val søkForFørsteSaksbehandler = LagretSøk.nyttSøk(
-                NyttLagretSøkRequest("Søk for første", LagretSøk.defaultQuery(false)),
+                NyttLagretSøkRequest("Søk for første", LagretSøk.defaultQuery(Områder.K9, false)),
                 saksbehandler,
             )
             val søkForAnnenSaksbehandler = LagretSøk.nyttSøk(
-                NyttLagretSøkRequest("Søk for annen", LagretSøk.defaultQuery(false)),
+                NyttLagretSøkRequest("Søk for annen", LagretSøk.defaultQuery(Områder.K9, false)),
                 annenSaksbehandler,
             )
 
@@ -173,7 +180,7 @@ class LagretSøkRepositoryTest : AbstractK9LosIntegrationTest() {
     fun `skal kaste exception ved optimistisk låsing ved samtidig endring`() {
         val opprettLagretSøk = NyttLagretSøkRequest(
             tittel = "Test søk",
-            query = LagretSøk.defaultQuery(false)
+            query = LagretSøk.defaultQuery(Områder.K9, false)
         )
 
         val lagretSøk = LagretSøk.nyttSøk(opprettLagretSøk, saksbehandler)

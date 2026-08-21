@@ -1,119 +1,99 @@
 package no.nav.k9.los.infrastruktur.abac
 
-import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.infrastruktur.azuregraph.IAzureGraphService
-import no.nav.k9.los.infrastruktur.rest.idToken
-import no.nav.k9.los.saksbehandleradmin.Saksbehandler
+import no.nav.k9.los.infrastruktur.brukerkontekst.BrukerkontekstMedOmråde
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.Oppgave
+import no.nav.k9.los.saksbehandleradmin.Saksbehandler
 import no.nav.sif.abac.kontrakt.abac.Diskresjonskode
 import no.nav.sif.abac.kontrakt.abac.dto.SaksnummerDto
 import no.nav.sif.abac.kontrakt.person.AktørId
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.*
-import kotlin.coroutines.coroutineContext
 
-class PepClient(
+class PepClient internal constructor(
     private val azureGraphService: IAzureGraphService,
-    private val sifAbacPdpKlient: ISifAbacPdpKlient
+    private val sifAbacPdpKlienter: SifAbacPdpKlienter,
+    private val gruppeoppsett: Gruppeoppsett,
 ) : IPepClient {
     private val log: Logger = LoggerFactory.getLogger(PepClient::class.java)
 
-    override suspend fun erOppgaveStyrer(): Boolean {
-        //TODO inline metode
-        return coroutineContext.idToken().erOppgavebehandler()
-    }
-
-    override suspend fun harBasisTilgang(): Boolean {
-        //TODO inline metode
-        return coroutineContext.idToken().harBasistilgang()
-    }
-
-    override suspend fun kanLeggeUtDriftsmelding(): Boolean {
-        //TODO inline metode
-        return coroutineContext.idToken().erDrifter()
-    }
-
-    override suspend fun harTilgangTilReserveringAvOppgaver(): Boolean {
-        //TODO inline metode
-        return coroutineContext.idToken().erSaksbehandler()
-    }
-
-    override suspend fun harTilgangTilKode6(ident: String): Boolean {
-        if (ident == coroutineContext.idToken().getNavIdent()) {
-            return harTilgangTilKode6()
+    override suspend fun harSaksbehandlerTilgangTilKode6(ident: String, brukerkontekst: BrukerkontekstMedOmråde): Boolean {
+        if (ident == brukerkontekst.navIdent) {
+            return brukerkontekst.harTilgangTilKode6
         }
-        val grupper = azureGraphService.hentGrupperForSaksbehandler(ident)
-        return grupper.contains(UUID.fromString(System.getenv("BRUKER_GRUPPE_ID_KODE6")))
+        val kode6Gruppe = gruppeoppsett.forOmråde(brukerkontekst.område).kode6 ?: return false
+        val grupper = azureGraphService.hentGrupper(ident)
+        return grupper.contains(kode6Gruppe)
     }
 
-    override suspend fun harTilgangTilKode6(): Boolean {
-        //TODO inline metode
-        return coroutineContext.idToken().kanBehandleKode6()
+    override suspend fun diskresjonskoderForSak(fagsakNummer: String, område: Områder): Set<Diskresjonskode> {
+        return sifAbacPdpKlienter.forOmråde(område).diskresjonskoderSak(SaksnummerDto(fagsakNummer))
     }
 
-    override suspend fun erSakKode6(fagsakNummer: String): Boolean {
-        val diskresjonskoder = sifAbacPdpKlient.diskresjonskoderSak(SaksnummerDto(fagsakNummer))
-        return diskresjonskoder.contains(Diskresjonskode.KODE6)
-    }
-
-    override suspend fun erAktørKode6(aktørid: String): Boolean {
-        val diskresjonskoder = sifAbacPdpKlient.diskresjonskoderPerson(AktørId(aktørid))
-        return diskresjonskoder.contains(Diskresjonskode.KODE6)
-    }
-
-    override suspend fun diskresjonskoderForSak(saksnummer: String): Set<Diskresjonskode> {
-        return sifAbacPdpKlient.diskresjonskoderSak(SaksnummerDto(saksnummer))
-    }
-
-    override suspend fun diskresjonskoderForPerson(aktørId: String): Set<Diskresjonskode> {
-        return sifAbacPdpKlient.diskresjonskoderPerson(AktørId(aktørId))
-    }
-
-    override suspend fun erSakKode7EllerEgenAnsatt(fagsakNummer: String): Boolean {
-        val diskresjonskoder = sifAbacPdpKlient.diskresjonskoderSak(SaksnummerDto(fagsakNummer))
-        return diskresjonskoder.contains(Diskresjonskode.KODE7) || diskresjonskoder.contains(Diskresjonskode.SKJERMET)
-    }
-
-    override suspend fun erAktørKode7EllerEgenAnsatt(aktørid: String): Boolean {
-        val diskresjonskoder = sifAbacPdpKlient.diskresjonskoderPerson(AktørId(aktørid))
-        return diskresjonskoder.contains(Diskresjonskode.KODE7) || diskresjonskoder.contains(Diskresjonskode.SKJERMET)
+    override suspend fun diskresjonskoderForPerson(aktørId: String, område: Områder): Set<Diskresjonskode> {
+        return sifAbacPdpKlienter.forOmråde(område).diskresjonskoderPerson(AktørId(aktørId))
     }
 
     override suspend fun harTilgangTilOppgaveV3(
         oppgave: Oppgave,
+        bruker: BrukerkontekstMedOmråde,
         action: Action,
-        grupperForSaksbehandler: Set<UUID>?
     ): Boolean {
         return harTilgang(
+            område = oppgave.oppgavetype.område.tilOmrådeEnum(),
             oppgavetype = oppgave.oppgavetype.eksternId,
-            identTilInnloggetBruker = azureGraphService.hentIdentTilInnloggetBruker(),
+            identTilInnloggetBruker = bruker.navIdent,
             action = action,
             saksnummer = oppgave.hentVerdi("saksnummer"),
             aktørIdSøker = oppgave.hentVerdi("aktorId"),
             aktørIdPleietrengende = oppgave.hentVerdi("pleietrengendeAktorId"),
-            grupperForSaksbehandler = grupperForSaksbehandler
+            grupperForSaksbehandler = bruker.grupper,
         )
     }
 
-    override fun harTilgangTilOppgaveV3(
+    override suspend fun harTilgangTilOppgaveV3(
         oppgave: Oppgave,
+        område: Områder,
         saksbehandler: Saksbehandler,
         action: Action
     ): Boolean {
-        return runBlocking {
-            harTilgang(
-                oppgavetype = oppgave.oppgavetype.eksternId,
-                identTilInnloggetBruker = saksbehandler.navident!!,
-                action = action,
-                saksnummer = oppgave.hentVerdi("saksnummer"),
-                aktørIdSøker = oppgave.hentVerdi("aktorId"),
-                aktørIdPleietrengende = oppgave.hentVerdi("pleietrengendeAktorId"),
-            )
-        }
+        return harTilgang(
+            område = område,
+            oppgavetype = oppgave.oppgavetype.eksternId,
+            identTilInnloggetBruker = saksbehandler.navident!!,
+            action = action,
+            saksnummer = oppgave.hentVerdi("saksnummer"),
+            aktørIdSøker = oppgave.hentVerdi("aktorId"),
+            aktørIdPleietrengende = oppgave.hentVerdi("pleietrengendeAktorId"),
+        )
     }
 
     private suspend fun harTilgang(
+        område: Områder,
+        oppgavetype: String,
+        identTilInnloggetBruker: String,
+        action: Action,
+        saksnummer: String?,
+        aktørIdSøker: String?,
+        aktørIdPleietrengende: String?,
+        grupperForSaksbehandler: Set<UUID>? = null
+    ): Boolean = when (område) {
+        Områder.K9 -> harTilgangK9(
+            oppgavetype = oppgavetype,
+            identTilInnloggetBruker = identTilInnloggetBruker,
+            action = action,
+            saksnummer = saksnummer,
+            aktørIdSøker = aktørIdSøker,
+            aktørIdPleietrengende = aktørIdPleietrengende,
+            grupperForSaksbehandler = grupperForSaksbehandler
+        )
+
+        Områder.UNG -> false
+    }
+
+    private suspend fun harTilgangK9(
         oppgavetype: String,
         identTilInnloggetBruker: String,
         action: Action,
@@ -122,11 +102,13 @@ class PepClient(
         aktørIdPleietrengende: String?,
         grupperForSaksbehandler: Set<UUID>? = null
     ): Boolean {
+        val klient = sifAbacPdpKlienter.forOmråde(Områder.K9)
         return when (oppgavetype) {
             "k9sak", "k9klage", "k9tilbake" -> {
                 //TODO når abac-k9 er ryddet bort: vurder å bruk sifAbacPdpKlient.harTilgangTilSak(action, saksnummer) de steder hvor vi sjekker innlogget bruker
-                val saksbehandlersGrupper = grupperForSaksbehandler ?: azureGraphService.hentGrupperForSaksbehandler(identTilInnloggetBruker)
-                val tilgang = sifAbacPdpKlient.harTilgangTilSak(
+                val saksbehandlersGrupper =
+                    grupperForSaksbehandler ?: azureGraphService.hentGrupper(identTilInnloggetBruker)
+                val tilgang = klient.harTilgangTilSak(
                     action = action,
                     saksnummerDto = SaksnummerDto(saksnummer!!),
                     saksbehandlersIdent = identTilInnloggetBruker,
@@ -139,8 +121,9 @@ class PepClient(
             "k9punsj" -> {
                 val berørteAktørId = setOfNotNull(aktørIdSøker, aktørIdPleietrengende)
                 val aktørIder = berørteAktørId.map { AktørId(it) }
-                val saksbehandlersGrupper = grupperForSaksbehandler ?: azureGraphService.hentGrupperForSaksbehandler(identTilInnloggetBruker)
-                val tilgang = if (aktørIder.isNotEmpty()) sifAbacPdpKlient.harTilgangTilPersoner(
+                val saksbehandlersGrupper =
+                    grupperForSaksbehandler ?: azureGraphService.hentGrupper(identTilInnloggetBruker)
+                val tilgang = if (aktørIder.isNotEmpty()) klient.harTilgangTilPersoner(
                     action = action,
                     aktørIder = aktørIder,
                     saksbehandlersIdent = identTilInnloggetBruker,
@@ -156,6 +139,4 @@ class PepClient(
             else -> throw NotImplementedError("Støtter kun tilgangsoppslag på k9klage, k9sak, k9tilbake og k9punsj")
         }
     }
-
 }
-

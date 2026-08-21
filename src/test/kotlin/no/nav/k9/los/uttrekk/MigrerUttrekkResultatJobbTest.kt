@@ -14,6 +14,7 @@ import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.koin.test.get
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 
 class MigrerUttrekkResultatJobbTest : AbstractK9LosIntegrationTest() {
 
@@ -32,19 +33,22 @@ class MigrerUttrekkResultatJobbTest : AbstractK9LosIntegrationTest() {
         jobb = MigrerUttrekkResultatJobb(uttrekkRepository)
 
         runBlocking {
-            saksbehandlerRepository.addSaksbehandler(
+            saksbehandlerRepository.addSaksbehandler("test@nav.no", Områder.K9)
+            saksbehandlerRepository.vedlikeholdSaksbehandler(
                 Saksbehandler(
                     id = null,
                     navident = "test",
                     navn = "Test Testersen",
                     epost = "test@nav.no",
                     enhet = null,
-                )
+                    områder = listOf(Områder.K9),
+                ),
+                skjermet = false,
             )
-            val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedEpost("test@nav.no")!!
+            val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedEpost("test@nav.no", skjermet = false)!!
             saksbehandlerId = saksbehandler.id!!
             val lagretSøk = LagretSøk.nyttSøk(
-                NyttLagretSøkRequest(tittel = "Test søk", query = LagretSøk.defaultQuery(false)),
+                NyttLagretSøkRequest(tittel = "Test søk", query = LagretSøk.defaultQuery(Områder.K9, false)),
                 saksbehandler,
             )
             lagretSøkRepository.opprett(lagretSøk)
