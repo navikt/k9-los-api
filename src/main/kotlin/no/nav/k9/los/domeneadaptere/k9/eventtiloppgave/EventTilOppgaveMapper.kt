@@ -1,6 +1,7 @@
 package no.nav.k9.los.domeneadaptere.k9.eventtiloppgave
 
 import no.nav.k9.los.domeneadaptere.eventlager.EventLagret
+import no.nav.k9.los.domeneadaptere.k9.K9Oppgavetypenavn
 import no.nav.k9.los.domeneadaptere.k9.eventtiloppgave.klagetillos.KlageEventTilOppgaveMapper
 import no.nav.k9.los.domeneadaptere.k9.eventtiloppgave.punsjtillos.PunsjEventTilOppgaveMapper
 import no.nav.k9.los.domeneadaptere.k9.eventtiloppgave.saktillos.SakEventTilOppgaveMapper
@@ -25,10 +26,10 @@ class EventTilOppgaveMapper(
     }
 
     internal fun oppgavetypeKode(eventLagret: EventLagret): String = when (eventLagret) {
-        is EventLagret.K9Sak     -> "k9sak"
-        is EventLagret.K9Tilbake -> "k9tilbake"
-        is EventLagret.K9Klage   -> "k9klage"
-        is EventLagret.K9Punsj   -> "k9punsj"
+        is EventLagret.K9Sak     -> K9Oppgavetypenavn.SAK.kode
+        is EventLagret.K9Tilbake -> K9Oppgavetypenavn.TILBAKE.kode
+        is EventLagret.K9Klage   -> K9Oppgavetypenavn.KLAGE.kode
+        is EventLagret.K9Punsj   -> K9Oppgavetypenavn.PUNSJ.kode
         is EventLagret.UngSak    -> throw UnsupportedOperationException(
             "UngSak-eventer skal ikke behandles av K9-pipeline"
         )
