@@ -117,11 +117,11 @@ fun Route.forvaltningApis() {
         request {
             pathParameter<Fagsystem>("system") {
                 description = "Kildesystem som har sendt inn oppgaven"
-                example("k9sak") {
+                example("K9SAK") {
                     value = Fagsystem.K9SAK
                     description = "K9sak"
                 }
-                example("k9punsj") {
+                example("PUNSJ") {
                     value = Fagsystem.PUNSJ
                     description = "K9punsj"
                 }
@@ -133,7 +133,7 @@ fun Route.forvaltningApis() {
     }) {
         requestContextService.withRequestContext(call) {
             if (pepClient.kanLeggeUtDriftsmelding()) {
-                val fagsystem = Fagsystem.fraKode(call.parameters["system"]!!)
+                val fagsystem = enumValueOf<Fagsystem>(call.parameters["system"]!!)
                 val saksnummer = call.parameters["saksnummer"]!!
                 val oppgavetypeKode = K9Oppgavetypenavn.fraFagsystem(fagsystem).kode
 
@@ -343,7 +343,7 @@ fun Route.forvaltningApis() {
          */
         requestContextService.withRequestContext(call) {
             if (pepClient.kanLeggeUtDriftsmelding()) {
-                val fagsystem = Fagsystem.fraKode(call.parameters["fagsystem"]!!)
+                val fagsystem = enumValueOf<Fagsystem>(call.parameters["fagsystem"]!!)
                 val avstemmingsrapport = avstemmingsTjeneste.avstem(fagsystem)
                 call.respond(objectMapper.writeValueAsString(avstemmingsrapport))
             } else {
@@ -499,7 +499,7 @@ fun Route.forvaltningApis() {
     }) {
         requestContextService.withRequestContext(call) {
             if (pepClient.kanLeggeUtDriftsmelding()) {
-                val fagsystem = Fagsystem.fraKode(call.parameters["fagsystem"]!!)
+                val fagsystem = enumValueOf<Fagsystem>(call.parameters["fagsystem"]!!)
                 val oppgaveQueryFraRequest = call.receive<OppgaveQuery>()
                 if (oppgaveQueryFraRequest.select.isNotEmpty()) {
                     call.respond(HttpStatusCode.BadRequest, "OppgaveQuery.select støttes ikke for bestilling fra query")
