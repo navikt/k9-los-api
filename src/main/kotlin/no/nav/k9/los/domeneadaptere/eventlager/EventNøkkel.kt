@@ -1,4 +1,4 @@
-package no.nav.k9.los.domeneadaptere.k9.eventmottak.eventlager
+package no.nav.k9.los.domeneadaptere.eventlager
 
 import no.nav.k9.los.kodeverk.Fagsystem
 

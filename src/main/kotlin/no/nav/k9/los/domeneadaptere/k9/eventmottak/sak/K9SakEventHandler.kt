@@ -3,7 +3,7 @@ package no.nav.k9.los.domeneadaptere.k9.eventmottak.sak
 import io.opentelemetry.instrumentation.annotations.WithSpan
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.EventHandlerMetrics
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.FeilRekkefølgeSjekker
-import no.nav.k9.los.domeneadaptere.k9.eventmottak.eventlager.EventRepository
+import no.nav.k9.los.domeneadaptere.eventlager.EventRepository
 import no.nav.k9.los.domeneadaptere.k9.eventtiloppgave.EventTilOppgaveAdapter
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.infrastruktur.utils.LosObjectMapper

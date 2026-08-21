@@ -2,7 +2,7 @@ package no.nav.k9.los.domeneadaptere.k9.eventtiloppgave.tilbaketillos
 
 import no.nav.k9.kodeverk.behandling.BehandlingResultatType
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.EventHendelse
-import no.nav.k9.los.domeneadaptere.k9.eventmottak.eventlager.EventLagret
+import no.nav.k9.los.domeneadaptere.eventlager.EventLagret
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.tilbakekrav.AksjonspunktDefinisjonK9Tilbake
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.tilbakekrav.K9TilbakeEventDto
 import no.nav.k9.los.kodeverk.AksjonspunktStatus

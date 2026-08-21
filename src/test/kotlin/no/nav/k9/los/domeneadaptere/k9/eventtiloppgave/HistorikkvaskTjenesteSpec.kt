@@ -9,9 +9,9 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import kotliquery.queryOf
 import no.nav.k9.los.domeneadaptere.k9.K9Oppgavetypenavn
-import no.nav.k9.los.domeneadaptere.k9.eventmottak.eventlager.EventNøkkel
-import no.nav.k9.los.domeneadaptere.k9.eventmottak.eventlager.EventRepository
-import no.nav.k9.los.domeneadaptere.k9.eventmottak.eventlager.HistorikkvaskBestilling
+import no.nav.k9.los.domeneadaptere.eventlager.EventNøkkel
+import no.nav.k9.los.domeneadaptere.eventlager.EventRepository
+import no.nav.k9.los.domeneadaptere.eventlager.HistorikkvaskBestilling
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventDto
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.infrastruktur.utils.LosObjectMapper

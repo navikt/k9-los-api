@@ -5,7 +5,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
 import kotliquery.TransactionalSession
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
-import no.nav.k9.los.domeneadaptere.k9.eventmottak.eventlager.EventLagret
+import no.nav.k9.los.domeneadaptere.eventlager.EventLagret
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.tilbakekrav.AksjonspunktDefinisjonK9Tilbake
 import no.nav.k9.los.infrastruktur.abac.cache.PepCacheInput
 import no.nav.k9.los.infrastruktur.abac.cache.PepCacheService
@@ -62,10 +62,13 @@ class OppgaveOppdatertHandler(
         }
 
         when (eventLagret) {
-            is EventLagret.K9Sak -> håndterSakOppdatert(eventLagret, oppgave, tx)
+            is EventLagret.K9Sak    -> håndterSakOppdatert(eventLagret, oppgave, tx)
             is EventLagret.K9Tilbake -> håndterTilbakeOppdatert(eventLagret, oppgave, tx)
-            is EventLagret.K9Klage -> håndterKlageOppdatert(eventLagret, oppgave, tx)
-            is EventLagret.K9Punsj -> håndterPunsjOppdatert(oppgave, tx)
+            is EventLagret.K9Klage  -> håndterKlageOppdatert(eventLagret, oppgave, tx)
+            is EventLagret.K9Punsj  -> håndterPunsjOppdatert(oppgave, tx)
+            is EventLagret.UngSak   -> throw UnsupportedOperationException(
+                "UngSak-eventer skal ikke behandles av K9-pipeline"
+            )
         }
     }
 
