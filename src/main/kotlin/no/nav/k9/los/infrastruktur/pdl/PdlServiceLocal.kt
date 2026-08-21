@@ -1,6 +1,6 @@
 package no.nav.k9.los.infrastruktur.pdl
 
-import no.nav.k9.los.infrastruktur.kontekst.InnloggetBruker
+import no.nav.k9.los.infrastruktur.brukerkontekst.InnloggetBruker
 
 class PdlServiceLocal : IPdlService {
 

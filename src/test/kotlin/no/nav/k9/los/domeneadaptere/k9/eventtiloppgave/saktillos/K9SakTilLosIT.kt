@@ -17,8 +17,8 @@ import no.nav.k9.los.domeneadaptere.k9.eventmottak.sak.K9SakEventHandler
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.idtoken.IdTokenLocal
 import no.nav.k9.los.infrastruktur.idtoken.IdToken
-import no.nav.k9.los.infrastruktur.kontekst.BrukerkontekstMedOmråde
-import no.nav.k9.los.infrastruktur.kontekst.TestKontekstFactory
+import no.nav.k9.los.infrastruktur.brukerkontekst.BrukerkontekstMedOmråde
+import no.nav.k9.los.infrastruktur.brukerkontekst.TestKontekstFactory
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.ko.OppgaveKoTjeneste
 import no.nav.k9.los.ko.OppgaveMuligReservert

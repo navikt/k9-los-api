@@ -1,4 +1,4 @@
-package no.nav.k9.los.infrastruktur.kontekst
+package no.nav.k9.los.infrastruktur.brukerkontekst
 
 import no.nav.k9.los.infrastruktur.idtoken.IdToken
 import no.nav.k9.los.infrastruktur.idtoken.IdTokenLocal
@@ -13,13 +13,9 @@ object TestKontekstFactory {
         grupper: Set<UUID> = idToken.groups.mapTo(mutableSetOf(), UUID::fromString),
     ) = BrukerkontekstMedOmråde(område, InnloggetBruker(navIdent, grupper, idToken))
 
-    fun systemkontekst(område: Områder) = Systemkontekst(område)
-
     fun brukerkontekstUtenOmråde(
         idToken: IdToken = IdTokenLocal(),
         navIdent: String = idToken.getNavIdent(),
         grupper: Set<UUID> = idToken.groups.mapTo(mutableSetOf(), UUID::fromString),
     ) = BrukerkontekstUtenOmråde(InnloggetBruker(navIdent, grupper, idToken))
-
-    fun systemkontekstUtenOmråde() = SystemkontekstUtenOmråde
 }

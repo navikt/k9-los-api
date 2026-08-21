@@ -6,7 +6,7 @@ import io.github.smiley4.ktoropenapi.put
 import io.ktor.http.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import no.nav.k9.los.infrastruktur.kontekst.medBrukerkontekst
+import no.nav.k9.los.infrastruktur.brukerkontekst.medBrukerkontekst
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.klage.K9KlageEventDto
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventDto
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.sak.K9SakEventDto
@@ -17,7 +17,7 @@ import no.nav.k9.los.forvaltning.K9PunsjEventIkkeSensitiv
 import no.nav.k9.los.forvaltning.K9SakEventIkkeSensitiv
 import no.nav.k9.los.forvaltning.K9TilbakeEventIkkeSensitiv
 import no.nav.k9.los.infrastruktur.abac.IPepClient
-import no.nav.k9.los.infrastruktur.kontekst.medBrukerkontekstUtenOmråde
+import no.nav.k9.los.infrastruktur.brukerkontekst.medBrukerkontekstUtenOmråde
 import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.kodeverk.Fagsystem
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder

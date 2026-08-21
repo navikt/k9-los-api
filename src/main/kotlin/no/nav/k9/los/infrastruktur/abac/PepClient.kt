@@ -1,10 +1,9 @@
 package no.nav.k9.los.infrastruktur.abac
 
 import no.nav.k9.los.infrastruktur.azuregraph.IAzureGraphService
-import no.nav.k9.los.infrastruktur.kontekst.BrukerkontekstMedOmråde
-import no.nav.k9.los.infrastruktur.kontekst.BrukerkontekstUtenOmråde
-import no.nav.k9.los.infrastruktur.kontekst.InnloggetBruker
-import no.nav.k9.los.infrastruktur.kontekst.Systemkontekst
+import no.nav.k9.los.infrastruktur.brukerkontekst.BrukerkontekstMedOmråde
+import no.nav.k9.los.infrastruktur.brukerkontekst.BrukerkontekstUtenOmråde
+import no.nav.k9.los.infrastruktur.brukerkontekst.InnloggetBruker
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.Oppgave
 import no.nav.k9.los.saksbehandleradmin.Saksbehandler
@@ -70,12 +69,12 @@ class PepClient internal constructor(
     private fun iGruppe(gruppeId: UUID?, bruker: InnloggetBruker): Boolean =
         gruppeId?.let(bruker.grupper::contains) ?: false
 
-    override suspend fun diskresjonskoderForSak(fagsakNummer: String, kontekst: Systemkontekst): Set<Diskresjonskode> {
-        return sifAbacPdpKlienter.forOmråde(kontekst.område).diskresjonskoderSak(SaksnummerDto(fagsakNummer))
+    override suspend fun diskresjonskoderForSak(fagsakNummer: String, område: Områder): Set<Diskresjonskode> {
+        return sifAbacPdpKlienter.forOmråde(område).diskresjonskoderSak(SaksnummerDto(fagsakNummer))
     }
 
-    override suspend fun diskresjonskoderForPerson(aktørId: String, kontekst: Systemkontekst): Set<Diskresjonskode> {
-        return sifAbacPdpKlienter.forOmråde(kontekst.område).diskresjonskoderPerson(AktørId(aktørId))
+    override suspend fun diskresjonskoderForPerson(aktørId: String, område: Områder): Set<Diskresjonskode> {
+        return sifAbacPdpKlienter.forOmråde(område).diskresjonskoderPerson(AktørId(aktørId))
     }
 
     override suspend fun harTilgangTilOppgaveV3(
@@ -98,12 +97,12 @@ class PepClient internal constructor(
 
     override suspend fun harTilgangTilOppgaveV3(
         oppgave: Oppgave,
-        kontekst: Systemkontekst,
+        område: Områder,
         saksbehandler: Saksbehandler,
         action: Action
     ): Boolean {
         return harTilgang(
-                område = kontekst.område,
+                område = område,
                 oppgavetype = oppgave.oppgavetype.eksternId,
                 identTilInnloggetBruker = saksbehandler.navident!!,
                 action = action,

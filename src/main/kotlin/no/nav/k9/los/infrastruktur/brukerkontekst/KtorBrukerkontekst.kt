@@ -1,4 +1,4 @@
-package no.nav.k9.los.infrastruktur.kontekst
+package no.nav.k9.los.infrastruktur.brukerkontekst
 
 import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
@@ -13,7 +13,6 @@ import no.nav.k9.los.områdeAttributeKey
 import org.koin.ktor.ext.getKoin
 import java.util.*
 
-// Unnlater å kalle denne medBrukerkontekstMedOmråde siden med område er standard
 suspend fun <T> RoutingContext.medBrukerkontekst(
     block: suspend (BrukerkontekstMedOmråde) -> T,
 ): T {
@@ -33,10 +32,6 @@ suspend fun <T> RoutingContext.medBrukerkontekstUtenOmråde(
         block(kontekst)
     }
 }
-
-internal fun systemkontekst(område: no.nav.k9.los.oppgavedefinisjon.omraade.Områder) = Systemkontekst(område)
-
-internal fun systemkontekstUtenOmråde() = SystemkontekstUtenOmråde
 
 private fun RoutingContext.innloggetBruker(): InnloggetBruker {
     val principal = call.principal<JWTPrincipal>()

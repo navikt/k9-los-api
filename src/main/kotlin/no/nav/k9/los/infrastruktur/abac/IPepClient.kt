@@ -1,9 +1,8 @@
 package no.nav.k9.los.infrastruktur.abac
 
-import no.nav.k9.los.infrastruktur.kontekst.BrukerkontekstMedOmråde
-import no.nav.k9.los.infrastruktur.kontekst.BrukerkontekstUtenOmråde
-import no.nav.k9.los.infrastruktur.kontekst.InnloggetBruker
-import no.nav.k9.los.infrastruktur.kontekst.Systemkontekst
+import no.nav.k9.los.infrastruktur.brukerkontekst.BrukerkontekstMedOmråde
+import no.nav.k9.los.infrastruktur.brukerkontekst.BrukerkontekstUtenOmråde
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.saksbehandleradmin.Saksbehandler
 import no.nav.sif.abac.kontrakt.abac.Diskresjonskode
 import java.util.*
@@ -11,8 +10,8 @@ import java.util.*
 /**
  * Tilgangskontroll (PEP) for Los.
  *
- * Globale brukeroperasjoner tar [InnloggetBruker], områdeavhengige brukeroperasjoner tar
- * [BrukerkontekstMedOmråde], og operasjoner som kun kan kjøres av system tar [Systemkontekst].
+ * Globale brukeroperasjoner tar [BrukerkontekstUtenOmråde], områdeavhengige brukeroperasjoner tar
+ * [BrukerkontekstMedOmråde].
  * [PepClient] velger riktig tilgangsløsning ut fra kontekstens område.
  *
  */
@@ -30,8 +29,8 @@ interface IPepClient {
      */
     suspend fun kanLeggeUtDriftsmelding(kontekst: BrukerkontekstMedOmråde): Boolean
     suspend fun harTilgangTilReserveringAvOppgaver(kontekst: BrukerkontekstMedOmråde): Boolean
-    suspend fun diskresjonskoderForSak(fagsakNummer: String, kontekst: Systemkontekst): Set<Diskresjonskode>
-    suspend fun diskresjonskoderForPerson(aktørId: String, kontekst: Systemkontekst): Set<Diskresjonskode>
+    suspend fun diskresjonskoderForSak(fagsakNummer: String, område: Områder): Set<Diskresjonskode>
+    suspend fun diskresjonskoderForPerson(aktørId: String, område: Områder): Set<Diskresjonskode>
     suspend fun harTilgangTilOppgaveV3(
         oppgave: no.nav.k9.los.oppgaveuthenting.Oppgave,
         kontekst: BrukerkontekstMedOmråde,
@@ -40,7 +39,7 @@ interface IPepClient {
     ) : Boolean
     suspend fun harTilgangTilOppgaveV3(
         oppgave: no.nav.k9.los.oppgaveuthenting.Oppgave,
-        kontekst: Systemkontekst,
+        område: Områder,
         saksbehandler: Saksbehandler,
         action: Action
     ) : Boolean

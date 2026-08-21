@@ -1,11 +1,10 @@
 package no.nav.k9.los.oppgavedefinisjon.feltdefinisjon
 
 import io.ktor.http.*
-import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import no.nav.k9.los.infrastruktur.kontekst.medBrukerkontekst
+import no.nav.k9.los.infrastruktur.brukerkontekst.medBrukerkontekst
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.feilhandtering.IllegalDeleteException
 import org.koin.ktor.ext.inject

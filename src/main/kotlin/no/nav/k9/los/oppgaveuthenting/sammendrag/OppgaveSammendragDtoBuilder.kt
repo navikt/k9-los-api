@@ -1,6 +1,6 @@
 package no.nav.k9.los.oppgaveuthenting.sammendrag
 
-import no.nav.k9.los.infrastruktur.kontekst.InnloggetBruker
+import no.nav.k9.los.infrastruktur.brukerkontekst.InnloggetBruker
 import no.nav.k9.los.infrastruktur.pdl.IPdlService
 import no.nav.k9.los.infrastruktur.pdl.PersonPdl
 import no.nav.k9.los.oppgaveuthenting.Oppgave

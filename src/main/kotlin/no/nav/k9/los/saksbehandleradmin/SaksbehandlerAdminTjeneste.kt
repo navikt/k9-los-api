@@ -2,7 +2,7 @@ package no.nav.k9.los.saksbehandleradmin
 
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
-import no.nav.k9.los.infrastruktur.kontekst.BrukerkontekstMedOmråde
+import no.nav.k9.los.infrastruktur.brukerkontekst.BrukerkontekstMedOmråde
 import no.nav.k9.los.ko.db.OppgaveKoRepository
 import no.nav.k9.los.lagretsok.LagretSøkTjeneste
 import no.nav.k9.los.reservasjon.ReservasjonV3Tjeneste

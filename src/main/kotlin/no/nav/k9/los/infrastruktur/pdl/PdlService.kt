@@ -10,7 +10,7 @@ import no.nav.helse.dusseldorf.ktor.metrics.Operation
 import no.nav.helse.dusseldorf.oauth2.client.AccessTokenClient
 import no.nav.helse.dusseldorf.oauth2.client.CachedAccessTokenClient
 import no.nav.k9.los.infrastruktur.azuregraph.IAzureGraphService
-import no.nav.k9.los.infrastruktur.kontekst.InnloggetBruker
+import no.nav.k9.los.infrastruktur.brukerkontekst.InnloggetBruker
 import no.nav.k9.los.infrastruktur.rest.NavHeaders
 import no.nav.k9.los.infrastruktur.utils.Cache
 import no.nav.k9.los.infrastruktur.utils.CacheObject

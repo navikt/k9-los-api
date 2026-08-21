@@ -1,6 +1,6 @@
 package no.nav.k9.los.infrastruktur.pdl
 
-import no.nav.k9.los.infrastruktur.kontekst.InnloggetBruker
+import no.nav.k9.los.infrastruktur.brukerkontekst.InnloggetBruker
 
 interface IPdlService {
     suspend fun person(aktorId: String, bruker: InnloggetBruker): PersonPdlResponse

@@ -6,8 +6,8 @@ import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.infrastruktur.azuregraph.IAzureGraphService
 import no.nav.k9.los.infrastruktur.idtoken.IdToken
-import no.nav.k9.los.infrastruktur.kontekst.BrukerkontekstMedOmråde
-import no.nav.k9.los.infrastruktur.kontekst.TestKontekstFactory
+import no.nav.k9.los.infrastruktur.brukerkontekst.BrukerkontekstMedOmråde
+import no.nav.k9.los.infrastruktur.brukerkontekst.TestKontekstFactory
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import org.junit.jupiter.api.Test
 import java.util.UUID

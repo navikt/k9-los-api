@@ -6,21 +6,20 @@ import kotliquery.TransactionalSession
 import no.nav.k9.los.feilhandtering.FinnerIkkeDataException
 import no.nav.k9.los.infrastruktur.abac.Action
 import no.nav.k9.los.infrastruktur.abac.IPepClient
-import no.nav.k9.los.infrastruktur.kontekst.systemkontekst
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.infrastruktur.utils.leggTilDagerHoppOverHelg
 import no.nav.k9.los.ko.KøpåvirkendeHendelse
 import no.nav.k9.los.ko.ReservasjonAnnullert
 import no.nav.k9.los.ko.ReservasjonEndret
 import no.nav.k9.los.ko.ReservasjonTatt
-import no.nav.k9.los.saksbehandleradmin.Saksbehandler
-import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.Oppgave
 import no.nav.k9.los.oppgaveuthenting.enkeltoppslag.ReservasjonsnøkkelOppgaveOppslag
+import no.nav.k9.los.saksbehandleradmin.Saksbehandler
+import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
-import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 
 class ReservasjonV3Tjeneste(
     private val transactionalManager: TransactionalManager,
@@ -329,7 +328,7 @@ class ReservasjonV3Tjeneste(
 
             pepClient.harTilgangTilOppgaveV3(
                 oppgave,
-                systemkontekst(oppgave.oppgavetype.område.tilOmrådeEnum()),
+                oppgave.oppgavetype.område.tilOmrådeEnum(),
                 saksbehandler,
                 Action.reserver,
             )

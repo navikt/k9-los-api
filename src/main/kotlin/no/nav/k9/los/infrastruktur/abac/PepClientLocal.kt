@@ -1,8 +1,8 @@
 package no.nav.k9.los.infrastruktur.abac
 
-import no.nav.k9.los.infrastruktur.kontekst.BrukerkontekstMedOmråde
-import no.nav.k9.los.infrastruktur.kontekst.BrukerkontekstUtenOmråde
-import no.nav.k9.los.infrastruktur.kontekst.Systemkontekst
+import no.nav.k9.los.infrastruktur.brukerkontekst.BrukerkontekstMedOmråde
+import no.nav.k9.los.infrastruktur.brukerkontekst.BrukerkontekstUtenOmråde
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.Oppgave
 import no.nav.k9.los.saksbehandleradmin.Saksbehandler
 import no.nav.sif.abac.kontrakt.abac.Diskresjonskode
@@ -45,11 +45,11 @@ class PepClientLocal : IPepClient {
         return false
     }
 
-    override suspend fun diskresjonskoderForSak(fagsakNummer: String, kontekst: Systemkontekst): Set<Diskresjonskode> {
+    override suspend fun diskresjonskoderForSak(fagsakNummer: String, område: Områder): Set<Diskresjonskode> {
         return setOf()
     }
 
-    override suspend fun diskresjonskoderForPerson(aktørId: String, kontekst: Systemkontekst): Set<Diskresjonskode> {
+    override suspend fun diskresjonskoderForPerson(aktørId: String, område: Områder): Set<Diskresjonskode> {
         return setOf()
     }
 
@@ -64,7 +64,7 @@ class PepClientLocal : IPepClient {
 
     override suspend fun harTilgangTilOppgaveV3(
         oppgave: Oppgave,
-        kontekst: Systemkontekst,
+        område: Områder,
         saksbehandler: Saksbehandler,
         action: Action
     ): Boolean {

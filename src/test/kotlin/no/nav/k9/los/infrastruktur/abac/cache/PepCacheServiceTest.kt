@@ -24,8 +24,8 @@ import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.infrastruktur.jobbplanlegger.Jobbplanlegger
 import no.nav.k9.los.infrastruktur.jobbplanlegger.PlanlagtJobb
 import no.nav.k9.los.infrastruktur.jobbplanlegger.Tidsvindu
-import no.nav.k9.los.infrastruktur.kontekst.BrukerkontekstMedOmråde
-import no.nav.k9.los.infrastruktur.kontekst.TestKontekstFactory
+import no.nav.k9.los.infrastruktur.brukerkontekst.BrukerkontekstMedOmråde
+import no.nav.k9.los.infrastruktur.brukerkontekst.TestKontekstFactory
 import no.nav.k9.los.kodeverk.BehandlingStatus
 import no.nav.k9.los.kodeverk.Fagsystem
 import no.nav.k9.los.kodeverk.PersonBeskyttelseType
@@ -84,38 +84,38 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
     }
 
     fun gjørSakKode6(saksnummer: String) {
-        val systemkontekst = TestKontekstFactory.systemkontekst(Områder.K9)
-        coEvery { pepClient.diskresjonskoderForSak(saksnummer, systemkontekst) } returns setOf(Diskresjonskode.KODE6)
+        val område = Områder.K9
+        coEvery { pepClient.diskresjonskoderForSak(saksnummer, område) } returns setOf(Diskresjonskode.KODE6)
     }
 
     fun gjørSakOrdinær(saksnummer: String) {
-        val systemkontekst = TestKontekstFactory.systemkontekst(Områder.K9)
-        coEvery { pepClient.diskresjonskoderForSak(saksnummer, systemkontekst) } returns setOf()
+        val område = Områder.K9
+        coEvery { pepClient.diskresjonskoderForSak(saksnummer, område) } returns setOf()
     }
 
     fun gjørAktørKode6(aktørId: String) {
-        val systemkontekst = TestKontekstFactory.systemkontekst(Områder.K9)
+        val område = Områder.K9
         coEvery {
             pepClient.diskresjonskoderForPerson(
                 aktørId,
-                systemkontekst
+                område
             )
         } returns setOf(Diskresjonskode.KODE6)
     }
 
     fun gjørAktørKode7(aktørId: String) {
-        val systemkontekst = TestKontekstFactory.systemkontekst(Områder.K9)
+        val område = Områder.K9
         coEvery {
             pepClient.diskresjonskoderForPerson(
                 aktørId,
-                systemkontekst
+                område
             )
         } returns setOf(Diskresjonskode.KODE7)
     }
 
     fun gjørAktørOrdinær(aktørId: String) {
-        val systemkontekst = TestKontekstFactory.systemkontekst(Områder.K9)
-        coEvery { pepClient.diskresjonskoderForPerson(aktørId, systemkontekst) } returns setOf()
+        val område = Områder.K9
+        coEvery { pepClient.diskresjonskoderForPerson(aktørId, område) } returns setOf()
     }
 
 

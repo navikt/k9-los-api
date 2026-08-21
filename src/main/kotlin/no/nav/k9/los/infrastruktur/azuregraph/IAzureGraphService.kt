@@ -1,6 +1,6 @@
 package no.nav.k9.los.infrastruktur.azuregraph
 
-import no.nav.k9.los.infrastruktur.kontekst.BrukerkontekstMedOmråde
+import no.nav.k9.los.infrastruktur.brukerkontekst.BrukerkontekstMedOmråde
 import java.util.*
 
 interface IAzureGraphService {

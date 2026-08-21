@@ -17,7 +17,7 @@ import no.nav.k9.los.oppgaveuthenting.sammendrag.OppgaveSammendragDto
 import no.nav.k9.los.oppgaveuthenting.sammendrag.OppgaveSammendragDtoBuilder
 import no.nav.k9.los.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
-import no.nav.k9.los.infrastruktur.kontekst.TestKontekstFactory
+import no.nav.k9.los.infrastruktur.brukerkontekst.TestKontekstFactory
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 
