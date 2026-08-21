@@ -49,7 +49,7 @@ import no.nav.k9.los.infrastruktur.abac.cache.PepCacheService
 import no.nav.k9.los.infrastruktur.azuregraph.AzureGraphService
 import no.nav.k9.los.infrastruktur.azuregraph.AzureGraphServiceLocal
 import no.nav.k9.los.infrastruktur.azuregraph.IAzureGraphService
-import no.nav.k9.los.infrastruktur.brukerkontekst.Brukerkontekstfabrikk
+import no.nav.k9.los.infrastruktur.brukerkontekst.BrukerkontekstFactory
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.infrastruktur.db.hikariConfig
 import no.nav.k9.los.infrastruktur.metrikker.EventlagerNokkeltallPrometheusCollector
@@ -116,7 +116,7 @@ fun common(app: Application, config: Configuration) = module {
     single { config.koinProfile() }
     single { config }
     single { Gruppeoppsett() }
-    single { Brukerkontekstfabrikk(get(), lokaleTilganger = get<KoinProfile>() == LOCAL) }
+    single { BrukerkontekstFactory(get(), lokaleTilganger = get<KoinProfile>() == LOCAL) }
     single<DataSource> { app.hikariConfig(config) }
 
     single(named("oppgaveKøOppdatert")) {
@@ -718,7 +718,6 @@ fun preprodConfig(config: Configuration) = module {
             baseUrl = config.pdlUrl(),
             accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
             scope = "api://dev-fss.pdl.pdl-api/.default",
-            azureGraphService = get<IAzureGraphService>(),
             httpClient = get()
         )
     }
@@ -796,7 +795,6 @@ fun prodConfig(config: Configuration) = module {
             baseUrl = config.pdlUrl(),
             accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
             scope = "api://prod-fss.pdl.pdl-api/.default",
-            azureGraphService = get<IAzureGraphService>(),
             httpClient = get()
         )
     }

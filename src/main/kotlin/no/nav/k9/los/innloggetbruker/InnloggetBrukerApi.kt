@@ -22,10 +22,10 @@ internal fun Route.InnloggetBrukerApi() {
     get("/saksbehandler") {
         if (configuration.koinProfile() != KoinProfile.LOCAL) {
             medBrukerkontekst { bruker ->
-                val token = bruker.bruker.idToken
-                val skjermet = bruker.harTilgangTilKode6()
+                val token = bruker.idToken
+                val skjermet = bruker.harTilgangTilKode6
                 log.info("Henter innlogget saksbehandler med epost ${token.getUsername()} og navn ${token.getName()}")
-                val saksbehandlerIdent = bruker.bruker.navIdent
+                val saksbehandlerIdent = bruker.navIdent
                 val saksbehandler =
                     saksbehandlerRepository.finnSaksbehandlerMedIdent(token.getNavIdent(), skjermet)
                         ?: saksbehandlerRepository.finnSaksbehandlerMedEpost(token.getUsername(), skjermet)
@@ -39,10 +39,10 @@ internal fun Route.InnloggetBrukerApi() {
                     token.getName(),
                     brukerIdent = saksbehandlerIdent,
                     id = saksbehandler?.let { saksbehandler.id },
-                    kanSaksbehandle = bruker.harBasisTilgang(), //TODO mismatch mellom navnet 'kanSaksbehandle' og at alle som har tilgang til systemet har basistilgang
-                    kanOppgavestyre = bruker.erOppgavestyrer(),
-                    kanReservere = bruker.harTilgangTilReserveringAvOppgaver(),
-                    kanDrifte = bruker.kanLeggeUtDriftsmelding(),
+                    kanSaksbehandle = bruker.harBasisTilgang, //TODO mismatch mellom navnet 'kanSaksbehandle' og at alle som har tilgang til systemet har basistilgang
+                    kanOppgavestyre = bruker.erOppgavestyrer,
+                    kanReservere = bruker.harTilgangTilReserveringAvOppgaver,
+                    kanDrifte = bruker.kanLeggeUtDriftsmelding,
                     finnesISaksbehandlerTabell = finnesISaksbehandlerTabell,
                     områder = saksbehandler?.områder ?: emptyList()
                 )

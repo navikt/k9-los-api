@@ -30,7 +30,7 @@ fun Route.SøkeboksApiNy() {
         }
     ) {
         medBrukerkontekst { bruker ->
-            if (bruker.harBasisTilgang()) {
+            if (bruker.harBasisTilgang) {
                 val (søkeord) = call.receive<SøkRequest>()
                 call.respond(søkeboksTjeneste.finnOppgaverSammendrag(søkeord, bruker.område, bruker))
             } else {

@@ -31,7 +31,7 @@ import no.nav.k9.los.forvaltning.ForvaltningRepository
 import no.nav.k9.los.forvaltning.OmrådeKoblingRepository
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.abac.Gruppeoppsett
-import no.nav.k9.los.infrastruktur.brukerkontekst.Brukerkontekstfabrikk
+import no.nav.k9.los.infrastruktur.brukerkontekst.BrukerkontekstFactory
 import no.nav.k9.los.infrastruktur.abac.PepClientLocal
 import no.nav.k9.los.infrastruktur.abac.cache.PepCacheRepository
 import no.nav.k9.los.infrastruktur.abac.cache.PepCacheService
@@ -125,7 +125,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     single { dataSource }
     single { pepClient }
     single { Gruppeoppsett() }
-    single { Brukerkontekstfabrikk(get(), lokaleTilganger = true) }
+    single { BrukerkontekstFactory(get(), lokaleTilganger = true) }
 
     single { DriftsmeldingRepository(get()) }
 

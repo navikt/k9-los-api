@@ -48,7 +48,7 @@ class MigrerUttrekkResultatJobbTest : AbstractK9LosIntegrationTest() {
             val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedEpost("test@nav.no", skjermet = false)!!
             saksbehandlerId = saksbehandler.id!!
             val lagretSøk = LagretSøk.nyttSøk(
-                NyttLagretSøkRequest(tittel = "Test søk", query = LagretSøk.defaultQuery(false)),
+                NyttLagretSøkRequest(tittel = "Test søk", query = LagretSøk.defaultQuery(Områder.K9, false)),
                 saksbehandler,
             )
             lagretSøkRepository.opprett(lagretSøk)

@@ -15,7 +15,6 @@ import no.nav.k9.los.OppgaveTestDataBuilder
 import no.nav.k9.los.infrastruktur.abac.Action
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
-import no.nav.k9.los.infrastruktur.brukerkontekst.BrukerkontekstMedOmråde
 import no.nav.k9.los.infrastruktur.brukerkontekst.TestKontekstFactory
 import no.nav.k9.los.infrastruktur.pdl.IPdlService
 import no.nav.k9.los.infrastruktur.pdl.PersonPdl
@@ -28,7 +27,6 @@ import no.nav.k9.los.oppgaveuthenting.OppgaveRepository
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.koin.test.get
-import java.util.*
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 
 class SisteOppgaverTjenesteTest : AbstractK9LosIntegrationTest() {

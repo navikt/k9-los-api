@@ -93,7 +93,7 @@ class K9TilbakeTilLosIT : AbstractK9LosIntegrationTest() {
     }
 
     private fun kontekst(saksbehandler: Saksbehandler): BrukerkontekstMedOmråde =
-        TestKontekstFactory.brukerkontekst(Områder.K9, navIdent = saksbehandler.navident!!)
+        TestKontekstFactory.brukerkontekst(Områder.K9)
 
     private fun assertIngenReservasjon(saksbehandler: Saksbehandler) {
         val reservasjonApisTjeneste = get<ReservasjonApisTjeneste>()

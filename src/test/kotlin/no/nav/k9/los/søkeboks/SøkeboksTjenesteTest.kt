@@ -36,19 +36,19 @@ class SøkeboksTjenesteTest {
         val åpen = oppgave("åpen", "SAK-1", Oppgavestatus.AAPEN)
         val obsolete = oppgave("obsolete", "SAK-2", Oppgavestatus.AAPEN, "OBSOLETE")
         val person = person()
-        val kontekst = TestKontekstFactory.brukerkontekst(Områder.K9)
+        val brukerkontekst = TestKontekstFactory.brukerkontekst(Områder.K9)
         every { queryService.queryForOppgave(any()) } returns listOf(lukket, åpen, obsolete)
         coEvery { pdlService.person("aktor-1", any()) } returns PersonPdlResponse(false, person)
-        coEvery { pepClient.harTilgangTilOppgaveV3(any(), kontekst, any()) } returns true
-        coEvery { builder.bygg(listOf(åpen), kontekst.bruker, mapOf("aktor-1" to person)) } returns emptyList()
+        coEvery { pepClient.harTilgangTilOppgaveV3(any(), brukerkontekst, any()) } returns true
+        coEvery { builder.bygg(listOf(åpen), brukerkontekst, mapOf("aktor-1" to person)) } returns emptyList()
         val oppgavesøkere = Oppgavesøkere(K9Oppgavesøk(), UngOppgavesøk())
         val tjeneste = SøkeboksTjeneste(pdlService, pepClient, builder, queryService, oppgavesøkere)
 
-        val resultat = tjeneste.finnOppgaverSammendrag("123456789", Områder.K9, kontekst)
+        val resultat = tjeneste.finnOppgaverSammendrag("123456789", Områder.K9, brukerkontekst)
 
         assertThat(resultat).isEqualTo(SøkeresultatSammendrag.MedResultat(emptyList()))
         coVerify(exactly = 1) { pdlService.person("aktor-1", any()) }
-        coVerify(exactly = 1) { builder.bygg(listOf(åpen), kontekst.bruker, mapOf("aktor-1" to person)) }
+        coVerify(exactly = 1) { builder.bygg(listOf(åpen), brukerkontekst, mapOf("aktor-1" to person)) }
     }
 
     private fun oppgave(

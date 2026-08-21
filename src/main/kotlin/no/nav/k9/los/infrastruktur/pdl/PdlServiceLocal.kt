@@ -1,10 +1,10 @@
 package no.nav.k9.los.infrastruktur.pdl
 
-import no.nav.k9.los.infrastruktur.brukerkontekst.InnloggetBruker
+import no.nav.k9.los.infrastruktur.brukerkontekst.BrukerkontekstMedOmråde
 
 class PdlServiceLocal : IPdlService {
 
-    override suspend fun person(aktorId: String, bruker: InnloggetBruker): PersonPdlResponse {
+    override suspend fun person(aktorId: String, brukerkontekst: BrukerkontekstMedOmråde): PersonPdlResponse {
         return PersonPdlResponse(false, PersonPdl(
             data = PersonPdl.Data(
                 hentPerson = PersonPdl.Data.HentPerson(
@@ -32,7 +32,7 @@ class PdlServiceLocal : IPdlService {
         )
     }
 
-    override suspend fun identifikator(fnummer: String, bruker: InnloggetBruker): PdlResponse {
+    override suspend fun identifikator(fnummer: String, brukerkontekst: BrukerkontekstMedOmråde): PdlResponse {
         return PdlResponse(false, AktøridPdl(
             data = AktøridPdl.Data(
                 hentIdenter = AktøridPdl.Data.HentIdenter(

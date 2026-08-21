@@ -13,12 +13,12 @@ import no.nav.sif.abac.kontrakt.abac.Diskresjonskode
  *
  */
 interface IPepClient {
-    suspend fun harSaksbehandlerTilgangTilKode6(ident: String, kontekst: BrukerkontekstMedOmråde): Boolean
+    suspend fun harSaksbehandlerTilgangTilKode6(ident: String, brukerkontekst: BrukerkontekstMedOmråde): Boolean
     suspend fun diskresjonskoderForSak(fagsakNummer: String, område: Områder): Set<Diskresjonskode>
     suspend fun diskresjonskoderForPerson(aktørId: String, område: Områder): Set<Diskresjonskode>
     suspend fun harTilgangTilOppgaveV3(
         oppgave: no.nav.k9.los.oppgaveuthenting.Oppgave,
-        kontekst: BrukerkontekstMedOmråde,
+        brukerkontekst: BrukerkontekstMedOmråde,
         action: Action = Action.read,
     ) : Boolean
     suspend fun harTilgangTilOppgaveV3(

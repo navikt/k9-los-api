@@ -14,7 +14,7 @@ fun Route.OppgaveQueryApis() {
 
     post("/query/antall") {
         medBrukerkontekst { bruker ->
-            if (bruker.harBasisTilgang()) {
+            if (bruker.harBasisTilgang) {
                 val oppgaveQuery = call.receive<OppgaveQuery>()
                 call.respond(oppgaveQueryService.queryForAntall(QueryRequest(oppgaveQuery, false, område = bruker.område)))
             } else {
@@ -25,7 +25,7 @@ fun Route.OppgaveQueryApis() {
 
     post("/validate") {
         medBrukerkontekst { bruker ->
-            if (bruker.harBasisTilgang()) {
+            if (bruker.harBasisTilgang) {
                 val oppgaveQuery = call.receive<OppgaveQuery>()
                 call.respond(oppgaveQueryService.validate(QueryRequest(oppgaveQuery, område = bruker.område)))
             } else {
@@ -36,7 +36,7 @@ fun Route.OppgaveQueryApis() {
 
     get("/felter") {
         medBrukerkontekst { bruker ->
-            if (bruker.harBasisTilgang()) {
+            if (bruker.harBasisTilgang) {
                 call.respond(oppgaveQueryService.hentAlleFelter())
             } else {
                 call.respond(HttpStatusCode.Forbidden)

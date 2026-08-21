@@ -23,9 +23,9 @@ class SisteOppgaverTjeneste(
 ) {
     private val log = LoggerFactory.getLogger(SisteOppgaverTjeneste::class.java)
 
-    suspend fun hentSisteOppgaver(kontekst: BrukerkontekstMedOmråde): List<SisteOppgaverDto> {
+    suspend fun hentSisteOppgaver(brukerkontekst: BrukerkontekstMedOmråde): List<SisteOppgaverDto> {
         return try {
-            val saksbehandlerIdent = kontekst.bruker.navIdent
+            val saksbehandlerIdent = brukerkontekst.navIdent
 
             val oppgaver =
                 transactionalManager.transaction { tx ->
@@ -48,10 +48,10 @@ class SisteOppgaverTjeneste(
                             try {
                                 val harTilgang = pepClient.harTilgangTilOppgaveV3(
                                     oppgave,
-                                    kontekst,
+                                    brukerkontekst,
                                 )
                                 val personPdl = oppgave.hentVerdi("aktorId")?.let {
-                                    pdlService.person(it, kontekst.bruker)
+                                    pdlService.person(it, brukerkontekst)
                                 }
                                 Triple(harTilgang, personPdl, oppgave)
                             } catch (e: Exception) {
@@ -94,8 +94,8 @@ class SisteOppgaverTjeneste(
         }
     }
 
-    fun lagreSisteOppgave(oppgaveNøkkelDto: OppgaveNøkkelDto, kontekst: BrukerkontekstMedOmråde) {
-        val brukerIdent = kontekst.bruker.navIdent
+    fun lagreSisteOppgave(oppgaveNøkkelDto: OppgaveNøkkelDto, brukerkontekst: BrukerkontekstMedOmråde) {
+        val brukerIdent = brukerkontekst.navIdent
         transactionalManager.transaction { tx ->
             sisteOppgaverRepository.lagreSisteOppgave(
                 tx,

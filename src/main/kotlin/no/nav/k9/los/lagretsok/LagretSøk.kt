@@ -88,29 +88,35 @@ class LagretSøk private constructor(
     }
 
     companion object {
-        fun defaultQuery(kode6: Boolean): OppgaveQuery = OppgaveQuery(
-            filtere = listOf(
-                FeltverdiOppgavefilter(
-                    område = null,
-                    kode = "oppgavestatus",
-                    operator = EksternFeltverdiOperator.IN,
-                    verdi = listOf(Oppgavestatus.AAPEN.kode, Oppgavestatus.VENTER.kode)
-                ),
-                FeltverdiOppgavefilter(
-                    område = null,
-                    kode = "personbeskyttelse",
-                    operator = EksternFeltverdiOperator.IN,
-                    verdi = listOf(if (kode6) PersonBeskyttelseType.KODE6.kode else PersonBeskyttelseType.UGRADERT.kode)
-                ),
-                FeltverdiOppgavefilter(
-                    område = Områder.K9,
-                    kode = "ytelsestype",
-                    operator = EksternFeltverdiOperator.IN,
-                    verdi = emptyList()
+        fun defaultQuery(område: Områder, kode6: Boolean): OppgaveQuery {
+            return when (område) {
+                Områder.K9 -> OppgaveQuery(
+                    filtere = listOf(
+                        FeltverdiOppgavefilter(
+                            område = null,
+                            kode = "oppgavestatus",
+                            operator = EksternFeltverdiOperator.IN,
+                            verdi = listOf(Oppgavestatus.AAPEN.kode, Oppgavestatus.VENTER.kode)
+                        ),
+                        FeltverdiOppgavefilter(
+                            område = null,
+                            kode = "personbeskyttelse",
+                            operator = EksternFeltverdiOperator.IN,
+                            verdi = listOf(if (kode6) PersonBeskyttelseType.KODE6.kode else PersonBeskyttelseType.UGRADERT.kode)
+                        ),
+                        FeltverdiOppgavefilter(
+                            område = Områder.K9,
+                            kode = "ytelsestype",
+                            operator = EksternFeltverdiOperator.IN,
+                            verdi = emptyList()
+                        )
+                    ),
+                    order = emptyList()
                 )
-            ),
-            order = emptyList()
-        )
+
+                else -> throw IllegalStateException("Ikke implementert for område")
+            }
+        }
 
         // For nye søk som ikke er lagret ennå
         fun nyttSøk(

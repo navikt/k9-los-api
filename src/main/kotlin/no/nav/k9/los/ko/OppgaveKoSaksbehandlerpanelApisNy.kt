@@ -24,10 +24,10 @@ fun Route.OppgaveKoSaksbehandlerApisNy() {
         }
     }) {
         medBrukerkontekst { bruker ->
-            if (bruker.harBasisTilgang()) {
-                val harTilgangTilKode6 = bruker.harTilgangTilKode6()
+            if (bruker.harBasisTilgang) {
+                val harTilgangTilKode6 = bruker.harTilgangTilKode6
                 val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedIdent(
-                    bruker.bruker.navIdent,
+                    bruker.navIdent,
                     harTilgangTilKode6
                 )!!
                 call.respond(
@@ -55,7 +55,7 @@ fun Route.OppgaveKoSaksbehandlerApisNy() {
         }
     }) {
         medBrukerkontekst { bruker ->
-            if (bruker.harBasisTilgang()) {
+            if (bruker.harBasisTilgang) {
                 val oppgavekøId = call.parameters["id"]!!
                 call.respond(
                     oppgaveKoTjeneste.hentOppgaverFraKøSammendrag(
@@ -84,7 +84,7 @@ fun Route.OppgaveKoSaksbehandlerApisNy() {
         }
     }) {
         medBrukerkontekst { bruker ->
-            if (bruker.harBasisTilgang()) {
+            if (bruker.harBasisTilgang) {
                 val oppgavekøId = call.parameters["id"]!!
                 call.respond(
                     oppgaveKoTjeneste.hentSaksbehandlereForKo(oppgavekøId.toLong(), bruker)
@@ -108,9 +108,9 @@ fun Route.OppgaveKoSaksbehandlerApisNy() {
         }
     }) {
         medBrukerkontekst { bruker ->
-            if (bruker.harBasisTilgang()) {
+            if (bruker.harBasisTilgang) {
                 val oppgavekøId = call.parameters["id"]!!
-                val skjermet = bruker.harTilgangTilKode6()
+                val skjermet = bruker.harTilgangTilKode6
                 val antallUtenReserverte = OpentelemetrySpanUtil.span("OppgaveKoTjeneste.hentAntallOppgaverForKø") {
                     oppgaveKoTjeneste.hentAntallOppgaverForKø(
                         oppgaveKoId = oppgavekøId.toLong(),
@@ -138,11 +138,11 @@ fun Route.OppgaveKoSaksbehandlerApisNy() {
         }
     }) {
         medBrukerkontekst { bruker ->
-            if (bruker.harTilgangTilReserveringAvOppgaver()) {
+            if (bruker.harTilgangTilReserveringAvOppgaver) {
                 val oppgavekøId = call.parameters["id"]!!
                 val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedIdent(
-                    bruker.bruker.navIdent,
-                    bruker.harTilgangTilKode6()
+                    bruker.navIdent,
+                    bruker.harTilgangTilKode6
                 )!!
                 val oppgaveMuligReservert = oppgaveKoTjeneste.taReservasjonFraKø(
                     innloggetBrukerId = innloggetBruker.id!!,

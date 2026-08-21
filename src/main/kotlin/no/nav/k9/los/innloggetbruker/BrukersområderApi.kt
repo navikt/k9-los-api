@@ -12,10 +12,10 @@ internal fun Route.BrukersområderApi() {
 
     get {
         medBrukerkontekstUtenOmråde { bruker ->
-            val skjermet = bruker.harKode6TilgangIEttEllerFlereOmråder()
+            val skjermet = bruker.harKode6TilgangIEttEllerFlereOmråder
             val områder: List<Områder> = (
-                    saksbehandlerRepository.finnSaksbehandlerMedIdent(bruker.bruker.navIdent, skjermet)
-                        ?: saksbehandlerRepository.finnSaksbehandlerMedEpost(bruker.bruker.idToken.getUsername(), skjermet)
+                    saksbehandlerRepository.finnSaksbehandlerMedIdent(bruker.navIdent, skjermet)
+                        ?: saksbehandlerRepository.finnSaksbehandlerMedEpost(bruker.idToken.getUsername(), skjermet)
                     )
                 ?.områder
                 ?.sortedBy { it.eksternId }

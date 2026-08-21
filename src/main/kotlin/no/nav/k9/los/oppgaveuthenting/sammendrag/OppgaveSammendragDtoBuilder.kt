@@ -1,6 +1,6 @@
 package no.nav.k9.los.oppgaveuthenting.sammendrag
 
-import no.nav.k9.los.infrastruktur.brukerkontekst.InnloggetBruker
+import no.nav.k9.los.infrastruktur.brukerkontekst.BrukerkontekstMedOmråde
 import no.nav.k9.los.infrastruktur.pdl.IPdlService
 import no.nav.k9.los.infrastruktur.pdl.PersonPdl
 import no.nav.k9.los.oppgaveuthenting.Oppgave
@@ -18,7 +18,7 @@ class OppgaveSammendragDtoBuilder(
 ) {
     suspend fun bygg(
         oppgaver: List<Oppgave>,
-        bruker: InnloggetBruker,
+        brukerkontekst: BrukerkontekstMedOmråde,
         alleredeHentedePersoner: Map<String, PersonPdl?> = emptyMap(),
     ): List<OppgaveSammendragDto> {
         val personer = alleredeHentedePersoner.toMutableMap()
@@ -26,7 +26,7 @@ class OppgaveSammendragDtoBuilder(
             val adapter = oppgavesøkere.forOmråde(oppgave.oppgavetype.område)
             val aktørId = adapter.aktørId(oppgave)
             val person = aktørId?.let {
-                if (personer.containsKey(it)) personer[it] else pdlService.person(it, bruker).person.also { person ->
+                if (personer.containsKey(it)) personer[it] else pdlService.person(it, brukerkontekst).person.also { person ->
                     personer[it] = person
                 }
             }

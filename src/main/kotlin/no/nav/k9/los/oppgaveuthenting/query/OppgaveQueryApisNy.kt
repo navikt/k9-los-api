@@ -28,7 +28,7 @@ fun Route.OppgaveQueryApisNy() {
         }
     }) {
         medBrukerkontekst { bruker ->
-            if (bruker.harBasisTilgang()) {
+            if (bruker.harBasisTilgang) {
                 val område = bruker.område
                 val oppgaveQuery = call.receive<OppgaveQuery>()
                 call.respond(oppgaveQueryService.queryForAntall(QueryRequest(oppgaveQuery, false, område = område)))
@@ -51,7 +51,7 @@ fun Route.OppgaveQueryApisNy() {
         }
     }) {
         medBrukerkontekst { bruker ->
-            if (bruker.harBasisTilgang()) {
+            if (bruker.harBasisTilgang) {
                 val område = bruker.område
                 val oppgaveQuery = call.receive<OppgaveQuery>()
                 call.respond(oppgaveQueryService.validate(QueryRequest(oppgaveQuery, område = område)))
@@ -71,7 +71,7 @@ fun Route.OppgaveQueryApisNy() {
         }
     }) {
         medBrukerkontekst { bruker ->
-            if (bruker.harBasisTilgang()) {
+            if (bruker.harBasisTilgang) {
                 val område = bruker.område
                 call.respond(oppgaveQueryService.hentAlleFelter())
             } else {

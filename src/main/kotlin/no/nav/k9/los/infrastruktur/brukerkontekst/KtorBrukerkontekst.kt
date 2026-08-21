@@ -7,35 +7,35 @@ import io.opentelemetry.api.trace.Span
 import io.opentelemetry.extension.kotlin.asContextElement
 import kotlinx.coroutines.withContext
 import no.nav.k9.los.KoinProfile
+import no.nav.k9.los.infrastruktur.idtoken.IdToken
 import no.nav.k9.los.infrastruktur.idtoken.IdTokenAzure
 import no.nav.k9.los.infrastruktur.idtoken.IdTokenLocal
 import no.nav.k9.los.områdeAttributeKey
 import org.koin.ktor.ext.getKoin
-import java.util.*
 
 suspend fun <T> RoutingContext.medBrukerkontekst(
     block: suspend (BrukerkontekstMedOmråde) -> T,
 ): T {
     val område = call.attributes.getOrNull(områdeAttributeKey)
         ?: throw IllegalStateException("Endepunktet er ikke registrert under en områdeApi-rute")
-    val kontekst = call.application.getKoin().get<Brukerkontekstfabrikk>().medOmråde(område, innloggetBruker())
+    val brukerkontekstMedOmråde = call.application.getKoin().get<BrukerkontekstFactory>().medOmråde(område, idToken())
     return withContext(Span.current().asContextElement()) {
-        block(kontekst)
+        block(brukerkontekstMedOmråde)
     }
 }
 
 suspend fun <T> RoutingContext.medBrukerkontekstUtenOmråde(
     block: suspend (BrukerkontekstUtenOmråde) -> T,
 ): T {
-    val kontekst = call.application.getKoin().get<Brukerkontekstfabrikk>().utenOmråde(innloggetBruker())
+    val brukerkontekstUtenOmråde = call.application.getKoin().get<BrukerkontekstFactory>().utenOmråde(idToken())
     return withContext(Span.current().asContextElement()) {
-        block(kontekst)
+        block(brukerkontekstUtenOmråde)
     }
 }
 
-private fun RoutingContext.innloggetBruker(): InnloggetBruker {
+private fun RoutingContext.idToken(): IdToken {
     val principal = call.principal<JWTPrincipal>()
-    val idToken = if (principal != null) {
+    return if (principal != null) {
         val authorizationHeader = call.request.parseAuthorizationHeader()?.render()
             ?: throw IllegalStateException("Token ikke satt")
         val jwt = authorizationHeader.substringAfter("Bearer ")
@@ -45,10 +45,4 @@ private fun RoutingContext.innloggetBruker(): InnloggetBruker {
         check(profile == KoinProfile.LOCAL) { "Validert principal ikke satt" }
         IdTokenLocal()
     }
-
-    return InnloggetBruker(
-        navIdent = idToken.getNavIdent(),
-        grupper = idToken.groups.mapTo(mutableSetOf(), UUID::fromString),
-        idToken = idToken,
-    )
 }

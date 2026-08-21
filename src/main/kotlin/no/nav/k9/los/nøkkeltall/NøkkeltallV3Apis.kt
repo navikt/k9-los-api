@@ -19,8 +19,8 @@ fun Route.NøkkeltallV3Apis() {
 
     get("status") {
         medBrukerkontekst { bruker ->
-            if (bruker.erOppgavestyrer()) {
-                call.respond(statusService.hentStatus(bruker.harTilgangTilKode6()))
+            if (bruker.erOppgavestyrer) {
+                call.respond(statusService.hentStatus(bruker.harTilgangTilKode6))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
@@ -29,8 +29,8 @@ fun Route.NøkkeltallV3Apis() {
 
     get("statusfordeling") {
         medBrukerkontekst { bruker ->
-            if (bruker.erOppgavestyrer()) {
-                val kode6 = bruker.harTilgangTilKode6()
+            if (bruker.erOppgavestyrer) {
+                val kode6 = bruker.harTilgangTilKode6
                 call.respond(statusFordelingService.hentVerdi(kode6))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
@@ -40,7 +40,7 @@ fun Route.NøkkeltallV3Apis() {
 
     get("dagens-tall") {
         medBrukerkontekst { bruker ->
-            if (bruker.erOppgavestyrer()) {
+            if (bruker.erOppgavestyrer) {
                 call.respond(dagensTallService.hentCachetVerdi())
             } else {
                 call.respond(HttpStatusCode.Forbidden)
@@ -50,7 +50,7 @@ fun Route.NøkkeltallV3Apis() {
 
     get("ferdigstilte-per-enhet") {
         medBrukerkontekst { bruker ->
-            if (bruker.erOppgavestyrer()) {
+            if (bruker.erOppgavestyrer) {
                 val gruppe = call.parameters["gruppe"]?.let { FerdigstiltePerEnhetGruppe.valueOf(it) }
                     ?: FerdigstiltePerEnhetGruppe.ALLE
                 val uker = call.parameters["uker"]?.toInt() ?: 2

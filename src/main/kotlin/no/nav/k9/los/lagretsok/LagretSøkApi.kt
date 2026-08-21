@@ -25,9 +25,9 @@ fun Route.LagretSøkApi() {
         }
     }) {
         medBrukerkontekst { bruker ->
-            if (bruker.harBasisTilgang()) {
-                val innloggetSaksbehandler = bruker.bruker.navIdent.let {
-                    saksbehandlerRepository.finnSaksbehandlerMedIdent(it, bruker.harTilgangTilKode6())
+            if (bruker.harBasisTilgang) {
+                val innloggetSaksbehandler = bruker.navIdent.let {
+                    saksbehandlerRepository.finnSaksbehandlerMedIdent(it, bruker.harTilgangTilKode6)
                 }
                 if (innloggetSaksbehandler == null) {
                     call.respond(HttpStatusCode.Forbidden, "Innlogget bruker er ikke i saksbehandler-tabellen.")
@@ -52,10 +52,10 @@ fun Route.LagretSøkApi() {
         }
     }) {
         medBrukerkontekst { bruker ->
-            if (bruker.harBasisTilgang()) {
+            if (bruker.harBasisTilgang) {
                 val id = call.parameters["id"]!!.toLong()
-                val innloggetSaksbehandler = bruker.bruker.navIdent.let {
-                    saksbehandlerRepository.finnSaksbehandlerMedIdent(it, bruker.harTilgangTilKode6())
+                val innloggetSaksbehandler = bruker.navIdent.let {
+                    saksbehandlerRepository.finnSaksbehandlerMedIdent(it, bruker.harTilgangTilKode6)
                 }
                 if (innloggetSaksbehandler == null) {
                     call.respond(HttpStatusCode.Forbidden, "Innlogget bruker er ikke i saksbehandler-tabellen.")
@@ -86,10 +86,10 @@ fun Route.LagretSøkApi() {
         }
     }) {
         medBrukerkontekst { bruker ->
-            if (bruker.erOppgavestyrer()) {
-                val navIdent = bruker.bruker.navIdent
+            if (bruker.erOppgavestyrer) {
+                val navIdent = bruker.navIdent
                 val request = call.receive<NyttLagretSøkRequest>()
-                val lagretSøk = lagretSøkTjeneste.nytt(navIdent, request, bruker.harTilgangTilKode6())
+                val lagretSøk = lagretSøkTjeneste.nytt(navIdent, request, bruker.harTilgangTilKode6)
                 call.respond(HttpStatusCode.Created, lagretSøk)
             } else {
                 call.respond(HttpStatusCode.Forbidden)
@@ -103,9 +103,9 @@ fun Route.LagretSøkApi() {
         }
     }) {
         medBrukerkontekst { bruker ->
-            if (bruker.erOppgavestyrer()) {
-                val harKode6Tilgang = bruker.harTilgangTilKode6()
-                call.respond(LagretSøk.defaultQuery(harKode6Tilgang))
+            if (bruker.erOppgavestyrer) {
+                val harKode6Tilgang = bruker.harTilgangTilKode6
+                call.respond(LagretSøk.defaultQuery(bruker.område, harKode6Tilgang))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
@@ -121,15 +121,15 @@ fun Route.LagretSøkApi() {
         }
     }) {
         medBrukerkontekst { bruker ->
-            if (bruker.harBasisTilgang()) {
-                val innloggetSaksbehandler = bruker.bruker.navIdent.let {
-                    saksbehandlerRepository.finnSaksbehandlerMedIdent(it, bruker.harTilgangTilKode6())
+            if (bruker.harBasisTilgang) {
+                val innloggetSaksbehandler = bruker.navIdent.let {
+                    saksbehandlerRepository.finnSaksbehandlerMedIdent(it, bruker.harTilgangTilKode6)
                 }
                 if (innloggetSaksbehandler == null) {
                     call.respond(HttpStatusCode.Forbidden, "Innlogget bruker er ikke i saksbehandler-tabellen.")
                 } else {
                     val endreLagretSøk = call.receive<EndreLagretSøkRequest>()
-                    val lagretSøk = lagretSøkTjeneste.endre(bruker.bruker.navIdent, endreLagretSøk, bruker.harTilgangTilKode6())
+                    val lagretSøk = lagretSøkTjeneste.endre(bruker.navIdent, endreLagretSøk, bruker.harTilgangTilKode6)
                     call.respond(HttpStatusCode.OK, lagretSøk)
                 }
             } else {
@@ -147,16 +147,16 @@ fun Route.LagretSøkApi() {
         }
     }) {
         medBrukerkontekst { bruker ->
-            if (bruker.harBasisTilgang()) {
-                val innloggetSaksbehandler = bruker.bruker.navIdent.let {
-                    saksbehandlerRepository.finnSaksbehandlerMedIdent(it, bruker.harTilgangTilKode6())
+            if (bruker.harBasisTilgang) {
+                val innloggetSaksbehandler = bruker.navIdent.let {
+                    saksbehandlerRepository.finnSaksbehandlerMedIdent(it, bruker.harTilgangTilKode6)
                 }
                 if (innloggetSaksbehandler == null) {
                     call.respond(HttpStatusCode.Forbidden, "Innlogget bruker er ikke i saksbehandler-tabellen.")
                 } else {
                     val (tittel) = call.receive<KopierLagretSøkRequest>()
                     val lagretSøkId = call.parameters["id"]!!.toLong()
-                    val nyttLagretSøk = lagretSøkTjeneste.kopier(bruker.bruker.navIdent, lagretSøkId, tittel, bruker.harTilgangTilKode6())
+                    val nyttLagretSøk = lagretSøkTjeneste.kopier(bruker.navIdent, lagretSøkId, tittel, bruker.harTilgangTilKode6)
                     call.respond(HttpStatusCode.OK, nyttLagretSøk)
                 }
             } else {
@@ -176,15 +176,15 @@ fun Route.LagretSøkApi() {
         }
     }) {
         medBrukerkontekst { bruker ->
-            if (bruker.harBasisTilgang()) {
-                val innloggetSaksbehandler = bruker.bruker.navIdent.let {
-                    saksbehandlerRepository.finnSaksbehandlerMedIdent(it, bruker.harTilgangTilKode6())
+            if (bruker.harBasisTilgang) {
+                val innloggetSaksbehandler = bruker.navIdent.let {
+                    saksbehandlerRepository.finnSaksbehandlerMedIdent(it, bruker.harTilgangTilKode6)
                 }
                 if (innloggetSaksbehandler == null) {
                     call.respond(HttpStatusCode.Forbidden, "Innlogget bruker er ikke i saksbehandler-tabellen.")
                 } else {
                     val lagretSøkId = call.parameters["id"]!!.toLong()
-                    lagretSøkTjeneste.slett(bruker.bruker.navIdent, lagretSøkId, bruker.harTilgangTilKode6())
+                    lagretSøkTjeneste.slett(bruker.navIdent, lagretSøkId, bruker.harTilgangTilKode6)
                     call.respond(HttpStatusCode.OK)
                 }
             } else {
@@ -195,10 +195,10 @@ fun Route.LagretSøkApi() {
 
     get("/{id}/antall") {
         medBrukerkontekst { bruker ->
-            if (bruker.harBasisTilgang()) {
+            if (bruker.harBasisTilgang) {
                 val lagretSøkId = call.parameters["id"]!!
-                val innloggetSaksbehandler = bruker.bruker.navIdent.let {
-                    saksbehandlerRepository.finnSaksbehandlerMedIdent(it, bruker.harTilgangTilKode6())
+                val innloggetSaksbehandler = bruker.navIdent.let {
+                    saksbehandlerRepository.finnSaksbehandlerMedIdent(it, bruker.harTilgangTilKode6)
                 }
                 if (innloggetSaksbehandler == null) {
                     call.respond(HttpStatusCode.Forbidden, "Innlogget bruker er ikke i saksbehandler-tabellen.")

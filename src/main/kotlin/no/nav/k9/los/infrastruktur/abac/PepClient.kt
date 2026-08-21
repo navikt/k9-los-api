@@ -19,11 +19,11 @@ class PepClient internal constructor(
 ) : IPepClient {
     private val log: Logger = LoggerFactory.getLogger(PepClient::class.java)
 
-    override suspend fun harSaksbehandlerTilgangTilKode6(ident: String, kontekst: BrukerkontekstMedOmråde): Boolean {
-        if (ident == kontekst.bruker.navIdent) {
-            return kontekst.harTilgangTilKode6()
+    override suspend fun harSaksbehandlerTilgangTilKode6(ident: String, brukerkontekst: BrukerkontekstMedOmråde): Boolean {
+        if (ident == brukerkontekst.navIdent) {
+            return brukerkontekst.harTilgangTilKode6
         }
-        val kode6Gruppe = gruppeoppsett.forOmråde(kontekst.område).kode6 ?: return false
+        val kode6Gruppe = gruppeoppsett.forOmråde(brukerkontekst.område).kode6 ?: return false
         val grupper = azureGraphService.hentGrupper(ident)
         return grupper.contains(kode6Gruppe)
     }
@@ -38,18 +38,18 @@ class PepClient internal constructor(
 
     override suspend fun harTilgangTilOppgaveV3(
         oppgave: Oppgave,
-        kontekst: BrukerkontekstMedOmråde,
+        bruker: BrukerkontekstMedOmråde,
         action: Action,
     ): Boolean {
         return harTilgang(
-            område = kontekst.område,
+            område = oppgave.oppgavetype.område.tilOmrådeEnum(),
             oppgavetype = oppgave.oppgavetype.eksternId,
-            identTilInnloggetBruker = kontekst.bruker.navIdent,
+            identTilInnloggetBruker = bruker.navIdent,
             action = action,
             saksnummer = oppgave.hentVerdi("saksnummer"),
             aktørIdSøker = oppgave.hentVerdi("aktorId"),
             aktørIdPleietrengende = oppgave.hentVerdi("pleietrengendeAktorId"),
-            grupperForSaksbehandler = kontekst.bruker.grupper,
+            grupperForSaksbehandler = bruker.grupper,
         )
     }
 
@@ -60,14 +60,14 @@ class PepClient internal constructor(
         action: Action
     ): Boolean {
         return harTilgang(
-                område = område,
-                oppgavetype = oppgave.oppgavetype.eksternId,
-                identTilInnloggetBruker = saksbehandler.navident!!,
-                action = action,
-                saksnummer = oppgave.hentVerdi("saksnummer"),
-                aktørIdSøker = oppgave.hentVerdi("aktorId"),
-                aktørIdPleietrengende = oppgave.hentVerdi("pleietrengendeAktorId"),
-            )
+            område = område,
+            oppgavetype = oppgave.oppgavetype.eksternId,
+            identTilInnloggetBruker = saksbehandler.navident!!,
+            action = action,
+            saksnummer = oppgave.hentVerdi("saksnummer"),
+            aktørIdSøker = oppgave.hentVerdi("aktorId"),
+            aktørIdPleietrengende = oppgave.hentVerdi("pleietrengendeAktorId"),
+        )
     }
 
     private suspend fun harTilgang(

@@ -45,8 +45,8 @@ open class AzureGraphService(
         }
     }
 
-    override suspend fun hentEnhet(kontekst: BrukerkontekstMedOmråde): String {
-        val token = kontekst.bruker.idToken
+    override suspend fun hentEnhet(brukerkontekst: BrukerkontekstMedOmråde): String {
+        val token = brukerkontekst.idToken
         return hentEnhetForBruker(brukernavn = token.getUsername(), onBehalfOf = token)
     }
 
@@ -119,14 +119,14 @@ open class AzureGraphService(
         }
     }
 
-    override suspend fun hentGrupper(brukerIdent: String): Set<UUID> {
-        val userId = hentUserIdForSaksbehandler(brukerIdent)
-        return hentGrupperForSaksbehandler(userId, brukerIdent)
+    override suspend fun hentGrupper(navIdent: String): Set<UUID> {
+        val userId = hentUserIdForSaksbehandler(navIdent)
+        return hentGrupperForSaksbehandler(userId, navIdent)
     }
 
-    override suspend fun hentGrupper(kontekst: BrukerkontekstMedOmråde): Set<UUID> {
-        val token = kontekst.bruker.idToken
-        return saksbehandlerGrupperCache.hent(kontekst.bruker.navIdent) {
+    override suspend fun hentGrupper(brukerkontekst: BrukerkontekstMedOmråde): Set<UUID> {
+        val token = brukerkontekst.idToken
+        return saksbehandlerGrupperCache.hent(brukerkontekst.navIdent) {
             val accessToken = accessToken(token)
             val json = runBlocking {
                 Retry.retry(

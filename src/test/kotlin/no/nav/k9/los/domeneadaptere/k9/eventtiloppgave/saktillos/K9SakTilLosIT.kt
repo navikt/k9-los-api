@@ -69,7 +69,7 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         val antallIDb = oppgaveQueryService.queryForAntall(QueryRequest(område = Områder.K9, oppgaveQuery = querySomKunInneholder(eksternId)))
         assertThat(antallIDb).isEqualTo(1)
 
-        val skjermet = kontekst(TestSaksbehandler.SARA.navident!!).harTilgangTilKode6()
+        val skjermet = kontekst(TestSaksbehandler.SARA.navident!!).harTilgangTilKode6
         val filtrerReserverte = true
         val antallIKø = oppgaveKøTjeneste.hentAntallOppgaverForKø(
             oppgaveKoId = kø.id,
@@ -92,7 +92,7 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         val antallIDb = oppgaveQueryService.queryForAntall(QueryRequest(område = Områder.K9, oppgaveQuery = querySomKunInneholder(eksternId)))
         assertThat(antallIDb).isEqualTo(1)
 
-        val skjermet = kontekst(TestSaksbehandler.SARA.navident!!).harTilgangTilKode6()
+        val skjermet = kontekst(TestSaksbehandler.SARA.navident!!).harTilgangTilKode6
         val filtrerReserverte = true
         val antallIKø = oppgaveKøTjeneste.hentAntallOppgaverForKø(
             oppgaveKoId = kø.id,
@@ -146,7 +146,7 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         val antallIDb = oppgaveQueryService.queryForAntall(QueryRequest(område = Områder.K9, oppgaveQuery = querySomKunInneholder(eksternId)))
         assertThat(antallIDb).isEqualTo(1)
 
-        val skjermet = kontekst(TestSaksbehandler.SARA.navident!!).harTilgangTilKode6()
+        val skjermet = kontekst(TestSaksbehandler.SARA.navident!!).harTilgangTilKode6
         val filtrerReserverte = true
         val antallIKø = oppgaveKøTjeneste.hentAntallOppgaverForKø(
             oppgaveKoId = kø.id,
@@ -176,7 +176,7 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         val antallIDb = oppgaveQueryService.queryForAntall(QueryRequest(område = Områder.K9, oppgaveQuery = querySomKunInneholder(eksternId)))
         assertThat(antallIDb).isEqualTo(1)
 
-        val skjermet = kontekst(TestSaksbehandler.SARA.navident!!).harTilgangTilKode6()
+        val skjermet = kontekst(TestSaksbehandler.SARA.navident!!).harTilgangTilKode6
         val filtrerReserverte = true
         val antallIKø = oppgaveKøTjeneste.hentAntallOppgaverForKø(
             oppgaveKoId = kø.id,
@@ -188,7 +188,7 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         val resultat = taReservasjonFra(kø, TestSaksbehandler.SARA)
         assertThat(resultat is OppgaveMuligReservert.Reservert).isTrue()
 
-        val skjermet1 = kontekst(TestSaksbehandler.SARA.navident!!).harTilgangTilKode6()
+        val skjermet1 = kontekst(TestSaksbehandler.SARA.navident!!).harTilgangTilKode6
         val filtrerReserverte1 = true
         val antallIKøEtterRes = oppgaveKøTjeneste.hentAntallOppgaverForKø(
             kø.id,
@@ -213,7 +213,7 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         val antallIDb = oppgaveQueryService.queryForAntall(QueryRequest(område = Områder.K9, oppgaveQuery = querySomKunInneholder(eksternId)))
         assertThat(antallIDb).isEqualTo(1)
 
-        val skjermet = kontekst(TestSaksbehandler.SARA.navident!!).harTilgangTilKode6()
+        val skjermet = kontekst(TestSaksbehandler.SARA.navident!!).harTilgangTilKode6
         val filtrerReserverte = true
         val antallIKø = oppgaveKøTjeneste.hentAntallOppgaverForKø(
             oppgaveKoId = kø.id,
@@ -425,7 +425,7 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
 
     private fun assertAntallIKø(kø: OppgaveKo, forventetAntall: Int) {
         oppgaveKøTjeneste.clearCache()
-        val skjermet = kontekst(TestSaksbehandler.SARA.navident!!).harTilgangTilKode6()
+        val skjermet = kontekst(TestSaksbehandler.SARA.navident!!).harTilgangTilKode6
         val filtrerReserverte = true
         val antallIKøEtterRes = oppgaveKøTjeneste.hentAntallOppgaverForKø(
             oppgaveKoId = kø.id,
@@ -476,7 +476,7 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
     private fun opprettKøFor(saksbehandler: Saksbehandler, oppgaveQuery: OppgaveQuery): OppgaveKo {
         val oppgaveKoRepository = get<OppgaveKoRepository>()
         val pepClient = get<IPepClient>()
-        val skjermet = kontekst(saksbehandler.navident!!).harTilgangTilKode6()
+        val skjermet = kontekst(saksbehandler.navident!!).harTilgangTilKode6
         val nyKø = oppgaveKoRepository.leggTil("Test", skjermet = skjermet, område = saksbehandler.områder.first()).copy(
             saksbehandlere = listOf(saksbehandler.epost),
             oppgaveQuery = oppgaveQuery

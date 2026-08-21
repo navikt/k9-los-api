@@ -30,7 +30,7 @@ class ReservasjonApisTjenesteTest {
         val sammendrag1 = mockk<OppgaveSammendragDto>()
         val sammendrag2 = mockk<OppgaveSammendragDto>()
         val saksbehandler = Saksbehandler(1, "Z123456", "Saks Behandler", "saks@nav.no", null, listOf(Områder.K9))
-        val kontekst = TestKontekstFactory.brukerkontekst(Områder.K9)
+        val brukerkontekst = TestKontekstFactory.brukerkontekst(Områder.K9)
         val nå = LocalDateTime.parse("2026-08-12T09:00:00")
         val reservasjon1 = ReservasjonV3(1, "r1", "", nå, nå.plusDays(1), null, Områder.K9)
         val reservasjon2 = ReservasjonV3(1, "r2", "", nå, nå.plusDays(1), null, Områder.K9)
@@ -49,9 +49,9 @@ class ReservasjonApisTjenesteTest {
             builder,
         )
 
-        val resultat = tjeneste.hentReserverteOppgaverSammendragForSaksbehandler(saksbehandler, kontekst)
+        val resultat = tjeneste.hentReserverteOppgaverSammendragForSaksbehandler(saksbehandler, brukerkontekst)
 
         assertThat(resultat.map { it.oppgaver.single() }).isEqualTo(listOf(sammendrag1, sammendrag2))
-        coVerify(exactly = 1) { builder.bygg(listOf(oppgave1, oppgave2), kontekst.bruker, emptyMap()) }
+        coVerify(exactly = 1) { builder.bygg(listOf(oppgave1, oppgave2), brukerkontekst, emptyMap()) }
     }
 }

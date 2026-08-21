@@ -11,7 +11,7 @@ fun Route.NyeOgFerdigstilteApi() {
 
     get {
         medBrukerkontekst { bruker ->
-            if (bruker.harBasisTilgang()) {
+            if (bruker.harBasisTilgang) {
                 call.respond(nyeOgFerdigstilteService.hentCachetVerdi(call.parameters["gruppe"]?.let { NyeOgFerdigstilteGruppe.valueOf(it) } ?: NyeOgFerdigstilteGruppe.ALLE))
             } else {
                 call.respond(HttpStatusCode.Forbidden)

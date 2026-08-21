@@ -24,9 +24,9 @@ fun Route.UttrekkApi() {
         }
     }) {
         medBrukerkontekst { bruker ->
-            if (bruker.harBasisTilgang()) {
-                val innloggetSaksbehandler = bruker.bruker.navIdent.let {
-                    saksbehandlerRepository.finnSaksbehandlerMedIdent(it, bruker.harTilgangTilKode6())
+            if (bruker.harBasisTilgang) {
+                val innloggetSaksbehandler = bruker.navIdent.let {
+                    saksbehandlerRepository.finnSaksbehandlerMedIdent(it, bruker.harTilgangTilKode6)
                 }
                 if (innloggetSaksbehandler == null) {
                     call.respond(HttpStatusCode.Forbidden, "Innlogget bruker er ikke i saksbehandler-tabellen.")
@@ -52,7 +52,7 @@ fun Route.UttrekkApi() {
         }
     }) {
         medBrukerkontekst { bruker ->
-            if (bruker.harBasisTilgang()) {
+            if (bruker.harBasisTilgang) {
                 val id = call.parameters["id"]?.toLongOrNull()
                 if (id == null) {
                     call.respond(HttpStatusCode.BadRequest, "Ugyldig uttrekk-id")
@@ -79,9 +79,9 @@ fun Route.UttrekkApi() {
         }
     }) {
         medBrukerkontekst { bruker ->
-            if (bruker.harBasisTilgang()) {
-                val innloggetSaksbehandler = bruker.bruker.navIdent.let {
-                    saksbehandlerRepository.finnSaksbehandlerMedIdent(it, bruker.harTilgangTilKode6())
+            if (bruker.harBasisTilgang) {
+                val innloggetSaksbehandler = bruker.navIdent.let {
+                    saksbehandlerRepository.finnSaksbehandlerMedIdent(it, bruker.harTilgangTilKode6)
                 }
                 if (innloggetSaksbehandler == null) {
                     call.respond(HttpStatusCode.Forbidden, "Innlogget bruker er ikke i saksbehandler-tabellen.")
@@ -109,7 +109,7 @@ fun Route.UttrekkApi() {
         }
     }) {
         medBrukerkontekst { bruker ->
-            if (bruker.harBasisTilgang()) {
+            if (bruker.harBasisTilgang) {
                 val id = call.parameters["id"]?.toLongOrNull()
                 if (id == null) {
                     call.respond(HttpStatusCode.BadRequest, "Ugyldig uttrekk-id")
@@ -141,7 +141,7 @@ fun Route.UttrekkApi() {
         }
     }) {
         medBrukerkontekst { bruker ->
-            if (bruker.harBasisTilgang()) {
+            if (bruker.harBasisTilgang) {
                 try {
                     val id = call.parameters["id"]?.toLongOrNull()
                     if (id == null) {
@@ -172,7 +172,7 @@ fun Route.UttrekkApi() {
         }
     }) {
         medBrukerkontekst { bruker ->
-            if (bruker.harBasisTilgang()) {
+            if (bruker.harBasisTilgang) {
                 val lagretSokId = call.parameters["lagretSokId"]?.toLongOrNull()
                 if (lagretSokId == null) {
                     call.respond(HttpStatusCode.BadRequest, "Ugyldig lagretSokId")
@@ -198,7 +198,7 @@ fun Route.UttrekkApi() {
         }
     }) {
         medBrukerkontekst { bruker ->
-            if (bruker.harBasisTilgang()) {
+            if (bruker.harBasisTilgang) {
                 val id = call.parameters["id"]?.toLongOrNull()
                 if (id == null) {
                     call.respond(HttpStatusCode.BadRequest, "Ugyldig uttrekk-id")
@@ -252,7 +252,7 @@ fun Route.UttrekkApi() {
         }
     }) {
         medBrukerkontekst { bruker ->
-            if (bruker.harBasisTilgang()) {
+            if (bruker.harBasisTilgang) {
                 val id = call.parameters["id"]?.toLongOrNull()
                 if (id == null) {
                     call.respond(HttpStatusCode.BadRequest, "Ugyldig uttrekk-id")

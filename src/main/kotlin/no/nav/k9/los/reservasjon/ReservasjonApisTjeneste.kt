@@ -70,7 +70,7 @@ class ReservasjonApisTjeneste(
         reservasjonEndringDto: List<ReservasjonEndringDto>,
         innloggetBruker: Saksbehandler,
         skjermet: Boolean,
-        kontekst: BrukerkontekstMedOmråde,
+        brukerkontekst: BrukerkontekstMedOmråde,
     ) {
         reservasjonEndringDto.forEach {
             endreReservasjon(
@@ -80,7 +80,7 @@ class ReservasjonApisTjeneste(
                 it.reserverTil,
                 it.begrunnelse,
                 skjermet,
-                kontekst,
+                brukerkontekst,
             )
         }
     }
@@ -92,7 +92,7 @@ class ReservasjonApisTjeneste(
         reserverTil: LocalDate? = null,
         begrunnelse: String? = null,
         skjermet: Boolean,
-        kontekst: BrukerkontekstMedOmråde,
+        brukerkontekst: BrukerkontekstMedOmråde,
     ): ReservasjonV3Dto {
         val tilSaksbehandler =
             tilBrukerIdent?.let { saksbehandlerRepository.finnSaksbehandlerMedIdent(it, skjermet) }
@@ -117,13 +117,13 @@ class ReservasjonApisTjeneste(
         val reservertAv = saksbehandlerRepository.finnSaksbehandlerMedId(nyReservasjon.reservasjonV3.reservertAv)!!
         log.info("endreReservasjon: ${nyReservasjon.reservasjonV3}, reservertAv: $reservertAv")
 
-        return reservasjonV3DtoBuilder.byggReservasjonV3Dto(nyReservasjon, reservertAv, kontekst.bruker)
+        return reservasjonV3DtoBuilder.byggReservasjonV3Dto(nyReservasjon, reservertAv, brukerkontekst)
     }
 
     suspend fun forlengReservasjon(
         forlengReservasjonDto: ForlengReservasjonDto,
         innloggetBruker: Saksbehandler,
-        kontekst: BrukerkontekstMedOmråde,
+        brukerkontekst: BrukerkontekstMedOmråde,
     ): ReservasjonV3Dto {
         val reservasjonsnøkkel =
             forlengReservasjonDto.reservasjonsnøkkel ?: aktivOppgaveOppslag.hentAktivOppgave(
@@ -143,14 +143,14 @@ class ReservasjonApisTjeneste(
             saksbehandlerRepository.finnSaksbehandlerMedId(forlengetReservasjon.reservasjonV3.reservertAv)!!
         log.info("forlengReservasjon: ${forlengetReservasjon.reservasjonV3}, reservertAv: $reservertAv")
 
-        return reservasjonV3DtoBuilder.byggReservasjonV3Dto(forlengetReservasjon, reservertAv, kontekst.bruker)
+        return reservasjonV3DtoBuilder.byggReservasjonV3Dto(forlengetReservasjon, reservertAv, brukerkontekst)
     }
 
     suspend fun overførReservasjon(
         params: FlyttReservasjonDto,
         innloggetBruker: Saksbehandler,
         skjermet: Boolean,
-        kontekst: BrukerkontekstMedOmråde,
+        brukerkontekst: BrukerkontekstMedOmråde,
     ): ReservasjonV3Dto {
         val tilSaksbehandler = saksbehandlerRepository.finnSaksbehandlerMedIdent(
             params.brukerIdent, skjermet
@@ -170,7 +170,7 @@ class ReservasjonApisTjeneste(
         )
         log.info("overførReservasjon: ${nyReservasjon.reservasjonV3}, utførtAv: $innloggetBruker., tilSaksbehandler: $tilSaksbehandler")
 
-        return reservasjonV3DtoBuilder.byggReservasjonV3Dto(nyReservasjon, tilSaksbehandler, kontekst.bruker)
+        return reservasjonV3DtoBuilder.byggReservasjonV3Dto(nyReservasjon, tilSaksbehandler, brukerkontekst)
     }
 
     private fun annullerReservasjon(
@@ -202,13 +202,13 @@ class ReservasjonApisTjeneste(
         }
     }
 
-    suspend fun hentReserverteOppgaverForSaksbehandler(saksbehandler: Saksbehandler, kontekst: BrukerkontekstMedOmråde): List<ReservasjonV3Dto> {
+    suspend fun hentReserverteOppgaverForSaksbehandler(saksbehandler: Saksbehandler, brukerkontekst: BrukerkontekstMedOmråde): List<ReservasjonV3Dto> {
         val reservasjonerMedOppgaver =
             reservasjonV3Tjeneste.hentReservasjonerForSaksbehandler(saksbehandler.id!!)
 
         return reservasjonerMedOppgaver.map { reservasjonMedOppgaver ->
             try {
-                reservasjonV3DtoBuilder.byggReservasjonV3Dto(reservasjonMedOppgaver, saksbehandler, kontekst.bruker)
+                reservasjonV3DtoBuilder.byggReservasjonV3Dto(reservasjonMedOppgaver, saksbehandler, brukerkontekst)
             } catch (e: Exception) {
                 log.warn("Klarte ikke tolke reservasjon med id ${reservasjonMedOppgaver.reservasjonV3.id}, v3-oppgaver: ${reservasjonMedOppgaver.oppgaverV3.map { it.eksternId }}")
                 throw e
@@ -218,13 +218,13 @@ class ReservasjonApisTjeneste(
 
     suspend fun hentReserverteOppgaverSammendragForSaksbehandler(
         saksbehandler: Saksbehandler,
-        kontekst: BrukerkontekstMedOmråde,
+        brukerkontekst: BrukerkontekstMedOmråde,
     ): List<ReservasjonSammendragDto> {
         val reservasjoner = reservasjonV3Tjeneste.hentReservasjonerForSaksbehandler(saksbehandler.id!!)
         // Bygger alle oppgavene i ett kall for å dele PDL-oppslag, og deler resultatet
         // tilbake per reservasjon. Forutsetter at builderen returnerer ett sammendrag
         // per oppgave i samme rekkefølge.
-        val alleOppgaver = oppgaveSammendragDtoBuilder.bygg(reservasjoner.flatMap { it.oppgaverV3 }, kontekst.bruker)
+        val alleOppgaver = oppgaveSammendragDtoBuilder.bygg(reservasjoner.flatMap { it.oppgaverV3 }, brukerkontekst)
         var indeks = 0
 
         return reservasjoner.map { reservasjonMedOppgaver ->
@@ -243,14 +243,14 @@ class ReservasjonApisTjeneste(
         }
     }
 
-    suspend fun hentAktivReservasjon(oppgaveNøkkel: OppgaveNøkkelDto, kontekst: BrukerkontekstMedOmråde): ReservasjonV3Dto? {
+    suspend fun hentAktivReservasjon(oppgaveNøkkel: OppgaveNøkkelDto, brukerkontekst: BrukerkontekstMedOmråde): ReservasjonV3Dto? {
         val oppgave = aktivOppgaveOppslag.hentAktivOppgave(
                 oppgaveNøkkel.oppgaveEksternId,
                 oppgaveNøkkel.oppgaveTypeEksternId,
             )
         if (!pepClient.harTilgangTilOppgaveV3(
                 oppgave = oppgave,
-                kontekst = kontekst,
+                brukerkontekst = brukerkontekst,
             )
         ) {
             throw ManglerTilgangException("Mangler tilgang til oppgave ${oppgave.eksternId}")
@@ -268,7 +268,7 @@ class ReservasjonApisTjeneste(
     }
 
     suspend fun hentAlleAktiveReservasjoner(kontekst: BrukerkontekstMedOmråde): List<ReservasjonDto> {
-        val innloggetBrukerHarKode6Tilgang = kontekst.harTilgangTilKode6()
+        val innloggetBrukerHarKode6Tilgang = kontekst.harTilgangTilKode6
 
         return reservasjonV3Tjeneste.hentAlleAktiveReservasjoner().flatMap { reservasjonMedOppgaver ->
             val saksbehandler =

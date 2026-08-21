@@ -46,7 +46,7 @@ class OppgaveKoTjenesteTest {
         val oppgaveQueryService = mockk<OppgaveQueryService>()
         val pepClient = mockk<IPepClient>()
         val builder = mockk<OppgaveSammendragDtoBuilder>()
-        val kontekst = kontekst("Z123456")
+        val brukerkontekst = kontekst("Z123456")
         val oppgave = oppgave("med-tilgang", "SAK-1")
         val kø = OppgaveKo(
             id = 1L,
@@ -78,8 +78,8 @@ class OppgaveKoTjenesteTest {
         )
         every { oppgaveKoRepository.hent(1L, false) } returns kø
         every { oppgaveQueryService.queryForOppgave(any()) } returns listOf(oppgave)
-        coEvery { pepClient.harTilgangTilOppgaveV3(oppgave, kontekst, Action.read) } returns true
-        coEvery { builder.bygg(listOf(oppgave), kontekst.bruker, emptyMap()) } returns listOf(sammendrag)
+        coEvery { pepClient.harTilgangTilOppgaveV3(oppgave, brukerkontekst, Action.read) } returns true
+        coEvery { builder.bygg(listOf(oppgave), brukerkontekst, emptyMap()) } returns listOf(sammendrag)
         val tjeneste = OppgaveKoTjeneste(
             transactionalManager = mockk<TransactionalManager>(relaxed = true),
             oppgaveKoRepository = oppgaveKoRepository,
@@ -93,10 +93,10 @@ class OppgaveKoTjenesteTest {
             oppgaveSammendragDtoBuilder = builder,
         )
 
-        val resultat = tjeneste.hentOppgaverFraKøSammendrag(kontekst, 1L, 10L, true)
+        val resultat = tjeneste.hentOppgaverFraKøSammendrag(brukerkontekst, 1L, 10L, true)
 
         assertThat(resultat.oppgaver).containsExactly(sammendrag)
-        coVerify(exactly = 1) { builder.bygg(listOf(oppgave), kontekst.bruker, emptyMap()) }
+        coVerify(exactly = 1) { builder.bygg(listOf(oppgave), brukerkontekst, emptyMap()) }
     }
 
     @Test
@@ -150,7 +150,7 @@ class OppgaveKoTjenesteTest {
         coEvery { pepClient.harTilgangTilOppgaveV3(førsteMedTilgang, kontekst, Action.read) } returns true
 
         val resultat = tjeneste.hentOppgaverFraKø(
-            kontekst = kontekst,
+            brukerkontekst = kontekst,
             oppgaveKoId = 1L,
             ønsketAntallOppgaver = 2L,
         )
@@ -202,5 +202,5 @@ class OppgaveKoTjenesteTest {
         )
     }
 
-    private fun kontekst(navIdent: String) = TestKontekstFactory.brukerkontekst(Områder.K9, navIdent = navIdent)
+    private fun kontekst(navIdent: String) = TestKontekstFactory.brukerkontekst(Områder.K9)
 }

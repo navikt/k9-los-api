@@ -32,10 +32,10 @@ fun Route.UttrekkApiNy() {
         }
     }) {
         medBrukerkontekst { bruker ->
-            if (bruker.harBasisTilgang()) {
+            if (bruker.harBasisTilgang) {
                 val område = bruker.område
-                val innloggetSaksbehandler = bruker.bruker.navIdent.let {
-                    saksbehandlerRepository.finnSaksbehandlerMedIdent(it, bruker.harTilgangTilKode6())
+                val innloggetSaksbehandler = bruker.navIdent.let {
+                    saksbehandlerRepository.finnSaksbehandlerMedIdent(it, bruker.harTilgangTilKode6)
                 }
                 if (innloggetSaksbehandler == null) {
                     call.respond(HttpStatusCode.Forbidden, "Innlogget bruker er ikke i saksbehandler-tabellen.")
@@ -67,7 +67,7 @@ fun Route.UttrekkApiNy() {
         }
     }) {
         medBrukerkontekst { bruker ->
-            if (bruker.harBasisTilgang()) {
+            if (bruker.harBasisTilgang) {
                 val område = bruker.område
                 val id = call.parameters["id"]?.toLongOrNull()
                 if (id == null) {
@@ -102,10 +102,10 @@ fun Route.UttrekkApiNy() {
         }
     }) {
         medBrukerkontekst { bruker ->
-            if (bruker.harBasisTilgang()) {
+            if (bruker.harBasisTilgang) {
                 val område = bruker.område
-                val innloggetSaksbehandler = bruker.bruker.navIdent.let {
-                    saksbehandlerRepository.finnSaksbehandlerMedIdent(it, bruker.harTilgangTilKode6())
+                val innloggetSaksbehandler = bruker.navIdent.let {
+                    saksbehandlerRepository.finnSaksbehandlerMedIdent(it, bruker.harTilgangTilKode6)
                 }
                 if (innloggetSaksbehandler == null) {
                     call.respond(HttpStatusCode.Forbidden, "Innlogget bruker er ikke i saksbehandler-tabellen.")
@@ -144,7 +144,7 @@ fun Route.UttrekkApiNy() {
         }
     }) {
         medBrukerkontekst { bruker ->
-            if (bruker.harBasisTilgang()) {
+            if (bruker.harBasisTilgang) {
                 val område = bruker.område
                 val id = call.parameters["id"]?.toLongOrNull()
                 if (id == null) {
@@ -183,7 +183,7 @@ fun Route.UttrekkApiNy() {
         }
     }) {
         medBrukerkontekst { bruker ->
-            if (bruker.harBasisTilgang()) {
+            if (bruker.harBasisTilgang) {
                 val område = bruker.område
                 try {
                     val id = call.parameters["id"]?.toLongOrNull()
@@ -221,7 +221,7 @@ fun Route.UttrekkApiNy() {
         }
     }) {
         medBrukerkontekst { bruker ->
-            if (bruker.harBasisTilgang()) {
+            if (bruker.harBasisTilgang) {
                 val område = bruker.område
                 val lagretSokId = call.parameters["lagretSokId"]?.toLongOrNull()
                 if (lagretSokId == null) {
@@ -254,7 +254,7 @@ fun Route.UttrekkApiNy() {
         }
     }) {
         medBrukerkontekst { bruker ->
-            if (bruker.harBasisTilgang()) {
+            if (bruker.harBasisTilgang) {
                 val område = bruker.område
                 val id = call.parameters["id"]?.toLongOrNull()
                 if (id == null) {
@@ -317,7 +317,7 @@ fun Route.UttrekkApiNy() {
         }
     }) {
         medBrukerkontekst { bruker ->
-            if (bruker.harBasisTilgang()) {
+            if (bruker.harBasisTilgang) {
                 val område = bruker.område
                 val id = call.parameters["id"]?.toLongOrNull()
                 if (id == null) {

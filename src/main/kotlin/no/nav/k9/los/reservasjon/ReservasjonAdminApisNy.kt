@@ -28,7 +28,7 @@ internal fun Route.ReservasjonAdminApisNy() {
         }
     }) {
         medBrukerkontekst { bruker ->
-            if (bruker.erOppgavestyrer()) {
+            if (bruker.erOppgavestyrer) {
                 call.respond(reservasjonApisTjeneste.hentAlleAktiveReservasjoner(bruker))
             } else {
                 call.respond(HttpStatusCode.Forbidden)

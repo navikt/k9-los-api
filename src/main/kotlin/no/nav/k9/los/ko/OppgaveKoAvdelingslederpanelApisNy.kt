@@ -36,8 +36,8 @@ fun Route.OppgaveKoAvdelingslederApisNy() {
         }
     }) {
         medBrukerkontekst { bruker ->
-            if (bruker.erOppgavestyrer()) {
-                val oppgavekøer = oppgaveKoTjeneste.hentOppgavekøer(skjermet = bruker.harTilgangTilKode6())
+            if (bruker.erOppgavestyrer) {
+                val oppgavekøer = oppgaveKoTjeneste.hentOppgavekøer(skjermet = bruker.harTilgangTilKode6)
                     .map { oppgaveko ->
                         OppgaveKoListeelement(
                             id = oppgaveko.id,
@@ -67,9 +67,9 @@ fun Route.OppgaveKoAvdelingslederApisNy() {
         }
     }) {
         medBrukerkontekst { bruker ->
-            if (bruker.erOppgavestyrer()) {
+            if (bruker.erOppgavestyrer) {
                 val oppgaveKo = call.receive<OppgaveKo>()
-                call.respond(oppgaveKoTjeneste.endre(oppgaveKo, bruker.harTilgangTilKode6()))
+                call.respond(oppgaveKoTjeneste.endre(oppgaveKo, bruker.harTilgangTilKode6))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
@@ -89,7 +89,7 @@ fun Route.OppgaveKoAvdelingslederApisNy() {
         }
     }) {
         medBrukerkontekst { bruker ->
-            if (bruker.erOppgavestyrer()) {
+            if (bruker.erOppgavestyrer) {
                 val kopierOppgaveKoDto = call.receive<KopierOppgaveKoDto>()
                 call.respond(
                     oppgaveKoTjeneste.kopier(
@@ -97,7 +97,7 @@ fun Route.OppgaveKoAvdelingslederApisNy() {
                         kopierOppgaveKoDto.tittel,
                         kopierOppgaveKoDto.taMedQuery,
                         kopierOppgaveKoDto.taMedSaksbehandlere,
-                        bruker.harTilgangTilKode6()
+                        bruker.harTilgangTilKode6
                     )
                 )
             } else {
@@ -119,8 +119,8 @@ fun Route.OppgaveKoAvdelingslederApisNy() {
         }
     }) {
         medBrukerkontekst { bruker ->
-            if (bruker.erOppgavestyrer()) {
-                val alleSaksbehandlere = saksbehandlerRepository.hentAlleSaksbehandlere(bruker.område, bruker.harTilgangTilKode6())
+            if (bruker.erOppgavestyrer) {
+                val alleSaksbehandlere = saksbehandlerRepository.hentAlleSaksbehandlere(bruker.område, bruker.harTilgangTilKode6)
                     .map { saksbehandler ->
                         SaksbehandlerForKolisteDto(saksbehandler)
                     }
@@ -144,9 +144,9 @@ fun Route.OppgaveKoAvdelingslederApisNy() {
         }
     }) {
         medBrukerkontekst { bruker ->
-            if (bruker.erOppgavestyrer()) {
+            if (bruker.erOppgavestyrer) {
                 val opprettOppgaveKoDto = call.receive<OpprettOppgaveKoDto>()
-                val harSkjermetTilgang = bruker.harTilgangTilKode6()
+                val harSkjermetTilgang = bruker.harTilgangTilKode6
                 // OpprettOppgaveKoDto bærer ikke område ennå. Skal det opprettes køer utenfor K9,
                 // må feltet inn i DTO-en og settes av klienten.
                 call.respond(
@@ -175,9 +175,9 @@ fun Route.OppgaveKoAvdelingslederApisNy() {
         }
     }) {
         medBrukerkontekst { bruker ->
-            if (bruker.erOppgavestyrer()) {
+            if (bruker.erOppgavestyrer) {
                 val oppgavekøId = call.parameters["id"]!!
-                call.respond(oppgaveKoTjeneste.hent(oppgavekøId.toLong(), bruker.harTilgangTilKode6()))
+                call.respond(oppgaveKoTjeneste.hent(oppgavekøId.toLong(), bruker.harTilgangTilKode6))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
@@ -197,7 +197,7 @@ fun Route.OppgaveKoAvdelingslederApisNy() {
         }
     }) {
         medBrukerkontekst { bruker ->
-            if (bruker.erOppgavestyrer()) {
+            if (bruker.erOppgavestyrer) {
                 val oppgavekøId = call.parameters["id"]!!
                 call.respond(oppgaveKoTjeneste.slett(oppgavekøId.toLong()))
             } else {
@@ -219,9 +219,9 @@ fun Route.OppgaveKoAvdelingslederApisNy() {
         }
     }) {
         medBrukerkontekst { bruker ->
-            if (bruker.erOppgavestyrer()) {
+            if (bruker.erOppgavestyrer) {
                 val oppgavekøId = call.parameters["id"]!!
-                val skjermet = bruker.harTilgangTilKode6()
+                val skjermet = bruker.harTilgangTilKode6
                 call.respond(oppgaveKoTjeneste.hentAntallMedOgUtenReserverteForKø(oppgavekøId.toLong(), skjermet))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
@@ -246,11 +246,11 @@ fun Route.OppgaveKoAvdelingslederApisNy() {
         }
     }) {
         medBrukerkontekst { bruker ->
-            if (bruker.erOppgavestyrer()) {
+            if (bruker.erOppgavestyrer) {
                 call.respond(
                     oppgaveKoTjeneste.hentKøerForSaksbehandler(
                         call.parameters["id"]?.toLong()!!,
-                        bruker.harTilgangTilKode6()
+                        bruker.harTilgangTilKode6
                     ).map {
                         OppgaveKoIdOgTittel(
                             id = it.id,

@@ -19,7 +19,7 @@ import no.nav.k9.los.oppgaveuthenting.Oppgave
 import org.junit.jupiter.api.Test
 import java.util.UUID
 
-class BrukerkontekstfabrikkTest {
+class BrukerkontekstFactoryTest {
     private val k9Saksbehandler = UUID.randomUUID()
     private val ungSaksbehandler = UUID.randomUUID()
     private val k9Veileder = UUID.randomUUID()
@@ -41,8 +41,8 @@ class BrukerkontekstfabrikkTest {
         runBlocking {
             val token = token(setOf(ungSaksbehandler))
 
-            kontekst(token, Områder.K9).harBasisTilgang() shouldBe false
-            kontekst(token, Områder.UNG).harBasisTilgang() shouldBe true
+            kontekst(token, Områder.K9).harBasisTilgang shouldBe false
+            kontekst(token, Områder.UNG).harBasisTilgang shouldBe true
         }
     }
 
@@ -64,7 +64,7 @@ class BrukerkontekstfabrikkTest {
         runBlocking {
             val token = token(setOf(drift))
 
-            globalKontekst(token).kanLeggeUtDriftsmelding() shouldBe true
+            globalKontekst(token).kanLeggeUtDriftsmelding shouldBe true
         }
     }
 
@@ -114,11 +114,11 @@ class BrukerkontekstfabrikkTest {
         coEvery { getNavIdent() } returns "Z123456"
     }
 
-    private fun harRolle(gruppe: UUID, kontekst: BrukerkontekstMedOmråde): Boolean = when (gruppe) {
-        ungSaksbehandler -> kontekst.harTilgangTilReserveringAvOppgaver()
-        ungVeileder -> kontekst.harBasisTilgang()
-        ungOppgavestyrer -> kontekst.erOppgavestyrer()
-        ungKode6 -> kontekst.harTilgangTilKode6()
+    private fun harRolle(gruppe: UUID, brukerkontekst: BrukerkontekstMedOmråde): Boolean = when (gruppe) {
+        ungSaksbehandler -> brukerkontekst.harTilgangTilReserveringAvOppgaver
+        ungVeileder -> brukerkontekst.harBasisTilgang
+        ungOppgavestyrer -> brukerkontekst.erOppgavestyrer
+        ungKode6 -> brukerkontekst.harTilgangTilKode6
         else -> error("Ukjent testgruppe")
     }
 

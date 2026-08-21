@@ -13,8 +13,7 @@ fun Route.DriftsmeldingerApis() {
 
     get {
         medBrukerkontekstUtenOmråde { bruker ->
-            // Driftsmeldinger er globale (se Gruppeoppsett), så basistilgang i minst ett område er tilstrekkelig
-            if (bruker.harBasisTilgangIEttEllerFlereOmråder()) {
+            if (bruker.harBasisTilgangIEttEllerFlereOmråder) {
                 call.respond(driftsmeldingTjeneste.hentDriftsmeldinger())
             } else {
                 call.respond(HttpStatusCode.Forbidden)
@@ -24,7 +23,7 @@ fun Route.DriftsmeldingerApis() {
 
     post {
         medBrukerkontekstUtenOmråde { bruker ->
-            if (bruker.kanLeggeUtDriftsmelding()) {
+            if (bruker.kanLeggeUtDriftsmelding) {
                 val melding = call.receive<Driftsmelding>()
                 call.respond(driftsmeldingTjeneste.leggTilDriftsmelding(melding.driftsmelding))
             } else {
@@ -35,7 +34,7 @@ fun Route.DriftsmeldingerApis() {
 
     post("/slett") {
         medBrukerkontekstUtenOmråde { bruker ->
-            if (bruker.kanLeggeUtDriftsmelding()) {
+            if (bruker.kanLeggeUtDriftsmelding) {
                 val param = call.receive<IdDto>()
                 call.respond(driftsmeldingTjeneste.slettDriftsmelding(UUID.fromString(param.id)))
             } else {
@@ -46,7 +45,7 @@ fun Route.DriftsmeldingerApis() {
 
     post("/toggle") {
         medBrukerkontekstUtenOmråde { bruker ->
-            if (bruker.kanLeggeUtDriftsmelding()) {
+            if (bruker.kanLeggeUtDriftsmelding) {
                 val param = call.receive<DriftsmeldingSwitch>()
                 call.respond(driftsmeldingTjeneste.toggleDriftsmelding(param))
             } else {

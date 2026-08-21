@@ -101,7 +101,7 @@ class BrukersområderApiTest : AbstractPostgresTest() {
                     single { KoinProfile.LOCAL }
                     single<IPepClient> { PepClientLocal() }
                     single { no.nav.k9.los.infrastruktur.abac.Gruppeoppsett() }
-                    single { no.nav.k9.los.infrastruktur.brukerkontekst.Brukerkontekstfabrikk(get(), lokaleTilganger = true) }
+                    single { no.nav.k9.los.infrastruktur.brukerkontekst.BrukerkontekstFactory(get(), lokaleTilganger = true) }
                     single { OmrådeRepository(dataSource) }
                     single { TransactionalManager(dataSource) }
                     single {

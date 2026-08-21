@@ -28,7 +28,7 @@ fun Route.SisteOppgaverApiNy() {
         }
     }) {
         medBrukerkontekst { bruker ->
-            if (bruker.harBasisTilgang()) {
+            if (bruker.harBasisTilgang) {
                 call.respond(sisteOppgaverTjeneste.hentSisteOppgaver(bruker))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
@@ -48,7 +48,7 @@ fun Route.SisteOppgaverApiNy() {
         }
     }) {
         medBrukerkontekst { bruker ->
-            if (bruker.harBasisTilgang()) {
+            if (bruker.harBasisTilgang) {
                 val oppgaveNøkkel = call.receive<OppgaveNøkkelDto>()
                 sisteOppgaverTjeneste.lagreSisteOppgave(oppgaveNøkkel, bruker)
                 call.respond(HttpStatusCode.OK)
