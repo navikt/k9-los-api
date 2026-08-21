@@ -29,10 +29,10 @@ fun Route.SøkeboksApiNy() {
             }
         }
     ) {
-        medBrukerkontekst { kontekst ->
-            if (kontekst.harBasisTilgang()) {
+        medBrukerkontekst { bruker ->
+            if (bruker.harBasisTilgang()) {
                 val (søkeord) = call.receive<SøkRequest>()
-                call.respond(søkeboksTjeneste.finnOppgaverSammendrag(søkeord, kontekst.område, kontekst))
+                call.respond(søkeboksTjeneste.finnOppgaverSammendrag(søkeord, bruker.område, bruker))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }

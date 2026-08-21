@@ -10,8 +10,8 @@ fun Route.NyeOgFerdigstilteApi() {
     val nyeOgFerdigstilteService by inject<NyeOgFerdigstilteService>()
 
     get {
-        medBrukerkontekst { kontekst ->
-            if (kontekst.harBasisTilgang()) {
+        medBrukerkontekst { bruker ->
+            if (bruker.harBasisTilgang()) {
                 call.respond(nyeOgFerdigstilteService.hentCachetVerdi(call.parameters["gruppe"]?.let { NyeOgFerdigstilteGruppe.valueOf(it) } ?: NyeOgFerdigstilteGruppe.ALLE))
             } else {
                 call.respond(HttpStatusCode.Forbidden)

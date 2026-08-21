@@ -17,9 +17,9 @@ internal fun Route.ReservasjonAdminApis() {
     val reservasjonApisTjeneste by inject<ReservasjonApisTjeneste>()
 
     get("/alle-reservasjoner") {
-        medBrukerkontekst { kontekst ->
-            if (kontekst.erOppgavestyrer()) {
-                call.respond(reservasjonApisTjeneste.hentAlleAktiveReservasjoner(kontekst))
+        medBrukerkontekst { bruker ->
+            if (bruker.erOppgavestyrer()) {
+                call.respond(reservasjonApisTjeneste.hentAlleAktiveReservasjoner(bruker))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }

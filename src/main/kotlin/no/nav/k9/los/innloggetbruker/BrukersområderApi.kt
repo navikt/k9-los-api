@@ -11,11 +11,11 @@ internal fun Route.BrukersområderApi() {
     val saksbehandlerRepository by inject<SaksbehandlerRepository>()
 
     get {
-        medBrukerkontekstUtenOmråde { kontekst ->
-            val skjermet = kontekst.harKode6TilgangIEttEllerFlereOmråder()
+        medBrukerkontekstUtenOmråde { bruker ->
+            val skjermet = bruker.harKode6TilgangIEttEllerFlereOmråder()
             val områder: List<Områder> = (
-                    saksbehandlerRepository.finnSaksbehandlerMedIdent(kontekst.bruker.navIdent, skjermet)
-                        ?: saksbehandlerRepository.finnSaksbehandlerMedEpost(kontekst.bruker.idToken.getUsername(), skjermet)
+                    saksbehandlerRepository.finnSaksbehandlerMedIdent(bruker.bruker.navIdent, skjermet)
+                        ?: saksbehandlerRepository.finnSaksbehandlerMedEpost(bruker.bruker.idToken.getUsername(), skjermet)
                     )
                 ?.områder
                 ?.sortedBy { it.eksternId }

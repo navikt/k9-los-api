@@ -18,9 +18,9 @@ fun Route.NøkkeltallV3Apis() {
     val perEnhetService by inject<FerdigstiltePerEnhetService>()
 
     get("status") {
-        medBrukerkontekst { kontekst ->
-            if (kontekst.erOppgavestyrer()) {
-                call.respond(statusService.hentStatus(kontekst.harTilgangTilKode6()))
+        medBrukerkontekst { bruker ->
+            if (bruker.erOppgavestyrer()) {
+                call.respond(statusService.hentStatus(bruker.harTilgangTilKode6()))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
@@ -28,9 +28,9 @@ fun Route.NøkkeltallV3Apis() {
     }
 
     get("statusfordeling") {
-        medBrukerkontekst { kontekst ->
-            if (kontekst.erOppgavestyrer()) {
-                val kode6 = kontekst.harTilgangTilKode6()
+        medBrukerkontekst { bruker ->
+            if (bruker.erOppgavestyrer()) {
+                val kode6 = bruker.harTilgangTilKode6()
                 call.respond(statusFordelingService.hentVerdi(kode6))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
@@ -39,8 +39,8 @@ fun Route.NøkkeltallV3Apis() {
     }
 
     get("dagens-tall") {
-        medBrukerkontekst { kontekst ->
-            if (kontekst.erOppgavestyrer()) {
+        medBrukerkontekst { bruker ->
+            if (bruker.erOppgavestyrer()) {
                 call.respond(dagensTallService.hentCachetVerdi())
             } else {
                 call.respond(HttpStatusCode.Forbidden)
@@ -49,8 +49,8 @@ fun Route.NøkkeltallV3Apis() {
     }
 
     get("ferdigstilte-per-enhet") {
-        medBrukerkontekst { kontekst ->
-            if (kontekst.erOppgavestyrer()) {
+        medBrukerkontekst { bruker ->
+            if (bruker.erOppgavestyrer()) {
                 val gruppe = call.parameters["gruppe"]?.let { FerdigstiltePerEnhetGruppe.valueOf(it) }
                     ?: FerdigstiltePerEnhetGruppe.ALLE
                 val uker = call.parameters["uker"]?.toInt() ?: 2

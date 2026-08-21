@@ -21,11 +21,11 @@ internal fun Route.InnloggetBrukerApi() {
 
     get("/saksbehandler") {
         if (configuration.koinProfile() != KoinProfile.LOCAL) {
-            medBrukerkontekst { kontekst ->
-                val token = kontekst.bruker.idToken
-                val skjermet = kontekst.harTilgangTilKode6()
+            medBrukerkontekst { bruker ->
+                val token = bruker.bruker.idToken
+                val skjermet = bruker.harTilgangTilKode6()
                 log.info("Henter innlogget saksbehandler med epost ${token.getUsername()} og navn ${token.getName()}")
-                val saksbehandlerIdent = kontekst.bruker.navIdent
+                val saksbehandlerIdent = bruker.bruker.navIdent
                 val saksbehandler =
                     saksbehandlerRepository.finnSaksbehandlerMedIdent(token.getNavIdent(), skjermet)
                         ?: saksbehandlerRepository.finnSaksbehandlerMedEpost(token.getUsername(), skjermet)
@@ -39,10 +39,10 @@ internal fun Route.InnloggetBrukerApi() {
                     token.getName(),
                     brukerIdent = saksbehandlerIdent,
                     id = saksbehandler?.let { saksbehandler.id },
-                    kanSaksbehandle = kontekst.harBasisTilgang(), //TODO mismatch mellom navnet 'kanSaksbehandle' og at alle som har tilgang til systemet har basistilgang
-                    kanOppgavestyre = kontekst.erOppgavestyrer(),
-                    kanReservere = kontekst.harTilgangTilReserveringAvOppgaver(),
-                    kanDrifte = kontekst.kanLeggeUtDriftsmelding(),
+                    kanSaksbehandle = bruker.harBasisTilgang(), //TODO mismatch mellom navnet 'kanSaksbehandle' og at alle som har tilgang til systemet har basistilgang
+                    kanOppgavestyre = bruker.erOppgavestyrer(),
+                    kanReservere = bruker.harTilgangTilReserveringAvOppgaver(),
+                    kanDrifte = bruker.kanLeggeUtDriftsmelding(),
                     finnesISaksbehandlerTabell = finnesISaksbehandlerTabell,
                     områder = saksbehandler?.områder ?: emptyList()
                 )
@@ -57,7 +57,7 @@ internal fun Route.InnloggetBrukerApi() {
                             navident = saksbehandlerIdent,
                             navn = token.getName(),
                             epost = token.getUsername(),
-                            enhet = azureGraphService.hentEnhet(kontekst),
+                            enhet = azureGraphService.hentEnhet(bruker),
                             områder = saksbehandler.områder
                         ),
                         skjermet

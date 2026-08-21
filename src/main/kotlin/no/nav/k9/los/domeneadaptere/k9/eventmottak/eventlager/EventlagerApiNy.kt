@@ -48,8 +48,8 @@ internal fun Route.EventlagerApiNy() {
             }
         }
     }) {
-        medBrukerkontekstUtenOmråde { kontekst ->
-            if (kontekst.kanLeggeUtDriftsmelding()) {
+        medBrukerkontekstUtenOmråde { bruker ->
+            if (bruker.kanLeggeUtDriftsmelding()) {
                 val fagsystem = Fagsystem.fraKode(call.parameters["fagsystem"]!!)
                 val eksternId = call.parameters["eksternId"]!!
 

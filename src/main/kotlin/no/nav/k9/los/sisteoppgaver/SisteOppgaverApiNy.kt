@@ -27,9 +27,9 @@ fun Route.SisteOppgaverApiNy() {
             HttpStatusCode.OK to { body<List<SisteOppgaverDto>>() }
         }
     }) {
-        medBrukerkontekst { kontekst ->
-            if (kontekst.harBasisTilgang()) {
-                call.respond(sisteOppgaverTjeneste.hentSisteOppgaver(kontekst))
+        medBrukerkontekst { bruker ->
+            if (bruker.harBasisTilgang()) {
+                call.respond(sisteOppgaverTjeneste.hentSisteOppgaver(bruker))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
@@ -47,10 +47,10 @@ fun Route.SisteOppgaverApiNy() {
             body<OppgaveNøkkelDto>()
         }
     }) {
-        medBrukerkontekst { kontekst ->
-            if (kontekst.harBasisTilgang()) {
+        medBrukerkontekst { bruker ->
+            if (bruker.harBasisTilgang()) {
                 val oppgaveNøkkel = call.receive<OppgaveNøkkelDto>()
-                sisteOppgaverTjeneste.lagreSisteOppgave(oppgaveNøkkel, kontekst)
+                sisteOppgaverTjeneste.lagreSisteOppgave(oppgaveNøkkel, bruker)
                 call.respond(HttpStatusCode.OK)
             } else {
                 call.respond(HttpStatusCode.Forbidden)

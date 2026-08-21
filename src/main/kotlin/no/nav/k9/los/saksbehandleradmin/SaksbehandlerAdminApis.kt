@@ -16,9 +16,9 @@ internal fun Route.SaksbehandlerAdminApis() {
     val reservasjonApisTjeneste by inject<ReservasjonApisTjeneste>()
 
     get("/saksbehandlere") {
-        medBrukerkontekst { kontekst ->
-            if (kontekst.erOppgavestyrer()) {
-                call.respond(saksbehandlerAdminTjeneste.hentSaksbehandlere(kontekst.område, kontekst.harTilgangTilKode6()))
+        medBrukerkontekst { bruker ->
+            if (bruker.erOppgavestyrer()) {
+                call.respond(saksbehandlerAdminTjeneste.hentSaksbehandlere(bruker.område, bruker.harTilgangTilKode6()))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
@@ -27,14 +27,14 @@ internal fun Route.SaksbehandlerAdminApis() {
 
     // TODO: slett når frontend har begynt å bruke nytt endepunkt
     post("/saksbehandlere/sok") {
-        medBrukerkontekst { kontekst ->
-            if (kontekst.erOppgavestyrer()) {
+        medBrukerkontekst { bruker ->
+            if (bruker.erOppgavestyrer()) {
                 val epost = call.receive<EpostDto>()
                 call.respond(
                     saksbehandlerAdminTjeneste.søkSaksbehandler(
                         epost,
                         Områder.K9,
-                        kontekst.harTilgangTilKode6(),
+                        bruker.harTilgangTilKode6(),
                     )
                 )
             } else {
@@ -44,8 +44,8 @@ internal fun Route.SaksbehandlerAdminApis() {
     }
 
     post("/saksbehandlere/legg-til") {
-        medBrukerkontekst { kontekst ->
-            if (kontekst.erOppgavestyrer()) {
+        medBrukerkontekst { bruker ->
+            if (bruker.erOppgavestyrer()) {
                 val request = call.receive<EpostDto>()
                 call.respond(saksbehandlerAdminTjeneste.leggTilSaksbehandlerForEpost(request.epost, Områder.K9))
             } else {
@@ -55,10 +55,10 @@ internal fun Route.SaksbehandlerAdminApis() {
     }
 
     post("/saksbehandlere/slett") {
-        medBrukerkontekst { kontekst ->
-            if (kontekst.erOppgavestyrer()) {
+        medBrukerkontekst { bruker ->
+            if (bruker.erOppgavestyrer()) {
                 val request = call.receive<EpostDto>()
-                call.respond(saksbehandlerAdminTjeneste.slettSaksbehandler(request.epost, Områder.K9, kontekst))
+                call.respond(saksbehandlerAdminTjeneste.slettSaksbehandler(request.epost, Områder.K9, bruker))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
@@ -66,10 +66,10 @@ internal fun Route.SaksbehandlerAdminApis() {
     }
 
     post("/saksbehandlere/slettForId") {
-        medBrukerkontekst { kontekst ->
-            if (kontekst.erOppgavestyrer()) {
+        medBrukerkontekst { bruker ->
+            if (bruker.erOppgavestyrer()) {
                 val id = call.receive<Long>()
-                call.respond(saksbehandlerAdminTjeneste.slettSaksbehandlerForId(id, kontekst))
+                call.respond(saksbehandlerAdminTjeneste.slettSaksbehandlerForId(id, bruker))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
@@ -78,9 +78,9 @@ internal fun Route.SaksbehandlerAdminApis() {
 
     // TODO: slett når frontend har begynt å bruke nytt endepunkt i ReservasjonApis
     get("reservasjoner") {
-        medBrukerkontekst { kontekst ->
-            if (kontekst.erOppgavestyrer()) {
-                call.respond(reservasjonApisTjeneste.hentAlleAktiveReservasjoner(kontekst))
+        medBrukerkontekst { bruker ->
+            if (bruker.erOppgavestyrer()) {
+                call.respond(reservasjonApisTjeneste.hentAlleAktiveReservasjoner(bruker))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }

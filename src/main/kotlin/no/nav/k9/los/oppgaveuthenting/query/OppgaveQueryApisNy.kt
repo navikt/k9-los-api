@@ -27,9 +27,9 @@ fun Route.OppgaveQueryApisNy() {
             }
         }
     }) {
-        medBrukerkontekst { kontekst ->
-            if (kontekst.harBasisTilgang()) {
-                val område = kontekst.område
+        medBrukerkontekst { bruker ->
+            if (bruker.harBasisTilgang()) {
+                val område = bruker.område
                 val oppgaveQuery = call.receive<OppgaveQuery>()
                 call.respond(oppgaveQueryService.queryForAntall(QueryRequest(oppgaveQuery, false, område = område)))
             } else {
@@ -50,9 +50,9 @@ fun Route.OppgaveQueryApisNy() {
             }
         }
     }) {
-        medBrukerkontekst { kontekst ->
-            if (kontekst.harBasisTilgang()) {
-                val område = kontekst.område
+        medBrukerkontekst { bruker ->
+            if (bruker.harBasisTilgang()) {
+                val område = bruker.område
                 val oppgaveQuery = call.receive<OppgaveQuery>()
                 call.respond(oppgaveQueryService.validate(QueryRequest(oppgaveQuery, område = område)))
             } else {
@@ -70,9 +70,9 @@ fun Route.OppgaveQueryApisNy() {
             }
         }
     }) {
-        medBrukerkontekst { kontekst ->
-            if (kontekst.harBasisTilgang()) {
-                val område = kontekst.område
+        medBrukerkontekst { bruker ->
+            if (bruker.harBasisTilgang()) {
+                val område = bruker.område
                 call.respond(oppgaveQueryService.hentAlleFelter())
             } else {
                 call.respond(HttpStatusCode.Forbidden)

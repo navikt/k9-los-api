@@ -22,11 +22,11 @@ internal fun Route.ReservasjonApis() {
     val reservasjonApisTjeneste by inject<ReservasjonApisTjeneste>()
 
     post("/reserver") {
-        medBrukerkontekst { kontekst ->
-            val skjermet = kontekst.harTilgangTilKode6()
-            if (kontekst.harTilgangTilReserveringAvOppgaver()) {
+        medBrukerkontekst { bruker ->
+            val skjermet = bruker.harTilgangTilKode6()
+            if (bruker.harTilgangTilReserveringAvOppgaver()) {
                 val oppgaveIdMedOverstyringDto = call.receive<OppgaveIdMedOverstyringDto>()
-                val navident = kontekst.bruker.navIdent
+                val navident = bruker.bruker.navIdent
                 val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedIdent(navident, skjermet)
                     ?: throw IllegalStateException("Fant ikke saksbehandler $navident ved forsøk på å reservasjon av oppgave")
 
@@ -44,14 +44,14 @@ internal fun Route.ReservasjonApis() {
     }
 
     get("/reserverte") {
-        medBrukerkontekst { kontekst ->
-            val skjermet = kontekst.harTilgangTilKode6()
-            if (kontekst.harBasisTilgang()) {
-                val innloggetBrukerNavIdent = kontekst.bruker.navIdent
+        medBrukerkontekst { bruker ->
+            val skjermet = bruker.harTilgangTilKode6()
+            if (bruker.harBasisTilgang()) {
+                val innloggetBrukerNavIdent = bruker.bruker.navIdent
                 val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedIdent(innloggetBrukerNavIdent, skjermet)
 
                 if (innloggetBruker != null) {
-                    val reservasjonV3Dtos = reservasjonApisTjeneste.hentReserverteOppgaverForSaksbehandler(innloggetBruker, kontekst)
+                    val reservasjonV3Dtos = reservasjonApisTjeneste.hentReserverteOppgaverForSaksbehandler(innloggetBruker, bruker)
                     call.respond(reservasjonV3Dtos)
                 } else {
                     log.info("Innlogger bruker med brukernavn $innloggetBrukerNavIdent finnes ikke i saksbehandlertabellen")
@@ -67,11 +67,11 @@ internal fun Route.ReservasjonApis() {
     }
 
     post("/opphev") {
-        medBrukerkontekst { kontekst ->
-            val skjermet = kontekst.harTilgangTilKode6()
-            if (kontekst.harBasisTilgang()) {
+        medBrukerkontekst { bruker ->
+            val skjermet = bruker.harTilgangTilKode6()
+            if (bruker.harBasisTilgang()) {
                 val params = call.receive<List<AnnullerReservasjonDto>>()
-                val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedIdent(kontekst.bruker.navIdent, skjermet)!!
+                val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedIdent(bruker.bruker.navIdent, skjermet)!!
 
                 try {
                     log.info(
@@ -91,16 +91,16 @@ internal fun Route.ReservasjonApis() {
     }
 
     post("/forleng") {
-        medBrukerkontekst { kontekst ->
-            val skjermet = kontekst.harTilgangTilKode6()
-            if (kontekst.harBasisTilgang()) {
+        medBrukerkontekst { bruker ->
+            val skjermet = bruker.harTilgangTilKode6()
+            if (bruker.harBasisTilgang()) {
                 val forlengReservasjonDto = call.receive<ForlengReservasjonDto>()
                 val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedIdent(
-                    kontekst.bruker.navIdent, skjermet
+                    bruker.bruker.navIdent, skjermet
                 )!!
 
                 try {
-                    call.respond(reservasjonApisTjeneste.forlengReservasjon(forlengReservasjonDto, innloggetBruker, kontekst))
+                    call.respond(reservasjonApisTjeneste.forlengReservasjon(forlengReservasjonDto, innloggetBruker, bruker))
                 } catch (e: FinnerIkkeDataException) {
                     call.respond(HttpStatusCode.NotFound, "Fant ingen aktiv reservasjon for angitt reservasjonsnøkkel")
                 }
@@ -111,18 +111,18 @@ internal fun Route.ReservasjonApis() {
     }
 
     post("/flytt") {
-        medBrukerkontekst { kontekst ->
-            val skjermet = kontekst.harTilgangTilKode6()
-            if (kontekst.harBasisTilgang()) {
+        medBrukerkontekst { bruker ->
+            val skjermet = bruker.harTilgangTilKode6()
+            if (bruker.harBasisTilgang()) {
                 val params = call.receive<FlyttReservasjonDto>()
 
                 val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedIdent(
-                    kontekst.bruker.navIdent, skjermet
+                    bruker.bruker.navIdent, skjermet
                 )!!
 
                 try {
                     log.info("Flytter reservasjonen til ${params.brukerIdent} (Gjort av ${innloggetBruker.navident})")
-                    call.respond(reservasjonApisTjeneste.overførReservasjon(params, innloggetBruker, skjermet, kontekst))
+                    call.respond(reservasjonApisTjeneste.overførReservasjon(params, innloggetBruker, skjermet, bruker))
                 } catch (e: FinnerIkkeDataException) {
                     call.respond(HttpStatusCode.NotFound, "Fant ingen aktiv reservasjon for angitt reservasjonsnøkkel")
                 }
@@ -133,15 +133,15 @@ internal fun Route.ReservasjonApis() {
     }
 
     post("/reservasjon/endre") {
-        medBrukerkontekst { kontekst ->
-            val skjermet = kontekst.harTilgangTilKode6()
-            if (kontekst.harBasisTilgang()) {
+        medBrukerkontekst { bruker ->
+            val skjermet = bruker.harTilgangTilKode6()
+            if (bruker.harBasisTilgang()) {
                 val reservasjonEndringDto = call.receive<List<ReservasjonEndringDto>>()
                 val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedIdent(
-                    kontekst.bruker.navIdent, skjermet
+                    bruker.bruker.navIdent, skjermet
                 )!!
                 try {
-                    call.respond(reservasjonApisTjeneste.endreReservasjoner(reservasjonEndringDto, innloggetBruker, skjermet, kontekst))
+                    call.respond(reservasjonApisTjeneste.endreReservasjoner(reservasjonEndringDto, innloggetBruker, skjermet, bruker))
                 } catch (e: FinnerIkkeDataException) {
                     call.respond(HttpStatusCode.NotFound, "Fant ingen aktiv reservasjon for angitt reservasjonsnøkkel")
                 }
@@ -152,11 +152,11 @@ internal fun Route.ReservasjonApis() {
     }
 
     post("/flytt/sok") {
-        medBrukerkontekst { kontekst ->
-            val skjermet = kontekst.harTilgangTilKode6()
-            if (kontekst.harBasisTilgang()) {
+        medBrukerkontekst { bruker ->
+            val skjermet = bruker.harTilgangTilKode6()
+            if (bruker.harBasisTilgang()) {
                 val params = call.receive<BrukerIdentDto>()
-                val sokSaksbehandlerMedIdent = saksbehandlerRepository.sokSaksbehandler(params.brukerIdent, kontekst.område, skjermet)
+                val sokSaksbehandlerMedIdent = saksbehandlerRepository.sokSaksbehandler(params.brukerIdent, bruker.område, skjermet)
                 call.respond(sokSaksbehandlerMedIdent)
             } else {
                 call.respond(HttpStatusCode.Forbidden)
@@ -165,10 +165,10 @@ internal fun Route.ReservasjonApis() {
     }
 
     get("/saksbehandlere") {
-        medBrukerkontekst { kontekst ->
-            val skjermet = kontekst.harTilgangTilKode6()
-            if (kontekst.harBasisTilgang()) {
-                val alleSaksbehandlere = saksbehandlerRepository.hentAlleSaksbehandlere(kontekst.område, skjermet)
+        medBrukerkontekst { bruker ->
+            val skjermet = bruker.harTilgangTilKode6()
+            if (bruker.harBasisTilgang()) {
+                val alleSaksbehandlere = saksbehandlerRepository.hentAlleSaksbehandlere(bruker.område, skjermet)
                 val saksbehandlerDtoListe =
                     alleSaksbehandlere.filter { saksbehandler -> !saksbehandler.navn.isNullOrBlank() && !saksbehandler.navident.isNullOrBlank() }
                         .map { saksbehandler ->
@@ -182,14 +182,14 @@ internal fun Route.ReservasjonApis() {
     }
 
     get("/aktiv-reservasjon") {
-        medBrukerkontekst { kontekst ->
-            if (kontekst.harBasisTilgang()) {
+        medBrukerkontekst { bruker ->
+            if (bruker.harBasisTilgang()) {
                 val oppgaveNøkkel = OppgaveNøkkelDto(
                     call.queryParameters["oppgaveEksternId"]!!,
                     call.queryParameters["oppgaveTypeEksternId"]!!,
                     call.queryParameters["områdeEksternId"]!!
                 )
-                val aktivReservasjon = reservasjonApisTjeneste.hentAktivReservasjon(oppgaveNøkkel, kontekst)
+                val aktivReservasjon = reservasjonApisTjeneste.hentAktivReservasjon(oppgaveNøkkel, bruker)
                 if (aktivReservasjon != null) {
                     call.respond(aktivReservasjon)
                 } else {
@@ -203,9 +203,9 @@ internal fun Route.ReservasjonApis() {
 
     // TODO: Fjernes herfra med overgang til ny API-struktur. Erstattet i ReservasjonAdminApis
     get("/alle-reservasjoner") {
-        medBrukerkontekst { kontekst ->
-            if (kontekst.erOppgavestyrer()) {
-                call.respond(reservasjonApisTjeneste.hentAlleAktiveReservasjoner(kontekst))
+        medBrukerkontekst { bruker ->
+            if (bruker.erOppgavestyrer()) {
+                call.respond(reservasjonApisTjeneste.hentAlleAktiveReservasjoner(bruker))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }

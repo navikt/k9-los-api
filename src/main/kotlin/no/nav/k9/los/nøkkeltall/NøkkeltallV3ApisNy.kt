@@ -28,10 +28,10 @@ fun Route.NøkkeltallV3ApisNy() {
             }
         }
     }) {
-        medBrukerkontekst { kontekst ->
-            if (kontekst.erOppgavestyrer()) {
-                val område = kontekst.område
-                call.respond(statusService.hentStatus(kontekst.harTilgangTilKode6()))
+        medBrukerkontekst { bruker ->
+            if (bruker.erOppgavestyrer()) {
+                val område = bruker.område
+                call.respond(statusService.hentStatus(bruker.harTilgangTilKode6()))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
@@ -47,10 +47,10 @@ fun Route.NøkkeltallV3ApisNy() {
             }
         }
     }) {
-        medBrukerkontekst { kontekst ->
-            if (kontekst.erOppgavestyrer()) {
-                val område = kontekst.område
-                val kode6 = kontekst.harTilgangTilKode6()
+        medBrukerkontekst { bruker ->
+            if (bruker.erOppgavestyrer()) {
+                val område = bruker.område
+                val kode6 = bruker.harTilgangTilKode6()
                 call.respond(statusFordelingService.hentVerdi(kode6))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
@@ -67,9 +67,9 @@ fun Route.NøkkeltallV3ApisNy() {
             }
         }
     }) {
-        medBrukerkontekst { kontekst ->
-            if (kontekst.erOppgavestyrer()) {
-                val område = kontekst.område
+        medBrukerkontekst { bruker ->
+            if (bruker.erOppgavestyrer()) {
+                val område = bruker.område
                 call.respond(dagensTallService.hentCachetVerdi())
             } else {
                 call.respond(HttpStatusCode.Forbidden)
@@ -96,9 +96,9 @@ fun Route.NøkkeltallV3ApisNy() {
             }
         }
     }) {
-        medBrukerkontekst { kontekst ->
-            if (kontekst.erOppgavestyrer()) {
-                val område = kontekst.område
+        medBrukerkontekst { bruker ->
+            if (bruker.erOppgavestyrer()) {
+                val område = bruker.område
                 val gruppe = call.parameters["gruppe"]?.let { FerdigstiltePerEnhetGruppe.valueOf(it) }
                     ?: FerdigstiltePerEnhetGruppe.ALLE
                 val uker = call.parameters["uker"]?.toInt() ?: 2

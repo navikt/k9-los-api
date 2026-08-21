@@ -31,11 +31,11 @@ fun Route.UttrekkApiNy() {
             HttpStatusCode.OK to { body<List<Uttrekk>>() }
         }
     }) {
-        medBrukerkontekst { kontekst ->
-            if (kontekst.harBasisTilgang()) {
-                val område = kontekst.område
-                val innloggetSaksbehandler = kontekst.bruker.navIdent.let {
-                    saksbehandlerRepository.finnSaksbehandlerMedIdent(it, kontekst.harTilgangTilKode6())
+        medBrukerkontekst { bruker ->
+            if (bruker.harBasisTilgang()) {
+                val område = bruker.område
+                val innloggetSaksbehandler = bruker.bruker.navIdent.let {
+                    saksbehandlerRepository.finnSaksbehandlerMedIdent(it, bruker.harTilgangTilKode6())
                 }
                 if (innloggetSaksbehandler == null) {
                     call.respond(HttpStatusCode.Forbidden, "Innlogget bruker er ikke i saksbehandler-tabellen.")
@@ -66,9 +66,9 @@ fun Route.UttrekkApiNy() {
             HttpStatusCode.NotFound to { }
         }
     }) {
-        medBrukerkontekst { kontekst ->
-            if (kontekst.harBasisTilgang()) {
-                val område = kontekst.område
+        medBrukerkontekst { bruker ->
+            if (bruker.harBasisTilgang()) {
+                val område = bruker.område
                 val id = call.parameters["id"]?.toLongOrNull()
                 if (id == null) {
                     call.respond(HttpStatusCode.BadRequest, "Ugyldig uttrekk-id")
@@ -101,11 +101,11 @@ fun Route.UttrekkApiNy() {
             HttpStatusCode.Created to { body<Long>() }
         }
     }) {
-        medBrukerkontekst { kontekst ->
-            if (kontekst.harBasisTilgang()) {
-                val område = kontekst.område
-                val innloggetSaksbehandler = kontekst.bruker.navIdent.let {
-                    saksbehandlerRepository.finnSaksbehandlerMedIdent(it, kontekst.harTilgangTilKode6())
+        medBrukerkontekst { bruker ->
+            if (bruker.harBasisTilgang()) {
+                val område = bruker.område
+                val innloggetSaksbehandler = bruker.bruker.navIdent.let {
+                    saksbehandlerRepository.finnSaksbehandlerMedIdent(it, bruker.harTilgangTilKode6())
                 }
                 if (innloggetSaksbehandler == null) {
                     call.respond(HttpStatusCode.Forbidden, "Innlogget bruker er ikke i saksbehandler-tabellen.")
@@ -143,9 +143,9 @@ fun Route.UttrekkApiNy() {
             HttpStatusCode.OK to { }
         }
     }) {
-        medBrukerkontekst { kontekst ->
-            if (kontekst.harBasisTilgang()) {
-                val område = kontekst.område
+        medBrukerkontekst { bruker ->
+            if (bruker.harBasisTilgang()) {
+                val område = bruker.område
                 val id = call.parameters["id"]?.toLongOrNull()
                 if (id == null) {
                     call.respond(HttpStatusCode.BadRequest, "Ugyldig uttrekk-id")
@@ -182,9 +182,9 @@ fun Route.UttrekkApiNy() {
             HttpStatusCode.BadRequest to { }
         }
     }) {
-        medBrukerkontekst { kontekst ->
-            if (kontekst.harBasisTilgang()) {
-                val område = kontekst.område
+        medBrukerkontekst { bruker ->
+            if (bruker.harBasisTilgang()) {
+                val område = bruker.område
                 try {
                     val id = call.parameters["id"]?.toLongOrNull()
                     if (id == null) {
@@ -220,9 +220,9 @@ fun Route.UttrekkApiNy() {
             HttpStatusCode.OK to { body<Int>() }
         }
     }) {
-        medBrukerkontekst { kontekst ->
-            if (kontekst.harBasisTilgang()) {
-                val område = kontekst.område
+        medBrukerkontekst { bruker ->
+            if (bruker.harBasisTilgang()) {
+                val område = bruker.område
                 val lagretSokId = call.parameters["lagretSokId"]?.toLongOrNull()
                 if (lagretSokId == null) {
                     call.respond(HttpStatusCode.BadRequest, "Ugyldig lagretSokId")
@@ -253,9 +253,9 @@ fun Route.UttrekkApiNy() {
             HttpStatusCode.NotFound to { }
         }
     }) {
-        medBrukerkontekst { kontekst ->
-            if (kontekst.harBasisTilgang()) {
-                val område = kontekst.område
+        medBrukerkontekst { bruker ->
+            if (bruker.harBasisTilgang()) {
+                val område = bruker.område
                 val id = call.parameters["id"]?.toLongOrNull()
                 if (id == null) {
                     call.respond(HttpStatusCode.BadRequest, "Ugyldig uttrekk-id")
@@ -316,9 +316,9 @@ fun Route.UttrekkApiNy() {
             HttpStatusCode.NotFound to { }
         }
     }) {
-        medBrukerkontekst { kontekst ->
-            if (kontekst.harBasisTilgang()) {
-                val område = kontekst.område
+        medBrukerkontekst { bruker ->
+            if (bruker.harBasisTilgang()) {
+                val område = bruker.område
                 val id = call.parameters["id"]?.toLongOrNull()
                 if (id == null) {
                     call.respond(HttpStatusCode.BadRequest, "Ugyldig uttrekk-id")
