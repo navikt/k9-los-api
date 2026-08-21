@@ -8,14 +8,12 @@ import io.ktor.http.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.brukerkontekst.medBrukerkontekst
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
 import org.koin.ktor.ext.inject
 
 fun Route.UttrekkApiNy() {
-    val pepClient by inject<IPepClient>()
     val uttrekkTjeneste by inject<UttrekkTjeneste>()
     val uttrekkRepository by inject<UttrekkRepository>()
     val uttrekkCsvGenerator by inject<UttrekkCsvGenerator>()
@@ -34,10 +32,10 @@ fun Route.UttrekkApiNy() {
         }
     }) {
         medBrukerkontekst { kontekst ->
-            if (pepClient.harBasisTilgang(kontekst)) {
+            if (kontekst.harBasisTilgang()) {
                 val område = kontekst.område
                 val innloggetSaksbehandler = kontekst.bruker.navIdent.let {
-                    saksbehandlerRepository.finnSaksbehandlerMedIdent(it, pepClient.harTilgangTilKode6(kontekst))
+                    saksbehandlerRepository.finnSaksbehandlerMedIdent(it, kontekst.harTilgangTilKode6())
                 }
                 if (innloggetSaksbehandler == null) {
                     call.respond(HttpStatusCode.Forbidden, "Innlogget bruker er ikke i saksbehandler-tabellen.")
@@ -69,7 +67,7 @@ fun Route.UttrekkApiNy() {
         }
     }) {
         medBrukerkontekst { kontekst ->
-            if (pepClient.harBasisTilgang(kontekst)) {
+            if (kontekst.harBasisTilgang()) {
                 val område = kontekst.område
                 val id = call.parameters["id"]?.toLongOrNull()
                 if (id == null) {
@@ -104,10 +102,10 @@ fun Route.UttrekkApiNy() {
         }
     }) {
         medBrukerkontekst { kontekst ->
-            if (pepClient.harBasisTilgang(kontekst)) {
+            if (kontekst.harBasisTilgang()) {
                 val område = kontekst.område
                 val innloggetSaksbehandler = kontekst.bruker.navIdent.let {
-                    saksbehandlerRepository.finnSaksbehandlerMedIdent(it, pepClient.harTilgangTilKode6(kontekst))
+                    saksbehandlerRepository.finnSaksbehandlerMedIdent(it, kontekst.harTilgangTilKode6())
                 }
                 if (innloggetSaksbehandler == null) {
                     call.respond(HttpStatusCode.Forbidden, "Innlogget bruker er ikke i saksbehandler-tabellen.")
@@ -146,7 +144,7 @@ fun Route.UttrekkApiNy() {
         }
     }) {
         medBrukerkontekst { kontekst ->
-            if (pepClient.harBasisTilgang(kontekst)) {
+            if (kontekst.harBasisTilgang()) {
                 val område = kontekst.område
                 val id = call.parameters["id"]?.toLongOrNull()
                 if (id == null) {
@@ -185,7 +183,7 @@ fun Route.UttrekkApiNy() {
         }
     }) {
         medBrukerkontekst { kontekst ->
-            if (pepClient.harBasisTilgang(kontekst)) {
+            if (kontekst.harBasisTilgang()) {
                 val område = kontekst.område
                 try {
                     val id = call.parameters["id"]?.toLongOrNull()
@@ -223,7 +221,7 @@ fun Route.UttrekkApiNy() {
         }
     }) {
         medBrukerkontekst { kontekst ->
-            if (pepClient.harBasisTilgang(kontekst)) {
+            if (kontekst.harBasisTilgang()) {
                 val område = kontekst.område
                 val lagretSokId = call.parameters["lagretSokId"]?.toLongOrNull()
                 if (lagretSokId == null) {
@@ -256,7 +254,7 @@ fun Route.UttrekkApiNy() {
         }
     }) {
         medBrukerkontekst { kontekst ->
-            if (pepClient.harBasisTilgang(kontekst)) {
+            if (kontekst.harBasisTilgang()) {
                 val område = kontekst.område
                 val id = call.parameters["id"]?.toLongOrNull()
                 if (id == null) {
@@ -319,7 +317,7 @@ fun Route.UttrekkApiNy() {
         }
     }) {
         medBrukerkontekst { kontekst ->
-            if (pepClient.harBasisTilgang(kontekst)) {
+            if (kontekst.harBasisTilgang()) {
                 val område = kontekst.område
                 val id = call.parameters["id"]?.toLongOrNull()
                 if (id == null) {

@@ -5,7 +5,6 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.k9.los.feilhandtering.FinnerIkkeDataException
-import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.brukerkontekst.medBrukerkontekst
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
 import no.nav.k9.los.oppgaveuthenting.OppgaveNøkkelDto
@@ -20,13 +19,12 @@ private val log: Logger = LoggerFactory.getLogger("nav.OppgaveApis")
 
 internal fun Route.ReservasjonApis() {
     val saksbehandlerRepository by inject<SaksbehandlerRepository>()
-    val pepClient by inject<IPepClient>()
     val reservasjonApisTjeneste by inject<ReservasjonApisTjeneste>()
 
     post("/reserver") {
         medBrukerkontekst { kontekst ->
-            val skjermet = pepClient.harTilgangTilKode6(kontekst)
-            if (pepClient.harTilgangTilReserveringAvOppgaver(kontekst)) {
+            val skjermet = kontekst.harTilgangTilKode6()
+            if (kontekst.harTilgangTilReserveringAvOppgaver()) {
                 val oppgaveIdMedOverstyringDto = call.receive<OppgaveIdMedOverstyringDto>()
                 val navident = kontekst.bruker.navIdent
                 val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedIdent(navident, skjermet)
@@ -47,8 +45,8 @@ internal fun Route.ReservasjonApis() {
 
     get("/reserverte") {
         medBrukerkontekst { kontekst ->
-            val skjermet = pepClient.harTilgangTilKode6(kontekst)
-            if (pepClient.harBasisTilgang(kontekst)) {
+            val skjermet = kontekst.harTilgangTilKode6()
+            if (kontekst.harBasisTilgang()) {
                 val innloggetBrukerNavIdent = kontekst.bruker.navIdent
                 val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedIdent(innloggetBrukerNavIdent, skjermet)
 
@@ -70,8 +68,8 @@ internal fun Route.ReservasjonApis() {
 
     post("/opphev") {
         medBrukerkontekst { kontekst ->
-            val skjermet = pepClient.harTilgangTilKode6(kontekst)
-            if (pepClient.harBasisTilgang(kontekst)) {
+            val skjermet = kontekst.harTilgangTilKode6()
+            if (kontekst.harBasisTilgang()) {
                 val params = call.receive<List<AnnullerReservasjonDto>>()
                 val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedIdent(kontekst.bruker.navIdent, skjermet)!!
 
@@ -94,8 +92,8 @@ internal fun Route.ReservasjonApis() {
 
     post("/forleng") {
         medBrukerkontekst { kontekst ->
-            val skjermet = pepClient.harTilgangTilKode6(kontekst)
-            if (pepClient.harBasisTilgang(kontekst)) {
+            val skjermet = kontekst.harTilgangTilKode6()
+            if (kontekst.harBasisTilgang()) {
                 val forlengReservasjonDto = call.receive<ForlengReservasjonDto>()
                 val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedIdent(
                     kontekst.bruker.navIdent, skjermet
@@ -114,8 +112,8 @@ internal fun Route.ReservasjonApis() {
 
     post("/flytt") {
         medBrukerkontekst { kontekst ->
-            val skjermet = pepClient.harTilgangTilKode6(kontekst)
-            if (pepClient.harBasisTilgang(kontekst)) {
+            val skjermet = kontekst.harTilgangTilKode6()
+            if (kontekst.harBasisTilgang()) {
                 val params = call.receive<FlyttReservasjonDto>()
 
                 val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedIdent(
@@ -136,8 +134,8 @@ internal fun Route.ReservasjonApis() {
 
     post("/reservasjon/endre") {
         medBrukerkontekst { kontekst ->
-            val skjermet = pepClient.harTilgangTilKode6(kontekst)
-            if (pepClient.harBasisTilgang(kontekst)) {
+            val skjermet = kontekst.harTilgangTilKode6()
+            if (kontekst.harBasisTilgang()) {
                 val reservasjonEndringDto = call.receive<List<ReservasjonEndringDto>>()
                 val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedIdent(
                     kontekst.bruker.navIdent, skjermet
@@ -155,8 +153,8 @@ internal fun Route.ReservasjonApis() {
 
     post("/flytt/sok") {
         medBrukerkontekst { kontekst ->
-            val skjermet = pepClient.harTilgangTilKode6(kontekst)
-            if (pepClient.harBasisTilgang(kontekst)) {
+            val skjermet = kontekst.harTilgangTilKode6()
+            if (kontekst.harBasisTilgang()) {
                 val params = call.receive<BrukerIdentDto>()
                 val sokSaksbehandlerMedIdent = saksbehandlerRepository.sokSaksbehandler(params.brukerIdent, kontekst.område, skjermet)
                 call.respond(sokSaksbehandlerMedIdent)
@@ -168,8 +166,8 @@ internal fun Route.ReservasjonApis() {
 
     get("/saksbehandlere") {
         medBrukerkontekst { kontekst ->
-            val skjermet = pepClient.harTilgangTilKode6(kontekst)
-            if (pepClient.harBasisTilgang(kontekst)) {
+            val skjermet = kontekst.harTilgangTilKode6()
+            if (kontekst.harBasisTilgang()) {
                 val alleSaksbehandlere = saksbehandlerRepository.hentAlleSaksbehandlere(kontekst.område, skjermet)
                 val saksbehandlerDtoListe =
                     alleSaksbehandlere.filter { saksbehandler -> !saksbehandler.navn.isNullOrBlank() && !saksbehandler.navident.isNullOrBlank() }
@@ -185,7 +183,7 @@ internal fun Route.ReservasjonApis() {
 
     get("/aktiv-reservasjon") {
         medBrukerkontekst { kontekst ->
-            if (pepClient.harBasisTilgang(kontekst)) {
+            if (kontekst.harBasisTilgang()) {
                 val oppgaveNøkkel = OppgaveNøkkelDto(
                     call.queryParameters["oppgaveEksternId"]!!,
                     call.queryParameters["oppgaveTypeEksternId"]!!,
@@ -206,7 +204,7 @@ internal fun Route.ReservasjonApis() {
     // TODO: Fjernes herfra med overgang til ny API-struktur. Erstattet i ReservasjonAdminApis
     get("/alle-reservasjoner") {
         medBrukerkontekst { kontekst ->
-            if (pepClient.erOppgaveStyrer(kontekst)) {
+            if (kontekst.erOppgavestyrer()) {
                 call.respond(reservasjonApisTjeneste.hentAlleAktiveReservasjoner(kontekst))
             } else {
                 call.respond(HttpStatusCode.Forbidden)

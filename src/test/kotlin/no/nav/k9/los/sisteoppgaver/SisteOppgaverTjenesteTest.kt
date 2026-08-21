@@ -14,7 +14,6 @@ import no.nav.k9.los.FeltType
 import no.nav.k9.los.OppgaveTestDataBuilder
 import no.nav.k9.los.infrastruktur.abac.Action
 import no.nav.k9.los.infrastruktur.abac.IPepClient
-import no.nav.k9.los.infrastruktur.azuregraph.IAzureGraphService
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.infrastruktur.brukerkontekst.BrukerkontekstMedOmråde
 import no.nav.k9.los.infrastruktur.brukerkontekst.TestKontekstFactory
@@ -45,7 +44,6 @@ class SisteOppgaverTjenesteTest : AbstractK9LosIntegrationTest() {
     // Mocks
     private lateinit var pepClient: IPepClient
     private lateinit var pdlService: IPdlService
-    private lateinit var azureGraphService: IAzureGraphService
     private lateinit var sisteOppgaverTjeneste: SisteOppgaverTjeneste
 
     private val testScope = CoroutineScope(Dispatchers.Unconfined)
@@ -58,16 +56,11 @@ class SisteOppgaverTjenesteTest : AbstractK9LosIntegrationTest() {
         saksbehandlerRepository = get()
         pepClient = mockk(relaxed = true)
         pdlService = mockk(relaxed = true)
-        azureGraphService = mockk(relaxed = true)
-        
-        coEvery { azureGraphService.hentGrupper(any<BrukerkontekstMedOmråde>()) } returns setOf(UUID.randomUUID())
-
         sisteOppgaverTjeneste = SisteOppgaverTjeneste(
             sisteOppgaverRepository = sisteOppgaverRepository,
             oppgaveRepository = oppgaveRepository,
             pepClient = pepClient,
             pdlService = pdlService,
-            azureGraphService = azureGraphService,
             transactionalManager = transactionalManager
         )
         
@@ -100,7 +93,7 @@ class SisteOppgaverTjenesteTest : AbstractK9LosIntegrationTest() {
         coEvery { pdlService.person(aktorId1, any()) } returns PersonPdlResponse(false, mockPerson)
 
         coEvery {
-            pepClient.harTilgangTilOppgaveV3(any(), kontekst, eq(Action.read), any())
+            pepClient.harTilgangTilOppgaveV3(any(), kontekst, eq(Action.read))
         } returns true
 
         // Lagre oppgaven som siste besøkt
@@ -138,7 +131,7 @@ class SisteOppgaverTjenesteTest : AbstractK9LosIntegrationTest() {
         
         // Bruker har tilgang til oppgave1 men ikke oppgave2
         coEvery {
-            pepClient.harTilgangTilOppgaveV3(any(), kontekst, eq(Action.read), any())
+            pepClient.harTilgangTilOppgaveV3(any(), kontekst, eq(Action.read))
         } answers {
             val oppgave = firstArg<Oppgave>()
             oppgave.eksternId == oppgave1.eksternId

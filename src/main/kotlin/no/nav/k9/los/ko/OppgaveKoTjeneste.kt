@@ -69,7 +69,7 @@ class OppgaveKoTjeneste(
         ønsketAntallOppgaver: Long,
         fjernReserverte: Boolean = false
     ): NesteOppgaverFraKoDto {
-        val kø = oppgaveKoRepository.hent(oppgaveKoId, pepClient.harTilgangTilKode6(kontekst))
+        val kø = oppgaveKoRepository.hent(oppgaveKoId, kontekst.harTilgangTilKode6())
         val tilgjengeligeOppgaver = hentTilgjengeligeOppgaverFraKø(
             kø = kø,
             ønsketAntallOppgaver = ønsketAntallOppgaver,
@@ -89,7 +89,7 @@ class OppgaveKoTjeneste(
         ønsketAntallOppgaver: Long,
         fjernReserverte: Boolean = false,
     ): OppgaverFraKøDto {
-        val kø = oppgaveKoRepository.hent(oppgaveKoId, pepClient.harTilgangTilKode6(kontekst))
+        val kø = oppgaveKoRepository.hent(oppgaveKoId, kontekst.harTilgangTilKode6())
         val oppgaver = hentTilgjengeligeOppgaverFraKø(kø, ønsketAntallOppgaver, fjernReserverte, kontekst)
         return OppgaverFraKøDto(oppgaveSammendragDtoBuilder.bygg(oppgaver, kontekst.bruker))
     }
@@ -247,7 +247,7 @@ class OppgaveKoTjeneste(
         kontekst: BrukerkontekstMedOmråde,
     ): OppgaveMuligReservert {
         log.info("taReservasjonFraKø, oppgaveKøId: $oppgaveKoId")
-        val skjermet = pepClient.harTilgangTilKode6(kontekst)
+        val skjermet = kontekst.harTilgangTilKode6()
         val oppgavekø = DetaljerMetrikker.time("taReservasjonFraKø", "hentKø", "$oppgaveKoId") {
             oppgaveKoRepository.hent(
                 oppgaveKoId,
@@ -314,7 +314,7 @@ class OppgaveKoTjeneste(
 
     @WithSpan
     suspend fun hentSaksbehandlereForKo(oppgaveKoId: Long, kontekst: BrukerkontekstMedOmråde): List<Saksbehandler> {
-        val skjermet = pepClient.harTilgangTilKode6(kontekst)
+        val skjermet = kontekst.harTilgangTilKode6()
         val oppgaveKo = oppgaveKoRepository.hent(oppgaveKoId, skjermet)
         return oppgaveKo.saksbehandlere.mapNotNull { saksbehandlerEpost: String ->
             saksbehandlerRepository.finnSaksbehandlerMedEpost(saksbehandlerEpost, skjermet).also {

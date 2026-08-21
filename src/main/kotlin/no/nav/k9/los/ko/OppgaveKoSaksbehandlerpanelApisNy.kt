@@ -5,7 +5,6 @@ import io.github.smiley4.ktoropenapi.post
 import io.ktor.http.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.brukerkontekst.medBrukerkontekst
 import no.nav.k9.los.infrastruktur.utils.OpentelemetrySpanUtil
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
@@ -15,7 +14,6 @@ import org.koin.ktor.ext.inject
 fun Route.OppgaveKoSaksbehandlerApisNy() {
     val oppgaveKoTjeneste by inject<OppgaveKoTjeneste>()
     val saksbehandlerRepository by inject<SaksbehandlerRepository>()
-    val pepClient by inject<IPepClient>()
 
     get("/saksbehandlerskoer", {
         request {
@@ -26,8 +24,8 @@ fun Route.OppgaveKoSaksbehandlerApisNy() {
         }
     }) {
         medBrukerkontekst { kontekst ->
-            if (pepClient.harBasisTilgang(kontekst)) {
-                val harTilgangTilKode6 = pepClient.harTilgangTilKode6(kontekst)
+            if (kontekst.harBasisTilgang()) {
+                val harTilgangTilKode6 = kontekst.harTilgangTilKode6()
                 val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedIdent(
                     kontekst.bruker.navIdent,
                     harTilgangTilKode6
@@ -57,7 +55,7 @@ fun Route.OppgaveKoSaksbehandlerApisNy() {
         }
     }) {
         medBrukerkontekst { kontekst ->
-            if (pepClient.harBasisTilgang(kontekst)) {
+            if (kontekst.harBasisTilgang()) {
                 val oppgavekøId = call.parameters["id"]!!
                 call.respond(
                     oppgaveKoTjeneste.hentOppgaverFraKøSammendrag(
@@ -86,7 +84,7 @@ fun Route.OppgaveKoSaksbehandlerApisNy() {
         }
     }) {
         medBrukerkontekst { kontekst ->
-            if (pepClient.harBasisTilgang(kontekst)) {
+            if (kontekst.harBasisTilgang()) {
                 val oppgavekøId = call.parameters["id"]!!
                 call.respond(
                     oppgaveKoTjeneste.hentSaksbehandlereForKo(oppgavekøId.toLong(), kontekst)
@@ -110,9 +108,9 @@ fun Route.OppgaveKoSaksbehandlerApisNy() {
         }
     }) {
         medBrukerkontekst { kontekst ->
-            if (pepClient.harBasisTilgang(kontekst)) {
+            if (kontekst.harBasisTilgang()) {
                 val oppgavekøId = call.parameters["id"]!!
-                val skjermet = pepClient.harTilgangTilKode6(kontekst)
+                val skjermet = kontekst.harTilgangTilKode6()
                 val antallUtenReserverte = OpentelemetrySpanUtil.span("OppgaveKoTjeneste.hentAntallOppgaverForKø") {
                     oppgaveKoTjeneste.hentAntallOppgaverForKø(
                         oppgaveKoId = oppgavekøId.toLong(),
@@ -140,11 +138,11 @@ fun Route.OppgaveKoSaksbehandlerApisNy() {
         }
     }) {
         medBrukerkontekst { kontekst ->
-            if (pepClient.harTilgangTilReserveringAvOppgaver(kontekst)) {
+            if (kontekst.harTilgangTilReserveringAvOppgaver()) {
                 val oppgavekøId = call.parameters["id"]!!
                 val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedIdent(
                     kontekst.bruker.navIdent,
-                    pepClient.harTilgangTilKode6(kontekst)
+                    kontekst.harTilgangTilKode6()
                 )!!
                 val oppgaveMuligReservert = oppgaveKoTjeneste.taReservasjonFraKø(
                     innloggetBrukerId = innloggetBruker.id!!,

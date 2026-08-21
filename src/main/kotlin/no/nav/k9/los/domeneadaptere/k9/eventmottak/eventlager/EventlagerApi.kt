@@ -16,7 +16,6 @@ import no.nav.k9.los.forvaltning.K9KlageEventIkkeSensitiv
 import no.nav.k9.los.forvaltning.K9PunsjEventIkkeSensitiv
 import no.nav.k9.los.forvaltning.K9SakEventIkkeSensitiv
 import no.nav.k9.los.forvaltning.K9TilbakeEventIkkeSensitiv
-import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.brukerkontekst.medBrukerkontekstUtenOmråde
 import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.kodeverk.Fagsystem
@@ -27,7 +26,6 @@ import kotlin.concurrent.thread
 internal fun Route.EventlagerApi() {
     val eventRepository by inject<EventRepository>()
     val oppgaveAdapter by inject<EventTilOppgaveAdapter>()
-    val pepClient by inject<IPepClient>()
 
     get("/eventer/{fagsystem}/{eksternId}", {
         description = "Hent ut eventhistorikk for en oppgave, nytt eventlager"
@@ -46,7 +44,7 @@ internal fun Route.EventlagerApi() {
         }
     }) {
         medBrukerkontekstUtenOmråde { kontekst ->
-            if (pepClient.kanLeggeUtDriftsmelding(kontekst)) {
+            if (kontekst.kanLeggeUtDriftsmelding()) {
                 val fagsystem = Fagsystem.fraKode(call.parameters["fagsystem"]!!)
                 val eksternId = call.parameters["eksternId"]!!
 

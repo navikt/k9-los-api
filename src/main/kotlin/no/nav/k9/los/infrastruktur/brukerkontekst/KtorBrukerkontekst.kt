@@ -18,7 +18,7 @@ suspend fun <T> RoutingContext.medBrukerkontekst(
 ): T {
     val område = call.attributes.getOrNull(områdeAttributeKey)
         ?: throw IllegalStateException("Endepunktet er ikke registrert under en områdeApi-rute")
-    val kontekst = BrukerkontekstMedOmråde(område, innloggetBruker())
+    val kontekst = call.application.getKoin().get<Brukerkontekstfabrikk>().medOmråde(område, innloggetBruker())
     return withContext(Span.current().asContextElement()) {
         block(kontekst)
     }
@@ -27,7 +27,7 @@ suspend fun <T> RoutingContext.medBrukerkontekst(
 suspend fun <T> RoutingContext.medBrukerkontekstUtenOmråde(
     block: suspend (BrukerkontekstUtenOmråde) -> T,
 ): T {
-    val kontekst = BrukerkontekstUtenOmråde(innloggetBruker())
+    val kontekst = call.application.getKoin().get<Brukerkontekstfabrikk>().utenOmråde(innloggetBruker())
     return withContext(Span.current().asContextElement()) {
         block(kontekst)
     }

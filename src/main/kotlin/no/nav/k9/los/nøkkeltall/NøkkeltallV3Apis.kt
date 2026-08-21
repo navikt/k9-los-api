@@ -3,7 +3,6 @@ package no.nav.k9.los.nøkkeltall
 import io.ktor.http.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.brukerkontekst.medBrukerkontekst
 import no.nav.k9.los.nøkkeltall.avdelingsleder.dagenstall.DagensTallService
 import no.nav.k9.los.nøkkeltall.avdelingsleder.ferdigstilteperenhet.FerdigstiltePerEnhetGruppe
@@ -17,12 +16,11 @@ fun Route.NøkkeltallV3Apis() {
     val statusService by inject<StatusService>()
     val dagensTallService by inject<DagensTallService>()
     val perEnhetService by inject<FerdigstiltePerEnhetService>()
-    val pepClient by inject<IPepClient>()
 
     get("status") {
         medBrukerkontekst { kontekst ->
-            if (pepClient.erOppgaveStyrer(kontekst)) {
-                call.respond(statusService.hentStatus(pepClient.harTilgangTilKode6(kontekst)))
+            if (kontekst.erOppgavestyrer()) {
+                call.respond(statusService.hentStatus(kontekst.harTilgangTilKode6()))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
@@ -31,8 +29,8 @@ fun Route.NøkkeltallV3Apis() {
 
     get("statusfordeling") {
         medBrukerkontekst { kontekst ->
-            if (pepClient.erOppgaveStyrer(kontekst)) {
-                val kode6 = pepClient.harTilgangTilKode6(kontekst)
+            if (kontekst.erOppgavestyrer()) {
+                val kode6 = kontekst.harTilgangTilKode6()
                 call.respond(statusFordelingService.hentVerdi(kode6))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
@@ -42,7 +40,7 @@ fun Route.NøkkeltallV3Apis() {
 
     get("dagens-tall") {
         medBrukerkontekst { kontekst ->
-            if (pepClient.erOppgaveStyrer(kontekst)) {
+            if (kontekst.erOppgavestyrer()) {
                 call.respond(dagensTallService.hentCachetVerdi())
             } else {
                 call.respond(HttpStatusCode.Forbidden)
@@ -52,7 +50,7 @@ fun Route.NøkkeltallV3Apis() {
 
     get("ferdigstilte-per-enhet") {
         medBrukerkontekst { kontekst ->
-            if (pepClient.erOppgaveStyrer(kontekst)) {
+            if (kontekst.erOppgavestyrer()) {
                 val gruppe = call.parameters["gruppe"]?.let { FerdigstiltePerEnhetGruppe.valueOf(it) }
                     ?: FerdigstiltePerEnhetGruppe.ALLE
                 val uker = call.parameters["uker"]?.toInt() ?: 2

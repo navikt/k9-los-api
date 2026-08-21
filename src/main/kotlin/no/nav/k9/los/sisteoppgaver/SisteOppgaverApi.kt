@@ -6,14 +6,12 @@ import io.ktor.http.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.brukerkontekst.medBrukerkontekst
 import no.nav.k9.los.oppgaveuthenting.OppgaveNøkkelDto
 import org.koin.ktor.ext.inject
 
 fun Route.SisteOppgaverApi() {
     val sisteOppgaverTjeneste by inject<SisteOppgaverTjeneste>()
-    val pepClient by inject<IPepClient>()
 
 
     get({
@@ -23,7 +21,7 @@ fun Route.SisteOppgaverApi() {
         }
     }) {
         medBrukerkontekst { kontekst ->
-            if (pepClient.harBasisTilgang(kontekst)) {
+            if (kontekst.harBasisTilgang()) {
                 call.respond(sisteOppgaverTjeneste.hentSisteOppgaver(kontekst))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
@@ -37,7 +35,7 @@ fun Route.SisteOppgaverApi() {
         request { body<OppgaveNøkkelDto>() }
     }) {
         medBrukerkontekst { kontekst ->
-            if (pepClient.harBasisTilgang(kontekst)) {
+            if (kontekst.harBasisTilgang()) {
                 val oppgaveNøkkel = call.receive<OppgaveNøkkelDto>()
                 sisteOppgaverTjeneste.lagreSisteOppgave(oppgaveNøkkel, kontekst)
                 call.respond(HttpStatusCode.OK)

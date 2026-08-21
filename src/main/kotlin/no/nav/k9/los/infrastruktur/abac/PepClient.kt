@@ -2,8 +2,6 @@ package no.nav.k9.los.infrastruktur.abac
 
 import no.nav.k9.los.infrastruktur.azuregraph.IAzureGraphService
 import no.nav.k9.los.infrastruktur.brukerkontekst.BrukerkontekstMedOmråde
-import no.nav.k9.los.infrastruktur.brukerkontekst.BrukerkontekstUtenOmråde
-import no.nav.k9.los.infrastruktur.brukerkontekst.InnloggetBruker
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.Oppgave
 import no.nav.k9.los.saksbehandleradmin.Saksbehandler
@@ -17,57 +15,18 @@ import java.util.*
 class PepClient internal constructor(
     private val azureGraphService: IAzureGraphService,
     private val sifAbacPdpKlienter: SifAbacPdpKlienter,
-    private val gruppeoppsett: Gruppeoppsett
+    private val gruppeoppsett: Gruppeoppsett,
 ) : IPepClient {
     private val log: Logger = LoggerFactory.getLogger(PepClient::class.java)
 
-    override suspend fun erOppgaveStyrer(kontekst: BrukerkontekstMedOmråde): Boolean {
-        return iGruppe(gruppeoppsett.forOmråde(kontekst.område).oppgavestyrer, kontekst.bruker)
-    }
-
-    override suspend fun harBasisTilgang(kontekst: BrukerkontekstMedOmråde): Boolean {
-        val grupper = gruppeoppsett.forOmråde(kontekst.område)
-        return iGruppe(grupper.saksbehandler, kontekst.bruker) || iGruppe(grupper.veileder, kontekst.bruker)
-    }
-
-    override suspend fun harBasisTilgangIEttEllerFlereOmråder(kontekst: BrukerkontekstUtenOmråde): Boolean {
-        return Områder.entries.any { område ->
-            val grupper = gruppeoppsett.forOmråde(område)
-            iGruppe(grupper.saksbehandler, kontekst.bruker) || iGruppe(grupper.veileder, kontekst.bruker)
-        }
-    }
-
-    override suspend fun kanLeggeUtDriftsmelding(kontekst: BrukerkontekstUtenOmråde): Boolean {
-        return iGruppe(gruppeoppsett.drift, kontekst.bruker)
-    }
-
-    override suspend fun kanLeggeUtDriftsmelding(kontekst: BrukerkontekstMedOmråde): Boolean {
-        return iGruppe(gruppeoppsett.drift, kontekst.bruker)
-    }
-
-    override suspend fun harTilgangTilReserveringAvOppgaver(kontekst: BrukerkontekstMedOmråde): Boolean {
-        return iGruppe(gruppeoppsett.forOmråde(kontekst.område).saksbehandler, kontekst.bruker)
-    }
-
-    override suspend fun harTilgangTilKode6(ident: String, kontekst: BrukerkontekstMedOmråde): Boolean {
+    override suspend fun harSaksbehandlerTilgangTilKode6(ident: String, kontekst: BrukerkontekstMedOmråde): Boolean {
         if (ident == kontekst.bruker.navIdent) {
-            return harTilgangTilKode6(kontekst)
+            return kontekst.harTilgangTilKode6()
         }
         val kode6Gruppe = gruppeoppsett.forOmråde(kontekst.område).kode6 ?: return false
         val grupper = azureGraphService.hentGrupper(ident)
         return grupper.contains(kode6Gruppe)
     }
-
-    override suspend fun harTilgangTilKode6(kontekst: BrukerkontekstMedOmråde): Boolean {
-        return iGruppe(gruppeoppsett.forOmråde(kontekst.område).kode6, kontekst.bruker)
-    }
-
-    override suspend fun harKode6TilgangIEttEllerFlereOmråder(kontekst: BrukerkontekstUtenOmråde): Boolean {
-        return Områder.entries.any { område -> iGruppe(gruppeoppsett.forOmråde(område).kode6, kontekst.bruker) }
-    }
-
-    private fun iGruppe(gruppeId: UUID?, bruker: InnloggetBruker): Boolean =
-        gruppeId?.let(bruker.grupper::contains) ?: false
 
     override suspend fun diskresjonskoderForSak(fagsakNummer: String, område: Områder): Set<Diskresjonskode> {
         return sifAbacPdpKlienter.forOmråde(område).diskresjonskoderSak(SaksnummerDto(fagsakNummer))
@@ -81,7 +40,6 @@ class PepClient internal constructor(
         oppgave: Oppgave,
         kontekst: BrukerkontekstMedOmråde,
         action: Action,
-        grupperForSaksbehandler: Set<UUID>?,
     ): Boolean {
         return harTilgang(
             område = kontekst.område,
@@ -91,7 +49,7 @@ class PepClient internal constructor(
             saksnummer = oppgave.hentVerdi("saksnummer"),
             aktørIdSøker = oppgave.hentVerdi("aktorId"),
             aktørIdPleietrengende = oppgave.hentVerdi("pleietrengendeAktorId"),
-            grupperForSaksbehandler = grupperForSaksbehandler
+            grupperForSaksbehandler = kontekst.bruker.grupper,
         )
     }
 

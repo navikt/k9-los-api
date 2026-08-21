@@ -6,7 +6,6 @@ import io.ktor.http.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.brukerkontekst.medBrukerkontekst
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.OppgaveQuery
@@ -15,7 +14,6 @@ import org.koin.ktor.ext.inject
 
 fun Route.OppgaveQueryApisNy() {
     val oppgaveQueryService by inject<OppgaveQueryService>()
-    val pepClient by KoinJavaComponent.inject<IPepClient>(IPepClient::class.java)
 
     post("/antall", {
         description = "Hent antall oppgaver som matcher en gitt spørring."
@@ -30,7 +28,7 @@ fun Route.OppgaveQueryApisNy() {
         }
     }) {
         medBrukerkontekst { kontekst ->
-            if (pepClient.harBasisTilgang(kontekst)) {
+            if (kontekst.harBasisTilgang()) {
                 val område = kontekst.område
                 val oppgaveQuery = call.receive<OppgaveQuery>()
                 call.respond(oppgaveQueryService.queryForAntall(QueryRequest(oppgaveQuery, false, område = område)))
@@ -53,7 +51,7 @@ fun Route.OppgaveQueryApisNy() {
         }
     }) {
         medBrukerkontekst { kontekst ->
-            if (pepClient.harBasisTilgang(kontekst)) {
+            if (kontekst.harBasisTilgang()) {
                 val område = kontekst.område
                 val oppgaveQuery = call.receive<OppgaveQuery>()
                 call.respond(oppgaveQueryService.validate(QueryRequest(oppgaveQuery, område = område)))
@@ -73,7 +71,7 @@ fun Route.OppgaveQueryApisNy() {
         }
     }) {
         medBrukerkontekst { kontekst ->
-            if (pepClient.harBasisTilgang(kontekst)) {
+            if (kontekst.harBasisTilgang()) {
                 val område = kontekst.område
                 call.respond(oppgaveQueryService.hentAlleFelter())
             } else {

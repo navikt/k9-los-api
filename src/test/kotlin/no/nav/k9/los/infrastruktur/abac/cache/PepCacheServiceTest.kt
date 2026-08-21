@@ -75,7 +75,7 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
         runBlocking {
             // Gir tilgang til kode6 for å isolere testing av cache-oppdatering
             coEvery {
-                pepClient.harTilgangTilOppgaveV3(any(), any<BrukerkontekstMedOmråde>(), any(), any())
+                pepClient.harTilgangTilOppgaveV3(any(), any<BrukerkontekstMedOmråde>(), any())
             } returns true
         }
 
@@ -286,7 +286,7 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
             )
         ).isNotEmpty()
         coVerify(exactly = 2) {
-            pepClient.harTilgangTilOppgaveV3(any(), any<BrukerkontekstMedOmråde>(), any(), any())
+            pepClient.harTilgangTilOppgaveV3(any(), any<BrukerkontekstMedOmråde>(), any())
         } //oppgaven hentet ut 2 ganger fra kø, gir to kall til pep klient
         assertThat(
             hentOppgaverMedSikkerhetsklassifisering(
@@ -296,7 +296,7 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
             )
         ).isEmpty()
         coVerify(exactly = 2) {
-            pepClient.harTilgangTilOppgaveV3(any(), any<BrukerkontekstMedOmråde>(), any(), any())
+            pepClient.harTilgangTilOppgaveV3(any(), any<BrukerkontekstMedOmråde>(), any())
         } //oppgaven var ikke i køa, så gjør ikke ekstra kall til pep-klent
 
         gjørSakKode6(saksnummer)
@@ -333,7 +333,7 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
 
         jobbplanlegger.stopp()
         coVerify(exactly = 3) {
-            pepClient.harTilgangTilOppgaveV3(any(), TestKontekstFactory.brukerkontekst(Områder.K9), any(), any())
+            pepClient.harTilgangTilOppgaveV3(any(), TestKontekstFactory.brukerkontekst(Områder.K9), any())
         } //oppgaven var bare i kode6-køa, så ble ett ekstra kall til pep-klent
     }
 

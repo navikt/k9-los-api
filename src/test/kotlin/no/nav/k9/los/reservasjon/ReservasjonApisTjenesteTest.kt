@@ -8,7 +8,6 @@ import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.infrastruktur.abac.IPepClient
-import no.nav.k9.los.infrastruktur.azuregraph.IAzureGraphService
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.Oppgave
@@ -47,7 +46,6 @@ class ReservasjonApisTjenesteTest {
             mockk<ReservasjonV3DtoBuilder>(),
             mockk<AktivOppgaveOppslag>(),
             mockk<IPepClient>(),
-            mockk<IAzureGraphService>(),
             builder,
         )
 

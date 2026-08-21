@@ -7,7 +7,6 @@ import io.ktor.http.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.brukerkontekst.medBrukerkontekst
 import no.nav.k9.los.ko.dto.KopierOppgaveKoDto
 import no.nav.k9.los.ko.dto.OppgaveKo
@@ -23,7 +22,6 @@ import org.koin.ktor.ext.inject
 fun Route.OppgaveKoAvdelingslederApisNy() {
     val oppgaveKoTjeneste by inject<OppgaveKoTjeneste>()
     val saksbehandlerRepository by inject<SaksbehandlerRepository>()
-    val pepClient by inject<IPepClient>()
 
     get("/hentKoliste", {
         description = "Hent liste over alle oppgavekøer."
@@ -38,8 +36,8 @@ fun Route.OppgaveKoAvdelingslederApisNy() {
         }
     }) {
         medBrukerkontekst { kontekst ->
-            if (pepClient.erOppgaveStyrer(kontekst)) {
-                val oppgavekøer = oppgaveKoTjeneste.hentOppgavekøer(skjermet = pepClient.harTilgangTilKode6(kontekst))
+            if (kontekst.erOppgavestyrer()) {
+                val oppgavekøer = oppgaveKoTjeneste.hentOppgavekøer(skjermet = kontekst.harTilgangTilKode6())
                     .map { oppgaveko ->
                         OppgaveKoListeelement(
                             id = oppgaveko.id,
@@ -69,9 +67,9 @@ fun Route.OppgaveKoAvdelingslederApisNy() {
         }
     }) {
         medBrukerkontekst { kontekst ->
-            if (pepClient.erOppgaveStyrer(kontekst)) {
+            if (kontekst.erOppgavestyrer()) {
                 val oppgaveKo = call.receive<OppgaveKo>()
-                call.respond(oppgaveKoTjeneste.endre(oppgaveKo, pepClient.harTilgangTilKode6(kontekst)))
+                call.respond(oppgaveKoTjeneste.endre(oppgaveKo, kontekst.harTilgangTilKode6()))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
@@ -91,7 +89,7 @@ fun Route.OppgaveKoAvdelingslederApisNy() {
         }
     }) {
         medBrukerkontekst { kontekst ->
-            if (pepClient.erOppgaveStyrer(kontekst)) {
+            if (kontekst.erOppgavestyrer()) {
                 val kopierOppgaveKoDto = call.receive<KopierOppgaveKoDto>()
                 call.respond(
                     oppgaveKoTjeneste.kopier(
@@ -99,7 +97,7 @@ fun Route.OppgaveKoAvdelingslederApisNy() {
                         kopierOppgaveKoDto.tittel,
                         kopierOppgaveKoDto.taMedQuery,
                         kopierOppgaveKoDto.taMedSaksbehandlere,
-                        pepClient.harTilgangTilKode6(kontekst)
+                        kontekst.harTilgangTilKode6()
                     )
                 )
             } else {
@@ -121,8 +119,8 @@ fun Route.OppgaveKoAvdelingslederApisNy() {
         }
     }) {
         medBrukerkontekst { kontekst ->
-            if (pepClient.erOppgaveStyrer(kontekst)) {
-                val alleSaksbehandlere = saksbehandlerRepository.hentAlleSaksbehandlere(kontekst.område, pepClient.harTilgangTilKode6(kontekst))
+            if (kontekst.erOppgavestyrer()) {
+                val alleSaksbehandlere = saksbehandlerRepository.hentAlleSaksbehandlere(kontekst.område, kontekst.harTilgangTilKode6())
                     .map { saksbehandler ->
                         SaksbehandlerForKolisteDto(saksbehandler)
                     }
@@ -146,9 +144,9 @@ fun Route.OppgaveKoAvdelingslederApisNy() {
         }
     }) {
         medBrukerkontekst { kontekst ->
-            if (pepClient.erOppgaveStyrer(kontekst)) {
+            if (kontekst.erOppgavestyrer()) {
                 val opprettOppgaveKoDto = call.receive<OpprettOppgaveKoDto>()
-                val harSkjermetTilgang = pepClient.harTilgangTilKode6(kontekst)
+                val harSkjermetTilgang = kontekst.harTilgangTilKode6()
                 // OpprettOppgaveKoDto bærer ikke område ennå. Skal det opprettes køer utenfor K9,
                 // må feltet inn i DTO-en og settes av klienten.
                 call.respond(
@@ -177,9 +175,9 @@ fun Route.OppgaveKoAvdelingslederApisNy() {
         }
     }) {
         medBrukerkontekst { kontekst ->
-            if (pepClient.erOppgaveStyrer(kontekst)) {
+            if (kontekst.erOppgavestyrer()) {
                 val oppgavekøId = call.parameters["id"]!!
-                call.respond(oppgaveKoTjeneste.hent(oppgavekøId.toLong(), pepClient.harTilgangTilKode6(kontekst)))
+                call.respond(oppgaveKoTjeneste.hent(oppgavekøId.toLong(), kontekst.harTilgangTilKode6()))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
@@ -199,7 +197,7 @@ fun Route.OppgaveKoAvdelingslederApisNy() {
         }
     }) {
         medBrukerkontekst { kontekst ->
-            if (pepClient.erOppgaveStyrer(kontekst)) {
+            if (kontekst.erOppgavestyrer()) {
                 val oppgavekøId = call.parameters["id"]!!
                 call.respond(oppgaveKoTjeneste.slett(oppgavekøId.toLong()))
             } else {
@@ -221,9 +219,9 @@ fun Route.OppgaveKoAvdelingslederApisNy() {
         }
     }) {
         medBrukerkontekst { kontekst ->
-            if (pepClient.erOppgaveStyrer(kontekst)) {
+            if (kontekst.erOppgavestyrer()) {
                 val oppgavekøId = call.parameters["id"]!!
-                val skjermet = pepClient.harTilgangTilKode6(kontekst)
+                val skjermet = kontekst.harTilgangTilKode6()
                 call.respond(oppgaveKoTjeneste.hentAntallMedOgUtenReserverteForKø(oppgavekøId.toLong(), skjermet))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
@@ -248,11 +246,11 @@ fun Route.OppgaveKoAvdelingslederApisNy() {
         }
     }) {
         medBrukerkontekst { kontekst ->
-            if (pepClient.erOppgaveStyrer(kontekst)) {
+            if (kontekst.erOppgavestyrer()) {
                 call.respond(
                     oppgaveKoTjeneste.hentKøerForSaksbehandler(
                         call.parameters["id"]?.toLong()!!,
-                        pepClient.harTilgangTilKode6(kontekst)
+                        kontekst.harTilgangTilKode6()
                     ).map {
                         OppgaveKoIdOgTittel(
                             id = it.id,

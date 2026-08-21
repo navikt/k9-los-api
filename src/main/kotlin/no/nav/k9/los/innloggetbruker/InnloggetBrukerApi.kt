@@ -4,7 +4,6 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.KoinProfile
-import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.azuregraph.IAzureGraphService
 import no.nav.k9.los.infrastruktur.brukerkontekst.medBrukerkontekst
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
@@ -14,7 +13,6 @@ import org.koin.ktor.ext.inject
 import org.slf4j.LoggerFactory
 
 internal fun Route.InnloggetBrukerApi() {
-    val pepClient by inject<IPepClient>()
     val saksbehandlerRepository by inject<SaksbehandlerRepository>()
     val azureGraphService by inject<IAzureGraphService>()
     val configuration by inject<Configuration>()
@@ -25,7 +23,7 @@ internal fun Route.InnloggetBrukerApi() {
         if (configuration.koinProfile() != KoinProfile.LOCAL) {
             medBrukerkontekst { kontekst ->
                 val token = kontekst.bruker.idToken
-                val skjermet = pepClient.harTilgangTilKode6(kontekst)
+                val skjermet = kontekst.harTilgangTilKode6()
                 log.info("Henter innlogget saksbehandler med epost ${token.getUsername()} og navn ${token.getName()}")
                 val saksbehandlerIdent = kontekst.bruker.navIdent
                 val saksbehandler =
@@ -41,10 +39,10 @@ internal fun Route.InnloggetBrukerApi() {
                     token.getName(),
                     brukerIdent = saksbehandlerIdent,
                     id = saksbehandler?.let { saksbehandler.id },
-                    kanSaksbehandle = pepClient.harBasisTilgang(kontekst), //TODO mismatch mellom navnet 'kanSaksbehandle' og at alle som har tilgang til systemet har basistilgang
-                    kanOppgavestyre = pepClient.erOppgaveStyrer(kontekst),
-                    kanReservere = pepClient.harTilgangTilReserveringAvOppgaver(kontekst),
-                    kanDrifte = pepClient.kanLeggeUtDriftsmelding(kontekst),
+                    kanSaksbehandle = kontekst.harBasisTilgang(), //TODO mismatch mellom navnet 'kanSaksbehandle' og at alle som har tilgang til systemet har basistilgang
+                    kanOppgavestyre = kontekst.erOppgavestyrer(),
+                    kanReservere = kontekst.harTilgangTilReserveringAvOppgaver(),
+                    kanDrifte = kontekst.kanLeggeUtDriftsmelding(),
                     finnesISaksbehandlerTabell = finnesISaksbehandlerTabell,
                     områder = saksbehandler?.områder ?: emptyList()
                 )

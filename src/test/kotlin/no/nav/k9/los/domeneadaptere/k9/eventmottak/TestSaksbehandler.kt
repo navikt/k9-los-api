@@ -1,6 +1,5 @@
 package no.nav.k9.los.domeneadaptere.k9.eventmottak
 
-import io.mockk.coEvery
 import io.mockk.mockk
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
@@ -59,9 +58,7 @@ class TestSaksbehandler: KoinTest {
     }
 
     private fun leggTilSkjermet() {
-        coEvery { pepClient.harKode6TilgangIEttEllerFlereOmråder(any()) } returns true
         repo.addSaksbehandler(KJERSTI_SKJERMET.epost, Områder.K9)
         repo.vedlikeholdSaksbehandler(KJERSTI_SKJERMET, skjermet = true)
-        coEvery { pepClient.harKode6TilgangIEttEllerFlereOmråder(any()) } returns false
     }
 }

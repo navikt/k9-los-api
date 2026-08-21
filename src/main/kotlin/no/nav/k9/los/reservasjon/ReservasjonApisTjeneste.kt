@@ -2,7 +2,6 @@ package no.nav.k9.los.reservasjon
 
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.brukerkontekst.BrukerkontekstMedOmråde
-import no.nav.k9.los.infrastruktur.azuregraph.IAzureGraphService
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.infrastruktur.utils.leggTilDagerHoppOverHelg
 import no.nav.k9.los.kodeverk.BehandlingType
@@ -25,7 +24,6 @@ class ReservasjonApisTjeneste(
     private val reservasjonV3DtoBuilder: ReservasjonV3DtoBuilder,
     private val aktivOppgaveOppslag: AktivOppgaveOppslag,
     private val pepClient: IPepClient,
-    private val azureGraphService: IAzureGraphService,
     private val oppgaveSammendragDtoBuilder: OppgaveSammendragDtoBuilder,
 ) {
 
@@ -253,7 +251,6 @@ class ReservasjonApisTjeneste(
         if (!pepClient.harTilgangTilOppgaveV3(
                 oppgave = oppgave,
                 kontekst = kontekst,
-                grupperForSaksbehandler = azureGraphService.hentGrupper(kontekst)
             )
         ) {
             throw ManglerTilgangException("Mangler tilgang til oppgave ${oppgave.eksternId}")
@@ -271,12 +268,13 @@ class ReservasjonApisTjeneste(
     }
 
     suspend fun hentAlleAktiveReservasjoner(kontekst: BrukerkontekstMedOmråde): List<ReservasjonDto> {
-        val innloggetBrukerHarKode6Tilgang = pepClient.harTilgangTilKode6(kontekst)
+        val innloggetBrukerHarKode6Tilgang = kontekst.harTilgangTilKode6()
 
         return reservasjonV3Tjeneste.hentAlleAktiveReservasjoner().flatMap { reservasjonMedOppgaver ->
             val saksbehandler =
                 saksbehandlerRepository.finnSaksbehandlerMedId(reservasjonMedOppgaver.reservasjonV3.reservertAv)!!
-            val saksbehandlerHarKode6Tilgang = pepClient.harTilgangTilKode6(saksbehandler.navident!!, kontekst)
+            val saksbehandlerHarKode6Tilgang =
+                pepClient.harSaksbehandlerTilgangTilKode6(saksbehandler.navident!!, kontekst)
 
             if (innloggetBrukerHarKode6Tilgang != saksbehandlerHarKode6Tilgang) {
                 emptyList()

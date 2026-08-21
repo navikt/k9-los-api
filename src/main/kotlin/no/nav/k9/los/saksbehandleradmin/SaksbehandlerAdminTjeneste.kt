@@ -1,6 +1,5 @@
 package no.nav.k9.los.saksbehandleradmin
 
-import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.infrastruktur.brukerkontekst.BrukerkontekstMedOmråde
 import no.nav.k9.los.ko.db.OppgaveKoRepository
@@ -10,7 +9,6 @@ import no.nav.k9.los.uttrekk.UttrekkTjeneste
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 
 class SaksbehandlerAdminTjeneste(
-    private val pepClient: IPepClient,
     private val transactionalManager: TransactionalManager,
     private val saksbehandlerRepository: SaksbehandlerRepository,
     private val oppgaveKøV3Repository: OppgaveKoRepository,
@@ -37,7 +35,7 @@ class SaksbehandlerAdminTjeneste(
     }
 
     suspend fun slettSaksbehandlerForId(id: Long, kontekst: BrukerkontekstMedOmråde) {
-        val skjermet = pepClient.harTilgangTilKode6(kontekst)
+        val skjermet = kontekst.harTilgangTilKode6()
 
         val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedId(id)
 
@@ -62,7 +60,7 @@ class SaksbehandlerAdminTjeneste(
         område: Områder,
         kontekst: BrukerkontekstMedOmråde,
     ) {
-        val skjermet = pepClient.harTilgangTilKode6(kontekst)
+        val skjermet = kontekst.harTilgangTilKode6()
 
         val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedEpost(epost, skjermet) ?: throw IllegalStateException("Kunne ikke finne saksbehandler med epost")
         if (!saksbehandler.områder.contains(område)) {

@@ -39,7 +39,7 @@ class SøkeboksTjenesteTest {
         val kontekst = TestKontekstFactory.brukerkontekst(Områder.K9)
         every { queryService.queryForOppgave(any()) } returns listOf(lukket, åpen, obsolete)
         coEvery { pdlService.person("aktor-1", any()) } returns PersonPdlResponse(false, person)
-        coEvery { pepClient.harTilgangTilOppgaveV3(any(), kontekst, any(), any()) } returns true
+        coEvery { pepClient.harTilgangTilOppgaveV3(any(), kontekst, any()) } returns true
         coEvery { builder.bygg(listOf(åpen), kontekst.bruker, mapOf("aktor-1" to person)) } returns emptyList()
         val oppgavesøkere = Oppgavesøkere(K9Oppgavesøk(), UngOppgavesøk())
         val tjeneste = SøkeboksTjeneste(pdlService, pepClient, builder, queryService, oppgavesøkere)

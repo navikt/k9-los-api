@@ -4,7 +4,6 @@ import io.opentelemetry.api.trace.Span
 import io.opentelemetry.extension.kotlin.asContextElement
 import kotlinx.coroutines.*
 import no.nav.k9.los.infrastruktur.abac.IPepClient
-import no.nav.k9.los.infrastruktur.azuregraph.IAzureGraphService
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.infrastruktur.brukerkontekst.BrukerkontekstMedOmråde
 import no.nav.k9.los.infrastruktur.pdl.IPdlService
@@ -20,7 +19,6 @@ class SisteOppgaverTjeneste(
     private val oppgaveRepository: OppgaveRepository,
     private val pepClient: IPepClient,
     private val pdlService: IPdlService,
-    private val azureGraphService: IAzureGraphService,
     private val transactionalManager: TransactionalManager
 ) {
     private val log = LoggerFactory.getLogger(SisteOppgaverTjeneste::class.java)
@@ -43,8 +41,6 @@ class SisteOppgaverTjeneste(
 
             if (oppgaver.isEmpty()) return emptyList()
 
-            val grupperForSaksbehandler = azureGraphService.hentGrupper(kontekst)
-
             val innhentinger = try {
                 withContext(Dispatchers.IO + Span.current().asContextElement()) {
                     oppgaver.map { oppgave ->
@@ -53,7 +49,6 @@ class SisteOppgaverTjeneste(
                                 val harTilgang = pepClient.harTilgangTilOppgaveV3(
                                     oppgave,
                                     kontekst,
-                                    grupperForSaksbehandler = grupperForSaksbehandler
                                 )
                                 val personPdl = oppgave.hentVerdi("aktorId")?.let {
                                     pdlService.person(it, kontekst.bruker)

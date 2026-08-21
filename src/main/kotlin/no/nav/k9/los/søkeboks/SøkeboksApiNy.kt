@@ -5,7 +5,6 @@ import io.ktor.http.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.brukerkontekst.medBrukerkontekst
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import org.koin.ktor.ext.inject
@@ -13,7 +12,6 @@ import org.koin.ktor.ext.inject
 
 fun Route.SøkeboksApiNy() {
     val søkeboksTjeneste by inject<SøkeboksTjeneste>()
-    val pepClient by inject<IPepClient>()
 
     post(
         {
@@ -32,7 +30,7 @@ fun Route.SøkeboksApiNy() {
         }
     ) {
         medBrukerkontekst { kontekst ->
-            if (pepClient.harBasisTilgang(kontekst)) {
+            if (kontekst.harBasisTilgang()) {
                 val (søkeord) = call.receive<SøkRequest>()
                 call.respond(søkeboksTjeneste.finnOppgaverSammendrag(søkeord, kontekst.område, kontekst))
             } else {
