@@ -50,7 +50,7 @@ internal fun Route.EventlagerApi() {
     }) {
         requestContextService.withRequestContext(call) {
             if (pepClient.kanLeggeUtDriftsmelding()) {
-                val fagsystem = enumValueOf<Fagsystem>(call.parameters["fagsystem"]!!)
+                val fagsystem = Fagsystem.fraParameter(call.parameters["fagsystem"]!!)
                 val eksternId = call.parameters["eksternId"]!!
 
                 val eventStrenger = try {
@@ -119,7 +119,7 @@ internal fun Route.EventlagerApi() {
             }
         }
     }) {
-        val fagsystem = enumValueOf<Fagsystem>(call.parameters["fagsystem"]!!)
+        val fagsystem = Fagsystem.fraParameter(call.parameters["fagsystem"]!!)
         eventRepository.bestillHistorikkvask(fagsystem)
 
         call.respond(HttpStatusCode.NoContent)
@@ -145,7 +145,7 @@ internal fun Route.EventlagerApi() {
         }
     }) {
         requestContextService.withRequestContext(call) {
-            val fagsystem = Fagsystem.fraKode(call.parameters["fagsystem"]!!)
+            val fagsystem = Fagsystem.fraParameter(call.parameters["fagsystem"]!!)
             val eksternId = call.parameters["eksternId"]!!
             eventRepository.bestillHistorikkvask(fagsystem, eksternId)
 
@@ -154,3 +154,5 @@ internal fun Route.EventlagerApi() {
     }
 
 }
+
+

@@ -5,6 +5,8 @@ import com.fasterxml.jackson.annotation.JsonFormat
 import com.fasterxml.jackson.annotation.JsonValue
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.TextNode
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
 
 
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)
@@ -150,6 +152,15 @@ enum class Fagsystem(override val kode: String, override val kodeverk: String, o
         fun fraKode(o: Any): Fagsystem {
             val kode = TempAvledeKode.getVerdi(o)
             return values().find { it.kode == kode } ?: throw IllegalStateException("Kjenner ikke igjen koden=$kode")
+        }
+
+        @JvmStatic
+        fun fraParameter(rawValue: String): Fagsystem {
+            val normalized = rawValue.trim()
+            if (normalized.startsWith("{")) {
+                return fraKode(LosObjectMapper.instance.readTree(normalized))
+            }
+            return fraKode(normalized.uppercase())
         }
     }
 }

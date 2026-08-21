@@ -133,7 +133,7 @@ fun Route.forvaltningApis() {
     }) {
         requestContextService.withRequestContext(call) {
             if (pepClient.kanLeggeUtDriftsmelding()) {
-                val fagsystem = enumValueOf<Fagsystem>(call.parameters["system"]!!)
+                val fagsystem = Fagsystem.fraParameter(call.parameters["system"]!!)
                 val saksnummer = call.parameters["saksnummer"]!!
                 val oppgavetypeKode = K9Oppgavetypenavn.fraFagsystem(fagsystem).kode
 
@@ -343,7 +343,7 @@ fun Route.forvaltningApis() {
          */
         requestContextService.withRequestContext(call) {
             if (pepClient.kanLeggeUtDriftsmelding()) {
-                val fagsystem = enumValueOf<Fagsystem>(call.parameters["fagsystem"]!!)
+                val fagsystem = Fagsystem.fraParameter(call.parameters["fagsystem"]!!)
                 val avstemmingsrapport = avstemmingsTjeneste.avstem(fagsystem)
                 call.respond(objectMapper.writeValueAsString(avstemmingsrapport))
             } else {
@@ -499,7 +499,7 @@ fun Route.forvaltningApis() {
     }) {
         requestContextService.withRequestContext(call) {
             if (pepClient.kanLeggeUtDriftsmelding()) {
-                val fagsystem = enumValueOf<Fagsystem>(call.parameters["fagsystem"]!!)
+                val fagsystem = Fagsystem.fraParameter(call.parameters["fagsystem"]!!)
                 val oppgaveQueryFraRequest = call.receive<OppgaveQuery>()
                 if (oppgaveQueryFraRequest.select.isNotEmpty()) {
                     call.respond(HttpStatusCode.BadRequest, "OppgaveQuery.select støttes ikke for bestilling fra query")
