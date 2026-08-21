@@ -45,9 +45,18 @@ class SaksbehandlerAdminTjeneste(
         }
 
         transactionalManager.transaction { tx ->
-            // V3-modellen: Sletter køer saksbehandler er med i
-            oppgaveKøV3Repository.hentKoerMedOppgittSaksbehandler(tx, saksbehandler.id!!, skjermet, true).forEach { kø ->
-                oppgaveKøV3Repository.endre(tx, kø.copy(saksbehandlerIds = kø.saksbehandlerIds - saksbehandler.id!!), skjermet)
+            // V3-modellen: Fjerner saksbehandler fra køer i alle områder, siden selve
+            // saksbehandlerraden slettes under og ellers ville etterlatt dinglende koblinger.
+            Områder.entries.forEach { område ->
+                oppgaveKøV3Repository.hentKoerMedOppgittSaksbehandler(tx, saksbehandler.id!!, skjermet, true, område)
+                    .forEach { kø ->
+                        oppgaveKøV3Repository.endre(
+                            tx,
+                            kø.copy(saksbehandlerIds = kø.saksbehandlerIds - saksbehandler.id!!),
+                            skjermet,
+                            område
+                        )
+                    }
             }
 
             // Sletter fra saksbehandler-tabellen
@@ -87,9 +96,18 @@ class SaksbehandlerAdminTjeneste(
         }
 
         transactionalManager.transaction { tx ->
-            // V3-modellen: Sletter køer saksbehandler er med i
-            oppgaveKøV3Repository.hentKoerMedOppgittSaksbehandler(tx, saksbehandler.id!!, skjermet, true).forEach { kø ->
-                oppgaveKøV3Repository.endre(tx, kø.copy(saksbehandlere = kø.saksbehandlere - epost), skjermet)
+            // V3-modellen: Fjerner saksbehandler fra køer i alle områder, siden selve
+            // saksbehandlerraden slettes under og ellers ville etterlatt dinglende koblinger.
+            Områder.entries.forEach { områdeForKø ->
+                oppgaveKøV3Repository.hentKoerMedOppgittSaksbehandler(tx, saksbehandler.id!!, skjermet, true, områdeForKø)
+                    .forEach { kø ->
+                        oppgaveKøV3Repository.endre(
+                            tx,
+                            kø.copy(saksbehandlere = kø.saksbehandlere - epost),
+                            skjermet,
+                            områdeForKø
+                        )
+                    }
             }
 
             // Sletter fra saksbehandler-tabellen

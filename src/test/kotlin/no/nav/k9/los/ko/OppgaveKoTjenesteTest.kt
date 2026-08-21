@@ -76,7 +76,7 @@ class OppgaveKoTjenesteTest {
             oppgavebehandlingsUrl = null,
             hastesak = false,
         )
-        every { oppgaveKoRepository.hent(1L, false) } returns kø
+        every { oppgaveKoRepository.hent(1L, false, Områder.K9) } returns kø
         every { oppgaveQueryService.queryForOppgave(any()) } returns listOf(oppgave)
         coEvery { pepClient.harTilgangTilOppgaveV3(oppgave, brukerkontekst, Action.read) } returns true
         coEvery { builder.bygg(listOf(oppgave), brukerkontekst, emptyMap()) } returns listOf(sammendrag)
@@ -136,7 +136,7 @@ class OppgaveKoTjenesteTest {
         val utenTilgang = oppgave("uten-tilgang", "SAK-1")
         val førsteMedTilgang = oppgave("med-tilgang-1", "SAK-2")
 
-        every { oppgaveKoRepository.hent(1L, false) } returns kø
+        every { oppgaveKoRepository.hent(1L, false, Områder.K9) } returns kø
         every {
             oppgaveQueryService.queryForOppgave(
                 QueryRequest(oppgaveQuery = kø.oppgaveQuery,

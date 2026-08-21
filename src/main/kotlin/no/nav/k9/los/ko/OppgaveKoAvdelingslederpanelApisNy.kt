@@ -37,7 +37,7 @@ fun Route.OppgaveKoAvdelingslederApisNy() {
     }) {
         medBrukerkontekst { bruker ->
             if (bruker.erOppgavestyrer) {
-                val oppgavekøer = oppgaveKoTjeneste.hentOppgavekøer(skjermet = bruker.harTilgangTilKode6)
+                val oppgavekøer = oppgaveKoTjeneste.hentOppgavekøer(område = bruker.område, skjermet = bruker.harTilgangTilKode6)
                     .map { oppgaveko ->
                         OppgaveKoListeelement(
                             id = oppgaveko.id,
@@ -69,7 +69,7 @@ fun Route.OppgaveKoAvdelingslederApisNy() {
         medBrukerkontekst { bruker ->
             if (bruker.erOppgavestyrer) {
                 val oppgaveKo = call.receive<OppgaveKo>()
-                call.respond(oppgaveKoTjeneste.endre(oppgaveKo, bruker.harTilgangTilKode6))
+                call.respond(oppgaveKoTjeneste.endre(oppgaveKo, bruker.harTilgangTilKode6, bruker.område))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
@@ -97,7 +97,8 @@ fun Route.OppgaveKoAvdelingslederApisNy() {
                         kopierOppgaveKoDto.tittel,
                         kopierOppgaveKoDto.taMedQuery,
                         kopierOppgaveKoDto.taMedSaksbehandlere,
-                        bruker.harTilgangTilKode6
+                        bruker.harTilgangTilKode6,
+                        bruker.område
                     )
                 )
             } else {
@@ -177,7 +178,7 @@ fun Route.OppgaveKoAvdelingslederApisNy() {
         medBrukerkontekst { bruker ->
             if (bruker.erOppgavestyrer) {
                 val oppgavekøId = call.parameters["id"]!!
-                call.respond(oppgaveKoTjeneste.hent(oppgavekøId.toLong(), bruker.harTilgangTilKode6))
+                call.respond(oppgaveKoTjeneste.hent(oppgavekøId.toLong(), bruker.harTilgangTilKode6, bruker.område))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
@@ -199,7 +200,7 @@ fun Route.OppgaveKoAvdelingslederApisNy() {
         medBrukerkontekst { bruker ->
             if (bruker.erOppgavestyrer) {
                 val oppgavekøId = call.parameters["id"]!!
-                call.respond(oppgaveKoTjeneste.slett(oppgavekøId.toLong()))
+                call.respond(oppgaveKoTjeneste.slett(oppgavekøId.toLong(), bruker.område))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
@@ -222,7 +223,7 @@ fun Route.OppgaveKoAvdelingslederApisNy() {
             if (bruker.erOppgavestyrer) {
                 val oppgavekøId = call.parameters["id"]!!
                 val skjermet = bruker.harTilgangTilKode6
-                call.respond(oppgaveKoTjeneste.hentAntallMedOgUtenReserverteForKø(oppgavekøId.toLong(), skjermet))
+                call.respond(oppgaveKoTjeneste.hentAntallMedOgUtenReserverteForKø(oppgavekøId.toLong(), skjermet, bruker.område))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
@@ -250,7 +251,8 @@ fun Route.OppgaveKoAvdelingslederApisNy() {
                 call.respond(
                     oppgaveKoTjeneste.hentKøerForSaksbehandler(
                         call.parameters["id"]?.toLong()!!,
-                        bruker.harTilgangTilKode6
+                        bruker.harTilgangTilKode6,
+                        bruker.område
                     ).map {
                         OppgaveKoIdOgTittel(
                             id = it.id,

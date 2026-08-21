@@ -14,10 +14,10 @@ import no.nav.k9.los.domeneadaptere.k9.avstemming.punsj.systemklient.LocalPunsjA
 import no.nav.k9.los.domeneadaptere.k9.avstemming.punsj.systemklient.RestPunsjAvstemmingsklient
 import no.nav.k9.los.domeneadaptere.k9.avstemming.saksbehandling.systemklient.LocalSakAvstemmingsklient
 import no.nav.k9.los.domeneadaptere.k9.avstemming.saksbehandling.systemklient.RestSakAvstemmingsklient
+import no.nav.k9.los.domeneadaptere.k9.eventmottak.FeilRekkefølgeSjekker
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.eventlager.EventRepository
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.kafka.AsynkronProsesseringV1Service
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.klage.K9KlageEventHandler
-import no.nav.k9.los.domeneadaptere.k9.eventmottak.FeilRekkefølgeSjekker
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventHandler
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.sak.K9SakEventHandler
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.tilbakekrav.K9TilbakeEventHandler
@@ -40,7 +40,6 @@ import no.nav.k9.los.domeneadaptere.k9.refreshk9sakoppgaver.restklient.K9SakServ
 import no.nav.k9.los.domeneadaptere.k9.statistikk.*
 import no.nav.k9.los.driftsmelding.DriftsmeldingRepository
 import no.nav.k9.los.driftsmelding.DriftsmeldingTjeneste
-import no.nav.k9.los.oppgavemottak.feltutlederforlagring.GyldigeFeltutledere
 import no.nav.k9.los.forvaltning.ForvaltningRepository
 import no.nav.k9.los.forvaltning.OmrådeKoblingRepository
 import no.nav.k9.los.infrastruktur.abac.*
@@ -57,7 +56,6 @@ import no.nav.k9.los.infrastruktur.metrikker.EventlagerNokkeltallRepository
 import no.nav.k9.los.infrastruktur.pdl.IPdlService
 import no.nav.k9.los.infrastruktur.pdl.PdlService
 import no.nav.k9.los.infrastruktur.pdl.PdlServiceLocal
-
 import no.nav.k9.los.ko.KøpåvirkendeHendelse
 import no.nav.k9.los.ko.OppgaveKoTjeneste
 import no.nav.k9.los.ko.db.OppgaveKoRepository
@@ -71,18 +69,11 @@ import no.nav.k9.los.oppgavemottak.AktivOgPartisjonertOppgaveAjourholdTjeneste
 import no.nav.k9.los.oppgavemottak.OppgaveV3Repository
 import no.nav.k9.los.oppgavemottak.OppgaveV3Tjeneste
 import no.nav.k9.los.oppgavemottak.PartisjonertOppgaveRepository
-import no.nav.k9.los.oppgaveuthenting.*
-import no.nav.k9.los.oppgaveuthenting.enkeltoppslag.AktivOppgaveOppslag
-import no.nav.k9.los.oppgaveuthenting.enkeltoppslag.AktivOppgaveOppslagPartisjonert
-import no.nav.k9.los.oppgaveuthenting.enkeltoppslag.ReservasjonsnøkkelOppgaveOppslag
-import no.nav.k9.los.oppgaveuthenting.enkeltoppslag.ReservasjonsnøkkelOppgaveOppslagPartisjonert
-import no.nav.k9.los.oppgaveuthenting.enkeltoppslag.TemporalOppgaveOppslag
-import no.nav.k9.los.oppgaveuthenting.enkeltoppslag.TemporalOppgaveOppslagOppgaveV3
+import no.nav.k9.los.oppgavemottak.feltutlederforlagring.GyldigeFeltutledere
+import no.nav.k9.los.oppgaveuthenting.OppgaveRepository
+import no.nav.k9.los.oppgaveuthenting.enkeltoppslag.*
 import no.nav.k9.los.oppgaveuthenting.query.OppgaveQueryService
 import no.nav.k9.los.oppgaveuthenting.query.db.OppgaveQueryRepository
-import no.nav.k9.los.søkeboks.Oppgavesøkere
-import no.nav.k9.los.søkeboks.k9.K9Oppgavesøk
-import no.nav.k9.los.søkeboks.ung.UngOppgavesøk
 import no.nav.k9.los.oppgaveuthenting.sammendrag.OppgaveSammendragDtoBuilder
 import no.nav.k9.los.reservasjon.ReservasjonApisTjeneste
 import no.nav.k9.los.reservasjon.ReservasjonV3DtoBuilder
@@ -92,7 +83,10 @@ import no.nav.k9.los.saksbehandleradmin.SaksbehandlerAdminTjeneste
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
 import no.nav.k9.los.sisteoppgaver.SisteOppgaverRepository
 import no.nav.k9.los.sisteoppgaver.SisteOppgaverTjeneste
+import no.nav.k9.los.søkeboks.Oppgavesøkere
 import no.nav.k9.los.søkeboks.SøkeboksTjeneste
+import no.nav.k9.los.søkeboks.k9.K9Oppgavesøk
+import no.nav.k9.los.søkeboks.ung.UngOppgavesøk
 import no.nav.k9.los.uttrekk.UttrekkCsvGenerator
 import no.nav.k9.los.uttrekk.UttrekkJobb
 import no.nav.k9.los.uttrekk.UttrekkRepository
@@ -264,10 +258,7 @@ fun common(app: Application, config: Configuration) = module {
             saksbehandlerRepository = get()
         )
     }
-
-    single { K9Oppgavesøk() }
-    single { UngOppgavesøk() }
-    single { Oppgavesøkere(k9 = get(), ung = get()) }
+    single { Oppgavesøkere(k9 = K9Oppgavesøk(), ung = UngOppgavesøk()) }
     single { OppgaveSammendragDtoBuilder(oppgavesøkere = get(), pdlService = get()) }
 
     single {
@@ -282,7 +273,14 @@ fun common(app: Application, config: Configuration) = module {
 
     single { FeltdefinisjonRepository(områdeRepository = get()) }
     single { OmrådeRepository(get()) }
-    single { OppgavetypeRepository(dataSource = get(), feltdefinisjonRepository = get(), områdeRepository = get(), gyldigeFeltutledere = get()) }
+    single {
+        OppgavetypeRepository(
+            dataSource = get(),
+            feltdefinisjonRepository = get(),
+            områdeRepository = get(),
+            gyldigeFeltutledere = get()
+        )
+    }
     single {
         OppgaveV3Repository(
             dataSource = get(),
@@ -696,7 +694,11 @@ fun naisCommonConfig(config: Configuration) = module {
     }
 
     single<IPepClient> {
-        PepClient(azureGraphService = get(), get(), get())
+        PepClient(
+            azureGraphService = get(),
+            sifAbacPdpKlienter = get(),
+            gruppeoppsett = get(),
+        )
     }
 }
 
@@ -741,12 +743,15 @@ fun preprodConfig(config: Configuration) = module {
         )
     }
 
-    single<ISifAbacPdpKlient> {
-        SifAbacPdpKlientK9(
-            configuration = get(),
-            accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
-            scope = "api://dev-fss.k9saksbehandling.sif-abac-pdp/.default",
-            httpClient = get()
+    single {
+        SifAbacPdpKlienter(
+            k9 = SifAbacPdpKlientK9(
+                configuration = get(),
+                accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
+                scope = "api://dev-fss.k9saksbehandling.sif-abac-pdp/.default",
+                httpClient = get()
+            ),
+            ung = SifAbacPdpKlientUng(),
         )
     }
 
@@ -818,12 +823,15 @@ fun prodConfig(config: Configuration) = module {
         )
     }
 
-    single<ISifAbacPdpKlient> {
-        SifAbacPdpKlientK9(
-            configuration = get(),
-            accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
-            scope = "api://prod-fss.k9saksbehandling.sif-abac-pdp/.default",
-            httpClient = get()
+    single {
+        SifAbacPdpKlienter(
+            k9 = SifAbacPdpKlientK9(
+                configuration = get(),
+                accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
+                scope = "api://prod-fss.k9saksbehandling.sif-abac-pdp/.default",
+                httpClient = get()
+            ),
+            ung = SifAbacPdpKlientUng(),
         )
     }
 

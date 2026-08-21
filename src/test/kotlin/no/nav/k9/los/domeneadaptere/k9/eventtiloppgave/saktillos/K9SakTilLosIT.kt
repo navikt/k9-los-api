@@ -74,7 +74,8 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         val antallIKø = oppgaveKøTjeneste.hentAntallOppgaverForKø(
             oppgaveKoId = kø.id,
             filtrerReserverte = filtrerReserverte,
-            skjermet = skjermet
+            skjermet = skjermet,
+            område = kø.område
         )
         assertThat(antallIKø).isEqualTo(0)
     }
@@ -97,7 +98,8 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         val antallIKø = oppgaveKøTjeneste.hentAntallOppgaverForKø(
             oppgaveKoId = kø.id,
             filtrerReserverte = filtrerReserverte,
-            skjermet = skjermet
+            skjermet = skjermet,
+            område = kø.område
         )
         assertThat(antallIKø).isEqualTo(0)
 
@@ -151,7 +153,8 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         val antallIKø = oppgaveKøTjeneste.hentAntallOppgaverForKø(
             oppgaveKoId = kø.id,
             filtrerReserverte = filtrerReserverte,
-            skjermet = skjermet
+            skjermet = skjermet,
+            område = kø.område
         )
         assertThat(antallIKø).isEqualTo(0)
 
@@ -181,7 +184,8 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         val antallIKø = oppgaveKøTjeneste.hentAntallOppgaverForKø(
             oppgaveKoId = kø.id,
             filtrerReserverte = filtrerReserverte,
-            skjermet = skjermet
+            skjermet = skjermet,
+            område = kø.område
         )
         assertThat(antallIKø).isEqualTo(1)
 
@@ -193,7 +197,8 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         val antallIKøEtterRes = oppgaveKøTjeneste.hentAntallOppgaverForKø(
             kø.id,
             filtrerReserverte = filtrerReserverte1,
-            skjermet = skjermet1
+            skjermet = skjermet1,
+            område = kø.område
         )
         assertThat(antallIKøEtterRes).isZero()
     }
@@ -218,7 +223,8 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         val antallIKø = oppgaveKøTjeneste.hentAntallOppgaverForKø(
             oppgaveKoId = kø.id,
             filtrerReserverte = filtrerReserverte,
-            skjermet = skjermet
+            skjermet = skjermet,
+            område = kø.område
         )
         assertThat(antallIKø).isEqualTo(1)
 
@@ -430,7 +436,8 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         val antallIKøEtterRes = oppgaveKøTjeneste.hentAntallOppgaverForKø(
             oppgaveKoId = kø.id,
             filtrerReserverte = filtrerReserverte,
-            skjermet = skjermet
+            skjermet = skjermet,
+            område = kø.område
         )
         assertThat(antallIKøEtterRes).isEqualTo(forventetAntall.toLong())
     }
@@ -475,13 +482,12 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
 
     private fun opprettKøFor(saksbehandler: Saksbehandler, oppgaveQuery: OppgaveQuery): OppgaveKo {
         val oppgaveKoRepository = get<OppgaveKoRepository>()
-        val pepClient = get<IPepClient>()
         val skjermet = kontekst(saksbehandler.navident!!).harTilgangTilKode6
         val nyKø = oppgaveKoRepository.leggTil("Test", skjermet = skjermet, område = saksbehandler.områder.first()).copy(
             saksbehandlere = listOf(saksbehandler.epost),
             oppgaveQuery = oppgaveQuery
         )
-        return oppgaveKoRepository.endre(nyKø, skjermet)
+        return oppgaveKoRepository.endre(nyKø, skjermet, saksbehandler.områder.first())
     }
 
     private fun kontekst(navIdent: String): BrukerkontekstMedOmråde {

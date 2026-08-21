@@ -23,7 +23,8 @@ fun Route.OppgaveKoSaksbehandlerApis() {
                 call.respond(
                     oppgaveKoTjeneste.hentKøerForSaksbehandler(
                         saksbehandler.id!!,
-                        harTilgangTilKode6
+                        harTilgangTilKode6,
+                        bruker.område
                     )
                 )
             } else {
@@ -72,7 +73,8 @@ fun Route.OppgaveKoSaksbehandlerApis() {
                     oppgaveKoTjeneste.hentAntallOppgaverForKø(
                         oppgaveKoId = oppgavekøId.toLong(),
                         filtrerReserverte = true,
-                        skjermet = skjermet
+                        skjermet = skjermet,
+                        område = bruker.område
                     )
                 }
                 call.respond(AntallOppgaver(antallUtenReserverte))

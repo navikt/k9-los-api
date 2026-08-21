@@ -340,12 +340,15 @@ fun Route.forvaltningApis() {
         get("/oppgaveko/antall") {
             medBrukerkontekstUtenOmråde { bruker ->
                 if (bruker.kanLeggeUtDriftsmelding) {
-                    val antall = oppgaveKoTjeneste.hentOppgavekøer(skjermet = false).map {
-                        oppgaveKoTjeneste.hentAntallOppgaverForKø(
-                            oppgaveKoId = it.id,
-                            filtrerReserverte = false,
-                            skjermet = false
-                        )
+                    val antall = Områder.entries.flatMap { område ->
+                        oppgaveKoTjeneste.hentOppgavekøer(område = område, skjermet = false).map {
+                            oppgaveKoTjeneste.hentAntallOppgaverForKø(
+                                oppgaveKoId = it.id,
+                                filtrerReserverte = false,
+                                skjermet = false,
+                                område = område
+                            )
+                        }
                     }.size
                     call.respond(antall)
                 } else {
@@ -357,22 +360,26 @@ fun Route.forvaltningApis() {
         get("/oppgaveko") {
             medBrukerkontekstUtenOmråde { bruker ->
                 if (bruker.kanLeggeUtDriftsmelding) {
-                    call.respond(oppgaveKoTjeneste.hentOppgavekøer(skjermet = false).map { it.id })
+                    call.respond(Områder.entries.flatMap { område ->
+                        oppgaveKoTjeneste.hentOppgavekøer(område = område, skjermet = false).map { it.id }
+                    })
                 } else {
                     call.respond(HttpStatusCode.Forbidden)
                 }
             }
         }
 
-        get("/oppgaveko/{ko}/antall") {
+        get("/oppgaveko/{omrade}/{ko}/antall") {
             medBrukerkontekstUtenOmråde { bruker ->
                 if (bruker.kanLeggeUtDriftsmelding) {
                     val køId = call.parameters["ko"]!!.toLong()
+                    val område = Områder.fraEksternId(call.parameters["omrade"]!!)
                     val medReserverte = call.request.queryParameters["reserverte"]?.toBoolean() ?: false
                     val antall = oppgaveKoTjeneste.hentAntallOppgaverForKø(
                         oppgaveKoId = køId,
                         filtrerReserverte = medReserverte,
-                        skjermet = false
+                        skjermet = false,
+                        område = område
                     )
                     call.respond(if (antall > 10) antall else -1)
                 } else {
@@ -397,7 +404,7 @@ fun Route.forvaltningApis() {
     }) {
         medBrukerkontekstUtenOmråde { bruker ->
             if (bruker.kanLeggeUtDriftsmelding) {
-                val område = call.parameters["omrade"]?.let { Områder.fraEksternId(it) }
+                val område = Områder.fraEksternId(call.parameters["omrade"]!!)
                 val kode = call.parameters["kode"]!!
 
                 val (køer, lagredeSøk) = transactionalManager.transaction { tx ->

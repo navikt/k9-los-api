@@ -58,8 +58,8 @@ class OppgaveKoTjeneste(
     private val antallOppgaverCacheVarighet = Duration.ofMinutes(5)
 
     @WithSpan
-    fun hentOppgavekøer(skjermet: Boolean): List<OppgaveKo> {
-        return oppgaveKoRepository.hentListe(skjermet)
+    fun hentOppgavekøer(område: Områder, skjermet: Boolean): List<OppgaveKo> {
+        return oppgaveKoRepository.hentListe(område, skjermet)
     }
 
     @WithSpan
@@ -69,7 +69,7 @@ class OppgaveKoTjeneste(
         ønsketAntallOppgaver: Long,
         fjernReserverte: Boolean = false
     ): NesteOppgaverFraKoDto {
-        val kø = oppgaveKoRepository.hent(oppgaveKoId, brukerkontekst.harTilgangTilKode6)
+        val kø = oppgaveKoRepository.hent(oppgaveKoId, brukerkontekst.harTilgangTilKode6, brukerkontekst.område)
         val tilgjengeligeOppgaver = hentTilgjengeligeOppgaverFraKø(
             kø = kø,
             ønsketAntallOppgaver = ønsketAntallOppgaver,
@@ -89,7 +89,7 @@ class OppgaveKoTjeneste(
         ønsketAntallOppgaver: Long,
         fjernReserverte: Boolean = false,
     ): OppgaverFraKøDto {
-        val kø = oppgaveKoRepository.hent(oppgaveKoId, brukerkontekst.harTilgangTilKode6)
+        val kø = oppgaveKoRepository.hent(oppgaveKoId, brukerkontekst.harTilgangTilKode6, brukerkontekst.område)
         val oppgaver = hentTilgjengeligeOppgaverFraKø(kø, ønsketAntallOppgaver, fjernReserverte, brukerkontekst)
         return OppgaverFraKøDto(oppgaveSammendragDtoBuilder.bygg(oppgaver, brukerkontekst))
     }
@@ -170,14 +170,16 @@ class OppgaveKoTjeneste(
     @WithSpan
     fun hentKøerForSaksbehandler(
         saksbehandlerId: Long,
-        skjermet: Boolean
+        skjermet: Boolean,
+        område: Områder
     ): List<OppgaveKo> {
         return transactionalManager.transaction { tx ->
             oppgaveKoRepository.hentKoerMedOppgittSaksbehandler(
                 tx = tx,
                 saksbehandlerId = saksbehandlerId,
                 medSaksbehandlere = false,
-                skjermet = skjermet
+                skjermet = skjermet,
+                område = område
             )
         }
     }
@@ -186,13 +188,24 @@ class OppgaveKoTjeneste(
     suspend fun hentAntallMedOgUtenReserverteForKø(
         oppgaveKoId: Long,
         skjermet: Boolean,
+        område: Områder,
     ): AntallOppgaverOgReserverte {
         return coroutineScope {
             val antallUtenReserverte = async(Dispatchers.IO + Span.current().asContextElement()) {
-                hentAntallOppgaverForKø(oppgaveKoId = oppgaveKoId, filtrerReserverte = true, skjermet = skjermet)
+                hentAntallOppgaverForKø(
+                    oppgaveKoId = oppgaveKoId,
+                    filtrerReserverte = true,
+                    skjermet = skjermet,
+                    område = område
+                )
             }
             val antallMedReserverte = async(Dispatchers.IO + Span.current().asContextElement()) {
-                hentAntallOppgaverForKø(oppgaveKoId = oppgaveKoId, filtrerReserverte = false, skjermet = skjermet)
+                hentAntallOppgaverForKø(
+                    oppgaveKoId = oppgaveKoId,
+                    filtrerReserverte = false,
+                    skjermet = skjermet,
+                    område = område
+                )
             }
 
             AntallOppgaverOgReserverte(
@@ -206,9 +219,10 @@ class OppgaveKoTjeneste(
     fun hentAntallOppgaverForKø(
         oppgaveKoId: Long,
         filtrerReserverte: Boolean,
-        skjermet: Boolean
+        skjermet: Boolean,
+        område: Områder
     ): Long {
-        val ko = oppgaveKoRepository.hent(oppgaveKoId, skjermet)
+        val ko = oppgaveKoRepository.hent(oppgaveKoId, skjermet, område)
         return antallOppgaverCache.hent(
             AntallOppgaverForKøCacheKey(oppgaveKoId, filtrerReserverte),
             antallOppgaverCacheVarighet
@@ -251,7 +265,8 @@ class OppgaveKoTjeneste(
         val oppgavekø = DetaljerMetrikker.time("taReservasjonFraKø", "hentKø", "$oppgaveKoId") {
             oppgaveKoRepository.hent(
                 oppgaveKoId,
-                skjermet
+                skjermet,
+                brukerkontekst.område
             )
         }
 
@@ -315,7 +330,7 @@ class OppgaveKoTjeneste(
     @WithSpan
     suspend fun hentSaksbehandlereForKo(oppgaveKoId: Long, brukerkontekst: BrukerkontekstMedOmråde): List<Saksbehandler> {
         val skjermet = brukerkontekst.harTilgangTilKode6
-        val oppgaveKo = oppgaveKoRepository.hent(oppgaveKoId, skjermet)
+        val oppgaveKo = oppgaveKoRepository.hent(oppgaveKoId, skjermet, brukerkontekst.område)
         return oppgaveKo.saksbehandlere.mapNotNull { saksbehandlerEpost: String ->
             saksbehandlerRepository.finnSaksbehandlerMedEpost(saksbehandlerEpost, skjermet).also {
                 if (it == null) {
@@ -331,9 +346,17 @@ class OppgaveKoTjeneste(
         tittel: String,
         taMedQuery: Boolean,
         taMedSaksbehandlere: Boolean,
-        skjermet: Boolean
+        skjermet: Boolean,
+        område: Områder
     ): OppgaveKo {
-        val kø = oppgaveKoRepository.kopier(kopierFraOppgaveId, tittel, taMedQuery, taMedSaksbehandlere, skjermet)
+        val kø = oppgaveKoRepository.kopier(
+            kopierFraOppgaveId,
+            tittel,
+            taMedQuery,
+            taMedSaksbehandlere,
+            skjermet,
+            område
+        )
         runBlocking {
             køpåvirkendeHendelseChannel.send(Kødefinisjon(kø.id))
         }
@@ -350,21 +373,21 @@ class OppgaveKoTjeneste(
     }
 
     @WithSpan
-    fun hent(oppgaveKoId: Long, harTilgangTilKode6: Boolean): OppgaveKo {
-        return oppgaveKoRepository.hent(oppgaveKoId, harTilgangTilKode6)
+    fun hent(oppgaveKoId: Long, harTilgangTilKode6: Boolean, område: Områder): OppgaveKo {
+        return oppgaveKoRepository.hent(oppgaveKoId, harTilgangTilKode6, område)
     }
 
     @WithSpan
-    fun slett(oppgaveKoId: Long) {
-        oppgaveKoRepository.slett(oppgaveKoId)
+    fun slett(oppgaveKoId: Long, område: Områder) {
+        oppgaveKoRepository.slett(oppgaveKoId, område)
         runBlocking {
             køpåvirkendeHendelseChannel.send(KødefinisjonSlettet(oppgaveKoId))
         }
         antallOppgaverCache.slettForKøId(oppgaveKoId)
     }
 
-    fun endre(oppgaveKo: OppgaveKo, skjermet: Boolean): OppgaveKo {
-        val kø = oppgaveKoRepository.endre(oppgaveKo, skjermet)
+    fun endre(oppgaveKo: OppgaveKo, skjermet: Boolean, område: Områder): OppgaveKo {
+        val kø = oppgaveKoRepository.endre(oppgaveKo, skjermet, område)
         runBlocking {
             køpåvirkendeHendelseChannel.send(Kødefinisjon(kø.id))
         }

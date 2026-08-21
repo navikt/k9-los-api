@@ -364,12 +364,15 @@ fun Route.forvaltningApisNy() {
         get("/oppgaveko/antall") {
             medBrukerkontekstUtenOmråde { bruker ->
                 if (bruker.kanLeggeUtDriftsmelding) {
-                    val antall = oppgaveKoTjeneste.hentOppgavekøer(skjermet = false).map {
-                        oppgaveKoTjeneste.hentAntallOppgaverForKø(
-                            oppgaveKoId = it.id,
-                            filtrerReserverte = false,
-                            skjermet = false
-                        )
+                    val antall = Områder.entries.flatMap { område ->
+                        oppgaveKoTjeneste.hentOppgavekøer(område = område, skjermet = false).map {
+                            oppgaveKoTjeneste.hentAntallOppgaverForKø(
+                                oppgaveKoId = it.id,
+                                filtrerReserverte = false,
+                                skjermet = false,
+                                område = område
+                            )
+                        }
                     }.size
                     call.respond(antall)
                 } else {
@@ -381,7 +384,9 @@ fun Route.forvaltningApisNy() {
         get("/oppgaveko") {
             medBrukerkontekstUtenOmråde { bruker ->
                 if (bruker.kanLeggeUtDriftsmelding) {
-                    call.respond(oppgaveKoTjeneste.hentOppgavekøer(skjermet = false).map { it.id })
+                    call.respond(Områder.entries.flatMap { område ->
+                        oppgaveKoTjeneste.hentOppgavekøer(område = område, skjermet = false).map { it.id }
+                    })
                 } else {
                     call.respond(HttpStatusCode.Forbidden)
                 }
@@ -389,14 +394,15 @@ fun Route.forvaltningApisNy() {
         }
 
         get("/oppgaveko/{ko}/antall") {
-            medBrukerkontekstUtenOmråde { bruker ->
+            medBrukerkontekst { bruker ->
                 if (bruker.kanLeggeUtDriftsmelding) {
                     val køId = call.parameters["ko"]!!.toLong()
                     val medReserverte = call.request.queryParameters["reserverte"]?.toBoolean() ?: false
                     val antall = oppgaveKoTjeneste.hentAntallOppgaverForKø(
                         oppgaveKoId = køId,
                         filtrerReserverte = medReserverte,
-                        skjermet = false
+                        skjermet = false,
+                        område = bruker.område
                     )
                     call.respond(if (antall > 10) antall else -1)
                 } else {
