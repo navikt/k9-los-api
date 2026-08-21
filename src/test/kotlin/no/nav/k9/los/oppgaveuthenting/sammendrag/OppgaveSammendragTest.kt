@@ -17,7 +17,11 @@ import no.nav.k9.los.kodeverk.BehandlingType
 import no.nav.k9.los.kodeverk.FagsakYtelseType
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.oppgavedefinisjon.omraade.Område
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgavedefinisjon.oppgavetype.Oppgavetype
+import no.nav.k9.los.søkeboks.Oppgavesøkere
+import no.nav.k9.los.søkeboks.k9.K9Oppgavesøk
+import no.nav.k9.los.søkeboks.ung.UngOppgavesøk
 import no.nav.k9.los.oppgaveuthenting.Oppgave
 import no.nav.k9.los.oppgaveuthenting.Oppgavefelt
 import org.junit.jupiter.api.Test
@@ -26,8 +30,8 @@ import java.time.LocalDateTime
 
 class OppgaveSammendragTest {
     @Test
-    fun `K9-mapper mapper faste sammendragsfelt`() {
-        val resultat = K9OppgaveSammendragMapper().map(oppgave("K9"), person())
+    fun `K9-adapter mapper faste sammendragsfelt`() {
+        val resultat = K9Oppgavesøk().tilSammendrag(oppgave(Områder.K9), person())
 
         assertThat(resultat.oppgaveNøkkel.oppgaveEksternId).isEqualTo("oppgave-1")
         assertThat(resultat.person?.navn).isEqualTo("Ola Nordmann")
@@ -42,41 +46,41 @@ class OppgaveSammendragTest {
     fun `builder henter samme person bare en gang per respons`() = runBlocking {
         val pdlService = mockk<IPdlService>()
         val person = person()
-        coEvery { pdlService.person("aktor-1") } returns PersonPdlResponse(false, person)
-        val builder = OppgaveSammendragDtoBuilder(listOf(K9OppgaveSammendragMapper()), pdlService)
+        coEvery { pdlService.person("aktor-1", any()) } returns PersonPdlResponse(false, person)
+        val builder = OppgaveSammendragDtoBuilder(Oppgavesøkere(K9Oppgavesøk(), UngOppgavesøk()), pdlService)
 
-        val resultat = builder.bygg(listOf(oppgave("K9"), oppgave("K9", "oppgave-2")))
+        val resultat = builder.bygg(listOf(oppgave(Områder.K9), oppgave(Områder.K9, "oppgave-2")), mockk())
 
         assertThat(resultat.size).isEqualTo(2)
-        coVerify(exactly = 1) { pdlService.person("aktor-1") }
+        coVerify(exactly = 1) { pdlService.person("aktor-1", any()) }
     }
 
     @Test
     fun `builder bruker allerede hentet person`() = runBlocking {
         val pdlService = mockk<IPdlService>()
-        val builder = OppgaveSammendragDtoBuilder(listOf(K9OppgaveSammendragMapper()), pdlService)
+        val builder = OppgaveSammendragDtoBuilder(Oppgavesøkere(K9Oppgavesøk(), UngOppgavesøk()), pdlService)
 
-        val resultat = builder.bygg(listOf(oppgave("K9")), mapOf("aktor-1" to person()))
+        val resultat = builder.bygg(listOf(oppgave(Områder.K9)), mockk(), mapOf("aktor-1" to person()))
 
         assertThat(resultat.single().person?.fnr).isEqualTo("12345678901")
-        coVerify(exactly = 0) { pdlService.person(any()) }
+        coVerify(exactly = 0) { pdlService.person(any(), any()) }
     }
 
     @Test
-    fun `builder faller ikke tilbake til K9 når område mangler mapper`() {
-        val builder = OppgaveSammendragDtoBuilder(listOf(K9OppgaveSammendragMapper()), mockk())
+    fun `builder faller ikke tilbake til K9 når område mangler adapter`() {
+        val builder = OppgaveSammendragDtoBuilder(Oppgavesøkere(K9Oppgavesøk(), UngOppgavesøk()), mockk())
 
-        val feil = assertThrows<IllegalStateException> {
-            runBlocking { builder.bygg(listOf(oppgave("UNG"))) }
+        val feil = assertThrows<NotImplementedError> {
+            runBlocking { builder.bygg(listOf(oppgave(Områder.UNG)), mockk()) }
         }
 
         assertThat(feil.message ?: "").contains("UNG")
     }
 
-    private fun oppgave(område: String, eksternId: String = "oppgave-1"): Oppgave {
+    private fun oppgave(område: Områder, eksternId: String = "oppgave-1"): Oppgave {
         val oppgavetype = mockk<Oppgavetype>()
         every { oppgavetype.eksternId } returns "k9sak"
-        every { oppgavetype.område } returns Område(id = 1, eksternId = område)
+        every { oppgavetype.område } returns Område(id = 1, eksternId = område.eksternId)
         every { oppgavetype.oppgavebehandlingsUrlTemplate } returns null
         return Oppgave(
             eksternId = eksternId,

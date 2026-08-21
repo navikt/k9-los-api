@@ -8,10 +8,10 @@ import kotliquery.TransactionalSession
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.sif.abac.kontrakt.abac.Diskresjonskode
 import java.time.Duration
 import java.time.LocalDateTime
-import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 
 class PepCacheService(
     private val pepClient: IPepClient,

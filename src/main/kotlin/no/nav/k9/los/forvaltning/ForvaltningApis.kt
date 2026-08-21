@@ -1,7 +1,5 @@
 package no.nav.k9.los.forvaltning
 
-import com.fasterxml.jackson.annotation.JsonCreator
-import com.fasterxml.jackson.annotation.JsonValue
 import io.github.smiley4.ktoropenapi.get
 import io.github.smiley4.ktoropenapi.post
 import io.ktor.http.*
@@ -9,19 +7,17 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotliquery.queryOf
-import no.nav.k9.kodeverk.behandling.FagsakYtelseType
 import no.nav.k9.los.domeneadaptere.k9.K9Oppgavetypenavn
 import no.nav.k9.los.domeneadaptere.k9.avstemming.AvstemmingsTjeneste
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.eventlager.EventRepository
 import no.nav.k9.los.domeneadaptere.k9.statistikk.StatistikkRepository
-import no.nav.k9.los.infrastruktur.abac.IPepClient
+import no.nav.k9.los.infrastruktur.brukerkontekst.medBrukerkontekstUtenOmråde
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
-import no.nav.k9.los.infrastruktur.rest.RequestContextService
 import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.ko.OppgaveKoTjeneste
 import no.nav.k9.los.kodeverk.Fagsystem
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgavedefinisjon.oppgavetype.OppgavetypeRepository
-import no.nav.k9.los.oppgaveuthenting.Oppgave
 import no.nav.k9.los.oppgaveuthenting.enkeltoppslag.AktivOppgaveOppslag
 import no.nav.k9.los.oppgaveuthenting.enkeltoppslag.TemporalOppgaveOppslag
 import no.nav.k9.los.oppgaveuthenting.query.OppgaveQueryService
@@ -52,9 +48,6 @@ fun Route.forvaltningApis() {
     val forvaltningRepository by inject<ForvaltningRepository>()
     val områdeKoblingRepository by inject<OmrådeKoblingRepository>()
 
-    val pepClient by inject<IPepClient>()
-    val requestContextService by inject<RequestContextService>()
-
 
     get("/index_oversikt", {
         description = "index_oversikt"
@@ -64,8 +57,8 @@ fun Route.forvaltningApis() {
             }
         }
     }) {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.kanLeggeUtDriftsmelding()) {
+        medBrukerkontekstUtenOmråde { bruker ->
+            if (bruker.kanLeggeUtDriftsmelding) {
                 val list = mutableListOf<String>()
                 transactionalManager.transaction { tx ->
                     tx.run(
@@ -130,8 +123,8 @@ fun Route.forvaltningApis() {
             }
         }
     }) {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.kanLeggeUtDriftsmelding()) {
+        medBrukerkontekstUtenOmråde { bruker ->
+            if (bruker.kanLeggeUtDriftsmelding) {
                 val fagsystem = Fagsystem.fraKode(call.parameters["system"]!!)
                 val saksnummer = call.parameters["saksnummer"]!!
                 val oppgavetypeKode = K9Oppgavetypenavn.fraFagsystem(fagsystem).kode
@@ -154,7 +147,7 @@ fun Route.forvaltningApis() {
                                 verdi = listOf(oppgavetypeKode)
                             ),
                             FeltverdiOppgavefilter(
-                                område = "K9",
+                                område = Områder.K9,
                                 kode = sokefelt,
                                 operator = EksternFeltverdiOperator.EQUALS,
                                 verdi = listOf(saksnummer)
@@ -162,20 +155,21 @@ fun Route.forvaltningApis() {
                         ),
                         select = listOf(
                             EnkelSelectFelt(
-                                område = "K9",
+                                område = Områder.K9,
                                 kode = "opprettetTidspunkt"
                             )
                         ),
                         order = listOf(
                             EnkelOrderFelt(
-                                område = "K9",
+                                område = Områder.K9,
                                 kode = "opprettetTidspunkt",
                                 økende = true
                             )
                         )
                     ),
                     fjernReserverte = false,
-                    avgrensning = null
+                    avgrensning = null,
+                    område = Områder.fraFagsystem(fagsystem)
                 )
 
                 val eksternIds = oppgaveQueryService.query(query).map { rad ->
@@ -185,7 +179,7 @@ fun Route.forvaltningApis() {
                         område = eksternOppgaveId.område,
                         eksternId = eksternOppgaveId.eksternId,
                         opprettetTidspunkt = rad.feltverdier
-                            .firstOrNull { it.område == "K9" && it.kode == "opprettetTidspunkt" }
+                            .firstOrNull { it.område == Områder.K9 && it.kode == "opprettetTidspunkt" }
                             ?.verdi
                             ?.toString()
                     )
@@ -212,8 +206,8 @@ fun Route.forvaltningApis() {
             }
         }
     }) {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.kanLeggeUtDriftsmelding()) {
+        medBrukerkontekstUtenOmråde { bruker ->
+            if (bruker.kanLeggeUtDriftsmelding) {
                 val oppgavetype = call.parameters["oppgavetype"]!!
                 val oppgaveEksternId = call.parameters["oppgaveEksternId"]!!
 
@@ -241,8 +235,8 @@ fun Route.forvaltningApis() {
             }
         }
     }) {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.kanLeggeUtDriftsmelding()) {
+        medBrukerkontekstUtenOmråde { bruker ->
+            if (bruker.kanLeggeUtDriftsmelding) {
                 val oppgavetypeEksternId = call.parameters["oppgavetype"]!!
                 val oppgaveEksternId = call.parameters["oppgaveEksternId"]!!
 
@@ -284,8 +278,8 @@ fun Route.forvaltningApis() {
             }
         }
     }) {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.kanLeggeUtDriftsmelding()) {
+        medBrukerkontekstUtenOmråde { bruker ->
+            if (bruker.kanLeggeUtDriftsmelding) {
                 val område = call.parameters["omrade"]!!
                 val oppgavetypeEksternId = call.parameters["oppgavetype"]!!
                 val oppgaveEksternId = call.parameters["oppgaveEksternId"]!!
@@ -294,7 +288,7 @@ fun Route.forvaltningApis() {
                     oppgaveTypeRepository.hentOppgavetype(område, oppgavetypeEksternId)
                 } catch (e: IllegalArgumentException) {
                     call.respond(HttpStatusCode.NotFound, e.message.toString())
-                    return@withRequestContext
+                    return@medBrukerkontekstUtenOmråde
                 }
 
                 val oppgave = oppgaveOppslagTjeneste.hentAktivOppgave(oppgaveEksternId, oppgavetypeEksternId)
@@ -331,8 +325,8 @@ fun Route.forvaltningApis() {
          2. Hent lokal liste åpne oppgaver
          3. Regn ut diff
          */
-        requestContextService.withRequestContext(call) {
-            if (pepClient.kanLeggeUtDriftsmelding()) {
+        medBrukerkontekstUtenOmråde { bruker ->
+            if (bruker.kanLeggeUtDriftsmelding) {
                 val fagsystem = Fagsystem.fraKode(call.parameters["fagsystem"]!!)
                 val avstemmingsrapport = avstemmingsTjeneste.avstem(fagsystem)
                 call.respond(objectMapper.writeValueAsString(avstemmingsrapport))
@@ -344,8 +338,8 @@ fun Route.forvaltningApis() {
 
     route("/ytelse") {
         get("/oppgaveko/antall") {
-            requestContextService.withRequestContext(call) {
-                if (pepClient.kanLeggeUtDriftsmelding()) {
+            medBrukerkontekstUtenOmråde { bruker ->
+                if (bruker.kanLeggeUtDriftsmelding) {
                     val antall = oppgaveKoTjeneste.hentOppgavekøer(skjermet = false).map {
                         oppgaveKoTjeneste.hentAntallOppgaverForKø(
                             oppgaveKoId = it.id,
@@ -361,8 +355,8 @@ fun Route.forvaltningApis() {
         }
 
         get("/oppgaveko") {
-            requestContextService.withRequestContext(call) {
-                if (pepClient.kanLeggeUtDriftsmelding()) {
+            medBrukerkontekstUtenOmråde { bruker ->
+                if (bruker.kanLeggeUtDriftsmelding) {
                     call.respond(oppgaveKoTjeneste.hentOppgavekøer(skjermet = false).map { it.id })
                 } else {
                     call.respond(HttpStatusCode.Forbidden)
@@ -371,8 +365,8 @@ fun Route.forvaltningApis() {
         }
 
         get("/oppgaveko/{ko}/antall") {
-            requestContextService.withRequestContext(call) {
-                if (pepClient.kanLeggeUtDriftsmelding()) {
+            medBrukerkontekstUtenOmråde { bruker ->
+                if (bruker.kanLeggeUtDriftsmelding) {
                     val køId = call.parameters["ko"]!!.toLong()
                     val medReserverte = call.request.queryParameters["reserverte"]?.toBoolean() ?: false
                     val antall = oppgaveKoTjeneste.hentAntallOppgaverForKø(
@@ -401,9 +395,9 @@ fun Route.forvaltningApis() {
             }
         }
     }) {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.kanLeggeUtDriftsmelding()) {
-                val område = call.parameters["omrade"].let { if (it == "null" || it == null) null else it }
+        medBrukerkontekstUtenOmråde { bruker ->
+            if (bruker.kanLeggeUtDriftsmelding) {
+                val område = call.parameters["omrade"]?.let { Områder.fraEksternId(it) }
                 val kode = call.parameters["kode"]!!
 
                 val (køer, lagredeSøk) = transactionalManager.transaction { tx ->
@@ -437,8 +431,8 @@ fun Route.forvaltningApis() {
         description =
             "Hent oversikt over alle feltdefinisjoner som er brukt som kriterie i oppgavekøer og lagrede søk, med antall for hver"
     }) {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.kanLeggeUtDriftsmelding()) {
+        medBrukerkontekstUtenOmråde { bruker ->
+            if (bruker.kanLeggeUtDriftsmelding) {
                 val (køer, lagredeSøk) = transactionalManager.transaction { tx ->
                     val alleKøer = forvaltningRepository.hentAlleOppgavekoerMedQuery(tx)
                     val alleLagredeSøk = forvaltningRepository.hentAlleLagredeSøkMedQuery(tx)
@@ -484,13 +478,13 @@ fun Route.forvaltningApis() {
             }
         }
     }) {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.kanLeggeUtDriftsmelding()) {
+        medBrukerkontekstUtenOmråde { bruker ->
+            if (bruker.kanLeggeUtDriftsmelding) {
                 val fagsystem = Fagsystem.fraKode(call.parameters["fagsystem"]!!)
                 val oppgaveQueryFraRequest = call.receive<OppgaveQuery>()
                 if (oppgaveQueryFraRequest.select.isNotEmpty()) {
                     call.respond(HttpStatusCode.BadRequest, "OppgaveQuery.select støttes ikke for bestilling fra query")
-                    return@withRequestContext
+                    return@medBrukerkontekstUtenOmråde
                 }
                 val filtereUtenOppgavetype = oppgaveQueryFraRequest.filtere
                     .filterNot { filter ->
@@ -504,7 +498,7 @@ fun Route.forvaltningApis() {
                         verdi = listOf(K9Oppgavetypenavn.fraFagsystem(fagsystem).kode)
                     )
                 )
-                val eksternIder = oppgaveQueryService.queryForOppgaveEksternId(QueryRequest(oppgaveQuery))
+                val eksternIder = oppgaveQueryService.queryForOppgaveEksternId(QueryRequest(oppgaveQuery, område = Områder.fraFagsystem(fagsystem)))
                     .map { it.eksternId }
                     .distinct()
 
@@ -537,13 +531,13 @@ fun Route.forvaltningApis() {
             }
         }
     }) {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.kanLeggeUtDriftsmelding()) {
+        medBrukerkontekstUtenOmråde { bruker ->
+            if (bruker.kanLeggeUtDriftsmelding) {
                 val fagsystem = DvhSendingFagsystem.fraKode(call.parameters["fagsystem"]!!)
                 val oppgaveQueryFraRequest = call.receive<OppgaveQuery>()
                 if (oppgaveQueryFraRequest.select.isNotEmpty()) {
                     call.respond(HttpStatusCode.BadRequest, "OppgaveQuery.select støttes ikke for bestilling fra query")
-                    return@withRequestContext
+                    return@medBrukerkontekstUtenOmråde
                 }
                 val filtereUtenOppgavetype = oppgaveQueryFraRequest.filtere
                     .filterNot { filter ->
@@ -557,7 +551,7 @@ fun Route.forvaltningApis() {
                         verdi = listOf(fagsystem.oppgavetypeKode)
                     )
                 )
-                val eksternIder = oppgaveQueryService.queryForOppgaveEksternId(QueryRequest(oppgaveQuery))
+                val eksternIder = oppgaveQueryService.queryForOppgaveEksternId(QueryRequest(oppgaveQuery, område = Områder.K9))
                     .map { it.eksternId }
                     .distinct()
 
@@ -578,8 +572,8 @@ fun Route.forvaltningApis() {
         description = "Viser om fremmednøklene mot OMRADE er validert og om indeksene på omrade_id er bygget. " +
                 "Migrering V1.0_0107 gjør kun metadataoperasjoner; det som krever full tabellgjennomgang utløses her."
     }) {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.kanLeggeUtDriftsmelding()) {
+        medBrukerkontekstUtenOmråde { bruker ->
+            if (bruker.kanLeggeUtDriftsmelding) {
                 call.respond(områdeKoblingRepository.hentStatus())
             } else {
                 call.respond(HttpStatusCode.Forbidden)
@@ -592,8 +586,8 @@ fun Route.forvaltningApis() {
                 "Tar SHARE UPDATE EXCLUSIVE og blokkerer verken lesing eller skriving, " +
                 "men kan ta tid på store tabeller. Idempotent."
     }) {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.kanLeggeUtDriftsmelding()) {
+        medBrukerkontekstUtenOmråde { bruker ->
+            if (bruker.kanLeggeUtDriftsmelding) {
                 val resultat = områdeKoblingRepository.validerAlleFremmednøkler()
                 log.info("Validering av områdefremmednøkler fullført: $resultat")
                 call.respond(resultat)
@@ -607,8 +601,8 @@ fun Route.forvaltningApis() {
         description = "Bygger indeks på omrade_id for reservasjon_v3, event_nokkel og oppgave_pep_cache " +
                 "med CREATE INDEX CONCURRENTLY, som ikke blokkerer skriving. Idempotent."
     }) {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.kanLeggeUtDriftsmelding()) {
+        medBrukerkontekstUtenOmråde { bruker ->
+            if (bruker.kanLeggeUtDriftsmelding) {
                 val resultat = områdeKoblingRepository.opprettIndekser()
                 log.info("Opprettelse av områdeindekser fullført: $resultat")
                 call.respond(resultat)

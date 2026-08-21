@@ -1,8 +1,6 @@
 package no.nav.k9.los.domeneadaptere.k9.eventmottak
 
-import io.mockk.coEvery
 import io.mockk.mockk
-import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.saksbehandleradmin.Saksbehandler
@@ -16,7 +14,7 @@ class TestSaksbehandler: KoinTest {
     val datasource = get<DataSource>()
     val pepClient = mockk<IPepClient>(relaxed = true)
     val repo = SaksbehandlerRepository(
-        datasource, pepClient = pepClient,
+        datasource,
         transactionalManager = get(),
         områdeRepository = get(),
     )
@@ -52,19 +50,15 @@ class TestSaksbehandler: KoinTest {
     }
 
     fun init() {
-        runBlocking {
-            repo.addSaksbehandler(SARA.epost, Områder.K9)
-            repo.vedlikeholdSaksbehandler(SARA)
-            repo.addSaksbehandler(BIRGER_BESLUTTER.epost, Områder.K9)
-            repo.vedlikeholdSaksbehandler(BIRGER_BESLUTTER)
-            leggTilSkjermet()
-        }
+        repo.addSaksbehandler(SARA.epost, Områder.K9)
+        repo.vedlikeholdSaksbehandler(SARA, skjermet = false)
+        repo.addSaksbehandler(BIRGER_BESLUTTER.epost, Områder.K9)
+        repo.vedlikeholdSaksbehandler(BIRGER_BESLUTTER, skjermet = false)
+        leggTilSkjermet()
     }
 
-    private suspend fun leggTilSkjermet() {
-        coEvery { pepClient.harTilgangTilKode6() } returns true
+    private fun leggTilSkjermet() {
         repo.addSaksbehandler(KJERSTI_SKJERMET.epost, Områder.K9)
-        repo.vedlikeholdSaksbehandler(KJERSTI_SKJERMET)
-        coEvery { pepClient.harTilgangTilKode6() } returns false
+        repo.vedlikeholdSaksbehandler(KJERSTI_SKJERMET, skjermet = true)
     }
 }

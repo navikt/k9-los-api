@@ -12,14 +12,14 @@ import no.nav.k9.los.ko.KøpåvirkendeHendelse
 import no.nav.k9.los.ko.ReservasjonAnnullert
 import no.nav.k9.los.ko.ReservasjonEndret
 import no.nav.k9.los.ko.ReservasjonTatt
-import no.nav.k9.los.saksbehandleradmin.Saksbehandler
-import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.Oppgave
 import no.nav.k9.los.oppgaveuthenting.enkeltoppslag.ReservasjonsnøkkelOppgaveOppslag
+import no.nav.k9.los.saksbehandleradmin.Saksbehandler
+import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
-import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 
 class ReservasjonV3Tjeneste(
     private val transactionalManager: TransactionalManager,
@@ -34,7 +34,7 @@ class ReservasjonV3Tjeneste(
         private val log: Logger = LoggerFactory.getLogger("ReservasjonV3Tjeneste")
     }
 
-    fun forsøkReservasjonOgReturnerAktiv(
+    suspend fun forsøkReservasjonOgReturnerAktiv(
         reservasjonsnøkkel: String,
         reserverForId: Long,
         gyldigFra: LocalDateTime,
@@ -93,7 +93,7 @@ class ReservasjonV3Tjeneste(
         }
     }
 
-    fun taReservasjon(
+    suspend fun taReservasjon(
         reservasjonsnøkkel: String,
         reserverForId: Long,
         utføresAvId: Long,
@@ -101,12 +101,12 @@ class ReservasjonV3Tjeneste(
         gyldigFra: LocalDateTime,
         gyldigTil: LocalDateTime
     ): ReservasjonV3 {
-        return transactionalManager.transaction { tx ->
+        return transactionalManager.transactionSuspend { tx ->
             taReservasjon(reservasjonsnøkkel, reserverForId, utføresAvId, gyldigFra, gyldigTil, kommentar, tx)
         }
     }
 
-    fun taReservasjon(
+    suspend fun taReservasjon(
         reservasjonsnøkkel: String,
         reserverForId: Long,
         utføresAvId: Long,
@@ -314,7 +314,7 @@ class ReservasjonV3Tjeneste(
         }
     }
 
-    private fun sjekkTilganger(
+    private suspend fun sjekkTilganger(
         oppgaver: List<Oppgave>,
         brukerIdSomSkalHaReservasjon: Long
     ): Boolean {
@@ -326,7 +326,12 @@ class ReservasjonV3Tjeneste(
                 )
             ) throw ManglerTilgangException("Saksbehandler kan ikke være beslutter på egen behandling")
 
-            pepClient.harTilgangTilOppgaveV3(oppgave, saksbehandler, Action.reserver)
+            pepClient.harTilgangTilOppgaveV3(
+                oppgave,
+                oppgave.oppgavetype.område.tilOmrådeEnum(),
+                saksbehandler,
+                Action.reserver,
+            )
         }
     }
 

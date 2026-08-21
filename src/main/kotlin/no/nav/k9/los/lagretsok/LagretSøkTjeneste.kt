@@ -1,5 +1,6 @@
 package no.nav.k9.los.lagretsok
 
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.query.OppgaveQueryService
 import no.nav.k9.los.oppgaveuthenting.query.QueryRequest
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
@@ -14,21 +15,21 @@ class LagretSøkTjeneste(
             ?: throw IllegalStateException("Lagret søk med id $lagretSøkId finnes ikke")
     }
 
-    suspend fun hentAlle(navIdent: String): List<LagretSøk> {
-        val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedIdent(navIdent)
+    suspend fun hentAlle(navIdent: String, skjermet: Boolean): List<LagretSøk> {
+        val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedIdent(navIdent, skjermet)
             ?: return emptyList()
         return lagretSøkRepository.hentAlle(saksbehandler)
     }
 
-    suspend fun nytt(navIdent: String, nyttLagretSøk: NyttLagretSøkRequest): Long {
-        val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedIdent(navIdent)
+    suspend fun nytt(navIdent: String, nyttLagretSøk: NyttLagretSøkRequest, skjermet: Boolean): Long {
+        val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedIdent(navIdent, skjermet)
             ?: throw IllegalStateException("Innlogget bruker er ikke i saksbehandler-tabellen")
         val lagretSøk = LagretSøk.nyttSøk(nyttLagretSøk, saksbehandler)
         return lagretSøkRepository.opprett(lagretSøk)
     }
 
-    suspend fun endre(navIdent: String, endreLagretSøk: EndreLagretSøkRequest): LagretSøk {
-        val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedIdent(navIdent)
+    suspend fun endre(navIdent: String, endreLagretSøk: EndreLagretSøkRequest, skjermet: Boolean): LagretSøk {
+        val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedIdent(navIdent, skjermet)
             ?: throw IllegalStateException("Innlogget bruker er ikke i saksbehandler-tabellen")
         val lagretSøk = lagretSøkRepository.hent(endreLagretSøk.id)
             ?: throw IllegalStateException("Lagret søk med id ${endreLagretSøk.id} finnes ikke")
@@ -37,8 +38,8 @@ class LagretSøkTjeneste(
         return lagretSøk
     }
 
-    suspend fun slett(navIdent: String, lagretSøkId: Long) {
-        val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedIdent(navIdent)
+    suspend fun slett(navIdent: String, lagretSøkId: Long, skjermet: Boolean) {
+        val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedIdent(navIdent, skjermet)
             ?: throw IllegalStateException("Innlogget bruker er ikke i saksbehandler-tabellen")
         val lagretSøk = lagretSøkRepository.hent(lagretSøkId)
             ?: throw IllegalStateException("Lagret søk med id $lagretSøkId finnes ikke")
@@ -50,11 +51,11 @@ class LagretSøkTjeneste(
         // Gjør ikke sjekk her på om lagret søk tilhører innlogget bruker, regner ikke det som nødvendig
         val lagretSøk = lagretSøkRepository.hent(lagretSøkId)
             ?: throw IllegalStateException("Lagret søk med id $lagretSøkId finnes ikke")
-        return oppgaveQueryService.queryForAntall(QueryRequest(lagretSøk.query))
+        return oppgaveQueryService.queryForAntall(QueryRequest(lagretSøk.query, område = Områder.K9))
     }
 
-    suspend fun kopier(navIdent: String, lagretSøkId: Long, tittel: String): Long {
-        val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedIdent(navIdent)
+    suspend fun kopier(navIdent: String, lagretSøkId: Long, tittel: String, skjermet: Boolean): Long {
+        val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedIdent(navIdent, skjermet)
             ?: throw IllegalStateException("Innlogget bruker er ikke i saksbehandler-tabellen")
         val lagretSøk = lagretSøkRepository.hent(lagretSøkId)
             ?: throw IllegalStateException("Lagret søk med id $lagretSøkId finnes ikke")

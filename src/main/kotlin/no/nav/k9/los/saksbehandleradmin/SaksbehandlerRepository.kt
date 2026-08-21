@@ -4,7 +4,6 @@ import kotliquery.*
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
-import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.oppgavedefinisjon.omraade.OmrådeRepository
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
@@ -15,7 +14,6 @@ import javax.sql.DataSource
 
 class SaksbehandlerRepository(
     private val dataSource: DataSource,
-    private val pepClient: IPepClient,
     private val transactionalManager: TransactionalManager,
     private val områdeRepository: OmrådeRepository
 ) {
@@ -73,9 +71,7 @@ class SaksbehandlerRepository(
      * av [addSaksbehandler] når avdelingsleder registrerer eposten. En upsert her ville dessuten
      * forbrukt en sekvensverdi på id-kolonnen ved konflikt, og forskjøvet genererte id-er.
      */
-    suspend fun vedlikeholdSaksbehandler(saksbehandler: Saksbehandler): Long {
-        val erSkjermet = pepClient.harTilgangTilKode6()
-
+    fun vedlikeholdSaksbehandler(saksbehandler: Saksbehandler, skjermet: Boolean): Long {
         return using(sessionOf(dataSource)) {
             it.transaction { tx ->
                 tx.run(
@@ -94,7 +90,7 @@ class SaksbehandlerRepository(
                             "epost" to saksbehandler.epost.lowercase(getDefault()),
                             "navn" to saksbehandler.navn,
                             "enhet" to saksbehandler.enhet,
-                            "skjermet" to erSkjermet,
+                            "skjermet" to skjermet,
                         )
                     ).map { row -> row.long("id") }.asSingle
                 ) ?: throw IllegalStateException("Fant ikke saksbehandler med epost ${saksbehandler.epost} for vedlikehold")
@@ -115,9 +111,7 @@ class SaksbehandlerRepository(
         }!!
     }
 
-    suspend fun finnSaksbehandlerMedEpost(epost: String): Saksbehandler? {
-        val skjermet = pepClient.harTilgangTilKode6()
-
+    fun finnSaksbehandlerMedEpost(epost: String, skjermet: Boolean): Saksbehandler? {
         val saksbehandler = using(sessionOf(dataSource)) { session ->
             session.transaction { tx ->
                 tx.run(
@@ -133,9 +127,7 @@ class SaksbehandlerRepository(
         return saksbehandler
     }
 
-    suspend fun finnSaksbehandlerMedIdent(ident: String): Saksbehandler? {
-        val skjermet = pepClient.harTilgangTilKode6()
-
+    fun finnSaksbehandlerMedIdent(ident: String, skjermet: Boolean): Saksbehandler? {
         val saksbehandler = using(sessionOf(dataSource)) {
             it.transaction { tx ->
                 tx.run(
@@ -335,19 +327,27 @@ class SaksbehandlerRepository(
         }
     }
 
-    suspend fun hentAlleSaksbehandlere(): List<Saksbehandler> {
-        return transactionalManager.transactionSuspend { tx ->
-            hentAlleSaksbehandlere(tx)
+    fun hentAlleSaksbehandlere(område: Områder, skjermet: Boolean): List<Saksbehandler> {
+        return transactionalManager.transaction { tx ->
+            hentAlleSaksbehandlere(tx, område, skjermet)
         }
     }
 
-    suspend fun hentAlleSaksbehandlere(tx: TransactionalSession): List<Saksbehandler> {
-        val skjermet = pepClient.harTilgangTilKode6()
+    fun hentAlleSaksbehandlere(tx: TransactionalSession, område: Områder, skjermet: Boolean): List<Saksbehandler> {
         val identer = using(sessionOf(dataSource)) {
             tx.run(
                 queryOf(
-                    "$SAKSBEHANDLER_SELECT where s.skjermet = :skjermet",
-                    mapOf("skjermet" to skjermet)
+                    """
+                    $SAKSBEHANDLER_SELECT
+                    where s.skjermet = :skjermet
+                      and exists (select 1 from saksbehandler_omrade so2
+                                  join omrade o2 on o2.id = so2.omrade_id
+                                  where so2.saksbehandler_id = s.id and o2.ekstern_id = :omradeEksternId)
+                    """.trimIndent(),
+                    mapOf(
+                        "skjermet" to skjermet,
+                        "omradeEksternId" to område.eksternId
+                    )
                 )
                     .map { row ->
                         mapSaksbehandler(row)
@@ -357,8 +357,8 @@ class SaksbehandlerRepository(
         return identer
     }
 
-    suspend fun sokSaksbehandler(søkestreng: String): Saksbehandler {
-        val alleSaksbehandlere = hentAlleSaksbehandlere()
+    fun sokSaksbehandler(søkestreng: String, område: Områder, skjermet: Boolean): Saksbehandler {
+        val alleSaksbehandlere = hentAlleSaksbehandlere(område, skjermet)
 
         fun levenshtein(lhs: CharSequence, rhs: CharSequence): Double {
             return LevenshteinDistance().apply(lhs, rhs).toDouble()

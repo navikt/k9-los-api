@@ -8,6 +8,7 @@ import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.lagretsok.LagretSøk
 import no.nav.k9.los.lagretsok.LagretSøkRepository
 import no.nav.k9.los.lagretsok.NyttLagretSøkRequest
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.EnkelSelectFelt
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.OppgaveQuery
 import no.nav.k9.los.saksbehandleradmin.Saksbehandler
@@ -15,7 +16,6 @@ import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.koin.test.get
-import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 
 class UttrekkJobbTest : AbstractK9LosIntegrationTest() {
 
@@ -46,12 +46,21 @@ class UttrekkJobbTest : AbstractK9LosIntegrationTest() {
                     epost = "test@nav.no",
                     enhet = null,
                     områder = listOf(Områder.K9),
-                )
+                ),
+                skjermet = false,
             )
-            val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedEpost("test@nav.no")!!
+            val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedEpost("test@nav.no", skjermet = false)!!
             saksbehandlerId = saksbehandler.id!!
             val lagretSøk = LagretSøk.nyttSøk(
-                NyttLagretSøkRequest(tittel = "Test søk", query = OppgaveQuery(filtere = listOf(), select = listOf(EnkelSelectFelt("K9", "saksnummer")))),
+                NyttLagretSøkRequest(
+                    tittel = "Test søk", query = OppgaveQuery(
+                        filtere = listOf(), select = listOf(
+                            EnkelSelectFelt(
+                                Områder.K9, "saksnummer"
+                            )
+                        )
+                    )
+                ),
                 saksbehandler,
             )
             lagretSøkRepository.opprett(lagretSøk)

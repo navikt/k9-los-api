@@ -4,21 +4,20 @@ import io.ktor.http.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import no.nav.k9.los.infrastruktur.brukerkontekst.medBrukerkontekst
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
-import no.nav.k9.los.infrastruktur.rest.RequestContextService
 import org.koin.ktor.ext.inject
 
 // Må legge til tilgangskontroll dersom disse endepunktene aktiveres
 internal fun Route.OppgaveV3Api() {
-    val requestContextService by inject<RequestContextService>()
     val oppgaveV3Tjeneste by inject<OppgaveV3Tjeneste>()
     val transactionalManager by inject<TransactionalManager>()
     val config by inject<Configuration>()
 
     put {
         if (config.nyOppgavestyringRestAktivert()) {
-            requestContextService.withRequestContext(call) {
+            medBrukerkontekst {
                 val oppgaveDto = call.receive<OppgaveDto>()
 
                 transactionalManager.transaction { tx ->
@@ -34,7 +33,7 @@ internal fun Route.OppgaveV3Api() {
 
     get("/{område}/{oppgavetype}/{eksternId}/{eksternVersjon}") {
         if (config.nyOppgavestyringRestAktivert()) {
-            requestContextService.withRequestContext(call) {
+            medBrukerkontekst {
                 call.respond(
                     transactionalManager.transaction { tx ->
                         oppgaveV3Tjeneste.hentOppgaveversjon(
@@ -57,7 +56,7 @@ internal fun Route.OppgaveV3Api() {
         /*
         if (config.nyOppgavestyringRestAktivert()) {
 
-            requestContextService.withRequestContext(call) {
+            medBrukerkontekst {
                 val oppgaveDto = call.receive<OppgaveDto>()
                 transactionalManager.transaction { tx ->
                     oppgaveV3Tjeneste.oppdaterEkstisterendeOppgaveversjon(oppgaveDto, tx)

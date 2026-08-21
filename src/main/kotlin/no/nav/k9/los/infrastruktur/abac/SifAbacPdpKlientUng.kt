@@ -22,12 +22,6 @@ class SifAbacPdpKlientUng : ISifAbacPdpKlient {
     override suspend fun diskresjonskoderSak(saksnummerDto: SaksnummerDto): Set<Diskresjonskode> =
         ikkeImplementert("diskresjonskoderSak")
 
-    override suspend fun harTilgangTilSak(action: Action, saksnummerDto: SaksnummerDto): Boolean =
-        ikkeImplementert("harTilgangTilSak")
-
-    override suspend fun harTilgangTilPersoner(action: Action, aktørIder: List<AktørId>): Boolean =
-        ikkeImplementert("harTilgangTilPersoner")
-
     override suspend fun harTilgangTilSak(
         action: Action,
         saksnummerDto: SaksnummerDto,

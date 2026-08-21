@@ -16,6 +16,7 @@ import no.nav.k9.los.oppgaveuthenting.query.dto.query.OppgaveQuery
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.Oppgavefilter
 import no.nav.k9.los.oppgaveuthenting.query.mapping.EksternFeltverdiOperator
 import no.nav.k9.los.nøkkeltall.KodeOgNavn
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
@@ -68,9 +69,9 @@ class StatusFordelingService(val queryService: OppgaveQueryService) {
 
         val punsj = FeltverdiOppgavefilter(null, "oppgavetype", EksternFeltverdiOperator.EQUALS, listOf("k9punsj"))
         val ikkePunsj = FeltverdiOppgavefilter(null, "oppgavetype", EksternFeltverdiOperator.NOT_EQUALS, listOf("k9punsj"))
-        val førstegang = FeltverdiOppgavefilter("K9", "behandlingTypekode", EksternFeltverdiOperator.EQUALS, listOf(BehandlingType.FORSTEGANGSSOKNAD.kode))
+        val førstegang = FeltverdiOppgavefilter(Områder.K9, "behandlingTypekode", EksternFeltverdiOperator.EQUALS, listOf(BehandlingType.FORSTEGANGSSOKNAD.kode))
         val klage = FeltverdiOppgavefilter(null, "oppgavetype", EksternFeltverdiOperator.EQUALS, listOf("k9klage"))
-        val revurdering = FeltverdiOppgavefilter("K9", "behandlingTypekode", EksternFeltverdiOperator.IN, listOf(BehandlingType.REVURDERING.kode, BehandlingType.REVURDERING_TILBAKEKREVING.kode))
+        val revurdering = FeltverdiOppgavefilter(Områder.K9, "behandlingTypekode", EksternFeltverdiOperator.IN, listOf(BehandlingType.REVURDERING.kode, BehandlingType.REVURDERING_TILBAKEKREVING.kode))
         val feilutbetaling = FeltverdiOppgavefilter(null, "oppgavetype", EksternFeltverdiOperator.EQUALS, listOf("k9tilbake"))
     }
 
@@ -86,7 +87,7 @@ class StatusFordelingService(val queryService: OppgaveQueryService) {
                 AggregertSelectFelt(Aggregeringsfunksjon.ANTALL),
             ),
         )
-        val resultat = queryService.query(QueryRequest(query))
+        val resultat = queryService.query(QueryRequest(query, område = Områder.K9))
 
         return resultat.associate { rad ->
             val status = rad.feltverdier.first().verdi?.toString() ?: ""
@@ -146,11 +147,11 @@ class StatusFordelingService(val queryService: OppgaveQueryService) {
             filtere = listOf(
                 personbeskyttelse, klage,
                 FeltverdiOppgavefilter(null, "oppgavestatus", EksternFeltverdiOperator.EQUALS, listOf(Oppgavestatus.VENTER.kode)),
-                FeltverdiOppgavefilter("K9", "aktivVenteårsak", EksternFeltverdiOperator.EQUALS, listOf(Venteårsak.OVERSENDT_KABAL.kode)),
+                FeltverdiOppgavefilter(Områder.K9, "aktivVenteårsak", EksternFeltverdiOperator.EQUALS, listOf(Venteårsak.OVERSENDT_KABAL.kode)),
             ),
             select = listOf(AggregertSelectFelt(Aggregeringsfunksjon.ANTALL)),
         )
-        val venterKabal = queryService.queryForAntall(QueryRequest(venterKabalQuery))
+        val venterKabal = queryService.queryForAntall(QueryRequest(venterKabalQuery, område = Områder.K9))
         val venterAnnet = (statusAntall[Oppgavestatus.VENTER.kode] ?: 0L) - venterKabal
 
         fun kildeQuery(vararg ekstraFiltre: Oppgavefilter) =
@@ -159,8 +160,8 @@ class StatusFordelingService(val queryService: OppgaveQueryService) {
         val åpenFilter = FeltverdiOppgavefilter(null, "oppgavestatus", EksternFeltverdiOperator.EQUALS, listOf(Oppgavestatus.AAPEN.kode))
         val venterFilter = FeltverdiOppgavefilter(null, "oppgavestatus", EksternFeltverdiOperator.EQUALS, listOf(Oppgavestatus.VENTER.kode))
         val uavklartFilter = FeltverdiOppgavefilter(null, "oppgavestatus", EksternFeltverdiOperator.EQUALS, listOf(Oppgavestatus.UAVKLART.kode))
-        val kabalFilter = FeltverdiOppgavefilter("K9", "aktivVenteårsak", EksternFeltverdiOperator.EQUALS, listOf(Venteårsak.OVERSENDT_KABAL.kode))
-        val ikkeKabalFilter = FeltverdiOppgavefilter("K9", "aktivVenteårsak", EksternFeltverdiOperator.NOT_EQUALS, listOf(Venteårsak.OVERSENDT_KABAL.kode))
+        val kabalFilter = FeltverdiOppgavefilter(Områder.K9, "aktivVenteårsak", EksternFeltverdiOperator.EQUALS, listOf(Venteårsak.OVERSENDT_KABAL.kode))
+        val ikkeKabalFilter = FeltverdiOppgavefilter(Områder.K9, "aktivVenteårsak", EksternFeltverdiOperator.NOT_EQUALS, listOf(Venteårsak.OVERSENDT_KABAL.kode))
 
         return StatuskortDto(
             tittel = KodeOgNavn(StatusGruppe.KLAGE.name, StatusGruppe.KLAGE.tekst),

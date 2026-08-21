@@ -1,7 +1,7 @@
 package no.nav.k9.los.saksbehandleradmin
 
-import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
+import no.nav.k9.los.infrastruktur.brukerkontekst.BrukerkontekstMedOmråde
 import no.nav.k9.los.ko.db.OppgaveKoRepository
 import no.nav.k9.los.lagretsok.LagretSøkTjeneste
 import no.nav.k9.los.reservasjon.ReservasjonV3Tjeneste
@@ -9,7 +9,6 @@ import no.nav.k9.los.uttrekk.UttrekkTjeneste
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 
 class SaksbehandlerAdminTjeneste(
-    private val pepClient: IPepClient,
     private val transactionalManager: TransactionalManager,
     private val saksbehandlerRepository: SaksbehandlerRepository,
     private val oppgaveKøV3Repository: OppgaveKoRepository,
@@ -19,8 +18,8 @@ class SaksbehandlerAdminTjeneste(
 ) {
 
     // TODO: slett når frontend har begynt å bruke nytt endepunkt
-    suspend fun søkSaksbehandler(epostDto: EpostDto, område: Områder): Saksbehandler {
-        var saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedEpost(epostDto.epost)
+    suspend fun søkSaksbehandler(epostDto: EpostDto, område: Områder, skjermet: Boolean): Saksbehandler {
+        var saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedEpost(epostDto.epost, skjermet)
         if (saksbehandler == null) {
             saksbehandler = Saksbehandler(
                 null, null, null, epostDto.epost, null, listOf(område)
@@ -35,14 +34,14 @@ class SaksbehandlerAdminTjeneste(
         saksbehandlerRepository.addSaksbehandler(epost, område)
     }
 
-    suspend fun slettSaksbehandlerForId(id: Long) {
-        val skjermet = pepClient.harTilgangTilKode6()
+    suspend fun slettSaksbehandlerForId(id: Long, brukerkontekst: BrukerkontekstMedOmråde) {
+        val skjermet = brukerkontekst.harTilgangTilKode6
 
         val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedId(id)
 
-        val lagredeSøk = lagretSøkTjeneste.hentAlle(saksbehandler!!.navident!!)
+        val lagredeSøk = lagretSøkTjeneste.hentAlle(saksbehandler!!.navident!!, skjermet)
         lagredeSøk.forEach {
-            lagretSøkTjeneste.slett(saksbehandler.navident!!, it.id!!)
+            lagretSøkTjeneste.slett(saksbehandler.navident!!, it.id!!, skjermet)
         }
 
         transactionalManager.transaction { tx ->
@@ -58,11 +57,12 @@ class SaksbehandlerAdminTjeneste(
 
     suspend fun slettSaksbehandler(
         epost: String,
-        område: Områder
+        område: Områder,
+        brukerkontekst: BrukerkontekstMedOmråde,
     ) {
-        val skjermet = pepClient.harTilgangTilKode6()
+        val skjermet = brukerkontekst.harTilgangTilKode6
 
-        val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedEpost(epost) ?: throw IllegalStateException("Kunne ikke finne saksbehandler med epost")
+        val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedEpost(epost, skjermet) ?: throw IllegalStateException("Kunne ikke finne saksbehandler med epost")
         if (!saksbehandler.områder.contains(område)) {
             throw IllegalStateException("Saksbehandler med epost $epost har ikke område ${område.eksternId}")
         }
@@ -76,9 +76,9 @@ class SaksbehandlerAdminTjeneste(
         }
 
         if (saksbehandler.navident != null) {
-            val lagredeSøk = lagretSøkTjeneste.hentAlle(saksbehandler.navident!!)
+            val lagredeSøk = lagretSøkTjeneste.hentAlle(saksbehandler.navident!!, skjermet)
             lagredeSøk.forEach {
-                lagretSøkTjeneste.slett(saksbehandler.navident!!, it.id!!)
+                lagretSøkTjeneste.slett(saksbehandler.navident!!, it.id!!, skjermet)
             }
             val uttrekkeneTilSakbehandler = uttrekkTjeneste.hentForSaksbehandler(saksbehandler.id!!)
             uttrekkeneTilSakbehandler.forEach {
@@ -101,9 +101,9 @@ class SaksbehandlerAdminTjeneste(
         }
     }
 
-    suspend fun hentSaksbehandlere(): List<SaksbehandlerDto> {
+    suspend fun hentSaksbehandlere(område: Områder, skjermet: Boolean): List<SaksbehandlerDto> {
         return transactionalManager.transactionSuspend { tx ->
-            val saksbehandlere = saksbehandlerRepository.hentAlleSaksbehandlere(tx)
+            val saksbehandlere = saksbehandlerRepository.hentAlleSaksbehandlere(tx, område, skjermet)
             val saksbehandlerIder = saksbehandlere.map { it.id!! }.toSet()
             val antallReservasjoner = reservasjonV3Tjeneste.tellReservasjonerForSaksbehandlere(saksbehandlerIder, tx)
 

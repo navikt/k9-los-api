@@ -98,11 +98,7 @@ class OppgaveKoTest : AbstractK9LosIntegrationTest() {
 
     private fun mockLeggTilSaksbehandler(saksbehandlerepost: String): Long {
         val pepClient = mockk<IPepClient>()
-        val saksbehandlerRepository = SaksbehandlerRepository(dataSource, pepClient, transactionalManager = get(), områdeRepository = get())
-        coEvery {
-            pepClient.harTilgangTilKode6()
-        } returns true
-
+        val saksbehandlerRepository = SaksbehandlerRepository(dataSource, transactionalManager = get(), områdeRepository = get())
         return runBlocking {
             saksbehandlerRepository.addSaksbehandler(saksbehandlerepost, Områder.K9)
         }

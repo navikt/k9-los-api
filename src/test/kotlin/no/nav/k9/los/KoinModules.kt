@@ -30,6 +30,8 @@ import no.nav.k9.los.oppgavemottak.feltutlederforlagring.GyldigeFeltutledere
 import no.nav.k9.los.forvaltning.ForvaltningRepository
 import no.nav.k9.los.forvaltning.OmrådeKoblingRepository
 import no.nav.k9.los.infrastruktur.abac.IPepClient
+import no.nav.k9.los.infrastruktur.abac.Gruppeoppsett
+import no.nav.k9.los.infrastruktur.brukerkontekst.BrukerkontekstFactory
 import no.nav.k9.los.infrastruktur.abac.PepClientLocal
 import no.nav.k9.los.infrastruktur.abac.cache.PepCacheRepository
 import no.nav.k9.los.infrastruktur.abac.cache.PepCacheService
@@ -56,9 +58,10 @@ import no.nav.k9.los.oppgavedefinisjon.oppgavetype.OppgavetypeTjeneste
 import no.nav.k9.los.nøkkeltall.saksbehandler.nyeogferdigstilte.NyeOgFerdigstilteService
 import no.nav.k9.los.oppgaveuthenting.query.OppgaveQueryService
 import no.nav.k9.los.oppgaveuthenting.query.db.OppgaveQueryRepository
-import no.nav.k9.los.oppgaveuthenting.sammendrag.K9OppgaveSammendragMapper
+import no.nav.k9.los.søkeboks.Oppgavesøkere
+import no.nav.k9.los.søkeboks.k9.K9Oppgavesøk
+import no.nav.k9.los.søkeboks.ung.UngOppgavesøk
 import no.nav.k9.los.oppgaveuthenting.sammendrag.OppgaveSammendragDtoBuilder
-import no.nav.k9.los.oppgaveuthenting.sammendrag.OppgaveSammendragMapper
 import no.nav.k9.los.reservasjon.ReservasjonApisTjeneste
 import no.nav.k9.los.reservasjon.ReservasjonV3DtoBuilder
 import no.nav.k9.los.reservasjon.ReservasjonV3Repository
@@ -121,13 +124,14 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
 
     single { dataSource }
     single { pepClient }
+    single { Gruppeoppsett() }
+    single { BrukerkontekstFactory(get(), lokaleTilganger = true) }
 
     single { DriftsmeldingRepository(get()) }
 
     single {
         SaksbehandlerRepository(
             dataSource = get(),
-            pepClient = get(),
             transactionalManager = get(),
             områdeRepository = get(),
         )
@@ -215,7 +219,6 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
 
     single {
         SaksbehandlerAdminTjeneste(
-            pepClient = get(),
             transactionalManager = get(),
             saksbehandlerRepository = get(),
             oppgaveKøV3Repository = get(),
@@ -404,8 +407,10 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
         )
     }
 
-    single<OppgaveSammendragMapper> { K9OppgaveSammendragMapper() }
-    single { OppgaveSammendragDtoBuilder(getAll(), get()) }
+    single { K9Oppgavesøk() }
+    single { UngOppgavesøk() }
+    single { Oppgavesøkere(k9 = get(), ung = get()) }
+    single { OppgaveSammendragDtoBuilder(oppgavesøkere = get(), pdlService = get()) }
 
     single {
         OppgaveKoTjeneste(
@@ -453,7 +458,6 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             reservasjonV3DtoBuilder = get(),
             aktivOppgaveOppslag = get(),
             pepClient = get(),
-            azureGraphService = get(),
             oppgaveSammendragDtoBuilder = get(),
         )
     }
@@ -509,10 +513,11 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
 
     single {
         SøkeboksTjeneste(
-            queryService = get(),
             pdlService = get(),
             pepClient = get(),
             oppgaveSammendragDtoBuilder = get(),
+            queryService = get(),
+            oppgavesøkere = get(),
         )
     }
 
@@ -526,7 +531,6 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             pepClient = get(),
             sisteOppgaverRepository = get(),
             pdlService = get(),
-            azureGraphService = get(),
             transactionalManager = get(),
         )
     }

@@ -6,6 +6,7 @@ import io.github.smiley4.ktoropenapi.put
 import io.ktor.http.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import no.nav.k9.los.infrastruktur.brukerkontekst.medBrukerkontekst
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.klage.K9KlageEventDto
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventDto
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.sak.K9SakEventDto
@@ -15,8 +16,7 @@ import no.nav.k9.los.forvaltning.K9KlageEventIkkeSensitiv
 import no.nav.k9.los.forvaltning.K9PunsjEventIkkeSensitiv
 import no.nav.k9.los.forvaltning.K9SakEventIkkeSensitiv
 import no.nav.k9.los.forvaltning.K9TilbakeEventIkkeSensitiv
-import no.nav.k9.los.infrastruktur.abac.IPepClient
-import no.nav.k9.los.infrastruktur.rest.RequestContextService
+import no.nav.k9.los.infrastruktur.brukerkontekst.medBrukerkontekstUtenOmråde
 import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.kodeverk.Fagsystem
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
@@ -25,10 +25,8 @@ import java.util.*
 import kotlin.concurrent.thread
 
 internal fun Route.EventlagerApiNy() {
-    val requestContextService by inject<RequestContextService>()
     val eventRepository by inject<EventRepository>()
     val oppgaveAdapter by inject<EventTilOppgaveAdapter>()
-    val pepClient by inject<IPepClient>()
 
     get("/eventer/{fagsystem}/{eksternId}", {
         description = "Hent ut eventhistorikk for en oppgave, nytt eventlager"
@@ -50,8 +48,8 @@ internal fun Route.EventlagerApiNy() {
             }
         }
     }) {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.kanLeggeUtDriftsmelding()) {
+        medBrukerkontekstUtenOmråde { bruker ->
+            if (bruker.kanLeggeUtDriftsmelding) {
                 val fagsystem = Fagsystem.fraKode(call.parameters["fagsystem"]!!)
                 val eksternId = call.parameters["eksternId"]!!
 
@@ -59,7 +57,7 @@ internal fun Route.EventlagerApiNy() {
                     eventRepository.hentAlleEventer(fagsystem, eksternId).map { it.eventJson }
                 } catch (e: NullPointerException) {
                     call.respond(HttpStatusCode.NotFound)
-                    return@withRequestContext
+                    return@medBrukerkontekstUtenOmråde
                 }
 
                 val eventerIkkeSensitive = when (fagsystem) {
@@ -95,7 +93,7 @@ internal fun Route.EventlagerApiNy() {
             }
         }
     }) {
-        requestContextService.withRequestContext(call) {
+        medBrukerkontekst {
             thread(
                 start = true,
                 isDaemon = true,
@@ -152,7 +150,7 @@ internal fun Route.EventlagerApiNy() {
             }
         }
     }) {
-        requestContextService.withRequestContext(call) {
+        medBrukerkontekst {
             val fagsystem = Fagsystem.fraKode(call.parameters["fagsystem"]!!)
             val eksternId = call.parameters["eksternId"]!!
             eventRepository.bestillHistorikkvask(fagsystem, eksternId)

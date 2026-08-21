@@ -1,207 +1,143 @@
 package no.nav.k9.los.søkeboks
 
 import no.nav.k9.los.infrastruktur.abac.IPepClient
+import no.nav.k9.los.infrastruktur.brukerkontekst.BrukerkontekstMedOmråde
 import no.nav.k9.los.infrastruktur.pdl.IPdlService
-import no.nav.k9.los.infrastruktur.pdl.navn
-import no.nav.k9.los.kodeverk.BehandlingStatus
-import no.nav.k9.los.kodeverk.FagsakYtelseType
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
+import no.nav.k9.los.oppgaveuthenting.Oppgave
 import no.nav.k9.los.oppgaveuthenting.query.OppgaveQueryService
 import no.nav.k9.los.oppgaveuthenting.query.QueryRequest
-import no.nav.k9.los.oppgaveuthenting.query.dto.query.EnkelOrderFelt
-import no.nav.k9.los.oppgaveuthenting.query.dto.query.FeltverdiOppgavefilter
-import no.nav.k9.los.oppgaveuthenting.query.dto.query.OppgaveQuery
-import no.nav.k9.los.oppgaveuthenting.query.mapping.EksternFeltverdiOperator
-import no.nav.k9.los.oppgaveuthenting.Oppgave
-import no.nav.k9.los.oppgaveuthenting.OppgaveNøkkelDto
 import no.nav.k9.los.oppgaveuthenting.sammendrag.OppgaveSammendragDtoBuilder
-import java.time.LocalDateTime
 
+/**
+ * Felles søkelogikk for alle områder. Klassen kjenner ingen feltkoder — all tolkning av
+ * søkeord og oppgaver skjer i områdets [Oppgavesøk].
+ */
 class SøkeboksTjeneste(
-    private val queryService: OppgaveQueryService,
     private val pdlService: IPdlService,
     private val pepClient: IPepClient,
     private val oppgaveSammendragDtoBuilder: OppgaveSammendragDtoBuilder,
+    private val queryService: OppgaveQueryService,
+    private val oppgavesøkere: Oppgavesøkere,
 ) {
-    suspend fun finnOppgaver(søkeord: String, område: Områder): Søkeresultat {
-        val oppgaver = finnOppgaverFor(søkeord) ?: return Søkeresultat.IkkeTilgang
-        return transformerTilSøkeresultat(oppgaver)
+    suspend fun finnOppgaver(søkeord: String, område: Områder, brukerkontekst: BrukerkontekstMedOmråde): Søkeresultat {
+        val adapter = oppgavesøkere.forOmråde(område)
+        val oppgaver = finnOppgaverFor(søkeord, område, adapter, brukerkontekst) ?: return Søkeresultat.IkkeTilgang
+        return transformerTilSøkeresultat(oppgaver, adapter, brukerkontekst)
     }
 
-    suspend fun finnOppgaverSammendrag(søkeord: String, område: Områder): SøkeresultatSammendrag {
-        val oppgaver = finnOppgaverFor(søkeord) ?: return SøkeresultatSammendrag.IkkeTilgang
-        return transformerTilSøkeresultatSammendrag(oppgaver)
+    suspend fun finnOppgaverSammendrag(søkeord: String, område: Områder, brukerkontekst: BrukerkontekstMedOmråde): SøkeresultatSammendrag {
+        val adapterForOmråde = oppgavesøkere.forOmråde(område)
+        val oppgaver = finnOppgaverFor(søkeord, område, adapterForOmråde, brukerkontekst) ?: return SøkeresultatSammendrag.IkkeTilgang
+        return transformerTilSøkeresultatSammendrag(oppgaver, adapterForOmråde, brukerkontekst)
     }
 
     /**
      * Slår opp oppgaver basert på hva søkeordet ser ut som. Returnerer null dersom
      * innlogget bruker ikke har tilgang til personen bak søkeordet.
      */
-    private suspend fun finnOppgaverFor(søkeord: String): List<Oppgave>? = when (søkeord.length) {
+    private suspend fun finnOppgaverFor(
+        søkeord: String,
+        område: Områder,
+        adapter: Oppgavesøk,
+        brukerkontekst: BrukerkontekstMedOmråde,
+    ): List<Oppgave>? {
+        val klassifisertSøkeord = klassifiser(søkeord, brukerkontekst) ?: return null
+        val query = adapter.lagQuery(klassifisertSøkeord) ?: return emptyList()
+        return queryService.queryForOppgave(QueryRequest(oppgaveQuery = query, område = område))
+    }
+
+    /**
+     * Utleder søkeordvariant fra lengden på input. 11 tegn antas å være fødselsnummer,
+     * 9 tegn journalpostId, ellers saksnummer. Returnerer null ved manglende tilgang til
+     * personen bak et fødselsnummer.
+     */
+    private suspend fun klassifiser(søkeord: String, brukerkontekst: BrukerkontekstMedOmråde): Søkeord? = when (søkeord.length) {
         11 -> {
-            val pdlResponse = pdlService.identifikator(søkeord)
-            if (pdlResponse.ikkeTilgang) {
+            val pdlRespons = pdlService.identifikator(søkeord, brukerkontekst)
+            if (pdlRespons.ikkeTilgang) {
                 null
             } else {
-                val aktørIder = pdlResponse.aktorId?.data?.hentIdenter?.identer?.map { it.ident } ?: emptyList()
-                finnOppgaverForAktørId(aktørIder + søkeord)
+                val aktørIder = pdlRespons.aktorId?.data?.hentIdenter?.identer?.map { it.ident } ?: emptyList()
+                Søkeord.Person(søkeord, aktørIder)
             }
         }
 
-        9 -> finnOppgaverForJournalpostId(søkeord)
-        else -> finnOppgaverForSaksnummer(søkeord)
-    }
-
-    private fun finnOppgaverForJournalpostId(journalpostId: String): List<Oppgave> {
-        val query = OppgaveQuery(
-            filtere = listOf(
-                FeltverdiOppgavefilter(
-                    område = "K9",
-                    kode = "journalpostId",
-                    operator = EksternFeltverdiOperator.EQUALS,
-                    verdi = listOf(journalpostId)
-                )
-            ), order = listOf(EnkelOrderFelt("K9", "mottattDato", false))
-        )
-        return queryService.queryForOppgave(QueryRequest(oppgaveQuery = query))
-    }
-
-    private suspend fun finnOppgaverForSøkersFnr(fnr: String): List<Oppgave> {
-        val aktørId =
-            pdlService.identifikator(fnr).aktorId?.data?.hentIdenter?.identer?.get(0)?.ident ?: return emptyList()
-        val query = OppgaveQuery(
-            filtere = listOf(
-                FeltverdiOppgavefilter(
-                    område = "K9",
-                    kode = "aktorId",
-                    operator = EksternFeltverdiOperator.IN,
-                    verdi = listOf(aktørId, fnr)
-                )
-            ), order = listOf(EnkelOrderFelt("K9", "mottattDato", false))
-        )
-        return queryService.queryForOppgave(QueryRequest(oppgaveQuery = query))
-    }
-
-    private fun finnOppgaverForAktørId(aktørIder: List<String>): List<Oppgave> {
-        val query = OppgaveQuery(
-            filtere = listOf(
-                FeltverdiOppgavefilter(
-                    område = "K9",
-                    kode = "aktorId",
-                    operator = EksternFeltverdiOperator.IN,
-                    verdi = aktørIder
-                )
-            ), order = listOf(EnkelOrderFelt("K9", "mottattDato", false))
-        )
-        return queryService.queryForOppgave(QueryRequest(oppgaveQuery = query))
-    }
-
-    private fun finnOppgaverForSaksnummer(saksnummer: String): List<Oppgave> {
-        val query = OppgaveQuery(
-            filtere = listOf(
-                FeltverdiOppgavefilter(
-                    område = "K9",
-                    kode = "saksnummer",
-                    operator = EksternFeltverdiOperator.EQUALS,
-                    verdi = listOf(saksnummer.uppercase().replace("O", "o").replace("I", "i"))
-                )
-            ), order = listOf(EnkelOrderFelt("K9", "mottattDato", false))
-        )
-        return queryService.queryForOppgave(QueryRequest(oppgaveQuery = query))
+        9 -> Søkeord.Journalpost(søkeord)
+        else -> Søkeord.Sak(søkeord)
     }
 
     private suspend fun transformerTilSøkeresultat(
         oppgaver: List<Oppgave>,
+        adapter: Oppgavesøk,
+        brukerkontekst: BrukerkontekstMedOmråde,
     ): Søkeresultat {
         if (oppgaver.isEmpty()) {
             return Søkeresultat.TomtResultat
         }
 
-        val aktørId = oppgaver.first().hentVerdi("aktorId")
-            ?: return Søkeresultat.TomtResultat
+        val aktørId = adapter.aktørId(oppgaver.first()) ?: return Søkeresultat.TomtResultat
 
-        val (ikkeTilgang, person) = pdlService.person(aktørId)
+        val (ikkeTilgang, person) = pdlService.person(aktørId, brukerkontekst)
 
         if (ikkeTilgang || person == null) {
             return Søkeresultat.IkkeTilgang
         }
 
-        val filtrerteBasertPåSaksnummer = filtrerOppgaverBasertPåSaksnummer(oppgaver)
-
-        val filtrertForTilgang = filtrerteBasertPåSaksnummer.filter {
-            pepClient.harTilgangTilOppgaveV3(it)
+        val filtrertForTilgang = énOppgavePerSak(oppgaver, adapter).filter {
+            pepClient.harTilgangTilOppgaveV3(it, brukerkontekst)
         }
 
         if (filtrertForTilgang.isEmpty()) {
             return Søkeresultat.IkkeTilgang
         }
 
+        val synligeOppgaver = filtrertForTilgang.filter { adapter.erSynlig(it) }
+
         return Søkeresultat.MedResultat(
             person = SøkeresultatPersonDto(person),
-            oppgaver = filtrertForTilgang.mapNotNull { oppgave ->
-                transformerOppgave(oppgave, person.navn())
+            oppgaver = synligeOppgaver.map { oppgave ->
+                SøkeresultatOppgaveDto(adapter.tilSammendrag(oppgave, person))
             }
         )
     }
 
     private suspend fun transformerTilSøkeresultatSammendrag(
         oppgaver: List<Oppgave>,
+        adapter: Oppgavesøk,
+        brukerkontekst: BrukerkontekstMedOmråde,
     ): SøkeresultatSammendrag {
         if (oppgaver.isEmpty()) return SøkeresultatSammendrag.TomtResultat
 
-        val aktørId = oppgaver.first().hentVerdi("aktorId")
-            ?: return SøkeresultatSammendrag.TomtResultat
-        val (ikkeTilgang, person) = pdlService.person(aktørId)
+        val aktørId = adapter.aktørId(oppgaver.first()) ?: return SøkeresultatSammendrag.TomtResultat
+        val (ikkeTilgang, person) = pdlService.person(aktørId, brukerkontekst)
         if (ikkeTilgang || person == null) return SøkeresultatSammendrag.IkkeTilgang
 
-        val filtrertForTilgang = filtrerOppgaverBasertPåSaksnummer(oppgaver).filter {
-            pepClient.harTilgangTilOppgaveV3(it)
+        val filtrertForTilgang = énOppgavePerSak(oppgaver, adapter).filter {
+            pepClient.harTilgangTilOppgaveV3(it, brukerkontekst)
         }
         if (filtrertForTilgang.isEmpty()) return SøkeresultatSammendrag.IkkeTilgang
 
-        val synligeOppgaver = filtrertForTilgang.filter { it.hentVerdi("ytelsestype") != "OBSOLETE" }
+        val synligeOppgaver = filtrertForTilgang.filter { adapter.erSynlig(it) }
         return SøkeresultatSammendrag.MedResultat(
             oppgaver = oppgaveSammendragDtoBuilder.bygg(
                 synligeOppgaver,
+                brukerkontekst,
                 alleredeHentedePersoner = mapOf(aktørId to person),
             ),
         )
     }
 
-    private fun filtrerOppgaverBasertPåSaksnummer(oppgaver: List<Oppgave>): List<Oppgave> {
-        val (oppgaverMedSaksnummer, oppgaverUtenSaksnummer) =
-            oppgaver.partition { it.hentVerdi("saksnummer") != null }
+    /** Beholder den åpne oppgaven per sak, eller den første dersom alle er lukket. */
+    private fun énOppgavePerSak(oppgaver: List<Oppgave>, adapter: Oppgavesøk): List<Oppgave> {
+        val (oppgaverMedSak, oppgaverUtenSak) = oppgaver.partition { adapter.saksnummer(it) != null }
 
-        val gruppertPåSaksnummer = oppgaverMedSaksnummer.groupBy { it.hentVerdi("saksnummer")!! }
-
-        val filtrerteMedSaksnummer = gruppertPåSaksnummer.values.map { oppgaverISak ->
-            // Finn den ene oppgaven som ikke er lukket (hvis den finnes)
-            oppgaverISak.find { it.status != Oppgavestatus.LUKKET } ?: oppgaverISak.first()
+        val filtrerteMedSak = oppgaverMedSak.groupBy { adapter.saksnummer(it)!! }.values.map { oppgaverISak ->
+            oppgaverISak.find { it.status != Oppgavestatus.LUKKET }
+                ?: oppgaverISak.first()
         }
 
-        return oppgaverUtenSaksnummer + filtrerteMedSaksnummer
-    }
-
-    private fun transformerOppgave(oppgave: Oppgave, navn: String): SøkeresultatOppgaveDto? {
-        if (oppgave.hentVerdi("ytelsestype") == "OBSOLETE") {
-            return null
-        }
-        return SøkeresultatOppgaveDto(
-            navn = navn,
-            oppgaveNøkkel = OppgaveNøkkelDto(oppgave),
-            ytelsestype = oppgave.hentVerdi("ytelsestype")?.let { FagsakYtelseType.fraKode(it).navn }
-                ?: FagsakYtelseType.UKJENT.navn,
-            saksnummer = oppgave.hentVerdi("saksnummer"),
-            hastesak = oppgave.hentVerdi("hastesak") == "true",
-            journalpostId = oppgave.hentVerdi("journalpostId"),
-            opprettetTidspunkt = oppgave.hentVerdi("registrertDato")?.let { dato -> LocalDateTime.parse(dato) },
-            status = oppgave.hentVerdi("behandlingsstatus")
-                ?.let { kode -> BehandlingStatus.fraKode(kode).navn }
-                ?: oppgave.status.visningsnavn,
-            oppgavebehandlingsUrl = oppgave.getOppgaveBehandlingsurl(),
-            reservasjonsnøkkel = oppgave.reservasjonsnøkkel,
-            fagsakÅr = oppgave.hentVerdi("fagsakÅr")?.toIntOrNull()
-        )
+        return oppgaverUtenSak + filtrerteMedSak
     }
 }

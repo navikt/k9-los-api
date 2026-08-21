@@ -49,6 +49,7 @@ import no.nav.k9.los.infrastruktur.abac.cache.PepCacheService
 import no.nav.k9.los.infrastruktur.azuregraph.AzureGraphService
 import no.nav.k9.los.infrastruktur.azuregraph.AzureGraphServiceLocal
 import no.nav.k9.los.infrastruktur.azuregraph.IAzureGraphService
+import no.nav.k9.los.infrastruktur.brukerkontekst.BrukerkontekstFactory
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.infrastruktur.db.hikariConfig
 import no.nav.k9.los.infrastruktur.metrikker.EventlagerNokkeltallPrometheusCollector
@@ -56,7 +57,7 @@ import no.nav.k9.los.infrastruktur.metrikker.EventlagerNokkeltallRepository
 import no.nav.k9.los.infrastruktur.pdl.IPdlService
 import no.nav.k9.los.infrastruktur.pdl.PdlService
 import no.nav.k9.los.infrastruktur.pdl.PdlServiceLocal
-import no.nav.k9.los.infrastruktur.rest.RequestContextService
+
 import no.nav.k9.los.ko.KøpåvirkendeHendelse
 import no.nav.k9.los.ko.OppgaveKoTjeneste
 import no.nav.k9.los.ko.db.OppgaveKoRepository
@@ -79,9 +80,10 @@ import no.nav.k9.los.oppgaveuthenting.enkeltoppslag.TemporalOppgaveOppslag
 import no.nav.k9.los.oppgaveuthenting.enkeltoppslag.TemporalOppgaveOppslagOppgaveV3
 import no.nav.k9.los.oppgaveuthenting.query.OppgaveQueryService
 import no.nav.k9.los.oppgaveuthenting.query.db.OppgaveQueryRepository
-import no.nav.k9.los.oppgaveuthenting.sammendrag.K9OppgaveSammendragMapper
+import no.nav.k9.los.søkeboks.Oppgavesøkere
+import no.nav.k9.los.søkeboks.k9.K9Oppgavesøk
+import no.nav.k9.los.søkeboks.ung.UngOppgavesøk
 import no.nav.k9.los.oppgaveuthenting.sammendrag.OppgaveSammendragDtoBuilder
-import no.nav.k9.los.oppgaveuthenting.sammendrag.OppgaveSammendragMapper
 import no.nav.k9.los.reservasjon.ReservasjonApisTjeneste
 import no.nav.k9.los.reservasjon.ReservasjonV3DtoBuilder
 import no.nav.k9.los.reservasjon.ReservasjonV3Repository
@@ -113,7 +115,8 @@ fun selectModulesBasedOnProfile(application: Application, config: Configuration)
 fun common(app: Application, config: Configuration) = module {
     single { config.koinProfile() }
     single { config }
-    single { RequestContextService(profile = get()) }
+    single { Gruppeoppsett() }
+    single { BrukerkontekstFactory(get(), lokaleTilganger = get<KoinProfile>() == LOCAL) }
     single<DataSource> { app.hikariConfig(config) }
 
     single(named("oppgaveKøOppdatert")) {
@@ -136,7 +139,6 @@ fun common(app: Application, config: Configuration) = module {
     single {
         SaksbehandlerRepository(
             dataSource = get(),
-            pepClient = get(),
             transactionalManager = get(),
             områdeRepository = get(),
         )
@@ -247,7 +249,6 @@ fun common(app: Application, config: Configuration) = module {
 
     single {
         SaksbehandlerAdminTjeneste(
-            pepClient = get(),
             transactionalManager = get(),
             saksbehandlerRepository = get(),
             oppgaveKøV3Repository = get(),
@@ -264,8 +265,10 @@ fun common(app: Application, config: Configuration) = module {
         )
     }
 
-    single<OppgaveSammendragMapper> { K9OppgaveSammendragMapper() }
-    single { OppgaveSammendragDtoBuilder(getAll(), get()) }
+    single { K9Oppgavesøk() }
+    single { UngOppgavesøk() }
+    single { Oppgavesøkere(k9 = get(), ung = get()) }
+    single { OppgaveSammendragDtoBuilder(oppgavesøkere = get(), pdlService = get()) }
 
     single {
         DriftsmeldingTjeneste(driftsmeldingRepository = get())
@@ -506,7 +509,6 @@ fun common(app: Application, config: Configuration) = module {
             reservasjonV3DtoBuilder = get(),
             aktivOppgaveOppslag = get(),
             pepClient = get(),
-            azureGraphService = get(),
             oppgaveSammendragDtoBuilder = get(),
         )
     }
@@ -549,10 +551,11 @@ fun common(app: Application, config: Configuration) = module {
 
     single {
         SøkeboksTjeneste(
-            queryService = get(),
             pdlService = get(),
             pepClient = get(),
             oppgaveSammendragDtoBuilder = get(),
+            queryService = get(),
+            oppgavesøkere = get(),
         )
     }
 
@@ -562,7 +565,6 @@ fun common(app: Application, config: Configuration) = module {
             pepClient = get(),
             sisteOppgaverRepository = get(),
             pdlService = get(),
-            azureGraphService = get(),
             transactionalManager = get(),
         )
     }
@@ -694,7 +696,7 @@ fun naisCommonConfig(config: Configuration) = module {
     }
 
     single<IPepClient> {
-        PepClient(azureGraphService = get(), get())
+        PepClient(azureGraphService = get(), get(), get())
     }
 }
 
@@ -716,7 +718,6 @@ fun preprodConfig(config: Configuration) = module {
             baseUrl = config.pdlUrl(),
             accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
             scope = "api://dev-fss.pdl.pdl-api/.default",
-            azureGraphService = get<IAzureGraphService>(),
             httpClient = get()
         )
     }
@@ -794,7 +795,6 @@ fun prodConfig(config: Configuration) = module {
             baseUrl = config.pdlUrl(),
             accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
             scope = "api://prod-fss.pdl.pdl-api/.default",
-            azureGraphService = get<IAzureGraphService>(),
             httpClient = get()
         )
     }

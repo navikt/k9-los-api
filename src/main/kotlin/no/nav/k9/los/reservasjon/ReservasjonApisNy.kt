@@ -7,13 +7,10 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.k9.los.feilhandtering.FinnerIkkeDataException
-import no.nav.k9.los.infrastruktur.abac.IPepClient
-import no.nav.k9.los.infrastruktur.rest.RequestContextService
-import no.nav.k9.los.infrastruktur.rest.idToken
+import no.nav.k9.los.infrastruktur.brukerkontekst.medBrukerkontekst
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.OppgaveNøkkelDto
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
-import no.nav.k9.los.område
 import org.koin.ktor.ext.inject
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -24,9 +21,7 @@ private val log: Logger = LoggerFactory.getLogger("nav.OppgaveApisNy")
 //TODO fjern reservasjonsid fra objekter til frontend
 
 internal fun Route.ReservasjonApisNy() {
-    val requestContextService by inject<RequestContextService>()
     val saksbehandlerRepository by inject<SaksbehandlerRepository>()
-    val pepClient by inject<IPepClient>()
     val reservasjonApisTjeneste by inject<ReservasjonApisTjeneste>()
 
     post("/reserver", {
@@ -41,17 +36,18 @@ internal fun Route.ReservasjonApisNy() {
             }
         }
     }) {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.harTilgangTilReserveringAvOppgaver()) {
-                val område = call.område // TODO: bruk område når tjenesten er oppdatert til å ta hensyn til område
+        medBrukerkontekst { bruker ->
+            val skjermet = bruker.harTilgangTilKode6
+            if (bruker.harTilgangTilReserveringAvOppgaver) {
+                val område = bruker.område
                 val oppgaveIdMedOverstyringDto = call.receive<OppgaveIdMedOverstyringDto>()
-                val navident = kotlin.coroutines.coroutineContext.idToken().getNavIdent()
-                val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedIdent(navident)
+                val navident = bruker.navIdent
+                val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedIdent(navident, skjermet)
                     ?: throw IllegalStateException("Fant ikke saksbehandler $navident ved forsøk på å reservasjon av oppgave")
 
                 try {
                     log.info("Forsøker å ta reservasjon direkte på ${oppgaveIdMedOverstyringDto.oppgaveNøkkel.oppgaveEksternId} for ${innloggetBruker.navident}")
-                    val oppgave = reservasjonApisTjeneste.reserverOppgave(innloggetBruker, oppgaveIdMedOverstyringDto)
+                    val oppgave = reservasjonApisTjeneste.reserverOppgave(innloggetBruker, oppgaveIdMedOverstyringDto, skjermet)
                     call.respond(oppgave)
                 } catch (e: ManglerTilgangException) {
                     call.respond(HttpStatusCode.Forbidden, e.message!!)
@@ -71,14 +67,15 @@ internal fun Route.ReservasjonApisNy() {
             }
         }
     }) {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.harBasisTilgang()) {
-                val område = call.område // TODO: bruk område når tjenesten er oppdatert til å ta hensyn til område
-                val innloggetBrukerNavIdent = kotlin.coroutines.coroutineContext.idToken().getNavIdent()
-                val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedIdent(innloggetBrukerNavIdent)
+        medBrukerkontekst { bruker ->
+            val skjermet = bruker.harTilgangTilKode6
+            if (bruker.harBasisTilgang) {
+                val område = bruker.område
+                val innloggetBrukerNavIdent = bruker.navIdent
+                val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedIdent(innloggetBrukerNavIdent, skjermet)
 
                 if (innloggetBruker != null) {
-                    val reservasjoner = reservasjonApisTjeneste.hentReserverteOppgaverSammendragForSaksbehandler(innloggetBruker)
+                    val reservasjoner = reservasjonApisTjeneste.hentReserverteOppgaverSammendragForSaksbehandler(innloggetBruker, bruker)
                     call.respond(reservasjoner)
                 } else {
                     log.info("Innlogger bruker med brukernavn $innloggetBrukerNavIdent finnes ikke i saksbehandlertabellen")
@@ -105,11 +102,12 @@ internal fun Route.ReservasjonApisNy() {
             }
         }
     }) {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.harBasisTilgang()) {
-                val område = call.område // TODO: bruk område når tjenesten er oppdatert til å ta hensyn til område
+        medBrukerkontekst { bruker ->
+            val skjermet = bruker.harTilgangTilKode6
+            if (bruker.harBasisTilgang) {
+                val område = bruker.område
                 val params = call.receive<List<AnnullerReservasjonDto>>()
-                val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedIdent(kotlin.coroutines.coroutineContext.idToken().getNavIdent())!!
+                val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedIdent(bruker.navIdent, skjermet)!!
 
                 try {
                     log.info(
@@ -140,16 +138,17 @@ internal fun Route.ReservasjonApisNy() {
             }
         }
     }) {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.harBasisTilgang()) {
-                val område = call.område // TODO: bruk område når tjenesten er oppdatert til å ta hensyn til område
+        medBrukerkontekst { bruker ->
+            val skjermet = bruker.harTilgangTilKode6
+            if (bruker.harBasisTilgang) {
+                val område = bruker.område
                 val forlengReservasjonDto = call.receive<ForlengReservasjonDto>()
                 val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedIdent(
-                    kotlin.coroutines.coroutineContext.idToken().getNavIdent()
+                    bruker.navIdent, skjermet
                 )!!
 
                 try {
-                    call.respond(reservasjonApisTjeneste.forlengReservasjon(forlengReservasjonDto, innloggetBruker))
+                    call.respond(reservasjonApisTjeneste.forlengReservasjon(forlengReservasjonDto, innloggetBruker, bruker))
                 } catch (e: FinnerIkkeDataException) {
                     call.respond(HttpStatusCode.NotFound, "Fant ingen aktiv reservasjon for angitt reservasjonsnøkkel")
                 }
@@ -171,18 +170,19 @@ internal fun Route.ReservasjonApisNy() {
             }
         }
     }) {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.harBasisTilgang()) {
-                val område = call.område // TODO: bruk område når tjenesten er oppdatert til å ta hensyn til område
+        medBrukerkontekst { bruker ->
+            val skjermet = bruker.harTilgangTilKode6
+            if (bruker.harBasisTilgang) {
+                val område = bruker.område
                 val params = call.receive<FlyttReservasjonDto>()
 
                 val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedIdent(
-                    kotlin.coroutines.coroutineContext.idToken().getNavIdent()
+                    bruker.navIdent, skjermet
                 )!!
 
                 try {
                     log.info("Flytter reservasjonen til ${params.brukerIdent} (Gjort av ${innloggetBruker.navident})")
-                    call.respond(reservasjonApisTjeneste.overførReservasjon(params, innloggetBruker))
+                    call.respond(reservasjonApisTjeneste.overførReservasjon(params, innloggetBruker, skjermet, bruker))
                 } catch (e: FinnerIkkeDataException) {
                     call.respond(HttpStatusCode.NotFound, "Fant ingen aktiv reservasjon for angitt reservasjonsnøkkel")
                 }
@@ -204,15 +204,16 @@ internal fun Route.ReservasjonApisNy() {
             }
         }
     }) {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.harBasisTilgang()) {
-                val område = call.område // TODO: bruk område når tjenesten er oppdatert til å ta hensyn til område
+        medBrukerkontekst { bruker ->
+            val skjermet = bruker.harTilgangTilKode6
+            if (bruker.harBasisTilgang) {
+                val område = bruker.område
                 val reservasjonEndringDto = call.receive<List<ReservasjonEndringDto>>()
                 val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedIdent(
-                    kotlin.coroutines.coroutineContext.idToken().getNavIdent()
+                    bruker.navIdent, skjermet
                 )!!
                 try {
-                    call.respond(reservasjonApisTjeneste.endreReservasjoner(reservasjonEndringDto, innloggetBruker))
+                    call.respond(reservasjonApisTjeneste.endreReservasjoner(reservasjonEndringDto, innloggetBruker, skjermet, bruker))
                 } catch (e: FinnerIkkeDataException) {
                     call.respond(HttpStatusCode.NotFound, "Fant ingen aktiv reservasjon for angitt reservasjonsnøkkel")
                 }
@@ -234,11 +235,11 @@ internal fun Route.ReservasjonApisNy() {
             }
         }
     }) {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.harBasisTilgang()) {
-                val område = call.område // TODO: bruk område når tjenesten er oppdatert til å ta hensyn til område
+        medBrukerkontekst { bruker ->
+            val skjermet = bruker.harTilgangTilKode6
+            if (bruker.harBasisTilgang) {
                 val params = call.receive<BrukerIdentDto>()
-                val sokSaksbehandlerMedIdent = saksbehandlerRepository.sokSaksbehandler(params.brukerIdent)
+                val sokSaksbehandlerMedIdent = saksbehandlerRepository.sokSaksbehandler(params.brukerIdent, bruker.område, skjermet)
                 call.respond(sokSaksbehandlerMedIdent)
             } else {
                 call.respond(HttpStatusCode.Forbidden)
@@ -255,10 +256,10 @@ internal fun Route.ReservasjonApisNy() {
             }
         }
     }) {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.harBasisTilgang()) {
-                val område = call.område // TODO: bruk område når tjenesten er oppdatert til å ta hensyn til område
-                val alleSaksbehandlere = saksbehandlerRepository.hentAlleSaksbehandlere()
+        medBrukerkontekst { bruker ->
+            val skjermet = bruker.harTilgangTilKode6
+            if (bruker.harBasisTilgang) {
+                val alleSaksbehandlere = saksbehandlerRepository.hentAlleSaksbehandlere(bruker.område, skjermet)
                 val saksbehandlerDtoListe =
                     alleSaksbehandlere.filter { saksbehandler -> !saksbehandler.navn.isNullOrBlank() && !saksbehandler.navident.isNullOrBlank() }
                         .map { saksbehandler ->
@@ -292,15 +293,15 @@ internal fun Route.ReservasjonApisNy() {
             }
         }
     }) {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.harBasisTilgang()) {
-                val område = call.område // TODO: bruk område når tjenesten er oppdatert til å ta hensyn til område
+        medBrukerkontekst { bruker ->
+            if (bruker.harBasisTilgang) {
+                val område = bruker.område
                 val oppgaveNøkkel = OppgaveNøkkelDto(
                     call.queryParameters["oppgaveEksternId"]!!,
                     call.queryParameters["oppgaveTypeEksternId"]!!,
                     call.queryParameters["områdeEksternId"]!!
                 )
-                val aktivReservasjon = reservasjonApisTjeneste.hentAktivReservasjon(oppgaveNøkkel)
+                val aktivReservasjon = reservasjonApisTjeneste.hentAktivReservasjon(oppgaveNøkkel, bruker)
                 if (aktivReservasjon != null) {
                     call.respond(aktivReservasjon)
                 } else {
@@ -322,21 +323,15 @@ internal fun Route.ReservasjonApisNy() {
             }
         }
     }) {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.erOppgaveStyrer()) {
-                val område = call.område // TODO: bruk område når tjenesten er oppdatert til å ta hensyn til område
-                call.respond(reservasjonApisTjeneste.hentAlleAktiveReservasjoner())
+        medBrukerkontekst { bruker ->
+            if (bruker.erOppgavestyrer) {
+                call.respond(reservasjonApisTjeneste.hentAlleAktiveReservasjoner(bruker))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
         }
     }
 }
-
-
-
-
-
 
 
 

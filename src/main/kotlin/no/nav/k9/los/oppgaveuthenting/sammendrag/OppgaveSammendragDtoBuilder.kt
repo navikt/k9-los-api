@@ -1,32 +1,36 @@
 package no.nav.k9.los.oppgaveuthenting.sammendrag
 
+import no.nav.k9.los.infrastruktur.brukerkontekst.BrukerkontekstMedOmråde
 import no.nav.k9.los.infrastruktur.pdl.IPdlService
 import no.nav.k9.los.infrastruktur.pdl.PersonPdl
-import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.Oppgave
+import no.nav.k9.los.søkeboks.Oppgavesøkere
 
+/**
+ * Bygger sammendrags-DTO-er for oppgaver på tvers av områder.
+ *
+ * All tolkning av oppgavens felt skjer i områdets Oppgavesøk-implementasjon, slik at denne klassen
+ * ikke kjenner feltkodene til noe område.
+ */
 class OppgaveSammendragDtoBuilder(
-    mappere: List<OppgaveSammendragMapper>,
+    private val oppgavesøkere: Oppgavesøkere,
     private val pdlService: IPdlService,
 ) {
-    private val mappere = mappere.associateBy { it.område }
-
     suspend fun bygg(
         oppgaver: List<Oppgave>,
+        brukerkontekst: BrukerkontekstMedOmråde,
         alleredeHentedePersoner: Map<String, PersonPdl?> = emptyMap(),
     ): List<OppgaveSammendragDto> {
         val personer = alleredeHentedePersoner.toMutableMap()
         return oppgaver.map { oppgave ->
-            val område = Områder.fraEksternId(oppgave.oppgavetype.område.eksternId)
-            val mapper = mappere[område]
-                ?: throw IllegalStateException("Mangler OppgaveSammendragMapper for område ${område.eksternId}")
-            val aktørId = oppgave.hentVerdi("aktorId")
+            val adapter = oppgavesøkere.forOmråde(oppgave.oppgavetype.område)
+            val aktørId = adapter.aktørId(oppgave)
             val person = aktørId?.let {
-                if (personer.containsKey(it)) personer[it] else pdlService.person(it).person.also { person ->
+                if (personer.containsKey(it)) personer[it] else pdlService.person(it, brukerkontekst).person.also { person ->
                     personer[it] = person
                 }
             }
-            mapper.map(oppgave, person)
+            adapter.tilSammendrag(oppgave, person)
         }
     }
 }

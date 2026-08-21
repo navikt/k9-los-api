@@ -7,6 +7,7 @@ import no.nav.k9.los.FeltType
 import no.nav.k9.los.OppgaveTestDataBuilder
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgavemottak.PartisjonertOppgaveRepository
 import no.nav.k9.los.oppgaveuthenting.query.db.OppgaveId
 import no.nav.k9.los.oppgaveuthenting.query.db.OppgaveQueryRepository
@@ -61,8 +62,8 @@ class TransientFeltutlederTest : AbstractK9LosIntegrationTest() {
             )
         )
 
-        val result = queryForOppgave(QueryRequest(oppgaveQueryUtenStatusfilter))
-        val resultMedStatusfilter = queryForOppgave(QueryRequest(oppgaveQueryMedStatusfilter))
+        val result = queryForOppgave(QueryRequest(område = Områder.K9, oppgaveQuery = oppgaveQueryUtenStatusfilter))
+        val resultMedStatusfilter = queryForOppgave(QueryRequest(område = Områder.K9, oppgaveQuery = oppgaveQueryMedStatusfilter))
         assertThat(result.size).isEqualTo(1)
         assertThat(resultMedStatusfilter.size).isEqualTo(1)
 
@@ -89,7 +90,7 @@ class TransientFeltutlederTest : AbstractK9LosIntegrationTest() {
             )
         )
 
-        val result = queryForOppgave(QueryRequest(oppgaveQuery))
+        val result = queryForOppgave(QueryRequest(område = Områder.K9, oppgaveQuery = oppgaveQuery))
         assertThat(result.size).isEqualTo(2)
 
         val oppgave = hentOppgave(result[0])
@@ -114,7 +115,7 @@ class TransientFeltutlederTest : AbstractK9LosIntegrationTest() {
             )
         )
 
-        val result = queryForOppgave(QueryRequest(oppgaveQuery))
+        val result = queryForOppgave(QueryRequest(område = Områder.K9, oppgaveQuery = oppgaveQuery))
         assertThat(result.size).isEqualTo(2)
 
         val oppgave = hentOppgave(result[0])
@@ -140,7 +141,7 @@ class TransientFeltutlederTest : AbstractK9LosIntegrationTest() {
         )
 
         val resultat = transactionalManager.transaction { tx ->
-            oppgaveQueryRepository.query(tx, QueryRequest(oppgaveQuery), LocalDateTime.now())
+            oppgaveQueryRepository.query(tx, QueryRequest(område = Områder.K9, oppgaveQuery = oppgaveQuery), LocalDateTime.now())
         }
 
         assertThat(resultat.size).isEqualTo(2)

@@ -4,15 +4,13 @@ import io.github.smiley4.ktoropenapi.get
 import io.ktor.http.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import no.nav.k9.los.infrastruktur.abac.IPepClient
-import no.nav.k9.los.infrastruktur.rest.RequestContextService
+import no.nav.k9.los.infrastruktur.brukerkontekst.medBrukerkontekst
 import no.nav.k9.los.nøkkeltall.avdelingsleder.dagenstall.DagensTallService
 import no.nav.k9.los.nøkkeltall.avdelingsleder.ferdigstilteperenhet.FerdigstiltePerEnhetGruppe
 import no.nav.k9.los.nøkkeltall.avdelingsleder.ferdigstilteperenhet.FerdigstiltePerEnhetService
 import no.nav.k9.los.nøkkeltall.avdelingsleder.status.StatusService
 import no.nav.k9.los.nøkkeltall.avdelingsleder.statusfordeling.StatusFordelingService
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
-import no.nav.k9.los.område
 import org.koin.ktor.ext.inject
 
 fun Route.NøkkeltallV3ApisNy() {
@@ -20,8 +18,6 @@ fun Route.NøkkeltallV3ApisNy() {
     val statusService by inject<StatusService>()
     val dagensTallService by inject<DagensTallService>()
     val perEnhetService by inject<FerdigstiltePerEnhetService>()
-    val requestContextService by inject<RequestContextService>()
-    val pepClient by inject<IPepClient>()
 
     get("status", {
         description = "Hent status for oppgavekøer."
@@ -32,10 +28,10 @@ fun Route.NøkkeltallV3ApisNy() {
             }
         }
     }) {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.erOppgaveStyrer()) {
-                val område = call.område // TODO: bruk område når tjenesten er oppdatert til å ta hensyn til område
-                call.respond(statusService.hentStatus(pepClient.harTilgangTilKode6()))
+        medBrukerkontekst { bruker ->
+            if (bruker.erOppgavestyrer) {
+                val område = bruker.område
+                call.respond(statusService.hentStatus(bruker.harTilgangTilKode6))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
@@ -51,10 +47,10 @@ fun Route.NøkkeltallV3ApisNy() {
             }
         }
     }) {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.erOppgaveStyrer()) {
-                val område = call.område // TODO: bruk område når tjenesten er oppdatert til å ta hensyn til område
-                val kode6 = pepClient.harTilgangTilKode6()
+        medBrukerkontekst { bruker ->
+            if (bruker.erOppgavestyrer) {
+                val område = bruker.område
+                val kode6 = bruker.harTilgangTilKode6
                 call.respond(statusFordelingService.hentVerdi(kode6))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
@@ -71,9 +67,9 @@ fun Route.NøkkeltallV3ApisNy() {
             }
         }
     }) {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.erOppgaveStyrer()) {
-                val område = call.område // TODO: bruk område når tjenesten er oppdatert til å ta hensyn til område
+        medBrukerkontekst { bruker ->
+            if (bruker.erOppgavestyrer) {
+                val område = bruker.område
                 call.respond(dagensTallService.hentCachetVerdi())
             } else {
                 call.respond(HttpStatusCode.Forbidden)
@@ -100,9 +96,9 @@ fun Route.NøkkeltallV3ApisNy() {
             }
         }
     }) {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.erOppgaveStyrer()) {
-                val område = call.område // TODO: bruk område når tjenesten er oppdatert til å ta hensyn til område
+        medBrukerkontekst { bruker ->
+            if (bruker.erOppgavestyrer) {
+                val område = bruker.område
                 val gruppe = call.parameters["gruppe"]?.let { FerdigstiltePerEnhetGruppe.valueOf(it) }
                     ?: FerdigstiltePerEnhetGruppe.ALLE
                 val uker = call.parameters["uker"]?.toInt() ?: 2
@@ -113,4 +109,3 @@ fun Route.NøkkeltallV3ApisNy() {
         }
     }
 }
-

@@ -14,7 +14,6 @@ import no.nav.k9.los.KoinProfile
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.abac.PepClientLocal
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
-import no.nav.k9.los.infrastruktur.rest.RequestContextService
 import no.nav.k9.los.oppgavedefinisjon.omraade.OmrådeRepository
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.saksbehandleradmin.Saksbehandler
@@ -44,7 +43,8 @@ class BrukersområderApiTest : AbstractPostgresTest() {
                     epost = "saksbehandler@nav.no",
                     enhet = "3450",
                     områder = listOf(Områder.K9, Områder.UNG)
-                )
+                ),
+                skjermet = false,
             )
         }
 
@@ -85,7 +85,6 @@ class BrukersområderApiTest : AbstractPostgresTest() {
         val områdeRepository = OmrådeRepository(dataSource)
         return SaksbehandlerRepository(
             dataSource = dataSource,
-            pepClient = pepClient,
             transactionalManager = TransactionalManager(dataSource),
             områdeRepository = områdeRepository,
         )
@@ -99,18 +98,19 @@ class BrukersområderApiTest : AbstractPostgresTest() {
         install(Koin) {
             modules(
                 module {
+                    single { KoinProfile.LOCAL }
                     single<IPepClient> { PepClientLocal() }
+                    single { no.nav.k9.los.infrastruktur.abac.Gruppeoppsett() }
+                    single { no.nav.k9.los.infrastruktur.brukerkontekst.BrukerkontekstFactory(get(), lokaleTilganger = true) }
                     single { OmrådeRepository(dataSource) }
                     single { TransactionalManager(dataSource) }
                     single {
                         SaksbehandlerRepository(
                             dataSource = dataSource,
-                            pepClient = get(),
                             transactionalManager = get(),
                             områdeRepository = get(),
                         )
                     }
-                    single { RequestContextService(profile = KoinProfile.LOCAL) }
                 }
             )
         }

@@ -96,13 +96,13 @@ class PepCacheRepository(
         )
     }
 
-    fun hent(kildeområde: String, eksternId: String): PepCache? {
+    fun hent(kildeområde: Områder, eksternId: String): PepCache? {
         return using(sessionOf(dataSource)) {
             it.transaction { tx -> hent(kildeområde, eksternId, tx) }
         }
     }
 
-    fun hent(kildeområde: String, eksternId: String, tx: TransactionalSession): PepCache? {
+    fun hent(kildeområde: Områder, eksternId: String, tx: TransactionalSession): PepCache? {
         return tx.run(
             queryOf("""
                     SELECT pc.*, o.ekstern_id as omrade_ekstern_id
@@ -110,7 +110,7 @@ class PepCacheRepository(
                     JOIN OMRADE o ON o.id = pc.omrade_id
                     WHERE pc.kildeomrade = :kildeomrade AND pc.ekstern_id = :ekstern_id 
                 """, mapOf(
-                    "kildeomrade" to kildeområde,
+                    "kildeomrade" to kildeområde.eksternId,
                     "ekstern_id" to eksternId
                 )
             ).map { it.tilPepCache() }.asSingle

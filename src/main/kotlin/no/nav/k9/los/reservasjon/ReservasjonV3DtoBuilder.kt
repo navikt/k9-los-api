@@ -1,5 +1,6 @@
 package no.nav.k9.los.reservasjon
 
+import no.nav.k9.los.infrastruktur.brukerkontekst.BrukerkontekstMedOmråde
 import no.nav.k9.los.infrastruktur.pdl.IPdlService
 import no.nav.k9.los.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
@@ -10,15 +11,17 @@ class ReservasjonV3DtoBuilder(
 ) {
     suspend fun byggReservasjonV3Dto(
         reservasjonMedOppgaver: ReservasjonV3MedOppgaver,
-        saksbehandler: Saksbehandler
+        saksbehandler: Saksbehandler,
+        brukerkontekst: BrukerkontekstMedOmråde
     ): ReservasjonV3Dto {
-        return byggForV3(reservasjonMedOppgaver, saksbehandler)
+        return byggForV3(reservasjonMedOppgaver, saksbehandler, brukerkontekst)
     }
 
 
     suspend fun byggForV3(
         reservasjonMedOppgaver: ReservasjonV3MedOppgaver,
-        saksbehandler: Saksbehandler
+        saksbehandler: Saksbehandler,
+        brukerkontekst: BrukerkontekstMedOmråde
     ): ReservasjonV3Dto {
         var endretAvNavn: String? = null
         if (reservasjonMedOppgaver.reservasjonV3.endretAv != null) {
@@ -28,7 +31,7 @@ class ReservasjonV3DtoBuilder(
 
         val oppgaveV3Dtos = reservasjonMedOppgaver.oppgaverV3.map {
             val person = it.hentVerdi("aktorId")?.let {
-                aktørId -> pdlService.person(aktørId).person
+                aktørId -> pdlService.person(aktørId, brukerkontekst).person
             }
             GenerellOppgaveV3Dto(it, person)
         }

@@ -1,16 +1,11 @@
 package no.nav.k9.los.infrastruktur.azuregraph
 
+import no.nav.k9.los.infrastruktur.brukerkontekst.BrukerkontekstMedOmråde
 import java.util.*
 
 interface IAzureGraphService {
-
-    suspend fun hentIdentTilInnloggetBruker(): String
-
-    suspend fun hentEnhetForInnloggetBruker(): String
-
-    suspend fun hentEnhetForBrukerMedSystemToken(brukernavn: String): String?
-
-    suspend fun hentGrupperForSaksbehandler(saksbehandlerIdent: String): Set<UUID>
-
-    suspend fun hentGrupperForInnloggetSaksbehandler(): Set<UUID>
+    suspend fun hentEnhet(brukerkontekst: BrukerkontekstMedOmråde): String
+    suspend fun hentEnhet(navIdent: String): String?
+    suspend fun hentGrupper(brukerkontekst: BrukerkontekstMedOmråde): Set<UUID>
+    suspend fun hentGrupper(navIdent: String): Set<UUID>
 }

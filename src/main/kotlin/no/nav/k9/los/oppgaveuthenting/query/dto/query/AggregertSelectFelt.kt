@@ -3,6 +3,7 @@ package no.nav.k9.los.oppgaveuthenting.query.dto.query
 import com.fasterxml.jackson.annotation.JsonAutoDetect
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonTypeName
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonAutoDetect(
@@ -13,6 +14,6 @@ import com.fasterxml.jackson.annotation.JsonTypeName
 @JsonTypeName("aggregert")
 class AggregertSelectFelt(
     val funksjon: Aggregeringsfunksjon,
-    val område: String? = null,
+    val område: Områder? = null,
     val kode: String? = null
 )                                                                                                                                                                                                                                                                                                                     : SelectFelt()

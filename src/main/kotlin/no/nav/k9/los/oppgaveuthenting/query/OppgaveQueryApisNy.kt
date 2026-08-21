@@ -6,18 +6,14 @@ import io.ktor.http.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import no.nav.k9.los.infrastruktur.abac.IPepClient
+import no.nav.k9.los.infrastruktur.brukerkontekst.medBrukerkontekst
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
-import no.nav.k9.los.infrastruktur.rest.RequestContextService
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.OppgaveQuery
-import no.nav.k9.los.område
 import org.koin.java.KoinJavaComponent
 import org.koin.ktor.ext.inject
 
 fun Route.OppgaveQueryApisNy() {
-    val requestContextService by inject<RequestContextService>()
     val oppgaveQueryService by inject<OppgaveQueryService>()
-    val pepClient by KoinJavaComponent.inject<IPepClient>(IPepClient::class.java)
 
     post("/antall", {
         description = "Hent antall oppgaver som matcher en gitt spørring."
@@ -31,11 +27,11 @@ fun Route.OppgaveQueryApisNy() {
             }
         }
     }) {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.harBasisTilgang()) {
-                val område = call.område // TODO: bruk område når tjenesten er oppdatert til å ta hensyn til område
+        medBrukerkontekst { bruker ->
+            if (bruker.harBasisTilgang) {
+                val område = bruker.område
                 val oppgaveQuery = call.receive<OppgaveQuery>()
-                call.respond(oppgaveQueryService.queryForAntall(QueryRequest(oppgaveQuery, false)))
+                call.respond(oppgaveQueryService.queryForAntall(QueryRequest(oppgaveQuery, false, område = område)))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
@@ -54,11 +50,11 @@ fun Route.OppgaveQueryApisNy() {
             }
         }
     }) {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.harBasisTilgang()) {
-                val område = call.område // TODO: bruk område når tjenesten er oppdatert til å ta hensyn til område
+        medBrukerkontekst { bruker ->
+            if (bruker.harBasisTilgang) {
+                val område = bruker.område
                 val oppgaveQuery = call.receive<OppgaveQuery>()
-                call.respond(oppgaveQueryService.validate(QueryRequest(oppgaveQuery)))
+                call.respond(oppgaveQueryService.validate(QueryRequest(oppgaveQuery, område = område)))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
@@ -74,9 +70,9 @@ fun Route.OppgaveQueryApisNy() {
             }
         }
     }) {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.harBasisTilgang()) {
-                val område = call.område // TODO: bruk område når tjenesten er oppdatert til å ta hensyn til område
+        medBrukerkontekst { bruker ->
+            if (bruker.harBasisTilgang) {
+                val område = bruker.område
                 call.respond(oppgaveQueryService.hentAlleFelter())
             } else {
                 call.respond(HttpStatusCode.Forbidden)
@@ -84,4 +80,3 @@ fun Route.OppgaveQueryApisNy() {
         }
     }
 }
-
