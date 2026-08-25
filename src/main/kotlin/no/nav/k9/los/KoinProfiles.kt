@@ -8,7 +8,6 @@ import kotlinx.coroutines.channels.Channel
 import no.nav.helse.dusseldorf.ktor.health.HealthService
 import no.nav.k9.los.KoinProfile.*
 import no.nav.k9.los.domeneadaptere.k9.OmrådeSetup
-import no.nav.k9.los.domeneadaptere.k9.adhocjobber.reservasjonkonvertering.ReservasjonKonverteringJobb
 import no.nav.k9.los.domeneadaptere.k9.avstemming.AvstemmingsTjeneste
 import no.nav.k9.los.domeneadaptere.k9.avstemming.punsj.systemklient.LocalPunsjAvstemmingsklient
 import no.nav.k9.los.domeneadaptere.k9.avstemming.punsj.systemklient.RestPunsjAvstemmingsklient
@@ -228,15 +227,6 @@ fun common(app: Application, config: Configuration) = module {
             k9TilbakeEventHandler = get(),
             k9PunsjEventHandler = get(),
             k9KlageEventHandler = get(),
-        )
-    }
-
-    single {
-        ReservasjonKonverteringJobb(
-            config = get(),
-            reservasjonV3Tjeneste = get(),
-            transactionalManager = get(),
-            oppgaveRepository = get(),
         )
     }
 
