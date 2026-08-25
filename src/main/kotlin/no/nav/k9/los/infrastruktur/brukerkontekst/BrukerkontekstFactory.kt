@@ -16,10 +16,10 @@ internal class BrukerkontekstFactory(
             område = område,
             navIdent = idToken.getNavIdent(),
             grupper = grupper,
-            harBasisTilgang = lokaleTilganger || grupperForOmråde.saksbehandler in grupper || grupperForOmråde.veileder in grupper,
+            harBasisTilgang = lokaleTilganger || grupperForOmråde.girBasisTilgang(grupper),
             harTilgangTilKode6 = !lokaleTilganger && grupperForOmråde.kode6 in grupper,
             erOppgavestyrer = lokaleTilganger || grupperForOmråde.oppgavestyrer in grupper,
-            harTilgangTilReserveringAvOppgaver = lokaleTilganger || grupperForOmråde.saksbehandler in grupper,
+            harTilgangTilReserveringAvOppgaver = lokaleTilganger || grupperForOmråde.girReserveringstilgang(grupper),
             kanLeggeUtDriftsmelding = lokaleTilganger || gruppeoppsett.drift in grupper,
             idToken = idToken,
         )
@@ -31,8 +31,7 @@ internal class BrukerkontekstFactory(
             navIdent = idToken.getNavIdent(),
             grupper = grupper,
             harBasisTilgangIEttEllerFlereOmråder = lokaleTilganger || Områder.entries.any {
-                val grupperForOmråde = gruppeoppsett.forOmråde(it)
-                grupperForOmråde.saksbehandler in grupper || grupperForOmråde.veileder in grupper
+                gruppeoppsett.forOmråde(it).girBasisTilgang(grupper)
             },
             harKode6TilgangIEttEllerFlereOmråder = !lokaleTilganger && Områder.entries.any {
                 gruppeoppsett.forOmråde(it).kode6 in grupper
