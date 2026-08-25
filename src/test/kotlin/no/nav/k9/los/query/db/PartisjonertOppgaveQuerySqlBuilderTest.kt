@@ -18,9 +18,9 @@ import java.time.LocalDateTime
 class PartisjonertOppgaveQuerySqlBuilderTest {
 
     private val mockFelter = mapOf(
-        OmrådeOgKode(Områder.UNG, "testfelt") to OppgavefeltMedMer(
+        OmrådeOgKode(Områder.AKTIVITETSPENGER, "testfelt") to OppgavefeltMedMer(
             Oppgavefelt(
-                område = Områder.UNG,
+                område = Områder.AKTIVITETSPENGER,
                 kode = "testfelt",
                 visningsnavn = "Test Felt",
                 tolkes_som = "String",
@@ -43,7 +43,7 @@ class PartisjonertOppgaveQuerySqlBuilderTest {
 
         builder.medFeltverdi(
             CombineOperator.AND,
-            Områder.UNG,
+            Områder.AKTIVITETSPENGER,
             "testfelt", 
             FeltverdiOperator.EQUALS,
             listOf("testverdi")
@@ -105,7 +105,7 @@ class PartisjonertOppgaveQuerySqlBuilderTest {
             område = Områder.K9
         )
 
-        builder.medEnkelOrder(Områder.UNG, "testfelt", true)
+        builder.medEnkelOrder(Områder.AKTIVITETSPENGER, "testfelt", true)
         val sql = builder.getQuery()
 
         assertTrue(sql.contains("SELECT ov.verdi"), "SQL burde inneholde korrekt sorteringsuttrykk")
@@ -124,7 +124,7 @@ class PartisjonertOppgaveQuerySqlBuilderTest {
 
         builder.medFeltverdi(
             CombineOperator.AND,
-            Områder.UNG,
+            Områder.AKTIVITETSPENGER,
             "testfelt", 
             FeltverdiOperator.EQUALS,
             listOf("testverdi")
@@ -138,7 +138,7 @@ class PartisjonertOppgaveQuerySqlBuilderTest {
             listOf("type1", "type2")
         )
         
-        builder.medEnkelOrder(Områder.UNG, "testfelt", false)
+        builder.medEnkelOrder(Områder.AKTIVITETSPENGER, "testfelt", false)
         builder.medPaging(100, 0)
         
         val sql = builder.getQuery()
@@ -164,7 +164,7 @@ class PartisjonertOppgaveQuerySqlBuilderTest {
         builder.medAggregering(emptyList(), listOf(AggregertSelectFelt(Aggregeringsfunksjon.ANTALL)))
         builder.medFeltverdi(
             CombineOperator.AND,
-            Områder.UNG,
+            Områder.AKTIVITETSPENGER,
             "testfelt", 
             FeltverdiOperator.EQUALS,
             listOf("testverdi")
@@ -219,7 +219,7 @@ class PartisjonertOppgaveQuerySqlBuilderTest {
             oppgavestatusFilter = listOf(Oppgavestatus.AAPEN),
             now = LocalDateTime.now(),
             ferdigstiltDatoFilter = null,
-            område = Områder.UNG
+            område = Områder.AKTIVITETSPENGER
         )
 
         val sql = builder.getQuery()
@@ -232,6 +232,6 @@ class PartisjonertOppgaveQuerySqlBuilderTest {
             sql.contains("opc.kildeomrade = :omrade"),
             "Pep-cache-joinen må følge samme område som oppgaven, ikke være hardkodet"
         )
-        assertEquals("UNG", builder.getParams()["omrade"])
+        assertEquals("AKTIVITETSPENGER", builder.getParams()["omrade"])
     }
 }

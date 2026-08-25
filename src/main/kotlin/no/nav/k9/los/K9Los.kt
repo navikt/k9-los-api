@@ -22,8 +22,6 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
-import io.opentelemetry.api.trace.Span
-import io.opentelemetry.extension.kotlin.asContextElement
 import io.prometheus.client.CollectorRegistry
 import io.prometheus.client.exporter.common.TextFormat
 import io.prometheus.client.hotspot.DefaultExports
@@ -52,8 +50,6 @@ import no.nav.k9.los.domeneadaptere.k9.statistikk.StatistikkApiNy
 import no.nav.k9.los.driftsmelding.DriftsmeldingerApis
 import no.nav.k9.los.forvaltning.forvaltningApis
 import no.nav.k9.los.forvaltning.forvaltningApisNy
-import no.nav.k9.los.infrastruktur.abac.OmrådeIkkeTilgjengeligException
-import no.nav.k9.los.reservasjon.ManglerTilgangException
 import no.nav.k9.los.infrastruktur.abac.cache.PepCacheService
 import no.nav.k9.los.infrastruktur.db.DB_AWARE_PARALLELISM
 import no.nav.k9.los.infrastruktur.db.migrate
@@ -80,6 +76,7 @@ import no.nav.k9.los.oppgavedefinisjon.oppgavetype.OppgavetypeApi
 import no.nav.k9.los.oppgavemottak.OppgaveV3Api
 import no.nav.k9.los.oppgaveuthenting.query.OppgaveQueryApis
 import no.nav.k9.los.oppgaveuthenting.query.OppgaveQueryApisNy
+import no.nav.k9.los.reservasjon.ManglerTilgangException
 import no.nav.k9.los.reservasjon.ReservasjonAdminApisNy
 import no.nav.k9.los.reservasjon.ReservasjonApis
 import no.nav.k9.los.reservasjon.ReservasjonApisNy
@@ -142,9 +139,6 @@ fun Application.k9Los() {
         DefaultStatusPages()
         JacksonStatusPages()
         AuthStatusPages()
-        exception<OmrådeIkkeTilgjengeligException> { call, _ ->
-            call.respond(HttpStatusCode.Forbidden)
-        }
         exception<ManglerTilgangException> { call, _ ->
             call.respond(HttpStatusCode.Forbidden)
         }

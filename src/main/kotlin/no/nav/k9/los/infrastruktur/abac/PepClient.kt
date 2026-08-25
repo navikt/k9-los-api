@@ -90,7 +90,7 @@ class PepClient internal constructor(
             grupperForSaksbehandler = grupperForSaksbehandler
         )
 
-        Områder.UNG -> false
+        Områder.AKTIVITETSPENGER -> false
     }
 
     private suspend fun harTilgangK9(

@@ -28,7 +28,6 @@ import no.nav.k9.los.domeneadaptere.k9.statistikk.*
 import no.nav.k9.los.driftsmelding.DriftsmeldingRepository
 import no.nav.k9.los.oppgavemottak.feltutlederforlagring.GyldigeFeltutledere
 import no.nav.k9.los.forvaltning.ForvaltningRepository
-import no.nav.k9.los.forvaltning.OmrådeKoblingRepository
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.abac.Gruppeoppsett
 import no.nav.k9.los.infrastruktur.brukerkontekst.BrukerkontekstFactory
@@ -60,7 +59,7 @@ import no.nav.k9.los.oppgaveuthenting.query.OppgaveQueryService
 import no.nav.k9.los.oppgaveuthenting.query.db.OppgaveQueryRepository
 import no.nav.k9.los.søkeboks.Oppgavesøkere
 import no.nav.k9.los.søkeboks.k9.K9Oppgavesøk
-import no.nav.k9.los.søkeboks.ung.UngOppgavesøk
+import no.nav.k9.los.søkeboks.aktivitetspenger.AktivitetspengerOppgavesøk
 import no.nav.k9.los.oppgaveuthenting.sammendrag.OppgaveSammendragDtoBuilder
 import no.nav.k9.los.reservasjon.ReservasjonApisTjeneste
 import no.nav.k9.los.reservasjon.ReservasjonV3DtoBuilder
@@ -408,8 +407,8 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     }
 
     single { K9Oppgavesøk() }
-    single { UngOppgavesøk() }
-    single { Oppgavesøkere(k9 = get(), ung = get()) }
+    single { AktivitetspengerOppgavesøk() }
+    single { Oppgavesøkere(k9 = get(), aktivitetspenger = get()) }
     single { OppgaveSammendragDtoBuilder(oppgavesøkere = get(), pdlService = get()) }
 
     single {
@@ -487,10 +486,6 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             oppgavetypeRepository = get(),
             transactionalManager = get(),
         )
-    }
-
-    single {
-        OmrådeKoblingRepository(dataSource = get())
     }
 
     single<AvstemmingsTjeneste> {

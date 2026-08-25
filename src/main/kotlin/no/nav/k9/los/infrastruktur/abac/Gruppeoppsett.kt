@@ -10,7 +10,7 @@ internal class Gruppeoppsett(
         oppgavestyrer = uuidFraMiljø("K9_OPPGAVESTYRER_GRUPPE_ID"),
         kode6 = uuidFraMiljø("K9_KODE6_GRUPPE_ID"),
     ),
-    ung: GrupperForOmråde = GrupperForOmråde(
+    aktivitetspenger: GrupperForOmråde = GrupperForOmråde(
         saksbehandler = uuidFraMiljø("UNG_SAKSBEHANDLER_GRUPPE_ID"),
         veileder = uuidFraMiljø("UNG_VEILEDER_GRUPPE_ID"),
         oppgavestyrer = uuidFraMiljø("UNG_OPPGAVESTYRER_GRUPPE_ID"),
@@ -19,7 +19,7 @@ internal class Gruppeoppsett(
     // Driftsmeldinger er globale for hele Los, og drift-gruppen er derfor ikke områdespesifikk.
     // Gruppen har beholdt K9-prefiks av historiske årsaker, men gjelder alle områder.
     val drift: UUID? = uuidFraMiljø("K9_DRIFT_GRUPPE_ID"),
-) : OmrådeRuter<GrupperForOmråde>(k9, ung) {
+) : OmrådeRuter<GrupperForOmråde>(k9, aktivitetspenger) {
     companion object {
         private fun uuidFraMiljø(navn: String): UUID? =
             System.getenv(navn)?.takeIf(String::isNotBlank)?.let(UUID::fromString)

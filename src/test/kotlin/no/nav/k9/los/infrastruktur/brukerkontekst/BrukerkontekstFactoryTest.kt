@@ -21,40 +21,40 @@ import java.util.UUID
 
 class BrukerkontekstFactoryTest {
     private val k9Saksbehandler = UUID.randomUUID()
-    private val ungSaksbehandler = UUID.randomUUID()
+    private val aktivitetspengerSaksbehandler = UUID.randomUUID()
     private val k9Veileder = UUID.randomUUID()
-    private val ungVeileder = UUID.randomUUID()
+    private val aktivitetspengerVeileder = UUID.randomUUID()
     private val k9Oppgavestyrer = UUID.randomUUID()
-    private val ungOppgavestyrer = UUID.randomUUID()
+    private val aktivitetspengerOppgavestyrer = UUID.randomUUID()
     private val drift = UUID.randomUUID()
     private val k9Kode6 = UUID.randomUUID()
-    private val ungKode6 = UUID.randomUUID()
+    private val aktivitetspengerKode6 = UUID.randomUUID()
 
     private val oppsett = Gruppeoppsett(
         k9 = GrupperForOmråde(k9Saksbehandler, k9Veileder, k9Oppgavestyrer, k9Kode6),
-        ung = GrupperForOmråde(ungSaksbehandler, ungVeileder, ungOppgavestyrer, ungKode6),
+        aktivitetspenger = GrupperForOmråde(aktivitetspengerSaksbehandler, aktivitetspengerVeileder, aktivitetspengerOppgavestyrer, aktivitetspengerKode6),
         drift = drift,
     )
 
     @Test
-    fun `bruker separate saksbehandlergrupper for K9 og UNG`() {
+    fun `bruker separate saksbehandlergrupper for K9 og AKTIVITETSPENGER`() {
         runBlocking {
-            val token = token(setOf(ungSaksbehandler))
+            val token = token(setOf(aktivitetspengerSaksbehandler))
 
             kontekst(token, Områder.K9).harBasisTilgang shouldBe false
-            kontekst(token, Områder.UNG).harBasisTilgang shouldBe true
+            kontekst(token, Områder.AKTIVITETSPENGER).harBasisTilgang shouldBe true
         }
     }
 
     @Test
     fun `bruker separate tokenbaserte grupper for alle roller`() {
         runBlocking {
-            val ungGrupper = listOf(ungSaksbehandler, ungVeileder, ungOppgavestyrer, ungKode6)
+            val aktivitetspengerGrupper = listOf(aktivitetspengerSaksbehandler, aktivitetspengerVeileder, aktivitetspengerOppgavestyrer, aktivitetspengerKode6)
 
-            for (gruppe in ungGrupper) {
+            for (gruppe in aktivitetspengerGrupper) {
                 val token = token(setOf(gruppe))
                 harRolle(gruppe, kontekst(token, Områder.K9)) shouldBe false
-                harRolle(gruppe, kontekst(token, Områder.UNG)) shouldBe true
+                harRolle(gruppe, kontekst(token, Områder.AKTIVITETSPENGER)) shouldBe true
             }
         }
     }
@@ -72,11 +72,11 @@ class BrukerkontekstFactoryTest {
     fun `bruker separat kode6-gruppe ved oppslag av annen saksbehandler`() {
         runBlocking {
             val azureGraphService = mockk<IAzureGraphService>()
-            coEvery { azureGraphService.hentGrupper("Z999999") } returns setOf(ungKode6)
+            coEvery { azureGraphService.hentGrupper("Z999999") } returns setOf(aktivitetspengerKode6)
             val pepClient = pepClient(azureGraphService)
 
             pepClient.harSaksbehandlerTilgangTilKode6("Z999999", kontekst(token(emptySet()), Områder.K9)) shouldBe false
-            pepClient.harSaksbehandlerTilgangTilKode6("Z999999", kontekst(token(emptySet()), Områder.UNG)) shouldBe true
+            pepClient.harSaksbehandlerTilgangTilKode6("Z999999", kontekst(token(emptySet()), Områder.AKTIVITETSPENGER)) shouldBe true
         }
     }
 
@@ -115,10 +115,10 @@ class BrukerkontekstFactoryTest {
     }
 
     private fun harRolle(gruppe: UUID, brukerkontekst: BrukerkontekstMedOmråde): Boolean = when (gruppe) {
-        ungSaksbehandler -> brukerkontekst.harTilgangTilReserveringAvOppgaver
-        ungVeileder -> brukerkontekst.harBasisTilgang
-        ungOppgavestyrer -> brukerkontekst.erOppgavestyrer
-        ungKode6 -> brukerkontekst.harTilgangTilKode6
+        aktivitetspengerSaksbehandler -> brukerkontekst.harTilgangTilReserveringAvOppgaver
+        aktivitetspengerVeileder -> brukerkontekst.harBasisTilgang
+        aktivitetspengerOppgavestyrer -> brukerkontekst.erOppgavestyrer
+        aktivitetspengerKode6 -> brukerkontekst.harTilgangTilKode6
         else -> error("Ukjent testgruppe")
     }
 

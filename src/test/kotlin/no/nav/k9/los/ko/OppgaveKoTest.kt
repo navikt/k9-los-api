@@ -7,7 +7,6 @@ import assertk.assertions.hasSize
 import assertk.assertions.isEmpty
 import assertk.assertions.isEqualTo
 import assertk.assertions.isNotNull
-import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.AbstractK9LosIntegrationTest
@@ -105,11 +104,11 @@ class OppgaveKoTest : AbstractK9LosIntegrationTest() {
         val k9Kø = oppgaveKoRepository.leggTil("K9-kø", skjermet = false, område = Områder.K9)
 
         // Lesing
-        assertFailure { oppgaveKoRepository.hent(k9Kø.id, false, Områder.UNG) }
-        assertThat(oppgaveKoRepository.hentListe(Områder.UNG, skjermet = false)).isEmpty()
+        assertFailure { oppgaveKoRepository.hent(k9Kø.id, false, Områder.AKTIVITETSPENGER) }
+        assertThat(oppgaveKoRepository.hentListe(Områder.AKTIVITETSPENGER, skjermet = false)).isEmpty()
 
         // Mutasjoner
-        assertFailure { oppgaveKoRepository.endre(k9Kø.copy(tittel = "Kapret"), false, Områder.UNG) }
+        assertFailure { oppgaveKoRepository.endre(k9Kø.copy(tittel = "Kapret"), false, Områder.AKTIVITETSPENGER) }
         assertFailure {
             oppgaveKoRepository.kopier(
                 k9Kø.id,
@@ -117,10 +116,10 @@ class OppgaveKoTest : AbstractK9LosIntegrationTest() {
                 taMedQuery = true,
                 taMedSaksbehandlere = true,
                 skjermet = false,
-                område = Områder.UNG
+                område = Områder.AKTIVITETSPENGER
             )
         }
-        assertFailure { oppgaveKoRepository.slett(k9Kø.id, Områder.UNG) }
+        assertFailure { oppgaveKoRepository.slett(k9Kø.id, Områder.AKTIVITETSPENGER) }
 
         // Køen skal være uendret og fortsatt finnes i sitt eget område
         val uendret = oppgaveKoRepository.hent(k9Kø.id, false, Områder.K9)

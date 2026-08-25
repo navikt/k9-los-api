@@ -41,7 +41,6 @@ import no.nav.k9.los.domeneadaptere.k9.statistikk.*
 import no.nav.k9.los.driftsmelding.DriftsmeldingRepository
 import no.nav.k9.los.driftsmelding.DriftsmeldingTjeneste
 import no.nav.k9.los.forvaltning.ForvaltningRepository
-import no.nav.k9.los.forvaltning.OmrådeKoblingRepository
 import no.nav.k9.los.infrastruktur.abac.*
 import no.nav.k9.los.infrastruktur.abac.cache.PepCacheRepository
 import no.nav.k9.los.infrastruktur.abac.cache.PepCacheService
@@ -85,8 +84,8 @@ import no.nav.k9.los.sisteoppgaver.SisteOppgaverRepository
 import no.nav.k9.los.sisteoppgaver.SisteOppgaverTjeneste
 import no.nav.k9.los.søkeboks.Oppgavesøkere
 import no.nav.k9.los.søkeboks.SøkeboksTjeneste
+import no.nav.k9.los.søkeboks.aktivitetspenger.AktivitetspengerOppgavesøk
 import no.nav.k9.los.søkeboks.k9.K9Oppgavesøk
-import no.nav.k9.los.søkeboks.ung.UngOppgavesøk
 import no.nav.k9.los.uttrekk.UttrekkCsvGenerator
 import no.nav.k9.los.uttrekk.UttrekkJobb
 import no.nav.k9.los.uttrekk.UttrekkRepository
@@ -258,7 +257,7 @@ fun common(app: Application, config: Configuration) = module {
             saksbehandlerRepository = get()
         )
     }
-    single { Oppgavesøkere(k9 = K9Oppgavesøk(), ung = UngOppgavesøk()) }
+    single { Oppgavesøkere(k9 = K9Oppgavesøk(), aktivitetspenger = AktivitetspengerOppgavesøk()) }
     single { OppgaveSammendragDtoBuilder(oppgavesøkere = get(), pdlService = get()) }
 
     single {
@@ -535,10 +534,6 @@ fun common(app: Application, config: Configuration) = module {
     }
 
     single {
-        OmrådeKoblingRepository(dataSource = get())
-    }
-
-    single {
         RefreshK9v3Tjeneste(
             k9SakService = get(),
             oppgaveQueryService = get(),
@@ -751,7 +746,7 @@ fun preprodConfig(config: Configuration) = module {
                 scope = "api://dev-fss.k9saksbehandling.sif-abac-pdp/.default",
                 httpClient = get()
             ),
-            ung = SifAbacPdpKlientUng(),
+            aktivitetspenger = SifAbacPdpKlientAktivitetspenger(),
         )
     }
 
@@ -831,7 +826,7 @@ fun prodConfig(config: Configuration) = module {
                 scope = "api://prod-fss.k9saksbehandling.sif-abac-pdp/.default",
                 httpClient = get()
             ),
-            ung = SifAbacPdpKlientUng(),
+            aktivitetspenger = SifAbacPdpKlientAktivitetspenger(),
         )
     }
 

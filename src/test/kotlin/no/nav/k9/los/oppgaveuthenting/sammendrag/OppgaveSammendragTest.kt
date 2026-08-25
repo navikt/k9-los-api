@@ -21,7 +21,7 @@ import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgavedefinisjon.oppgavetype.Oppgavetype
 import no.nav.k9.los.søkeboks.Oppgavesøkere
 import no.nav.k9.los.søkeboks.k9.K9Oppgavesøk
-import no.nav.k9.los.søkeboks.ung.UngOppgavesøk
+import no.nav.k9.los.søkeboks.aktivitetspenger.AktivitetspengerOppgavesøk
 import no.nav.k9.los.oppgaveuthenting.Oppgave
 import no.nav.k9.los.oppgaveuthenting.Oppgavefelt
 import org.junit.jupiter.api.Test
@@ -47,7 +47,7 @@ class OppgaveSammendragTest {
         val pdlService = mockk<IPdlService>()
         val person = person()
         coEvery { pdlService.person("aktor-1", any()) } returns PersonPdlResponse(false, person)
-        val builder = OppgaveSammendragDtoBuilder(Oppgavesøkere(K9Oppgavesøk(), UngOppgavesøk()), pdlService)
+        val builder = OppgaveSammendragDtoBuilder(Oppgavesøkere(K9Oppgavesøk(), AktivitetspengerOppgavesøk()), pdlService)
 
         val resultat = builder.bygg(listOf(oppgave(Områder.K9), oppgave(Områder.K9, "oppgave-2")), mockk())
 
@@ -58,7 +58,7 @@ class OppgaveSammendragTest {
     @Test
     fun `builder bruker allerede hentet person`() = runBlocking {
         val pdlService = mockk<IPdlService>()
-        val builder = OppgaveSammendragDtoBuilder(Oppgavesøkere(K9Oppgavesøk(), UngOppgavesøk()), pdlService)
+        val builder = OppgaveSammendragDtoBuilder(Oppgavesøkere(K9Oppgavesøk(), AktivitetspengerOppgavesøk()), pdlService)
 
         val resultat = builder.bygg(listOf(oppgave(Områder.K9)), mockk(), mapOf("aktor-1" to person()))
 
@@ -68,13 +68,13 @@ class OppgaveSammendragTest {
 
     @Test
     fun `builder faller ikke tilbake til K9 når område mangler adapter`() {
-        val builder = OppgaveSammendragDtoBuilder(Oppgavesøkere(K9Oppgavesøk(), UngOppgavesøk()), mockk())
+        val builder = OppgaveSammendragDtoBuilder(Oppgavesøkere(K9Oppgavesøk(), AktivitetspengerOppgavesøk()), mockk())
 
         val feil = assertThrows<NotImplementedError> {
-            runBlocking { builder.bygg(listOf(oppgave(Områder.UNG)), mockk()) }
+            runBlocking { builder.bygg(listOf(oppgave(Områder.AKTIVITETSPENGER)), mockk()) }
         }
 
-        assertThat(feil.message ?: "").contains("UNG")
+        assertThat(feil.message ?: "").contains("AKTIVITETSPENGER")
     }
 
     private fun oppgave(område: Områder, eksternId: String = "oppgave-1"): Oppgave {

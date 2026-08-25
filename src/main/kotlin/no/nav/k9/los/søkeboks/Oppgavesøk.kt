@@ -9,7 +9,7 @@ import no.nav.k9.los.oppgaveuthenting.sammendrag.OppgaveSammendragDto
  * Søk etter og tolkning av oppgaver for ett område.
  *
  * Feltdefinisjonene er uavhengige per område: at K9 har feltet `saksnummer` sier ingenting om
- * at UNG har det, eller om at det betyr det samme. Implementasjonene av dette grensesnittet er
+ * at AKTIVITETSPENGER har det, eller om at det betyr det samme. Implementasjonene av dette grensesnittet er
  * derfor de eneste stedene feltkoder skal forekomme — felleskode skal aldri kalle
  * [Oppgave.hentVerdi] eller bygge et
  * [no.nav.k9.los.oppgaveuthenting.query.dto.query.FeltverdiOppgavefilter] direkte.

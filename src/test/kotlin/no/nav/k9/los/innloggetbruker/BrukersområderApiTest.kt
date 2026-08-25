@@ -28,13 +28,13 @@ class BrukersområderApiTest : AbstractPostgresTest() {
     @Test
     fun `returnerer innlogget brukers områder når bruker finnes på navident`() {
         val områdeRepository = OmrådeRepository(dataSource)
-        områdeRepository.lagre(Områder.UNG.eksternId)
+        områdeRepository.lagre(Områder.AKTIVITETSPENGER.eksternId)
 
         val saksbehandlerRepository = saksbehandlerRepository()
 
         runBlocking {
             saksbehandlerRepository.addSaksbehandler("saksbehandler@nav.no", Områder.K9)
-            saksbehandlerRepository.addSaksbehandler("saksbehandler@nav.no", Områder.UNG)
+            saksbehandlerRepository.addSaksbehandler("saksbehandler@nav.no", Områder.AKTIVITETSPENGER)
             saksbehandlerRepository.vedlikeholdSaksbehandler(
                 Saksbehandler(
                     id = null,
@@ -42,7 +42,7 @@ class BrukersområderApiTest : AbstractPostgresTest() {
                     navn = "Saksbehandler Sara",
                     epost = "saksbehandler@nav.no",
                     enhet = "3450",
-                    områder = listOf(Områder.K9, Områder.UNG)
+                    områder = listOf(Områder.K9, Områder.AKTIVITETSPENGER)
                 ),
                 skjermet = false,
             )
@@ -56,7 +56,7 @@ class BrukersområderApiTest : AbstractPostgresTest() {
             val response = client.get("/brukersområder")
 
             assertEquals(HttpStatusCode.OK, response.status)
-            assertEquals("[\"K9\",\"UNG\"]", response.bodyAsText())
+            assertEquals("[\"K9\",\"AKTIVITETSPENGER\"]", response.bodyAsText())
         }
     }
 

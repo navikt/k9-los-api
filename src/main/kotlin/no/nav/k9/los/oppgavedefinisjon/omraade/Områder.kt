@@ -17,7 +17,7 @@ import no.nav.k9.los.kodeverk.Fagsystem
  */
 enum class Områder(val eksternId: String, val urlSegment: String) {
     K9("K9", "k9"),
-    UNG("UNG", "ung");
+    AKTIVITETSPENGER("AKTIVITETSPENGER", "aktivitetspenger");
 
     companion object {
         fun fraEksternId(eksternId: String): Områder =

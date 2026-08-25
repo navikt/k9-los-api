@@ -48,7 +48,7 @@ class PepCacheService(
     private suspend fun lagPepCacheFra(oppgaveIdOgAktører: PepCacheInput): PepCache {
         // PepCacheInput kommer i dag utelukkende fra K9-oppgaver, jf. spørringen i
         // PepCacheRepository.hentOppgaverMedStatusOgPepCacheEldreEnn som filtrerer på kildeomrade
-        // = 'K9'. Når UNG-oppgaver skal pep-caches må området følge med fra oppgaven.
+        // = 'K9'. Når AKTIVITETSPENGER-oppgaver skal pep-caches må området følge med fra oppgaven.
         val område = Områder.K9
         val pep = PepCache(
             eksternId = oppgaveIdOgAktører.eksternId,

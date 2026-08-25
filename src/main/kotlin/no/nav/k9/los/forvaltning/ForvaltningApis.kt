@@ -47,7 +47,6 @@ fun Route.forvaltningApis() {
     val statistikkRepository by inject<StatistikkRepository>()
     val temporalOppslagTjeneste by inject<TemporalOppgaveOppslag>()
     val forvaltningRepository by inject<ForvaltningRepository>()
-    val områdeKoblingRepository by inject<OmrådeKoblingRepository>()
 
 
     get("/index_oversikt", {
@@ -575,49 +574,4 @@ fun Route.forvaltningApis() {
             }
         }
     }
-
-    get("/omrade/kobling/status", {
-        description = "Viser om fremmednøklene mot OMRADE er validert og om indeksene på omrade_id er bygget. " +
-                "Migrering V1.0_0107 gjør kun metadataoperasjoner; det som krever full tabellgjennomgang utløses her."
-    }) {
-        medBrukerkontekstUtenOmråde { bruker ->
-            if (bruker.kanLeggeUtDriftsmelding) {
-                call.respond(områdeKoblingRepository.hentStatus())
-            } else {
-                call.respond(HttpStatusCode.Forbidden)
-            }
-        }
-    }
-
-    post("/omrade/kobling/valider-fremmednokler", {
-        description = "Validerer fremmednøklene mot OMRADE som ennå ikke er validert. " +
-                "Tar SHARE UPDATE EXCLUSIVE og blokkerer verken lesing eller skriving, " +
-                "men kan ta tid på store tabeller. Idempotent."
-    }) {
-        medBrukerkontekstUtenOmråde { bruker ->
-            if (bruker.kanLeggeUtDriftsmelding) {
-                val resultat = områdeKoblingRepository.validerAlleFremmednøkler()
-                log.info("Validering av områdefremmednøkler fullført: $resultat")
-                call.respond(resultat)
-            } else {
-                call.respond(HttpStatusCode.Forbidden)
-            }
-        }
-    }
-
-    post("/omrade/kobling/opprett-indekser", {
-        description = "Bygger indeks på omrade_id for reservasjon_v3, event_nokkel og oppgave_pep_cache " +
-                "med CREATE INDEX CONCURRENTLY, som ikke blokkerer skriving. Idempotent."
-    }) {
-        medBrukerkontekstUtenOmråde { bruker ->
-            if (bruker.kanLeggeUtDriftsmelding) {
-                val resultat = områdeKoblingRepository.opprettIndekser()
-                log.info("Opprettelse av områdeindekser fullført: $resultat")
-                call.respond(resultat)
-            } else {
-                call.respond(HttpStatusCode.Forbidden)
-            }
-        }
-    }
-
 }
