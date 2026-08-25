@@ -190,7 +190,7 @@ spec:
       value: {{group_id_oppgavestyrer}}
     - name: AKTIVITETSPENGER_KODE6_GRUPPE_ID
       value: "{{aktivitetspenger_group_id_kode6}}"
-    - name: AKTIVITETSPENGER_SAKSBEHANDLER_LOKALKONTOR_GRUPPE_ID
+    - name: AKTIVITETSPENGER_SAKSBEHANDLER_NAVKONTOR_GRUPPE_ID
       value: "{{aktivitetspenger_group_id_saksbehandler_nav_kontor}}"
     - name: AKTIVITETSPENGER_SAKSBEHANDLER_NAY_GRUPPE_ID
       value: "{{aktivitetspenger_group_id_saksbehandler_nay}}"

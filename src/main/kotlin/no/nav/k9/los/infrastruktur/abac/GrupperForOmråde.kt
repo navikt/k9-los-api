@@ -24,14 +24,14 @@ internal data class K9Grupper(
 }
 
 internal data class AktivitetspengerGrupper(
-    val saksbehandlerLokalkontor: UUID?,
+    val saksbehandlerNavkontor: UUID?,
     val saksbehandlerNay: UUID?,
     override val oppgavestyrer: UUID?,
     override val kode6: UUID?,
 ) : GrupperForOmråde() {
     override fun girBasisTilgang(grupper: Set<UUID>) =
-        saksbehandlerLokalkontor in grupper || saksbehandlerNay in grupper
+        saksbehandlerNavkontor in grupper || saksbehandlerNay in grupper
 
     override fun girReserveringstilgang(grupper: Set<UUID>) =
-        saksbehandlerLokalkontor in grupper || saksbehandlerNay in grupper
+        saksbehandlerNavkontor in grupper || saksbehandlerNay in grupper
 }

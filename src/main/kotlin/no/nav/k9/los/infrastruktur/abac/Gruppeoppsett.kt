@@ -11,7 +11,7 @@ internal class Gruppeoppsett(
         kode6 = uuidFraMiljø("K9_KODE6_GRUPPE_ID"),
     ),
     aktivitetspenger: AktivitetspengerGrupper = AktivitetspengerGrupper(
-        saksbehandlerLokalkontor = uuidFraMiljø("AKTIVITETSPENGER_SAKSBEHANDLER_LOKALKONTOR_GRUPPE_ID"),
+        saksbehandlerNavkontor = uuidFraMiljø("AKTIVITETSPENGER_SAKSBEHANDLER_NAVKONTOR_GRUPPE_ID"),
         saksbehandlerNay = uuidFraMiljø("AKTIVITETSPENGER_SAKSBEHANDLER_NAY_GRUPPE_ID"),
         oppgavestyrer = uuidFraMiljø("AKTIVITETSPENGER_OPPGAVESTYRER_GRUPPE_ID"),
         kode6 = uuidFraMiljø("AKTIVITETSPENGER_KODE6_GRUPPE_ID"),
