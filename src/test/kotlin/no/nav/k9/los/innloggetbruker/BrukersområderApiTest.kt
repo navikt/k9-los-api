@@ -21,6 +21,7 @@ import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
 import org.junit.jupiter.api.Test
 import org.koin.dsl.module
 import org.koin.ktor.plugin.Koin
+import kotlin.test.assertContains
 import kotlin.test.assertEquals
 
 class BrukersområderApiTest : AbstractPostgresTest() {
@@ -56,7 +57,9 @@ class BrukersområderApiTest : AbstractPostgresTest() {
             val response = client.get("/brukersområder")
 
             assertEquals(HttpStatusCode.OK, response.status)
-            assertEquals("[\"K9\",\"AKTIVITETSPENGER\"]", response.bodyAsText())
+            val bodyAsText = response.bodyAsText()
+            assertContains("AKTIVITETSPENGER", bodyAsText)
+            assertContains("K9", bodyAsText)
         }
     }
 

@@ -79,7 +79,7 @@ spec:
           - id: {{group_id_oppgavestyrer}}
           # AKTIVITETSPENGER-grupper fylles inn per miljø før utrulling
           - id: "{{aktivitetspenger_group_id_kode6}}"
-          - id: "{{aktivitetspenger_group_id_saksbehandler_nav_kontor}}"
+          - id: "{{aktivitetspenger_group_id_saksbehandler_navkontor}}"
           - id: "{{aktivitetspenger_group_id_saksbehandler_nay}}"
           - id: "{{aktivitetspenger_group_id_oppgavestyrer}}"
         extra:
@@ -162,48 +162,16 @@ spec:
     - name: "OTEL_RESOURCE_ATTRIBUTES"
       value: "service.name=k9-los-api,service.namespace=k9saksbehandling,deployment.environment={{deployment_environment}},nais.backend=elastic-apm;grafana-lgtm"
 
-    # Gruppenavn for roller fra Active Directory
-    # 0000-GA-k9-beslutter
-    - name: BRUKER_GRUPPE_ID_BESLUTTER
-      value: {{group_id_beslutter}}
-    # 0000-GA-Egne_ansatte
-    - name: BRUKER_GRUPPE_ID_EGENANSATT
-      value: {{group_id_egenansatt}}
-    # 0000-GA-Strengt_Fortrolig_Adresse
-    - name: K9_KODE6_GRUPPE_ID
-      value: {{group_id_kode6}}
-    # 0000-GA-Fortrolig_Adresse
-    - name: BRUKER_GRUPPE_ID_KODE7
-      value: {{group_id_kode7}}
-    # 0000-GA-k9-overstyrer
-    - name: BRUKER_GRUPPE_ID_OVERSTYRER
-      value: {{group_id_overstyrer}}
-    # 0000-GA-k9-saksbehandler
-    - name: K9_SAKSBEHANDLER_GRUPPE_ID
-      value: {{group_id_saksbehandler}}
-    # 0000-GA-k9-veileder
-    - name: K9_VEILEDER_GRUPPE_ID
-      value: {{group_id_veileder}}
-    # 0000-GA-k9-drift
-    - name: K9_DRIFT_GRUPPE_ID
-      value: {{group_id_drift}}
-    # 0000-GA-k9-oppgavestyrer
-    - name: K9_OPPGAVESTYRER_GRUPPE_ID
-      value: {{group_id_oppgavestyrer}}
-    - name: AKTIVITETSPENGER_KODE6_GRUPPE_ID
-      value: "{{aktivitetspenger_group_id_kode6}}"
-    - name: AKTIVITETSPENGER_SAKSBEHANDLER_NAVKONTOR_GRUPPE_ID
-      value: "{{aktivitetspenger_group_id_saksbehandler_nav_kontor}}"
-    - name: AKTIVITETSPENGER_SAKSBEHANDLER_NAY_GRUPPE_ID
-      value: "{{aktivitetspenger_group_id_saksbehandler_nay}}"
-    - name: AKTIVITETSPENGER_OPPGAVESTYRER_GRUPPE_ID
-      value: "{{aktivitetspenger_group_id_oppgavestyrer}}"
-
       # feature toggles
     - name: NY_OPPGAVESTYRING
       value: "true"
     - name: NY_OPPGAVESTYRING_REST_API
       value: "{{ny_oppgavestyring_rest_api}}"
-
+    - name: K9SAK_CONSUMER_AIVEN
+      value: "true"
+    - name: PUNSJ_CONSUMER_AIVEN
+      value: "true"
+    - name: TILBAKE_CONSUMER_AIVEN
+      value: "true"
     - name: NOKKELTALL_ENHETER
       value: "{{nokkeltall_enheter}}"
