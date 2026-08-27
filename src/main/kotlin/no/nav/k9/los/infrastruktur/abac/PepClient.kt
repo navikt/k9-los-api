@@ -10,7 +10,6 @@ import no.nav.sif.abac.kontrakt.abac.dto.SaksnummerDto
 import no.nav.sif.abac.kontrakt.person.AktørId
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import java.util.*
 
 class PepClient internal constructor(
     private val azureGraphService: IAzureGraphService,
@@ -49,7 +48,6 @@ class PepClient internal constructor(
             saksnummer = oppgave.hentVerdi("saksnummer"),
             aktørIdSøker = oppgave.hentVerdi("aktorId"),
             aktørIdPleietrengende = oppgave.hentVerdi("pleietrengendeAktorId"),
-            grupperForSaksbehandler = bruker.grupper,
         )
     }
 
@@ -78,7 +76,6 @@ class PepClient internal constructor(
         saksnummer: String?,
         aktørIdSøker: String?,
         aktørIdPleietrengende: String?,
-        grupperForSaksbehandler: Set<UUID>? = null
     ): Boolean = when (område) {
         Områder.K9 -> harTilgangK9(
             oppgavetype = oppgavetype,
@@ -87,7 +84,6 @@ class PepClient internal constructor(
             saksnummer = saksnummer,
             aktørIdSøker = aktørIdSøker,
             aktørIdPleietrengende = aktørIdPleietrengende,
-            grupperForSaksbehandler = grupperForSaksbehandler
         )
 
         Områder.AKTIVITETSPENGER -> false
@@ -100,29 +96,25 @@ class PepClient internal constructor(
         saksnummer: String?,
         aktørIdSøker: String?,
         aktørIdPleietrengende: String?,
-        grupperForSaksbehandler: Set<UUID>? = null
     ): Boolean {
         val klient = sifAbacPdpKlienter.forOmråde(Områder.K9)
+        // TODO: PDP-endepunktene sak-grupper/personer-grupper tar fortsatt grupper som input.
+        // Når PDP tilbyr ident-baserte endepunkter (gruppene hentes da fra OBO-tokenet
+        // server-side) kan Graph-oppslaget her fjernes.
+        val saksbehandlersGrupper = azureGraphService.hentGrupper(identTilInnloggetBruker)
         return when (oppgavetype) {
             "k9sak", "k9klage", "k9tilbake" -> {
-                //TODO når abac-k9 er ryddet bort: vurder å bruk sifAbacPdpKlient.harTilgangTilSak(action, saksnummer) de steder hvor vi sjekker innlogget bruker
-                val saksbehandlersGrupper =
-                    grupperForSaksbehandler ?: azureGraphService.hentGrupper(identTilInnloggetBruker)
-                val tilgang = klient.harTilgangTilSak(
+                klient.harTilgangTilSak(
                     action = action,
                     saksnummerDto = SaksnummerDto(saksnummer!!),
                     saksbehandlersIdent = identTilInnloggetBruker,
                     saksbehandlersGrupper = saksbehandlersGrupper
                 )
-
-                tilgang
             }
 
             "k9punsj" -> {
                 val berørteAktørId = setOfNotNull(aktørIdSøker, aktørIdPleietrengende)
                 val aktørIder = berørteAktørId.map { AktørId(it) }
-                val saksbehandlersGrupper =
-                    grupperForSaksbehandler ?: azureGraphService.hentGrupper(identTilInnloggetBruker)
                 val tilgang = if (aktørIder.isNotEmpty()) klient.harTilgangTilPersoner(
                     action = action,
                     aktørIder = aktørIder,

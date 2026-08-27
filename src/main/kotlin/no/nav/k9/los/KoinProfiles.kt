@@ -45,6 +45,7 @@ import no.nav.k9.los.forvaltning.ForvaltningRepository
 import no.nav.k9.los.infrastruktur.abac.*
 import no.nav.k9.los.infrastruktur.abac.cache.PepCacheRepository
 import no.nav.k9.los.infrastruktur.abac.cache.PepCacheService
+import no.nav.k9.los.infrastruktur.abac.tilganger.SifAbacPdpTilgangerKlient
 import no.nav.k9.los.infrastruktur.azuregraph.AzureGraphService
 import no.nav.k9.los.infrastruktur.azuregraph.AzureGraphServiceLocal
 import no.nav.k9.los.infrastruktur.azuregraph.IAzureGraphService
@@ -110,7 +111,7 @@ fun common(app: Application, config: Configuration) = module {
     single { config.koinProfile() }
     single { config }
     single { Gruppeoppsett() }
-    single { BrukerkontekstFactory(get(), lokaleTilganger = get<KoinProfile>() == LOCAL) }
+    single { BrukerkontekstFactory(getOrNull<SifAbacPdpTilgangerKlient>(), lokaleTilganger = get<KoinProfile>() == LOCAL) }
     single<DataSource> { app.hikariConfig(config) }
 
     single(named("oppgaveKøOppdatert")) {
@@ -698,6 +699,15 @@ fun naisCommonConfig(config: Configuration) = module {
         )
     }
 
+    single {
+        SifAbacPdpTilgangerKlient(
+            configuration = get(),
+            accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
+            scope = sifAbacPdpScope(config),
+            httpClient = get()
+        )
+    }
+
     single<IPepClient> {
         PepClient(
             azureGraphService = get(),
@@ -706,6 +716,9 @@ fun naisCommonConfig(config: Configuration) = module {
         )
     }
 }
+
+private fun sifAbacPdpScope(config: Configuration): String =
+    "api://${if (config.koinProfile() == KoinProfile.PROD) "prod" else "dev"}-fss.k9saksbehandling.sif-abac-pdp/.default"
 
 // Unik konfigurasjon for preprod
 fun preprodConfig(config: Configuration) = module {

@@ -3,25 +3,22 @@ package no.nav.k9.los.infrastruktur.abac
 import no.nav.k9.los.oppgavedefinisjon.omraade.OmrådeRuter
 import java.util.*
 
+/**
+ * Tilganger for innlogget bruker hentes fra sif-abac-pdp (se SifAbacPdpTilgangerKlient),
+ * ikke fra gruppe-claims på tokenet. Det eneste som gjenstår her er kode6-gruppe-idene,
+ * som brukes ved oppslag på _andre_ saksbehandlere via Azure Graph
+ * (PepClient.harSaksbehandlerTilgangTilKode6).
+ *
+ * TODO: flytt også dette oppslaget til sif-abac-pdp når PDP tilbyr tilgangsoppslag på ident.
+ */
 internal class Gruppeoppsett(
-    k9: K9Grupper = K9Grupper(
-        saksbehandler = uuidFraMiljø("K9_SAKSBEHANDLER_GRUPPE_ID"),
-        veileder = uuidFraMiljø("K9_VEILEDER_GRUPPE_ID"),
-        oppgavestyrer = uuidFraMiljø("K9_OPPGAVESTYRER_GRUPPE_ID"),
-        kode6 = uuidFraMiljø("K9_KODE6_GRUPPE_ID"),
-    ),
-    aktivitetspenger: AktivitetspengerGrupper = AktivitetspengerGrupper(
-        saksbehandlerNavkontor = uuidFraMiljø("AKTIVITETSPENGER_SAKSBEHANDLER_NAVKONTOR_GRUPPE_ID"),
-        saksbehandlerNay = uuidFraMiljø("AKTIVITETSPENGER_SAKSBEHANDLER_NAY_GRUPPE_ID"),
-        oppgavestyrer = uuidFraMiljø("AKTIVITETSPENGER_OPPGAVESTYRER_GRUPPE_ID"),
-        kode6 = uuidFraMiljø("AKTIVITETSPENGER_KODE6_GRUPPE_ID"),
-    ),
-    // Driftsmeldinger er globale for hele Los, og drift-gruppen er derfor ikke områdespesifikk.
-    // Gruppen har beholdt K9-prefiks av historiske årsaker, men gjelder alle områder.
-    val drift: UUID? = uuidFraMiljø("K9_DRIFT_GRUPPE_ID"),
-) : OmrådeRuter<GrupperForOmråde>(k9, aktivitetspenger) {
+    k9: Kode6ForOmråde = Kode6ForOmråde(uuidFraMiljø("K9_KODE6_GRUPPE_ID")),
+    aktivitetspenger: Kode6ForOmråde = Kode6ForOmråde(uuidFraMiljø("AKTIVITETSPENGER_KODE6_GRUPPE_ID")),
+) : OmrådeRuter<Kode6ForOmråde>(k9, aktivitetspenger) {
     companion object {
         private fun uuidFraMiljø(navn: String): UUID? =
             System.getenv(navn)?.takeIf(String::isNotBlank)?.let(UUID::fromString)
     }
 }
+
+internal data class Kode6ForOmråde(val kode6: UUID?)

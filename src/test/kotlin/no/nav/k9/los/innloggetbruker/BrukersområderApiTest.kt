@@ -58,8 +58,8 @@ class BrukersområderApiTest : AbstractPostgresTest() {
 
             assertEquals(HttpStatusCode.OK, response.status)
             val bodyAsText = response.bodyAsText()
-            assertContains("AKTIVITETSPENGER", bodyAsText)
-            assertContains("K9", bodyAsText)
+            assertContains(bodyAsText, "AKTIVITETSPENGER")
+            assertContains(bodyAsText, "K9")
         }
     }
 
@@ -104,7 +104,7 @@ class BrukersområderApiTest : AbstractPostgresTest() {
                     single { KoinProfile.LOCAL }
                     single<IPepClient> { PepClientLocal() }
                     single { no.nav.k9.los.infrastruktur.abac.Gruppeoppsett() }
-                    single { no.nav.k9.los.infrastruktur.brukerkontekst.BrukerkontekstFactory(get(), lokaleTilganger = true) }
+                    single { no.nav.k9.los.infrastruktur.brukerkontekst.BrukerkontekstFactory(lokaleTilganger = true) }
                     single { OmrådeRepository(dataSource) }
                     single { TransactionalManager(dataSource) }
                     single {

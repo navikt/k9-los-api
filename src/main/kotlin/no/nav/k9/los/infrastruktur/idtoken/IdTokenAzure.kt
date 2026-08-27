@@ -5,7 +5,6 @@ import no.nav.helse.dusseldorf.ktor.auth.UnAuthorizedException
 
 data class IdTokenAzure(
     override val value: String,
-    override val groups: Set<String>,
     private val navIdent: String,
     private val name: String,
     private val username: String,
@@ -17,7 +16,6 @@ data class IdTokenAzure(
     companion object {
         fun fra(value: String, principal: JWTPrincipal) = IdTokenAzure(
             value = value,
-            groups = principal.payload.getClaim("groups").asList(String::class.java)?.toSet().orEmpty(),
             navIdent = principal.payload.getClaim("NAVident").asString()
                 ?: throw UnAuthorizedException(),
             name = principal.payload.getClaim("name").asString()

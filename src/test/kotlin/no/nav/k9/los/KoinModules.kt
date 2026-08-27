@@ -123,7 +123,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     single { dataSource }
     single { pepClient }
     single { Gruppeoppsett() }
-    single { BrukerkontekstFactory(get(), lokaleTilganger = true) }
+    single { BrukerkontekstFactory(lokaleTilganger = true) }
 
     single { DriftsmeldingRepository(get()) }
 
