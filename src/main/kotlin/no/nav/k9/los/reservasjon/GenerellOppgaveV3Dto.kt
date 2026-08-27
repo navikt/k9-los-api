@@ -2,6 +2,7 @@ package no.nav.k9.los.reservasjon
 
 import no.nav.k9.los.infrastruktur.pdl.*
 import no.nav.k9.los.kodeverk.BehandlingType
+import no.nav.k9.los.kodeverk.FagsakYtelseType
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.oppgaveuthenting.Oppgave
 import no.nav.k9.los.oppgaveuthenting.OppgaveNøkkelDto
@@ -13,6 +14,7 @@ data class GenerellOppgaveV3Dto(
     val søkersPersonnr: String,
     val søkersKjønn: String,
     val søkersDødsdato: LocalDate?,
+    val ytelsestype: FagsakYtelseType?,
     val behandlingstype: BehandlingType,
     val saksnummer: String?,
     val oppgaveNøkkel: OppgaveNøkkelDto,
@@ -28,6 +30,7 @@ data class GenerellOppgaveV3Dto(
         søkersPersonnr = person?.fnr() ?: "Ukjent fnummer",
         søkersKjønn = person?.kjoenn() ?: "Ukjent kjønn",
         søkersDødsdato = person?.doedsdato(),
+        ytelsestype = oppgaveV3.hentVerdi("ytelsestype")?.let { FagsakYtelseType.fraKode(it) },
         behandlingstype = BehandlingType.fraKode(oppgaveV3.hentVerdi("behandlingTypekode")!!),
         saksnummer = oppgaveV3.hentVerdi("saksnummer"),
         oppgaveNøkkel = OppgaveNøkkelDto(oppgaveV3),

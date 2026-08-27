@@ -46,6 +46,9 @@ enum class Områder(val eksternId: String, val urlSegment: String) {
             Fagsystem.K9TILBAKE,
             Fagsystem.K9KLAGE,
             Fagsystem.PUNSJ -> K9
+
+            Fagsystem.UNGSAK -> TODO()
+            Fagsystem.UNGTILBAKE -> TODO()
         }
     }
 }

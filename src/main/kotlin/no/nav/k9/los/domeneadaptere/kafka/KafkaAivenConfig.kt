@@ -1,4 +1,4 @@
-package no.nav.k9.los.domeneadaptere.k9.eventmottak.kafka
+package no.nav.k9.los.domeneadaptere.kafka
 
 import org.apache.kafka.clients.CommonClientConfigs
 import org.apache.kafka.clients.consumer.ConsumerConfig

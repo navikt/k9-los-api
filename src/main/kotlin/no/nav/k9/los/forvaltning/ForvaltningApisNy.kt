@@ -149,6 +149,8 @@ fun Route.forvaltningApisNy() {
                     Fagsystem.K9KLAGE -> "saksnummer"
 
                     Fagsystem.PUNSJ -> "journalpostId"
+                    Fagsystem.UNGSAK -> TODO()
+                    Fagsystem.UNGTILBAKE -> TODO()
                 }
 
                 val query = QueryRequest(

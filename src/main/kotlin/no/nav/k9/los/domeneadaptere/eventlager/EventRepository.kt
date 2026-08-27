@@ -1,4 +1,4 @@
-package no.nav.k9.los.domeneadaptere.k9.eventmottak.eventlager
+package no.nav.k9.los.domeneadaptere.eventlager
 
 import kotliquery.*
 import no.nav.k9.los.infrastruktur.db.util.InClauseHjelper
@@ -6,6 +6,7 @@ import no.nav.k9.los.kodeverk.Fagsystem
 import no.nav.k9.los.oppgavedefinisjon.omraade.OmrådeRepository
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import org.jetbrains.annotations.VisibleForTesting
+import org.slf4j.LoggerFactory
 import javax.sql.DataSource
 
 
@@ -14,7 +15,7 @@ class EventRepository(
     private val dataSource: DataSource,
     private val områdeRepository: OmrådeRepository,
 ) {
-    private val log = org.slf4j.LoggerFactory.getLogger(EventRepository::class.java)
+    private val log = LoggerFactory.getLogger(EventRepository::class.java)
 
     fun upsertOgLåsEventnøkkel(
         fagsystem: Fagsystem,
@@ -198,6 +199,7 @@ class EventRepository(
                         where e.event_nokkel_id = en.id
                         and e.dirty = true
                     )
+                    and en.FAGSYSTEM in ('K9SAK','K9TILBAKE','K9KLAGE','PUNSJ')
                 """.trimIndent()
                 ).map { row ->
                     EventNøkkel(

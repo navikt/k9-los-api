@@ -1,4 +1,4 @@
-package no.nav.k9.los.domeneadaptere.k9.eventmottak.eventlager
+package no.nav.k9.los.domeneadaptere.eventlager
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import io.github.smiley4.ktoropenapi.get
@@ -6,16 +6,14 @@ import io.github.smiley4.ktoropenapi.put
 import io.ktor.http.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import no.nav.k9.los.infrastruktur.brukerkontekst.medBrukerkontekst
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.klage.K9KlageEventDto
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventDto
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.sak.K9SakEventDto
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.tilbakekrav.K9TilbakeEventDto
 import no.nav.k9.los.domeneadaptere.k9.eventtiloppgave.EventTilOppgaveAdapter
-import no.nav.k9.los.forvaltning.K9KlageEventIkkeSensitiv
-import no.nav.k9.los.forvaltning.K9PunsjEventIkkeSensitiv
-import no.nav.k9.los.forvaltning.K9SakEventIkkeSensitiv
-import no.nav.k9.los.forvaltning.K9TilbakeEventIkkeSensitiv
+import no.nav.k9.los.domeneadaptere.ungsak.eventmottak.ungsak.UngSakEventDto
+import no.nav.k9.los.forvaltning.*
+import no.nav.k9.los.infrastruktur.brukerkontekst.medBrukerkontekst
 import no.nav.k9.los.infrastruktur.brukerkontekst.medBrukerkontekstUtenOmråde
 import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.kodeverk.Fagsystem
@@ -45,7 +43,7 @@ internal fun Route.EventlagerApi() {
     }) {
         medBrukerkontekstUtenOmråde { bruker ->
             if (bruker.kanLeggeUtDriftsmelding) {
-                val fagsystem = Fagsystem.fraKode(call.parameters["fagsystem"]!!)
+                val fagsystem = Fagsystem.fraParameter(call.parameters["fagsystem"]!!)
                 val eksternId = call.parameters["eksternId"]!!
 
                 val eventStrenger = try {
@@ -72,6 +70,11 @@ internal fun Route.EventlagerApi() {
                         val eventliste = eventStrenger.map { LosObjectMapper.prettyInstance.readValue<K9PunsjEventDto>(it) }.toList()
                         eventliste.map { event -> K9PunsjEventIkkeSensitiv(event) }
                     }
+                    Fagsystem.UNGSAK -> {
+                        val eventliste = eventStrenger.map { LosObjectMapper.prettyInstance.readValue<UngSakEventDto>(it) }.toList()
+                        eventliste.map { event -> UngSakEventIkkeSensitiv(event) }
+                    }
+                    Fagsystem.UNGTILBAKE -> throw NotImplementedError("Fagsystem $fagsystem is not implemented yet")
                 }
                 call.respond(LosObjectMapper.prettyInstance.writeValueAsString(eventerIkkeSensitive))
             } else {
@@ -107,7 +110,7 @@ internal fun Route.EventlagerApi() {
             }
         }
     }) {
-        val fagsystem = Fagsystem.fraKode(call.parameters["fagsystem"]!!)
+        val fagsystem = Fagsystem.fraParameter(call.parameters["fagsystem"]!!)
         eventRepository.bestillHistorikkvask(fagsystem)
 
         call.respond(HttpStatusCode.NoContent)
@@ -132,7 +135,7 @@ internal fun Route.EventlagerApi() {
         }
     }) {
         medBrukerkontekst {
-            val fagsystem = Fagsystem.fraKode(call.parameters["fagsystem"]!!)
+            val fagsystem = Fagsystem.fraParameter(call.parameters["fagsystem"]!!)
             val eksternId = call.parameters["eksternId"]!!
             eventRepository.bestillHistorikkvask(fagsystem, eksternId)
 

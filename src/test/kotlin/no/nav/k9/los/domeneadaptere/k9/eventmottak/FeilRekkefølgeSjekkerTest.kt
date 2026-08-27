@@ -3,7 +3,7 @@ package no.nav.k9.los.domeneadaptere.k9.eventmottak
 import assertk.assertThat
 import assertk.assertions.isFalse
 import assertk.assertions.isTrue
-import no.nav.k9.los.domeneadaptere.k9.eventmottak.eventlager.EventLagret
+import no.nav.k9.los.domeneadaptere.eventlager.EventLagret
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 

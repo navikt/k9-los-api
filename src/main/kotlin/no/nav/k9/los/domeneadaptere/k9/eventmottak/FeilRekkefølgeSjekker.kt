@@ -1,6 +1,6 @@
 package no.nav.k9.los.domeneadaptere.k9.eventmottak
 
-import no.nav.k9.los.domeneadaptere.k9.eventmottak.eventlager.EventLagret
+import no.nav.k9.los.domeneadaptere.eventlager.EventLagret
 
 /**
  * Sjekker om innkommende eventer er i feil rekkefølge ved å sammenligne dirty og non-dirty eventer.
