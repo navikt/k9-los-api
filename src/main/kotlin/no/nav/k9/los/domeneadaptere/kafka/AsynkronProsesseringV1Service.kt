@@ -9,10 +9,10 @@ import no.nav.k9.los.domeneadaptere.k9.eventmottak.sak.K9SakEventHandler
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.sak.K9SakKafkaStream
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.tilbakekrav.K9TilbakeEventHandler
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.tilbakekrav.K9TilbakeKafkaStream
-import no.nav.k9.los.domeneadaptere.ungsak.eventmottak.ungsak.UngSakEventHandler
-import no.nav.k9.los.domeneadaptere.ungsak.eventmottak.ungsak.UngSakKafkaStream
-import no.nav.k9.los.domeneadaptere.ungsak.eventmottak.ungtilbake.UngTilbakeEventHandler
-import no.nav.k9.los.domeneadaptere.ungsak.eventmottak.ungtilbake.UngTilbakeKafkaStream
+import no.nav.k9.los.domeneadaptere.ung.eventmottak.ungsak.UngSakEventHandler
+import no.nav.k9.los.domeneadaptere.ung.eventmottak.ungsak.UngSakKafkaStream
+import no.nav.k9.los.domeneadaptere.ung.eventmottak.ungtilbake.UngTilbakeEventHandler
+import no.nav.k9.los.domeneadaptere.ung.eventmottak.ungtilbake.UngTilbakeKafkaStream
 import org.slf4j.LoggerFactory
 
 internal class AsynkronProsesseringV1Service(

@@ -37,8 +37,8 @@ import no.nav.k9.los.domeneadaptere.k9.refreshk9sakoppgaver.restklient.K9SakServ
 import no.nav.k9.los.domeneadaptere.k9.refreshk9sakoppgaver.restklient.K9SakServiceSystemClient
 import no.nav.k9.los.domeneadaptere.k9.statistikk.*
 import no.nav.k9.los.domeneadaptere.kafka.AsynkronProsesseringV1Service
-import no.nav.k9.los.domeneadaptere.ungsak.eventmottak.ungsak.UngSakEventHandler
-import no.nav.k9.los.domeneadaptere.ungsak.eventmottak.ungtilbake.UngTilbakeEventHandler
+import no.nav.k9.los.domeneadaptere.ung.eventmottak.ungsak.UngSakEventHandler
+import no.nav.k9.los.domeneadaptere.ung.eventmottak.ungtilbake.UngTilbakeEventHandler
 import no.nav.k9.los.driftsmelding.DriftsmeldingRepository
 import no.nav.k9.los.driftsmelding.DriftsmeldingTjeneste
 import no.nav.k9.los.forvaltning.ForvaltningRepository

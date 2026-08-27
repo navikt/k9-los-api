@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer
-import no.nav.k9.los.domeneadaptere.ungsak.eventmottak.ungsak.UngSakEventDto
+import no.nav.k9.los.domeneadaptere.ung.eventmottak.ungsak.UngSakEventDto
 import no.nav.ung.kodeverk.Fagsystem
 import no.nav.ung.kodeverk.hendelse.EventHendelse
 import no.nav.ung.sak.kontrakt.aksjonspunkt.AksjonspunktTilstandDto

@@ -5,7 +5,7 @@ import no.nav.k9.los.domeneadaptere.k9.eventmottak.klage.K9KlageEventDto
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventDto
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.sak.K9SakEventDto
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.tilbakekrav.K9TilbakeEventDto
-import no.nav.k9.los.domeneadaptere.ungsak.eventmottak.ungsak.UngSakEventDto
+import no.nav.k9.los.domeneadaptere.ung.eventmottak.ungsak.UngSakEventDto
 import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.kodeverk.Fagsystem
 import java.time.LocalDateTime

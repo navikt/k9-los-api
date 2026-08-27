@@ -1,4 +1,4 @@
-package no.nav.k9.los.domeneadaptere.ungsak.eventmottak.ungsak
+package no.nav.k9.los.domeneadaptere.ung.eventmottak.ungsak
 
 import no.nav.k9.los.domeneadaptere.eventlager.EventRepository
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.FeilRekkefølgeSjekker
