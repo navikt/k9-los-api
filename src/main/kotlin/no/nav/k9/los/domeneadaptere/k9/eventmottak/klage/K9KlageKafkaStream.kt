@@ -1,13 +1,12 @@
 package no.nav.k9.los.domeneadaptere.k9.eventmottak.klage
 
 import no.nav.k9.los.Configuration
-import no.nav.k9.los.domeneadaptere.k9.eventmottak.kafka.ManagedKafkaStreams
-import no.nav.k9.los.domeneadaptere.k9.eventmottak.kafka.ManagedStreamHealthy
-import no.nav.k9.los.domeneadaptere.k9.eventmottak.kafka.ManagedStreamReady
+import no.nav.k9.los.domeneadaptere.kafka.ManagedKafkaStreams
+import no.nav.k9.los.domeneadaptere.kafka.ManagedStreamHealthy
+import no.nav.k9.los.domeneadaptere.kafka.ManagedStreamReady
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.AksjonspunktKlageLaget
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.Topic
-import no.nav.k9.los.domeneadaptere.k9.eventmottak.kafka.IKafkaConfig
-import no.nav.k9.los.domeneadaptere.k9.eventmottak.sak.K9SakKafkaStream
+import no.nav.k9.los.domeneadaptere.kafka.IKafkaConfig
 import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.infrastruktur.utils.OpentelemetrySpanUtil
 import no.nav.k9.los.infrastruktur.utils.TransientFeilHåndterer

@@ -9,7 +9,7 @@ import io.ktor.server.routing.*
 import kotliquery.queryOf
 import no.nav.k9.los.domeneadaptere.k9.K9Oppgavetypenavn
 import no.nav.k9.los.domeneadaptere.k9.avstemming.AvstemmingsTjeneste
-import no.nav.k9.los.domeneadaptere.k9.eventmottak.eventlager.EventRepository
+import no.nav.k9.los.domeneadaptere.eventlager.EventRepository
 import no.nav.k9.los.domeneadaptere.k9.statistikk.StatistikkRepository
 import no.nav.k9.los.infrastruktur.brukerkontekst.medBrukerkontekst
 import no.nav.k9.los.infrastruktur.brukerkontekst.medBrukerkontekstUtenOmråde
@@ -109,11 +109,11 @@ fun Route.forvaltningApis() {
         request {
             pathParameter<Fagsystem>("system") {
                 description = "Kildesystem som har sendt inn oppgaven"
-                example("k9sak") {
+                example("K9SAK") {
                     value = Fagsystem.K9SAK
                     description = "K9sak"
                 }
-                example("k9punsj") {
+                example("PUNSJ") {
                     value = Fagsystem.PUNSJ
                     description = "K9punsj"
                 }
@@ -125,7 +125,7 @@ fun Route.forvaltningApis() {
     }) {
         medBrukerkontekstUtenOmråde { bruker ->
             if (bruker.kanLeggeUtDriftsmelding) {
-                val fagsystem = Fagsystem.fraKode(call.parameters["system"]!!)
+                val fagsystem = Fagsystem.fraParameter(call.parameters["system"]!!)
                 val saksnummer = call.parameters["saksnummer"]!!
                 val oppgavetypeKode = K9Oppgavetypenavn.fraFagsystem(fagsystem).kode
 
@@ -135,6 +135,11 @@ fun Route.forvaltningApis() {
                     Fagsystem.K9KLAGE -> "saksnummer"
 
                     Fagsystem.PUNSJ -> "journalpostId"
+
+                    Fagsystem.UNGSAK,
+                    Fagsystem.UNGTILBAKE -> throw NotImplementedError(
+                        "Fagsystem $fagsystem er ikke støttet i dette endepunktet"
+                    )
                 }
 
                 val query = QueryRequest(
@@ -327,7 +332,7 @@ fun Route.forvaltningApis() {
          */
         medBrukerkontekstUtenOmråde { bruker ->
             if (bruker.kanLeggeUtDriftsmelding) {
-                val fagsystem = Fagsystem.fraKode(call.parameters["fagsystem"]!!)
+                val fagsystem = Fagsystem.fraParameter(call.parameters["fagsystem"]!!)
                 val avstemmingsrapport = avstemmingsTjeneste.avstem(fagsystem)
                 call.respond(objectMapper.writeValueAsString(avstemmingsrapport))
             } else {
@@ -487,7 +492,7 @@ fun Route.forvaltningApis() {
     }) {
         medBrukerkontekstUtenOmråde { bruker ->
             if (bruker.kanLeggeUtDriftsmelding) {
-                val fagsystem = Fagsystem.fraKode(call.parameters["fagsystem"]!!)
+                val fagsystem = Fagsystem.fraParameter(call.parameters["fagsystem"]!!)
                 val oppgaveQueryFraRequest = call.receive<OppgaveQuery>()
                 if (oppgaveQueryFraRequest.select.isNotEmpty()) {
                     call.respond(HttpStatusCode.BadRequest, "OppgaveQuery.select støttes ikke for bestilling fra query")

@@ -3,10 +3,9 @@ package no.nav.k9.los.domeneadaptere.k9.eventtiloppgave
 import io.opentelemetry.instrumentation.annotations.SpanAttribute
 import io.opentelemetry.instrumentation.annotations.WithSpan
 import kotliquery.TransactionalSession
-import no.nav.k9.los.domeneadaptere.k9.K9Oppgavetypenavn
-import no.nav.k9.los.domeneadaptere.k9.eventmottak.eventlager.EventLagret
-import no.nav.k9.los.domeneadaptere.k9.eventmottak.eventlager.EventNøkkel
-import no.nav.k9.los.domeneadaptere.k9.eventmottak.eventlager.EventRepository
+import no.nav.k9.los.domeneadaptere.eventlager.EventLagret
+import no.nav.k9.los.domeneadaptere.eventlager.EventNøkkel
+import no.nav.k9.los.domeneadaptere.eventlager.EventRepository
 import no.nav.k9.los.domeneadaptere.k9.statistikk.StatistikkRepository
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.oppgavemottak.AktivOgPartisjonertOppgaveAjourholdTjeneste
@@ -101,7 +100,7 @@ class EventTilOppgaveAdapter(
                 forrigeOppgaveversjon = oppgave
                 sisteOppgaveversjon = oppgave
             } else {
-                forrigeOppgaveversjon = hentEksisterendeVersjon(eventnøkkel, eventnummer, tx)
+                forrigeOppgaveversjon = hentEksisterendeVersjon(eventnøkkel, eventLagret, eventnummer, tx)
             }
         }
 
@@ -138,7 +137,7 @@ class EventTilOppgaveAdapter(
                 statistikkteller++
                 forrigeOppgaveversjon = oppgave
             } else {
-                forrigeOppgaveversjon = hentEksisterendeVersjon(eventnøkkel, eventnummer, tx)
+                forrigeOppgaveversjon = hentEksisterendeVersjon(eventnøkkel, eventLagret, eventnummer, tx)
             }
         }
 
@@ -163,7 +162,7 @@ class EventTilOppgaveAdapter(
         val førsteEventnummer = eventerMedNummerering.first().first
         // Første dirty melding er ikke første for oppgaven – hent foregående versjon som kontekst.
         return if (førsteEventnummer > 0) {
-            hentEksisterendeVersjon(eventnøkkel, førsteEventnummer - 1, tx)
+            hentEksisterendeVersjon(eventnøkkel, eventerMedNummerering.first().second, førsteEventnummer - 1, tx)
         } else {
             null
         }
@@ -171,12 +170,13 @@ class EventTilOppgaveAdapter(
 
     private fun hentEksisterendeVersjon(
         eventnøkkel: EventNøkkel,
+        eventLagret: EventLagret,
         internVersjon: Int,
         tx: TransactionalSession,
     ): OppgaveV3? {
         return oppgaveV3Tjeneste.hentOppgaveversjon(
             "K9",
-            K9Oppgavetypenavn.fraFagsystem(eventnøkkel.fagsystem).kode,
+            eventTilOppgaveMapper.oppgavetypeKode(eventLagret),
             eventnøkkel.eksternId,
             internVersjon,
             tx,

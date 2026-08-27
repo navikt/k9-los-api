@@ -6,8 +6,8 @@ import no.nav.helse.dusseldorf.ktor.auth.issuers
 import no.nav.helse.dusseldorf.ktor.auth.withoutAdditionalClaimRules
 import no.nav.helse.dusseldorf.ktor.core.getOptionalString
 import no.nav.helse.dusseldorf.ktor.core.getRequiredString
-import no.nav.k9.los.domeneadaptere.k9.eventmottak.kafka.IKafkaConfig
-import no.nav.k9.los.domeneadaptere.k9.eventmottak.kafka.KafkaAivenConfig
+import no.nav.k9.los.domeneadaptere.kafka.IKafkaConfig
+import no.nav.k9.los.domeneadaptere.kafka.KafkaAivenConfig
 import no.nav.k9.los.infrastruktur.db.createHikariConfig
 import org.apache.kafka.clients.consumer.OffsetResetStrategy
 import java.net.URI
@@ -45,12 +45,8 @@ data class Configuration(private val config: ApplicationConfig) {
         config.getOptionalString("nav.db.migrering_etter_oppstart", secret = false)?.toBoolean() ?: false
 
     internal fun getAksjonspunkthendelseTopic(): String {
-        if (k9SakConsumerAiven()) {
-            return config.getOptionalString("nav.kafka.aksjonshendelseTopic", secret = false)
-                ?: "k9saksbehandling.k9sak-aksjonspunkthendelse"
-        } else {
-            return "privat-k9-aksjonspunkthendelse"
-        }
+        return config.getOptionalString("nav.kafka.aksjonshendelseTopic", secret = false)
+            ?: "k9saksbehandling.k9sak-aksjonspunkthendelse"
     }
 
     internal fun getKlageOppgavemeldingerTopic(): String {
@@ -69,26 +65,26 @@ data class Configuration(private val config: ApplicationConfig) {
     }
 
     internal fun getAksjonspunkthendelsePunsjTopic(): String {
-        if (punsjConsumerAiven()) {
-            return config.getOptionalString("nav.kafka.punsjAksjonshendelseTopic", secret = false)
-                ?: "k9saksbehandling.punsj-aksjonspunkthendelse-v1"
-        } else {
-            return "privat-k9punsj-aksjonspunkthendelse-v1"
-        }
+        return config.getOptionalString("nav.kafka.punsjAksjonshendelseTopic", secret = false)
+            ?: "k9saksbehandling.punsj-aksjonspunkthendelse-v1"
     }
 
     internal fun getAksjonspunkthendelseTilbakeTopic(): String {
-        if (tilbakeConsumerAiven()) {
-            return config.getOptionalString("nav.kafka.tilbakekrevingaksjonshendelseTopic", secret = false)
-                ?: "k9saksbehandling.tilbakekreving-hendelse-los"
-        } else {
-            return "privat-tilbakekreving-k9loshendelse-v1"
-        }
+        return config.getOptionalString("nav.kafka.tilbakekrevingaksjonshendelseTopic", secret = false)
+            ?: "k9saksbehandling.tilbakekreving-hendelse-los"
     }
 
     internal fun getSakOgBehandlingTopic(): String {
         return config.getOptionalString("nav.kafka.sakOgBehandlingTopic", secret = false)
             ?: ""
+    }
+
+    internal fun getUngSakHendelseTopic(): String {
+        return config.getOptionalString("nav.kafka.ungSakTopic", secret = false) ?: ""
+    }
+
+    internal fun getUngTilbakeHendelseTopic(): String {
+        return config.getOptionalString("nav.kafka.ungTilbakeTopic", secret = false) ?: ""
     }
 
     internal fun getÅpenStatistikkSakTopic(): String {
@@ -105,25 +101,11 @@ data class Configuration(private val config: ApplicationConfig) {
         return config.getOptionalString("nav.features.nyOppgavestyring", secret = false).toBoolean()
     }
 
-    internal fun nyOppgavestyringDvhSendingAktivert(): Boolean {
-        return config.getOptionalString("nav.features.nyOppgavestyringDvhSending", secret = false).toBoolean()
-    }
 
     internal fun nyOppgavestyringRestAktivert(): Boolean {
         return config.getOptionalString("nav.features.nyOppgavestyringRestApi", secret = false).toBoolean()
     }
 
-    internal fun punsjConsumerAiven(): Boolean {
-        return config.getOptionalString("nav.features.punsjConsumerAiven", secret = false).toBoolean()
-    }
-
-    internal fun tilbakeConsumerAiven(): Boolean {
-        return config.getOptionalString("nav.features.tilbakeConsumerAiven", secret = false).toBoolean()
-    }
-
-    internal fun k9SakConsumerAiven(): Boolean {
-        return config.getOptionalString("nav.features.k9SakConsumerAiven", secret = false).toBoolean()
-    }
 
     internal fun getProfileAwareKafkaAivenConfig(): IKafkaConfig {
         val defaultOffsetResetStrategy =

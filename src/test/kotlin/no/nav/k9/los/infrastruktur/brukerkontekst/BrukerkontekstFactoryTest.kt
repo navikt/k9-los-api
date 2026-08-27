@@ -8,8 +8,9 @@ import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.infrastruktur.azuregraph.IAzureGraphService
 import no.nav.k9.los.infrastruktur.idtoken.IdToken
+import no.nav.k9.los.infrastruktur.abac.AktivitetspengerGrupper
 import no.nav.k9.los.infrastruktur.abac.Gruppeoppsett
-import no.nav.k9.los.infrastruktur.abac.GrupperForOmråde
+import no.nav.k9.los.infrastruktur.abac.K9Grupper
 import no.nav.k9.los.infrastruktur.abac.PepClient
 import no.nav.k9.los.infrastruktur.abac.Action
 import no.nav.k9.los.infrastruktur.abac.ISifAbacPdpKlient
@@ -21,9 +22,9 @@ import java.util.UUID
 
 class BrukerkontekstFactoryTest {
     private val k9Saksbehandler = UUID.randomUUID()
-    private val aktivitetspengerSaksbehandler = UUID.randomUUID()
+    private val aktivitetspengerLokalkontor = UUID.randomUUID()
+    private val aktivitetspengerNay = UUID.randomUUID()
     private val k9Veileder = UUID.randomUUID()
-    private val aktivitetspengerVeileder = UUID.randomUUID()
     private val k9Oppgavestyrer = UUID.randomUUID()
     private val aktivitetspengerOppgavestyrer = UUID.randomUUID()
     private val drift = UUID.randomUUID()
@@ -31,15 +32,20 @@ class BrukerkontekstFactoryTest {
     private val aktivitetspengerKode6 = UUID.randomUUID()
 
     private val oppsett = Gruppeoppsett(
-        k9 = GrupperForOmråde(k9Saksbehandler, k9Veileder, k9Oppgavestyrer, k9Kode6),
-        aktivitetspenger = GrupperForOmråde(aktivitetspengerSaksbehandler, aktivitetspengerVeileder, aktivitetspengerOppgavestyrer, aktivitetspengerKode6),
+        k9 = K9Grupper(k9Saksbehandler, k9Veileder, k9Oppgavestyrer, k9Kode6),
+        aktivitetspenger = AktivitetspengerGrupper(
+            aktivitetspengerLokalkontor,
+            aktivitetspengerNay,
+            aktivitetspengerOppgavestyrer,
+            aktivitetspengerKode6
+        ),
         drift = drift,
     )
 
     @Test
     fun `bruker separate saksbehandlergrupper for K9 og AKTIVITETSPENGER`() {
         runBlocking {
-            val token = token(setOf(aktivitetspengerSaksbehandler))
+            val token = token(setOf(aktivitetspengerLokalkontor))
 
             kontekst(token, Områder.K9).harBasisTilgang shouldBe false
             kontekst(token, Områder.AKTIVITETSPENGER).harBasisTilgang shouldBe true
@@ -47,9 +53,36 @@ class BrukerkontekstFactoryTest {
     }
 
     @Test
+    fun `aktivitetspenger gir basistilgang for både lokalkontor og nay`() {
+        runBlocking {
+            val lokalkontorToken = token(setOf(aktivitetspengerLokalkontor))
+            val nayToken = token(setOf(aktivitetspengerNay))
+
+            kontekst(lokalkontorToken, Områder.AKTIVITETSPENGER).harBasisTilgang shouldBe true
+            kontekst(nayToken, Områder.AKTIVITETSPENGER).harBasisTilgang shouldBe true
+        }
+    }
+
+    @Test
+    fun `aktivitetspenger gir reserveringstilgang for både lokalkontor og nay`() {
+        runBlocking {
+            val lokalkontorToken = token(setOf(aktivitetspengerLokalkontor))
+            val nayToken = token(setOf(aktivitetspengerNay))
+
+            kontekst(lokalkontorToken, Områder.AKTIVITETSPENGER).harTilgangTilReserveringAvOppgaver shouldBe true
+            kontekst(nayToken, Områder.AKTIVITETSPENGER).harTilgangTilReserveringAvOppgaver shouldBe true
+        }
+    }
+
+    @Test
     fun `bruker separate tokenbaserte grupper for alle roller`() {
         runBlocking {
-            val aktivitetspengerGrupper = listOf(aktivitetspengerSaksbehandler, aktivitetspengerVeileder, aktivitetspengerOppgavestyrer, aktivitetspengerKode6)
+            val aktivitetspengerGrupper = listOf(
+                aktivitetspengerLokalkontor,
+                aktivitetspengerNay,
+                aktivitetspengerOppgavestyrer,
+                aktivitetspengerKode6
+            )
 
             for (gruppe in aktivitetspengerGrupper) {
                 val token = token(setOf(gruppe))
@@ -115,8 +148,8 @@ class BrukerkontekstFactoryTest {
     }
 
     private fun harRolle(gruppe: UUID, brukerkontekst: BrukerkontekstMedOmråde): Boolean = when (gruppe) {
-        aktivitetspengerSaksbehandler -> brukerkontekst.harTilgangTilReserveringAvOppgaver
-        aktivitetspengerVeileder -> brukerkontekst.harBasisTilgang
+        aktivitetspengerLokalkontor -> brukerkontekst.harTilgangTilReserveringAvOppgaver
+        aktivitetspengerNay -> brukerkontekst.harTilgangTilReserveringAvOppgaver
         aktivitetspengerOppgavestyrer -> brukerkontekst.erOppgavestyrer
         aktivitetspengerKode6 -> brukerkontekst.harTilgangTilKode6
         else -> error("Ukjent testgruppe")

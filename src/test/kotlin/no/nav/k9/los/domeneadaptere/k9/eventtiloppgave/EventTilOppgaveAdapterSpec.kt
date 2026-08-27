@@ -1,6 +1,5 @@
 package no.nav.k9.los.domeneadaptere.k9.eventtiloppgave
 
-import io.kotest.core.spec.IsolationMode
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.core.test.TestCase
 import io.kotest.matchers.shouldBe
@@ -13,9 +12,9 @@ import no.nav.k9.kodeverk.behandling.BehandlingStegType
 import no.nav.k9.kodeverk.behandling.FagsakYtelseType
 import no.nav.k9.los.domeneadaptere.k9.K9Oppgavetypenavn
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.EventHendelse
-import no.nav.k9.los.domeneadaptere.k9.eventmottak.eventlager.EventNøkkel
-import no.nav.k9.los.domeneadaptere.k9.eventmottak.eventlager.EventRepository
-import no.nav.k9.los.domeneadaptere.k9.eventmottak.eventlager.HistorikkvaskBestilling
+import no.nav.k9.los.domeneadaptere.eventlager.EventNøkkel
+import no.nav.k9.los.domeneadaptere.eventlager.EventRepository
+import no.nav.k9.los.domeneadaptere.eventlager.HistorikkvaskBestilling
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventDto
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.sak.K9SakEventDto
 import no.nav.k9.los.infrastruktur.db.TransactionalManager

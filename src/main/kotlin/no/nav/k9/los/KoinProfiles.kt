@@ -7,6 +7,7 @@ import io.ktor.server.application.*
 import kotlinx.coroutines.channels.Channel
 import no.nav.helse.dusseldorf.ktor.health.HealthService
 import no.nav.k9.los.KoinProfile.*
+import no.nav.k9.los.domeneadaptere.eventlager.EventRepository
 import no.nav.k9.los.domeneadaptere.k9.OmrådeSetup
 import no.nav.k9.los.domeneadaptere.k9.avstemming.AvstemmingsTjeneste
 import no.nav.k9.los.domeneadaptere.k9.avstemming.punsj.systemklient.LocalPunsjAvstemmingsklient
@@ -14,8 +15,6 @@ import no.nav.k9.los.domeneadaptere.k9.avstemming.punsj.systemklient.RestPunsjAv
 import no.nav.k9.los.domeneadaptere.k9.avstemming.saksbehandling.systemklient.LocalSakAvstemmingsklient
 import no.nav.k9.los.domeneadaptere.k9.avstemming.saksbehandling.systemklient.RestSakAvstemmingsklient
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.FeilRekkefølgeSjekker
-import no.nav.k9.los.domeneadaptere.k9.eventmottak.eventlager.EventRepository
-import no.nav.k9.los.domeneadaptere.k9.eventmottak.kafka.AsynkronProsesseringV1Service
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.klage.K9KlageEventHandler
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventHandler
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.sak.K9SakEventHandler
@@ -37,6 +36,9 @@ import no.nav.k9.los.domeneadaptere.k9.refreshk9sakoppgaver.restklient.K9SakBeha
 import no.nav.k9.los.domeneadaptere.k9.refreshk9sakoppgaver.restklient.K9SakServiceLocal
 import no.nav.k9.los.domeneadaptere.k9.refreshk9sakoppgaver.restklient.K9SakServiceSystemClient
 import no.nav.k9.los.domeneadaptere.k9.statistikk.*
+import no.nav.k9.los.domeneadaptere.kafka.AsynkronProsesseringV1Service
+import no.nav.k9.los.domeneadaptere.ungsak.eventmottak.ungsak.UngSakEventHandler
+import no.nav.k9.los.domeneadaptere.ungsak.eventmottak.ungtilbake.UngTilbakeEventHandler
 import no.nav.k9.los.driftsmelding.DriftsmeldingRepository
 import no.nav.k9.los.driftsmelding.DriftsmeldingTjeneste
 import no.nav.k9.los.forvaltning.ForvaltningRepository
@@ -195,6 +197,22 @@ fun common(app: Application, config: Configuration) = module {
     }
 
     single {
+        UngSakEventHandler(
+            eventRepository = get(),
+            transactionalManager = get(),
+            feilRekkefølgeSjekker = get(),
+        )
+    }
+
+    single {
+        UngTilbakeEventHandler(
+            eventRepository = get(),
+            transactionalManager = get(),
+            feilRekkefølgeSjekker = get(),
+        )
+    }
+
+    single {
         EventRepository(
             dataSource = get(),
             områdeRepository = get(),
@@ -227,6 +245,8 @@ fun common(app: Application, config: Configuration) = module {
             k9TilbakeEventHandler = get(),
             k9PunsjEventHandler = get(),
             k9KlageEventHandler = get(),
+            ungSakEventHandler = get(),
+            ungTilbakeEventHandler = get(),
         )
     }
 

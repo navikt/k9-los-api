@@ -1,4 +1,4 @@
-package no.nav.k9.los.domeneadaptere.k9.eventmottak.kafka
+package no.nav.k9.los.domeneadaptere.kafka
 
 import io.prometheus.client.Gauge
 import no.nav.helse.dusseldorf.ktor.health.HealthCheck
