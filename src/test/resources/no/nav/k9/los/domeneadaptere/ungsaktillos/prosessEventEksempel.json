@@ -1,0 +1,128 @@
+[
+{
+  "eksternId": "575a3f96-117e-4f02-9499-9dcff7f0e8c5",
+  "eventTid": "2026-08-21T12:49:41.034415026",
+  "nyeKrav": true,
+  "aktørId": "2679194420258",
+  "fagsystem": "UNG_SAK",
+  "saksnummer": "300HNC",
+  "vedtaksdato": null,
+  "resultatType": "IKKE_FASTSATT",
+  "eventHendelse": "BEHANDLINGSKONTROLL_EVENT",
+
+  "fagsakPeriode": {
+    "fom": "2026-08-20",
+    "tom": "2027-08-20"
+  },
+  "behandlingSteg": "INREG",
+  "ytelseTypeKode": "AKT",
+  "behandlendeEnhet": "0387",
+  "behandlingStatus": "UTRED",
+  "søknadsårsaker": [],
+  "fraEndringsdialog": false,
+  "behandlingTypeKode": "BT-002",
+  "behandlingsårsaker": [],
+  "ansvarligBeslutterForTotrinn": null,
+  "aksjonspunktTilstander": [],
+  "opprettetBehandling": "2026-08-21T12:49:33",
+  "eldsteDatoMedEndringFraSøker": "2026-08-21T10:49:15.477",
+  "aksjonspunktKoderMedStatusListe": {},
+  "ansvarligSaksbehandlerForTotrinn": null,
+
+  "behandlingstidFrist": "2026-10-02"
+},
+{
+  "nyeKrav": true,
+  "aktørId": "2679194420258",
+  "eventTid": "2026-08-21T12:49:47.510085640",
+  "eksternId": "575a3f96-117e-4f02-9499-9dcff7f0e8c5",
+  "fagsystem": "UNG_SAK",
+  "saksnummer": "300HNC",
+  "vedtaksdato": null,
+  "resultatType": "IKKE_FASTSATT",
+  "eventHendelse": "BEHANDLINGSKONTROLL_EVENT",
+  "fagsakPeriode": {
+    "fom": "2026-08-20",
+    "tom": "2027-08-20"
+  },
+  "behandlingSteg": "VURDER_BOSTEDVILKÅR",
+  "ytelseTypeKode": "AKT",
+  "behandlendeEnhet": "0387",
+  "behandlingStatus": "UTRED",
+  "søknadsårsaker": [],
+  "fraEndringsdialog": false,
+  "behandlingTypeKode": "BT-002",
+  "behandlingstidFrist": "2026-10-02",
+  "behandlingsårsaker": [],
+  "opprettetBehandling": "2026-08-21T12:49:33",
+  "aksjonspunktTilstander": [
+    {
+      "status": "OPPR",
+      "fristTid": null,
+      "venteårsak": "-",
+      "endretTidspunkt": null,
+      "aksjonspunktKode": "5140",
+      "opprettetTidspunkt": "2026-08-21T12:49:47.265",
+      "ansvarligSaksbehandler": null
+    }
+  ],
+  "ansvarligBeslutterForTotrinn": null,
+  "eldsteDatoMedEndringFraSøker": "2026-08-21T10:49:15.477",
+  "aksjonspunktKoderMedStatusListe": {
+    "5140": "OPPR"
+  },
+  "ansvarligSaksbehandlerForTotrinn": null
+},
+{
+  "nyeKrav": true,
+  "aktørId": "2679194420258",
+  "eventTid": "2026-08-21T12:51:09.833435941",
+  "eksternId": "575a3f96-117e-4f02-9499-9dcff7f0e8c5",
+  "fagsystem": "UNG_SAK",
+  "saksnummer": "300HNC",
+  "vedtaksdato": null,
+  "resultatType": "IKKE_FASTSATT",
+  "eventHendelse": "BEHANDLINGSKONTROLL_EVENT",
+  "fagsakPeriode": {
+    "fom": "2026-08-20",
+    "tom": "2027-08-20"
+  },
+  "behandlingSteg": "VURDER_ANDRE_LIVSOPPHOLDSYTELSER",
+  "ytelseTypeKode": "AKT",
+  "behandlendeEnhet": "0387",
+  "behandlingStatus": "UTRED",
+  "søknadsårsaker": [],
+  "fraEndringsdialog": false,
+  "behandlingTypeKode": "BT-002",
+  "behandlingstidFrist": "2026-10-02",
+  "behandlingsårsaker": [],
+  "opprettetBehandling": "2026-08-21T12:49:33",
+  "aksjonspunktTilstander": [
+    {
+      "status": "OPPR",
+      "fristTid": null,
+      "venteårsak": "-",
+      "endretTidspunkt": null,
+      "aksjonspunktKode": "5142",
+      "opprettetTidspunkt": "2026-08-21T12:51:09.613",
+      "ansvarligSaksbehandler": null
+    },
+    {
+      "status": "UTFO",
+      "fristTid": null,
+      "venteårsak": "-",
+      "endretTidspunkt": "2026-08-21T12:51:08.616",
+      "aksjonspunktKode": "5140",
+      "opprettetTidspunkt": "2026-08-21T12:49:47.265",
+      "ansvarligSaksbehandler": "Z994959"
+    }
+  ],
+  "ansvarligBeslutterForTotrinn": null,
+  "eldsteDatoMedEndringFraSøker": "2026-08-21T10:49:15.477",
+  "aksjonspunktKoderMedStatusListe": {
+    "5140": "UTFO",
+    "5142": "OPPR"
+  },
+  "ansvarligSaksbehandlerForTotrinn": null
+}
+]
