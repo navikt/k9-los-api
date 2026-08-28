@@ -50,16 +50,6 @@ open class AzureGraphService(
         return hentEnhetForBruker(brukernavn = token.getUsername(), onBehalfOf = token)
     }
 
-    override suspend fun hentEnhet(brukernavn: String): String? {
-        return try {
-            hentEnhet(brukernavn)
-                .takeIf { EnheterSomSkalUtelatesFraLos.sjekkKanBrukes(it) }
-        } catch (e: Exception) {
-            log.warn("Klarte ikke å hente behandlende enhet for $brukernavn", e)
-            null
-        }
-    }
-
     private suspend fun hentEnhetForBruker(brukernavn: String, onBehalfOf: IdToken? = null): String {
         val key = brukernavn + "_office_location"
         val cachedOfficeLocation = officeLocationCache.get(key)
@@ -122,36 +112,6 @@ open class AzureGraphService(
     override suspend fun hentGrupper(navIdent: String): Set<UUID> {
         val userId = hentUserIdForSaksbehandler(navIdent)
         return hentGrupperForSaksbehandler(userId, navIdent)
-    }
-
-    override suspend fun hentGrupper(brukerkontekst: BrukerkontekstMedOmråde): Set<UUID> {
-        val token = brukerkontekst.idToken
-        return saksbehandlerGrupperCache.hent(brukerkontekst.navIdent) {
-            val accessToken = accessToken(token)
-            val json = runBlocking {
-                Retry.retry(
-                    operation = "grupper-for-saksbehandler",
-                    initialDelay = Duration.ofMillis(200),
-                    factor = 2.0,
-                    logger = log
-                ) {
-                    val response = Operation.monitored(
-                        app = "k9-los-api",
-                        operation = "grupper-for-saksbehandler",
-                        resultResolver = { 200 == it.status.value }
-                    ) {
-                        httpClient.get("https://graph.microsoft.com/v1.0/me/memberOf") {
-                            header(HttpHeaders.Accept, "application/json")
-                            header(HttpHeaders.Authorization, "Bearer ${accessToken.token}")
-                            header("ConsistencyLevel", "eventual")
-                        }
-                    }
-                    håndterResultat(response)
-                }
-            }
-            LosObjectMapper.instance.readValue<DirectoryOjects>(json).value.map { it.id }.toSet()
-        }
-
     }
 
     private fun hentUserIdForSaksbehandler(saksbehandlerIdent: String): UUID {
