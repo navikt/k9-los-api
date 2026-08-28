@@ -61,8 +61,6 @@ class SifAbacPdpTilgangerKlient(
         val response = Retry.retry(
             tries = 3,
             operation = "innlogget-ansatt-tilganger-$path",
-            initialDelay = Duration.ofMillis(200),
-            factor = 2.0,
             logger = log,
         ) {
             httpClient.get("${url}/api/$path/nav-ansatt/v2") {
@@ -79,8 +77,10 @@ class SifAbacPdpTilgangerKlient(
 
         val body = response.bodyAsText()
         return when (område) {
-            Områder.K9 -> OmrådeTilganger.fraK9(LosObjectMapper.instance.readValue<InnloggetAnsattK9V2Dto>(body))
-            Områder.AKTIVITETSPENGER -> OmrådeTilganger.fraUng(LosObjectMapper.instance.readValue<InnloggetAnsattUngV2Dto>(body))
+            Områder.K9 -> OmrådeTilganger.forK9(LosObjectMapper.instance.readValue<InnloggetAnsattK9V2Dto>(body))
+            Områder.AKTIVITETSPENGER -> OmrådeTilganger.forAktivitetspenger(LosObjectMapper.instance.readValue<InnloggetAnsattUngV2Dto>(body))
         }
     }
 }
+
+private data class TilgangCacheKey(val navIdent: String, val område: Områder)

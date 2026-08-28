@@ -7,9 +7,7 @@ import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.infrastruktur.abac.Action
-import no.nav.k9.los.infrastruktur.abac.Gruppeoppsett
 import no.nav.k9.los.infrastruktur.abac.ISifAbacPdpKlient
-import no.nav.k9.los.infrastruktur.abac.Kode6ForOmråde
 import no.nav.k9.los.infrastruktur.abac.PepClient
 import no.nav.k9.los.infrastruktur.abac.SifAbacPdpKlienter
 import no.nav.k9.los.infrastruktur.abac.tilganger.OmrådeTilganger
@@ -18,17 +16,9 @@ import no.nav.k9.los.infrastruktur.idtoken.IdToken
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.Oppgave
 import org.junit.jupiter.api.Test
-import java.util.UUID
+import java.util.*
 
 class BrukerkontekstFactoryTest {
-
-    private val k9Kode6 = UUID.randomUUID()
-    private val aktivitetspengerKode6 = UUID.randomUUID()
-
-    private val oppsett = Gruppeoppsett(
-        k9 = Kode6ForOmråde(k9Kode6),
-        aktivitetspenger = Kode6ForOmråde(aktivitetspengerKode6),
-    )
 
     private fun tilganger(
         harBasisTilgang: Boolean = false,
@@ -71,14 +61,14 @@ class BrukerkontekstFactoryTest {
             kontekst.harTilgangTilKode6 shouldBe true
             kontekst.erOppgavestyrer shouldBe true
             kontekst.harTilgangTilReserveringAvOppgaver shouldBe true
-            kontekst.kanLeggeUtDriftsmelding shouldBe true
+            kontekst.harDriftstilgang shouldBe true
 
             val tom = kontekst(Områder.K9, tilganger())
             tom.harBasisTilgang shouldBe false
             tom.harTilgangTilKode6 shouldBe false
             tom.erOppgavestyrer shouldBe false
             tom.harTilgangTilReserveringAvOppgaver shouldBe false
-            tom.kanLeggeUtDriftsmelding shouldBe false
+            tom.harDriftstilgang shouldBe false
         }
     }
 
@@ -91,7 +81,7 @@ class BrukerkontekstFactoryTest {
                     Områder.AKTIVITETSPENGER to tilganger(),
                 )
             )
-            kunK9Drift.kanLeggeUtDriftsmelding shouldBe true
+            kunK9Drift.harDriftstilgangIEttEllerFlereOmråder shouldBe true
 
             val ingenDrift = TestKontekstFactory.brukerkontekstUtenOmråde(
                 tilgangerPerOmråde = mapOf(
@@ -99,7 +89,7 @@ class BrukerkontekstFactoryTest {
                     Områder.AKTIVITETSPENGER to tilganger(),
                 )
             )
-            ingenDrift.kanLeggeUtDriftsmelding shouldBe false
+            ingenDrift.harDriftstilgangIEttEllerFlereOmråder shouldBe false
         }
     }
 
@@ -127,24 +117,6 @@ class BrukerkontekstFactoryTest {
     }
 
     @Test
-    fun `bruker separat kode6-gruppe ved oppslag av annen saksbehandler`() {
-        runBlocking {
-            val azureGraphService = mockk<IAzureGraphService>()
-            coEvery { azureGraphService.hentGrupper("Z999999") } returns setOf(aktivitetspengerKode6)
-            val pepClient = pepClient(azureGraphService)
-
-            pepClient.harSaksbehandlerTilgangTilKode6(
-                "Z999999",
-                kontekst(Områder.K9, tilganger())
-            ) shouldBe false
-            pepClient.harSaksbehandlerTilgangTilKode6(
-                "Z999999",
-                kontekst(Områder.AKTIVITETSPENGER, tilganger())
-            ) shouldBe true
-        }
-    }
-
-    @Test
     fun `oppgavetilgang slår opp grupper via Graph, ikke fra kontekst`() {
         runBlocking {
             val azureGraphService = mockk<IAzureGraphService>()
@@ -161,18 +133,18 @@ class BrukerkontekstFactoryTest {
                 pdpKlient.harTilgangTilSak(Action.read, any(), "Z123456", brukergrupper)
             } returns true
 
-            PepClient(azureGraphService, pdpKlienter, oppsett)
-                .harTilgangTilOppgaveV3(oppgave, kontekst(Områder.K9, tilganger())) shouldBe true
+            PepClient(
+                azureGraphService,
+                pdpKlienter,
+                mockk(),
+                mockk(),
+                "",
+                mockk(),
+            ).harTilgangTilOppgaveV3(oppgave, kontekst(Områder.K9, tilganger())) shouldBe true
 
             coVerify(exactly = 1) { azureGraphService.hentGrupper("Z123456") }
         }
     }
-
-    private fun pepClient(azureGraphService: IAzureGraphService = mockk()) = PepClient(
-        azureGraphService = azureGraphService,
-        sifAbacPdpKlienter = mockk(),
-        gruppeoppsett = oppsett,
-    )
 
     private fun token() = mockk<IdToken> {
         coEvery { getNavIdent() } returns "Z123456"

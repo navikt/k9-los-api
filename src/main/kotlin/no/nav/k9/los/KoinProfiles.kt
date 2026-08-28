@@ -110,7 +110,6 @@ fun selectModulesBasedOnProfile(application: Application, config: Configuration)
 fun common(app: Application, config: Configuration) = module {
     single { config.koinProfile() }
     single { config }
-    single { Gruppeoppsett() }
     single { BrukerkontekstFactory(getOrNull<SifAbacPdpTilgangerKlient>(), lokaleTilganger = get<KoinProfile>() == LOCAL) }
     single<DataSource> { app.hikariConfig(config) }
 
@@ -712,7 +711,10 @@ fun naisCommonConfig(config: Configuration) = module {
         PepClient(
             azureGraphService = get(),
             sifAbacPdpKlienter = get(),
-            gruppeoppsett = get(),
+            httpClient = get(),
+            scope = sifAbacPdpScope(config),
+            configuration = get(),
+            cachedAccessTokenClient = get()
         )
     }
 }

@@ -58,7 +58,7 @@ fun Route.forvaltningApis() {
         }
     }) {
         medBrukerkontekstUtenOmråde { bruker ->
-            if (bruker.kanLeggeUtDriftsmelding) {
+            if (bruker.harDriftstilgangIEttEllerFlereOmråder) {
                 val list = mutableListOf<String>()
                 transactionalManager.transaction { tx ->
                     tx.run(
@@ -124,7 +124,7 @@ fun Route.forvaltningApis() {
         }
     }) {
         medBrukerkontekstUtenOmråde { bruker ->
-            if (bruker.kanLeggeUtDriftsmelding) {
+            if (bruker.harDriftstilgangIEttEllerFlereOmråder) {
                 val fagsystem = Fagsystem.fraParameter(call.parameters["system"]!!)
                 val saksnummer = call.parameters["saksnummer"]!!
                 val oppgavetypeKode = K9Oppgavetypenavn.fraFagsystem(fagsystem).kode
@@ -212,7 +212,7 @@ fun Route.forvaltningApis() {
         }
     }) {
         medBrukerkontekst { bruker ->
-            if (bruker.kanLeggeUtDriftsmelding) {
+            if (bruker.harDriftstilgang) {
                 val oppgavetype = call.parameters["oppgavetype"]!!
                 val oppgaveEksternId = call.parameters["oppgaveEksternId"]!!
 
@@ -241,7 +241,7 @@ fun Route.forvaltningApis() {
         }
     }) {
         medBrukerkontekstUtenOmråde { bruker ->
-            if (bruker.kanLeggeUtDriftsmelding) {
+            if (bruker.harDriftstilgangIEttEllerFlereOmråder) {
                 val oppgavetypeEksternId = call.parameters["oppgavetype"]!!
                 val oppgaveEksternId = call.parameters["oppgaveEksternId"]!!
 
@@ -284,7 +284,7 @@ fun Route.forvaltningApis() {
         }
     }) {
         medBrukerkontekst { bruker ->
-            if (bruker.kanLeggeUtDriftsmelding) {
+            if (bruker.harDriftstilgang) {
                 val område = bruker.område.eksternId
                 val oppgavetypeEksternId = call.parameters["oppgavetype"]!!
                 val oppgaveEksternId = call.parameters["oppgaveEksternId"]!!
@@ -331,7 +331,7 @@ fun Route.forvaltningApis() {
          3. Regn ut diff
          */
         medBrukerkontekstUtenOmråde { bruker ->
-            if (bruker.kanLeggeUtDriftsmelding) {
+            if (bruker.harDriftstilgangIEttEllerFlereOmråder) {
                 val fagsystem = Fagsystem.fraParameter(call.parameters["fagsystem"]!!)
                 val avstemmingsrapport = avstemmingsTjeneste.avstem(fagsystem)
                 call.respond(objectMapper.writeValueAsString(avstemmingsrapport))
@@ -344,7 +344,7 @@ fun Route.forvaltningApis() {
     route("/ytelse") {
         get("/oppgaveko/antall") {
             medBrukerkontekstUtenOmråde { bruker ->
-                if (bruker.kanLeggeUtDriftsmelding) {
+                if (bruker.harDriftstilgangIEttEllerFlereOmråder) {
                     val antall = Områder.entries.flatMap { område ->
                         oppgaveKoTjeneste.hentOppgavekøer(område = område, skjermet = false).map {
                             oppgaveKoTjeneste.hentAntallOppgaverForKø(
@@ -364,7 +364,7 @@ fun Route.forvaltningApis() {
 
         get("/oppgaveko") {
             medBrukerkontekstUtenOmråde { bruker ->
-                if (bruker.kanLeggeUtDriftsmelding) {
+                if (bruker.harDriftstilgangIEttEllerFlereOmråder) {
                     call.respond(Områder.entries.flatMap { område ->
                         oppgaveKoTjeneste.hentOppgavekøer(område = område, skjermet = false).map { it.id }
                     })
@@ -376,7 +376,7 @@ fun Route.forvaltningApis() {
 
         get("/oppgaveko/{omrade}/{ko}/antall") {
             medBrukerkontekstUtenOmråde { bruker ->
-                if (bruker.kanLeggeUtDriftsmelding) {
+                if (bruker.harDriftstilgangIEttEllerFlereOmråder) {
                     val køId = call.parameters["ko"]!!.toLong()
                     val område = Områder.fraEksternId(call.parameters["omrade"]!!)
                     val medReserverte = call.request.queryParameters["reserverte"]?.toBoolean() ?: false
@@ -408,7 +408,7 @@ fun Route.forvaltningApis() {
         }
     }) {
         medBrukerkontekstUtenOmråde { bruker ->
-            if (bruker.kanLeggeUtDriftsmelding) {
+            if (bruker.harDriftstilgangIEttEllerFlereOmråder) {
                 val område = Områder.fraEksternId(call.parameters["omrade"]!!)
                 val kode = call.parameters["kode"]!!
 
@@ -444,7 +444,7 @@ fun Route.forvaltningApis() {
             "Hent oversikt over alle feltdefinisjoner som er brukt som kriterie i oppgavekøer og lagrede søk, med antall for hver"
     }) {
         medBrukerkontekstUtenOmråde { bruker ->
-            if (bruker.kanLeggeUtDriftsmelding) {
+            if (bruker.harDriftstilgangIEttEllerFlereOmråder) {
                 val (køer, lagredeSøk) = transactionalManager.transaction { tx ->
                     val alleKøer = forvaltningRepository.hentAlleOppgavekoerMedQuery(tx)
                     val alleLagredeSøk = forvaltningRepository.hentAlleLagredeSøkMedQuery(tx)
@@ -491,7 +491,7 @@ fun Route.forvaltningApis() {
         }
     }) {
         medBrukerkontekstUtenOmråde { bruker ->
-            if (bruker.kanLeggeUtDriftsmelding) {
+            if (bruker.harDriftstilgangIEttEllerFlereOmråder) {
                 val fagsystem = Fagsystem.fraParameter(call.parameters["fagsystem"]!!)
                 val oppgaveQueryFraRequest = call.receive<OppgaveQuery>()
                 if (oppgaveQueryFraRequest.select.isNotEmpty()) {
@@ -544,7 +544,7 @@ fun Route.forvaltningApis() {
         }
     }) {
         medBrukerkontekstUtenOmråde { bruker ->
-            if (bruker.kanLeggeUtDriftsmelding) {
+            if (bruker.harDriftstilgangIEttEllerFlereOmråder) {
                 val fagsystem = DvhSendingFagsystem.fraKode(call.parameters["fagsystem"]!!)
                 val oppgaveQueryFraRequest = call.receive<OppgaveQuery>()
                 if (oppgaveQueryFraRequest.select.isNotEmpty()) {

@@ -8,7 +8,8 @@ class Saksbehandler(
     var navn: String?,
     var epost: String,
     var enhet: String?,
-    var områder: List<Områder>
+    var områder: List<Områder>,
+    val kode6: Boolean
 ) {
     override fun toString(): String {
         return navident ?: ""

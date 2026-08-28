@@ -4,7 +4,6 @@ import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.OppgaveTestDataBuilder
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
-import no.nav.k9.los.infrastruktur.idtoken.IdTokenLocal
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.reservasjon.ReservasjonV3Tjeneste
 import org.hamcrest.CoreMatchers.equalTo
@@ -32,7 +31,8 @@ class SaksbehandlerRepositoryTest : AbstractK9LosIntegrationTest() {
                     navn = "Zed Saksbehandler",
                     epost = epost,
                     enhet = "9999",
-                    områder = listOf(Områder.K9)
+                    områder = listOf(Områder.K9),
+                    kode6 = false
                 ),
                 skjermet = false,
             )
@@ -66,7 +66,8 @@ class SaksbehandlerRepositoryTest : AbstractK9LosIntegrationTest() {
                     ident,
                     ident + "@nav.no",
                     enhet = "1234",
-                    områder = listOf(Områder.K9)
+                    områder = listOf(Områder.K9),
+                    kode6 = false
                 ),
                 skjermet = false,
             )
@@ -81,7 +82,8 @@ class SaksbehandlerRepositoryTest : AbstractK9LosIntegrationTest() {
                     ident2,
                     ident2 + "@nav.no",
                     enhet = "1234",
-                    områder = listOf(Områder.K9)
+                    områder = listOf(Områder.K9),
+                    kode6 = false
                 ),
                 skjermet = false,
             )

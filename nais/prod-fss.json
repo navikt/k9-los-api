@@ -17,7 +17,6 @@
   "app_k9punsj_url": "https://k9-punsj.intern.nav.no/api",
   "app_k9sak_frontend_url": "https://k9.intern.nav.no/k9/web",
   "app_k9punsj_frontend_url": "https://k9-punsj-frontend.intern.nav.no",
-  "app_sif_abac_pdp_url": "https://sif-abac-pdp.intern.nav.no/sif/sif-abac-pdp",
   "deployment_environment": "p",
   "ny_oppgavestyring_dvh_sending": "true",
   "ny_oppgavestyring_rest_api": "false",

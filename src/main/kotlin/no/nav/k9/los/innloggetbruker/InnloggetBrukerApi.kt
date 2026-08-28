@@ -42,7 +42,7 @@ internal fun Route.InnloggetBrukerApi() {
                     kanSaksbehandle = bruker.harBasisTilgang, //TODO mismatch mellom navnet 'kanSaksbehandle' og at alle som har tilgang til systemet har basistilgang
                     kanOppgavestyre = bruker.erOppgavestyrer,
                     kanReservere = bruker.harTilgangTilReserveringAvOppgaver,
-                    kanDrifte = bruker.kanLeggeUtDriftsmelding,
+                    kanDrifte = bruker.harDriftstilgang,
                     finnesISaksbehandlerTabell = finnesISaksbehandlerTabell,
                     områder = saksbehandler?.områder ?: emptyList()
                 )
@@ -58,7 +58,8 @@ internal fun Route.InnloggetBrukerApi() {
                             navn = token.getName(),
                             epost = token.getUsername(),
                             enhet = azureGraphService.hentEnhet(bruker),
-                            områder = saksbehandler.områder
+                            områder = saksbehandler.områder,
+                            kode6 = skjermet
                         ),
                         skjermet
                     )

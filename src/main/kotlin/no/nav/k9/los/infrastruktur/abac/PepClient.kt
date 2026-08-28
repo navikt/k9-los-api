@@ -1,7 +1,17 @@
 package no.nav.k9.los.infrastruktur.abac
 
+import com.fasterxml.jackson.module.kotlin.readValue
+import io.ktor.client.*
+import io.ktor.client.request.*
+import io.ktor.client.statement.*
+import io.ktor.http.*
+import no.nav.helse.dusseldorf.ktor.core.Retry
+import no.nav.helse.dusseldorf.oauth2.client.CachedAccessTokenClient
+import no.nav.k9.los.Configuration
 import no.nav.k9.los.infrastruktur.azuregraph.IAzureGraphService
 import no.nav.k9.los.infrastruktur.brukerkontekst.BrukerkontekstMedOmråde
+import no.nav.k9.los.infrastruktur.rest.NavHeaders
+import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.Oppgave
 import no.nav.k9.los.saksbehandleradmin.Saksbehandler
@@ -10,40 +20,63 @@ import no.nav.sif.abac.kontrakt.abac.dto.SaksnummerDto
 import no.nav.sif.abac.kontrakt.person.AktørId
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.time.Duration
+import java.util.*
 
 class PepClient internal constructor(
     private val azureGraphService: IAzureGraphService,
     private val sifAbacPdpKlienter: SifAbacPdpKlienter,
-    private val gruppeoppsett: Gruppeoppsett,
+    private val cachedAccessTokenClient: CachedAccessTokenClient,
+    private val configuration: Configuration,
+    private val scope: String,
+    private val httpClient: HttpClient
 ) : IPepClient {
     private val log: Logger = LoggerFactory.getLogger(PepClient::class.java)
-
-    override suspend fun harSaksbehandlerTilgangTilKode6(ident: String, brukerkontekst: BrukerkontekstMedOmråde): Boolean {
-        if (ident == brukerkontekst.navIdent) {
-            return brukerkontekst.harTilgangTilKode6
-        }
-        val kode6Gruppe = gruppeoppsett.forOmråde(brukerkontekst.område).kode6 ?: return false
-        val grupper = azureGraphService.hentGrupper(ident)
-        return grupper.contains(kode6Gruppe)
-    }
 
     override suspend fun diskresjonskoderForSak(fagsakNummer: String, område: Områder): Set<Diskresjonskode> {
         return sifAbacPdpKlienter.forOmråde(område).diskresjonskoderSak(SaksnummerDto(fagsakNummer))
     }
 
     override suspend fun diskresjonskoderForPerson(aktørId: String, område: Områder): Set<Diskresjonskode> {
-        return sifAbacPdpKlienter.forOmråde(område).diskresjonskoderPerson(AktørId(aktørId))
+        val systemToken = cachedAccessTokenClient.getClientCredentialsAccessToken(setOf(scope))
+        val response = Retry.retry(
+            tries = 3,
+            operation = "diskresjonskoder-person",
+            initialDelay = Duration.ofMillis(200),
+            factor = 2.0,
+            logger = log
+        ) {
+            httpClient.post("${configuration.sifAbacPdpUrl()}/api/diskresjonskoder/person") {
+                setBody(LosObjectMapper.instance.writeValueAsString(aktørId))
+                header(
+                    //OBS! Dette kalles bare med system token, og skal ikke brukes ved saksbehandler token
+                    HttpHeaders.Authorization, systemToken.asAuthoriationHeader()
+                )
+                header(HttpHeaders.Accept, "application/json")
+                header(HttpHeaders.ContentType, "application/json")
+                header(NavHeaders.CallId, UUID.randomUUID().toString())
+            }
+        }
+
+        val abc = if (response.status.isSuccess()) {
+            response.bodyAsText()
+        } else {
+            throw IllegalStateException("Feil ved henting av diskresjonskoder for person fra sif-abac-pdp: HTTP ${response.status.value} ${response.status.description}")
+        }
+
+        return LosObjectMapper.instance.readValue<List<Diskresjonskode>>(abc)
+            .toSet()
     }
 
     override suspend fun harTilgangTilOppgaveV3(
         oppgave: Oppgave,
-        bruker: BrukerkontekstMedOmråde,
+        brukerkontekst: BrukerkontekstMedOmråde,
         action: Action,
     ): Boolean {
         return harTilgang(
             område = oppgave.oppgavetype.område.tilOmrådeEnum(),
             oppgavetype = oppgave.oppgavetype.eksternId,
-            identTilInnloggetBruker = bruker.navIdent,
+            identTilInnloggetBruker = brukerkontekst.navIdent,
             action = action,
             saksnummer = oppgave.hentVerdi("saksnummer"),
             aktørIdSøker = oppgave.hentVerdi("aktorId"),

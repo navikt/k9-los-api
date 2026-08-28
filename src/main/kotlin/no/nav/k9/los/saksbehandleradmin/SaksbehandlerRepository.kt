@@ -424,7 +424,8 @@ class SaksbehandlerRepository(
             navn = row.stringOrNull("navn"),
             epost = row.string("epost").lowercase(Locale.getDefault()),
             enhet = row.stringOrNull("enhet"),
-            områder = områder
+            områder = områder,
+            kode6 = row.boolean("skjermet"),
         )
     }
 

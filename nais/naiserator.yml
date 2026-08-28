@@ -69,6 +69,7 @@ spec:
         - application: k9-punsj
           namespace: k9saksbehandling
           cluster: {{cluster_name_punsj}}
+        - application: sif-abac-pdp
     inbound:
       rules:
         - application: k9-los-web
@@ -109,7 +110,7 @@ spec:
     - name: APP_K9PUNSJ_FRONTEND_URL
       value: {{app_k9punsj_frontend_url}}
     - name: APP_SIF_ABAC_PDP_URL
-      value: {{app_sif_abac_pdp_url}}
+      value: http://sif-abac-pdp
 
       # Kafka
     - name: KAFKA_AKSJONSPUNKTHENDELSE_TOPIC

@@ -36,38 +36,6 @@ class SifAbacPdpKlientK9(
     private val scopes = setOf(scope)
     private val environment = configuration.koinProfile
 
-    override suspend fun diskresjonskoderPerson(aktørId: AktørId): Set<Diskresjonskode> {
-        val antallForsøk = 3
-        val systemToken = cachedAccessTokenClient.getClientCredentialsAccessToken(scopes)
-        val response = Retry.retry(
-            tries = antallForsøk,
-            operation = "diskresjonskoder-person",
-            initialDelay = Duration.ofMillis(200),
-            factor = 2.0,
-            logger = log
-        ) {
-            httpClient.post("${url}/api/diskresjonskoder/person") {
-                setBody(LosObjectMapper.instance.writeValueAsString(aktørId))
-                header(
-                    //OBS! Dette kalles bare med system token, og skal ikke brukes ved saksbehandler token
-                    HttpHeaders.Authorization, systemToken.asAuthoriationHeader()
-                )
-                header(HttpHeaders.Accept, "application/json")
-                header(HttpHeaders.ContentType, "application/json")
-                header(NavHeaders.CallId, UUID.randomUUID().toString())
-            }
-        }
-
-        val abc = if (response.status.isSuccess()) {
-            response.bodyAsText()
-        } else {
-            throw IllegalStateException("Feil ved henting av diskresjonskoder for person fra sif-abac-pdp: HTTP ${response.status.value} ${response.status.description}")
-        }
-
-        return LosObjectMapper.instance.readValue<List<Diskresjonskode>>(abc)
-            .toSet()
-    }
-
     override suspend fun diskresjonskoderSak(saksnummerDto: SaksnummerDto): Set<Diskresjonskode> {
         val antallForsøk = 3
         val systemToken = cachedAccessTokenClient.getClientCredentialsAccessToken(scopes)

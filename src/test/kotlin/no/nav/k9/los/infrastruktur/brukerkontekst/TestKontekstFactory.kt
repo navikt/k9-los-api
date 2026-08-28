@@ -35,7 +35,7 @@ internal object TestKontekstFactory {
         harTilgangTilKode6 = tilganger.harTilgangTilKode6,
         erOppgavestyrer = tilganger.erOppgavestyrer,
         harTilgangTilReserveringAvOppgaver = tilganger.harTilgangTilReserveringAvOppgaver,
-        kanLeggeUtDriftsmelding = tilganger.kanLeggeUtDriftsmelding,
+        harDriftstilgang = tilganger.kanLeggeUtDriftsmelding,
     )
 
     fun brukerkontekstUtenOmråde(
@@ -46,6 +46,6 @@ internal object TestKontekstFactory {
         idToken = idToken,
         harBasisTilgangIEttEllerFlereOmråder = tilgangerPerOmråde.values.any { it.harBasisTilgang },
         harKode6TilgangIEttEllerFlereOmråder = tilgangerPerOmråde.values.any { it.harTilgangTilKode6 },
-        kanLeggeUtDriftsmelding = tilgangerPerOmråde.values.any { it.kanLeggeUtDriftsmelding },
+        harDriftstilgangIEttEllerFlereOmråder = tilgangerPerOmråde.values.any { it.kanLeggeUtDriftsmelding },
     )
 }

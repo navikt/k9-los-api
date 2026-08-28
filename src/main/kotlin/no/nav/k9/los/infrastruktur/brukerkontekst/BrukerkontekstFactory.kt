@@ -25,7 +25,7 @@ internal class BrukerkontekstFactory(
                 harTilgangTilKode6 = false,
                 erOppgavestyrer = true,
                 harTilgangTilReserveringAvOppgaver = true,
-                kanLeggeUtDriftsmelding = true,
+                harDriftstilgang = true,
                 idToken = idToken,
             )
         }
@@ -37,7 +37,7 @@ internal class BrukerkontekstFactory(
             harTilgangTilKode6 = tilganger.harTilgangTilKode6,
             erOppgavestyrer = tilganger.erOppgavestyrer,
             harTilgangTilReserveringAvOppgaver = tilganger.harTilgangTilReserveringAvOppgaver,
-            kanLeggeUtDriftsmelding = tilganger.kanLeggeUtDriftsmelding,
+            harDriftstilgang = tilganger.kanLeggeUtDriftsmelding,
             idToken = idToken,
         )
     }
@@ -48,7 +48,7 @@ internal class BrukerkontekstFactory(
                 navIdent = idToken.getNavIdent(),
                 harBasisTilgangIEttEllerFlereOmråder = true,
                 harKode6TilgangIEttEllerFlereOmråder = false, // kode6 er av lokalt, jf. medOmråde
-                kanLeggeUtDriftsmelding = true,
+                harDriftstilgangIEttEllerFlereOmråder = true,
                 idToken = idToken,
             )
         }
@@ -63,7 +63,7 @@ internal class BrukerkontekstFactory(
             navIdent = idToken.getNavIdent(),
             harBasisTilgangIEttEllerFlereOmråder = tilgangerPerOmråde.any { it.second.harBasisTilgang },
             harKode6TilgangIEttEllerFlereOmråder = tilgangerPerOmråde.any { it.second.harTilgangTilKode6 },
-            kanLeggeUtDriftsmelding = tilgangerPerOmråde.any { it.second.kanLeggeUtDriftsmelding },
+            harDriftstilgangIEttEllerFlereOmråder = tilgangerPerOmråde.any { it.second.kanLeggeUtDriftsmelding },
             idToken = idToken,
         )
     }

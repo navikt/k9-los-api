@@ -23,7 +23,7 @@ fun Route.DriftsmeldingerApis() {
 
     post {
         medBrukerkontekstUtenOmråde { bruker ->
-            if (bruker.kanLeggeUtDriftsmelding) {
+            if (bruker.harDriftstilgangIEttEllerFlereOmråder) {
                 val melding = call.receive<Driftsmelding>()
                 call.respond(driftsmeldingTjeneste.leggTilDriftsmelding(melding.driftsmelding))
             } else {
@@ -34,7 +34,7 @@ fun Route.DriftsmeldingerApis() {
 
     post("/slett") {
         medBrukerkontekstUtenOmråde { bruker ->
-            if (bruker.kanLeggeUtDriftsmelding) {
+            if (bruker.harDriftstilgangIEttEllerFlereOmråder) {
                 val param = call.receive<IdDto>()
                 call.respond(driftsmeldingTjeneste.slettDriftsmelding(UUID.fromString(param.id)))
             } else {
@@ -45,7 +45,7 @@ fun Route.DriftsmeldingerApis() {
 
     post("/toggle") {
         medBrukerkontekstUtenOmråde { bruker ->
-            if (bruker.kanLeggeUtDriftsmelding) {
+            if (bruker.harDriftstilgangIEttEllerFlereOmråder) {
                 val param = call.receive<DriftsmeldingSwitch>()
                 call.respond(driftsmeldingTjeneste.toggleDriftsmelding(param))
             } else {

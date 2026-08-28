@@ -41,6 +41,7 @@ class SisteOppgaverRepositoryTest : AbstractK9LosIntegrationTest() {
                     epost = "test@nav.no",
                     enhet = null,
                     områder = listOf(Områder.K9),
+                    kode6 = false,
                 ),
                 skjermet = false,
             )

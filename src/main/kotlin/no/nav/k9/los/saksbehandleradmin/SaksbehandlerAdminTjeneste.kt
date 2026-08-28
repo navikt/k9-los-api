@@ -22,7 +22,7 @@ class SaksbehandlerAdminTjeneste(
         var saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedEpost(epostDto.epost, skjermet)
         if (saksbehandler == null) {
             saksbehandler = Saksbehandler(
-                null, null, null, epostDto.epost, null, listOf(område)
+                null, null, null, epostDto.epost, null, listOf(område), skjermet
             )
             saksbehandlerRepository.addSaksbehandler(epostDto.epost, område)
         }

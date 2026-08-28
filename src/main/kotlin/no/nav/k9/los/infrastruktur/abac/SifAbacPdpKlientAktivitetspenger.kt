@@ -7,9 +7,6 @@ import java.util.UUID
 
 class SifAbacPdpKlientAktivitetspenger : ISifAbacPdpKlient {
 
-    override suspend fun diskresjonskoderPerson(aktørId: AktørId): Set<Diskresjonskode> =
-        ikkeImplementert("diskresjonskoderPerson")
-
     override suspend fun diskresjonskoderSak(saksnummerDto: SaksnummerDto): Set<Diskresjonskode> =
         ikkeImplementert("diskresjonskoderSak")
 

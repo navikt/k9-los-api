@@ -12,7 +12,7 @@ data class BrukerkontekstMedOmråde internal constructor(
     val harTilgangTilKode6: Boolean,
     val erOppgavestyrer: Boolean,
     val harTilgangTilReserveringAvOppgaver: Boolean,
-    val kanLeggeUtDriftsmelding: Boolean,
+    val harDriftstilgang: Boolean,
 )
 
 @ConsistentCopyVisibility
@@ -21,5 +21,5 @@ data class BrukerkontekstUtenOmråde internal constructor(
     val idToken: IdToken,
     val harBasisTilgangIEttEllerFlereOmråder: Boolean,
     val harKode6TilgangIEttEllerFlereOmråder: Boolean,
-    val kanLeggeUtDriftsmelding: Boolean,
+    val harDriftstilgangIEttEllerFlereOmråder: Boolean,
 )
