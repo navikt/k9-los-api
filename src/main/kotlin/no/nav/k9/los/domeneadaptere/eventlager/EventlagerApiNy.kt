@@ -21,7 +21,7 @@ import no.nav.k9.los.forvaltning.K9TilbakeEventIkkeSensitiv
 import no.nav.k9.los.forvaltning.UngSakEventIkkeSensitiv
 import no.nav.k9.los.infrastruktur.brukerkontekst.medBrukerkontekstUtenOmråde
 import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
-import no.nav.k9.los.kodeverk.Fagsystem
+import no.nav.k9.los.domeneadaptere.eventlager.Fagsystem
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import org.koin.ktor.ext.inject
 import java.util.*

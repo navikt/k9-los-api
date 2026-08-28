@@ -2,7 +2,7 @@ package no.nav.k9.los.domeneadaptere.k9
 
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonValue
-import no.nav.k9.los.kodeverk.Fagsystem
+import no.nav.k9.los.domeneadaptere.eventlager.Fagsystem
 
 enum class K9Oppgavetypenavn(@JsonValue val kode: String) {
     SAK("k9sak"),

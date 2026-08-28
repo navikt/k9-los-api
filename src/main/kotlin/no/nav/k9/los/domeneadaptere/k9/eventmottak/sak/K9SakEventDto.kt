@@ -10,7 +10,7 @@ import no.nav.k9.kodeverk.behandling.FagsakStatus
 import no.nav.k9.kodeverk.produksjonsstyring.MerknadType
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.EventHendelse
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.KodeverkDeserializer
-import no.nav.k9.los.kodeverk.Fagsystem
+import no.nav.k9.los.domeneadaptere.eventlager.Fagsystem
 import no.nav.k9.sak.kontrakt.aksjonspunkt.AksjonspunktTilstandDto
 import no.nav.k9.sak.typer.Periode
 import java.time.LocalDate

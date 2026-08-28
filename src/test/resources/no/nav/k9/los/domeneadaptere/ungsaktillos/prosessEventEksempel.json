@@ -18,12 +18,12 @@
   "ytelseTypeKode": "AKT",
   "behandlendeEnhet": "0387",
   "behandlingStatus": "UTRED",
-  "søknadsårsaker": [],
-  "fraEndringsdialog": false,
+  "søknadsårsaker": [], //TODO: ikke i bruk, fjern i ung-sak
+  "fraEndringsdialog": false, //TODO: ikke i bruk, fjern i ung-sak
+  "aksjonspunktTilstander": [],
   "behandlingTypeKode": "BT-002",
   "behandlingsårsaker": [],
   "ansvarligBeslutterForTotrinn": null,
-  "aksjonspunktTilstander": [],
   "opprettetBehandling": "2026-08-21T12:49:33",
   "eldsteDatoMedEndringFraSøker": "2026-08-21T10:49:15.477",
   "aksjonspunktKoderMedStatusListe": {},
@@ -117,12 +117,28 @@
       "ansvarligSaksbehandler": "Z994959"
     }
   ],
+  "ansvarligSaksbehandlerForTotrinn": null,
   "ansvarligBeslutterForTotrinn": null,
+
   "eldsteDatoMedEndringFraSøker": "2026-08-21T10:49:15.477",
   "aksjonspunktKoderMedStatusListe": {
     "5140": "UTFO",
     "5142": "OPPR"
-  },
-  "ansvarligSaksbehandlerForTotrinn": null
+  }
 }
 ]
+
+e1: AP1
+e2: løst lokalkontor, ansvarlig saksbehandler: X
+e3: besluttet lokalkontor, ansvarlig beslutter: y
+e4: AP2, NAY
+e5: løst NAY, ansvarlig saksbehandler2: a
+e3: besluttet NAY, ansvarlig beslutter2: b
+
+o1: AP1
+o2: løst lokalkontor, ansvarlig saksbehandler: X
+o3: besluttet lokalkontor, ansvarlig beslutter: y
+
+o'1: AP2, NAY
+o'2: løst NAY, ansvarlig saksbehandler: a
+o'3: besluttet NAY, ansvarlig beslutter: b

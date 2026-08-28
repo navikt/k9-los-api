@@ -8,7 +8,7 @@ import no.nav.k9.los.domeneadaptere.k9.eventmottak.tilbakekrav.K9TilbakeEventDto
 import no.nav.k9.los.kodeverk.AksjonspunktStatus
 import no.nav.k9.los.kodeverk.AksjonspunktStatus.OPPRETTET
 import no.nav.k9.los.kodeverk.BehandlingStatus
-import no.nav.k9.los.kodeverk.Fagsystem
+import no.nav.k9.los.domeneadaptere.eventlager.Fagsystem
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.oppgavemottak.*
 import org.jetbrains.annotations.VisibleForTesting

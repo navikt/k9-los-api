@@ -344,7 +344,7 @@ class OmrådeSetup(
             eksternId = "Fagsystem",
             beskrivelse = null,
             uttømmende = true,
-            verdier = Fagsystem.entries.lagDto(beskrivelse = null)
+            verdier = K9Fagsystem.entries.lagDto(beskrivelse = null)
         )
         feltdefinisjonTjeneste.oppdater(kodeverkDto)
     }

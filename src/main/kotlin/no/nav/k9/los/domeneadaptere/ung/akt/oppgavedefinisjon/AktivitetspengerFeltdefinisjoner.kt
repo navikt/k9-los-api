@@ -1,5 +1,6 @@
 package no.nav.k9.los.domeneadaptere.ung.akt.oppgavedefinisjon
 
+import no.nav.k9.los.kodeverk.AktFagsystem
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.Datatype
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.FeltdefinisjonDto
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.FeltdefinisjonerDto
@@ -8,6 +9,10 @@ import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.Synlighet
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.query.mapping.transientfeltutleder.K9SakTidSidenMottattDatoUtleder
 import no.nav.k9.los.oppgaveuthenting.query.mapping.transientfeltutleder.TransientFeltutleder
+import no.nav.ung.kodeverk.behandling.BehandlingStatus
+import no.nav.ung.kodeverk.behandling.BehandlingStegType
+import no.nav.ung.kodeverk.behandling.BehandlingType
+import no.nav.ung.kodeverk.behandling.BehandlingÅrsakType
 import kotlin.reflect.KClass
 
 object AktivitetspengerFeltdefinisjoner {
@@ -29,7 +34,7 @@ object AktivitetspengerFeltdefinisjoner {
                     listetype = false,
                     tolkesSom = Datatype.STRING,
                     synlighet = Synlighet.OVER_STREKEN,
-                    kodeverkreferanse = kodeverk(Områder.AKTIVITETSPENGER, "Behandlingtype"),
+                    kodeverkreferanse = kodeverk(Områder.AKTIVITETSPENGER, BehandlingType::class.java.simpleName),
                 ),
                 felt(
                     id = AktivitetspengerFeltIder.Behandling.STATUS,
@@ -37,7 +42,7 @@ object AktivitetspengerFeltdefinisjoner {
                     listetype = false,
                     tolkesSom = Datatype.STRING,
                     synlighet = Synlighet.UNDER_STREKEN,
-                    kodeverkreferanse = kodeverk(Områder.AKTIVITETSPENGER, "Behandlingsstatus"),
+                    kodeverkreferanse = kodeverk(Områder.AKTIVITETSPENGER, BehandlingStatus::class.java.simpleName),
                 ),
                 felt(
                     id = AktivitetspengerFeltIder.Behandling.STEG,
@@ -45,7 +50,7 @@ object AktivitetspengerFeltdefinisjoner {
                     listetype = false,
                     tolkesSom = Datatype.STRING,
                     synlighet = Synlighet.UNDER_STREKEN,
-                    kodeverkreferanse = kodeverk(Områder.AKTIVITETSPENGER, "Behandlingssteg"),
+                    kodeverkreferanse = kodeverk(Områder.AKTIVITETSPENGER, BehandlingStegType::class.java.simpleName),
                 ),
                 felt(
                     id = AktivitetspengerFeltIder.Behandling.ARSAK,
@@ -53,27 +58,12 @@ object AktivitetspengerFeltdefinisjoner {
                     listetype = true,
                     tolkesSom = Datatype.STRING,
                     synlighet = Synlighet.OVER_STREKEN,
-                    kodeverkreferanse = kodeverk(Områder.AKTIVITETSPENGER, "behandlingsårsak"),
+                    kodeverkreferanse = kodeverk(Områder.AKTIVITETSPENGER, BehandlingÅrsakType::class.java.simpleName),
                 ),
                 // Soknad
                 felt(
                     id = AktivitetspengerFeltIder.Soknad.NYE_KRAV,
                     visningsnavn = "Søknad inneholder nye perioder",
-                    listetype = false,
-                    tolkesSom = Datatype.BOOLEAN,
-                    synlighet = Synlighet.OVER_STREKEN,
-                ),
-                felt(
-                    id = AktivitetspengerFeltIder.Soknad.ARSAK,
-                    visningsnavn = "Søknadsårsak - gjelder kun omsorgspenger",
-                    listetype = true,
-                    tolkesSom = Datatype.STRING,
-                    synlighet = Synlighet.OVER_STREKEN,
-                    kodeverkreferanse = kodeverk(Områder.AKTIVITETSPENGER, "søknadsårsak"),
-                ),
-                felt(
-                    id = AktivitetspengerFeltIder.Soknad.FRA_ENDRINGSDIALOG,
-                    visningsnavn = "Oppdatert gjennom endringsdialog",
                     listetype = false,
                     tolkesSom = Datatype.BOOLEAN,
                     synlighet = Synlighet.OVER_STREKEN,
@@ -92,7 +82,7 @@ object AktivitetspengerFeltdefinisjoner {
                     listetype = false,
                     tolkesSom = Datatype.STRING,
                     synlighet = Synlighet.UNDER_STREKEN,
-                    kodeverkreferanse = kodeverk(Områder.K9, "Fagsystem"), //TODO: Område
+                    kodeverkreferanse = kodeverk(Områder.AKTIVITETSPENGER, AktFagsystem::class.java.simpleName),
                 ),
                 felt(
                     id = AktivitetspengerFeltIder.Sak.SAKSNUMMER,

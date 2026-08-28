@@ -16,7 +16,7 @@ import no.nav.k9.los.forvaltning.*
 import no.nav.k9.los.infrastruktur.brukerkontekst.medBrukerkontekst
 import no.nav.k9.los.infrastruktur.brukerkontekst.medBrukerkontekstUtenOmråde
 import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
-import no.nav.k9.los.kodeverk.Fagsystem
+import no.nav.k9.los.domeneadaptere.eventlager.Fagsystem
 import org.koin.ktor.ext.inject
 import java.util.*
 import kotlin.concurrent.thread
