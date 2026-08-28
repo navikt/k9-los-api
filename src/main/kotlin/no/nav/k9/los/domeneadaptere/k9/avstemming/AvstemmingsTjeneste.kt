@@ -7,7 +7,7 @@ import no.nav.k9.los.domeneadaptere.k9.avstemming.punsj.systemklient.PunsjAvstem
 import no.nav.k9.los.domeneadaptere.k9.avstemming.saksbehandling.Behandlingstilstand
 import no.nav.k9.los.domeneadaptere.k9.avstemming.saksbehandling.SakAvstemmer
 import no.nav.k9.los.domeneadaptere.k9.avstemming.saksbehandling.systemklient.SakAvstemmingsklient
-import no.nav.k9.los.kodeverk.Fagsystem
+import no.nav.k9.los.domeneadaptere.eventlager.Fagsystem
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.query.OppgaveQueryService

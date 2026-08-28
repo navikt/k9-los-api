@@ -1,5 +1,6 @@
 package no.nav.k9.los.oppgavedefinisjon.feltdefinisjon
 
+import kotliquery.TransactionalSession
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.oppgavedefinisjon.omraade.Område
 import no.nav.k9.los.oppgavedefinisjon.omraade.OmrådeRepository
@@ -24,15 +25,24 @@ class FeltdefinisjonTjeneste(
         }
     }
 
+    fun oppdater(kodeverkDtoListe: List<KodeverkDto>) {
+        transactionalManager.transaction { tx ->
+            kodeverkDtoListe.forEach { oppdater(it, tx) }
+        }
+    }
+
     fun oppdater(kodeverkDto: KodeverkDto) {
         transactionalManager.transaction { tx ->
-            val område = områdeRepository.hentOmråde(kodeverkDto.område, tx)
-
-            val kodeverk = Kodeverk(kodeverkDto, område)
-
-            feltdefinisjonRepository.tømVerdierHvisKodeverkFinnes(kodeverk, tx)
-            feltdefinisjonRepository.lagre(kodeverk, tx)
+            oppdater(kodeverkDto, tx)
         }
+    }
+
+    private fun oppdater(kodeverkDto: KodeverkDto, tx: TransactionalSession) {
+        val område = områdeRepository.hentOmråde(kodeverkDto.område, tx)
+        val kodeverk = Kodeverk(kodeverkDto, område)
+
+        feltdefinisjonRepository.tømVerdierHvisKodeverkFinnes(kodeverk, tx)
+        feltdefinisjonRepository.lagre(kodeverk, tx)
     }
 
     fun hent(område: String): Feltdefinisjoner {

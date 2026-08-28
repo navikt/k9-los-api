@@ -1,4 +1,4 @@
-package no.nav.k9.los.domeneadaptere.ungsak.eventmottak.ungsak
+package no.nav.k9.los.domeneadaptere.ung.eventmottak.ungsak
 
 import no.nav.ung.kodeverk.Fagsystem
 import no.nav.ung.kodeverk.hendelse.EventHendelse
@@ -29,6 +29,9 @@ data class UngSakEventDto(
     val behandlendeEnhet: String? = null,
     val ansvarligBeslutterForTotrinn: String? = null,
     val ansvarligSaksbehandlerForTotrinn: String? = null,
+    val navKontorAnsvarligSaksbehandler: String? = null,
+    val navKontorBeslutter: String? = null,
+
     val resultatType: String? = null,
     val ytelseTypeKode: String,
     val behandlingTypeKode: String,
@@ -41,16 +44,13 @@ data class UngSakEventDto(
     @JsonDeserialize(using = LocalDateTimeDeserializer::class)
     val opprettetBehandling: LocalDateTime,
 
-    val aksjonspunktKoderMedStatusListe: Map<String, String>,
     val fagsakPeriode: Periode? = null,
     val aksjonspunktTilstander: List<AksjonspunktTilstandDto> = emptyList(),
     val nyeKrav: Boolean? = null,
-    val fraEndringsdialog: Boolean? = null,
 
     @JsonDeserialize(using = LocalDateDeserializer::class)
     val vedtaksdato: LocalDate? = null,
 
     val behandlingstidFrist: LocalDate? = null,
     val behandlingsårsaker: List<String> = emptyList(),
-    val søknadsårsaker: List<String> = emptyList(),
 )

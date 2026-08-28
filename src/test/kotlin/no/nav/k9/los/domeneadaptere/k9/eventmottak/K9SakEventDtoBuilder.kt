@@ -10,7 +10,7 @@ import no.nav.k9.kodeverk.behandling.aksjonspunkt.Venteårsak
 import no.nav.k9.kodeverk.uttak.SøknadÅrsak
 import no.nav.k9.los.kodeverk.BehandlingStatus
 import no.nav.k9.los.kodeverk.FagsakYtelseType
-import no.nav.k9.los.kodeverk.Fagsystem
+import no.nav.k9.los.domeneadaptere.eventlager.Fagsystem
 import no.nav.k9.los.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.sak.K9SakEventDto
 import java.time.LocalDate

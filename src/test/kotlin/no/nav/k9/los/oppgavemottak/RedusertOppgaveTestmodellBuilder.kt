@@ -1,5 +1,6 @@
 package no.nav.k9.los.oppgavemottak
 
+import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.Datatype
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.FeltdefinisjonDto
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.FeltdefinisjonTjeneste
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.FeltdefinisjonerDto
@@ -45,8 +46,7 @@ class RedusertOppgaveTestmodellBuilder(
                     visningsnavn = "Test",
                     beskrivelse = null,
                     listetype = true,
-                    tolkesSom = "String",
-
+                    tolkesSom = Datatype.STRING,
                     synlighet = Synlighet.UNDER_STREKEN,
                     kodeverkreferanse = null,
                     transientFeltutleder = null,
@@ -56,8 +56,7 @@ class RedusertOppgaveTestmodellBuilder(
                     visningsnavn = "Test",
                     beskrivelse = null,
                     listetype = false,
-                    tolkesSom = "Timestamp",
-
+                    tolkesSom = Datatype.TIMESTAMP,
                     synlighet = Synlighet.UNDER_STREKEN,
                     kodeverkreferanse = null,
                     transientFeltutleder = null,
@@ -67,8 +66,7 @@ class RedusertOppgaveTestmodellBuilder(
                     visningsnavn = "Test",
                     beskrivelse = null,
                     listetype = false,
-                    tolkesSom = "String",
-
+                    tolkesSom = Datatype.STRING,
                     synlighet = Synlighet.UNDER_STREKEN,
                     kodeverkreferanse = null,
                     transientFeltutleder = null,
@@ -78,7 +76,7 @@ class RedusertOppgaveTestmodellBuilder(
                     visningsnavn = "Test",
                     beskrivelse = null,
                     listetype = false,
-                    tolkesSom = "Duration",
+                    tolkesSom = Datatype.DURATION,
                     synlighet = Synlighet.INTERNT,
                     kodeverkreferanse = null,
                     transientFeltutleder = null,
@@ -88,7 +86,7 @@ class RedusertOppgaveTestmodellBuilder(
                     visningsnavn = "Test",
                     beskrivelse = null,
                     listetype = false,
-                    tolkesSom = "boolean",
+                    tolkesSom = Datatype.BOOLEAN,
                     synlighet = Synlighet.INTERNT,
                     kodeverkreferanse = null,
                     transientFeltutleder = null,

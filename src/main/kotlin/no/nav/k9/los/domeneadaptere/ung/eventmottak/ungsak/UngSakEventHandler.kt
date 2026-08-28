@@ -1,10 +1,10 @@
-package no.nav.k9.los.domeneadaptere.ungsak.eventmottak.ungsak
+package no.nav.k9.los.domeneadaptere.ung.eventmottak.ungsak
 
 import no.nav.k9.los.domeneadaptere.eventlager.EventRepository
+import no.nav.k9.los.domeneadaptere.eventlager.Fagsystem
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.FeilRekkefølgeSjekker
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
-import no.nav.k9.los.kodeverk.Fagsystem
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import org.slf4j.LoggerFactory
 
