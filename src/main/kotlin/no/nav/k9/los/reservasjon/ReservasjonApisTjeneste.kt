@@ -34,15 +34,14 @@ class ReservasjonApisTjeneste(
 
     suspend fun reserverOppgave(
         innloggetBruker: Saksbehandler,
-        oppgaveIdMedOverstyringDto: OppgaveIdMedOverstyringDto,
+        oppgaveNøkkel: OppgaveNøkkelDto,
         skjermet: Boolean,
         område: Områder,
     ): OppgaveStatusDto {
         val reserverFra = LocalDateTime.now()
-        val oppgaveNøkkel = oppgaveIdMedOverstyringDto.oppgaveNøkkel
 
         val reserverForSaksbehandler = saksbehandlerRepository.finnSaksbehandlerMedIdent(
-            oppgaveIdMedOverstyringDto.overstyrIdent ?: innloggetBruker.navident!!, skjermet
+            innloggetBruker.navident!!, skjermet
         )!!
 
         val reservasjonV3 = transactionalManager.transactionSuspend { tx ->
@@ -58,7 +57,7 @@ class ReservasjonApisTjeneste(
                 reserverForId = reserverForSaksbehandler.id!!,
                 gyldigFra = reserverFra,
                 utføresAvId = innloggetBruker.id!!,
-                kommentar = oppgaveIdMedOverstyringDto.overstyrBegrunnelse,
+                kommentar = null,
                 gyldigTil = reserverFra.leggTilDagerHoppOverHelg(2),
                 tx = tx
             )

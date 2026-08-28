@@ -31,7 +31,7 @@ import no.nav.k9.los.oppgaveuthenting.query.QueryRequest
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.OppgaveQuery
 import no.nav.k9.los.oppgaveuthenting.query.mapping.EksternFeltverdiOperator
-import no.nav.k9.los.reservasjon.OppgaveIdMedOverstyringDto
+import no.nav.k9.los.reservasjon.OppgaveNøkkelWrapperDto
 import no.nav.k9.los.reservasjon.ReservasjonApisTjeneste
 import no.nav.k9.los.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.oppgaveuthenting.OppgaveNøkkelDto
@@ -107,9 +107,7 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         val reservasjoner = runBlocking {
             reservasjonTjeneste.reserverOppgave(
                 TestSaksbehandler.SARA,
-                OppgaveIdMedOverstyringDto(
-                    oppgaveNøkkel = TestOppgaveNøkkel.forK9sak(eksternId)
-                ),
+                TestOppgaveNøkkel.forK9sak(eksternId),
                 skjermet = false,
                 område = Områder.K9,
             )
