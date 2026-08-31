@@ -4,5 +4,5 @@ interface IdToken {
     val value: String
     fun getNavIdent(): String
     fun getName(): String
-    fun getUsername(): String
+    fun getPreferredUsername(): String
 }

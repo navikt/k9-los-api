@@ -131,17 +131,12 @@ class PepClient internal constructor(
         aktørIdPleietrengende: String?,
     ): Boolean {
         val klient = sifAbacPdpKlienter.forOmråde(Områder.K9)
-        // TODO: PDP-endepunktene sak-grupper/personer-grupper tar fortsatt grupper som input.
-        // Når PDP tilbyr ident-baserte endepunkter (gruppene hentes da fra OBO-tokenet
-        // server-side) kan Graph-oppslaget her fjernes.
-        val saksbehandlersGrupper = azureGraphService.hentGrupper(identTilInnloggetBruker)
         return when (oppgavetype) {
             "k9sak", "k9klage", "k9tilbake" -> {
                 klient.harTilgangTilSak(
                     action = action,
                     saksnummerDto = SaksnummerDto(saksnummer!!),
                     saksbehandlersIdent = identTilInnloggetBruker,
-                    saksbehandlersGrupper = saksbehandlersGrupper
                 )
             }
 
@@ -151,9 +146,7 @@ class PepClient internal constructor(
                 val tilgang = if (aktørIder.isNotEmpty()) klient.harTilgangTilPersoner(
                     action = action,
                     aktørIder = aktørIder,
-                    saksbehandlersIdent = identTilInnloggetBruker,
-                    saksbehandlersGrupper = saksbehandlersGrupper
-                ) else {
+                    saksbehandlersIdent = identTilInnloggetBruker) else {
                     log.warn("Ingen aktørIder funnet for punsj-oppgave. Gir som fallback tilgang til oppgaven, for å unngå at den havner utenfor alle køer.")
                     true
                 }

@@ -46,8 +46,11 @@ internal class BrukerkontekstFactory(
         if (lokaleTilganger) {
             return BrukerkontekstUtenOmråde(
                 navIdent = idToken.getNavIdent(),
+                områderMedBasisTilgang = Områder.entries,
                 harBasisTilgangIEttEllerFlereOmråder = true,
                 harKode6TilgangIEttEllerFlereOmråder = false, // kode6 er av lokalt, jf. medOmråde
+                erOppgavestyrerIEttEllerFlereOmråder = true,
+                harTilgangTilReserveringAvOppgaverIEttEllerFlereOmråder = true,
                 harDriftstilgangIEttEllerFlereOmråder = true,
                 idToken = idToken,
             )
@@ -56,14 +59,19 @@ internal class BrukerkontekstFactory(
         // så etterfølgende medOmråde-kall treffer cachen.
         val tilgangerPerOmråde = coroutineScope {
             Områder.entries.map { område ->
-                async { område to tilgangerKlient!!.tilganger(område, idToken) }
-            }.map { it.await() }
+                område to async { tilgangerKlient!!.tilganger(område, idToken) }
+            }.associate { (område, tilganger) -> område to tilganger.await() }
         }
         return BrukerkontekstUtenOmråde(
             navIdent = idToken.getNavIdent(),
-            harBasisTilgangIEttEllerFlereOmråder = tilgangerPerOmråde.any { it.second.harBasisTilgang },
-            harKode6TilgangIEttEllerFlereOmråder = tilgangerPerOmråde.any { it.second.harTilgangTilKode6 },
-            harDriftstilgangIEttEllerFlereOmråder = tilgangerPerOmråde.any { it.second.kanLeggeUtDriftsmelding },
+            områderMedBasisTilgang = tilgangerPerOmråde.filterValues { it.harBasisTilgang }.keys.toList(),
+            harBasisTilgangIEttEllerFlereOmråder = tilgangerPerOmråde.values.any { it.harBasisTilgang },
+            harKode6TilgangIEttEllerFlereOmråder = tilgangerPerOmråde.values.any { it.harTilgangTilKode6 },
+            erOppgavestyrerIEttEllerFlereOmråder = tilgangerPerOmråde.values.any { it.erOppgavestyrer },
+            harTilgangTilReserveringAvOppgaverIEttEllerFlereOmråder = tilgangerPerOmråde.values.any {
+                it.harTilgangTilReserveringAvOppgaver
+            },
+            harDriftstilgangIEttEllerFlereOmråder = tilgangerPerOmråde.values.any { it.kanLeggeUtDriftsmelding },
             idToken = idToken,
         )
     }

@@ -54,6 +54,7 @@ import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.infrastruktur.db.hikariConfig
 import no.nav.k9.los.infrastruktur.metrikker.EventlagerNokkeltallPrometheusCollector
 import no.nav.k9.los.infrastruktur.metrikker.EventlagerNokkeltallRepository
+import no.nav.k9.los.innloggetbruker.InnloggetBrukerTjeneste
 import no.nav.k9.los.infrastruktur.pdl.IPdlService
 import no.nav.k9.los.infrastruktur.pdl.PdlService
 import no.nav.k9.los.infrastruktur.pdl.PdlServiceLocal
@@ -97,6 +98,7 @@ import org.koin.core.qualifier.named
 import org.koin.dsl.module
 import org.slf4j.LoggerFactory
 import java.util.*
+import java.time.Clock
 import javax.sql.DataSource
 
 fun selectModulesBasedOnProfile(application: Application, config: Configuration): List<Module> {
@@ -112,6 +114,7 @@ fun common(app: Application, config: Configuration) = module {
     single { config }
     single { BrukerkontekstFactory(getOrNull<SifAbacPdpTilgangerKlient>(), lokaleTilganger = get<KoinProfile>() == LOCAL) }
     single<DataSource> { app.hikariConfig(config) }
+    single { Clock.systemDefaultZone() }
 
     single(named("oppgaveKøOppdatert")) {
         Channel<UUID>(Channel.UNLIMITED)
@@ -137,6 +140,7 @@ fun common(app: Application, config: Configuration) = module {
             områdeRepository = get(),
         )
     }
+    single { InnloggetBrukerTjeneste(get(), get(), get()) }
 
     single {
         GyldigeFeltutledere(

@@ -5,5 +5,5 @@ data class IdTokenLocal(
 ) : IdToken {
     override fun getNavIdent(): String = "Z123456"
     override fun getName(): String = "saksbehandler@nav.no"
-    override fun getUsername(): String = "saksbehandler@nav.no"
+    override fun getPreferredUsername(): String = "saksbehandler@nav.no"
 }

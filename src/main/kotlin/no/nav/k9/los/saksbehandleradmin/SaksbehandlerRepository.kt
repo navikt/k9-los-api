@@ -8,6 +8,7 @@ import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.oppgavedefinisjon.omraade.OmrådeRepository
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import org.apache.commons.text.similarity.LevenshteinDistance
+import java.time.LocalDateTime
 import java.util.Locale
 import java.util.Locale.getDefault
 import javax.sql.DataSource
@@ -71,7 +72,11 @@ class SaksbehandlerRepository(
      * av [addSaksbehandler] når avdelingsleder registrerer eposten. En upsert her ville dessuten
      * forbrukt en sekvensverdi på id-kolonnen ved konflikt, og forskjøvet genererte id-er.
      */
-    fun vedlikeholdSaksbehandler(saksbehandler: Saksbehandler, skjermet: Boolean): Long {
+    fun vedlikeholdSaksbehandler(
+        saksbehandler: Saksbehandler,
+        skjermet: Boolean,
+        oppdatertTidspunkt: LocalDateTime = LocalDateTime.now(),
+    ): Long {
         return using(sessionOf(dataSource)) {
             it.transaction { tx ->
                 tx.run(
@@ -81,7 +86,8 @@ class SaksbehandlerRepository(
                         set navident = coalesce(:navident, navident),
                             navn = coalesce(:navn, navn),
                             enhet = coalesce(:enhet, enhet),
-                            skjermet = :skjermet
+                            skjermet = :skjermet,
+                            sist_oppdatert = :oppdatertTidspunkt
                         where lower(epost) = lower(:epost)
                         returning id
                      """,
@@ -91,6 +97,7 @@ class SaksbehandlerRepository(
                             "navn" to saksbehandler.navn,
                             "enhet" to saksbehandler.enhet,
                             "skjermet" to skjermet,
+                            "oppdatertTidspunkt" to oppdatertTidspunkt,
                         )
                     ).map { row -> row.long("id") }.asSingle
                 ) ?: throw IllegalStateException("Fant ikke saksbehandler med epost ${saksbehandler.epost} for vedlikehold")
@@ -426,6 +433,7 @@ class SaksbehandlerRepository(
             enhet = row.stringOrNull("enhet"),
             områder = områder,
             kode6 = row.boolean("skjermet"),
+            sistOppdatert = row.localDateTimeOrNull("sist_oppdatert"),
         )
     }
 
@@ -439,11 +447,12 @@ class SaksbehandlerRepository(
                          s.epost,
                          s.enhet,
                          s.skjermet,
+                         s.sist_oppdatert,
                          string_agg(distinct o.ekstern_id, ',') as omrade_ekstern_ider
                   from saksbehandler s
                            left join saksbehandler_omrade so on so.saksbehandler_id = s.id
                            left join omrade o on o.id = so.omrade_id
-                  group by s.id, s.navident, s.navn, s.epost, s.enhet, s.skjermet) s
+                  group by s.id, s.navident, s.navn, s.epost, s.enhet, s.skjermet, s.sist_oppdatert) s
             """
     }
 }

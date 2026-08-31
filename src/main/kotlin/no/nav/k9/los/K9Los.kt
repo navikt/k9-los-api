@@ -57,7 +57,8 @@ import no.nav.k9.los.infrastruktur.jobbplanlegger.Jobbplanlegger
 import no.nav.k9.los.infrastruktur.jobbplanlegger.PlanlagtJobb
 import no.nav.k9.los.infrastruktur.jobbplanlegger.Tidsvindu
 import no.nav.k9.los.infrastruktur.metrikker.EventlagerNokkeltallPrometheusCollector
-import no.nav.k9.los.innloggetbruker.BrukersområderApi
+import no.nav.k9.los.innloggetbruker.InnloggetBrukersOmråderApi
+import no.nav.k9.los.innloggetbruker.LegacyInnloggetBrukerApi
 import no.nav.k9.los.innloggetbruker.InnloggetBrukerApi
 import no.nav.k9.los.ko.KøpåvirkendeHendelse
 import no.nav.k9.los.ko.OppgaveKoApis
@@ -264,7 +265,7 @@ private fun Route.legacyApi() {
                 SaksbehandlerAdminApis()
             }
 
-            InnloggetBrukerApi()
+            LegacyInnloggetBrukerApi()
 
             route("ny-oppgavestyring") {
                 route("ko") { OppgaveKoApis() }
@@ -297,9 +298,9 @@ private fun Route.legacyApi() {
 
 private fun Route.apiUnderConstruction() {
     route("driftsmeldinger", { tags("Driftsmelding") }) { DriftsmeldingerApis() }
-    route("brukersområder") { BrukersområderApi() }
+    route("innlogget-bruker/områder") { InnloggetBrukersOmråderApi() }
     områdeApi {
-        route("innloggetbruker") { InnloggetBrukerApi() }
+        route("innlogget-bruker") { InnloggetBrukerApi() }
         swaggerUI("openapi.json")
         route("openapi.json") { openApi() }
 

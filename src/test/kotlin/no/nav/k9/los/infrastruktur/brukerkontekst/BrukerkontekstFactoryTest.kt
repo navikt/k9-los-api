@@ -16,7 +16,6 @@ import no.nav.k9.los.infrastruktur.idtoken.IdToken
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.Oppgave
 import org.junit.jupiter.api.Test
-import java.util.*
 
 class BrukerkontekstFactoryTest {
 
@@ -94,16 +93,22 @@ class BrukerkontekstFactoryTest {
     }
 
     @Test
-    fun `utenOmråde aggregerer basis- og kode6-tilgang på tvers av områder`() {
+    fun `utenOmråde aggregerer tilganger på tvers av områder`() {
         runBlocking {
             val kontekst = TestKontekstFactory.brukerkontekstUtenOmråde(
                 tilgangerPerOmråde = mapOf(
-                    Områder.K9 to tilganger(harTilgangTilKode6 = true),
-                    Områder.AKTIVITETSPENGER to tilganger(harBasisTilgang = true),
+                    Områder.K9 to tilganger(harTilgangTilKode6 = true, erOppgavestyrer = true),
+                    Områder.AKTIVITETSPENGER to tilganger(
+                        harBasisTilgang = true,
+                        harTilgangTilReserveringAvOppgaver = true,
+                    ),
                 )
             )
             kontekst.harBasisTilgangIEttEllerFlereOmråder shouldBe true
+            kontekst.områderMedBasisTilgang shouldBe listOf(Områder.AKTIVITETSPENGER)
             kontekst.harKode6TilgangIEttEllerFlereOmråder shouldBe true
+            kontekst.erOppgavestyrerIEttEllerFlereOmråder shouldBe true
+            kontekst.harTilgangTilReserveringAvOppgaverIEttEllerFlereOmråder shouldBe true
 
             val ingen = TestKontekstFactory.brukerkontekstUtenOmråde(
                 tilgangerPerOmråde = mapOf(
@@ -112,37 +117,10 @@ class BrukerkontekstFactoryTest {
                 )
             )
             ingen.harBasisTilgangIEttEllerFlereOmråder shouldBe false
+            ingen.områderMedBasisTilgang shouldBe emptyList()
             ingen.harKode6TilgangIEttEllerFlereOmråder shouldBe false
-        }
-    }
-
-    @Test
-    fun `oppgavetilgang slår opp grupper via Graph, ikke fra kontekst`() {
-        runBlocking {
-            val azureGraphService = mockk<IAzureGraphService>()
-            val pdpKlient = mockk<ISifAbacPdpKlient>()
-            val pdpKlienter = mockk<SifAbacPdpKlienter>()
-            val oppgave = mockk<Oppgave>(relaxed = true)
-            val brukergrupper = setOf(UUID.randomUUID())
-            every { pdpKlienter.forOmråde(Områder.K9) } returns pdpKlient
-            every { oppgave.oppgavetype.eksternId } returns "k9sak"
-            every { oppgave.oppgavetype.område.tilOmrådeEnum() } returns Områder.K9
-            every { oppgave.hentVerdi("saksnummer") } returns "123"
-            coEvery { azureGraphService.hentGrupper("Z123456") } returns brukergrupper
-            coEvery {
-                pdpKlient.harTilgangTilSak(Action.read, any(), "Z123456", brukergrupper)
-            } returns true
-
-            PepClient(
-                azureGraphService,
-                pdpKlienter,
-                mockk(),
-                mockk(),
-                "",
-                mockk(),
-            ).harTilgangTilOppgaveV3(oppgave, kontekst(Områder.K9, tilganger())) shouldBe true
-
-            coVerify(exactly = 1) { azureGraphService.hentGrupper("Z123456") }
+            ingen.erOppgavestyrerIEttEllerFlereOmråder shouldBe false
+            ingen.harTilgangTilReserveringAvOppgaverIEttEllerFlereOmråder shouldBe false
         }
     }
 

@@ -75,7 +75,6 @@ class SifAbacPdpKlientK9(
         action: Action,
         saksnummerDto: SaksnummerDto,
         saksbehandlersIdent: String,
-        saksbehandlersGrupper: Set<UUID>
     ): Boolean {
         if (!saksbehandlersIdent.matches(Regex("^[A-ZÆØÅ][0-9]{6}$"))) {
             throw IllegalArgumentException("Saksbehandlers ident var '$saksbehandlersIdent', passer ikke med validering")
@@ -85,7 +84,7 @@ class SifAbacPdpKlientK9(
         }
         val request = SaksnummerOperasjonGrupperDto(
             saksbehandlersIdent,
-            saksbehandlersGrupper.toList(),
+            null,
             saksnummerDto,
             OperasjonDto(ResourceType.FAGSAK, map(action), emptySet<AksjonspunktType>())
         )
@@ -123,11 +122,10 @@ class SifAbacPdpKlientK9(
         action: Action,
         aktørIder: List<AktørId>,
         saksbehandlersIdent: String,
-        saksbehandlersGrupper: Set<UUID>
     ): Boolean {
         val request = PersonerOperasjonGrupperDto(
             saksbehandlersIdent,
-            saksbehandlersGrupper.toList(),
+            null,
             aktørIder,
             emptyList(),
             OperasjonDto(ResourceType.FAGSAK, map(action), emptySet<AksjonspunktType>())

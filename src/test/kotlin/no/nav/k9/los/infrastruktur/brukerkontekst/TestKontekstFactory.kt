@@ -44,8 +44,13 @@ internal object TestKontekstFactory {
     ): BrukerkontekstUtenOmråde = BrukerkontekstUtenOmråde(
         navIdent = idToken.getNavIdent(),
         idToken = idToken,
+        områderMedBasisTilgang = tilgangerPerOmråde.filterValues { it.harBasisTilgang }.keys.toList(),
         harBasisTilgangIEttEllerFlereOmråder = tilgangerPerOmråde.values.any { it.harBasisTilgang },
         harKode6TilgangIEttEllerFlereOmråder = tilgangerPerOmråde.values.any { it.harTilgangTilKode6 },
+        erOppgavestyrerIEttEllerFlereOmråder = tilgangerPerOmråde.values.any { it.erOppgavestyrer },
+        harTilgangTilReserveringAvOppgaverIEttEllerFlereOmråder = tilgangerPerOmråde.values.any {
+            it.harTilgangTilReserveringAvOppgaver
+        },
         harDriftstilgangIEttEllerFlereOmråder = tilgangerPerOmråde.values.any { it.kanLeggeUtDriftsmelding },
     )
 }

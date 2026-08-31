@@ -19,7 +19,10 @@ data class BrukerkontekstMedOmråde internal constructor(
 data class BrukerkontekstUtenOmråde internal constructor(
     val navIdent: String,
     val idToken: IdToken,
+    val områderMedBasisTilgang: List<Områder>,
     val harBasisTilgangIEttEllerFlereOmråder: Boolean,
     val harKode6TilgangIEttEllerFlereOmråder: Boolean,
+    val erOppgavestyrerIEttEllerFlereOmråder: Boolean,
+    val harTilgangTilReserveringAvOppgaverIEttEllerFlereOmråder: Boolean,
     val harDriftstilgangIEttEllerFlereOmråder: Boolean,
 )

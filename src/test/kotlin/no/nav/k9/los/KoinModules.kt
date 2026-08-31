@@ -36,6 +36,7 @@ import no.nav.k9.los.infrastruktur.azuregraph.AzureGraphServiceLocal
 import no.nav.k9.los.infrastruktur.azuregraph.IAzureGraphService
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.infrastruktur.metrikker.EventlagerNokkeltallRepository
+import no.nav.k9.los.innloggetbruker.InnloggetBrukerTjeneste
 import no.nav.k9.los.infrastruktur.pdl.IPdlService
 import no.nav.k9.los.infrastruktur.pdl.PdlServiceLocal
 import no.nav.k9.los.ko.KøpåvirkendeHendelse
@@ -87,6 +88,7 @@ import org.koin.core.module.Module
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
 import java.util.*
+import java.time.Clock
 import javax.sql.DataSource
 
 fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClientLocal()): Module = module {
@@ -120,6 +122,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     }
 
     single { dataSource }
+    single { Clock.systemDefaultZone() }
     single { pepClient }
     single { BrukerkontekstFactory(lokaleTilganger = true) }
 
@@ -154,6 +157,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
         AzureGraphServiceLocal(
         ) as IAzureGraphService
     }
+    single { InnloggetBrukerTjeneste(get(), get(), get()) }
 
     single { TransactionalManager(dataSource = get()) }
 

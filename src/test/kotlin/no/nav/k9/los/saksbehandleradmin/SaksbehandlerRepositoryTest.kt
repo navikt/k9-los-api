@@ -20,6 +20,7 @@ class SaksbehandlerRepositoryTest : AbstractK9LosIntegrationTest() {
     fun `addSaksbehandler upserter uten a nullstille eksisterende felter`() {
         val saksbehandlerRepository = get<SaksbehandlerRepository>()
         val epost = "z999999@nav.no"
+        val oppdatertTidspunkt = LocalDateTime.parse("2026-08-28T10:00:00")
 
         runBlocking {
             // Saksbehandler får område via admin, og feltene vedlikeholdes ved innlogging
@@ -35,6 +36,7 @@ class SaksbehandlerRepositoryTest : AbstractK9LosIntegrationTest() {
                     kode6 = false
                 ),
                 skjermet = false,
+                oppdatertTidspunkt = oppdatertTidspunkt,
             )
 
             // Simulerer admin-legg-til på eksisterende epost med kun område.
@@ -49,6 +51,7 @@ class SaksbehandlerRepositoryTest : AbstractK9LosIntegrationTest() {
         assertThat(lagret.navn, equalTo("Zed Saksbehandler"))
         assertThat(lagret.enhet, equalTo("9999"))
         assertThat(lagret.områder, equalTo(listOf(Områder.K9)))
+        assertThat(lagret.sistOppdatert, equalTo(oppdatertTidspunkt))
     }
 
     @Test

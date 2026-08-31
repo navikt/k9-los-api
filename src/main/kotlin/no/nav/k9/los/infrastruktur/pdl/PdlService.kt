@@ -88,7 +88,6 @@ class PdlService(
                 response.bodyAsText()
             } else {
                 log.warn("Error response = '${response.bodyAsText()}' fra '${response.request.url}'")
-                log.warn("HTTP ${response.status.value} ${response.status.description} aktorId callId: ${callId} ${brukerkontekst.idToken.getUsername()}")
                 null
             }
         }
