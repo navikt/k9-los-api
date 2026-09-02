@@ -13,7 +13,11 @@ data class BrukerkontekstMedOmråde internal constructor(
     val erOppgavestyrer: Boolean,
     val harTilgangTilReserveringAvOppgaver: Boolean,
     val harDriftstilgang: Boolean,
-)
+) {
+    fun krevOmråde(område: Områder) = require(this.område == område) {
+        "Krever at handlingen for område $område er samme som området på brukerkontekst ${this.område}"
+    }
+}
 
 @ConsistentCopyVisibility
 data class BrukerkontekstUtenOmråde internal constructor(

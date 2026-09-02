@@ -100,6 +100,7 @@ class InnloggetBrukerTjeneste(
             throw e
         } catch (e: Exception) {
             log.warn("Kunne ikke hente enhet for innlogget saksbehandler. Forsøker igjen ved neste innlogging", e)
+            // TODO: Oppdatere felter fra token selv om enhetskall feiler?
             return
         }
 

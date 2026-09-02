@@ -616,7 +616,8 @@ fun common(app: Application, config: Configuration) = module {
         LagretSøkTjeneste(
             lagretSøkRepository = get(),
             saksbehandlerRepository = get(),
-            oppgaveQueryService = get()
+            oppgaveQueryService = get(),
+            transactionalManager = get(),
         )
     }
 

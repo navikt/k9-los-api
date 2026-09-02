@@ -57,9 +57,9 @@ import no.nav.k9.los.infrastruktur.jobbplanlegger.Jobbplanlegger
 import no.nav.k9.los.infrastruktur.jobbplanlegger.PlanlagtJobb
 import no.nav.k9.los.infrastruktur.jobbplanlegger.Tidsvindu
 import no.nav.k9.los.infrastruktur.metrikker.EventlagerNokkeltallPrometheusCollector
+import no.nav.k9.los.innloggetbruker.InnloggetBrukerApi
 import no.nav.k9.los.innloggetbruker.InnloggetBrukersOmråderApi
 import no.nav.k9.los.innloggetbruker.LegacyInnloggetBrukerApi
-import no.nav.k9.los.innloggetbruker.InnloggetBrukerApi
 import no.nav.k9.los.ko.KøpåvirkendeHendelse
 import no.nav.k9.los.ko.OppgaveKoApis
 import no.nav.k9.los.ko.OppgaveKoAvdelingslederApisNy
@@ -88,7 +88,6 @@ import no.nav.k9.los.sisteoppgaver.SisteOppgaverApiNy
 import no.nav.k9.los.søkeboks.SøkeboksApi
 import no.nav.k9.los.søkeboks.SøkeboksApiNy
 import no.nav.k9.los.tjenester.mock.localSetup
-import no.nav.k9.los.uttrekk.MigrerUttrekkResultatJobb
 import no.nav.k9.los.uttrekk.UttrekkApi
 import no.nav.k9.los.uttrekk.UttrekkApiNy
 import no.nav.k9.los.uttrekk.UttrekkJobb
@@ -345,7 +344,6 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
         koin.get<no.nav.k9.los.nøkkeltall.avdelingsleder.ferdigstilteperenhet.FerdigstiltePerEnhetService>()
     val nyeOgFerdigstilteService = koin.get<NyeOgFerdigstilteService>()
     val uttrekkJobb = koin.get<UttrekkJobb>()
-    val migrerUttrekkResultatJobb = MigrerUttrekkResultatJobb(koin.get())
 
     val k9sakBehandlingsoppfriskingJobb = K9sakBehandlingsoppfriskingJobb(
         reservasjonRepository = koin.get(),
@@ -542,15 +540,6 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
                 minutter = listOf(3), // vilkårlig valgt minutt tidlig i timen 5-6
             ) {
                 k9sakBehandlingsoppfriskingJobb.utfør()
-            }
-        )
-
-        add(
-            PlanlagtJobb.Oppstart(
-                navn = "MigrerUttrekkResultatFormat",
-                prioritet = lavPrioritet,
-            ) {
-                migrerUttrekkResultatJobb.kjør()
             }
         )
 

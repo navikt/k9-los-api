@@ -10,6 +10,7 @@ import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.lagretsok.LagretSøk
 import no.nav.k9.los.lagretsok.LagretSøkRepository
 import no.nav.k9.los.lagretsok.NyttLagretSøkRequest
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.OppgaveQuery
 import no.nav.k9.los.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
@@ -18,7 +19,6 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.koin.test.get
 import java.time.LocalDateTime
-import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 
 class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
 
@@ -53,7 +53,7 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
             saksbehandlerId = saksbehandler.id!!
             val lagretSøk = LagretSøk.nyttSøk(
                 NyttLagretSøkRequest(tittel = "Test søk", query = LagretSøk.defaultQuery(Områder.K9, false)),
-                saksbehandler,
+                saksbehandler, Områder.K9,
             )
             lagretSøkRepository.opprett(lagretSøk)
             testQuery = lagretSøk.query

@@ -7,6 +7,8 @@ import assertk.assertions.isNotNull
 import assertk.assertions.isNull
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.AbstractK9LosIntegrationTest
+import no.nav.k9.los.infrastruktur.db.TransactionalManager
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.OppgaveQuery
 import no.nav.k9.los.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
@@ -14,18 +16,19 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.koin.test.get
-import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 
 class LagretSøkRepositoryTest : AbstractK9LosIntegrationTest() {
 
     private lateinit var lagretSøkRepository: LagretSøkRepository
     private lateinit var saksbehandlerRepository: SaksbehandlerRepository
     private lateinit var saksbehandler: Saksbehandler
+    private lateinit var transactionalManager: TransactionalManager
 
     @BeforeEach
     fun setup() {
         lagretSøkRepository = get()
         saksbehandlerRepository = get()
+        transactionalManager = get()
 
         runBlocking {
             saksbehandlerRepository.addSaksbehandler("test@nav.no", Områder.K9)
@@ -52,7 +55,7 @@ class LagretSøkRepositoryTest : AbstractK9LosIntegrationTest() {
             query = LagretSøk.defaultQuery(Områder.K9, false)
         )
 
-        val lagretSøk = LagretSøk.nyttSøk(opprettLagretSøk, saksbehandler)
+        val lagretSøk = LagretSøk.nyttSøk(opprettLagretSøk, saksbehandler, Områder.K9)
         val id = lagretSøkRepository.opprett(lagretSøk)
 
         val hentetSøk = lagretSøkRepository.hent(id)
@@ -77,7 +80,7 @@ class LagretSøkRepositoryTest : AbstractK9LosIntegrationTest() {
             query = LagretSøk.defaultQuery(Områder.K9, false)
         )
 
-        val lagretSøk = LagretSøk.nyttSøk(opprettLagretSøk, saksbehandler)
+        val lagretSøk = LagretSøk.nyttSøk(opprettLagretSøk, saksbehandler, Områder.K9)
         val id = lagretSøkRepository.opprett(lagretSøk)
 
         val hentetSøk = lagretSøkRepository.hent(id)!!
@@ -105,11 +108,11 @@ class LagretSøkRepositoryTest : AbstractK9LosIntegrationTest() {
             query = LagretSøk.defaultQuery(Områder.K9, false)
         )
 
-        val lagretSøk = LagretSøk.nyttSøk(opprettLagretSøk, saksbehandler)
+        val lagretSøk = LagretSøk.nyttSøk(opprettLagretSøk, saksbehandler, Områder.K9)
         val id = lagretSøkRepository.opprett(lagretSøk)
 
         val hentetSøk = lagretSøkRepository.hent(id)!!
-        lagretSøkRepository.slett(hentetSøk)
+        transactionalManager.transactionContext { lagretSøkRepository.slett(hentetSøk) }
 
         val søkEtterSletting = lagretSøkRepository.hent(id)
         assertThat(søkEtterSletting).isNull()
@@ -119,17 +122,17 @@ class LagretSøkRepositoryTest : AbstractK9LosIntegrationTest() {
     fun `skal hente alle lagrede søk for en saksbehandler`() {
         val søk1 = LagretSøk.nyttSøk(
             NyttLagretSøkRequest("Søk 1", LagretSøk.defaultQuery(Områder.K9, false)),
-            saksbehandler,
+            saksbehandler, Områder.K9,
         )
         val søk2 = LagretSøk.nyttSøk(
             NyttLagretSøkRequest("Søk 2", LagretSøk.defaultQuery(Områder.K9, false)),
-            saksbehandler,
+            saksbehandler, Områder.K9,
         )
 
         lagretSøkRepository.opprett(søk1)
         lagretSøkRepository.opprett(søk2)
 
-        val alleSøk = lagretSøkRepository.hentAlle(saksbehandler)
+        val alleSøk = lagretSøkRepository.hentAlle(saksbehandler, Områder.K9)
         assertThat(alleSøk).hasSize(2)
         assertThat(alleSøk.map { it.tittel }).isEqualTo(listOf("Søk 2", "Søk 1"))
     }
@@ -151,28 +154,29 @@ class LagretSøkRepositoryTest : AbstractK9LosIntegrationTest() {
                 ),
                 skjermet = false,
             )
-            val annenSaksbehandler = saksbehandlerRepository.finnSaksbehandlerMedEpost("annen@nav.no", skjermet = false)!!
+            val annenSaksbehandler =
+                saksbehandlerRepository.finnSaksbehandlerMedEpost("annen@nav.no", skjermet = false)!!
 
             // Opprett søk for begge saksbehandlere
             val søkForFørsteSaksbehandler = LagretSøk.nyttSøk(
                 NyttLagretSøkRequest("Søk for første", LagretSøk.defaultQuery(Områder.K9, false)),
-                saksbehandler,
+                saksbehandler, Områder.K9,
             )
             val søkForAnnenSaksbehandler = LagretSøk.nyttSøk(
                 NyttLagretSøkRequest("Søk for annen", LagretSøk.defaultQuery(Områder.K9, false)),
-                annenSaksbehandler,
+                annenSaksbehandler, Områder.K9,
             )
 
             lagretSøkRepository.opprett(søkForFørsteSaksbehandler)
             lagretSøkRepository.opprett(søkForAnnenSaksbehandler)
 
             // Hent søk for første saksbehandler - skal kun få ett resultat
-            val søkForFørste = lagretSøkRepository.hentAlle(saksbehandler)
+            val søkForFørste = lagretSøkRepository.hentAlle(saksbehandler, Områder.K9)
             assertThat(søkForFørste).hasSize(1)
             assertThat(søkForFørste[0].tittel).isEqualTo("Søk for første")
 
             // Hent søk for annen saksbehandler - skal kun få ett resultat
-            val søkForAnnen = lagretSøkRepository.hentAlle(annenSaksbehandler)
+            val søkForAnnen = lagretSøkRepository.hentAlle(annenSaksbehandler, Områder.K9)
             assertThat(søkForAnnen).hasSize(1)
             assertThat(søkForAnnen[0].tittel).isEqualTo("Søk for annen")
         }
@@ -185,7 +189,7 @@ class LagretSøkRepositoryTest : AbstractK9LosIntegrationTest() {
             query = LagretSøk.defaultQuery(Områder.K9, false)
         )
 
-        val lagretSøk = LagretSøk.nyttSøk(opprettLagretSøk, saksbehandler)
+        val lagretSøk = LagretSøk.nyttSøk(opprettLagretSøk, saksbehandler, Områder.K9)
         val id = lagretSøkRepository.opprett(lagretSøk)
 
         // Simuler samtidig endring - hent to instanser av samme søk

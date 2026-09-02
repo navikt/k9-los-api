@@ -18,7 +18,8 @@ internal fun Route.SaksbehandlerAdminApis() {
     get("/saksbehandlere") {
         medBrukerkontekst { bruker ->
             if (bruker.erOppgavestyrer) {
-                call.respond(saksbehandlerAdminTjeneste.hentSaksbehandlere(bruker.område, bruker.harTilgangTilKode6))
+                val saksbehandlere = saksbehandlerAdminTjeneste.hentSaksbehandlere(bruker.område, bruker.harTilgangTilKode6)
+                call.respond(saksbehandlere)
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
@@ -58,7 +59,7 @@ internal fun Route.SaksbehandlerAdminApis() {
         medBrukerkontekst { bruker ->
             if (bruker.erOppgavestyrer) {
                 val request = call.receive<EpostDto>()
-                call.respond(saksbehandlerAdminTjeneste.slettSaksbehandler(request.epost, Områder.K9, bruker))
+                call.respond(saksbehandlerAdminTjeneste.slettSaksbehandler(request.epost, bruker))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }

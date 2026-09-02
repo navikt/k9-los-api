@@ -57,7 +57,7 @@ internal fun Route.SaksbehandlerAdminApisNy() {
         medBrukerkontekst { bruker ->
             if (bruker.erOppgavestyrer) {
                 val request = call.receive<EpostDto>()
-                call.respond(saksbehandlerAdminTjeneste.slettSaksbehandler(request.epost, bruker.område, bruker))
+                call.respond(saksbehandlerAdminTjeneste.slettSaksbehandler(request.epost, bruker))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }

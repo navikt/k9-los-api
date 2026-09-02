@@ -62,7 +62,7 @@ class UttrekkJobbTest : AbstractK9LosIntegrationTest() {
                         )
                     )
                 ),
-                saksbehandler,
+                saksbehandler, Områder.K9,
             )
             lagretSøkRepository.opprett(lagretSøk)
             testQuery = lagretSøk.query

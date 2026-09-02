@@ -560,7 +560,8 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
         LagretSøkTjeneste(
             saksbehandlerRepository = get(),
             lagretSøkRepository = get(),
-            oppgaveQueryService = get()
+            oppgaveQueryService = get(),
+            transactionalManager = get(),
         )
     }
 

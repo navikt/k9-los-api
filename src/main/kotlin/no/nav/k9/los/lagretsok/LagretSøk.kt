@@ -12,6 +12,7 @@ import java.time.LocalDateTime
 class LagretSøk private constructor(
     val id: Long?,
     val lagetAv: Long,
+    val område: Områder,
     versjon: Long,
     tittel: String,
     beskrivelse: String,
@@ -79,6 +80,7 @@ class LagretSøk private constructor(
         return LagretSøk(
             id = null,
             lagetAv = saksbehandler.id ?: throw IllegalStateException("Saksbehandler må ha id"),
+            område = this.område,
             versjon = 1,
             tittel = tittel,
             beskrivelse = "",
@@ -122,10 +124,12 @@ class LagretSøk private constructor(
         fun nyttSøk(
             nyttLagretSøk: NyttLagretSøkRequest,
             saksbehandler: Saksbehandler,
+            område: Områder,
         ): LagretSøk {
             return LagretSøk(
                 id = null,
                 lagetAv = saksbehandler.id ?: throw IllegalStateException("Saksbehandler må ha id"),
+                område = område,
                 versjon = 1,
                 tittel = nyttLagretSøk.tittel,
                 beskrivelse = "",
@@ -138,13 +142,14 @@ class LagretSøk private constructor(
         fun fraEksisterende(
             id: Long,
             lagetAv: Long,
+            område: Områder,
             versjon: Long,
             tittel: String,
             beskrivelse: String,
             sistEndret: LocalDateTime,
             query: OppgaveQuery = OppgaveQuery()
         ): LagretSøk {
-            return LagretSøk(id, lagetAv, versjon, tittel, beskrivelse, sistEndret, query)
+            return LagretSøk(id, lagetAv, område, versjon, tittel, beskrivelse, sistEndret, query)
         }
     }
 }

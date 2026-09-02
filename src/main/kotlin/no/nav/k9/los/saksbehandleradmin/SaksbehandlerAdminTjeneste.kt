@@ -1,12 +1,12 @@
 package no.nav.k9.los.saksbehandleradmin
 
-import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.infrastruktur.brukerkontekst.BrukerkontekstMedOmråde
+import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.ko.db.OppgaveKoRepository
 import no.nav.k9.los.lagretsok.LagretSøkTjeneste
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.reservasjon.ReservasjonV3Tjeneste
 import no.nav.k9.los.uttrekk.UttrekkTjeneste
-import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 
 class SaksbehandlerAdminTjeneste(
     private val transactionalManager: TransactionalManager,
@@ -18,7 +18,7 @@ class SaksbehandlerAdminTjeneste(
 ) {
 
     // TODO: slett når frontend har begynt å bruke nytt endepunkt
-    suspend fun søkSaksbehandler(epostDto: EpostDto, område: Områder, skjermet: Boolean): Saksbehandler {
+    fun søkSaksbehandler(epostDto: EpostDto, område: Områder, skjermet: Boolean): Saksbehandler {
         var saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedEpost(epostDto.epost, skjermet)
         if (saksbehandler == null) {
             saksbehandler = Saksbehandler(
@@ -29,20 +29,18 @@ class SaksbehandlerAdminTjeneste(
         return saksbehandler
     }
 
-    suspend fun leggTilSaksbehandlerForEpost(epost: String, område: Områder) {
+    fun leggTilSaksbehandlerForEpost(epost: String, område: Områder) {
         // lagrer med tomme verdier, disse blir populert etter at saksbehandleren har logget seg inn
         saksbehandlerRepository.addSaksbehandler(epost, område)
     }
 
-    suspend fun slettSaksbehandlerForId(id: Long, brukerkontekst: BrukerkontekstMedOmråde) {
-        val skjermet = brukerkontekst.harTilgangTilKode6
+    fun slettSaksbehandlerForId(id: Long, bruker: BrukerkontekstMedOmråde) {
+        val skjermet = bruker.harTilgangTilKode6
 
         val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedId(id)
+            ?: throw IllegalStateException("Fant ikke saksbehandler med id $id")
 
-        val lagredeSøk = lagretSøkTjeneste.hentAlle(saksbehandler!!.navident!!, skjermet)
-        lagredeSøk.forEach {
-            lagretSøkTjeneste.slett(saksbehandler.navident!!, it.id!!, skjermet)
-        }
+        lagretSøkTjeneste.slettAlle(bruker)
 
         transactionalManager.transaction { tx ->
             // V3-modellen: Fjerner saksbehandler fra køer i alle områder, siden selve
@@ -64,33 +62,32 @@ class SaksbehandlerAdminTjeneste(
         }
     }
 
-    suspend fun slettSaksbehandler(
+    fun slettSaksbehandler(
         epost: String,
-        område: Områder,
-        brukerkontekst: BrukerkontekstMedOmråde,
+        bruker: BrukerkontekstMedOmråde,
     ) {
-        val skjermet = brukerkontekst.harTilgangTilKode6
+        val skjermet = bruker.harTilgangTilKode6
 
         val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedEpost(epost, skjermet) ?: throw IllegalStateException("Kunne ikke finne saksbehandler med epost")
-        if (!saksbehandler.områder.contains(område)) {
-            throw IllegalStateException("Saksbehandler med epost $epost har ikke område ${område.eksternId}")
+        if (!saksbehandler.områder.contains(bruker.område)) {
+            throw IllegalStateException("Saksbehandler med epost $epost har ikke område ${bruker.område}")
         }
 
         if (saksbehandler.områder.size > 1) {
             transactionalManager.transaction { tx ->
-                saksbehandlerRepository.fjernOmrådeFraSaksbehandler(tx, epost, skjermet, område)
+                saksbehandlerRepository.fjernOmrådeFraSaksbehandler(tx, epost, skjermet, bruker.område)
                 //TODO: fjern saksbehandler-områdets reservasjoner
             }
             return
         }
 
         if (saksbehandler.navident != null) {
-            val lagredeSøk = lagretSøkTjeneste.hentAlle(saksbehandler.navident!!, skjermet)
+            val lagredeSøk = lagretSøkTjeneste.hentAlle(bruker)
             lagredeSøk.forEach {
-                lagretSøkTjeneste.slett(saksbehandler.navident!!, it.id!!, skjermet)
+                lagretSøkTjeneste.slett(bruker, it.id!!)
             }
-            val uttrekkeneTilSakbehandler = uttrekkTjeneste.hentForSaksbehandler(saksbehandler.id!!)
-            uttrekkeneTilSakbehandler.forEach {
+            val uttrekkeneTilSaksbehandler = uttrekkTjeneste.hentForSaksbehandler(saksbehandler.id!!)
+            uttrekkeneTilSaksbehandler.forEach {
                 uttrekkTjeneste.slett(it.id!!)
             }
         }
