@@ -8,6 +8,14 @@ metadata:
 spec:
   image: {{ image }}
   port: 8020
+  # Flyway kjører før HTTP-serveren starter. Startup-proben gir migreringen opptil én time,
+  # mens forrige pod fortsetter å betjene trafikk i den rullerende deployen.
+  startup:
+    path: isalive
+    initialDelay: 20
+    timeout: 1
+    periodSeconds: 5
+    failureThreshold: 720
   liveness:
     path: isalive
     initialDelay: 20
