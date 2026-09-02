@@ -6,6 +6,7 @@ import no.nav.k9.los.Configuration
 import no.nav.k9.los.KoinProfile
 import no.nav.vault.jdbc.hikaricp.HikariCPVaultUtil
 import org.flywaydb.core.Flyway
+import org.flywaydb.database.postgresql.PostgreSQLConfigurationExtension
 import java.util.*
 import javax.sql.DataSource
 import kotlin.time.measureTimedValue
@@ -50,11 +51,18 @@ fun Application.migrate(configuration: Configuration) {
 }
 
 fun runMigration(dataSource: DataSource, initSql: String? = null): Int {
-    return Flyway.configure()
+    val configuration = Flyway.configure()
         .locations("migreringer/")
         .dataSource(dataSource)
         .initSql(initSql)
-        .load()
+
+    // CREATE INDEX CONCURRENTLY kan vente på Flyways egen transaksjonelle advisory lock.
+    // Session-lock bevarer eksklusiv migreringskjøring uten å slå av transaksjoner for vanlige migreringer.
+    configuration.pluginRegister
+        .getExact(PostgreSQLConfigurationExtension::class.java)
+        .setTransactionalLock(false)
+
+    return configuration.load()
         .migrate()
         .migrationsExecuted
 }

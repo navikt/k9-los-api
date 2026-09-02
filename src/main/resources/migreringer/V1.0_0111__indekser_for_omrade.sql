@@ -1,5 +1,5 @@
--- CONCURRENTLY unngaar aa blokkere skriving mens indeksene bygges.
--- Drop foerst gjoer migreringen restartbar etter en avbrutt concurrent bygging.
+-- CONCURRENTLY unngår å blokkere skriving mens indeksene bygges.
+-- Drop først gjør migreringen restartbar etter en avbrutt concurrent-bygging.
 drop index concurrently if exists idx_reservasjon_v3_omrade_id;
 drop index concurrently if exists idx_event_nokkel_omrade_id;
 drop index concurrently if exists idx_oppgave_pep_cache_omrade_id;

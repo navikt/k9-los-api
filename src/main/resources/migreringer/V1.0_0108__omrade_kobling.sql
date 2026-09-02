@@ -1,5 +1,5 @@
--- Kobler omraade til tabellene som maa avgrenses naar flere omraader tas i bruk.
--- Eksisterende rader tilhoerer K9. Validering og indeksbygging tas i egne migreringer
+-- Kobler område til tabellene som må avgrenses når flere områder tas i bruk.
+-- Eksisterende rader tilhører K9. Validering og indeksbygging tas i egne migreringer
 -- fordi de leser gjennom de store tabellene.
 
 insert into omrade(ekstern_id)
@@ -55,7 +55,7 @@ begin
 end
 $$;
 
--- Smaa tabeller valideres med en gang. Store tabeller valideres i V1.0_0109.
+-- Små tabeller valideres med en gang. Store tabeller valideres i V1.0_0109.
 alter table saksbehandler_omrade validate constraint fk_saksbehandler_omrade_omrade;
 alter table oppgaveko_v3 validate constraint fk_oppgaveko_v3_omrade;
 

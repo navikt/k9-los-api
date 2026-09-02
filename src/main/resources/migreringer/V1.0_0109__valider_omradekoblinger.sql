@@ -1,4 +1,4 @@
--- Fremmednoklene ble opprettet som NOT VALID i V1.0_0108 for aa unngaa
+-- Fremmednøklene ble opprettet som NOT VALID i V1.0_0108 for å unngå
 -- tabellskann under den migreringen. VALIDATE CONSTRAINT tillater samtidig
 -- lesing og skriving, men verifiserer alle eksisterende rader.
 
