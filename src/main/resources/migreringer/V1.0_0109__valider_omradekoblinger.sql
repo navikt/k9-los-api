@@ -1,4 +1,4 @@
--- Fremmednoklene ble opprettet som NOT VALID i V1.0_0107 for aa unngaa
+-- Fremmednoklene ble opprettet som NOT VALID i V1.0_0108 for aa unngaa
 -- tabellskann under den migreringen. VALIDATE CONSTRAINT tillater samtidig
 -- lesing og skriving, men verifiserer alle eksisterende rader.
 
@@ -13,3 +13,12 @@ alter table oppgave_pep_cache
 
 alter table event_nokkel
     validate constraint fk_event_nokkel_omrade;
+
+alter table oppgave_id_part
+    validate constraint fk_oppgave_id_part_omrade;
+
+alter table oppgave_v3_part
+    validate constraint chk_oppgave_v3_part_k9_omrade;
+
+alter table oppgavefelt_verdi_part
+    validate constraint chk_oppgavefelt_verdi_part_k9_omrade;

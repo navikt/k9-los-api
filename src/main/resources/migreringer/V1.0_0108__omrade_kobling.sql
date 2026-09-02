@@ -49,6 +49,9 @@ begin
     execute format('alter table event_nokkel add column omrade_id bigint not null default %s', k9_id);
     alter table event_nokkel alter column omrade_id drop default;
     alter table event_nokkel add constraint fk_event_nokkel_omrade foreign key (omrade_id) references omrade (id) not valid;
+
+    execute format('alter table oppgave_id_part add column omrade_id bigint not null default %s', k9_id);
+    alter table oppgave_id_part add constraint fk_oppgave_id_part_omrade foreign key (omrade_id) references omrade (id) not valid;
 end
 $$;
 
@@ -59,5 +62,13 @@ alter table oppgaveko_v3 validate constraint fk_oppgaveko_v3_omrade;
 alter table oppgave_v3_part
     add column omrade_ekstern_id varchar(100) not null default 'K9';
 
+alter table oppgavefelt_verdi_part
+    add column omrade_ekstern_id varchar(100) not null default 'K9';
+
 alter table oppgave_v3_part
-    alter column omrade_ekstern_id drop default;
+    add constraint chk_oppgave_v3_part_k9_omrade
+        check (omrade_ekstern_id = 'K9') not valid;
+
+alter table oppgavefelt_verdi_part
+    add constraint chk_oppgavefelt_verdi_part_k9_omrade
+        check (omrade_ekstern_id = 'K9') not valid;

@@ -39,9 +39,11 @@ class AktivOppgaveOppslagPartisjonert(
                 """
                     SELECT o.*
                     FROM oppgave_id_part ip
+                    INNER JOIN omrade omr ON omr.id = ip.omrade_id
                     INNER JOIN oppgave_v3_part o ON o.id = ip.id
                     WHERE ip.oppgave_ekstern_id = :eksternId
                       AND ip.oppgavetype_ekstern_id = :oppgavetype
+                      AND omr.ekstern_id = :omrade
                       AND o.omrade_ekstern_id = :omrade
                     """.trimIndent(),
                 mapOf("eksternId" to eksternId, "oppgavetype" to oppgavetypeEksternId, "omrade" to område.eksternId)
