@@ -9,26 +9,18 @@ import kotlin.time.measureTimedValue
 
 private val log = LoggerFactory.getLogger("DatabaseMigration")
 
-fun main(args: Array<String>) {
-    val operation = args.singleOrNull() ?: error("Forventet operasjon: migrate eller verify")
+fun main() {
     val configuration = Configuration(HoconApplicationConfig(ConfigFactory.load()))
     check(configuration.koinProfile() != KoinProfile.LOCAL) {
         "Databasejobben skal bruke Vault-konfigurasjon"
     }
 
-    val (resultat, tidsbruk) = measureTimedValue {
+    val (antallMigrert, tidsbruk) = measureTimedValue {
         dataSourceFromVault(configuration, Role.Admin).use { dataSource ->
             val initSql = "SET ROLE \"${configuration.databaseName()}-${Role.Admin}\""
-            when (operation) {
-                "migrate" -> "${runMigration(dataSource, initSql)} migreringer kjørt"
-                "verify" -> {
-                    verifyMigrationHistory(dataSource, initSql)
-                    "Flyway-historikk verifisert"
-                }
-                else -> error("Ukjent operasjon: $operation")
-            }
+            runMigration(dataSource, initSql)
         }
     }
 
-    log.info("Databaseoperasjon fullført: {}. Tidsbruk={}", resultat, tidsbruk)
+    log.info("Databasemigrering fullført. Antall migrert={}, tidsbruk={}", antallMigrert, tidsbruk)
 }

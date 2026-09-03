@@ -6,13 +6,15 @@
 
 ## Databasemigrering
 
-Applikasjonen kjører ikke Flyway ved oppstart. Migrering og deploy er separate, manuelle operasjoner:
+Deployflyten kjører migreringsjobben før applikasjonen deployes:
 
-1. Kjør workflowen `Migrer database` med image-tag og miljø.
-2. La den gamle applikasjonen kjøre mens migreringen pågår når migreringen er bakoverkompatibel.
-3. Skaler applikasjonen manuelt til 0 før migreringer som krever det på grunn av låser eller inkompatible skjemaendringer.
-4. Kjør workflowen `Deploy applikasjon` med samme image-tag og miljø. Workflowen validerer Flyway-historikken før applikasjonen deployes.
+1. Byggworkflowen publiserer imaget.
+2. `k9-los-api-db-migration` kjører Flyway med migreringsidentitetens `k9-los-admin`-tilgang.
+3. Applikasjonen deployes bare dersom migreringsjobben fullfører.
+4. Applikasjonen verifiserer Flyway-historikken ved oppstart og stopper dersom databasen ikke er oppdatert.
 
-Begge workflowene bruker samme concurrency-gruppe per miljø. En appdeploy kan derfor ikke verifisere historikken samtidig som en migreringsworkflow kjører.
+Den gamle applikasjonen fortsetter normalt å kjøre mens migreringen pågår. Skaler applikasjonen manuelt til 0 før migreringer som krever det på grunn av låser eller inkompatible skjemaendringer.
 
-Naisjobben heter `k9-los-api-db-migration` og trenger en egen Vault-identitet med tilgang til databasens `k9-los-admin`-rolle. Jobben stopper før Flyway starter dersom denne tilgangen mangler.
+Lokalt og i verdikjedetester er profilen `LOCAL`. Da kjører applikasjonen selv Flyway før den starter.
+
+Naisjobben trenger en egen Vault-identitet med tilgang til databasens `k9-los-admin`-rolle. Jobben stopper før Flyway starter dersom denne tilgangen mangler.

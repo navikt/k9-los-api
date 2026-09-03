@@ -1,4 +1,4 @@
-name: Deploy applikasjon
+name: Deploy manuelt
 on:
   workflow_dispatch:
     inputs:
@@ -15,14 +15,11 @@ on:
           - prod
 
 jobs:
-  verify-and-deploy:
-    name: Verifiser migrering og deploy
+  deploy:
+    name: Migrer og deploy
     runs-on: ubuntu-latest
-    timeout-minutes: 75
+    timeout-minutes: 370
     environment: ${{ inputs.environment }}-fss:k9saksbehandling
-    concurrency:
-      group: k9-los-api-database-${{ inputs.environment }}
-      cancel-in-progress: false
     permissions:
       contents: read
       id-token: write
@@ -33,15 +30,14 @@ jobs:
         uses: nais/login@bb6c3e1e14e53d40d69d0d092bd2fce2e39ae3bf # v0
         with:
           team: k9saksbehandling
-      - name: Verifiser Flyway-historikk
+      - name: Kjør Flyway
         uses: nais/deploy/actions/deploy@fc3eae3edebabdf67f7592102ae16176d5ba3b5f # v2
         env:
           CLUSTER: ${{ inputs.environment }}-fss
           RESOURCE: nais/db-migration.yml
           VARS: nais/${{ inputs.environment }}-fss.json
-          VAR: migration_command=verify
           IMAGE: ${{ steps.login.outputs.registry }}/${{ github.repository }}:${{ inputs.image }}
-          TIMEOUT: 50m
+          TIMEOUT: 355m
       - name: Deploy applikasjon
         uses: nais/deploy/actions/deploy@fc3eae3edebabdf67f7592102ae16176d5ba3b5f # v2
         env:

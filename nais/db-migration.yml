@@ -12,7 +12,6 @@ spec:
     - -cp
     - /app/app.jar:/app/lib/*
     - no.nav.k9.los.infrastruktur.db.DatabaseMigrationKt
-    - {{ migration_command }}
   backoffLimit: 0
   restartPolicy: Never
   ttl: 24h
