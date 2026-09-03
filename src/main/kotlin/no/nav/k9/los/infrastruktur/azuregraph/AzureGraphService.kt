@@ -114,7 +114,7 @@ open class AzureGraphService(
                         result.first().officeLocation
                     }
                 }
-                officeLocationCache.set(key, CacheObject(officeLocation, LocalDateTime.now().plusDays(180)))
+                officeLocationCache.set(key, CacheObject(officeLocation, LocalDateTime.now().plusDays(1)))
                 return officeLocation
             } catch (e: Exception) {
                 log.warn("Feilet i oppslag av enhet for saksbehandler $brukernavn, bruker tom streng som enhet", e)
