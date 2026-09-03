@@ -57,7 +57,7 @@ class InnloggetBrukerTjenesteTest {
     }
 
     @Test
-    fun `forsøker på nytt etter feil fra Azure`() = runBlocking {
+    fun `vedlikeholder ikke saksbehandler når Azure er utilgjengelig (prøver igjen ved neste kall)`() = runBlocking {
         coEvery { azureGraphService.hentEnhetForInnloggetBruker() } throws IllegalStateException("Azure er utilgjengelig")
 
         tjeneste.vedlikeholdHvisUtdatert(saksbehandler(nå.minusDays(2)), "Z123456", "Saksbehandler Sara")
