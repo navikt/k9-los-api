@@ -9,6 +9,7 @@ import no.nav.k9.los.domeneadaptere.k9.eventmottak.tilbakekrav.K9TilbakeEventHan
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.kodeverk.FagsakYtelseType
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.query.OppgaveQueryService
 import no.nav.k9.los.oppgaveuthenting.query.QueryRequest
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.OppgaveQuery
@@ -77,10 +78,10 @@ class K9TilbakeEventHandlerTest : AbstractK9LosIntegrationTest() {
         k9TilbakeEventHandler.prosesser(event)
 
         val antall = oppgaveQueryService.queryForAntall(
-            QueryRequest(
+            QueryRequest(område = Områder.K9, oppgaveQuery = 
                 OppgaveQuery(
                     listOf(
-                        FeltverdiOppgavefilter("K9", "behandlingUuid", EksternFeltverdiOperator.EQUALS, listOf("29cbdc33-0e59-4559-96a8-c2154bf17e5a")),
+                        FeltverdiOppgavefilter(Områder.K9, "behandlingUuid", EksternFeltverdiOperator.EQUALS, listOf("29cbdc33-0e59-4559-96a8-c2154bf17e5a")),
                     )
                 )
             )

@@ -3,6 +3,7 @@ package no.nav.k9.los.oppgaveuthenting
 import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.oppgavedefinisjon.omraade.Område
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgavedefinisjon.oppgavetype.Oppgavetype
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -23,7 +24,7 @@ class UtledOppgavebehandlingsUrlTest : AbstractK9LosIntegrationTest(){
         val oppgavefelter = listOf(
             Oppgavefelt(
                 eksternId = "saksnummer",
-                område = "K9",
+                område = Områder.K9,
                 listetype = false,
                 påkrevd = false,
                 verdi = "ABC123",
@@ -31,7 +32,7 @@ class UtledOppgavebehandlingsUrlTest : AbstractK9LosIntegrationTest(){
             ),
             Oppgavefelt(
                 eksternId = "behandlingUuid",
-                område = "K9",
+                område = Områder.K9,
                 listetype = false,
                 påkrevd = false,
                 verdi = "beh456",
@@ -63,7 +64,7 @@ class UtledOppgavebehandlingsUrlTest : AbstractK9LosIntegrationTest(){
         val oppgavefelter = listOf(
             Oppgavefelt(
                 eksternId = "saksnummer",
-                område = "K9",
+                område = Områder.K9,
                 listetype = false,
                 påkrevd = false,
                 verdi = "ABC123",
@@ -71,7 +72,7 @@ class UtledOppgavebehandlingsUrlTest : AbstractK9LosIntegrationTest(){
             ),
             Oppgavefelt(
                 eksternId = "behandlingUuid",
-                område = "K9",
+                område = Områder.K9,
                 listetype = false,
                 påkrevd = false,
                 verdi = "beh456",
@@ -103,7 +104,7 @@ class UtledOppgavebehandlingsUrlTest : AbstractK9LosIntegrationTest(){
         val oppgavefelter = listOf(
             Oppgavefelt(
                 eksternId = "saksnummer",
-                område = "K9",
+                område = Områder.K9,
                 listetype = false,
                 påkrevd = false,
                 verdi = "ABC123",
@@ -111,7 +112,7 @@ class UtledOppgavebehandlingsUrlTest : AbstractK9LosIntegrationTest(){
             ),
             Oppgavefelt(
                 eksternId = "løsbartAksjonspunkt",
-                område = "K9",
+                område = Områder.K9,
                 listetype = false,
                 påkrevd = false,
                 verdi = "9001",

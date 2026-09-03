@@ -11,6 +11,7 @@ import no.nav.k9.los.infrastruktur.utils.OpentelemetrySpanUtil
 import no.nav.k9.los.kodeverk.Fagsystem
 import org.jetbrains.annotations.VisibleForTesting
 import org.slf4j.LoggerFactory
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 
 
 class K9SakEventHandler(
@@ -41,7 +42,7 @@ class K9SakEventHandler(
         val t0 = System.nanoTime()
 
         transactionalManager.transaction { tx ->
-            val eventnøkkel = eventRepository.lagre(Fagsystem.K9SAK, eksternId, eksternVersjon, event, tx)
+            val eventnøkkel = eventRepository.lagre(Fagsystem.K9SAK, eksternId, eksternVersjon, event, Områder.fraFagsystem(Fagsystem.K9SAK), tx)
             val alleEventer = eventRepository.hentAlleEventerMedLås(eventnøkkel, tx)
 
             if (feilRekkefølgeSjekker.sjekkFeilRekkefølge(alleEventer)) {

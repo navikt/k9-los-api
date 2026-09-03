@@ -13,9 +13,11 @@ import no.nav.k9.los.Configuration
 import no.nav.k9.los.domeneadaptere.k9.eventtiloppgave.klagetillos.KlageEventTilOppgaveMapper
 import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.kodeverk.*
-import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.*
-import no.nav.k9.los.oppgavedefinisjon.omraade.OmrådeRepository
-import no.nav.k9.los.oppgavedefinisjon.oppgavetype.OppgavetypeTjeneste
+import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.FeltdefinisjonerDto
+import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.KodeverkDto
+import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.KodeverkVerdiDto
+import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.Synlighet
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgavedefinisjon.oppgavetype.OppgavetyperDto
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -29,7 +31,7 @@ class OmrådeSetup(
     private val config: Configuration,
 ) {
     private val log: Logger = LoggerFactory.getLogger(OmrådeSetup::class.java)
-    private val område: String = "K9"
+    private val område: String = Områder.K9.eksternId
 
     fun setup() {
         opprettOmråde()

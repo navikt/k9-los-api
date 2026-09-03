@@ -3,6 +3,7 @@ package no.nav.k9.los.oppgaveuthenting.query.mapping
 import assertk.assertThat
 import assertk.assertions.*
 import no.nav.k9.los.FeltType
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.CombineOppgavefilter
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.FeltverdiOppgavefilter
 import org.junit.jupiter.api.Test
@@ -13,7 +14,7 @@ class OppgavefilterUtenBetingelserFjernerTest {
         val resultat = OppgavefilterUtenBetingelserFjerner.fjern(
             listOf(
                 FeltverdiOppgavefilter(
-                    "K9",
+                    Områder.K9,
                     FeltType.BEHANDLINGUUID.eksternId,
                     EksternFeltverdiOperator.IN,
                     listOf("", null)
@@ -28,7 +29,7 @@ class OppgavefilterUtenBetingelserFjernerTest {
         val resultat = OppgavefilterUtenBetingelserFjerner.fjern(
             listOf(
                 FeltverdiOppgavefilter(
-                    "K9",
+                    Områder.K9,
                     FeltType.BEHANDLINGUUID.eksternId,
                     EksternFeltverdiOperator.IN,
                     listOf()
@@ -43,7 +44,7 @@ class OppgavefilterUtenBetingelserFjernerTest {
         val resultat = OppgavefilterUtenBetingelserFjerner.fjern(
             listOf(
                 FeltverdiOppgavefilter(
-                    "K9",
+                    Områder.K9,
                     FeltType.BEHANDLINGUUID.eksternId,
                     EksternFeltverdiOperator.IN,
                     listOf(null)
@@ -59,7 +60,7 @@ class OppgavefilterUtenBetingelserFjernerTest {
             listOf(
                 CombineOppgavefilter(
                     CombineOperator.AND,
-                    listOf(FeltverdiOppgavefilter("K9", FeltType.BEHANDLINGUUID.eksternId, EksternFeltverdiOperator.EQUALS, listOf("")))
+                    listOf(FeltverdiOppgavefilter(Områder.K9, FeltType.BEHANDLINGUUID.eksternId, EksternFeltverdiOperator.EQUALS, listOf("")))
                 )
             )
         )
@@ -70,9 +71,9 @@ class OppgavefilterUtenBetingelserFjernerTest {
     fun `Vanskeligste case - skal fjerne rekursivt`() {
         val resultat = OppgavefilterUtenBetingelserFjerner.fjern(
             listOf(
-                FeltverdiOppgavefilter("K9", FeltType.BEHANDLINGUUID.eksternId, EksternFeltverdiOperator.EQUALS, listOf()),
+                FeltverdiOppgavefilter(Områder.K9, FeltType.BEHANDLINGUUID.eksternId, EksternFeltverdiOperator.EQUALS, listOf()),
                 FeltverdiOppgavefilter(
-                    "K9",
+                    Områder.K9,
                     FeltType.YTELSE_TYPE.eksternId,
                     EksternFeltverdiOperator.EQUALS,
                     listOf("ytelsestype")
@@ -82,7 +83,7 @@ class OppgavefilterUtenBetingelserFjernerTest {
                     listOf(
                         CombineOppgavefilter(
                             CombineOperator.AND,
-                            listOf(FeltverdiOppgavefilter("K9", FeltType.BEHANDLINGUUID.eksternId, EksternFeltverdiOperator.EQUALS, listOf()))
+                            listOf(FeltverdiOppgavefilter(Områder.K9, FeltType.BEHANDLINGUUID.eksternId, EksternFeltverdiOperator.EQUALS, listOf()))
                         )
                     )
                 )

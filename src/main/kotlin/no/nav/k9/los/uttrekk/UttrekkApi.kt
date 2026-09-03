@@ -8,15 +8,11 @@ import io.ktor.http.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import no.nav.k9.los.infrastruktur.abac.IPepClient
-import no.nav.k9.los.infrastruktur.rest.RequestContextService
-import no.nav.k9.los.infrastruktur.rest.idToken
+import no.nav.k9.los.infrastruktur.brukerkontekst.medBrukerkontekst
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
 import org.koin.ktor.ext.inject
 
 fun Route.UttrekkApi() {
-    val pepClient by inject<IPepClient>()
-    val requestContextService by inject<RequestContextService>()
     val uttrekkTjeneste by inject<UttrekkTjeneste>()
     val uttrekkRepository by inject<UttrekkRepository>()
     val uttrekkCsvGenerator by inject<UttrekkCsvGenerator>()
@@ -27,10 +23,10 @@ fun Route.UttrekkApi() {
             HttpStatusCode.OK to { body<List<Uttrekk>>() }
         }
     }) {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.harBasisTilgang()) {
-                val innloggetSaksbehandler = coroutineContext.idToken().getNavIdent().let {
-                    saksbehandlerRepository.finnSaksbehandlerMedIdent(it)
+        medBrukerkontekst { bruker ->
+            if (bruker.harBasisTilgang) {
+                val innloggetSaksbehandler = bruker.navIdent.let {
+                    saksbehandlerRepository.finnSaksbehandlerMedIdent(it, bruker.harTilgangTilKode6)
                 }
                 if (innloggetSaksbehandler == null) {
                     call.respond(HttpStatusCode.Forbidden, "Innlogget bruker er ikke i saksbehandler-tabellen.")
@@ -55,12 +51,12 @@ fun Route.UttrekkApi() {
             HttpStatusCode.NotFound to { }
         }
     }) {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.harBasisTilgang()) {
+        medBrukerkontekst { bruker ->
+            if (bruker.harBasisTilgang) {
                 val id = call.parameters["id"]?.toLongOrNull()
                 if (id == null) {
                     call.respond(HttpStatusCode.BadRequest, "Ugyldig uttrekk-id")
-                    return@withRequestContext
+                    return@medBrukerkontekst
                 }
                 val uttrekk = uttrekkTjeneste.hent(id)
                 if (uttrekk != null) {
@@ -82,10 +78,10 @@ fun Route.UttrekkApi() {
             HttpStatusCode.Created to { body<Long>() }
         }
     }) {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.harBasisTilgang()) {
-                val innloggetSaksbehandler = coroutineContext.idToken().getNavIdent().let {
-                    saksbehandlerRepository.finnSaksbehandlerMedIdent(it)
+        medBrukerkontekst { bruker ->
+            if (bruker.harBasisTilgang) {
+                val innloggetSaksbehandler = bruker.navIdent.let {
+                    saksbehandlerRepository.finnSaksbehandlerMedIdent(it, bruker.harTilgangTilKode6)
                 }
                 if (innloggetSaksbehandler == null) {
                     call.respond(HttpStatusCode.Forbidden, "Innlogget bruker er ikke i saksbehandler-tabellen.")
@@ -112,12 +108,12 @@ fun Route.UttrekkApi() {
             HttpStatusCode.OK to { }
         }
     }) {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.harBasisTilgang()) {
+        medBrukerkontekst { bruker ->
+            if (bruker.harBasisTilgang) {
                 val id = call.parameters["id"]?.toLongOrNull()
                 if (id == null) {
                     call.respond(HttpStatusCode.BadRequest, "Ugyldig uttrekk-id")
-                    return@withRequestContext
+                    return@medBrukerkontekst
                 }
                 val (tittel) = call.receive<EndreTittel>()
                 try {
@@ -144,13 +140,13 @@ fun Route.UttrekkApi() {
             HttpStatusCode.BadRequest to { }
         }
     }) {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.harBasisTilgang()) {
+        medBrukerkontekst { bruker ->
+            if (bruker.harBasisTilgang) {
                 try {
                     val id = call.parameters["id"]?.toLongOrNull()
                     if (id == null) {
                         call.respond(HttpStatusCode.BadRequest, "Ugyldig uttrekk-id")
-                        return@withRequestContext
+                        return@medBrukerkontekst
                     }
                     uttrekkTjeneste.slett(id)
                     call.respond(HttpStatusCode.OK)
@@ -175,12 +171,12 @@ fun Route.UttrekkApi() {
             HttpStatusCode.OK to { body<Int>() }
         }
     }) {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.harBasisTilgang()) {
+        medBrukerkontekst { bruker ->
+            if (bruker.harBasisTilgang) {
                 val lagretSokId = call.parameters["lagretSokId"]?.toLongOrNull()
                 if (lagretSokId == null) {
                     call.respond(HttpStatusCode.BadRequest, "Ugyldig lagretSokId")
-                    return@withRequestContext
+                    return@medBrukerkontekst
                 }
                 val antallSlettet = uttrekkTjeneste.slettForLagretSøk(lagretSokId)
                 call.respond(HttpStatusCode.OK, antallSlettet)
@@ -201,24 +197,24 @@ fun Route.UttrekkApi() {
             HttpStatusCode.NotFound to { }
         }
     }) {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.harBasisTilgang()) {
+        medBrukerkontekst { bruker ->
+            if (bruker.harBasisTilgang) {
                 val id = call.parameters["id"]?.toLongOrNull()
                 if (id == null) {
                     call.respond(HttpStatusCode.BadRequest, "Ugyldig uttrekk-id")
-                    return@withRequestContext
+                    return@medBrukerkontekst
                 }
                 val uttrekk = uttrekkTjeneste.hent(id)
 
                 if (uttrekk == null) {
                     call.respond(HttpStatusCode.NotFound, "Uttrekk finnes ikke")
-                    return@withRequestContext
+                    return@medBrukerkontekst
                 }
 
                 val resultat = uttrekkRepository.hentResultat(id)
                 if (resultat == null) {
                     call.respond(HttpStatusCode.NotFound, "Uttrekk har ingen resultat")
-                    return@withRequestContext
+                    return@medBrukerkontekst
                 }
 
                 call.response.header(
@@ -255,12 +251,12 @@ fun Route.UttrekkApi() {
             HttpStatusCode.NotFound to { }
         }
     }) {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.harBasisTilgang()) {
+        medBrukerkontekst { bruker ->
+            if (bruker.harBasisTilgang) {
                 val id = call.parameters["id"]?.toLongOrNull()
                 if (id == null) {
                     call.respond(HttpStatusCode.BadRequest, "Ugyldig uttrekk-id")
-                    return@withRequestContext
+                    return@medBrukerkontekst
                 }
                 val offset = call.request.queryParameters["offset"]?.toIntOrNull() ?: 0
                 val limit = call.request.queryParameters["limit"]?.toIntOrNull()
@@ -269,13 +265,13 @@ fun Route.UttrekkApi() {
 
                 if (uttrekk == null) {
                     call.respond(HttpStatusCode.NotFound, "Uttrekk finnes ikke")
-                    return@withRequestContext
+                    return@medBrukerkontekst
                 }
 
                 val resultatJson = uttrekkRepository.hentResultat(id)
                 if (resultatJson == null) {
                     call.respond(HttpStatusCode.NotFound, "Uttrekk har ingen resultat")
-                    return@withRequestContext
+                    return@medBrukerkontekst
                 }
 
                 val alleRader = UttrekkResultatMapper.fraLagretJson(resultatJson)

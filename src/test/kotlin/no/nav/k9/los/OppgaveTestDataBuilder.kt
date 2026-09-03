@@ -14,6 +14,7 @@ import no.nav.k9.los.oppgavedefinisjon.oppgavetype.OppgavetypeRepository
 import no.nav.k9.los.oppgaveuthenting.query.db.OmrådeOgKode
 import no.nav.k9.los.oppgaveuthenting.query.db.OppgavefeltMedMer
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.Synlighet
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.query.dto.felter.Oppgavefelt
 import org.koin.test.KoinTest
 import org.koin.test.get
@@ -36,7 +37,7 @@ class OppgaveTestDataBuilder(
 
     init {
         områdeSetup.setup()
-        område = områdeRepository.hent("K9")!!
+        område = områdeRepository.hent(Områder.K9.eksternId)!!
     }
 
     val oppgaveFeltverdier = mutableMapOf<FeltType, OppgaveFeltverdi>()
@@ -92,7 +93,7 @@ class OppgaveTestDataBuilder(
 
 enum class FeltType(
     val eksternId: String,
-    val område: String? = "K9",
+    val område: Områder? = Områder.K9,
     val tolkesSom: String = "String"
 ) {
     AKTØR_ID("aktorId"),
@@ -122,36 +123,36 @@ enum class FeltType(
 }
 
 val felter: Map<OmrådeOgKode, OppgavefeltMedMer> = mapOf(
-    OmrådeOgKode("K9", FeltType.OPPGAVE_STATUS.eksternId) to OppgavefeltMedMer(
+    OmrådeOgKode(Områder.K9, FeltType.OPPGAVE_STATUS.eksternId) to OppgavefeltMedMer(
         Oppgavefelt(
-            område = "K9",
+            område = Områder.K9,
             kode = FeltType.OPPGAVE_STATUS.eksternId,
             visningsnavn = FeltType.OPPGAVE_STATUS.name,
             tolkes_som = FeltType.OPPGAVE_STATUS.tolkesSom,
             synlighet = Synlighet.OVER_STREKEN,
             verdiforklaringer = emptyList()
         ), null),
-    OmrådeOgKode("K9", FeltType.FAGSYSTEM.eksternId) to OppgavefeltMedMer(
+    OmrådeOgKode(Områder.K9, FeltType.FAGSYSTEM.eksternId) to OppgavefeltMedMer(
         Oppgavefelt(
-            område = "K9",
+            område = Områder.K9,
             kode = FeltType.FAGSYSTEM.eksternId,
             visningsnavn = FeltType.FAGSYSTEM.name,
             tolkes_som = FeltType.FAGSYSTEM.tolkesSom,
             synlighet = Synlighet.OVER_STREKEN,
             verdiforklaringer = emptyList()
         ), null),
-    OmrådeOgKode("K9", FeltType.MOTTATT_DATO.eksternId) to OppgavefeltMedMer(
+    OmrådeOgKode(Områder.K9, FeltType.MOTTATT_DATO.eksternId) to OppgavefeltMedMer(
         Oppgavefelt(
-            område = "K9",
+            område = Områder.K9,
             kode = FeltType.MOTTATT_DATO.eksternId,
             visningsnavn = FeltType.MOTTATT_DATO.name,
             tolkes_som = FeltType.MOTTATT_DATO.tolkesSom,
             synlighet = Synlighet.OVER_STREKEN,
             verdiforklaringer = emptyList()
         ), null),
-    OmrådeOgKode("K9", FeltType.LIGGER_HOS_BESLUTTER.eksternId) to OppgavefeltMedMer(
+    OmrådeOgKode(Områder.K9, FeltType.LIGGER_HOS_BESLUTTER.eksternId) to OppgavefeltMedMer(
         Oppgavefelt(
-            område = "K9",
+            område = Områder.K9,
             kode = FeltType.LIGGER_HOS_BESLUTTER.eksternId,
             visningsnavn = FeltType.LIGGER_HOS_BESLUTTER.name,
             tolkes_som = FeltType.LIGGER_HOS_BESLUTTER.tolkesSom,

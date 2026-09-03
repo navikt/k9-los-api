@@ -7,6 +7,7 @@ import assertk.assertions.hasSize
 import no.nav.k9.los.FeltType
 import no.nav.k9.los.felter
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.query.QueryRequest
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.CombineOppgavefilter
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.FeltverdiOppgavefilter
@@ -21,15 +22,15 @@ class OppgaveQueryToSqlMapperTest {
     fun `finner riktige oppgavestatuser, for å utlede oppgave- og oppgavefeltverditabeller`() {
         val oppgaveQuery = OppgaveQuery(
             listOf(
-                FeltverdiOppgavefilter("K9", "oppgavestatus", EksternFeltverdiOperator.EQUALS, listOf(Oppgavestatus.AAPEN.kode)),
-                FeltverdiOppgavefilter("K9", "fagsystem", EksternFeltverdiOperator.NOT_EQUALS, listOf("Tullball")),
+                FeltverdiOppgavefilter(Områder.K9, "oppgavestatus", EksternFeltverdiOperator.EQUALS, listOf(Oppgavestatus.AAPEN.kode)),
+                FeltverdiOppgavefilter(Områder.K9, "fagsystem", EksternFeltverdiOperator.NOT_EQUALS, listOf("Tullball")),
                 CombineOppgavefilter(
                     CombineOperator.OR, listOf(
-                        FeltverdiOppgavefilter("K9", "mottattDato", EksternFeltverdiOperator.LESS_THAN, listOf(LocalDate.of(2022, 1, 1))),
+                        FeltverdiOppgavefilter(Områder.K9, "mottattDato", EksternFeltverdiOperator.LESS_THAN, listOf(LocalDate.of(2022, 1, 1))),
                         CombineOppgavefilter(
                             CombineOperator.AND, listOf(
                                 FeltverdiOppgavefilter(
-                                    "K9",
+                                    Områder.K9,
                                     "oppgavestatus",
                                     EksternFeltverdiOperator.EQUALS,
                                     listOf(Oppgavestatus.LUKKET.kode)
@@ -42,7 +43,7 @@ class OppgaveQueryToSqlMapperTest {
         )
 
         val oppgavestatuser = OppgaveQueryToSqlMapper.traverserFiltereOgFinnOppgavestatus(
-            QueryRequest(oppgaveQuery),
+            QueryRequest(område = Områder.K9, oppgaveQuery = oppgaveQuery),
         )
 
         assertThat(oppgavestatuser).containsOnly(Oppgavestatus.AAPEN, Oppgavestatus.LUKKET)
@@ -66,13 +67,13 @@ class OppgaveQueryToSqlMapperTest {
             )
         )
         val sqlBuilder = OppgaveQueryToSqlMapper.toSql(
-            QueryRequest(oppgaveQuery),
+            QueryRequest(område = Områder.K9, oppgaveQuery = oppgaveQuery),
             felter,
             LocalDateTime.now()
         )
 
         assertThat(sqlBuilder.getQuery()).contains(sqlBuilder.getParams().keys)
-        assertThat(sqlBuilder.getParams()).hasSize(11) // Antallet er spesifikt for partisjonerte tabeller
+        assertThat(sqlBuilder.getParams()).hasSize(12) // Antallet er spesifikt for partisjonerte tabeller. Inkluderer :område
     }
 
     @Test
@@ -94,13 +95,13 @@ class OppgaveQueryToSqlMapperTest {
             )
         )
         val sqlBuilder = OppgaveQueryToSqlMapper.toSql(
-            QueryRequest(oppgaveQuery),
+            QueryRequest(område = Områder.K9, oppgaveQuery = oppgaveQuery),
             felter,
             LocalDateTime.now()
         )
 
         assertThat(sqlBuilder.getQuery()).contains(sqlBuilder.getParams().keys)
-        assertThat(sqlBuilder.getParams()).hasSize(12)
+        assertThat(sqlBuilder.getParams()).hasSize(13) // Inkluderer :område
     }
 
     private fun byggFilter(

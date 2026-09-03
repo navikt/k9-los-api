@@ -1,12 +1,11 @@
 package no.nav.k9.los.infrastruktur.abac.tilganger
 
-import no.nav.k9.los.infrastruktur.idtoken.IIdToken
+import no.nav.k9.los.infrastruktur.idtoken.IdToken
 
-/**
- * Sammenligner tilgangene Los beregner selv med tilgangene sif-abac-pdp ville gitt, som forberedelse
- * til å la sif-abac-pdp overta. Observasjonen skjer utenfor request-løpet: den skal aldri kunne
- * påvirke svaret eller svartiden til kalleren.
- */
 internal interface PdpTilgangsskygge {
-    fun observer(idToken: IIdToken, autoritative: Tilganger)
+    fun observer(idToken: IdToken, autoritative: Tilganger)
+}
+
+internal object IngenPdpTilgangsskygge : PdpTilgangsskygge {
+    override fun observer(idToken: IdToken, autoritative: Tilganger) = Unit
 }

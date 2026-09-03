@@ -4,8 +4,8 @@ import io.opentelemetry.api.trace.Span
 import io.opentelemetry.extension.kotlin.asContextElement
 import kotlinx.coroutines.*
 import no.nav.k9.los.infrastruktur.abac.IPepClient
-import no.nav.k9.los.infrastruktur.azuregraph.IAzureGraphService
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
+import no.nav.k9.los.infrastruktur.brukerkontekst.BrukerkontekstMedOmråde
 import no.nav.k9.los.infrastruktur.pdl.IPdlService
 import no.nav.k9.los.infrastruktur.pdl.fnr
 import no.nav.k9.los.infrastruktur.pdl.navn
@@ -19,14 +19,13 @@ class SisteOppgaverTjeneste(
     private val oppgaveRepository: OppgaveRepository,
     private val pepClient: IPepClient,
     private val pdlService: IPdlService,
-    private val azureGraphService: IAzureGraphService,
     private val transactionalManager: TransactionalManager
 ) {
     private val log = LoggerFactory.getLogger(SisteOppgaverTjeneste::class.java)
 
-    suspend fun hentSisteOppgaver(): List<SisteOppgaverDto> {
+    suspend fun hentSisteOppgaver(brukerkontekst: BrukerkontekstMedOmråde): List<SisteOppgaverDto> {
         return try {
-            val saksbehandlerIdent = azureGraphService.hentIdentTilInnloggetBruker()
+            val saksbehandlerIdent = brukerkontekst.navIdent
 
             val oppgaver =
                 transactionalManager.transaction { tx ->
@@ -42,8 +41,6 @@ class SisteOppgaverTjeneste(
 
             if (oppgaver.isEmpty()) return emptyList()
 
-            val grupperForSaksbehandler = azureGraphService.hentGrupperForInnloggetSaksbehandler()
-
             val innhentinger = try {
                 withContext(Dispatchers.IO + Span.current().asContextElement()) {
                     oppgaver.map { oppgave ->
@@ -51,10 +48,10 @@ class SisteOppgaverTjeneste(
                             try {
                                 val harTilgang = pepClient.harTilgangTilOppgaveV3(
                                     oppgave,
-                                    grupperForSaksbehandler = grupperForSaksbehandler
+                                    brukerkontekst,
                                 )
                                 val personPdl = oppgave.hentVerdi("aktorId")?.let {
-                                    pdlService.person(it)
+                                    pdlService.person(it, brukerkontekst)
                                 }
                                 Triple(harTilgang, personPdl, oppgave)
                             } catch (e: Exception) {
@@ -97,8 +94,8 @@ class SisteOppgaverTjeneste(
         }
     }
 
-    suspend fun lagreSisteOppgave(oppgaveNøkkelDto: OppgaveNøkkelDto) {
-        val brukerIdent = azureGraphService.hentIdentTilInnloggetBruker()
+    fun lagreSisteOppgave(oppgaveNøkkelDto: OppgaveNøkkelDto, brukerkontekst: BrukerkontekstMedOmråde) {
+        val brukerIdent = brukerkontekst.navIdent
         transactionalManager.transaction { tx ->
             sisteOppgaverRepository.lagreSisteOppgave(
                 tx,

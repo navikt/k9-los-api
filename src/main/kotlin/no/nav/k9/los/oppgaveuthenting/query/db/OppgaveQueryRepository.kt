@@ -10,6 +10,7 @@ import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.FeltdefinisjonRepository
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.Kodeverkreferanse
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.Synlighet
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.query.QueryRequest
 import no.nav.k9.los.oppgaveuthenting.query.dto.felter.Oppgavefelt
 import no.nav.k9.los.oppgaveuthenting.query.dto.felter.Oppgavefelter
@@ -69,7 +70,7 @@ class OppgaveQueryRepository(
                 }
                 OppgavefeltMedMer(
                     Oppgavefelt(
-                        område = row.string("omrade"),
+                        område = Områder.fraEksternId(row.string("omrade")),
                         kode = row.string("kode"),
                         visningsnavn = row.string("visningsnavn"),
                         tolkes_som = row.string("tolkes_som"),

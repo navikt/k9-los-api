@@ -10,6 +10,10 @@ import io.kotest.engine.test.TestResult
 import no.nav.k9.los.buildAndTestConfig
 import no.nav.k9.los.domeneadaptere.k9.OmrådeSetup
 import no.nav.k9.los.infrastruktur.db.runMigration
+import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.FeltdefinisjonRepository
+import no.nav.k9.los.oppgavedefinisjon.omraade.OmrådeRepository
+import no.nav.k9.los.oppgavedefinisjon.oppgavetype.OppgavetypeRepository
+import no.nav.k9.los.slettTestområder
 import no.nav.k9.los.tjenester.mock.localSetup.getKoin
 import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
@@ -64,6 +68,22 @@ object DbCleanupListener : TestListener {
     override suspend fun afterTest(testCase: TestCase, result: TestResult) {
         val ds: DataSource = getKoin().get()
         cleanupTables(ds)
+        slettTestområder(ds)
+        invaliderStrukturCacher()
+    }
+}
+
+/**
+ * Feltdefinisjoner, oppgavetyper og områder caches per område i repositoryene, og Koin lever hele
+ * prosjektet ut i kotest. Når slettTestområder fjerner de strukturelle radene til et testområde, må
+ * cachene tømmes — ellers ser tjenestene et område som fortsatt finnes, og gjenoppretter det aldri.
+ */
+private fun invaliderStrukturCacher() {
+    getKoin().get<OmrådeRepository>().invaliderCache()
+    getKoin().get<OppgavetypeRepository>().invaliderCache()
+    getKoin().get<FeltdefinisjonRepository>().apply {
+        invaliderFeltdefinisjonerCache()
+        invaliderKodeverkCache()
     }
 }
 
@@ -71,10 +91,14 @@ object DbCleanupListener : TestListener {
  * Kotest-spesifikk cleanup som bevarer strukturelle tabeller (omrade, oppgavetype, oppgavefelt, feltdefinisjon,
  * kodeverk, kodeverk_verdi) som settes opp én gang i beforeProject via OmrådeSetup.
  * JUnit-testene bruker TØM_DATA_SQL som truncater alt, men de kaller OmrådeSetup.setup() i @BeforeEach.
+ *
+ * Strukturelle rader for områder testene selv har opprettet ryddes bort av slettTestområder, se
+ * DbCleanupListener.
  */
 private const val KOTEST_TØM_DATA_SQL = """
              truncate 
                  driftsmeldinger,
+                 saksbehandler_omrade,
                  saksbehandler,
                  siste_oppgaver,
                  OPPGAVEKO_SAKSBEHANDLER,

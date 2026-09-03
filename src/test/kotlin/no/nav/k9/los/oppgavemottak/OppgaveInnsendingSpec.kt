@@ -14,8 +14,14 @@ class OppgaveInnsendingSpec: KoinTest, FreeSpec(){
     val transactionalManager = get<TransactionalManager>()
 
     init {
-        "En oppgaveDto pakket inn i NyOppgaveversjon" - {
+        // Oppgavemodellen ligger i strukturelle tabeller, men testområdet ryddes bort etter hver test
+        // (se DbCleanupListener) for at det ikke skal lekke inn i andre tester. Derfor bygges den på nytt
+        // foran hver test i stedet for én gang per container.
+        beforeTest {
             oppgavemodellBuilder.byggOppgavemodell()
+        }
+
+        "En oppgaveDto pakket inn i NyOppgaveversjon" - {
             val oppgaveDto = oppgavemodellBuilder.lagOppgaveDto()
             val innsending = NyOppgaveversjon(oppgaveDto)
             "og eksternVersjon ikke har blitt sendt inn før" - {
@@ -41,7 +47,6 @@ class OppgaveInnsendingSpec: KoinTest, FreeSpec(){
             }
         }
         "En oppgaveDto pakket inn i VaskOppgaveversjon" - {
-            oppgavemodellBuilder.byggOppgavemodell()
             val oppgaveDto = oppgavemodellBuilder.lagOppgaveDto()
             val innsending = VaskOppgaveversjon(oppgaveDto, 0)
             "og eksternId ikke finnes fra før" - {

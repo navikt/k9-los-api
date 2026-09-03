@@ -39,7 +39,7 @@ class ReservasjonsnøkkelOppgaveOppslagPartisjonert(
             ).map { it.tilOppgaveRad() }.asList
         )
         return rader.map { rad ->
-            val oppgavetypeObj = oppgavetypeRepository.hentOppgavetype("K9", rad.oppgavetypeEksternId, tx)
+            val oppgavetypeObj = oppgavetypeRepository.hentOppgavetype(rad.omradeEksternId, rad.oppgavetypeEksternId, tx)
             val oppgavefelter = hentOppgavefelter(tx, rad.id, oppgavetypeObj)
             Oppgave(
                 eksternId = rad.oppgaveEksternId,
@@ -72,7 +72,7 @@ class ReservasjonsnøkkelOppgaveOppslagPartisjonert(
             ).map { row ->
                 Oppgavefelt(
                     eksternId = row.string("ekstern_id"),
-                    område = "K9",
+                    område = oppgavetype.område.tilOmrådeEnum(),
                     listetype = row.boolean("liste_type"),
                     påkrevd = row.boolean("pakrevd"),
                     verdi = row.string("verdi"),

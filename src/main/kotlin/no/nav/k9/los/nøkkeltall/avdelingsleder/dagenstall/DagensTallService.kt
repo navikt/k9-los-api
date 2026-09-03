@@ -13,6 +13,7 @@ import no.nav.k9.los.oppgaveuthenting.query.QueryRequest
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.*
 import no.nav.k9.los.oppgaveuthenting.query.mapping.EksternFeltverdiOperator
 import no.nav.k9.los.nøkkeltall.KodeOgNavn
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
@@ -27,11 +28,11 @@ class DagensTallService(
     private val log: Logger = LoggerFactory.getLogger(DagensTallService::class.java)
 
     companion object {
-        val omsorgspenger = FeltverdiOppgavefilter("K9", "ytelsestype", EksternFeltverdiOperator.IN, listOf(FagsakYtelseType.OMSORGSPENGER.kode))
-        val opplæringspenger = FeltverdiOppgavefilter("K9", "ytelsestype", EksternFeltverdiOperator.IN, listOf(FagsakYtelseType.OLP.kode))
-        val psb = FeltverdiOppgavefilter("K9", "ytelsestype", EksternFeltverdiOperator.IN, listOf(FagsakYtelseType.PLEIEPENGER_SYKT_BARN.kode))
+        val omsorgspenger = FeltverdiOppgavefilter(Områder.K9, "ytelsestype", EksternFeltverdiOperator.IN, listOf(FagsakYtelseType.OMSORGSPENGER.kode))
+        val opplæringspenger = FeltverdiOppgavefilter(Områder.K9, "ytelsestype", EksternFeltverdiOperator.IN, listOf(FagsakYtelseType.OLP.kode))
+        val psb = FeltverdiOppgavefilter(Områder.K9, "ytelsestype", EksternFeltverdiOperator.IN, listOf(FagsakYtelseType.PLEIEPENGER_SYKT_BARN.kode))
 
-        val mottattDato = { dato: LocalDate -> FeltverdiOppgavefilter("K9", "mottattDato", EksternFeltverdiOperator.GREATER_THAN_OR_EQUALS, listOf(dato.toString())) }
+        val mottattDato = { dato: LocalDate -> FeltverdiOppgavefilter(Områder.K9, "mottattDato", EksternFeltverdiOperator.GREATER_THAN_OR_EQUALS, listOf(dato.toString())) }
         val ferdigstiltDato = { dato: LocalDate -> FeltverdiOppgavefilter(null, "ferdigstiltDato", EksternFeltverdiOperator.GREATER_THAN_OR_EQUALS, listOf(dato.toString())) }
         val lukket = FeltverdiOppgavefilter(null, "oppgavestatus", EksternFeltverdiOperator.EQUALS, listOf(Oppgavestatus.LUKKET.kode))
 
@@ -77,14 +78,14 @@ class DagensTallService(
 
     private fun hentGrupperte(filtere: List<Oppgavefilter>, medHelautomatisk: Boolean): List<TelleRad> {
         val selectFelter = buildList {
-            add(EnkelSelectFelt("K9", "ytelsestype"))
+            add(EnkelSelectFelt(Områder.K9, "ytelsestype"))
             add(EnkelSelectFelt(null, "oppgavetype"))
-            add(EnkelSelectFelt("K9", "behandlingTypekode"))
-            if (medHelautomatisk) add(EnkelSelectFelt("K9", "helautomatiskBehandlet"))
+            add(EnkelSelectFelt(Områder.K9, "behandlingTypekode"))
+            if (medHelautomatisk) add(EnkelSelectFelt(Områder.K9, "helautomatiskBehandlet"))
             add(AggregertSelectFelt(Aggregeringsfunksjon.ANTALL))
         }
         val query = OppgaveQuery(filtere = filtere, select = selectFelter)
-        val resultat = queryService.query(QueryRequest(query))
+        val resultat = queryService.query(QueryRequest(query, område = Områder.K9))
 
         return resultat.map { rad ->
             TelleRad(

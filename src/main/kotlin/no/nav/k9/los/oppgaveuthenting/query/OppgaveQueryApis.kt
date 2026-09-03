@@ -4,22 +4,19 @@ import io.ktor.http.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import no.nav.k9.los.infrastruktur.abac.IPepClient
-import no.nav.k9.los.infrastruktur.rest.RequestContextService
+import no.nav.k9.los.infrastruktur.brukerkontekst.medBrukerkontekst
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.OppgaveQuery
 import org.koin.java.KoinJavaComponent
 import org.koin.ktor.ext.inject
 
 fun Route.OppgaveQueryApis() {
-    val requestContextService by inject<RequestContextService>()
     val oppgaveQueryService by inject<OppgaveQueryService>()
-    val pepClient by KoinJavaComponent.inject<IPepClient>(IPepClient::class.java)
 
     post("/query/antall") {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.harBasisTilgang()) {
+        medBrukerkontekst { bruker ->
+            if (bruker.harBasisTilgang) {
                 val oppgaveQuery = call.receive<OppgaveQuery>()
-                call.respond(oppgaveQueryService.queryForAntall(QueryRequest(oppgaveQuery, false)))
+                call.respond(oppgaveQueryService.queryForAntall(QueryRequest(oppgaveQuery, false, område = bruker.område)))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
@@ -27,10 +24,10 @@ fun Route.OppgaveQueryApis() {
     }
 
     post("/validate") {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.harBasisTilgang()) {
+        medBrukerkontekst { bruker ->
+            if (bruker.harBasisTilgang) {
                 val oppgaveQuery = call.receive<OppgaveQuery>()
-                call.respond(oppgaveQueryService.validate(QueryRequest(oppgaveQuery)))
+                call.respond(oppgaveQueryService.validate(QueryRequest(oppgaveQuery, område = bruker.område)))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
@@ -38,8 +35,8 @@ fun Route.OppgaveQueryApis() {
     }
 
     get("/felter") {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.harBasisTilgang()) {
+        medBrukerkontekst { bruker ->
+            if (bruker.harBasisTilgang) {
                 call.respond(oppgaveQueryService.hentAlleFelter())
             } else {
                 call.respond(HttpStatusCode.Forbidden)

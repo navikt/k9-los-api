@@ -2,6 +2,7 @@ package no.nav.k9.los.nøkkeltall.avdelingsleder.status
 
 import no.nav.k9.los.kodeverk.BehandlingType
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.query.OppgaveQueryService
 import no.nav.k9.los.oppgaveuthenting.query.QueryRequest
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.*
@@ -37,11 +38,11 @@ class StatusService(
         val oppgaveQuery = OppgaveQuery(
             filtere = filtere,
             select = listOf(
-                EnkelSelectFelt("K9", "behandlingTypekode"),
+                EnkelSelectFelt(Områder.K9, "behandlingTypekode"),
                 AggregertSelectFelt(Aggregeringsfunksjon.ANTALL),
             ),
         )
-        val resultat = queryService.query(QueryRequest(oppgaveQuery))
+        val resultat = queryService.query(QueryRequest(oppgaveQuery, område = Områder.K9))
 
         val alleGrupper = resultat.mapNotNull { rad ->
             val behandlingTypeKode = rad.feltverdier.firstOrNull()?.verdi?.toString() ?: return@mapNotNull null

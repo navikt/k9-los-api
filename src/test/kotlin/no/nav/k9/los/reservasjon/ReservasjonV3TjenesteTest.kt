@@ -2,10 +2,12 @@ package no.nav.k9.los.reservasjon
 
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.AbstractK9LosIntegrationTest
+import no.nav.k9.los.OppgaveTestDataBuilder
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
+import no.nav.k9.los.infrastruktur.idtoken.IdTokenLocal
 import no.nav.k9.los.oppgaveuthenting.query.equalsWithPrecision
 import no.nav.k9.los.saksbehandleradmin.Saksbehandler
-import no.nav.k9.los.saksbehandleradmin.TestSaksbehandlerRepository
+import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -13,36 +15,25 @@ import org.junit.jupiter.api.assertThrows
 import org.koin.test.get
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
-import no.nav.k9.los.saksbehandleradmin.OpprettSaksbehandler
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 
 class ReservasjonV3TjenesteTest : AbstractK9LosIntegrationTest() {
+    
     private lateinit var saksbehandlerInnlogget: Saksbehandler
     private lateinit var saksbehandler1: Saksbehandler
 
     @BeforeEach
     fun setup() {
-        val testSaksbehandlerRepository = get<TestSaksbehandlerRepository>()
+        val saksbehandlerRepository = get<SaksbehandlerRepository>()
 
         saksbehandlerInnlogget = runBlocking {
-            testSaksbehandlerRepository.opprettSaksbehandler(
-                OpprettSaksbehandler(
-                    navident = null,
-                    navn = null,
-                    epost = "saksbehandler@nav.no",
-                    enhet = null,
-                )
-            )
+            saksbehandlerRepository.opprettSaksbehandler("saksbehandler@nav.no", Områder.K9)
+            saksbehandlerRepository.finnSaksbehandlerMedEpost("saksbehandler@nav.no", skjermet = false)!!
         }
 
         saksbehandler1 = runBlocking {
-            testSaksbehandlerRepository.opprettSaksbehandler(
-                OpprettSaksbehandler(
-                    navident = null,
-                    navn = null,
-                    epost = "test1@test.no",
-                    enhet = null,
-                )
-            )
+            saksbehandlerRepository.opprettSaksbehandler("test1@test.no", Områder.K9)
+            saksbehandlerRepository.finnSaksbehandlerMedEpost("test1@test.no", skjermet = false)!!
         }
     }
 
@@ -51,16 +42,22 @@ class ReservasjonV3TjenesteTest : AbstractK9LosIntegrationTest() {
         val transactionalManager = get<TransactionalManager>()
         val reservasjonV3Tjeneste = get<ReservasjonV3Tjeneste>()
 
+        // Reservasjonen arver området fra oppgaven med samme reservasjonsnøkkel
+        val builder = OppgaveTestDataBuilder()
+        builder.lagre(builder.lag(reservasjonsnøkkel = "test1"))
+
         val reservasjon = transactionalManager.transaction { tx ->
-            reservasjonV3Tjeneste.forsøkReservasjonOgReturnerAktiv(
-                reservasjonsnøkkel = "test1",
-                reserverForId = saksbehandler1.id,
-                kommentar = "",
-                gyldigFra = LocalDateTime.now(),
-                gyldigTil = LocalDateTime.now().plusDays(1),
-                utføresAvId = saksbehandlerInnlogget.id,
-                tx = tx
-            )
+            runBlocking {
+                reservasjonV3Tjeneste.forsøkReservasjonOgReturnerAktiv(
+                    reservasjonsnøkkel = "test1",
+                    reserverForId = saksbehandler1.id,
+                    kommentar = "",
+                    gyldigFra = LocalDateTime.now(),
+                    gyldigTil = LocalDateTime.now().plusDays(1),
+                    utføresAvId = saksbehandlerInnlogget.id,
+                    tx = tx
+                )
+            }
         }
 
 
@@ -82,16 +79,22 @@ class ReservasjonV3TjenesteTest : AbstractK9LosIntegrationTest() {
         val transactionalManager = get<TransactionalManager>()
         val reservasjonV3Tjeneste = get<ReservasjonV3Tjeneste>()
 
+        // Reservasjonen arver området fra oppgaven med samme reservasjonsnøkkel
+        val builder = OppgaveTestDataBuilder()
+        builder.lagre(builder.lag(reservasjonsnøkkel = "test1"))
+
         transactionalManager.transaction { tx ->
-            reservasjonV3Tjeneste.forsøkReservasjonOgReturnerAktiv(
-                reservasjonsnøkkel = "test1",
-                reserverForId = saksbehandler1.id,
-                kommentar = "",
-                gyldigFra = LocalDateTime.now(),
-                gyldigTil = LocalDateTime.now().plusDays(1),
-                utføresAvId = saksbehandlerInnlogget.id,
-                tx = tx
-            )
+            runBlocking {
+                reservasjonV3Tjeneste.forsøkReservasjonOgReturnerAktiv(
+                    reservasjonsnøkkel = "test1",
+                    reserverForId = saksbehandler1.id,
+                    kommentar = "",
+                    gyldigFra = LocalDateTime.now(),
+                    gyldigTil = LocalDateTime.now().plusDays(1),
+                    utføresAvId = saksbehandlerInnlogget.id,
+                    tx = tx
+                )
+            }
         }
 
         reservasjonV3Tjeneste.annullerReservasjonHvisFinnes(
@@ -112,17 +115,11 @@ class ReservasjonV3TjenesteTest : AbstractK9LosIntegrationTest() {
         val repo = get<ReservasjonV3Repository>()
         val reservasjonV3Tjeneste = get<ReservasjonV3Tjeneste>()
         val transactionalManager = get<TransactionalManager>()
-        val testSaksbehandlerRepository = get<TestSaksbehandlerRepository>()
+        val saksbehandlerRepository = get<SaksbehandlerRepository>()
 
         val saksbehandler2 = runBlocking {
-            testSaksbehandlerRepository.opprettSaksbehandler(
-                OpprettSaksbehandler(
-                    navident = null,
-                    navn = null,
-                    epost = "test2@test.no",
-                    enhet = null,
-                )
-            )
+            saksbehandlerRepository.opprettSaksbehandler("test2@test.no", Områder.K9)
+            saksbehandlerRepository.finnSaksbehandlerMedEpost("test2@test.no", skjermet = false)!!
         }
 
         val reservasjon = ReservasjonV3(
@@ -131,7 +128,8 @@ class ReservasjonV3TjenesteTest : AbstractK9LosIntegrationTest() {
             kommentar = "",
             gyldigFra = LocalDateTime.now(),
             gyldigTil = LocalDateTime.now().plusDays(1),
-            endretAv = null
+            endretAv = null,
+            område = Områder.K9
         )
 
         transactionalManager.transaction { tx ->
@@ -169,13 +167,14 @@ class ReservasjonV3TjenesteTest : AbstractK9LosIntegrationTest() {
         val reservasjonV3Tjeneste = get<ReservasjonV3Tjeneste>()
         val transactionalManager = get<TransactionalManager>()
 
-        val reservasjon = ReservasjonV3(
+        var reservasjon = ReservasjonV3(
             reservertAv = saksbehandler1.id,
             reservasjonsnøkkel = "test1",
             kommentar = "",
             gyldigFra = LocalDateTime.now(),
             gyldigTil = LocalDateTime.now().plusDays(1),
-            endretAv = null
+            endretAv = null,
+            område = Områder.K9
         )
 
         transactionalManager.transaction { tx ->

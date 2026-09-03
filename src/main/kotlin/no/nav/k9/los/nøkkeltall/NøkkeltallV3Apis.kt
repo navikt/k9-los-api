@@ -3,8 +3,7 @@ package no.nav.k9.los.nøkkeltall
 import io.ktor.http.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import no.nav.k9.los.infrastruktur.abac.IPepClient
-import no.nav.k9.los.infrastruktur.rest.RequestContextService
+import no.nav.k9.los.infrastruktur.brukerkontekst.medBrukerkontekst
 import no.nav.k9.los.nøkkeltall.avdelingsleder.dagenstall.DagensTallService
 import no.nav.k9.los.nøkkeltall.avdelingsleder.ferdigstilteperenhet.FerdigstiltePerEnhetGruppe
 import no.nav.k9.los.nøkkeltall.avdelingsleder.ferdigstilteperenhet.FerdigstiltePerEnhetService
@@ -17,13 +16,11 @@ fun Route.NøkkeltallV3Apis() {
     val statusService by inject<StatusService>()
     val dagensTallService by inject<DagensTallService>()
     val perEnhetService by inject<FerdigstiltePerEnhetService>()
-    val requestContextService by inject<RequestContextService>()
-    val pepClient by inject<IPepClient>()
 
     get("status") {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.erOppgaveStyrer()) {
-                call.respond(statusService.hentStatus(pepClient.harTilgangTilKode6()))
+        medBrukerkontekst { bruker ->
+            if (bruker.erOppgavestyrer) {
+                call.respond(statusService.hentStatus(bruker.harTilgangTilKode6))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
@@ -31,9 +28,9 @@ fun Route.NøkkeltallV3Apis() {
     }
 
     get("statusfordeling") {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.erOppgaveStyrer()) {
-                val kode6 = pepClient.harTilgangTilKode6()
+        medBrukerkontekst { bruker ->
+            if (bruker.erOppgavestyrer) {
+                val kode6 = bruker.harTilgangTilKode6
                 call.respond(statusFordelingService.hentVerdi(kode6))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
@@ -42,8 +39,8 @@ fun Route.NøkkeltallV3Apis() {
     }
 
     get("dagens-tall") {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.erOppgaveStyrer()) {
+        medBrukerkontekst { bruker ->
+            if (bruker.erOppgavestyrer) {
                 call.respond(dagensTallService.hentCachetVerdi())
             } else {
                 call.respond(HttpStatusCode.Forbidden)
@@ -52,8 +49,8 @@ fun Route.NøkkeltallV3Apis() {
     }
 
     get("ferdigstilte-per-enhet") {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.erOppgaveStyrer()) {
+        medBrukerkontekst { bruker ->
+            if (bruker.erOppgavestyrer) {
                 val gruppe = call.parameters["gruppe"]?.let { FerdigstiltePerEnhetGruppe.valueOf(it) }
                     ?: FerdigstiltePerEnhetGruppe.ALLE
                 val uker = call.parameters["uker"]?.toInt() ?: 2

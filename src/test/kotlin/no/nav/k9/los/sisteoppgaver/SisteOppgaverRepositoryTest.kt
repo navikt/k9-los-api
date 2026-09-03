@@ -10,13 +10,14 @@ import no.nav.k9.los.OppgaveTestDataBuilder
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
+import no.nav.k9.los.saksbehandleradmin.OpprettSaksbehandler
 import no.nav.k9.los.saksbehandleradmin.TestSaksbehandlerRepository
 import no.nav.k9.los.oppgaveuthenting.OppgaveNøkkelDto
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.koin.test.get
 import java.util.*
-import no.nav.k9.los.saksbehandleradmin.OpprettSaksbehandler
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 
 class SisteOppgaverRepositoryTest : AbstractK9LosIntegrationTest() {
 
@@ -36,14 +37,11 @@ class SisteOppgaverRepositoryTest : AbstractK9LosIntegrationTest() {
 
         runBlocking {
             testSaksbehandlerRepository.opprettSaksbehandler(
-                OpprettSaksbehandler(
-                    navident = "test",
-                    navn = "Test Testersen",
-                    epost = "test@nav.no",
-                    enhet = null,
-                )
+                OpprettSaksbehandler(navident = "test", navn = "Test Testersen", epost = "test@nav.no", enhet = null),
+                Områder.K9,
+                skjermet = false,
             )
-            saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedEpost("test@nav.no")!!
+            saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedEpost("test@nav.no", skjermet = false)!!
         }
     }
 

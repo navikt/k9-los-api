@@ -1,90 +1,52 @@
 package no.nav.k9.los.saksbehandleradmin
 
-import kotliquery.queryOf
-import kotliquery.sessionOf
-import kotliquery.using
-import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
-import java.util.Locale.getDefault
+import no.nav.k9.los.oppgavedefinisjon.omraade.OmrådeRepository
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import javax.sql.DataSource
 
+/**
+ * Testscope-repo som oppretter en ferdig utfylt saksbehandler i én operasjon.
+ *
+ * Produksjonsflyten er todelt med vilje: [SaksbehandlerRepository.opprettSaksbehandler] kobler epost
+ * til område når avdelingsleder registrerer saksbehandleren, og
+ * [SaksbehandlerRepository.vedlikeholdSaksbehandler] fyller ut navident, navn og enhet først når
+ * saksbehandleren selv logger inn. Tester trenger sjelden å skille de to stegene, så de samles her
+ * i stedet for at produksjonsrepoet får en opprettelsesvei som bare tester bruker.
+ */
 class TestSaksbehandlerRepository(
     private val dataSource: DataSource,
-    private val pepClient: IPepClient,
+    områdeRepository: OmrådeRepository,
 ) {
-    private val saksbehandlerRepository = SaksbehandlerRepository(dataSource, pepClient, TransactionalManager(dataSource))
+    private val saksbehandlerRepository =
+        SaksbehandlerRepository(dataSource, TransactionalManager(dataSource), områdeRepository)
 
-    suspend fun opprettSaksbehandler(opprettSaksbehandler: OpprettSaksbehandler): Saksbehandler {
-        val erSkjermet = pepClient.harTilgangTilKode6()
-        return using(sessionOf(dataSource)) {
-            val saksbehandlerId = it.transaction { tx ->
-                val saksbehandlerId = tx.run(
-                    queryOf(
-                        """
-                        insert into saksbehandler as k (navident, navn, epost, enhet, skjermet)
-                        values (:navident,:navn,:epost, :enhet, :skjermet)
-                        returning id
-                     """,
-                        mapOf(
-                            "navident" to opprettSaksbehandler.navident,
-                            "epost" to opprettSaksbehandler.epost.lowercase(getDefault()),
-                            "navn" to opprettSaksbehandler.navn,
-                            "enhet" to opprettSaksbehandler.enhet,
-                            "skjermet" to erSkjermet
-                        )
-                    ).map { row -> row.long("id") }.asSingle
-                )
-                saksbehandlerId!!
-            }
-            saksbehandlerRepository.finnSaksbehandlerMedId(saksbehandlerId)!!
-        }
+    fun opprettSaksbehandler(
+        opprettSaksbehandler: OpprettSaksbehandler,
+        område: Områder = Områder.K9,
+        skjermet: Boolean = false,
+    ): Saksbehandler {
+        val id = saksbehandlerRepository.opprettSaksbehandler(opprettSaksbehandler.epost, område, skjermet)
+        saksbehandlerRepository.vedlikeholdSaksbehandler(
+            saksbehandler = Saksbehandler(
+                id = id,
+                navident = opprettSaksbehandler.navident,
+                navn = opprettSaksbehandler.navn,
+                epost = opprettSaksbehandler.epost,
+                enhet = opprettSaksbehandler.enhet,
+                områder = listOf(område),
+                kode6 = skjermet,
+            ),
+            skjermet = skjermet,
+        )
+        return saksbehandlerRepository.finnSaksbehandlerMedId(id)!!
     }
 
-    suspend fun finnSaksbehandlerMedEpost(epost: String): Saksbehandler? {
-        val skjermet = pepClient.harTilgangTilKode6()
+    fun finnSaksbehandlerMedEpost(epost: String, skjermet: Boolean = false): Saksbehandler? =
+        saksbehandlerRepository.finnSaksbehandlerMedEpost(epost, skjermet)
 
-        val saksbehandler = using(sessionOf(dataSource)) { session ->
-            session.transaction { tx ->
-                tx.run(
-                    queryOf(
-                        "select * from saksbehandler where lower(epost) = lower(:epost) and skjermet = :skjermet",
-                        mapOf("epost" to epost, "skjermet" to skjermet)
-                    ).map { row ->
-                        Saksbehandler(
-                            id = row.long("id"),
-                            navident = row.stringOrNull("navident"),
-                            navn = row.stringOrNull("navn"),
-                            epost = row.string("epost").lowercase(getDefault()),
-                            enhet = row.stringOrNull("enhet"),
-                            sistOppdatert = row.localDateTimeOrNull("sist_oppdatert")
-                        )
-                    }.asSingle
-                )
-            }
-        }
-        return saksbehandler
-    }
-
-    suspend fun hentAlleSaksbehandlere(): List<Saksbehandler> {
-        val skjermet = pepClient.harTilgangTilKode6()
-        val identer = using(sessionOf(dataSource)) {
-            it.run(
-                queryOf(
-                    "select * from saksbehandler where skjermet = :skjermet",
-                    mapOf("skjermet" to skjermet)
-                )
-                    .map { row ->
-                        Saksbehandler(
-                            id = row.long("id"),
-                            navident = row.stringOrNull("navident"),
-                            navn = row.stringOrNull("navn"),
-                            epost = row.string("epost").lowercase(getDefault()),
-                            enhet = row.stringOrNull("enhet"),
-                            sistOppdatert = row.localDateTimeOrNull("sist_oppdatert")
-                        )
-                    }.asList
-            )
-        }
-        return identer
-    }
+    fun hentAlleSaksbehandlere(
+        område: Områder = Områder.K9,
+        skjermet: Boolean = false,
+    ): List<Saksbehandler> = saksbehandlerRepository.hentAlleSaksbehandlere(område, skjermet)
 }

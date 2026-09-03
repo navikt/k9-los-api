@@ -10,15 +10,17 @@ import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.lagretsok.LagretSøk
 import no.nav.k9.los.lagretsok.LagretSøkRepository
 import no.nav.k9.los.lagretsok.NyttLagretSøkRequest
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.OppgaveQuery
+import no.nav.k9.los.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
+import no.nav.k9.los.saksbehandleradmin.OpprettSaksbehandler
 import no.nav.k9.los.saksbehandleradmin.TestSaksbehandlerRepository
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.koin.test.get
 import java.time.LocalDateTime
-import no.nav.k9.los.saksbehandleradmin.OpprettSaksbehandler
 
 class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
 
@@ -38,18 +40,16 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
         testSaksbehandlerRepository = get()
 
         runBlocking {
-            val saksbehandler = testSaksbehandlerRepository.opprettSaksbehandler(
-                OpprettSaksbehandler(
-                    navident = "test",
-                    navn = "Test Testersen",
-                    epost = "test@nav.no",
-                    enhet = null,
-                )
+            testSaksbehandlerRepository.opprettSaksbehandler(
+                OpprettSaksbehandler(navident = "test", navn = "Test Testersen", epost = "test@nav.no", enhet = null),
+                Områder.K9,
+                skjermet = false,
             )
+            val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedEpost("test@nav.no", skjermet = false)!!
             saksbehandlerId = saksbehandler.id
             val lagretSøk = LagretSøk.nyttSøk(
-                NyttLagretSøkRequest(tittel = "Test søk", query = LagretSøk.defaultQuery(false)),
-                saksbehandler
+                NyttLagretSøkRequest(tittel = "Test søk", query = LagretSøk.defaultQuery(Områder.K9, false)),
+                saksbehandler, Områder.K9,
             )
             lagretSøkRepository.opprett(lagretSøk)
             testQuery = lagretSøk.query
@@ -171,13 +171,11 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
         // Opprett en annen saksbehandler for å teste filtreringen
         val annenSaksbehandlerId = runBlocking {
             testSaksbehandlerRepository.opprettSaksbehandler(
-                OpprettSaksbehandler(
-                    navident = "test2",
-                    navn = "Test Testersen 2",
-                    epost = "test2@nav.no",
-                    enhet = null,
-                )
-            ).id
+                OpprettSaksbehandler(navident = "test2", navn = "Test Testersen 2", epost = "test2@nav.no", enhet = null),
+                Områder.K9,
+                skjermet = false,
+            )
+            saksbehandlerRepository.finnSaksbehandlerMedEpost("test2@nav.no", skjermet = false)!!.id
         }
 
         val uttrekk1 = Uttrekk.opprettUttrekk(

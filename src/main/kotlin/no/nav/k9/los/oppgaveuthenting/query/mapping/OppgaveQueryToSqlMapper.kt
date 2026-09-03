@@ -15,7 +15,7 @@ object OppgaveQueryToSqlMapper {
         val oppgavestatusFilter = traverserFiltereOgFinnOppgavestatus(request)
         val ferdigstiltDatofilter = traverserFiltereOgFinnFerdigstiltDatofilter(request)
 
-        return PartisjonertOppgaveQuerySqlBuilder(felter, oppgavestatusFilter, now, ferdigstiltDatofilter)
+        return PartisjonertOppgaveQuerySqlBuilder(felter, oppgavestatusFilter, now, ferdigstiltDatofilter, request.område)
     }
 
     fun toSql(
@@ -66,16 +66,6 @@ object OppgaveQueryToSqlMapper {
         } else {
             Oppgavestatus.entries
         }
-    }
-
-    private fun traverserFiltereOgFinnSpørringsstrategi(request: QueryRequest): Spørringstrategi? {
-        val verdierFunnet = mutableSetOf<Spørringstrategi>()
-        rekursivtSøk(
-            request.oppgaveQuery.filtere,
-            verdierFunnet,
-            { verdi -> Spørringstrategi.fraKode(verdi.toString()) },
-            { filter -> filter.kode == "spørringstrategi" })
-        return verdierFunnet.firstOrNull()
     }
 
     private fun traverserFiltereOgFinnFerdigstiltDatofilter(queryRequest: QueryRequest): FeltverdiOppgavefilter? {

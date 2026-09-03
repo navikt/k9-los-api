@@ -5,6 +5,7 @@ import assertk.assertions.isEqualTo
 import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.FeltType
 import no.nav.k9.los.OppgaveTestDataBuilder
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.enkeltoppslag.AktivOppgaveOppslag
 import no.nav.k9.los.oppgaveuthenting.enkeltoppslag.TemporalOppgaveOppslag
 import org.junit.jupiter.api.Test
@@ -38,7 +39,7 @@ class OppgaveRepositoryTest : AbstractK9LosIntegrationTest() {
         assertThat(oppgaveTidsserie[0].hentListeverdi(FeltType.AKSJONSPUNKT.eksternId)[0]).isEqualTo("1234")
         assertThat(oppgaveTidsserie[1].hentListeverdi(FeltType.AKSJONSPUNKT.eksternId)[0]).isEqualTo("2345")
 
-        val nyesteOppgave = aktivOppgaveOppslag.hentAktivOppgave(behandlingUuid, "k9sak")
+        val nyesteOppgave = aktivOppgaveOppslag.hentAktivOppgave(behandlingUuid, "k9sak", Områder.K9)
 
         // Identifiserer nyeste oppgave basert på aksjonspunktkode 2345
         assertThat(nyesteOppgave.hentListeverdi(FeltType.AKSJONSPUNKT.eksternId)[0]).isEqualTo("2345")

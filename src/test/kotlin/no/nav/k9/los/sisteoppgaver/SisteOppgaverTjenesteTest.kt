@@ -14,13 +14,14 @@ import no.nav.k9.los.FeltType
 import no.nav.k9.los.OppgaveTestDataBuilder
 import no.nav.k9.los.infrastruktur.abac.Action
 import no.nav.k9.los.infrastruktur.abac.IPepClient
-import no.nav.k9.los.infrastruktur.azuregraph.IAzureGraphService
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
+import no.nav.k9.los.infrastruktur.brukerkontekst.TestKontekstFactory
 import no.nav.k9.los.infrastruktur.pdl.IPdlService
 import no.nav.k9.los.infrastruktur.pdl.PersonPdl
 import no.nav.k9.los.infrastruktur.pdl.PersonPdlResponse
 import no.nav.k9.los.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
+import no.nav.k9.los.saksbehandleradmin.OpprettSaksbehandler
 import no.nav.k9.los.saksbehandleradmin.TestSaksbehandlerRepository
 import no.nav.k9.los.oppgaveuthenting.Oppgave
 import no.nav.k9.los.oppgaveuthenting.OppgaveNøkkelDto
@@ -28,10 +29,11 @@ import no.nav.k9.los.oppgaveuthenting.OppgaveRepository
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.koin.test.get
-import java.util.*
-import no.nav.k9.los.saksbehandleradmin.OpprettSaksbehandler
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 
 class SisteOppgaverTjenesteTest : AbstractK9LosIntegrationTest() {
+
+    private val kontekst = TestKontekstFactory.brukerkontekst(Områder.K9)
 
     private lateinit var sisteOppgaverRepository: SisteOppgaverRepository
     private lateinit var oppgaveRepository: OppgaveRepository
@@ -43,7 +45,6 @@ class SisteOppgaverTjenesteTest : AbstractK9LosIntegrationTest() {
     // Mocks
     private lateinit var pepClient: IPepClient
     private lateinit var pdlService: IPdlService
-    private lateinit var azureGraphService: IAzureGraphService
     private lateinit var sisteOppgaverTjeneste: SisteOppgaverTjeneste
 
     private val testScope = CoroutineScope(Dispatchers.Unconfined)
@@ -57,29 +58,21 @@ class SisteOppgaverTjenesteTest : AbstractK9LosIntegrationTest() {
         testSaksbehandlerRepository = get()
         pepClient = mockk(relaxed = true)
         pdlService = mockk(relaxed = true)
-        azureGraphService = mockk(relaxed = true)
-        
-        coEvery { azureGraphService.hentIdentTilInnloggetBruker() } returns "test@nav.no"
-        coEvery { azureGraphService.hentGrupperForSaksbehandler(any()) } returns setOf(UUID.randomUUID())
-
         sisteOppgaverTjeneste = SisteOppgaverTjeneste(
             sisteOppgaverRepository = sisteOppgaverRepository,
             oppgaveRepository = oppgaveRepository,
             pepClient = pepClient,
             pdlService = pdlService,
-            azureGraphService = azureGraphService,
             transactionalManager = transactionalManager
         )
         
         runBlocking {
-            saksbehandler = testSaksbehandlerRepository.opprettSaksbehandler(
-                OpprettSaksbehandler(
-                    navident = "test",
-                    navn = "Test Testersen",
-                    epost = "test@nav.no",
-                    enhet = null,
-                )
+            testSaksbehandlerRepository.opprettSaksbehandler(
+                OpprettSaksbehandler(navident = "test", navn = "Test Testersen", epost = "test@nav.no", enhet = null),
+                Områder.K9,
+                skjermet = false,
             )
+            saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedEpost("test@nav.no", skjermet = false)!!
         }
     }
 
@@ -92,10 +85,10 @@ class SisteOppgaverTjenesteTest : AbstractK9LosIntegrationTest() {
             .lagOgLagre()
             
         val mockPerson: PersonPdl = mockk(relaxed = true)
-        coEvery { pdlService.person(aktorId1) } returns PersonPdlResponse(false, mockPerson)
+        coEvery { pdlService.person(aktorId1, any()) } returns PersonPdlResponse(false, mockPerson)
 
         coEvery {
-            pepClient.harTilgangTilOppgaveV3(any(), eq(Action.read), any())
+            pepClient.harTilgangTilOppgaveV3(any(), kontekst, eq(Action.read))
         } returns true
 
         // Lagre oppgaven som siste besøkt
@@ -104,11 +97,12 @@ class SisteOppgaverTjenesteTest : AbstractK9LosIntegrationTest() {
                 områdeEksternId = "K9",
                 oppgaveEksternId = oppgave1.eksternId,
                 oppgaveTypeEksternId = oppgave1.oppgavetype.eksternId
-            )
+            ),
+            kontekst
         )
         
         // Hent siste oppgaver, og sjekk resultatet
-        val sisteOppgaver = sisteOppgaverTjeneste.hentSisteOppgaver()
+        val sisteOppgaver = sisteOppgaverTjeneste.hentSisteOppgaver(kontekst)
         assertThat(sisteOppgaver).hasSize(1)
         assertThat(sisteOppgaver[0].oppgaveEksternId).isEqualTo(oppgave1.eksternId)
     }
@@ -127,12 +121,12 @@ class SisteOppgaverTjenesteTest : AbstractK9LosIntegrationTest() {
             .lagOgLagre()
 
         val mockPerson: PersonPdl = mockk(relaxed = true)
-        coEvery { pdlService.person(aktorId1) } returns PersonPdlResponse(false, mockPerson)
-        coEvery { pdlService.person(aktorId2) } returns PersonPdlResponse(true, mockPerson)
+        coEvery { pdlService.person(aktorId1, any()) } returns PersonPdlResponse(false, mockPerson)
+        coEvery { pdlService.person(aktorId2, any()) } returns PersonPdlResponse(true, mockPerson)
         
         // Bruker har tilgang til oppgave1 men ikke oppgave2
         coEvery {
-            pepClient.harTilgangTilOppgaveV3(any(), eq(Action.read), any())
+            pepClient.harTilgangTilOppgaveV3(any(), kontekst, eq(Action.read))
         } answers {
             val oppgave = firstArg<Oppgave>()
             oppgave.eksternId == oppgave1.eksternId
@@ -143,19 +137,21 @@ class SisteOppgaverTjenesteTest : AbstractK9LosIntegrationTest() {
                 områdeEksternId = "K9",
                 oppgaveEksternId = oppgave1.eksternId,
                 oppgaveTypeEksternId = "k9sak"
-            )
+            ),
+            kontekst
         )
-        
+
         sisteOppgaverTjeneste.lagreSisteOppgave(
             OppgaveNøkkelDto(
                 områdeEksternId = "K9",
                 oppgaveEksternId = oppgave2.eksternId,
                 oppgaveTypeEksternId = "k9sak"
-            )
+            ),
+            kontekst
         )
 
         // Sjekk resultatet - skal kun få oppgave1 tilbake siden bruker ikke har tilgang til oppgave2
-        val sisteOppgaver = sisteOppgaverTjeneste.hentSisteOppgaver()
+        val sisteOppgaver = sisteOppgaverTjeneste.hentSisteOppgaver(kontekst)
         assertThat(sisteOppgaver).hasSize(1)
         assertThat(sisteOppgaver[0].oppgaveEksternId).isEqualTo(oppgave1.eksternId)
     }

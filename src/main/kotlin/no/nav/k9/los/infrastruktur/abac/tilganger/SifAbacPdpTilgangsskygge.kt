@@ -10,7 +10,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
 import no.nav.k9.los.infrastruktur.abac.ISifAbacPdpKlient
 import no.nav.k9.los.infrastruktur.abac.SifAbacPdpHttpException
-import no.nav.k9.los.infrastruktur.idtoken.IIdToken
+import no.nav.k9.los.infrastruktur.idtoken.IdToken
 import org.slf4j.LoggerFactory
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
@@ -24,23 +24,20 @@ internal class SifAbacPdpTilgangsskygge(
 ) : PdpTilgangsskygge {
     private val log = LoggerFactory.getLogger(SifAbacPdpTilgangsskygge::class.java)
 
-    override fun observer(idToken: IIdToken, autoritative: Tilganger) {
+    override fun observer(idToken: IdToken, autoritative: Tilganger) {
         skyggeScope.launch {
             try {
                 val fraPdp = withTimeout(timeout) { klient.hentTilganger(idToken) }
                 val avvik = finnAvvik(autoritative, fraPdp)
-                if (avvik.isEmpty()) {
-                    log.info("Ingen avvik i skyggetilganger fra sif-abac-pdp")
-                } else {
-                    log.info("Avvik i skyggetilganger fra sif-abac-pdp: tilgangstyper={}", avvik.joinToString(","))
+                if (avvik.isNotEmpty()) {
+                    log.warn("Avvik i skyggetilganger fra sif-abac-pdp: tilgangstyper={}", avvik.joinToString(","))
                 }
             } catch (_: TimeoutCancellationException) {
-                log.info("Skyggekall mot sif-abac-pdp brukte mer enn {}", timeout)
+                log.warn("Skyggekall mot sif-abac-pdp brukte mer enn {}", timeout)
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                // Logger kun feiltype og statuskode, aldri feilmelding, for å unngå å lekke innhold fra sif-abac-pdp.
-                log.info(
+                log.warn(
                     "Skyggekall mot sif-abac-pdp feilet: feiltype={}, status={}",
                     e::class.simpleName ?: "UkjentFeil",
                     (e as? SifAbacPdpHttpException)?.status?.toString() ?: "ikke_tilgjengelig",
@@ -49,7 +46,7 @@ internal class SifAbacPdpTilgangsskygge(
         }
     }
 
-    private fun finnAvvik(autoritative: Tilganger, fraPdp: Tilganger): Set<Tilgangstype> = buildSet {
+    internal fun finnAvvik(autoritative: Tilganger, fraPdp: Tilganger): Set<Tilgangstype> = buildSet {
         if (autoritative.basis != fraPdp.basis) add(Tilgangstype.BASIS)
         if (autoritative.kode6 != fraPdp.kode6) add(Tilgangstype.KODE6)
         if (autoritative.oppgavestyring != fraPdp.oppgavestyring) add(Tilgangstype.OPPGAVESTYRING)

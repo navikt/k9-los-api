@@ -12,9 +12,8 @@ import no.nav.k9.los.Configuration
 import no.nav.k9.los.KoinProfile
 import no.nav.k9.los.infrastruktur.abac.tilganger.InnloggetAnsattK9V2Dto
 import no.nav.k9.los.infrastruktur.abac.tilganger.Tilganger
-import no.nav.k9.los.infrastruktur.idtoken.IIdToken
+import no.nav.k9.los.infrastruktur.idtoken.IdToken
 import no.nav.k9.los.infrastruktur.rest.NavHeaders
-import no.nav.k9.los.infrastruktur.rest.idToken
 import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
 import no.nav.sif.abac.kontrakt.abac.AksjonspunktType
 import no.nav.sif.abac.kontrakt.abac.BeskyttetRessursActionAttributt
@@ -27,9 +26,8 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.util.*
-import kotlin.coroutines.coroutineContext
 
-class SifAbacPdpKlient(
+class SifAbacPdpKlientK9(
     configuration: Configuration,
     accessTokenClient: AccessTokenClient,
     scope: String,
@@ -41,7 +39,7 @@ class SifAbacPdpKlient(
     private val scopes = setOf(scope)
     private val environment = configuration.koinProfile
 
-    override suspend fun hentTilganger(idToken: IIdToken): Tilganger {
+    override suspend fun hentTilganger(idToken: IdToken): Tilganger {
         val antallForsøk = 3
         val oboToken = cachedAccessTokenClient.getOnBehalfOfAccessToken(scopes, idToken.value)
         val response = Retry.retry(
@@ -127,44 +125,46 @@ class SifAbacPdpKlient(
         val abc = if (response.status.isSuccess()) {
             response.bodyAsText()
         } else {
-            throw IllegalStateException("Feil ved henting av diskresjonskoder for sak fra sif-abac-pdp $completeUrl for saksnummer $body : HTTP ${response.status.value} ${response.status.description}")
+            throw IllegalStateException("Feil ved henting av diskresjonskoder for sak fra sif-abac-pdp: HTTP ${response.status.value} ${response.status.description}")
         }
 
         return LosObjectMapper.instance.readValue<List<Diskresjonskode>>(abc)
             .toSet()
     }
 
-    override suspend fun harTilgangTilSak(action: Action, saksnummerDto: SaksnummerDto): Boolean {
-        val request = SaksnummerOperasjonDto(saksnummerDto, OperasjonDto(ResourceType.FAGSAK, map(action), emptySet<AksjonspunktType>()))
-        val antallForsøk = 3
-        val jwt = coroutineContext.idToken().value
-        val oboToken = cachedAccessTokenClient.getOnBehalfOfAccessToken(scopes, jwt)
-        val response = Retry.retry(
-            tries = antallForsøk,
+    override suspend fun harTilgangTilSak(
+        action: Action,
+        saksnummerDto: SaksnummerDto,
+        idToken: IdToken,
+    ): Boolean {
+        val request = SaksnummerOperasjonDto(
+            saksnummerDto,
+            OperasjonDto(ResourceType.FAGSAK, map(action), emptySet<AksjonspunktType>()),
+        )
+        return harTilgangMedOboToken(
             operation = "tilgangskontroll-sak",
-            initialDelay = Duration.ofMillis(200),
-            factor = 2.0,
-            logger = log
-        ) {
-            httpClient.post("${url}/api/tilgangskontroll/v2/k9/sak") {
-                setBody(LosObjectMapper.instance.writeValueAsString(request))
-                header(
-                    //OBS! Dette kalles bare med obo token
-                    HttpHeaders.Authorization, oboToken.asAuthoriationHeader()
-                )
-                header(HttpHeaders.Accept, "application/json")
-                header(HttpHeaders.ContentType, "application/json")
-                header(NavHeaders.CallId, UUID.randomUUID().toString())
-            }
-        }
+            endpoint = "/api/tilgangskontroll/v2/k9/sak",
+            body = LosObjectMapper.instance.writeValueAsString(request),
+            idToken = idToken,
+        )
+    }
 
-        val abc = if (response.status.isSuccess()) {
-            response.bodyAsText()
-        } else {
-            throw IllegalStateException("Feil ved sjekk av tilgang til sak mot sif-abac-pdp: HTTP ${response.status.value} ${response.status.description}")
-        }
-
-        return LosObjectMapper.instance.readValue<Tilgangsbeslutning>(abc).harTilgang()
+    override suspend fun harTilgangTilPersoner(
+        action: Action,
+        aktørIder: List<AktørId>,
+        idToken: IdToken,
+    ): Boolean {
+        val request = PersonerOperasjonDto(
+            aktørIder,
+            emptyList(),
+            OperasjonDto(ResourceType.FAGSAK, map(action), emptySet<AksjonspunktType>()),
+        )
+        return harTilgangMedOboToken(
+            operation = "tilgangskontroll-personer",
+            endpoint = "/api/tilgangskontroll/v2/k9/personer",
+            body = LosObjectMapper.instance.writeValueAsString(request),
+            idToken = idToken,
+        )
     }
 
     override suspend fun harTilgangTilSak(
@@ -174,7 +174,7 @@ class SifAbacPdpKlient(
         saksbehandlersGrupper: Set<UUID>
     ): Boolean {
         if (!saksbehandlersIdent.matches(Regex("^[A-ZÆØÅ][0-9]{6}$"))) {
-            throw IllegalArgumentException("Saksbehandlers ident var '$saksbehandlersIdent', passer ikke med validering")
+            throw IllegalArgumentException("Saksbehandlers ident passer ikke med validering")
         }
         if (saksnummerDto.saksnummer.trim().isEmpty()) {
             throw IllegalArgumentException("Mangler saksnummer, passer ikke med validering")
@@ -209,45 +209,11 @@ class SifAbacPdpKlient(
         val abc = if (response.status.isSuccess()) {
             response.bodyAsText()
         } else {
-            throw IllegalStateException("Feil ved sjekk av tilgang til sak vha grupper mot sif-abac-pdp ${if (environment == KoinProfile.PREPROD) body else ""}: HTTP ${response.status.value} ${response.status.description}")
+            throw IllegalStateException("Feil ved sjekk av tilgang til sak vha grupper mot sif-abac-pdp: HTTP ${response.status.value} ${response.status.description}")
         }
 
         return LosObjectMapper.instance.readValue<Tilgangsbeslutning>(abc).harTilgang()
     }
-
-    override suspend fun harTilgangTilPersoner(action: Action, aktørIder: List<AktørId>): Boolean {
-        val request = PersonerOperasjonDto(aktørIder, emptyList(), OperasjonDto(ResourceType.FAGSAK, map(action), emptySet<AksjonspunktType>()))
-        val antallForsøk = 3
-        val jwt = coroutineContext.idToken().value
-        val oboToken = cachedAccessTokenClient.getOnBehalfOfAccessToken(scopes, jwt)
-        val response = Retry.retry(
-            tries = antallForsøk,
-            operation = "tilgangskontroll-personer",
-            initialDelay = Duration.ofMillis(200),
-            factor = 2.0,
-            logger = log
-        ) {
-            httpClient.post("${url}/api/tilgangskontroll/v2/k9/personer") {
-                setBody(LosObjectMapper.instance.writeValueAsString(request))
-                header(
-                    //OBS! Dette kalles bare med obo token
-                    HttpHeaders.Authorization, oboToken.asAuthoriationHeader()
-                )
-                header(HttpHeaders.Accept, "application/json")
-                header(HttpHeaders.ContentType, "application/json")
-                header(NavHeaders.CallId, UUID.randomUUID().toString())
-            }
-        }
-
-        val abc = if (response.status.isSuccess()) {
-            response.bodyAsText()
-        } else {
-            throw IllegalStateException("Feil ved sjekk av tilgang til personer mot sif-abac-pdp: HTTP ${response.status.value} ${response.status.description}")
-        }
-
-        return LosObjectMapper.instance.readValue<Tilgangsbeslutning>(abc).harTilgang()
-    }
-
 
     override suspend fun harTilgangTilPersoner(
         action: Action,
@@ -286,10 +252,38 @@ class SifAbacPdpKlient(
         val abc = if (response.status.isSuccess()) {
             response.bodyAsText()
         } else {
-            throw IllegalStateException("Feil ved sjekk av tilgang til personer vha grupper mot sif-abac-pdp ${if (environment == KoinProfile.PREPROD) body else ""}: HTTP ${response.status.value} ${response.status.description}")
+            throw IllegalStateException("Feil ved sjekk av tilgang til personer vha grupper mot sif-abac-pdp: HTTP ${response.status.value} ${response.status.description}")
         }
 
         return LosObjectMapper.instance.readValue<Tilgangsbeslutning>(abc).harTilgang()
+    }
+
+    private suspend fun harTilgangMedOboToken(
+        operation: String,
+        endpoint: String,
+        body: String,
+        idToken: IdToken,
+    ): Boolean {
+        val oboToken = cachedAccessTokenClient.getOnBehalfOfAccessToken(scopes, idToken.value)
+        val response = Retry.retry(
+            tries = 3,
+            operation = operation,
+            initialDelay = Duration.ofMillis(200),
+            factor = 2.0,
+            logger = log,
+        ) {
+            httpClient.post("$url$endpoint") {
+                setBody(body)
+                header(HttpHeaders.Authorization, oboToken.asAuthoriationHeader())
+                header(HttpHeaders.Accept, "application/json")
+                header(HttpHeaders.ContentType, "application/json")
+                header(NavHeaders.CallId, UUID.randomUUID().toString())
+            }
+        }
+        if (!response.status.isSuccess()) {
+            throw IllegalStateException("Feil ved $operation mot sif-abac-pdp: HTTP ${response.status.value} ${response.status.description}")
+        }
+        return LosObjectMapper.instance.readValue<Tilgangsbeslutning>(response.bodyAsText()).harTilgang()
     }
 
     private fun map(action: Action): BeskyttetRessursActionAttributt {

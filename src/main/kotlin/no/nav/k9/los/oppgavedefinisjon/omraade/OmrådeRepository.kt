@@ -19,6 +19,9 @@ class OmrådeRepository(private val dataSource: DataSource) {
         }
     }
 
+    /** Henter det persisterte området, inkludert database-id. */
+    fun hentOmråde(område: Områder, tx: TransactionalSession): Område = hentOmråde(område.eksternId, tx)
+
     fun hentOmråde(eksternId: String, tx: TransactionalSession): Område {
         return områdeCache.hent(nøkkel = eksternId) {
             tx.run(
