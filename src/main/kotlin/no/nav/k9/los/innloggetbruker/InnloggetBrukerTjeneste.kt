@@ -18,8 +18,7 @@ class InnloggetBrukerTjeneste(
     suspend fun vedlikeholdHvisUtdatert(
         saksbehandler: Saksbehandler,
         navident: String,
-        navn: String,
-        epost: String
+        navn: String
     ) {
         val nå = LocalDateTime.now(clock)
         val sistOppdatert = saksbehandler.sistOppdatert
@@ -41,7 +40,7 @@ class InnloggetBrukerTjeneste(
                 id = saksbehandler.id,
                 navident = navident,
                 navn = navn,
-                epost = epost,
+                epost = saksbehandler.epost,
                 enhet = enhet
             ),
             oppdatertTidspunkt = nå

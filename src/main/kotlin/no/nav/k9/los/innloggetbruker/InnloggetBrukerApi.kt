@@ -54,8 +54,7 @@ internal fun Route.InnloggetBrukerApi() {
                     innloggetBrukerTjeneste.vedlikeholdHvisUtdatert(
                         saksbehandler = saksbehandler,
                         navident = saksbehandlerIdent,
-                        navn = token.getName(),
-                        epost = token.getUsername()
+                        navn = token.getName()
                     )
                 }
                 call.respond(

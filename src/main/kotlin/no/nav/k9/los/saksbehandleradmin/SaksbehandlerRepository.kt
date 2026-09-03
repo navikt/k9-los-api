@@ -71,7 +71,7 @@ class SaksbehandlerRepository(
                         "id" to saksbehandler.id,
                         "navident" to saksbehandler.navident,
                         "navn" to saksbehandler.navn,
-                        "epost" to saksbehandler.epost.lowercase(getDefault()),
+                        "epost" to saksbehandler.epost,
                         "enhet" to saksbehandler.enhet,
                         "skjermet" to erSkjermet,
                         "oppdatertTidspunkt" to oppdatertTidspunkt

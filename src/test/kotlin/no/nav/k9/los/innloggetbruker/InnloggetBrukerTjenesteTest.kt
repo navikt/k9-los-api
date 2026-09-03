@@ -21,7 +21,7 @@ class InnloggetBrukerTjenesteTest {
     fun `vedlikeholder saksbehandler når tidspunkt mangler`() = runBlocking {
         coEvery { azureGraphService.hentEnhetForInnloggetBruker() } returns "3450"
 
-        tjeneste.vedlikeholdHvisUtdatert(saksbehandler(null), "Z123456", "Saksbehandler Sara", "saksbehandler@nav.no")
+        tjeneste.vedlikeholdHvisUtdatert(saksbehandler(null), "Z123456", "Saksbehandler Sara")
 
         coVerify(exactly = 1) {
             repository.vedlikeholdSaksbehandler(
@@ -33,7 +33,7 @@ class InnloggetBrukerTjenesteTest {
 
     @Test
     fun `vedlikeholder ikke saksbehandler før det har gått 24 timer`() = runBlocking {
-        tjeneste.vedlikeholdHvisUtdatert(saksbehandler(nå.minusHours(23)), "Z123456", "Saksbehandler Sara", "saksbehandler@nav.no")
+        tjeneste.vedlikeholdHvisUtdatert(saksbehandler(nå.minusHours(23)), "Z123456", "Saksbehandler Sara")
 
         coVerify(exactly = 0) { azureGraphService.hentEnhetForInnloggetBruker() }
         coVerify(exactly = 0) { repository.vedlikeholdSaksbehandler(any(), any()) }
@@ -41,7 +41,7 @@ class InnloggetBrukerTjenesteTest {
 
     @Test
     fun `vedlikeholder ikke saksbehandler når det har gått nøyaktig 24 timer`() = runBlocking {
-        tjeneste.vedlikeholdHvisUtdatert(saksbehandler(nå.minusHours(24)), "Z123456", "Saksbehandler Sara", "saksbehandler@nav.no")
+        tjeneste.vedlikeholdHvisUtdatert(saksbehandler(nå.minusHours(24)), "Z123456", "Saksbehandler Sara")
 
         coVerify(exactly = 0) { azureGraphService.hentEnhetForInnloggetBruker() }
         coVerify(exactly = 0) { repository.vedlikeholdSaksbehandler(any(), any()) }
@@ -51,7 +51,7 @@ class InnloggetBrukerTjenesteTest {
     fun `vedlikeholder saksbehandler når det har gått mer enn 24 timer`() = runBlocking {
         coEvery { azureGraphService.hentEnhetForInnloggetBruker() } returns "3450"
 
-        tjeneste.vedlikeholdHvisUtdatert(saksbehandler(nå.minusHours(25)), "Z123456", "Saksbehandler Sara", "saksbehandler@nav.no")
+        tjeneste.vedlikeholdHvisUtdatert(saksbehandler(nå.minusHours(25)), "Z123456", "Saksbehandler Sara")
 
         coVerify(exactly = 1) { repository.vedlikeholdSaksbehandler(any(), nå) }
     }
@@ -60,7 +60,7 @@ class InnloggetBrukerTjenesteTest {
     fun `forsøker på nytt etter feil fra Azure`() = runBlocking {
         coEvery { azureGraphService.hentEnhetForInnloggetBruker() } throws IllegalStateException("Azure er utilgjengelig")
 
-        tjeneste.vedlikeholdHvisUtdatert(saksbehandler(nå.minusDays(2)), "Z123456", "Saksbehandler Sara", "saksbehandler@nav.no")
+        tjeneste.vedlikeholdHvisUtdatert(saksbehandler(nå.minusDays(2)), "Z123456", "Saksbehandler Sara")
 
         coVerify(exactly = 0) { repository.vedlikeholdSaksbehandler(any(), any()) }
     }
