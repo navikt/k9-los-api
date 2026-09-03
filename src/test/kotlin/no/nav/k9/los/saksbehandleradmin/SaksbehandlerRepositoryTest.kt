@@ -14,6 +14,25 @@ import java.time.LocalDateTime
 
 class SaksbehandlerRepositoryTest : AbstractK9LosIntegrationTest() {
     @Test
+    fun `vedlikeholder saksbehandler og tidspunkt`() = runBlocking {
+        val repository = get<SaksbehandlerRepository>()
+        val opprinnelig = Saksbehandler(null, "Z123456", "Gammelt navn", "saksbehandler@nav.no", "1234")
+        val id = repository.addSaksbehandler(opprinnelig)
+        val tidspunkt = LocalDateTime.parse("2026-08-28T10:00:00")
+
+        repository.vedlikeholdSaksbehandler(
+            Saksbehandler(id, "Z654321", "Nytt navn", "saksbehandler@nav.no", "3450"),
+            tidspunkt
+        )
+
+        val oppdatert = repository.finnSaksbehandlerMedId(id)!!
+        assertThat(oppdatert.navident, equalTo("Z654321"))
+        assertThat(oppdatert.navn, equalTo("Nytt navn"))
+        assertThat(oppdatert.enhet, equalTo("3450"))
+        assertThat(oppdatert.sistOppdatert, equalTo(tidspunkt))
+    }
+
+    @Test
     fun `slette saksbehandler`() {
         val saksbehandlerRepository = get<SaksbehandlerRepository>()
         val ident = "Z123456"

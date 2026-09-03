@@ -7,6 +7,7 @@ import kotliquery.using
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import org.apache.commons.text.similarity.LevenshteinDistance
+import java.time.LocalDateTime
 import java.util.Locale
 import java.util.Locale.getDefault
 import javax.sql.DataSource
@@ -44,6 +45,39 @@ class SaksbehandlerRepository(
                 saksbehandlerId!!
             }
             saksbehandlerId
+        }
+    }
+
+    suspend fun vedlikeholdSaksbehandler(
+        saksbehandler: Saksbehandler,
+        oppdatertTidspunkt: LocalDateTime
+    ): Long {
+        val erSkjermet = pepClient.harTilgangTilKode6()
+        return using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                    update saksbehandler
+                    set navident = :navident,
+                        navn = :navn,
+                        epost = :epost,
+                        enhet = :enhet,
+                        skjermet = :skjermet,
+                        sist_oppdatert = :oppdatertTidspunkt
+                    where id = :id
+                    returning id
+                    """.trimIndent(),
+                    mapOf(
+                        "id" to saksbehandler.id,
+                        "navident" to saksbehandler.navident,
+                        "navn" to saksbehandler.navn,
+                        "epost" to saksbehandler.epost.lowercase(getDefault()),
+                        "enhet" to saksbehandler.enhet,
+                        "skjermet" to erSkjermet,
+                        "oppdatertTidspunkt" to oppdatertTidspunkt
+                    )
+                ).map { row -> row.long("id") }.asSingle
+            ) ?: throw IllegalStateException("Fant ikke saksbehandler med id ${saksbehandler.id} for vedlikehold")
         }
     }
 
@@ -331,7 +365,8 @@ class SaksbehandlerRepository(
             navident = row.stringOrNull("navident"),
             navn = row.stringOrNull("navn"),
             epost = row.string("epost").lowercase(Locale.getDefault()),
-            enhet = row.stringOrNull("enhet")
+            enhet = row.stringOrNull("enhet"),
+            sistOppdatert = row.localDateTimeOrNull("sist_oppdatert")
         )
     }
 }

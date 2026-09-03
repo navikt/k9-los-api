@@ -58,6 +58,7 @@ import no.nav.k9.los.infrastruktur.pdl.IPdlService
 import no.nav.k9.los.infrastruktur.pdl.PdlService
 import no.nav.k9.los.infrastruktur.pdl.PdlServiceLocal
 import no.nav.k9.los.infrastruktur.rest.RequestContextService
+import no.nav.k9.los.innloggetbruker.InnloggetBrukerTjeneste
 import no.nav.k9.los.ko.KøpåvirkendeHendelse
 import no.nav.k9.los.ko.OppgaveKoTjeneste
 import no.nav.k9.los.ko.db.OppgaveKoRepository
@@ -97,6 +98,7 @@ import org.koin.core.module.Module
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
 import org.slf4j.LoggerFactory
+import java.time.Clock
 import java.util.*
 import javax.sql.DataSource
 
@@ -130,6 +132,7 @@ fun common(app: Application, config: Configuration) = module {
     single { OppgaveRepository(get()) }
 
     single { TransactionalManager(dataSource = get()) }
+    single<Clock> { Clock.systemDefaultZone() }
 
     single {
         SaksbehandlerRepository(
@@ -138,6 +141,7 @@ fun common(app: Application, config: Configuration) = module {
             transactionalManager = get(),
         )
     }
+    single { InnloggetBrukerTjeneste(get(), get(), get()) }
 
     single {
         GyldigeFeltutledere(

@@ -37,6 +37,7 @@ import no.nav.k9.los.infrastruktur.abac.cache.PepCacheService
 import no.nav.k9.los.infrastruktur.azuregraph.AzureGraphServiceLocal
 import no.nav.k9.los.infrastruktur.azuregraph.IAzureGraphService
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
+import no.nav.k9.los.innloggetbruker.InnloggetBrukerTjeneste
 import no.nav.k9.los.infrastruktur.metrikker.EventlagerNokkeltallRepository
 import no.nav.k9.los.infrastruktur.pdl.IPdlService
 import no.nav.k9.los.infrastruktur.pdl.PdlServiceLocal
@@ -84,6 +85,7 @@ import no.nav.k9.los.oppgaveuthenting.enkeltoppslag.TemporalOppgaveOppslagOppgav
 import org.koin.core.module.Module
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
+import java.time.Clock
 import java.util.*
 import javax.sql.DataSource
 
@@ -119,6 +121,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
 
     single { dataSource }
     single { pepClient }
+    single<Clock> { Clock.systemDefaultZone() }
 
     single { DriftsmeldingRepository(get()) }
 
@@ -129,6 +132,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             transactionalManager = get(),
         )
     }
+    single { InnloggetBrukerTjeneste(get(), get(), get()) }
 
     single {
         GyldigeFeltutledere(
