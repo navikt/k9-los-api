@@ -46,6 +46,8 @@ object TestConfiguration {
         map["nav.kafka_aiven.application_id"] = "k9-los-api"
 
         map["nav.kafka.statistikkSakTopic"] = "privat-k9statistikk-sak-v1"
+        map["nav.kafka.ungSakTopic"] = "k9saksbehandling.ung-sak-aksjonspunkthendelse"
+        map["nav.kafka.ungTilbakeTopic"] = "k9saksbehandling.ung-tilbakekreving-hendelse-los"
 
         map["nav.db.url"] = "jdbc:postgresql://localhost:5432/k9los_unit"
         map["nav.db.username"] = "k9los_unit"
