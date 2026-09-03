@@ -52,7 +52,6 @@ import no.nav.k9.los.forvaltning.forvaltningApis
 import no.nav.k9.los.forvaltning.forvaltningApisNy
 import no.nav.k9.los.infrastruktur.abac.cache.PepCacheService
 import no.nav.k9.los.infrastruktur.db.DB_AWARE_PARALLELISM
-import no.nav.k9.los.infrastruktur.db.migrate
 import no.nav.k9.los.infrastruktur.jobbplanlegger.Jobbplanlegger
 import no.nav.k9.los.infrastruktur.jobbplanlegger.PlanlagtJobb
 import no.nav.k9.los.infrastruktur.jobbplanlegger.Tidsvindu
@@ -358,17 +357,6 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
     val heleTiden = Tidsvindu.alleDager()
 
     val planlagteJobber = buildSet {
-        if (configuration.migreringEtterOppstart) {
-            add(
-                PlanlagtJobb.Oppstart(
-                    navn = "FlywayMigrering",
-                    prioritet = 0,
-                ) {
-                    migrate(configuration)
-                }
-            )
-        }
-
         add(
             PlanlagtJobb.Oppstart(
                 navn = "Setup",

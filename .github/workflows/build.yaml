@@ -1,4 +1,4 @@
-name: "Bygg og deploy"
+name: "Bygg"
 on:
   push:
     paths-ignore:
@@ -8,11 +8,6 @@ on:
       - 'LICENSE'
       - 'CODEOWNERS'
   workflow_dispatch:
-
-# Ikke la to migreringer eller rollouter kjøre samtidig.
-concurrency:
-  group: k9-los-api-deploy
-  cancel-in-progress: false
 
 jobs:
 
@@ -32,53 +27,3 @@ jobs:
       upload-image: ${{ github.ref_name != github.event.repository.default_branch }}
       t-2c: "-T1C"
     secrets: inherit
-
-  deploy-dev:
-    name: Deploy dev
-    runs-on: ubuntu-latest
-    timeout-minutes: 75
-    permissions:
-      id-token: write
-      contents: read
-    if: ${{ github.ref_name == github.event.repository.default_branch}}
-    needs: [ build-app ]
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - name: Logg inn i GAR
-        id: login
-        uses: nais/login@bb6c3e1e14e53d40d69d0d092bd2fce2e39ae3bf # v0
-        with:
-          team: k9saksbehandling
-      - name: Deploy til dev
-        uses: nais/deploy/actions/deploy@fc3eae3edebabdf67f7592102ae16176d5ba3b5f # v2
-        env:
-          CLUSTER: dev-fss
-          RESOURCE: nais/naiserator.yml
-          VARS: nais/dev-fss.json
-          IMAGE: ${{ steps.login.outputs.registry }}/${{ github.repository }}:${{ needs.build-app.outputs.build-version }}
-          TIMEOUT: 70m
-
-  deploy-prod:
-    name: Deploy prod
-    runs-on: ubuntu-latest
-    timeout-minutes: 75
-    permissions:
-      id-token: write
-      contents: read
-    if: ${{ github.ref_name == github.event.repository.default_branch}}
-    needs: [ build-app, deploy-dev ]
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - name: Logg inn i GAR
-        id: login
-        uses: nais/login@bb6c3e1e14e53d40d69d0d092bd2fce2e39ae3bf # v0
-        with:
-          team: k9saksbehandling
-      - name: Deploy til prod
-        uses: nais/deploy/actions/deploy@fc3eae3edebabdf67f7592102ae16176d5ba3b5f # v2
-        env:
-          CLUSTER: prod-fss
-          RESOURCE: nais/naiserator.yml
-          VARS: nais/prod-fss.json
-          IMAGE: ${{ steps.login.outputs.registry }}/${{ github.repository }}:${{ needs.build-app.outputs.build-version }}
-          TIMEOUT: 70m

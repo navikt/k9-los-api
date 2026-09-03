@@ -19,7 +19,7 @@ data class Configuration(private val config: ApplicationConfig) {
         internal const val AZURE_V2_ALIAS = "azure-v2"
     }
 
-    private val clients = config.clients()
+    private val clients by lazy { config.clients() }
 
     internal fun issuers() = config.issuers().withoutAdditionalClaimRules()
 
@@ -40,9 +40,6 @@ data class Configuration(private val config: ApplicationConfig) {
         username = config.getOptionalString("nav.db.username", secret = false),
         password = config.getOptionalString("nav.db.password", secret = true)
     )
-
-    internal val migreringEtterOppstart =
-        config.getOptionalString("nav.db.migrering_etter_oppstart", secret = false)?.toBoolean() ?: false
 
     internal fun getAksjonspunkthendelseTopic(): String {
         return config.getOptionalString("nav.kafka.aksjonshendelseTopic", secret = false)

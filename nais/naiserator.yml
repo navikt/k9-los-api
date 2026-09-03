@@ -8,14 +8,6 @@ metadata:
 spec:
   image: {{ image }}
   port: 8020
-  # Flyway kjører før HTTP-serveren starter. Startup-proben gir migreringen opptil én time,
-  # mens forrige pod fortsetter å betjene trafikk i den rullerende deployen.
-  startup:
-    path: isalive
-    initialDelay: 20
-    timeout: 1
-    periodSeconds: 5
-    failureThreshold: 720
   liveness:
     path: isalive
     initialDelay: 20
@@ -100,9 +92,6 @@ spec:
       value: {{db_url}}
     - name: DB_VAULT_MOUNTPATH
       value: {{db_vault_mountpath}}
-    - name: MIGRERING_ETTER_OPPSTART
-      value: "{{migrering_etter_oppstart}}"
-
     - name: PDL_URL
       value: {{pdl_url}}
 
