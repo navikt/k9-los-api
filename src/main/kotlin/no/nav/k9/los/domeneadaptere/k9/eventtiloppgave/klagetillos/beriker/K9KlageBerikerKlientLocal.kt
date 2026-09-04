@@ -14,7 +14,7 @@ class K9KlageBerikerKlientLocal : K9KlageBerikerInterfaceKludge {
         return LosOpplysningerSomManglerHistoriskIKlageDto(BehandlingType.FØRSTEGANGSSØKNAD)
     }
 
-    override fun hentFraK9Sak(påklagdBehandlingUUID: UUID, antallForsøk: Int): LosOpplysningerSomManglerIKlageDto? {
+    override fun hentFraK9Sak(saksnummer: String, antallForsøk: Int): LosOpplysningerSomManglerIKlageDto? {
         val dto = LosOpplysningerSomManglerIKlageDto()
         dto.pleietrengendeAktørId = AktørId.dummy()
         dto.isUtenlandstilsnitt = false
