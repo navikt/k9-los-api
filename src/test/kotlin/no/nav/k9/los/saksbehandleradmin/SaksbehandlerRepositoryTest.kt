@@ -16,7 +16,7 @@ class SaksbehandlerRepositoryTest : AbstractK9LosIntegrationTest() {
     @Test
     fun `vedlikeholder saksbehandler og tidspunkt`() = runBlocking {
         val repository = get<SaksbehandlerRepository>()
-        val opprinnelig = Saksbehandler(null, "Z123456", "Gammelt navn", "saksbehandler@nav.no", "1234")
+        val opprinnelig = Saksbehandler(1, "Z123456", "Gammelt navn", "saksbehandler@nav.no", "1234")
         val id = repository.addSaksbehandler(opprinnelig)
         val tidspunkt = LocalDateTime.parse("2026-08-28T10:00:00")
 
@@ -41,7 +41,7 @@ class SaksbehandlerRepositoryTest : AbstractK9LosIntegrationTest() {
         runBlocking {
             saksbehandlerRepository.addSaksbehandler(
                 Saksbehandler(
-                    null,
+                    1,
                     ident,
                     ident,
                     ident + "@nav.no",
@@ -53,7 +53,7 @@ class SaksbehandlerRepositoryTest : AbstractK9LosIntegrationTest() {
         runBlocking {
             saksbehandlerRepository.addSaksbehandler(
                 Saksbehandler(
-                    null,
+                    2,
                     ident2,
                     ident2,
                     ident2 + "@nav.no",
@@ -78,11 +78,11 @@ class SaksbehandlerRepositoryTest : AbstractK9LosIntegrationTest() {
 
         val reservasjonV3Tjeneste = get<ReservasjonV3Tjeneste>()
 
-        val reservasjon = reservasjonV3Tjeneste.taReservasjon("test", saksbehandler.id!!, saksbehandler.id!!, "test", LocalDateTime.now(), LocalDateTime.now().plusDays(1))
+        reservasjonV3Tjeneste.taReservasjon("test", saksbehandler.id, saksbehandler.id, "test", LocalDateTime.now(), LocalDateTime.now().plusDays(1))
 
-        reservasjonV3Tjeneste.forlengReservasjon("test", LocalDateTime.now().plusDays(2), saksbehandler.id!!, "test")
+        reservasjonV3Tjeneste.forlengReservasjon("test", LocalDateTime.now().plusDays(2), saksbehandler.id, "test")
 
-        reservasjonV3Tjeneste.overførReservasjon("test", LocalDateTime.now().plusDays(1), saksbehandler2.id!!, saksbehandler2.id!!, "kommentar")
+        reservasjonV3Tjeneste.overførReservasjon("test", LocalDateTime.now().plusDays(1), saksbehandler2.id, saksbehandler2.id, "kommentar")
 
         val transactionalManager = get<TransactionalManager>()
         transactionalManager.transaction { tx ->

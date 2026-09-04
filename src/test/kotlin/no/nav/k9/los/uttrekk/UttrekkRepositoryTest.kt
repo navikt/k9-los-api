@@ -37,7 +37,7 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
         runBlocking {
             saksbehandlerRepository.addSaksbehandler(
                 Saksbehandler(
-                    id = null,
+                    id = 1,
                     navident = "test",
                     navn = "Test Testersen",
                     epost = "test@nav.no",
@@ -45,7 +45,7 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
                 )
             )
             val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedEpost("test@nav.no")!!
-            saksbehandlerId = saksbehandler.id!!
+            saksbehandlerId = saksbehandler.id
             val lagretSøk = LagretSøk.nyttSøk(
                 NyttLagretSøkRequest(tittel = "Test søk", query = LagretSøk.defaultQuery(false)),
                 saksbehandler,
@@ -171,14 +171,14 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
         val annenSaksbehandlerId = runBlocking {
             saksbehandlerRepository.addSaksbehandler(
                 Saksbehandler(
-                    id = null,
+                    id = 1,
                     navident = "test2",
                     navn = "Test Testersen 2",
                     epost = "test2@nav.no",
                     enhet = null,
                 )
             )
-            saksbehandlerRepository.finnSaksbehandlerMedEpost("test2@nav.no")!!.id!!
+            saksbehandlerRepository.finnSaksbehandlerMedEpost("test2@nav.no")!!.id
         }
 
         val uttrekk1 = Uttrekk.opprettUttrekk(

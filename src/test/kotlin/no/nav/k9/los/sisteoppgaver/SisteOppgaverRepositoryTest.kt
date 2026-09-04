@@ -33,7 +33,7 @@ class SisteOppgaverRepositoryTest : AbstractK9LosIntegrationTest() {
         runBlocking {
             saksbehandlerRepository.addSaksbehandler(
                 Saksbehandler(
-                    id = null,
+                    id = 1,
                     navident = "test",
                     navn = "Test Testersen",
                     epost = "test@nav.no",

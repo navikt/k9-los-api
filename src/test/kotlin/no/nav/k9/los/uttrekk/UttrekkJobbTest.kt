@@ -38,7 +38,7 @@ class UttrekkJobbTest : AbstractK9LosIntegrationTest() {
         runBlocking {
             saksbehandlerRepository.addSaksbehandler(
                 Saksbehandler(
-                    id = null,
+                    id = 1,
                     navident = "test",
                     navn = "Test Testersen",
                     epost = "test@nav.no",
@@ -46,7 +46,7 @@ class UttrekkJobbTest : AbstractK9LosIntegrationTest() {
                 )
             )
             val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedEpost("test@nav.no")!!
-            saksbehandlerId = saksbehandler.id!!
+            saksbehandlerId = saksbehandler.id
             val lagretSøk = LagretSøk.nyttSøk(
                 NyttLagretSøkRequest(tittel = "Test søk", query = OppgaveQuery(filtere = listOf(), select = listOf(EnkelSelectFelt("K9", "saksnummer")))),
                 saksbehandler,

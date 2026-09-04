@@ -29,7 +29,7 @@ class LagretSøkRepositoryTest : AbstractK9LosIntegrationTest() {
         runBlocking {
             saksbehandlerRepository.addSaksbehandler(
                 Saksbehandler(
-                    id = null,
+                    id = 1,
                     navident = "test",
                     navn = "Test Testersen",
                     epost = "test@nav.no",
@@ -135,7 +135,7 @@ class LagretSøkRepositoryTest : AbstractK9LosIntegrationTest() {
             // Opprett en annen saksbehandler
             saksbehandlerRepository.addSaksbehandler(
                 Saksbehandler(
-                    id = null,
+                    id = 1,
                     navident = "annen",
                     navn = "Annen Testersen",
                     epost = "annen@nav.no",

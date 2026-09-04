@@ -48,6 +48,29 @@ class SaksbehandlerRepository(
         }
     }
 
+    suspend fun addSaksbehandler(epost: String): Long {
+        val erSkjermet = pepClient.harTilgangTilKode6()
+        return using(sessionOf(dataSource)) {
+            val saksbehandlerId = it.transaction { tx ->
+                val saksbehandlerId = tx.run(
+                    queryOf(
+                        """
+                        insert into saksbehandler as k (epost, skjermet)
+                        values (:epost, :skjermet)
+                        returning id
+                     """,
+                        mapOf(
+                            "epost" to epost.lowercase(getDefault()),
+                            "skjermet" to erSkjermet
+                        )
+                    ).map { row -> row.long("id") }.asSingle
+                )
+                saksbehandlerId!!
+            }
+            saksbehandlerId
+        }
+    }
+
     suspend fun vedlikeholdSaksbehandler(
         saksbehandler: Saksbehandler,
         oppdatertTidspunkt: LocalDateTime

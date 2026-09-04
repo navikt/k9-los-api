@@ -40,21 +40,21 @@ import kotlin.random.Random
 
 val saksbehandlere = listOf(
     Saksbehandler(
-        id = null,
+        id = 1,
         navident = "Z123456",
         navn = "Saksbehandler Sara",
         epost = "saksbehandler@nav.no",
         enhet = "2830 NAV DRIFT"
     ),
     Saksbehandler(
-        id = null,
+        id = 2,
         navident = "Z167457",
         navn = "Lars Pokèmonsen",
         epost = "lars.monsen@nav.no",
         enhet = "2830 NAV DRIFT"
     ),
     Saksbehandler(
-        id = null,
+        id = 3,
         navident = "Z321457",
         navn = "Lord Edgar Hansen",
         epost = "the.lord@nav.no",
@@ -74,9 +74,7 @@ object localSetup : KoinComponent {
         if (profile == KoinProfile.LOCAL) {
             runBlocking {
                 saksbehandlere.forEach { saksbehandler ->
-                    saksbehandlerRepository.addSaksbehandler(
-                        saksbehandler
-                    )
+                    saksbehandlerRepository.addSaksbehandler(saksbehandler)
                 }
             }
         }

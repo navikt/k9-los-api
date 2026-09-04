@@ -728,7 +728,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
             val ident = "test"
             saksbehandlerRepository.addSaksbehandler(
                 Saksbehandler(
-                    null,
+                    1,
                     ident,
                     ident,
                     ident + "@nav.no",

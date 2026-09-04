@@ -24,7 +24,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
         val saksbehandler = runBlocking {
             saksbehandlerRepository.addSaksbehandler(
                 Saksbehandler(
-                    id = null,
+                    id = 1,
                     navident = null,
                     navn = null,
                     epost = "test1@test.no",
@@ -36,7 +36,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
         }
 
         val reservasjon = ReservasjonV3(
-            reservertAv = saksbehandler.id!!,
+            reservertAv = saksbehandler.id,
             reservasjonsnøkkel = "test1",
             gyldigFra = LocalDateTime.now(),
             gyldigTil = LocalDateTime.now().plusDays(1),
@@ -55,7 +55,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
 
         transactionalManager.transaction { tx ->
             val reservasjonerHentet =
-                reservasjonV3Repository.hentAktiveReservasjonerForSaksbehandler(saksbehandler.id!!, tx)
+                reservasjonV3Repository.hentAktiveReservasjonerForSaksbehandler(saksbehandler.id, tx)
             assertEquals(reservasjon, reservasjonerHentet[0])
         }
     }
@@ -69,7 +69,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
         val saksbehandler1 = runBlocking {
             saksbehandlerRepository.addSaksbehandler(
                 Saksbehandler(
-                    id = null,
+                    id = 1,
                     navident = null,
                     navn = null,
                     epost = "test1@test.no",
@@ -83,7 +83,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
         val saksbehandler2 = runBlocking {
             saksbehandlerRepository.addSaksbehandler(
                 Saksbehandler(
-                    id = null,
+                    id = 1,
                     navident = null,
                     navn = null,
                     epost = "test2@test.no",
@@ -94,7 +94,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
         }
 
         val reservasjon1 = ReservasjonV3(
-            reservertAv = saksbehandler1.id!!,
+            reservertAv = saksbehandler1.id,
             reservasjonsnøkkel = "test1",
             gyldigFra = LocalDateTime.now().minusDays(5),
             gyldigTil = LocalDateTime.now().minusDays(1),
@@ -103,7 +103,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
         )
 
         val reservasjon2 = ReservasjonV3(
-            reservertAv = saksbehandler2.id!!,
+            reservertAv = saksbehandler2.id,
             reservasjonsnøkkel = "test1",
             gyldigFra = LocalDateTime.now().plusMinutes(1),
             gyldigTil = LocalDateTime.now().plusDays(1).plusMinutes(1),
@@ -129,7 +129,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
         val saksbehandler1 = runBlocking {
             saksbehandlerRepository.addSaksbehandler(
                 Saksbehandler(
-                    id = null,
+                    id = 1,
                     navident = null,
                     navn = null,
                     epost = "test1@test.no",
@@ -141,7 +141,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
         }
 
         val reservasjon1 = ReservasjonV3(
-            reservertAv = saksbehandler1.id!!,
+            reservertAv = saksbehandler1.id,
             reservasjonsnøkkel = "test1",
             gyldigFra = LocalDateTime.now().minusDays(5),
             gyldigTil = LocalDateTime.now().minusDays(1),
@@ -150,7 +150,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
         )
 
         val reservasjon2 = ReservasjonV3(
-            reservertAv = saksbehandler1.id!!,
+            reservertAv = saksbehandler1.id,
             reservasjonsnøkkel = "test1",
             gyldigFra = LocalDateTime.now(),
             gyldigTil = LocalDateTime.now().plusDays(1).plusMinutes(1),
@@ -172,7 +172,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
 
         transactionalManager.transaction { tx ->
             val aktiveReservasjoner =
-                repo.hentAktiveReservasjonerForSaksbehandler(saksbehandler1.id!!, tx)
+                repo.hentAktiveReservasjonerForSaksbehandler(saksbehandler1.id, tx)
             assertEquals(reservasjon2, aktiveReservasjoner[0])
         }
     }
@@ -186,7 +186,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
         val saksbehandler1 = runBlocking {
             saksbehandlerRepository.addSaksbehandler(
                 Saksbehandler(
-                    id = null,
+                    id = 1,
                     navident = null,
                     navn = null,
                     epost = "test1@test.no",
@@ -200,7 +200,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
         val saksbehandler2 = runBlocking {
             saksbehandlerRepository.addSaksbehandler(
                 Saksbehandler(
-                    id = null,
+                    id = 1,
                     navident = null,
                     navn = null,
                     epost = "test2@test.no",
@@ -211,7 +211,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
         }
 
         val reservasjon1 = ReservasjonV3(
-            reservertAv = saksbehandler1.id!!,
+            reservertAv = saksbehandler1.id,
             reservasjonsnøkkel = "test1",
             gyldigFra = LocalDateTime.now(),
             gyldigTil = LocalDateTime.now().plusDays(1),
@@ -220,7 +220,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
         )
 
         val reservasjon2 = ReservasjonV3(
-            reservertAv = saksbehandler2.id!!,
+            reservertAv = saksbehandler2.id,
             reservasjonsnøkkel = "test1",
             gyldigFra = LocalDateTime.now().plusMinutes(1),
             gyldigTil = LocalDateTime.now().plusDays(1).plusMinutes(1),
@@ -251,7 +251,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
         val saksbehandler1 = runBlocking {
             saksbehandlerRepository.addSaksbehandler(
                 Saksbehandler(
-                    id = null,
+                    id = 1,
                     navident = null,
                     navn = null,
                     epost = "test1@test.no",
@@ -265,7 +265,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
         val saksbehandler2 = runBlocking {
             saksbehandlerRepository.addSaksbehandler(
                 Saksbehandler(
-                    id = null,
+                    id = 1,
                     navident = null,
                     navn = null,
                     epost = "test2@test.no",
@@ -276,7 +276,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
         }
 
         val reservasjon1 = ReservasjonV3(
-            reservertAv = saksbehandler1.id!!,
+            reservertAv = saksbehandler1.id,
             reservasjonsnøkkel = "test1",
             gyldigFra = LocalDateTime.now(),
             gyldigTil = LocalDateTime.now().plusDays(1),
@@ -285,7 +285,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
         )
 
         val reservasjon2 = ReservasjonV3(
-            reservertAv = saksbehandler2.id!!,
+            reservertAv = saksbehandler2.id,
             reservasjonsnøkkel = "test1",
             gyldigFra = LocalDateTime.now().plusMinutes(1),
             gyldigTil = LocalDateTime.now().plusDays(1).plusMinutes(1),
@@ -296,7 +296,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
         val saksbehandlerInnlogget = runBlocking {
             saksbehandlerRepository.addSaksbehandler(
                 Saksbehandler(
-                    id = null,
+                    id = 1,
                     navident = "saksbehandler@nav.no",
                     navn = null,
                     epost = "saksbehandler@nav.no",
@@ -308,7 +308,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
 
         transactionalManager.transaction { tx ->
             val reservasjon = repo.lagreReservasjon(reservasjon1, tx)
-            repo.annullerAktivReservasjonOgLagreEndring(reservasjon, "", saksbehandlerInnlogget.id!!, tx)
+            repo.annullerAktivReservasjonOgLagreEndring(reservasjon, "", saksbehandlerInnlogget.id, tx)
         }
 
         transactionalManager.transaction { tx ->
@@ -325,7 +325,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
         val saksbehandler = runBlocking {
             saksbehandlerRepository.addSaksbehandler(
                 Saksbehandler(
-                    id = null,
+                    id = 1,
                     navident = null,
                     navn = null,
                     epost = "test1@test.no",
@@ -337,7 +337,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
         }
 
         val reservasjon = ReservasjonV3(
-            reservertAv = saksbehandler.id!!,
+            reservertAv = saksbehandler.id,
             reservasjonsnøkkel = "test1",
             gyldigFra = LocalDateTime.now(),
             gyldigTil = LocalDateTime.now().plusDays(1),
@@ -374,7 +374,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
         val saksbehandler1 = runBlocking {
             saksbehandlerRepository.addSaksbehandler(
                 Saksbehandler(
-                    id = null,
+                    id = 1,
                     navident = null,
                     navn = null,
                     epost = "test1@test.no",
@@ -386,7 +386,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
         val saksbehandler2 = runBlocking {
             saksbehandlerRepository.addSaksbehandler(
                 Saksbehandler(
-                    id = null,
+                    id = 2,
                     navident = null,
                     navn = null,
                     epost = "test2@test.no",
@@ -398,7 +398,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
         val saksbehandler3skjermet = runBlocking {
             saksbehandlerRepository.addSaksbehandler(
                 Saksbehandler(
-                    id = null,
+                    id = 3,
                     navident = null,
                     navn = null,
                     epost = "test3@test.no",
@@ -409,7 +409,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
         }
 
         val reservasjon1 = ReservasjonV3(
-            reservertAv = saksbehandler1.id!!,
+            reservertAv = saksbehandler1.id,
             reservasjonsnøkkel = "test1",
             gyldigFra = LocalDateTime.now(),
             gyldigTil = LocalDateTime.now().plusDays(1),
@@ -417,7 +417,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
             endretAv = null
         )
         val reservasjon2 = ReservasjonV3(
-            reservertAv = saksbehandler1.id!!,
+            reservertAv = saksbehandler1.id,
             reservasjonsnøkkel = "test2",
             gyldigFra = LocalDateTime.now(),
             gyldigTil = LocalDateTime.now().plusDays(1),
@@ -425,7 +425,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
             endretAv = null
         )
         val reservasjon3 = ReservasjonV3(
-            reservertAv = saksbehandler2.id!!,
+            reservertAv = saksbehandler2.id,
             reservasjonsnøkkel = "test3",
             gyldigFra = LocalDateTime.now(),
             gyldigTil = LocalDateTime.now().plusDays(1),
@@ -433,7 +433,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
             endretAv = null
         )
         val reservasjon4 = ReservasjonV3(
-            reservertAv = saksbehandler3skjermet.id!!,
+            reservertAv = saksbehandler3skjermet.id,
             reservasjonsnøkkel = "test4",
             gyldigFra = LocalDateTime.now(),
             gyldigTil = LocalDateTime.now().plusDays(1),
@@ -451,15 +451,15 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
         val resultat = transactionalManager.transaction { tx ->
             reservasjonV3Repository.tellAktiveReservasjonerForSaksbehandlere(
                 setOf(
-                    saksbehandler1.id!!,
-                    saksbehandler2.id!!
+                    saksbehandler1.id,
+                    saksbehandler2.id
                 ), tx
             )
         }
 
         assertEquals(resultat, mapOf(
-            saksbehandler1.id!! to 2,
-            saksbehandler2.id!! to 1
+            saksbehandler1.id to 2,
+            saksbehandler2.id to 1
         ))
     }
 }

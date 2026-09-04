@@ -118,7 +118,7 @@ class LagretSøk private constructor(
         ): LagretSøk {
             return LagretSøk(
                 id = null,
-                lagetAv = saksbehandler.id ?: throw IllegalStateException("Saksbehandler må ha id"),
+                lagetAv = saksbehandler.id,
                 versjon = 1,
                 tittel = nyttLagretSøk.tittel,
                 beskrivelse = "",

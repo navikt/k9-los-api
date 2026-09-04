@@ -16,26 +16,11 @@ class SaksbehandlerAdminTjeneste(
     private val uttrekkTjeneste: UttrekkTjeneste,
     private val reservasjonV3Tjeneste: ReservasjonV3Tjeneste
 ) {
-
-    // TODO: slett når frontend har begynt å bruke nytt endepunkt
-    suspend fun søkSaksbehandler(epostDto: EpostDto): Saksbehandler {
-        var saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedEpost(epostDto.epost)
-        if (saksbehandler == null) {
-            saksbehandler = Saksbehandler(
-                null, null, null, epostDto.epost, null
-            )
-            saksbehandlerRepository.addSaksbehandler(saksbehandler)
-        }
-        return saksbehandler
-    }
-
     suspend fun leggTilSaksbehandlerForEpost(epost: String) {
         if (saksbehandlerRepository.finnSaksbehandlerMedEpost(epost) != null) {
             throw IllegalStateException("Saksbehandler finnes fra før")
         }
-        // lagrer med tomme verdier, disse blir populert etter at saksbehandleren har logget seg inn
-        val saksbehandler = Saksbehandler(null, null, null, epost, null)
-        saksbehandlerRepository.addSaksbehandler(saksbehandler)
+        saksbehandlerRepository.addSaksbehandler(epost)
     }
 
     suspend fun slettSaksbehandlerForId(id: Long) {
