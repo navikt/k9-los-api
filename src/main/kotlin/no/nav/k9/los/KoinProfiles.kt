@@ -87,7 +87,6 @@ import no.nav.k9.los.reservasjon.ReservasjonV3Repository
 import no.nav.k9.los.reservasjon.ReservasjonV3Tjeneste
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerAdminTjeneste
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
-import no.nav.k9.los.saksbehandleradmin.TestSaksbehandlerRepository
 import no.nav.k9.los.sisteoppgaver.SisteOppgaverRepository
 import no.nav.k9.los.sisteoppgaver.SisteOppgaverTjeneste
 import no.nav.k9.los.søkeboks.SøkeboksTjeneste
@@ -106,8 +105,8 @@ import javax.sql.DataSource
 fun selectModulesBasedOnProfile(application: Application, config: Configuration): List<Module> {
     return when (config.koinProfile()) {
         LOCAL -> listOf(common(application, config), localDevConfig())
-        PREPROD -> listOf(common(application, config), naisCommonConfig(config), preprodConfig(config))
-        PROD -> listOf(common(application, config), naisCommonConfig(config), prodConfig(config))
+        PREPROD -> listOf(common(application, config), naisCommonConfig(), preprodConfig(config))
+        PROD -> listOf(common(application, config), naisCommonConfig(), prodConfig(config))
     }
 }
 
@@ -140,13 +139,6 @@ fun common(app: Application, config: Configuration) = module {
             dataSource = get(),
             pepClient = get(),
             transactionalManager = get(),
-        )
-    }
-
-    single {
-        TestSaksbehandlerRepository(
-            dataSource = get(),
-            pepClient = get(),
         )
     }
 
@@ -685,7 +677,7 @@ fun localDevConfig() = module {
 }
 
 // For både preprod og prod
-fun naisCommonConfig(config: Configuration) = module {
+fun naisCommonConfig() = module {
     single {
         // Standard httpclient uten proxy. Er eksplisitt på engine for å unngå en uforutsett engine fra classpath.
         HttpClient(Java)

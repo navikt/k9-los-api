@@ -1,6 +1,9 @@
 package no.nav.k9.los.tjenester.mock
 
 import kotlinx.coroutines.runBlocking
+import kotliquery.queryOf
+import kotliquery.sessionOf
+import kotliquery.using
 import no.nav.k9.klage.kontrakt.behandling.oppgavetillos.Aksjonspunkttilstand
 import no.nav.k9.kodeverk.behandling.BehandlingResultatType
 import no.nav.k9.kodeverk.behandling.BehandlingStegType
@@ -25,8 +28,6 @@ import no.nav.k9.los.kodeverk.BehandlingType
 import no.nav.k9.los.kodeverk.FagsakYtelseType
 import no.nav.k9.los.kodeverk.Fagsystem
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
-import no.nav.k9.los.saksbehandleradmin.Saksbehandler
-import no.nav.k9.los.saksbehandleradmin.TestSaksbehandlerRepository
 import no.nav.k9.sak.kontrakt.aksjonspunkt.AksjonspunktTilstandDto
 import no.nav.k9.sak.typer.AktørId
 import no.nav.k9.sak.typer.JournalpostId
@@ -36,45 +37,55 @@ import org.koin.core.component.inject
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
+import javax.sql.DataSource
 import kotlin.random.Random
 
-val saksbehandlere = listOf(
-    Saksbehandler(
-        id = 1,
-        navident = "Z123456",
-        navn = "Saksbehandler Sara",
-        epost = "saksbehandler@nav.no",
-        enhet = "2830 NAV DRIFT"
-    ),
-    Saksbehandler(
-        id = 2,
-        navident = "Z167457",
-        navn = "Lars Pokèmonsen",
-        epost = "lars.monsen@nav.no",
-        enhet = "2830 NAV DRIFT"
-    ),
-    Saksbehandler(
-        id = 3,
-        navident = "Z321457",
-        navn = "Lord Edgar Hansen",
-        epost = "the.lord@nav.no",
-        enhet = "2830 NAV DRIFT"
-    )
-)
-
 object localSetup : KoinComponent {
-    private val testSaksbehandlerRepository: TestSaksbehandlerRepository by inject()
     private val punsjEventHandler: K9PunsjEventHandler by inject()
     private val tilbakeEventHandler: K9TilbakeEventHandler by inject()
     private val sakEventHandler: K9SakEventHandler by inject()
     private val klageEventHandler: K9KlageEventHandler by inject()
     private val profile: KoinProfile by inject()
+    private val dataSource: DataSource by inject()
+
+    fun addSaksbehandler(saksbehandlerfelter: Map<String, String>) {
+        return using(sessionOf(dataSource)) {
+            it.transaction { tx ->
+                tx.run(
+                    queryOf(
+                        """
+                        insert into saksbehandler (navident, navn, epost, enhet, skjermet)
+                        values (:navident,:navn, :epost, '2830 NAV DRIFT', false)
+                        on conflict do nothing
+                     """,
+                        saksbehandlerfelter
+                    ).asExecute
+                )
+            }
+        }
+    }
 
     fun initSaksbehandlere() {
         if (profile == KoinProfile.LOCAL) {
             runBlocking {
-                saksbehandlere.forEach { saksbehandler ->
-                    testSaksbehandlerRepository.addSaksbehandler(saksbehandler)
+                listOf(
+                    mapOf(
+                        "navident" to "Z123456",
+                        "navn" to "Saksbehandler Sara",
+                        "epost" to "saksbehandler@nav.no",
+                    ),
+                    mapOf(
+                        "navident" to "Z167457",
+                        "navn" to "Lars Pokèmonsen",
+                        "epost" to "lars.monsen@nav.no",
+                    ),
+                    mapOf(
+                        "navident" to "Z321457",
+                        "navn" to "Lord Edgar Hansen",
+                        "epost" to "the.lord@nav.no",
+                    )
+                ).forEach { saksbehandler ->
+                    addSaksbehandler(saksbehandler)
                 }
             }
         }

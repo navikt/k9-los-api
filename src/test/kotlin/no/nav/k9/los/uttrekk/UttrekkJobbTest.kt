@@ -8,8 +8,6 @@ import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.lagretsok.LagretSøk
 import no.nav.k9.los.lagretsok.LagretSøkRepository
 import no.nav.k9.los.lagretsok.NyttLagretSøkRequest
-import no.nav.k9.los.oppgaveuthenting.query.dto.query.EnkelSelectFelt
-import no.nav.k9.los.oppgaveuthenting.query.dto.query.OppgaveQuery
 import no.nav.k9.los.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
 import no.nav.k9.los.saksbehandleradmin.TestSaksbehandlerRepository
@@ -26,7 +24,6 @@ class UttrekkJobbTest : AbstractK9LosIntegrationTest() {
     private lateinit var saksbehandlerRepository: SaksbehandlerRepository
     private lateinit var testSaksbehandlerRepository: TestSaksbehandlerRepository
     private var saksbehandlerId: Long = 0L
-    private lateinit var testQuery: OppgaveQuery
     private lateinit var testLagretSøk: LagretSøk
 
     @BeforeEach
