@@ -35,7 +35,7 @@ class SisteOppgaverRepositoryTest : AbstractK9LosIntegrationTest() {
         transactionalManager = get()
 
         runBlocking {
-            testSaksbehandlerRepository.upsertSaksbehandler(
+            testSaksbehandlerRepository.opprettSaksbehandler(
                 OpprettSaksbehandler(
                     navident = "test",
                     navn = "Test Testersen",

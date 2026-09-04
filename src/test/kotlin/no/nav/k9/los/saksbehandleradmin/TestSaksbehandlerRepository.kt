@@ -14,7 +14,7 @@ class TestSaksbehandlerRepository(
 ) {
     private val saksbehandlerRepository = SaksbehandlerRepository(dataSource, pepClient, TransactionalManager(dataSource))
 
-    suspend fun upsertSaksbehandler(opprettSaksbehandler: OpprettSaksbehandler): Saksbehandler {
+    suspend fun opprettSaksbehandler(opprettSaksbehandler: OpprettSaksbehandler): Saksbehandler {
         val erSkjermet = pepClient.harTilgangTilKode6()
         return using(sessionOf(dataSource)) {
             val saksbehandlerId = it.transaction { tx ->
@@ -23,12 +23,6 @@ class TestSaksbehandlerRepository(
                         """
                         insert into saksbehandler as k (navident, navn, epost, enhet, skjermet)
                         values (:navident,:navn,:epost, :enhet, :skjermet)
-                        on conflict (epost) do update
-                        set navident = :navident,
-                            navn = :navn,
-                            enhet = :enhet,
-                            epost = :epost,
-                            skjermet = :skjermet
                         returning id
                      """,
                         mapOf(

@@ -72,7 +72,7 @@ class SisteOppgaverTjenesteTest : AbstractK9LosIntegrationTest() {
         )
         
         runBlocking {
-            saksbehandler = testSaksbehandlerRepository.upsertSaksbehandler(
+            saksbehandler = testSaksbehandlerRepository.opprettSaksbehandler(
                 OpprettSaksbehandler(
                     navident = "test",
                     navn = "Test Testersen",

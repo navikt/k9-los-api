@@ -20,7 +20,7 @@ class SaksbehandlerAdminTjeneste(
         if (saksbehandlerRepository.finnSaksbehandlerMedEpost(epost) != null) {
             throw IllegalStateException("Saksbehandler finnes fra før")
         }
-        saksbehandlerRepository.addSaksbehandler(epost)
+        saksbehandlerRepository.opprettSaksbehandler(epost)
     }
 
     suspend fun slettSaksbehandlerForId(id: Long) {

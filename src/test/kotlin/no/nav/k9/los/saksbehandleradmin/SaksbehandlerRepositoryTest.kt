@@ -18,7 +18,7 @@ class SaksbehandlerRepositoryTest : AbstractK9LosIntegrationTest() {
         val testSaksbehandlerRepository = get<TestSaksbehandlerRepository>()
         val repository = get<SaksbehandlerRepository>()
         val opprinnelig = OpprettSaksbehandler( "Z123456", "Gammelt navn", "saksbehandler@nav.no", "1234")
-        val id = testSaksbehandlerRepository.upsertSaksbehandler(opprinnelig).id
+        val id = testSaksbehandlerRepository.opprettSaksbehandler(opprinnelig).id
         val tidspunkt = LocalDateTime.parse("2026-08-28T10:00:00")
 
         repository.vedlikeholdSaksbehandler(
@@ -41,7 +41,7 @@ class SaksbehandlerRepositoryTest : AbstractK9LosIntegrationTest() {
         val ident2 = "Z234567"
 
         runBlocking {
-            testSaksbehandlerRepository.upsertSaksbehandler(
+            testSaksbehandlerRepository.opprettSaksbehandler(
                 OpprettSaksbehandler(
                     ident,
                     ident,
@@ -52,7 +52,7 @@ class SaksbehandlerRepositoryTest : AbstractK9LosIntegrationTest() {
         }
 
         runBlocking {
-            testSaksbehandlerRepository.upsertSaksbehandler(
+            testSaksbehandlerRepository.opprettSaksbehandler(
                 OpprettSaksbehandler(
                     ident2,
                     ident2,

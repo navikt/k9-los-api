@@ -17,7 +17,7 @@ class SaksbehandlerRepository(
     private val pepClient: IPepClient,
     private val transactionalManager: TransactionalManager
 ) {
-    suspend fun addSaksbehandler(epost: String): Long {
+    suspend fun opprettSaksbehandler(epost: String): Long {
         val erSkjermet = pepClient.harTilgangTilKode6()
         return using(sessionOf(dataSource)) {
             val saksbehandlerId = it.transaction { tx ->

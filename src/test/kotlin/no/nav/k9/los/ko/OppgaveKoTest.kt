@@ -104,7 +104,7 @@ class OppgaveKoTest : AbstractK9LosIntegrationTest() {
         } returns true
 
         return runBlocking {
-            testSaksbehandlerRepository.upsertSaksbehandler(
+            testSaksbehandlerRepository.opprettSaksbehandler(
                 OpprettSaksbehandler(
                     navident = "Ident$saksbehandlerepost",
                     navn = "Navn for $saksbehandlerepost",

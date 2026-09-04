@@ -36,7 +36,7 @@ class UttrekkJobbTest : AbstractK9LosIntegrationTest() {
         testSaksbehandlerRepository = get()
 
         runBlocking {
-            val saksbehandler = testSaksbehandlerRepository.upsertSaksbehandler(
+            val saksbehandler = testSaksbehandlerRepository.opprettSaksbehandler(
                 OpprettSaksbehandler(
                     navident = "test",
                     navn = "Test Testersen",

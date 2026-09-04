@@ -48,15 +48,15 @@ class TestSaksbehandler: KoinTest {
 
     fun init() {
         runBlocking {
-            repo.upsertSaksbehandler(SARA.tilOpprettSaksbehandler())
-            repo.upsertSaksbehandler(BIRGER_BESLUTTER.tilOpprettSaksbehandler())
+            repo.opprettSaksbehandler(SARA.tilOpprettSaksbehandler())
+            repo.opprettSaksbehandler(BIRGER_BESLUTTER.tilOpprettSaksbehandler())
             leggTilSkjermet()
         }
     }
 
     private suspend fun leggTilSkjermet() {
         coEvery { pepClient.harTilgangTilKode6() } returns true
-        repo.upsertSaksbehandler(KJERSTI_SKJERMET.tilOpprettSaksbehandler())
+        repo.opprettSaksbehandler(KJERSTI_SKJERMET.tilOpprettSaksbehandler())
         coEvery { pepClient.harTilgangTilKode6() } returns false
     }
 

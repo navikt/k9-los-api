@@ -24,7 +24,7 @@ class ReservasjonV3TjenesteTest : AbstractK9LosIntegrationTest() {
         val testSaksbehandlerRepository = get<TestSaksbehandlerRepository>()
 
         saksbehandlerInnlogget = runBlocking {
-            testSaksbehandlerRepository.upsertSaksbehandler(
+            testSaksbehandlerRepository.opprettSaksbehandler(
                 OpprettSaksbehandler(
                     navident = null,
                     navn = null,
@@ -35,7 +35,7 @@ class ReservasjonV3TjenesteTest : AbstractK9LosIntegrationTest() {
         }
 
         saksbehandler1 = runBlocking {
-            testSaksbehandlerRepository.upsertSaksbehandler(
+            testSaksbehandlerRepository.opprettSaksbehandler(
                 OpprettSaksbehandler(
                     navident = null,
                     navn = null,
@@ -115,7 +115,7 @@ class ReservasjonV3TjenesteTest : AbstractK9LosIntegrationTest() {
         val testSaksbehandlerRepository = get<TestSaksbehandlerRepository>()
 
         val saksbehandler2 = runBlocking {
-            testSaksbehandlerRepository.upsertSaksbehandler(
+            testSaksbehandlerRepository.opprettSaksbehandler(
                 OpprettSaksbehandler(
                     navident = null,
                     navn = null,

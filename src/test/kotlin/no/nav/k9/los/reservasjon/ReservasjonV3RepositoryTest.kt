@@ -22,7 +22,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
         val transactionalManager = get<TransactionalManager>()
 
         val saksbehandler = runBlocking {
-            testSaksbehandlerRepository.upsertSaksbehandler(
+            testSaksbehandlerRepository.opprettSaksbehandler(
                 OpprettSaksbehandler(
                     navident = null,
                     navn = null,
@@ -64,7 +64,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
         val testSaksbehandlerRepository = get<TestSaksbehandlerRepository>()
 
         val saksbehandler1 = runBlocking {
-            testSaksbehandlerRepository.upsertSaksbehandler(
+            testSaksbehandlerRepository.opprettSaksbehandler(
                 OpprettSaksbehandler(
                     navident = null,
                     navn = null,
@@ -75,7 +75,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
         }
 
         val saksbehandler2 = runBlocking {
-            testSaksbehandlerRepository.upsertSaksbehandler(
+            testSaksbehandlerRepository.opprettSaksbehandler(
                 OpprettSaksbehandler(
                     navident = null,
                     navn = null,
@@ -119,7 +119,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
         val testSaksbehandlerRepository = get<TestSaksbehandlerRepository>()
 
         val saksbehandler1 = runBlocking {
-            testSaksbehandlerRepository.upsertSaksbehandler(
+            testSaksbehandlerRepository.opprettSaksbehandler(
                 OpprettSaksbehandler(
                     navident = null,
                     navn = null,
@@ -173,7 +173,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
         val testSaksbehandlerRepository = get<TestSaksbehandlerRepository>()
 
         val saksbehandler1 = runBlocking {
-            testSaksbehandlerRepository.upsertSaksbehandler(
+            testSaksbehandlerRepository.opprettSaksbehandler(
                 OpprettSaksbehandler(
                     navident = null,
                     navn = null,
@@ -184,7 +184,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
         }
 
         val saksbehandler2 = runBlocking {
-            testSaksbehandlerRepository.upsertSaksbehandler(
+            testSaksbehandlerRepository.opprettSaksbehandler(
                 OpprettSaksbehandler(
                     navident = null,
                     navn = null,
@@ -233,7 +233,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
         val testSaksbehandlerRepository = get<TestSaksbehandlerRepository>()
 
         val saksbehandler1 = runBlocking {
-            testSaksbehandlerRepository.upsertSaksbehandler(
+            testSaksbehandlerRepository.opprettSaksbehandler(
                 OpprettSaksbehandler(
                     navident = null,
                     navn = null,
@@ -244,7 +244,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
         }
 
         val saksbehandler2 = runBlocking {
-            testSaksbehandlerRepository.upsertSaksbehandler(
+            testSaksbehandlerRepository.opprettSaksbehandler(
                 OpprettSaksbehandler(
                     navident = null,
                     navn = null,
@@ -273,7 +273,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
         )
 
         val saksbehandlerInnlogget = runBlocking {
-            testSaksbehandlerRepository.upsertSaksbehandler(
+            testSaksbehandlerRepository.opprettSaksbehandler(
                 OpprettSaksbehandler(
                     navident = null,
                     navn = null,
@@ -300,7 +300,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
         val transactionalManager = get<TransactionalManager>()
 
         val saksbehandler = runBlocking {
-            testSaksbehandlerRepository.upsertSaksbehandler(
+            testSaksbehandlerRepository.opprettSaksbehandler(
                 OpprettSaksbehandler(
                     navident = null,
                     navn = null,
@@ -346,7 +346,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
         val transactionalManager = get<TransactionalManager>()
 
         val saksbehandler1 = runBlocking {
-            testSaksbehandlerRepository.upsertSaksbehandler(
+            testSaksbehandlerRepository.opprettSaksbehandler(
                 OpprettSaksbehandler(
                     navident = null,
                     navn = null,
@@ -356,7 +356,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
             )
         }
         val saksbehandler2 = runBlocking {
-            testSaksbehandlerRepository.upsertSaksbehandler(
+            testSaksbehandlerRepository.opprettSaksbehandler(
                 OpprettSaksbehandler(
                     navident = null,
                     navn = null,
@@ -366,7 +366,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
             )
         }
         val saksbehandler3skjermet = runBlocking {
-            testSaksbehandlerRepository.upsertSaksbehandler(
+            testSaksbehandlerRepository.opprettSaksbehandler(
                 OpprettSaksbehandler(
                     navident = null,
                     navn = null,
