@@ -33,7 +33,7 @@ class KlageEventTilOppgaveMapper(
         val event = eventLagret.eventDto
 
         val losOpplysningerSomManglerIKlageDto =
-            event.påklagdBehandlingId?.let { k9klageBeriker.hentFraK9Sak(it) }
+            event.påklagdBehandlingId?.let { k9klageBeriker.hentFraK9Sak(event.saksnummer) }
 
         val eventBeriket =
             event.copy(
