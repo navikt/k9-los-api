@@ -15,6 +15,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.koin.test.get
+import no.nav.k9.los.saksbehandleradmin.OpprettSaksbehandler
 
 class LagretSøkRepositoryTest : AbstractK9LosIntegrationTest() {
 
@@ -30,16 +31,14 @@ class LagretSøkRepositoryTest : AbstractK9LosIntegrationTest() {
         testSaksbehandlerRepository = get()
 
         runBlocking {
-            testSaksbehandlerRepository.addSaksbehandler(
-                Saksbehandler(
-                    id = 1,
+            saksbehandler = testSaksbehandlerRepository.upsertSaksbehandler(
+                OpprettSaksbehandler(
                     navident = "test",
                     navn = "Test Testersen",
                     epost = "test@nav.no",
                     enhet = null,
                 )
             )
-            saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedEpost("test@nav.no")!!
         }
     }
 
@@ -136,16 +135,14 @@ class LagretSøkRepositoryTest : AbstractK9LosIntegrationTest() {
     fun `skal kun hente søk som tilhører saksbehandleren`() {
         runBlocking {
             // Opprett en annen saksbehandler
-            testSaksbehandlerRepository.addSaksbehandler(
-                Saksbehandler(
-                    id = 1,
+            val annenSaksbehandler = testSaksbehandlerRepository.upsertSaksbehandler(
+                OpprettSaksbehandler(
                     navident = "annen",
                     navn = "Annen Testersen",
                     epost = "annen@nav.no",
                     enhet = null,
                 )
             )
-            val annenSaksbehandler = saksbehandlerRepository.finnSaksbehandlerMedEpost("annen@nav.no")!!
 
             // Opprett søk for begge saksbehandlere
             val søkForFørsteSaksbehandler = LagretSøk.nyttSøk(

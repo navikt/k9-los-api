@@ -11,7 +11,6 @@ import no.nav.k9.los.lagretsok.LagretSøk
 import no.nav.k9.los.lagretsok.LagretSøkRepository
 import no.nav.k9.los.lagretsok.NyttLagretSøkRequest
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.OppgaveQuery
-import no.nav.k9.los.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
 import no.nav.k9.los.saksbehandleradmin.TestSaksbehandlerRepository
 import org.junit.jupiter.api.BeforeEach
@@ -19,6 +18,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.koin.test.get
 import java.time.LocalDateTime
+import no.nav.k9.los.saksbehandleradmin.OpprettSaksbehandler
 
 class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
 
@@ -38,16 +38,14 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
         testSaksbehandlerRepository = get()
 
         runBlocking {
-            testSaksbehandlerRepository.addSaksbehandler(
-                Saksbehandler(
-                    id = 1,
+            val saksbehandler = testSaksbehandlerRepository.upsertSaksbehandler(
+                OpprettSaksbehandler(
                     navident = "test",
                     navn = "Test Testersen",
                     epost = "test@nav.no",
                     enhet = null,
                 )
             )
-            val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedEpost("test@nav.no")!!
             saksbehandlerId = saksbehandler.id
             val lagretSøk = LagretSøk.nyttSøk(
                 NyttLagretSøkRequest(tittel = "Test søk", query = LagretSøk.defaultQuery(false)),
@@ -172,16 +170,14 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
     fun `skal hente uttrekk for saksbehandler`() {
         // Opprett en annen saksbehandler for å teste filtreringen
         val annenSaksbehandlerId = runBlocking {
-            testSaksbehandlerRepository.addSaksbehandler(
-                Saksbehandler(
-                    id = 1,
+            testSaksbehandlerRepository.upsertSaksbehandler(
+                OpprettSaksbehandler(
                     navident = "test2",
                     navn = "Test Testersen 2",
                     epost = "test2@nav.no",
                     enhet = null,
                 )
-            )
-            testSaksbehandlerRepository.finnSaksbehandlerMedEpost("test2@nav.no")!!.id
+            ).id
         }
 
         val uttrekk1 = Uttrekk.opprettUttrekk(

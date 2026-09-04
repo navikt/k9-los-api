@@ -4,6 +4,7 @@ import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.k9.los.infrastruktur.abac.IPepClient
+import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import java.util.Locale.getDefault
 import javax.sql.DataSource
 
@@ -11,7 +12,9 @@ class TestSaksbehandlerRepository(
     private val dataSource: DataSource,
     private val pepClient: IPepClient,
 ) {
-    suspend fun addSaksbehandler(saksbehandler: Saksbehandler): Long {
+    private val saksbehandlerRepository = SaksbehandlerRepository(dataSource, pepClient, TransactionalManager(dataSource))
+
+    suspend fun upsertSaksbehandler(opprettSaksbehandler: OpprettSaksbehandler): Saksbehandler {
         val erSkjermet = pepClient.harTilgangTilKode6()
         return using(sessionOf(dataSource)) {
             val saksbehandlerId = it.transaction { tx ->
@@ -24,21 +27,22 @@ class TestSaksbehandlerRepository(
                         set navident = :navident,
                             navn = :navn,
                             enhet = :enhet,
+                            epost = :epost,
                             skjermet = :skjermet
                         returning id
                      """,
                         mapOf(
-                            "navident" to saksbehandler.navident,
-                            "epost" to saksbehandler.epost.lowercase(getDefault()),
-                            "navn" to saksbehandler.navn,
-                            "enhet" to saksbehandler.enhet,
+                            "navident" to opprettSaksbehandler.navident,
+                            "epost" to opprettSaksbehandler.epost,
+                            "navn" to opprettSaksbehandler.navn,
+                            "enhet" to opprettSaksbehandler.enhet,
                             "skjermet" to erSkjermet
                         )
                     ).map { row -> row.long("id") }.asSingle
                 )
                 saksbehandlerId!!
             }
-            saksbehandlerId
+            saksbehandlerRepository.finnSaksbehandlerMedId(saksbehandlerId)!!
         }
     }
 

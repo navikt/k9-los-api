@@ -21,8 +21,6 @@ import no.nav.k9.los.oppgaveuthenting.query.dto.query.*
 import no.nav.k9.los.oppgaveuthenting.query.mapping.CombineOperator
 import no.nav.k9.los.oppgaveuthenting.query.mapping.EksternFeltverdiOperator
 import no.nav.k9.los.reservasjon.ReservasjonV3Tjeneste
-import no.nav.k9.los.saksbehandleradmin.Saksbehandler
-import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
 import no.nav.k9.los.saksbehandleradmin.TestSaksbehandlerRepository
 import no.nav.k9.los.oppgaveuthenting.OppgaveRepository
 import org.junit.jupiter.api.Test
@@ -34,6 +32,7 @@ import java.io.StringWriter
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
+import no.nav.k9.los.saksbehandleradmin.OpprettSaksbehandler
 
 class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
 
@@ -727,9 +726,8 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
 
         val saksbehandler = runBlocking {
             val ident = "test"
-            testSaksbehandlerRepository.addSaksbehandler(
-                Saksbehandler(
-                    1,
+            testSaksbehandlerRepository.upsertSaksbehandler(
+                OpprettSaksbehandler(
                     ident,
                     ident,
                     ident + "@nav.no",

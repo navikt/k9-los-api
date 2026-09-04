@@ -8,12 +8,12 @@ import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.lagretsok.LagretSøk
 import no.nav.k9.los.lagretsok.LagretSøkRepository
 import no.nav.k9.los.lagretsok.NyttLagretSøkRequest
-import no.nav.k9.los.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
 import no.nav.k9.los.saksbehandleradmin.TestSaksbehandlerRepository
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.koin.test.get
+import no.nav.k9.los.saksbehandleradmin.OpprettSaksbehandler
 
 class UttrekkJobbTest : AbstractK9LosIntegrationTest() {
 
@@ -36,16 +36,14 @@ class UttrekkJobbTest : AbstractK9LosIntegrationTest() {
         testSaksbehandlerRepository = get()
 
         runBlocking {
-            testSaksbehandlerRepository.addSaksbehandler(
-                Saksbehandler(
-                    id = 1,
+            val saksbehandler = testSaksbehandlerRepository.upsertSaksbehandler(
+                OpprettSaksbehandler(
                     navident = "test",
                     navn = "Test Testersen",
                     epost = "test@nav.no",
                     enhet = null,
                 )
             )
-            val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedEpost("test@nav.no")!!
             saksbehandlerId = saksbehandler.id
             val lagretSøk = LagretSøk.nyttSøk(
                 NyttLagretSøkRequest(tittel = "Test søk", query = LagretSøk.defaultQuery(false)),
