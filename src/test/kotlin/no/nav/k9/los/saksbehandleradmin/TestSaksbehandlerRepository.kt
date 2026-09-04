@@ -27,7 +27,7 @@ class TestSaksbehandlerRepository(
                      """,
                         mapOf(
                             "navident" to opprettSaksbehandler.navident,
-                            "epost" to opprettSaksbehandler.epost,
+                            "epost" to opprettSaksbehandler.epost.lowercase(getDefault()),
                             "navn" to opprettSaksbehandler.navn,
                             "enhet" to opprettSaksbehandler.enhet,
                             "skjermet" to erSkjermet
