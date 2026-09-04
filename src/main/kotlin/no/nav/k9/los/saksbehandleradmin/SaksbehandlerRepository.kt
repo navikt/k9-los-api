@@ -17,37 +17,6 @@ class SaksbehandlerRepository(
     private val pepClient: IPepClient,
     private val transactionalManager: TransactionalManager
 ) {
-    suspend fun addSaksbehandler(saksbehandler: Saksbehandler): Long {
-        val erSkjermet = pepClient.harTilgangTilKode6()
-        return using(sessionOf(dataSource)) {
-            val saksbehandlerId = it.transaction { tx ->
-                val saksbehandlerId = tx.run(
-                    queryOf(
-                        """
-                        insert into saksbehandler as k (navident, navn, epost, enhet, skjermet)
-                        values (:navident,:navn,:epost, :enhet, :skjermet)
-                        on conflict (epost) do update
-                        set navident = :navident,
-                            navn = :navn,
-                            enhet = :enhet,
-                            skjermet = :skjermet
-                        returning id
-                     """,
-                        mapOf(
-                            "navident" to saksbehandler.navident,
-                            "epost" to saksbehandler.epost.lowercase(getDefault()),
-                            "navn" to saksbehandler.navn,
-                            "enhet" to saksbehandler.enhet,
-                            "skjermet" to erSkjermet
-                        )
-                    ).map { row -> row.long("id") }.asSingle
-                )
-                saksbehandlerId!!
-            }
-            saksbehandlerId
-        }
-    }
-
     suspend fun addSaksbehandler(epost: String): Long {
         val erSkjermet = pepClient.harTilgangTilKode6()
         return using(sessionOf(dataSource)) {

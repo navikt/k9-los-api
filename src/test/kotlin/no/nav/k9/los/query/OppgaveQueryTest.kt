@@ -23,6 +23,7 @@ import no.nav.k9.los.oppgaveuthenting.query.mapping.EksternFeltverdiOperator
 import no.nav.k9.los.reservasjon.ReservasjonV3Tjeneste
 import no.nav.k9.los.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
+import no.nav.k9.los.saksbehandleradmin.TestSaksbehandlerRepository
 import no.nav.k9.los.oppgaveuthenting.OppgaveRepository
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -722,11 +723,11 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
 
     @Test
     fun `queryRequest som vil fjerne reserverte oppgaver skal kun få ureserverte`() {
-        val saksbehandlerRepository = get<SaksbehandlerRepository>()
+        val testSaksbehandlerRepository = get<TestSaksbehandlerRepository>()
 
         val saksbehandler = runBlocking {
             val ident = "test"
-            saksbehandlerRepository.addSaksbehandler(
+            testSaksbehandlerRepository.addSaksbehandler(
                 Saksbehandler(
                     1,
                     ident,
@@ -735,7 +736,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
                     enhet = "1234"
                 )
             )
-            saksbehandlerRepository.hentAlleSaksbehandlere()
+            testSaksbehandlerRepository.hentAlleSaksbehandlere()
         }.get(0)
 
         val builder = OppgaveTestDataBuilder()

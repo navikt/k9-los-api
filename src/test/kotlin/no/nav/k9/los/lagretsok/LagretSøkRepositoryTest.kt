@@ -10,6 +10,7 @@ import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.OppgaveQuery
 import no.nav.k9.los.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
+import no.nav.k9.los.saksbehandleradmin.TestSaksbehandlerRepository
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -19,15 +20,17 @@ class LagretSøkRepositoryTest : AbstractK9LosIntegrationTest() {
 
     private lateinit var lagretSøkRepository: LagretSøkRepository
     private lateinit var saksbehandlerRepository: SaksbehandlerRepository
+    private lateinit var testSaksbehandlerRepository: TestSaksbehandlerRepository
     private lateinit var saksbehandler: Saksbehandler
 
     @BeforeEach
     fun setup() {
         lagretSøkRepository = get()
         saksbehandlerRepository = get()
+        testSaksbehandlerRepository = get()
 
         runBlocking {
-            saksbehandlerRepository.addSaksbehandler(
+            testSaksbehandlerRepository.addSaksbehandler(
                 Saksbehandler(
                     id = 1,
                     navident = "test",
@@ -133,7 +136,7 @@ class LagretSøkRepositoryTest : AbstractK9LosIntegrationTest() {
     fun `skal kun hente søk som tilhører saksbehandleren`() {
         runBlocking {
             // Opprett en annen saksbehandler
-            saksbehandlerRepository.addSaksbehandler(
+            testSaksbehandlerRepository.addSaksbehandler(
                 Saksbehandler(
                     id = 1,
                     navident = "annen",

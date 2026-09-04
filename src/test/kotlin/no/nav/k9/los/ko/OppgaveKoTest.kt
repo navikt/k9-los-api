@@ -12,6 +12,7 @@ import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
+import no.nav.k9.los.saksbehandleradmin.TestSaksbehandlerRepository
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.ko.db.OppgaveKoRepository
 import org.junit.jupiter.api.Test
@@ -98,13 +99,13 @@ class OppgaveKoTest : AbstractK9LosIntegrationTest() {
 
     private fun mockLeggTilSaksbehandler(saksbehandlerepost: String): Long {
         val pepClient = mockk<IPepClient>()
-        val saksbehandlerRepository = SaksbehandlerRepository(dataSource, pepClient, transactionalManager = get())
+        val testSaksbehandlerRepository = TestSaksbehandlerRepository(dataSource, pepClient)
         coEvery {
             pepClient.harTilgangTilKode6()
         } returns true
 
         return runBlocking {
-            saksbehandlerRepository.addSaksbehandler(
+            testSaksbehandlerRepository.addSaksbehandler(
                 Saksbehandler(
                     id = 1,
                     navident = "Ident$saksbehandlerepost",

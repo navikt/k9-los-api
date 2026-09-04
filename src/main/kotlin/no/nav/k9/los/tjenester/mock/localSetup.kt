@@ -26,7 +26,7 @@ import no.nav.k9.los.kodeverk.FagsakYtelseType
 import no.nav.k9.los.kodeverk.Fagsystem
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.saksbehandleradmin.Saksbehandler
-import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
+import no.nav.k9.los.saksbehandleradmin.TestSaksbehandlerRepository
 import no.nav.k9.sak.kontrakt.aksjonspunkt.AksjonspunktTilstandDto
 import no.nav.k9.sak.typer.AktørId
 import no.nav.k9.sak.typer.JournalpostId
@@ -63,7 +63,7 @@ val saksbehandlere = listOf(
 )
 
 object localSetup : KoinComponent {
-    private val saksbehandlerRepository: SaksbehandlerRepository by inject()
+    private val testSaksbehandlerRepository: TestSaksbehandlerRepository by inject()
     private val punsjEventHandler: K9PunsjEventHandler by inject()
     private val tilbakeEventHandler: K9TilbakeEventHandler by inject()
     private val sakEventHandler: K9SakEventHandler by inject()
@@ -74,7 +74,7 @@ object localSetup : KoinComponent {
         if (profile == KoinProfile.LOCAL) {
             runBlocking {
                 saksbehandlere.forEach { saksbehandler ->
-                    saksbehandlerRepository.addSaksbehandler(saksbehandler)
+                    testSaksbehandlerRepository.addSaksbehandler(saksbehandler)
                 }
             }
         }

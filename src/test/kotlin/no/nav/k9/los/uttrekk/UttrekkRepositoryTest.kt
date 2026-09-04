@@ -13,6 +13,7 @@ import no.nav.k9.los.lagretsok.NyttLagretSøkRequest
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.OppgaveQuery
 import no.nav.k9.los.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
+import no.nav.k9.los.saksbehandleradmin.TestSaksbehandlerRepository
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -24,6 +25,7 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
     private lateinit var uttrekkRepository: UttrekkRepository
     private lateinit var lagretSøkRepository: LagretSøkRepository
     private lateinit var saksbehandlerRepository: SaksbehandlerRepository
+    private lateinit var testSaksbehandlerRepository: TestSaksbehandlerRepository
     private var saksbehandlerId: Long = 0L
     private lateinit var testQuery: OppgaveQuery
     private lateinit var testLagretSøk: LagretSøk
@@ -33,9 +35,10 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
         uttrekkRepository = get()
         lagretSøkRepository = get()
         saksbehandlerRepository = get()
+        testSaksbehandlerRepository = get()
 
         runBlocking {
-            saksbehandlerRepository.addSaksbehandler(
+            testSaksbehandlerRepository.addSaksbehandler(
                 Saksbehandler(
                     id = 1,
                     navident = "test",
@@ -48,7 +51,7 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
             saksbehandlerId = saksbehandler.id
             val lagretSøk = LagretSøk.nyttSøk(
                 NyttLagretSøkRequest(tittel = "Test søk", query = LagretSøk.defaultQuery(false)),
-                saksbehandler,
+                saksbehandler
             )
             lagretSøkRepository.opprett(lagretSøk)
             testQuery = lagretSøk.query
@@ -169,7 +172,7 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
     fun `skal hente uttrekk for saksbehandler`() {
         // Opprett en annen saksbehandler for å teste filtreringen
         val annenSaksbehandlerId = runBlocking {
-            saksbehandlerRepository.addSaksbehandler(
+            testSaksbehandlerRepository.addSaksbehandler(
                 Saksbehandler(
                     id = 1,
                     navident = "test2",
@@ -178,7 +181,7 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
                     enhet = null,
                 )
             )
-            saksbehandlerRepository.finnSaksbehandlerMedEpost("test2@nav.no")!!.id
+            testSaksbehandlerRepository.finnSaksbehandlerMedEpost("test2@nav.no")!!.id
         }
 
         val uttrekk1 = Uttrekk.opprettUttrekk(

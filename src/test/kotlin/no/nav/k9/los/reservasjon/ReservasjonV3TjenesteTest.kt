@@ -6,6 +6,7 @@ import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.oppgaveuthenting.query.equalsWithPrecision
 import no.nav.k9.los.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
+import no.nav.k9.los.saksbehandleradmin.TestSaksbehandlerRepository
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -20,10 +21,10 @@ class ReservasjonV3TjenesteTest : AbstractK9LosIntegrationTest() {
 
     @BeforeEach
     fun setup() {
-        val saksbehandlerRepository = get<SaksbehandlerRepository>()
+        val testSaksbehandlerRepository = get<TestSaksbehandlerRepository>()
 
         saksbehandlerInnlogget = runBlocking {
-            saksbehandlerRepository.addSaksbehandler(
+            testSaksbehandlerRepository.addSaksbehandler(
                 Saksbehandler(
                     id = 1,
                     navident = "saksbehandler@nav.no",
@@ -32,11 +33,11 @@ class ReservasjonV3TjenesteTest : AbstractK9LosIntegrationTest() {
                     enhet = null,
                 )
             )
-            saksbehandlerRepository.finnSaksbehandlerMedEpost("saksbehandler@nav.no")!!
+            testSaksbehandlerRepository.finnSaksbehandlerMedEpost("saksbehandler@nav.no")!!
         }
 
         saksbehandler1 = runBlocking {
-            saksbehandlerRepository.addSaksbehandler(
+            testSaksbehandlerRepository.addSaksbehandler(
                 Saksbehandler(
                     id = 2,
                     navident = null,
@@ -45,7 +46,7 @@ class ReservasjonV3TjenesteTest : AbstractK9LosIntegrationTest() {
                     enhet = null,
                 )
             )
-            saksbehandlerRepository.finnSaksbehandlerMedEpost("test1@test.no")!!
+            testSaksbehandlerRepository.finnSaksbehandlerMedEpost("test1@test.no")!!
         }
     }
 
@@ -115,10 +116,10 @@ class ReservasjonV3TjenesteTest : AbstractK9LosIntegrationTest() {
         val repo = get<ReservasjonV3Repository>()
         val reservasjonV3Tjeneste = get<ReservasjonV3Tjeneste>()
         val transactionalManager = get<TransactionalManager>()
-        val saksbehandlerRepository = get<SaksbehandlerRepository>()
+        val testSaksbehandlerRepository = get<TestSaksbehandlerRepository>()
 
         val saksbehandler2 = runBlocking {
-            saksbehandlerRepository.addSaksbehandler(
+            testSaksbehandlerRepository.addSaksbehandler(
                 Saksbehandler(
                     id = 1,
                     navident = null,
@@ -127,7 +128,7 @@ class ReservasjonV3TjenesteTest : AbstractK9LosIntegrationTest() {
                     enhet = null,
                 )
             )
-            saksbehandlerRepository.finnSaksbehandlerMedEpost("test2@test.no")!!
+            testSaksbehandlerRepository.finnSaksbehandlerMedEpost("test2@test.no")!!
         }
 
         val reservasjon = ReservasjonV3(

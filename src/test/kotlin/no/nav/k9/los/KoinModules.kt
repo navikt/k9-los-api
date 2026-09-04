@@ -64,6 +64,7 @@ import no.nav.k9.los.reservasjon.ReservasjonV3Repository
 import no.nav.k9.los.reservasjon.ReservasjonV3Tjeneste
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerAdminTjeneste
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
+import no.nav.k9.los.saksbehandleradmin.TestSaksbehandlerRepository
 import no.nav.k9.los.sisteoppgaver.SisteOppgaverRepository
 import no.nav.k9.los.sisteoppgaver.SisteOppgaverTjeneste
 import no.nav.k9.los.søkeboks.SøkeboksTjeneste
@@ -132,6 +133,14 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             transactionalManager = get(),
         )
     }
+
+    single {
+        TestSaksbehandlerRepository(
+            dataSource = get(),
+            pepClient = get(),
+        )
+    }
+
     single { InnloggetBrukerTjeneste(get(), get(), get()) }
 
     single {

@@ -21,6 +21,7 @@ import no.nav.k9.los.infrastruktur.pdl.PersonPdl
 import no.nav.k9.los.infrastruktur.pdl.PersonPdlResponse
 import no.nav.k9.los.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
+import no.nav.k9.los.saksbehandleradmin.TestSaksbehandlerRepository
 import no.nav.k9.los.oppgaveuthenting.Oppgave
 import no.nav.k9.los.oppgaveuthenting.OppgaveNøkkelDto
 import no.nav.k9.los.oppgaveuthenting.OppgaveRepository
@@ -35,6 +36,7 @@ class SisteOppgaverTjenesteTest : AbstractK9LosIntegrationTest() {
     private lateinit var oppgaveRepository: OppgaveRepository
     private lateinit var transactionalManager: TransactionalManager
     private lateinit var saksbehandlerRepository: SaksbehandlerRepository
+    private lateinit var testSaksbehandlerRepository: TestSaksbehandlerRepository
     private lateinit var saksbehandler: Saksbehandler
     
     // Mocks
@@ -51,6 +53,7 @@ class SisteOppgaverTjenesteTest : AbstractK9LosIntegrationTest() {
         oppgaveRepository = get()
         transactionalManager = get()
         saksbehandlerRepository = get()
+        testSaksbehandlerRepository = get()
         pepClient = mockk(relaxed = true)
         pdlService = mockk(relaxed = true)
         azureGraphService = mockk(relaxed = true)
@@ -68,7 +71,7 @@ class SisteOppgaverTjenesteTest : AbstractK9LosIntegrationTest() {
         )
         
         runBlocking {
-            saksbehandlerRepository.addSaksbehandler(
+            testSaksbehandlerRepository.addSaksbehandler(
                 Saksbehandler(
                     id = 1,
                     navident = "test",

@@ -4,7 +4,7 @@ import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.saksbehandleradmin.Saksbehandler
-import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
+import no.nav.k9.los.saksbehandleradmin.TestSaksbehandlerRepository
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import org.koin.test.KoinTest
 import org.koin.test.get
@@ -14,9 +14,8 @@ class TestSaksbehandler: KoinTest {
 
     val datasource = get<DataSource>()
     val pepClient = mockk<IPepClient>(relaxed = true)
-    val repo = SaksbehandlerRepository(
+    val repo = TestSaksbehandlerRepository(
         datasource, pepClient = pepClient,
-        transactionalManager = get(),
     )
 
     companion object {
