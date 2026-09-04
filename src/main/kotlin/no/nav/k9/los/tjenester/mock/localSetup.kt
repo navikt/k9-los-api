@@ -84,9 +84,7 @@ object localSetup : KoinComponent {
                         "navn" to "Lord Edgar Hansen",
                         "epost" to "the.lord@nav.no",
                     )
-                ).forEach { saksbehandler ->
-                    addSaksbehandler(saksbehandler)
-                }
+                ).forEach { addSaksbehandler(it) }
             }
         }
     }
