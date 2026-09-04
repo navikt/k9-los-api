@@ -11,11 +11,11 @@ import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.saksbehandleradmin.Saksbehandler
-import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
+import no.nav.k9.los.saksbehandleradmin.TestSaksbehandlerRepository
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.ko.db.OppgaveKoRepository
+import no.nav.k9.los.saksbehandleradmin.OpprettSaksbehandler
 import org.junit.jupiter.api.Test
-import org.koin.test.get
 
 class OppgaveKoTest : AbstractK9LosIntegrationTest() {
 
@@ -59,16 +59,16 @@ class OppgaveKoTest : AbstractK9LosIntegrationTest() {
         assertThat(oppgaveKo.tittel).isEqualTo(tittel)
 
         val saksbehandlerepost = "a@b"
-        val saksbehandlerId = mockLeggTilSaksbehandler(saksbehandlerepost)
+        val saksbehandler = mockLeggTilSaksbehandler(saksbehandlerepost)
 
 
-        val oppgaveKoFraDb = oppgaveKoRepository.endre(oppgaveKo.copy(saksbehandlere = listOf(saksbehandlerepost), saksbehandlerIds = listOf(saksbehandlerId)), false)
+        val oppgaveKoFraDb = oppgaveKoRepository.endre(oppgaveKo.copy(saksbehandlere = listOf(saksbehandlerepost), saksbehandlerIds = listOf(saksbehandler.id)), false)
         assertThat(oppgaveKoFraDb.saksbehandlere).contains(saksbehandlerepost)
         assertThat(oppgaveKoFraDb.saksbehandlere).hasSize(1)
 
         val saksbehandlerepost2 = "b@c"
-        val saksbehandlerId2 = mockLeggTilSaksbehandler(saksbehandlerepost2)
-        val oppgaveKoFraDb2 = oppgaveKoRepository.endre(oppgaveKoFraDb.copy(saksbehandlere = listOf(saksbehandlerepost2), saksbehandlerIds = listOf(saksbehandlerId2)), false)
+        val saksbehandler2 = mockLeggTilSaksbehandler(saksbehandlerepost2)
+        val oppgaveKoFraDb2 = oppgaveKoRepository.endre(oppgaveKoFraDb.copy(saksbehandlere = listOf(saksbehandlerepost2), saksbehandlerIds = listOf(saksbehandler2.id)), false)
         assertThat(oppgaveKoFraDb2.saksbehandlere).contains(saksbehandlerepost2)
         assertThat(oppgaveKoFraDb2.saksbehandlere).hasSize(1)
 
@@ -82,8 +82,8 @@ class OppgaveKoTest : AbstractK9LosIntegrationTest() {
         val tittel = "Testkø"
         val saksbehandlerepost = "a@b"
         val oppgaveKo = oppgaveKoRepository.leggTil(tittel, skjermet = false)
-        val saksbehandlerId = mockLeggTilSaksbehandler(saksbehandlerepost)
-        val gammelOppgaveko = oppgaveKoRepository.endre(oppgaveKo.copy(saksbehandlere = listOf(saksbehandlerepost), saksbehandlerIds = listOf(saksbehandlerId)), false)
+        val saksbehandler = mockLeggTilSaksbehandler(saksbehandlerepost)
+        val gammelOppgaveko = oppgaveKoRepository.endre(oppgaveKo.copy(saksbehandlere = listOf(saksbehandlerepost), saksbehandlerIds = listOf(saksbehandler.id)), false)
 
         val nyTittel = "Ny tittel"
         val nyOppgaveKo = oppgaveKoRepository.kopier(gammelOppgaveko.id, nyTittel,
@@ -96,21 +96,20 @@ class OppgaveKoTest : AbstractK9LosIntegrationTest() {
         assertThat(nyOppgaveKo.tittel).isEqualTo(nyTittel)
     }
 
-    private fun mockLeggTilSaksbehandler(saksbehandlerepost: String): Long {
+    private fun mockLeggTilSaksbehandler(saksbehandlerepost: String): Saksbehandler {
         val pepClient = mockk<IPepClient>()
-        val saksbehandlerRepository = SaksbehandlerRepository(dataSource, pepClient, transactionalManager = get())
+        val testSaksbehandlerRepository = TestSaksbehandlerRepository(dataSource, pepClient)
         coEvery {
             pepClient.harTilgangTilKode6()
         } returns true
 
         return runBlocking {
-            saksbehandlerRepository.addSaksbehandler(
-                Saksbehandler(
-                    id = null,
+            testSaksbehandlerRepository.opprettSaksbehandler(
+                OpprettSaksbehandler(
                     navident = "Ident$saksbehandlerepost",
                     navn = "Navn for $saksbehandlerepost",
                     epost = saksbehandlerepost,
-                    enhet = null
+                    enhet = null,
                 )
             )
         }

@@ -16,26 +16,11 @@ class SaksbehandlerAdminTjeneste(
     private val uttrekkTjeneste: UttrekkTjeneste,
     private val reservasjonV3Tjeneste: ReservasjonV3Tjeneste
 ) {
-
-    // TODO: slett når frontend har begynt å bruke nytt endepunkt
-    suspend fun søkSaksbehandler(epostDto: EpostDto): Saksbehandler {
-        var saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedEpost(epostDto.epost)
-        if (saksbehandler == null) {
-            saksbehandler = Saksbehandler(
-                null, null, null, epostDto.epost, null
-            )
-            saksbehandlerRepository.addSaksbehandler(saksbehandler)
-        }
-        return saksbehandler
-    }
-
     suspend fun leggTilSaksbehandlerForEpost(epost: String) {
         if (saksbehandlerRepository.finnSaksbehandlerMedEpost(epost) != null) {
             throw IllegalStateException("Saksbehandler finnes fra før")
         }
-        // lagrer med tomme verdier, disse blir populert etter at saksbehandleren har logget seg inn
-        val saksbehandler = Saksbehandler(null, null, null, epost, null)
-        saksbehandlerRepository.addSaksbehandler(saksbehandler)
+        saksbehandlerRepository.opprettSaksbehandler(epost)
     }
 
     suspend fun slettSaksbehandlerForId(id: Long) {
@@ -50,8 +35,8 @@ class SaksbehandlerAdminTjeneste(
 
         transactionalManager.transaction { tx ->
             // V3-modellen: Sletter køer saksbehandler er med i
-            oppgaveKøV3Repository.hentKoerMedOppgittSaksbehandler(tx, saksbehandler.id!!, skjermet, true).forEach { kø ->
-                oppgaveKøV3Repository.endre(tx, kø.copy(saksbehandlerIds = kø.saksbehandlerIds - saksbehandler.id!!), skjermet)
+            oppgaveKøV3Repository.hentKoerMedOppgittSaksbehandler(tx, saksbehandler.id, skjermet, true).forEach { kø ->
+                oppgaveKøV3Repository.endre(tx, kø.copy(saksbehandlerIds = kø.saksbehandlerIds - saksbehandler.id), skjermet)
             }
 
             // Sletter fra saksbehandler-tabellen
@@ -70,7 +55,7 @@ class SaksbehandlerAdminTjeneste(
             lagredeSøk.forEach {
                 lagretSøkTjeneste.slett(saksbehandler.navident!!, it.id!!)
             }
-            val uttrekkeneTilSakbehandler = uttrekkTjeneste.hentForSaksbehandler(saksbehandler.id!!)
+            val uttrekkeneTilSakbehandler = uttrekkTjeneste.hentForSaksbehandler(saksbehandler.id)
             uttrekkeneTilSakbehandler.forEach {
                 uttrekkTjeneste.slett(it.id!!)
             }
@@ -78,7 +63,7 @@ class SaksbehandlerAdminTjeneste(
 
         transactionalManager.transaction { tx ->
             // V3-modellen: Sletter køer saksbehandler er med i
-            oppgaveKøV3Repository.hentKoerMedOppgittSaksbehandler(tx, saksbehandler.id!!, skjermet, true).forEach { kø ->
+            oppgaveKøV3Repository.hentKoerMedOppgittSaksbehandler(tx, saksbehandler.id, skjermet, true).forEach { kø ->
                 oppgaveKøV3Repository.endre(tx, kø.copy(saksbehandlere = kø.saksbehandlere - epost), skjermet)
             }
 
@@ -94,7 +79,7 @@ class SaksbehandlerAdminTjeneste(
     suspend fun hentSaksbehandlere(): List<SaksbehandlerDto> {
         return transactionalManager.transactionSuspend { tx ->
             val saksbehandlere = saksbehandlerRepository.hentAlleSaksbehandlere(tx)
-            val saksbehandlerIder = saksbehandlere.map { it.id!! }.toSet()
+            val saksbehandlerIder = saksbehandlere.map { it.id }.toSet()
             val antallReservasjoner = reservasjonV3Tjeneste.tellReservasjonerForSaksbehandlere(saksbehandlerIder, tx)
 
             saksbehandlere.map {
@@ -104,7 +89,7 @@ class SaksbehandlerAdminTjeneste(
                     navn = it.navn,
                     epost = it.epost,
                     enhet = it.enhet,
-                    antallAktiveReservasjoner = antallReservasjoner.getOrElse(it.id!!) { 0 }
+                    antallAktiveReservasjoner = antallReservasjoner.getOrElse(it.id) { 0 }
                 )
             }.sortedBy { it.navn }
         }

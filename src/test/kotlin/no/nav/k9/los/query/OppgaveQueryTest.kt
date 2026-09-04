@@ -21,8 +21,7 @@ import no.nav.k9.los.oppgaveuthenting.query.dto.query.*
 import no.nav.k9.los.oppgaveuthenting.query.mapping.CombineOperator
 import no.nav.k9.los.oppgaveuthenting.query.mapping.EksternFeltverdiOperator
 import no.nav.k9.los.reservasjon.ReservasjonV3Tjeneste
-import no.nav.k9.los.saksbehandleradmin.Saksbehandler
-import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
+import no.nav.k9.los.saksbehandleradmin.TestSaksbehandlerRepository
 import no.nav.k9.los.oppgaveuthenting.OppgaveRepository
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -33,6 +32,7 @@ import java.io.StringWriter
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
+import no.nav.k9.los.saksbehandleradmin.OpprettSaksbehandler
 
 class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
 
@@ -722,20 +722,19 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
 
     @Test
     fun `queryRequest som vil fjerne reserverte oppgaver skal kun få ureserverte`() {
-        val saksbehandlerRepository = get<SaksbehandlerRepository>()
+        val testSaksbehandlerRepository = get<TestSaksbehandlerRepository>()
 
         val saksbehandler = runBlocking {
             val ident = "test"
-            saksbehandlerRepository.addSaksbehandler(
-                Saksbehandler(
-                    null,
+            testSaksbehandlerRepository.opprettSaksbehandler(
+                OpprettSaksbehandler(
                     ident,
                     ident,
                     ident + "@nav.no",
                     enhet = "1234"
                 )
             )
-            saksbehandlerRepository.hentAlleSaksbehandlere()
+            testSaksbehandlerRepository.hentAlleSaksbehandlere()
         }.get(0)
 
         val builder = OppgaveTestDataBuilder()
@@ -745,8 +744,8 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
         val reservasjonstjeneste = get<ReservasjonV3Tjeneste>()
         reservasjonstjeneste.taReservasjon(
             "test",
-            saksbehandler.id!!,
-            saksbehandler.id!!,
+            saksbehandler.id,
+            saksbehandler.id,
             "test",
             LocalDateTime.now(),
             LocalDateTime.now().plusDays(2)

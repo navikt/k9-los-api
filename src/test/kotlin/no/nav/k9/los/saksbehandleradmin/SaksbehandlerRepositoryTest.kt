@@ -14,15 +14,35 @@ import java.time.LocalDateTime
 
 class SaksbehandlerRepositoryTest : AbstractK9LosIntegrationTest() {
     @Test
+    fun `vedlikeholder saksbehandler og tidspunkt`() = runBlocking {
+        val testSaksbehandlerRepository = get<TestSaksbehandlerRepository>()
+        val repository = get<SaksbehandlerRepository>()
+        val opprinnelig = OpprettSaksbehandler( "Z123456", "Gammelt navn", "saksbehandler@nav.no", "1234")
+        val id = testSaksbehandlerRepository.opprettSaksbehandler(opprinnelig).id
+        val tidspunkt = LocalDateTime.parse("2026-08-28T10:00:00")
+
+        repository.vedlikeholdSaksbehandler(
+            Saksbehandler(id, "Z654321", "Nytt navn", "saksbehandler@nav.no", "3450"),
+            tidspunkt
+        )
+
+        val oppdatert = repository.finnSaksbehandlerMedId(id)!!
+        assertThat(oppdatert.navident, equalTo("Z654321"))
+        assertThat(oppdatert.navn, equalTo("Nytt navn"))
+        assertThat(oppdatert.enhet, equalTo("3450"))
+        assertThat(oppdatert.sistOppdatert, equalTo(tidspunkt))
+    }
+
+    @Test
     fun `slette saksbehandler`() {
         val saksbehandlerRepository = get<SaksbehandlerRepository>()
+        val testSaksbehandlerRepository = get<TestSaksbehandlerRepository>()
         val ident = "Z123456"
         val ident2 = "Z234567"
 
         runBlocking {
-            saksbehandlerRepository.addSaksbehandler(
-                Saksbehandler(
-                    null,
+            testSaksbehandlerRepository.opprettSaksbehandler(
+                OpprettSaksbehandler(
                     ident,
                     ident,
                     ident + "@nav.no",
@@ -32,9 +52,8 @@ class SaksbehandlerRepositoryTest : AbstractK9LosIntegrationTest() {
         }
 
         runBlocking {
-            saksbehandlerRepository.addSaksbehandler(
-                Saksbehandler(
-                    null,
+            testSaksbehandlerRepository.opprettSaksbehandler(
+                OpprettSaksbehandler(
                     ident2,
                     ident2,
                     ident2 + "@nav.no",
@@ -59,11 +78,11 @@ class SaksbehandlerRepositoryTest : AbstractK9LosIntegrationTest() {
 
         val reservasjonV3Tjeneste = get<ReservasjonV3Tjeneste>()
 
-        val reservasjon = reservasjonV3Tjeneste.taReservasjon("test", saksbehandler.id!!, saksbehandler.id!!, "test", LocalDateTime.now(), LocalDateTime.now().plusDays(1))
+        reservasjonV3Tjeneste.taReservasjon("test", saksbehandler.id, saksbehandler.id, "test", LocalDateTime.now(), LocalDateTime.now().plusDays(1))
 
-        reservasjonV3Tjeneste.forlengReservasjon("test", LocalDateTime.now().plusDays(2), saksbehandler.id!!, "test")
+        reservasjonV3Tjeneste.forlengReservasjon("test", LocalDateTime.now().plusDays(2), saksbehandler.id, "test")
 
-        reservasjonV3Tjeneste.overførReservasjon("test", LocalDateTime.now().plusDays(1), saksbehandler2.id!!, saksbehandler2.id!!, "kommentar")
+        reservasjonV3Tjeneste.overførReservasjon("test", LocalDateTime.now().plusDays(1), saksbehandler2.id, saksbehandler2.id, "kommentar")
 
         val transactionalManager = get<TransactionalManager>()
         transactionalManager.transaction { tx ->

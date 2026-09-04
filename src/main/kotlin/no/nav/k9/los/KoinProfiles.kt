@@ -58,6 +58,7 @@ import no.nav.k9.los.infrastruktur.pdl.IPdlService
 import no.nav.k9.los.infrastruktur.pdl.PdlService
 import no.nav.k9.los.infrastruktur.pdl.PdlServiceLocal
 import no.nav.k9.los.infrastruktur.rest.RequestContextService
+import no.nav.k9.los.innloggetbruker.InnloggetBrukerTjeneste
 import no.nav.k9.los.ko.KøpåvirkendeHendelse
 import no.nav.k9.los.ko.OppgaveKoTjeneste
 import no.nav.k9.los.ko.db.OppgaveKoRepository
@@ -97,14 +98,15 @@ import org.koin.core.module.Module
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
 import org.slf4j.LoggerFactory
+import java.time.Clock
 import java.util.*
 import javax.sql.DataSource
 
 fun selectModulesBasedOnProfile(application: Application, config: Configuration): List<Module> {
     return when (config.koinProfile()) {
         LOCAL -> listOf(common(application, config), localDevConfig())
-        PREPROD -> listOf(common(application, config), naisCommonConfig(config), preprodConfig(config))
-        PROD -> listOf(common(application, config), naisCommonConfig(config), prodConfig(config))
+        PREPROD -> listOf(common(application, config), naisCommonConfig(), preprodConfig(config))
+        PROD -> listOf(common(application, config), naisCommonConfig(), prodConfig(config))
     }
 }
 
@@ -130,6 +132,7 @@ fun common(app: Application, config: Configuration) = module {
     single { OppgaveRepository(get()) }
 
     single { TransactionalManager(dataSource = get()) }
+    single<Clock> { Clock.systemDefaultZone() }
 
     single {
         SaksbehandlerRepository(
@@ -138,6 +141,8 @@ fun common(app: Application, config: Configuration) = module {
             transactionalManager = get(),
         )
     }
+
+    single { InnloggetBrukerTjeneste(get(), get(), get()) }
 
     single {
         GyldigeFeltutledere(
@@ -672,7 +677,7 @@ fun localDevConfig() = module {
 }
 
 // For både preprod og prod
-fun naisCommonConfig(config: Configuration) = module {
+fun naisCommonConfig() = module {
     single {
         // Standard httpclient uten proxy. Er eksplisitt på engine for å unngå en uforutsett engine fra classpath.
         HttpClient(Java)

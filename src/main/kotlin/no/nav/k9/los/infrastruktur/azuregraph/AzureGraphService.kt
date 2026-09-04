@@ -14,12 +14,9 @@ import no.nav.helse.dusseldorf.oauth2.client.CachedAccessTokenClient
 import no.nav.k9.los.infrastruktur.idtoken.IIdToken
 import no.nav.k9.los.infrastruktur.rest.idToken
 import no.nav.k9.los.infrastruktur.utils.Cache
-import no.nav.k9.los.infrastruktur.utils.CacheObject
 import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
-import no.nav.k9.los.infrastruktur.azuregraph.EnheterSomSkalUtelatesFraLos
 import org.slf4j.LoggerFactory
 import java.time.Duration
-import java.time.LocalDateTime
 import java.util.*
 import kotlin.coroutines.coroutineContext
 
@@ -28,7 +25,6 @@ open class AzureGraphService(
     private val httpClient: HttpClient
 ) : IAzureGraphService {
     private val cachedAccessTokenClient = CachedAccessTokenClient(accessTokenClient)
-    private val officeLocationCache = Cache<String, String>(cacheSizeLimit = 1000)
     private val saksbehandlerUserIdCache = Cache<String, UUID>(cacheSizeLimit = 1000)
     private val saksbehandlerGrupperCache = Cache<String, Set<UUID>>(cacheSizeLimit = 1000)
     private val log = LoggerFactory.getLogger("AzureGraphService")!!
@@ -67,61 +63,54 @@ open class AzureGraphService(
     }
 
     private suspend fun hentEnhetForBruker(brukernavn: String, onBehalfOf: IIdToken? = null): String {
-        val key = brukernavn + "_office_location"
-        val cachedOfficeLocation = officeLocationCache.get(key)
-        if (cachedOfficeLocation == null) {
-            val accessToken = accessToken(onBehalfOf)
+        val accessToken = accessToken(onBehalfOf)
 
-            val json = Retry.retry(
+        val json = Retry.retry(
+            operation = "office-location",
+            initialDelay = Duration.ofMillis(200),
+            factor = 2.0,
+            logger = log
+        ) {
+            val response = Operation.monitored(
+                app = "k9-los-api",
                 operation = "office-location",
-                initialDelay = Duration.ofMillis(200),
-                factor = 2.0,
-                logger = log
+                resultResolver = { 200 == it.status.value }
             ) {
-                val response = Operation.monitored(
-                    app = "k9-los-api",
-                    operation = "office-location",
-                    resultResolver = { 200 == it.status.value }
-                ) {
-                    httpClient.get {
-                        if (onBehalfOf != null) {
-                            url("https://graph.microsoft.com/v1.0/me")
-                            parameter("\$select", "officeLocation")
-                        } else {
-                            url("https://graph.microsoft.com/v1.0/users")
-                            parameter("\$filter", "mailNickname eq '$brukernavn'")
-                            parameter("\$select", "officeLocation")
-                        }
-                        header(HttpHeaders.Accept, "application/json")
-                        header(HttpHeaders.Authorization, "Bearer ${accessToken.token}")
-                        header("ConsistencyLevel", "eventual")
-                    }
-                }
-
-                håndterResultat(response)
-            }
-            return try {
-                val officeLocation = if (onBehalfOf != null) {
-                    LosObjectMapper.instance.readValue<OfficeLocation>(json).officeLocation
-                } else {
-                    val result = LosObjectMapper.instance.readValue<OfficeLocationFilterResult>(json).value.also {
-                        if (it.size > 1) log.warn("Flere enn 1 treff på ident")
-                    }
-                    if (result.isEmpty()) {
-                        log.warn("Fant ingen treff på enhet for saksbehandler $brukernavn, bruker tom streng som enhet")
-                        ""
+                httpClient.get {
+                    if (onBehalfOf != null) {
+                        url("https://graph.microsoft.com/v1.0/me")
+                        parameter("\$select", "officeLocation")
                     } else {
-                        result.first().officeLocation
+                        url("https://graph.microsoft.com/v1.0/users")
+                        parameter("\$filter", "mailNickname eq '$brukernavn'")
+                        parameter("\$select", "officeLocation")
                     }
+                    header(HttpHeaders.Accept, "application/json")
+                    header(HttpHeaders.Authorization, "Bearer ${accessToken.token}")
+                    header("ConsistencyLevel", "eventual")
                 }
-                officeLocationCache.set(key, CacheObject(officeLocation, LocalDateTime.now().plusDays(180)))
-                return officeLocation
-            } catch (e: Exception) {
-                log.warn("Feilet i oppslag av enhet for saksbehandler $brukernavn, bruker tom streng som enhet", e)
-                ""
             }
-        } else {
-            return cachedOfficeLocation.value
+
+            håndterResultat(response)
+        }
+        return try {
+            val officeLocation = if (onBehalfOf != null) {
+                LosObjectMapper.instance.readValue<OfficeLocation>(json).officeLocation
+            } else {
+                val result = LosObjectMapper.instance.readValue<OfficeLocationFilterResult>(json).value.also {
+                    if (it.size > 1) log.warn("Flere enn 1 treff på ident")
+                }
+                if (result.isEmpty()) {
+                    log.warn("Fant ingen treff på enhet for saksbehandler $brukernavn, bruker tom streng som enhet")
+                    ""
+                } else {
+                    result.first().officeLocation
+                }
+            }
+            return officeLocation
+        } catch (e: Exception) {
+            log.warn("Feilet i oppslag av enhet for saksbehandler $brukernavn, bruker tom streng som enhet", e)
+            ""
         }
     }
 
