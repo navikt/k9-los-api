@@ -18,11 +18,11 @@ class OppgaveStatusDto(
     constructor(reservasjonV3: ReservasjonV3, innloggetBruker: Saksbehandler, saksbehandlerSomHarReservasjon: Saksbehandler) : this (
     erReservert = true,
     reservertTilTidspunkt = reservasjonV3.gyldigTil,
-    erReservertAvInnloggetBruker = reservasjonV3.reservertAv == innloggetBruker.id!!,
+    erReservertAvInnloggetBruker = reservasjonV3.reservertAv == innloggetBruker.id,
     reservertAv = saksbehandlerSomHarReservasjon.navident,
     reservertAvNavn = saksbehandlerSomHarReservasjon.navn,
     flyttetReservasjon = null,
-    kanOverstyres = reservasjonV3.reservertAv != innloggetBruker.id!!
+    kanOverstyres = reservasjonV3.reservertAv != innloggetBruker.id
     )
 }
 

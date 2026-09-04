@@ -26,7 +26,7 @@ data class ReservasjonV3Dto(
         reservertAvNavn = reservertAv.navn,
         reservertAvIdent = reservertAv.navident!!,
         reservertAvEpost = reservertAv.epost,
-        reservertAvId = reservertAv.id!!,
+        reservertAvId = reservertAv.id,
         kommentar = reservasjonV3.kommentar ?: "",
         reservertFra = reservasjonV3.gyldigFra,
         reservertTil = reservasjonV3.gyldigTil,

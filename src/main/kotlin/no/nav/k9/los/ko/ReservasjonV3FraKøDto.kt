@@ -20,7 +20,7 @@ data class ReservasjonV3FraKøDto (
         reservasjonsnøkkel = reservasjonV3.reservasjonsnøkkel,
         oppgavebehandlingsUrl = oppgave.getOppgaveBehandlingsurl(),
         reservertAv = reservertAv.epost,
-        reservertAvId = reservertAv.id!!,
+        reservertAvId = reservertAv.id,
         reservertFra = reservasjonV3.gyldigFra,
         reservertTil = reservasjonV3.gyldigTil
     )

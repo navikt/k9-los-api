@@ -63,7 +63,7 @@ class ReservasjonV3(
         gyldigTil: LocalDateTime,
         endretAv: Long?
     ) : this(
-        reservertAv = saksbehandler.id!!,
+        reservertAv = saksbehandler.id,
         reservasjonsnøkkel = reservasjonsnøkkel,
         kommentar = kommentar,
         gyldigFra = gyldigFra,

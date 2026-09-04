@@ -746,8 +746,8 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
         val reservasjonstjeneste = get<ReservasjonV3Tjeneste>()
         reservasjonstjeneste.taReservasjon(
             "test",
-            saksbehandler.id!!,
-            saksbehandler.id!!,
+            saksbehandler.id,
+            saksbehandler.id,
             "test",
             LocalDateTime.now(),
             LocalDateTime.now().plusDays(2)

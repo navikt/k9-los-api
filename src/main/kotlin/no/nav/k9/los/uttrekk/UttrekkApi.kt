@@ -35,7 +35,7 @@ fun Route.UttrekkApi() {
                 if (innloggetSaksbehandler == null) {
                     call.respond(HttpStatusCode.Forbidden, "Innlogget bruker er ikke i saksbehandler-tabellen.")
                 } else {
-                    val uttrekk = uttrekkTjeneste.hentForSaksbehandler(innloggetSaksbehandler.id!!)
+                    val uttrekk = uttrekkTjeneste.hentForSaksbehandler(innloggetSaksbehandler.id)
                     call.respond(uttrekk)
                 }
             } else {
@@ -92,7 +92,7 @@ fun Route.UttrekkApi() {
                 } else {
                     try {
                         val request = call.receive<OpprettUttrekk>()
-                        val uttrekkId = uttrekkTjeneste.opprett(request, innloggetSaksbehandler.id!!)
+                        val uttrekkId = uttrekkTjeneste.opprett(request, innloggetSaksbehandler.id)
                         call.respond(HttpStatusCode.Created, uttrekkId)
                     } catch (e: IllegalArgumentException) {
                         call.respond(HttpStatusCode.BadRequest, e.message ?: "Ugyldig forespørsel")
