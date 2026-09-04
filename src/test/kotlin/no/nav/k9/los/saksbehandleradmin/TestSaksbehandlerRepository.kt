@@ -7,14 +7,6 @@ import no.nav.k9.los.infrastruktur.abac.IPepClient
 import java.util.Locale.getDefault
 import javax.sql.DataSource
 
-/**
- * Repository for test- og lokal utviklingsformål.
- * Skal ikke brukes i produksjonskode.
- *
- * Denne klassen finnes fordi tester og localSetup trenger å opprette
- * saksbehandlere med fullstendig informasjon (navident, navn, enhet),
- * mens produksjonsflyten kun oppretter saksbehandlere med epost.
- */
 class TestSaksbehandlerRepository(
     private val dataSource: DataSource,
     private val pepClient: IPepClient,
