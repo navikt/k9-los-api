@@ -1,11 +1,9 @@
 package no.nav.k9.los.lagretsok
 
-import kotliquery.Row
-import kotliquery.queryOf
-import kotliquery.sessionOf
-import kotliquery.using
+import kotliquery.*
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.OppgaveQuery
 import no.nav.k9.los.saksbehandleradmin.Saksbehandler
 import javax.sql.DataSource
@@ -14,13 +12,14 @@ class LagretSøkRepository(val dataSource: DataSource) {
     private val transactionalManager = TransactionalManager(dataSource)
 
     fun hent(id: Long): LagretSøk? {
-        return transactionalManager.transaction {
-            it.run(
+        return transactionalManager.transaction { tx ->
+            tx.run(
                 queryOf(
                     """
-                SELECT *
+                SELECT omrade.ekstern_id as omrade_ekstern_id, lagret_sok.*
                 FROM lagret_sok
-                WHERE id = :id
+                INNER JOIN omrade on omrade.id = lagret_sok.omrade_id
+                WHERE lagret_sok.id = :id
             """.trimIndent(), mapOf("id" to id)
                 ).map {
                     it.toLagretSøk()
@@ -35,8 +34,8 @@ class LagretSøkRepository(val dataSource: DataSource) {
             tx.updateAndReturnGeneratedKey(
                 queryOf(
                     """
-                    INSERT INTO lagret_sok (tittel, versjon, beskrivelse, sist_endret, query, laget_av)
-                    VALUES (:tittel, :versjon, :beskrivelse, :sist_endret, :query::jsonb, :lagetAv)
+                    INSERT INTO lagret_sok (tittel, versjon, beskrivelse, sist_endret, query, laget_av, omrade_id)
+                    VALUES (:tittel, :versjon, :beskrivelse, :sist_endret, :query::jsonb, :lagetAv, (select id from omrade where ekstern_id = :omrade))
                     """.trimIndent(),
                     mapOf(
                         "tittel" to lagretSøk.tittel,
@@ -45,6 +44,7 @@ class LagretSøkRepository(val dataSource: DataSource) {
                         "sist_endret" to lagretSøk.sistEndret,
                         "query" to LosObjectMapper.instance.writeValueAsString(lagretSøk.query),
                         "lagetAv" to lagretSøk.lagetAv,
+                        "omrade" to lagretSøk.område.eksternId
                     )
                 )
             )
@@ -76,29 +76,29 @@ class LagretSøkRepository(val dataSource: DataSource) {
         }
     }
 
+    context(tx: TransactionalSession)
     fun slett(lagretSøk: LagretSøk) {
-        transactionalManager.transaction {
-            it.run(
-                queryOf(
-                    """
+        tx.run(
+            queryOf(
+                """
                 DELETE FROM lagret_sok
                 WHERE id = :id
             """.trimIndent(), mapOf("id" to lagretSøk.id)
-                ).asUpdate
-            )
-        }
+            ).asUpdate
+        )
     }
 
-    fun hentAlle(saksbehandler: Saksbehandler): List<LagretSøk> {
+    fun hentAlle(saksbehandler: Saksbehandler, område: Områder): List<LagretSøk> {
         return using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(
                     """
-                SELECT *
+                SELECT omrade.ekstern_id as omrade_ekstern_id, lagret_sok.*
                 FROM lagret_sok
-                WHERE laget_av = :lagetAv
-                ORDER BY id DESC
-            """.trimIndent(), mapOf("lagetAv" to saksbehandler.id)
+                INNER JOIN omrade on omrade.ekstern_id = :omrade
+                WHERE laget_av = :lagetAv AND omrade.ekstern_id = :omrade
+                ORDER BY lagret_sok.id DESC
+            """.trimIndent(), mapOf("lagetAv" to saksbehandler.id, "omrade" to område.eksternId)
                 ).map {
                     it.toLagretSøk()
                 }.asList
@@ -111,6 +111,7 @@ private fun Row.toLagretSøk(): LagretSøk {
     return LagretSøk.fraEksisterende(
         id = long("id"),
         lagetAv = long("laget_av"),
+        område = Områder.fraEksternId(string("omrade_ekstern_id")),
         versjon = long("versjon"),
         tittel = string("tittel"),
         beskrivelse = string("beskrivelse"),

@@ -7,6 +7,7 @@ import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.kodeverk.PersonBeskyttelseType
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.Datatype
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.*
 import no.nav.k9.los.oppgaveuthenting.query.dto.resultat.Aggregertverdi
 import no.nav.k9.los.oppgaveuthenting.query.dto.resultat.OppgaveQueryRad
@@ -26,6 +27,7 @@ class PartisjonertOppgaveQuerySqlBuilder(
     oppgavestatusFilter: List<Oppgavestatus>,
     val now: LocalDateTime,
     ferdigstiltDatoFilter: FeltverdiOppgavefilter?,
+    private val område: Områder,
 ) : OppgaveQuerySqlBuilder {
     private val log = LoggerFactory.getLogger(PartisjonertOppgaveQuerySqlBuilder::class.java)
 
@@ -92,10 +94,10 @@ class PartisjonertOppgaveQuerySqlBuilder(
     private var selectClause = "SELECT o.id, o.oppgave_ekstern_id, o.oppgave_ekstern_versjon"
     private var fromClause = """
         FROM oppgave_v3_part o
-        LEFT JOIN oppgave_pep_cache opc ON (opc.kildeomrade = 'K9' AND o.oppgave_ekstern_id = opc.ekstern_id)
+        LEFT JOIN oppgave_pep_cache opc ON (opc.kildeomrade = :omrade AND o.oppgave_ekstern_id = opc.ekstern_id)
     """.trimIndent()
 
-    private var whereClause = "WHERE o.oppgavestatus IN ($oppgavestatusPlaceholder) ${ferdigstiltDatoBetingelse("o")}"
+    private var whereClause = "WHERE o.omrade_ekstern_id = :omrade AND o.oppgavestatus IN ($oppgavestatusPlaceholder) ${ferdigstiltDatoBetingelse("o")}"
     private val orderByClauses = mutableListOf<String>()
     private val orderByClause get() = if (orderByClauses.isNotEmpty()) "ORDER BY " + orderByClauses.joinToString(", ") else ""
     private var groupByClause = ""
@@ -145,7 +147,7 @@ class PartisjonertOppgaveQuerySqlBuilder(
 
     override fun medFeltverdi(
         combineOperator: CombineOperator,
-        feltområde: String?,
+        feltområde: Områder?,
         feltkode: String,
         operator: FeltverdiOperator,
         feltverdier: List<Any?>
@@ -249,7 +251,7 @@ class PartisjonertOppgaveQuerySqlBuilder(
         whereClause += ")"
     }
 
-    override fun medEnkelOrder(feltområde: String?, feltkode: String, økende: Boolean) {
+    override fun medEnkelOrder(feltområde: Områder?, feltkode: String, økende: Boolean) {
         if (aggregerteFelter.isNotEmpty()) {
             val alias = grupperingsAlias[OmrådeOgKode(feltområde, feltkode)]
                 ?: throw IllegalStateException("Kan ikke sortere gruppert query på felt som ikke er en del av grupperingen: ${feltområde ?: "null"}.$feltkode")
@@ -277,7 +279,7 @@ class PartisjonertOppgaveQuerySqlBuilder(
 
     override fun medAggregertOrder(
         funksjon: Aggregeringsfunksjon,
-        feltområde: String?,
+        feltområde: Områder?,
         feltkode: String?,
         økende: Boolean
     ) {
@@ -354,12 +356,12 @@ class PartisjonertOppgaveQuerySqlBuilder(
 
         return OppgaveQueryRad(
             oppgaveId = PartisjonertOppgaveId(row.long("id")),
-            eksternOppgaveId = EksternOppgaveId("K9", row.string("oppgave_ekstern_id")),
+            eksternOppgaveId = EksternOppgaveId(område.eksternId, row.string("oppgave_ekstern_id")),
             feltverdier = feltverdier,
         )
     }
 
-    private fun hentTransientFeltutleder(feltområde: String?, feltkode: String): TransientFeltutleder? {
+    private fun hentTransientFeltutleder(feltområde: Områder?, feltkode: String): TransientFeltutleder? {
         return felter[OmrådeOgKode(feltområde, feltkode)]?.transientFeltutleder
     }
 
@@ -379,7 +381,7 @@ class PartisjonertOppgaveQuerySqlBuilder(
 
     private fun medOppgavefelt(
         combineOperator: CombineOperator,
-        feltområde: String,
+        feltområde: Områder,
         feltkode: String,
         operator: FeltverdiOperator,
         feltverdi: List<Any?>
@@ -439,7 +441,7 @@ class PartisjonertOppgaveQuerySqlBuilder(
         """.trimIndent()
     }
 
-    private fun medEnkelOrderAvOppgavefelt(feltområde: String, feltkode: String, økende: Boolean) {
+    private fun medEnkelOrderAvOppgavefelt(feltområde: Områder, feltkode: String, økende: Boolean) {
         hentTransientFeltutleder(feltområde, feltkode)?.let {
             val sqlMedParams = sikreUnikeParams(
                 it.orderBy(OrderByInput(Spørringstrategi.PARTISJONERT, now, feltområde, feltkode, økende))
@@ -469,14 +471,14 @@ class PartisjonertOppgaveQuerySqlBuilder(
         )
     }
 
-    private fun verdifelt(feltområde: String, feltkode: String): String {
+    private fun verdifelt(feltområde: Områder, feltkode: String): String {
         return when (oppgavefelterKodeOgType[OmrådeOgKode(feltområde, feltkode)]) {
             Datatype.INTEGER -> "ov.verdi_bigint"
             else -> "ov.verdi"
         }
     }
 
-    private fun erListetype(feltområde: String, feltkode: String): Boolean {
+    private fun erListetype(feltområde: Områder, feltkode: String): Boolean {
         return felter[OmrådeOgKode(feltområde, feltkode)]?.oppgavefelt?.listetype ?: false
     }
 
@@ -486,7 +488,7 @@ class PartisjonertOppgaveQuerySqlBuilder(
         val queryParams: Map<String, Any?> = emptyMap(),
     )
 
-    private fun datatypeForFelt(feltområde: String?, feltkode: String): Datatype {
+    private fun datatypeForFelt(feltområde: Områder?, feltkode: String): Datatype {
         return oppgavefelterKodeOgType[OmrådeOgKode(feltområde, feltkode)]
             ?: throw IllegalStateException("Fant ikke datatype for aggregeringsfelt ${feltområde ?: "null"}.$feltkode")
     }
@@ -792,6 +794,7 @@ class PartisjonertOppgaveQuerySqlBuilder(
 
     override fun getParams(): Map<String, Any?> {
         return buildMap {
+            put("omrade", område.eksternId)
             putAll(queryParams)
             putAll(orderByParams)
             putAll(oppgavestatusParams)

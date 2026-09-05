@@ -8,6 +8,7 @@ import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.lagretsok.LagretSøk
 import no.nav.k9.los.lagretsok.LagretSøkRepository
 import no.nav.k9.los.lagretsok.NyttLagretSøkRequest
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.EnkelSelectFelt
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.OppgaveQuery
 import no.nav.k9.los.saksbehandleradmin.Saksbehandler
@@ -36,20 +37,32 @@ class UttrekkJobbTest : AbstractK9LosIntegrationTest() {
         saksbehandlerRepository = get()
 
         runBlocking {
-            saksbehandlerRepository.addSaksbehandler(
+            saksbehandlerRepository.addSaksbehandler("test@nav.no", Områder.K9)
+            saksbehandlerRepository.vedlikeholdSaksbehandler(
                 Saksbehandler(
                     id = null,
                     navident = "test",
                     navn = "Test Testersen",
                     epost = "test@nav.no",
                     enhet = null,
-                )
+                    områder = listOf(Områder.K9),
+                    kode6 = false,
+                ),
+                skjermet = false,
             )
-            val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedEpost("test@nav.no")!!
+            val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedEpost("test@nav.no", skjermet = false)!!
             saksbehandlerId = saksbehandler.id!!
             val lagretSøk = LagretSøk.nyttSøk(
-                NyttLagretSøkRequest(tittel = "Test søk", query = OppgaveQuery(filtere = listOf(), select = listOf(EnkelSelectFelt("K9", "saksnummer")))),
-                saksbehandler,
+                NyttLagretSøkRequest(
+                    tittel = "Test søk", query = OppgaveQuery(
+                        filtere = listOf(), select = listOf(
+                            EnkelSelectFelt(
+                                Områder.K9, "saksnummer"
+                            )
+                        )
+                    )
+                ),
+                saksbehandler, Områder.K9,
             )
             lagretSøkRepository.opprett(lagretSøk)
             testQuery = lagretSøk.query

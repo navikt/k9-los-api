@@ -3,6 +3,7 @@ package no.nav.k9.los
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import no.nav.k9.los.infrastruktur.db.runMigration
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import org.junit.jupiter.api.AfterEach
 import org.testcontainers.containers.PostgreSQLContainer
 import javax.sql.DataSource
@@ -34,6 +35,15 @@ class TestDataSource {
 // Hack needed because testcontainers use of generics confuses Kotlin
 class KPostgreSQLContainer(imageName: String) : PostgreSQLContainer<KPostgreSQLContainer>(imageName)
 
+/**
+ * Truncater testdata, men bevarer OMRADE. Området er strukturelt: det opprettes av
+ * migrering/OmrådeSetup, og er en forutsetning for at rader kan lagres i tabeller med
+ * fremmednøkkel mot OMRADE (saksbehandler, oppgaveko_v3, reservasjon_v3,
+ * oppgave_pep_cache, event_nokkel).
+ *
+ * OmrådeRepository cacher dessuten Område med database-id, og den cachen ville blitt
+ * ugyldig dersom `restart identity` nullstilte omrade mellom testene.
+ */
 const val TØM_DATA_SQL = """
             do $$
             declare
@@ -44,7 +54,7 @@ const val TØM_DATA_SQL = """
                 into truncate_sql
                 from pg_tables
                 where schemaname = 'public'
-                  and tablename <> 'flyway_schema_history';
+                  and tablename not in ('flyway_schema_history', 'omrade');
 
                 if truncate_sql is not null then
                     execute truncate_sql;
@@ -52,6 +62,38 @@ const val TØM_DATA_SQL = """
             end;
             $$;
         """
+
+
+/**
+ * Fjerner områder som tester har opprettet, sammen med de strukturelle radene som henger på dem.
+ *
+ * Tester som trenger en egen oppgavemodell (se RedusertOppgaveTestmodellBuilder) oppretter sitt eget
+ * område i OMRADE. Den tabellen bevares av opprydningen mellom testene, så uten dette ville
+ * testområdet blitt liggende og lekket inn i etterfølgende tester — som feiler når rader fra
+ * databasen mappes til [Områder].
+ *
+ * Kjøres etter at datatabellene er tømt, siden oppgave_v3 m.fl. har fremmednøkkel mot OPPGAVETYPE.
+ */
+fun slettTestområder(dataSource: DataSource) {
+    val kjenteOmråder = Områder.entries.joinToString(", ") { "'${it.eksternId}'" }
+    val testområder = "select id from omrade where ekstern_id not in ($kjenteOmråder)"
+
+    val slettinger = listOf(
+        "delete from oppgavefelt where oppgavetype_id in (select id from oppgavetype where omrade_id in ($testområder))",
+        "delete from oppgavetype where omrade_id in ($testområder)",
+        "delete from feltdefinisjon where omrade_id in ($testområder)",
+        "delete from kodeverk_verdi where kodeverk_id in (select id from kodeverk where omrade_id in ($testområder))",
+        "delete from kodeverk where omrade_id in ($testområder)",
+        "delete from omrade where id in ($testområder)",
+    )
+
+    dataSource.connection.use { connection ->
+        connection.createStatement().use { statement ->
+            slettinger.forEach { statement.execute(it) }
+        }
+    }
+}
+
 
 abstract class AbstractPostgresTest {
     companion object {
@@ -76,6 +118,8 @@ abstract class AbstractPostgresTest {
         dataSource.connection.use {
             it.createStatement().execute(TØM_DATA_SQL)
         }
-
+        slettTestområder(dataSource)
     }
 }
+
+

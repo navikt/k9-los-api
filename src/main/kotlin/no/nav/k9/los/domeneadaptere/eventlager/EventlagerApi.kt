@@ -12,13 +12,9 @@ import no.nav.k9.los.domeneadaptere.k9.eventmottak.sak.K9SakEventDto
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.tilbakekrav.K9TilbakeEventDto
 import no.nav.k9.los.domeneadaptere.k9.eventtiloppgave.EventTilOppgaveAdapter
 import no.nav.k9.los.domeneadaptere.ungsak.eventmottak.ungsak.UngSakEventDto
-import no.nav.k9.los.forvaltning.K9KlageEventIkkeSensitiv
-import no.nav.k9.los.forvaltning.K9PunsjEventIkkeSensitiv
-import no.nav.k9.los.forvaltning.K9SakEventIkkeSensitiv
-import no.nav.k9.los.forvaltning.K9TilbakeEventIkkeSensitiv
-import no.nav.k9.los.forvaltning.UngSakEventIkkeSensitiv
-import no.nav.k9.los.infrastruktur.abac.IPepClient
-import no.nav.k9.los.infrastruktur.rest.RequestContextService
+import no.nav.k9.los.forvaltning.*
+import no.nav.k9.los.infrastruktur.brukerkontekst.medBrukerkontekst
+import no.nav.k9.los.infrastruktur.brukerkontekst.medBrukerkontekstUtenOmråde
 import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.kodeverk.Fagsystem
 import org.koin.ktor.ext.inject
@@ -26,13 +22,10 @@ import java.util.*
 import kotlin.concurrent.thread
 
 internal fun Route.EventlagerApi() {
-    val requestContextService by inject<RequestContextService>()
     val eventRepository by inject<EventRepository>()
     val oppgaveAdapter by inject<EventTilOppgaveAdapter>()
-    val pepClient by inject<IPepClient>()
 
     get("/eventer/{fagsystem}/{eksternId}", {
-        tags("Forvaltning")
         description = "Hent ut eventhistorikk for en oppgave, nytt eventlager"
         request {
             pathParameter<Fagsystem>("fagsystem") {
@@ -48,8 +41,8 @@ internal fun Route.EventlagerApi() {
             }
         }
     }) {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.kanLeggeUtDriftsmelding()) {
+        medBrukerkontekstUtenOmråde { bruker ->
+            if (bruker.harDriftstilgangIEttEllerFlereOmråder) {
                 val fagsystem = Fagsystem.fraParameter(call.parameters["fagsystem"]!!)
                 val eksternId = call.parameters["eksternId"]!!
 
@@ -57,7 +50,7 @@ internal fun Route.EventlagerApi() {
                     eventRepository.hentAlleEventer(fagsystem, eksternId).map { it.eventJson }
                 } catch (e: NullPointerException) {
                     call.respond(HttpStatusCode.NotFound)
-                    return@withRequestContext
+                    return@medBrukerkontekstUtenOmråde
                 }
 
                 val eventerIkkeSensitive = when (fagsystem) {
@@ -91,9 +84,8 @@ internal fun Route.EventlagerApi() {
     }
 
     put("/spillAvDirtyEventer", {
-        tags("Forvaltning")
     }) {
-        requestContextService.withRequestContext(call) {
+        medBrukerkontekst {
             thread(
                 start = true,
                 isDaemon = true,
@@ -107,7 +99,6 @@ internal fun Route.EventlagerApi() {
     }
 
     put("/{fagsystem}/bestillHistorikkvask", {
-        tags("Forvaltning")
         request {
             pathParameter<Fagsystem>("fagsystem") {
                 description = "Fagsystemet man vil ha eventkonvertering for"
@@ -126,7 +117,6 @@ internal fun Route.EventlagerApi() {
     }
 
     put("bestillHistorikkvaskForEnkeltoppgave", {
-        tags("Forvaltning")
         request {
             queryParameter<Fagsystem>("fagsystem") {
                 description = "Fagsystemet for oppgaven man vil ha historikkvask for"
@@ -144,7 +134,7 @@ internal fun Route.EventlagerApi() {
             }
         }
     }) {
-        requestContextService.withRequestContext(call) {
+        medBrukerkontekst {
             val fagsystem = Fagsystem.fraParameter(call.parameters["fagsystem"]!!)
             val eksternId = call.parameters["eksternId"]!!
             eventRepository.bestillHistorikkvask(fagsystem, eksternId)
@@ -154,5 +144,3 @@ internal fun Route.EventlagerApi() {
     }
 
 }
-
-

@@ -37,6 +37,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
 import kotlin.random.Random
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 
 val saksbehandlere = listOf(
     Saksbehandler(
@@ -44,21 +45,42 @@ val saksbehandlere = listOf(
         navident = "Z123456",
         navn = "Saksbehandler Sara",
         epost = "saksbehandler@nav.no",
-        enhet = "2830 NAV DRIFT"
+        enhet = "2830 NAV DRIFT",
+        områder = listOf(Områder.K9,
+//            Områder.AKTIVITETSPENGER
+        ),
+        kode6 = false
     ),
     Saksbehandler(
         id = null,
         navident = "Z167457",
         navn = "Lars Pokèmonsen",
         epost = "lars.monsen@nav.no",
-        enhet = "2830 NAV DRIFT"
+        enhet = "2830 NAV DRIFT",
+        områder = listOf(Områder.K9,
+//            Områder.AKTIVITETSPENGER
+        ),
+        kode6 = false
     ),
+//    Saksbehandler(
+//        id = null,
+//        navident = "A167457",
+//        navn = "Arild Aktivitetspenger",
+//        epost = "arild.aktivitetspenger@nav.no",
+//        enhet = "2830 NAV DRIFT",
+//        områder = listOf(
+//            Områder.AKTIVITETSPENGER
+//        ),
+//        kode6 = false
+//    ),
     Saksbehandler(
         id = null,
         navident = "Z321457",
         navn = "Lord Edgar Hansen",
         epost = "the.lord@nav.no",
-        enhet = "2830 NAV DRIFT"
+        enhet = "2830 NAV DRIFT",
+        områder = listOf(Områder.K9),
+        kode6 = false
     )
 )
 
@@ -74,9 +96,10 @@ object localSetup : KoinComponent {
         if (profile == KoinProfile.LOCAL) {
             runBlocking {
                 saksbehandlere.forEach { saksbehandler ->
-                    saksbehandlerRepository.addSaksbehandler(
-                        saksbehandler
-                    )
+                    saksbehandler.områder.forEach { område ->
+                        saksbehandlerRepository.addSaksbehandler(saksbehandler.epost, område)
+                    }
+                    saksbehandlerRepository.vedlikeholdSaksbehandler(saksbehandler, false)
                 }
             }
         }

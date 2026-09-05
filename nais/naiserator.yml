@@ -57,26 +57,8 @@ spec:
       enabled: true
       tenant: {{azure_tenant}}
       claims:
-        # Kun de gruppene brukeren er medlem av vil bli lagt til i claims på tokenet.
-        groups:
-          # 0000-GA-k9-beslutter
-          - id: {{group_id_beslutter}}
-          # 0000-GA-Egne_ansatte
-          - id: {{group_id_egenansatt}}
-          # 0000-GA-Strengt_Fortrolig_Adresse
-          - id: {{group_id_kode6}}
-          # 0000-GA-Fortrolig_Adresse
-          - id: {{group_id_kode7}}
-          # 0000-GA-k9-overstyrer
-          - id: {{group_id_overstyrer}}
-          # 0000-GA-k9-saksbehandler
-          - id: {{group_id_saksbehandler}}
-          # 0000-GA-k9-veileder
-          - id: {{group_id_veileder}}
-          # 0000-GA-k9-drift
-          - id: {{group_id_drift}}
-          # 0000-GA-k9-oppgavestyrer
-          - id: {{group_id_oppgavestyrer}}
+        # Tilganger hentes fra sif-abac-pdp (SifAbacPdpTilgangerKlient), ikke fra gruppe-claims
+        # på tokenet. Derfor er ingen grupper med i claims lenger.
         extra:
           - "NAVident"
   accessPolicy:
@@ -87,6 +69,7 @@ spec:
         - application: k9-punsj
           namespace: k9saksbehandling
           cluster: {{cluster_name_punsj}}
+        - application: sif-abac-pdp
     inbound:
       rules:
         - application: k9-los-web
@@ -109,9 +92,6 @@ spec:
       value: {{db_url}}
     - name: DB_VAULT_MOUNTPATH
       value: {{db_vault_mountpath}}
-    - name: MIGRERING_ETTER_OPPSTART
-      value: "{{migrering_etter_oppstart}}"
-
     - name: PDL_URL
       value: {{pdl_url}}
 
@@ -127,7 +107,7 @@ spec:
     - name: APP_K9PUNSJ_FRONTEND_URL
       value: {{app_k9punsj_frontend_url}}
     - name: APP_SIF_ABAC_PDP_URL
-      value: {{app_sif_abac_pdp_url}}
+      value: http://sif-abac-pdp
 
       # Kafka
     - name: KAFKA_AKSJONSPUNKTHENDELSE_TOPIC
@@ -157,40 +137,16 @@ spec:
     - name: "OTEL_RESOURCE_ATTRIBUTES"
       value: "service.name=k9-los-api,service.namespace=k9saksbehandling,deployment.environment={{deployment_environment}},nais.backend=elastic-apm;grafana-lgtm"
 
-    # Gruppenavn for roller fra Active Directory
-    # 0000-GA-k9-beslutter
-    - name: BRUKER_GRUPPE_ID_BESLUTTER
-      value: {{group_id_beslutter}}
-    # 0000-GA-Egne_ansatte
-    - name: BRUKER_GRUPPE_ID_EGENANSATT
-      value: {{group_id_egenansatt}}
-    # 0000-GA-Strengt_Fortrolig_Adresse
-    - name: BRUKER_GRUPPE_ID_KODE6
-      value: {{group_id_kode6}}
-    # 0000-GA-Fortrolig_Adresse
-    - name: BRUKER_GRUPPE_ID_KODE7
-      value: {{group_id_kode7}}
-    # 0000-GA-k9-overstyrer
-    - name: BRUKER_GRUPPE_ID_OVERSTYRER
-      value: {{group_id_overstyrer}}
-    # 0000-GA-k9-saksbehandler
-    - name: BRUKER_GRUPPE_ID_SAKSBEHANDLER
-      value: {{group_id_saksbehandler}}
-    # 0000-GA-k9-veileder
-    - name: BRUKER_GRUPPE_ID_VEILEDER
-      value: {{group_id_veileder}}
-    # 0000-GA-k9-drift
-    - name: BRUKER_GRUPPE_ID_DRIFT
-      value: {{group_id_drift}}
-    # 0000-GA-k9-oppgavestyrer
-    - name: BRUKER_GRUPPE_ID_OPPGAVESTYRER
-      value: {{group_id_oppgavestyrer}}
-
       # feature toggles
     - name: NY_OPPGAVESTYRING
       value: "true"
     - name: NY_OPPGAVESTYRING_REST_API
       value: "{{ny_oppgavestyring_rest_api}}"
-
+    - name: K9SAK_CONSUMER_AIVEN
+      value: "true"
+    - name: PUNSJ_CONSUMER_AIVEN
+      value: "true"
+    - name: TILBAKE_CONSUMER_AIVEN
+      value: "true"
     - name: NOKKELTALL_ENHETER
       value: "{{nokkeltall_enheter}}"

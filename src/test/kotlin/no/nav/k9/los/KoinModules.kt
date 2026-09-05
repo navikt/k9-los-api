@@ -1,12 +1,9 @@
-@file:Suppress("USELESS_CAST")
-
 package no.nav.k9.los
 
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.channels.Channel
 import no.nav.k9.los.domeneadaptere.k9.OmrådeSetup
-import no.nav.k9.los.domeneadaptere.k9.adhocjobber.reservasjonkonvertering.ReservasjonKonverteringJobb
 import no.nav.k9.los.domeneadaptere.k9.avstemming.AvstemmingsTjeneste
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.FeilRekkefølgeSjekker
 import no.nav.k9.los.domeneadaptere.eventlager.EventRepository
@@ -31,6 +28,7 @@ import no.nav.k9.los.driftsmelding.DriftsmeldingRepository
 import no.nav.k9.los.oppgavemottak.feltutlederforlagring.GyldigeFeltutledere
 import no.nav.k9.los.forvaltning.ForvaltningRepository
 import no.nav.k9.los.infrastruktur.abac.IPepClient
+import no.nav.k9.los.infrastruktur.brukerkontekst.BrukerkontekstFactory
 import no.nav.k9.los.infrastruktur.abac.PepClientLocal
 import no.nav.k9.los.infrastruktur.abac.cache.PepCacheRepository
 import no.nav.k9.los.infrastruktur.abac.cache.PepCacheService
@@ -38,6 +36,7 @@ import no.nav.k9.los.infrastruktur.azuregraph.AzureGraphServiceLocal
 import no.nav.k9.los.infrastruktur.azuregraph.IAzureGraphService
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.infrastruktur.metrikker.EventlagerNokkeltallRepository
+import no.nav.k9.los.innloggetbruker.InnloggetBrukerTjeneste
 import no.nav.k9.los.infrastruktur.pdl.IPdlService
 import no.nav.k9.los.infrastruktur.pdl.PdlServiceLocal
 import no.nav.k9.los.ko.KøpåvirkendeHendelse
@@ -57,6 +56,10 @@ import no.nav.k9.los.oppgavedefinisjon.oppgavetype.OppgavetypeTjeneste
 import no.nav.k9.los.nøkkeltall.saksbehandler.nyeogferdigstilte.NyeOgFerdigstilteService
 import no.nav.k9.los.oppgaveuthenting.query.OppgaveQueryService
 import no.nav.k9.los.oppgaveuthenting.query.db.OppgaveQueryRepository
+import no.nav.k9.los.søkeboks.Oppgavesøkere
+import no.nav.k9.los.søkeboks.k9.K9Oppgavesøk
+import no.nav.k9.los.søkeboks.aktivitetspenger.AktivitetspengerOppgavesøk
+import no.nav.k9.los.oppgaveuthenting.sammendrag.OppgaveSammendragDtoBuilder
 import no.nav.k9.los.reservasjon.ReservasjonApisTjeneste
 import no.nav.k9.los.reservasjon.ReservasjonV3DtoBuilder
 import no.nav.k9.los.reservasjon.ReservasjonV3Repository
@@ -85,6 +88,7 @@ import org.koin.core.module.Module
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
 import java.util.*
+import java.time.Clock
 import javax.sql.DataSource
 
 fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClientLocal()): Module = module {
@@ -108,7 +112,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
         K9SakServiceLocal() as IK9SakService
     }
 
-    single { PepCacheRepository(dataSource) }
+    single { PepCacheRepository(dataSource, get()) }
     single {
         PepCacheService(
             pepClient = get(),
@@ -118,15 +122,17 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     }
 
     single { dataSource }
+    single { Clock.systemDefaultZone() }
     single { pepClient }
+    single { BrukerkontekstFactory(lokaleTilganger = true) }
 
     single { DriftsmeldingRepository(get()) }
 
     single {
         SaksbehandlerRepository(
             dataSource = get(),
-            pepClient = get(),
             transactionalManager = get(),
+            områdeRepository = get(),
         )
     }
 
@@ -151,15 +157,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
         AzureGraphServiceLocal(
         ) as IAzureGraphService
     }
-
-    single {
-        ReservasjonKonverteringJobb(
-            config = get(),
-            reservasjonV3Tjeneste = get(),
-            transactionalManager = get(),
-            oppgaveRepository = get(),
-        )
-    }
+    single { InnloggetBrukerTjeneste(get(), get(), get()) }
 
     single { TransactionalManager(dataSource = get()) }
 
@@ -202,6 +200,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     single {
         EventRepository(
             dataSource = get(),
+            områdeRepository = get(),
         )
     }
 
@@ -211,7 +210,6 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
 
     single {
         SaksbehandlerAdminTjeneste(
-            pepClient = get(),
             transactionalManager = get(),
             saksbehandlerRepository = get(),
             oppgaveKøV3Repository = get(),
@@ -289,6 +287,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     single {
         EventRepository(
             dataSource = get(),
+            områdeRepository = get(),
         )
     }
 
@@ -377,6 +376,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     single {
         ReservasjonV3Repository(
             transactionalManager = get(),
+            områdeRepository = get(),
         )
     }
 
@@ -398,6 +398,11 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
         )
     }
 
+    single { K9Oppgavesøk() }
+    single { AktivitetspengerOppgavesøk() }
+    single { Oppgavesøkere(k9 = get(), aktivitetspenger = get()) }
+    single { OppgaveSammendragDtoBuilder(oppgavesøkere = get(), pdlService = get()) }
+
     single {
         OppgaveKoTjeneste(
             transactionalManager = get(),
@@ -409,6 +414,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             pdlService = get(),
             køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
             feltdefinisjonTjeneste = get(),
+            oppgaveSammendragDtoBuilder = get(),
         )
     }
 
@@ -430,7 +436,8 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
 
     single {
         OppgaveKoRepository(
-            datasource = get()
+            datasource = get(),
+            områdeRepository = get(),
         )
     }
 
@@ -442,12 +449,12 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             reservasjonV3DtoBuilder = get(),
             aktivOppgaveOppslag = get(),
             pepClient = get(),
-            azureGraphService = get(),
+            oppgaveSammendragDtoBuilder = get(),
         )
     }
 
     single {
-        PepCacheRepository(dataSource = get())
+        PepCacheRepository(dataSource = get(), områdeRepository = get())
     }
 
     single<AktivOppgaveOppslag> {
@@ -493,9 +500,11 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
 
     single {
         SøkeboksTjeneste(
-            queryService = get(),
             pdlService = get(),
             pepClient = get(),
+            oppgaveSammendragDtoBuilder = get(),
+            queryService = get(),
+            oppgavesøkere = get(),
         )
     }
 
@@ -509,7 +518,6 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             pepClient = get(),
             sisteOppgaverRepository = get(),
             pdlService = get(),
-            azureGraphService = get(),
             transactionalManager = get(),
         )
     }
@@ -552,7 +560,8 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
         LagretSøkTjeneste(
             saksbehandlerRepository = get(),
             lagretSøkRepository = get(),
-            oppgaveQueryService = get()
+            oppgaveQueryService = get(),
+            transactionalManager = get(),
         )
     }
 

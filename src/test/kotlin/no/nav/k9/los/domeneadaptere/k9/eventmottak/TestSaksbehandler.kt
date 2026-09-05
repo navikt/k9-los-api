@@ -1,11 +1,10 @@
 package no.nav.k9.los.domeneadaptere.k9.eventmottak
 
-import io.mockk.coEvery
 import io.mockk.mockk
-import kotlinx.coroutines.runBlocking
+import no.nav.k9.los.infrastruktur.abac.IPepClient
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
-import no.nav.k9.los.infrastruktur.abac.IPepClient
 import org.koin.test.KoinTest
 import org.koin.test.get
 import javax.sql.DataSource
@@ -15,8 +14,9 @@ class TestSaksbehandler: KoinTest {
     val datasource = get<DataSource>()
     val pepClient = mockk<IPepClient>(relaxed = true)
     val repo = SaksbehandlerRepository(
-        datasource, pepClient = pepClient,
+        datasource,
         transactionalManager = get(),
+        områdeRepository = get(),
     )
 
     companion object {
@@ -25,7 +25,9 @@ class TestSaksbehandler: KoinTest {
             navident = "Z123456",
             navn = "Sara Saksbehandler",
             epost = "sara.saksbehandler@nav.no",
-            enhet = "2830 NAV DRIFT"
+            enhet = "2830 NAV DRIFT",
+            områder = listOf(Områder.K9),
+            kode6 = false
         )
 
         val BIRGER_BESLUTTER = Saksbehandler(
@@ -33,7 +35,9 @@ class TestSaksbehandler: KoinTest {
             navident = "Z654321",
             navn = "Birger Beslutter",
             epost = "birger.beslutter@nav.no",
-            enhet = "2830 NAV DRIFT"
+            enhet = "2830 NAV DRIFT",
+            områder = listOf(Områder.K9),
+            kode6 = false
         )
 
         val KJERSTI_SKJERMET = Saksbehandler(
@@ -41,22 +45,23 @@ class TestSaksbehandler: KoinTest {
             navident = "Z999999",
             navn = "Kjersti Skjermet",
             epost = "kjersti.skjermet@nav.no",
-            enhet = "SKJERMET"
+            enhet = "SKJERMET",
+            områder = listOf(Områder.K9),
+            kode6 = true
         )
 
     }
 
     fun init() {
-        runBlocking {
-            repo.addSaksbehandler(SARA)
-            repo.addSaksbehandler(BIRGER_BESLUTTER)
-            leggTilSkjermet()
-        }
+        repo.addSaksbehandler(SARA.epost, Områder.K9)
+        repo.vedlikeholdSaksbehandler(SARA, skjermet = false)
+        repo.addSaksbehandler(BIRGER_BESLUTTER.epost, Områder.K9)
+        repo.vedlikeholdSaksbehandler(BIRGER_BESLUTTER, skjermet = false)
+        leggTilSkjermet()
     }
 
-    private suspend fun leggTilSkjermet() {
-        coEvery { pepClient.harTilgangTilKode6() } returns true
-        repo.addSaksbehandler(KJERSTI_SKJERMET)
-        coEvery { pepClient.harTilgangTilKode6() } returns false
+    private fun leggTilSkjermet() {
+        repo.addSaksbehandler(KJERSTI_SKJERMET.epost, Områder.K9)
+        repo.vedlikeholdSaksbehandler(KJERSTI_SKJERMET, skjermet = true)
     }
 }

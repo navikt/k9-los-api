@@ -11,6 +11,11 @@ import javax.sql.DataSource
 class TransactionalManager(
     private val dataSource: DataSource
 ) {
+    fun <A> transactionContext(operasjon: context(TransactionalSession) () -> A): A =
+        using(sessionOf(dataSource, returnGeneratedKey = true)) { session ->
+            session.transaction { tx -> context(tx) { operasjon() } }
+        }
+
     fun <A> transaction(operation: (TransactionalSession) -> A): A {
         return using(sessionOf(dataSource, returnGeneratedKey = true)) { session ->
             session.transaction {
@@ -21,10 +26,9 @@ class TransactionalManager(
 
     suspend fun <A> transactionSuspend(operation: suspend (TransactionalSession) -> A): A {
         return withContext(Dispatchers.IO) {
-            val context = coroutineContext
             using(sessionOf(dataSource, returnGeneratedKey = true)) { session ->
                 session.transaction {
-                    runBlocking(context) {
+                    runBlocking {
                         operation(it)
                     }
                 }

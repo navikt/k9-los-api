@@ -12,6 +12,7 @@ import no.nav.k9.los.kodeverk.BehandlingType
 import no.nav.k9.los.kodeverk.Fagsystem
 import org.jetbrains.annotations.VisibleForTesting
 import org.slf4j.LoggerFactory
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 
 
 class K9PunsjEventHandler (
@@ -39,7 +40,7 @@ class K9PunsjEventHandler (
     fun prosesser(eksternId: String, eksternVersjon: String, event: String) {
         EventHandlerMetrics.time("k9punsj", "gjennomført") {
             transactionalManager.transaction { tx ->
-                val eventnøkkel = eventRepository.lagre(Fagsystem.PUNSJ, eksternId, eksternVersjon, event, tx)
+                val eventnøkkel = eventRepository.lagre(Fagsystem.PUNSJ, eksternId, eksternVersjon, event, Områder.fraFagsystem(Fagsystem.PUNSJ), tx)
                 val alleEventer = eventRepository.hentAlleEventerMedLås(eventnøkkel, tx)
 
                 if (feilRekkefølgeSjekker.sjekkFeilRekkefølge(alleEventer)) {

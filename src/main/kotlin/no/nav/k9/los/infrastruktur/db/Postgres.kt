@@ -1,14 +1,13 @@
 package no.nav.k9.los.infrastruktur.db
 
 import com.zaxxer.hikari.HikariDataSource
-import io.ktor.server.application.*
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.KoinProfile
 import no.nav.vault.jdbc.hikaricp.HikariCPVaultUtil
 import org.flywaydb.core.Flyway
+import org.flywaydb.database.postgresql.PostgreSQLConfigurationExtension
 import java.util.*
 import javax.sql.DataSource
-import kotlin.time.measureTimedValue
 
 enum class Role {
     Admin, User, ReadOnly;
@@ -30,31 +29,33 @@ fun dataSourceFromVault(hikariConfig: Configuration, role: Role): HikariDataSour
         "${hikariConfig.databaseName()}-$role"
     )
 
-fun Application.migrate(configuration: Configuration) {
-    log.info("Migrerer database")
-    val (antallMigrert, tidsbruk) = measureTimedValue {
-        if (configuration.koinProfile() == KoinProfile.LOCAL) {
-            HikariDataSource(configuration.hikariConfig()).use { dataSource ->
-                runMigration(dataSource)
-            }
-        } else {
-            dataSourceFromVault(configuration, Role.Admin).use { dataSource ->
-                runMigration(
-                    dataSource,
-                    "SET ROLE \"${configuration.databaseName()}-${Role.Admin}\""
-                )
-            }
-        }
-    }
-    log.info("Migrert database, antallMigrert={} tidsbruk={}", antallMigrert, tidsbruk)
+fun runMigration(dataSource: DataSource, initSql: String? = null): Int {
+    return configuredFlyway(dataSource, initSql)
+        .migrate()
+        .migrationsExecuted
 }
 
-fun runMigration(dataSource: DataSource, initSql: String? = null): Int {
-    return Flyway.configure()
+fun verifyMigrationHistory(dataSource: DataSource, initSql: String? = null) {
+    val flyway = configuredFlyway(dataSource, initSql)
+    flyway.validate()
+
+    val pending = flyway.info().pending()
+    check(pending.isEmpty()) {
+        "Databasen har ventende migreringer: ${pending.joinToString { it.version.toString() }}"
+    }
+}
+
+private fun configuredFlyway(dataSource: DataSource, initSql: String? = null): Flyway {
+    val configuration = Flyway.configure()
         .locations("migreringer/")
         .dataSource(dataSource)
         .initSql(initSql)
-        .load()
-        .migrate()
-        .migrationsExecuted
+
+    // CREATE INDEX CONCURRENTLY kan vente på Flyways egen transaksjonelle advisory lock.
+    // Session-lock bevarer eksklusiv migreringskjøring uten å slå av transaksjoner for vanlige migreringer.
+    configuration.pluginRegister
+        .getExact(PostgreSQLConfigurationExtension::class.java)
+        .setTransactionalLock(false)
+
+    return configuration.load()
 }

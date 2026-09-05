@@ -3,6 +3,7 @@ package no.nav.k9.los.oppgaveuthenting.enkeltoppslag
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgavedefinisjon.oppgavetype.Oppgavetype
 import no.nav.k9.los.oppgavedefinisjon.oppgavetype.OppgavetypeRepository
 import no.nav.k9.los.oppgaveuthenting.Oppgave
@@ -15,22 +16,22 @@ class AktivOppgaveOppslagPartisjonert(
     private val transactionalManager: TransactionalManager,
 ) : AktivOppgaveOppslag {
 
-    override fun hentAktivOppgave(eksternId: String, oppgavetypeEksternId: String): Oppgave {
-        return transactionalManager.transaction { tx -> hentAktivOppgave(eksternId, oppgavetypeEksternId, tx) }
+    override fun hentAktivOppgave(eksternId: String, oppgavetypeEksternId: String, område: Områder): Oppgave {
+        return transactionalManager.transaction { tx -> hentAktivOppgave(eksternId, oppgavetypeEksternId, område, tx) }
     }
 
-    override fun hentAktivOppgave(eksternId: String, oppgavetypeEksternId: String, tx: TransactionalSession): Oppgave {
-        return hentAktivOppgaveHvisFinnes(eksternId, oppgavetypeEksternId, tx)
+    override fun hentAktivOppgave(eksternId: String, oppgavetypeEksternId: String, område: Områder, tx: TransactionalSession): Oppgave {
+        return hentAktivOppgaveHvisFinnes(eksternId, oppgavetypeEksternId, område, tx)
             ?: throw IllegalStateException("Fant ikke aktiv oppgave med eksternId=$eksternId og oppgavetype=$oppgavetypeEksternId")
     }
 
-    override fun hentAktivOppgaveHvisFinnes(eksternId: String, oppgavetypeEksternId: String): Oppgave? {
+    override fun hentAktivOppgaveHvisFinnes(eksternId: String, oppgavetypeEksternId: String, område: Områder): Oppgave? {
         return transactionalManager.transaction { tx ->
-            hentAktivOppgaveHvisFinnes(eksternId, oppgavetypeEksternId, tx)
+            hentAktivOppgaveHvisFinnes(eksternId, oppgavetypeEksternId, område, tx)
         }
     }
 
-    override fun hentAktivOppgaveHvisFinnes(eksternId: String, oppgavetypeEksternId: String, tx: TransactionalSession): Oppgave? {
+    override fun hentAktivOppgaveHvisFinnes(eksternId: String, oppgavetypeEksternId: String, område: Områder, tx: TransactionalSession): Oppgave? {
         val now = LocalDateTime.now()
 
         val rad = tx.run(
@@ -38,15 +39,18 @@ class AktivOppgaveOppslagPartisjonert(
                 """
                     SELECT o.*
                     FROM oppgave_id_part ip
+                    INNER JOIN omrade omr ON omr.id = ip.omrade_id
                     INNER JOIN oppgave_v3_part o ON o.id = ip.id
                     WHERE ip.oppgave_ekstern_id = :eksternId
                       AND ip.oppgavetype_ekstern_id = :oppgavetype
+                      AND omr.ekstern_id = :omrade
+                      AND o.omrade_ekstern_id = :omrade
                     """.trimIndent(),
-                mapOf("eksternId" to eksternId, "oppgavetype" to oppgavetypeEksternId)
+                mapOf("eksternId" to eksternId, "oppgavetype" to oppgavetypeEksternId, "omrade" to område.eksternId)
             ).map { it.tilOppgaveRad() }.asSingle
         ) ?: return null
 
-        val oppgavetypeObj = oppgavetypeRepository.hentOppgavetype("K9", rad.oppgavetypeEksternId, tx)
+        val oppgavetypeObj = oppgavetypeRepository.hentOppgavetype(rad.omradeEksternId, rad.oppgavetypeEksternId, tx)
         val oppgavefelter = hentOppgavefelter(tx, rad.id, oppgavetypeObj)
         return Oppgave(
             eksternId = rad.oppgaveEksternId,
@@ -74,7 +78,7 @@ class AktivOppgaveOppslagPartisjonert(
             ).map { row ->
                 Oppgavefelt(
                     eksternId = row.string("ekstern_id"),
-                    område = "K9",
+                    område = oppgavetype.område.tilOmrådeEnum(),
                     listetype = row.boolean("liste_type"),
                     påkrevd = row.boolean("pakrevd"),
                     verdi = row.string("verdi"),

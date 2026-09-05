@@ -1,7 +1,8 @@
 package no.nav.k9.los.infrastruktur.pdl
 
-interface IPdlService {
-    suspend fun person(aktorId: String): PersonPdlResponse
+import no.nav.k9.los.infrastruktur.brukerkontekst.BrukerkontekstMedOmråde
 
-    suspend fun identifikator(fnummer: String): PdlResponse
+interface IPdlService {
+    suspend fun person(aktorId: String, brukerkontekst: BrukerkontekstMedOmråde): PersonPdlResponse
+    suspend fun identifikator(fnummer: String, brukerkontekst: BrukerkontekstMedOmråde): PdlResponse
 }

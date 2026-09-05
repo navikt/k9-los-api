@@ -24,6 +24,7 @@ import org.junit.jupiter.api.Test
 import org.koin.test.get
 import java.time.LocalDateTime
 import java.util.*
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 
 
 class K9PunsjTilLosIT : AbstractK9LosIntegrationTest() {
@@ -102,7 +103,7 @@ class K9PunsjTilLosIT : AbstractK9LosIntegrationTest() {
         eventHandler.prosesser(event2)
         eventHandler.prosesser(event3)
 
-        eventTilOppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(Fagsystem.PUNSJ, punsjId.toString()))
+        eventTilOppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(Fagsystem.PUNSJ, punsjId.toString(), område = Områder.K9))
 
         val oppgave = transactionalManager.transaction { tx -> oppgaveRepository.hentNyesteOppgaveForEksternIdHvisFinnes(tx, "K9", punsjId.toString()) }
         assertThat(oppgave!!.status).isEqualTo(Oppgavestatus.LUKKET)

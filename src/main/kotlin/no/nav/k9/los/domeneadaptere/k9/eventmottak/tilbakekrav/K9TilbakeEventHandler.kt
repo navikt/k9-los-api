@@ -11,6 +11,7 @@ import no.nav.k9.los.infrastruktur.utils.OpentelemetrySpanUtil
 import no.nav.k9.los.kodeverk.Fagsystem
 import org.jetbrains.annotations.VisibleForTesting
 import org.slf4j.LoggerFactory
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 
 
 class K9TilbakeEventHandler(
@@ -43,7 +44,7 @@ class K9TilbakeEventHandler(
     ) {
         EventHandlerMetrics.time("k9tilbake", "gjennomført") {
             transactionalManager.transaction { tx ->
-                val eventnøkkel = eventRepository.lagre(Fagsystem.K9TILBAKE, eksternId, eksternVersjon, event, tx)
+                val eventnøkkel = eventRepository.lagre(Fagsystem.K9TILBAKE, eksternId, eksternVersjon, event, Områder.fraFagsystem(Fagsystem.K9TILBAKE), tx)
                 val alleEventer = eventRepository.hentAlleEventerMedLås(eventnøkkel, tx)
 
                 if (feilRekkefølgeSjekker.sjekkFeilRekkefølge(alleEventer)) {

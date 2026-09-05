@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect
 import com.fasterxml.jackson.annotation.JsonFormat
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonTypeName
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.query.mapping.EksternFeltverdiOperator
 
 
@@ -19,7 +20,7 @@ import no.nav.k9.los.oppgaveuthenting.query.mapping.EksternFeltverdiOperator
 )
 @JsonTypeName("feltverdi")
 data class FeltverdiOppgavefilter (
-    val område: String?,
+    val område: Områder?,
     val kode: String,
     val operator: EksternFeltverdiOperator,
 

@@ -2,6 +2,7 @@ package no.nav.k9.los.lagretsok
 
 import no.nav.k9.los.kodeverk.PersonBeskyttelseType
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.OppgaveQuery
 import no.nav.k9.los.oppgaveuthenting.query.mapping.EksternFeltverdiOperator
@@ -11,6 +12,7 @@ import java.time.LocalDateTime
 class LagretSøk private constructor(
     val id: Long?,
     val lagetAv: Long,
+    val område: Områder,
     versjon: Long,
     tittel: String,
     beskrivelse: String,
@@ -78,6 +80,7 @@ class LagretSøk private constructor(
         return LagretSøk(
             id = null,
             lagetAv = saksbehandler.id ?: throw IllegalStateException("Saksbehandler må ha id"),
+            område = this.område,
             versjon = 1,
             tittel = tittel,
             beskrivelse = "",
@@ -87,38 +90,46 @@ class LagretSøk private constructor(
     }
 
     companion object {
-        fun defaultQuery(kode6: Boolean): OppgaveQuery = OppgaveQuery(
-            filtere = listOf(
-                FeltverdiOppgavefilter(
-                    område = null,
-                    kode = "oppgavestatus",
-                    operator = EksternFeltverdiOperator.IN,
-                    verdi = listOf(Oppgavestatus.AAPEN.kode, Oppgavestatus.VENTER.kode)
-                ),
-                FeltverdiOppgavefilter(
-                    område = null,
-                    kode = "personbeskyttelse",
-                    operator = EksternFeltverdiOperator.IN,
-                    verdi = listOf(if (kode6) PersonBeskyttelseType.KODE6.kode else PersonBeskyttelseType.UGRADERT.kode)
-                ),
-                FeltverdiOppgavefilter(
-                    område = "K9",
-                    kode = "ytelsestype",
-                    operator = EksternFeltverdiOperator.IN,
-                    verdi = emptyList()
+        fun defaultQuery(område: Områder, kode6: Boolean): OppgaveQuery {
+            return when (område) {
+                Områder.K9 -> OppgaveQuery(
+                    filtere = listOf(
+                        FeltverdiOppgavefilter(
+                            område = null,
+                            kode = "oppgavestatus",
+                            operator = EksternFeltverdiOperator.IN,
+                            verdi = listOf(Oppgavestatus.AAPEN.kode, Oppgavestatus.VENTER.kode)
+                        ),
+                        FeltverdiOppgavefilter(
+                            område = null,
+                            kode = "personbeskyttelse",
+                            operator = EksternFeltverdiOperator.IN,
+                            verdi = listOf(if (kode6) PersonBeskyttelseType.KODE6.kode else PersonBeskyttelseType.UGRADERT.kode)
+                        ),
+                        FeltverdiOppgavefilter(
+                            område = Områder.K9,
+                            kode = "ytelsestype",
+                            operator = EksternFeltverdiOperator.IN,
+                            verdi = emptyList()
+                        )
+                    ),
+                    order = emptyList()
                 )
-            ),
-            order = emptyList()
-        )
+
+                else -> throw IllegalStateException("Ikke implementert for område")
+            }
+        }
 
         // For nye søk som ikke er lagret ennå
         fun nyttSøk(
             nyttLagretSøk: NyttLagretSøkRequest,
             saksbehandler: Saksbehandler,
+            område: Områder,
         ): LagretSøk {
             return LagretSøk(
                 id = null,
                 lagetAv = saksbehandler.id ?: throw IllegalStateException("Saksbehandler må ha id"),
+                område = område,
                 versjon = 1,
                 tittel = nyttLagretSøk.tittel,
                 beskrivelse = "",
@@ -131,13 +142,14 @@ class LagretSøk private constructor(
         fun fraEksisterende(
             id: Long,
             lagetAv: Long,
+            område: Områder,
             versjon: Long,
             tittel: String,
             beskrivelse: String,
             sistEndret: LocalDateTime,
             query: OppgaveQuery = OppgaveQuery()
         ): LagretSøk {
-            return LagretSøk(id, lagetAv, versjon, tittel, beskrivelse, sistEndret, query)
+            return LagretSøk(id, lagetAv, område, versjon, tittel, beskrivelse, sistEndret, query)
         }
     }
 }
