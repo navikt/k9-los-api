@@ -72,17 +72,17 @@ object localSetup : KoinComponent {
                     mapOf(
                         "navident" to "Z123456",
                         "navn" to "Saksbehandler Sara",
-                        "epost" to "saksbehandler@nav.no",
+                        "epost" to "saksbehandler.sara@nav.no",
                     ),
                     mapOf(
                         "navident" to "Z167457",
-                        "navn" to "Lars Pokèmonsen",
-                        "epost" to "lars.monsen@nav.no",
+                        "navn" to "Saksbehandler Lars",
+                        "epost" to "saksbehandler.lars@nav.no",
                     ),
                     mapOf(
                         "navident" to "Z321457",
-                        "navn" to "Lord Edgar Hansen",
-                        "epost" to "the.lord@nav.no",
+                        "navn" to "Saksbehandler Edgar",
+                        "epost" to "saksbehandler.edgar@nav.no",
                     )
                 ).forEach { addSaksbehandler(it) }
             }
