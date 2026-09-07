@@ -54,24 +54,19 @@ internal fun Route.EventlagerApi() {
 
                 val eventerIkkeSensitive = when (fagsystem) {
                     Fagsystem.K9SAK -> {
-                        val eventliste = eventStrenger.map { LosObjectMapper.prettyInstance.readValue<K9SakEventDto>(it) }.toList()
-                        eventliste
+                        eventStrenger.map { LosObjectMapper.prettyInstance.readValue<K9SakEventDto>(it) }.toList()
                     }
                     Fagsystem.K9TILBAKE -> {
-                        val eventliste = eventStrenger.map { LosObjectMapper.prettyInstance.readValue<K9TilbakeEventDto>(it) }.toList()
-                        eventliste
+                        eventStrenger.map { LosObjectMapper.prettyInstance.readValue<K9TilbakeEventDto>(it) }.toList()
                     }
                     Fagsystem.K9KLAGE -> {
-                        val eventliste = eventStrenger.map { LosObjectMapper.prettyInstance.readValue<K9KlageEventDto>(it) }.toList()
-                        eventliste
+                        eventStrenger.map { LosObjectMapper.prettyInstance.readValue<K9KlageEventDto>(it) }.toList()
                     }
                     Fagsystem.PUNSJ -> {
-                        val eventliste = eventStrenger.map { LosObjectMapper.prettyInstance.readValue<K9PunsjEventDto>(it) }.toList()
-                        eventliste
+                        eventStrenger.map { LosObjectMapper.prettyInstance.readValue<K9PunsjEventDto>(it) }.toList()
                     }
                     Fagsystem.UNGSAK -> {
-                        val eventliste = eventStrenger.map { LosObjectMapper.prettyInstance.readValue<UngSakEventDto>(it) }.toList()
-                        eventliste
+                        eventStrenger.map { LosObjectMapper.prettyInstance.readValue<UngSakEventDto>(it) }.toList()
                     }
                     Fagsystem.UNGTILBAKE -> throw NotImplementedError("Fagsystem $fagsystem is not implemented yet")
                 }
