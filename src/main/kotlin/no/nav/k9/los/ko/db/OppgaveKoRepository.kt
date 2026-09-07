@@ -197,9 +197,8 @@ class OppgaveKoRepository(
                     exists (
                         select 1
                         from oppgaveko_saksbehandler os
-                        inner join saksbehandler s on s.epost = os.saksbehandler_epost
                         where os.oppgaveko_v3_id = ko.id
-                        and s.id = :saksbehandler_id
+                        and os.saksbehandler_id = :saksbehandler_id
                         )""",
                 mapOf(
                     "saksbehandler_id" to saksbehandlerId,
@@ -214,11 +213,15 @@ class OppgaveKoRepository(
     private fun hentKoSaksbehandlere(tx: TransactionalSession, oppgavekoV3Id: Long): List<String> {
         return tx.run(
             queryOf(
-                "SELECT saksbehandler_epost FROM OPPGAVEKO_SAKSBEHANDLER WHERE oppgaveko_v3_id = :oppgavekoV3Id",
+                """
+                SELECT s.epost FROM oppgaveko_saksbehandler os
+                INNER JOIN saksbehandler s ON s.id = os.saksbehandler_id
+                WHERE os.oppgaveko_v3_id = :oppgavekoV3Id
+                """,
                 mapOf(
                     "oppgavekoV3Id" to oppgavekoV3Id
                 )
-            ).map { row -> row.string("saksbehandler_epost") }.asList
+            ).map { row -> row.string("epost") }.asList
         )
     }
 
@@ -239,8 +242,8 @@ class OppgaveKoRepository(
             val insertedRows = tx.run(
                 queryOf(
                     """
-                    INSERT INTO OPPGAVEKO_SAKSBEHANDLER (oppgaveko_v3_id, saksbehandler_id, saksbehandler_epost) 
-                    SELECT :oppgavekoV3Id, :saksbehandlerId, epost FROM saksbehandler WHERE id = :saksbehandlerId
+                    INSERT INTO OPPGAVEKO_SAKSBEHANDLER (oppgaveko_v3_id, saksbehandler_id)
+                    SELECT :oppgavekoV3Id, :saksbehandlerId FROM saksbehandler WHERE id = :saksbehandlerId
                     """,
                     mapOf(
                         "oppgavekoV3Id" to oppgaveKo.id,

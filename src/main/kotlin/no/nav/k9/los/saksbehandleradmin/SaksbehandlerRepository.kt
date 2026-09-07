@@ -52,6 +52,7 @@ class SaksbehandlerRepository(
                     update saksbehandler
                     set navident = :navident,
                         navn = :navn,
+                        epost = :epost,
                         enhet = :enhet,
                         skjermet = :skjermet,
                         sist_oppdatert = :oppdatertTidspunkt
@@ -62,6 +63,7 @@ class SaksbehandlerRepository(
                         "id" to saksbehandler.id,
                         "navident" to saksbehandler.navident,
                         "navn" to saksbehandler.navn,
+                        "epost" to saksbehandler.epost.lowercase(getDefault()),
                         "enhet" to saksbehandler.enhet,
                         "skjermet" to erSkjermet,
                         "oppdatertTidspunkt" to oppdatertTidspunkt

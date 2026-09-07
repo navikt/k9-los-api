@@ -13,9 +13,13 @@ import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.saksbehandleradmin.TestSaksbehandlerRepository
 import no.nav.k9.los.infrastruktur.abac.IPepClient
+import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.ko.db.OppgaveKoRepository
 import no.nav.k9.los.saksbehandleradmin.OpprettSaksbehandler
+import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
 import org.junit.jupiter.api.Test
+import org.koin.test.get
+import java.time.LocalDateTime
 
 class OppgaveKoTest : AbstractK9LosIntegrationTest() {
 
@@ -94,6 +98,45 @@ class OppgaveKoTest : AbstractK9LosIntegrationTest() {
         assertThat(nyOppgaveKo.saksbehandlere).contains(saksbehandlerepost)
         assertThat(nyOppgaveKo.saksbehandlere).hasSize(1)
         assertThat(nyOppgaveKo.tittel).isEqualTo(nyTittel)
+    }
+
+    @Test
+    fun `epostbytte bevarer køtilknytning og bruker ny epost ved oppslag og kopiering`() = runBlocking {
+        val repository = OppgaveKoRepository(dataSource)
+        val saksbehandlerRepository = get<SaksbehandlerRepository>()
+        val saksbehandler = mockLeggTilSaksbehandler("gammel@nav.no")
+        val ko = repository.leggTil("Testkø", skjermet = false)
+        repository.endre(ko.copy(saksbehandlerIds = listOf(saksbehandler.id)), false)
+
+        saksbehandlerRepository.vedlikeholdSaksbehandler(
+            Saksbehandler(saksbehandler.id, saksbehandler.navident, saksbehandler.navn, "ny@nav.no", saksbehandler.enhet),
+            LocalDateTime.parse("2026-08-28T10:00:00")
+        )
+
+        val oppdatertKo = repository.hent(ko.id, false)
+        assertThat(oppdatertKo.saksbehandlerIds).isEqualTo(listOf(saksbehandler.id))
+        assertThat(oppdatertKo.saksbehandlere).isEqualTo(listOf("ny@nav.no"))
+        val koer = get<TransactionalManager>().transaction { tx ->
+            repository.hentKoerMedOppgittSaksbehandler(tx, saksbehandler.id, false, true)
+        }
+        assertThat(koer.map { it.id }).isEqualTo(listOf(ko.id))
+        assertThat(koer.single().saksbehandlere).isEqualTo(listOf("ny@nav.no"))
+
+        val kopi = repository.kopier(ko.id, "Kopi", taMedQuery = true, taMedSaksbehandlere = true, skjermet = false)
+        assertThat(kopi.saksbehandlerIds).isEqualTo(listOf(saksbehandler.id))
+        assertThat(kopi.saksbehandlere).isEqualTo(listOf("ny@nav.no"))
+    }
+
+    @Test
+    fun `ukjent saksbehandler ignoreres ved lagring av kotilknytning`() {
+        val repository = OppgaveKoRepository(dataSource)
+        val saksbehandler = mockLeggTilSaksbehandler("kjent@nav.no")
+        val ko = repository.leggTil("Testkø", skjermet = false)
+
+        val lagret = repository.endre(ko.copy(saksbehandlerIds = listOf(saksbehandler.id, Long.MAX_VALUE)), false)
+
+        assertThat(lagret.saksbehandlerIds).isEqualTo(listOf(saksbehandler.id))
+        assertThat(lagret.saksbehandlere).isEqualTo(listOf(saksbehandler.epost))
     }
 
     private fun mockLeggTilSaksbehandler(saksbehandlerepost: String): Saksbehandler {
