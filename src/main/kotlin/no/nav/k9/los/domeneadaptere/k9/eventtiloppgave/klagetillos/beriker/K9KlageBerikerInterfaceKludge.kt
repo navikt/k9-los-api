@@ -7,5 +7,5 @@ import java.util.*
 interface K9KlageBerikerInterfaceKludge {
     fun hentFraK9Klage(påklagdBehandlingUUID: UUID, antallForsøk: Int = 3): LosOpplysningerSomManglerHistoriskIKlageDto?
 
-    fun hentFraK9Sak(påklagdBehandlingUUID: UUID, antallForsøk: Int = 3): LosOpplysningerSomManglerIKlageDto?
+    fun hentFraK9Sak(saksnummer: String, antallForsøk: Int = 3): LosOpplysningerSomManglerIKlageDto?
 }

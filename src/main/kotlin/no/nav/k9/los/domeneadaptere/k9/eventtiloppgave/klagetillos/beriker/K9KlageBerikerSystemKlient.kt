@@ -41,11 +41,11 @@ class K9KlageBerikerSystemKlient(
     }
 
     @WithSpan
-    override fun hentFraK9Sak(påklagdBehandlingUUID: UUID, antallForsøk: Int): LosOpplysningerSomManglerIKlageDto? {
-        return runBlocking { hentFraK9SakSuspend(påklagdBehandlingUUID, antallForsøk) }
+    override fun hentFraK9Sak(saksnummer: String, antallForsøk: Int): LosOpplysningerSomManglerIKlageDto? {
+        return runBlocking { hentFraK9SakSuspend(saksnummer, antallForsøk) }
     }
 
-    private suspend fun hentFraK9SakSuspend(påklagdBehandlingUUID: UUID, antallForsøk: Int = 3): LosOpplysningerSomManglerIKlageDto? {
+    private suspend fun hentFraK9SakSuspend(saksnummer: String, antallForsøk: Int = 3): LosOpplysningerSomManglerIKlageDto? {
         val response = Retry.retry(
             tries = antallForsøk,
             operation = "berik",
@@ -53,8 +53,8 @@ class K9KlageBerikerSystemKlient(
             factor = 2.0,
             logger = log
         ) {
-            httpClient.get("${urlSak}/los/klage/berik") {
-                parameter("behandlingUuid", påklagdBehandlingUUID.toString())
+            httpClient.get("${urlSak}/los/klage/berik/saksnummer") {
+                parameter("saksnummer", saksnummer)
                 header(
                     //OBS! Dette kalles bare med system token, og skal ikke brukes ved saksbehandler token
                     HttpHeaders.Authorization, cachedAccessTokenClient.getClientCredentialsAccessToken(setOf(scopeSak)).asAuthoriationHeader()
