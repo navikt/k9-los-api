@@ -4,6 +4,8 @@ import no.nav.ung.kodeverk.Fagsystem
 import no.nav.ung.kodeverk.hendelse.EventHendelse
 import no.nav.ung.sak.kontrakt.aksjonspunkt.AksjonspunktTilstandDto
 import no.nav.ung.sak.typer.Periode
+import no.nav.k9.los.forvaltning.SENSITIVE_FIELDS
+import no.nav.k9.los.forvaltning.SensitiveField
 import tools.jackson.databind.annotation.JsonDeserialize
 import tools.jackson.databind.annotation.JsonSerialize
 import tools.jackson.databind.ext.javatime.deser.LocalDateDeserializer
@@ -17,6 +19,7 @@ data class UngSakEventDto(
     val eksternId: UUID,
     val fagsystem: Fagsystem,
     val saksnummer: String,
+    @field:SensitiveField(SENSITIVE_FIELDS.AKTOR_ID)
     val aktørId: String,
 
     @JsonSerialize(using = ToStringSerializer::class)

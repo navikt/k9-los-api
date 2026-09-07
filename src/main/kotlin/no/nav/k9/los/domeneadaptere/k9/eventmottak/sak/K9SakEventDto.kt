@@ -11,6 +11,8 @@ import no.nav.k9.kodeverk.produksjonsstyring.MerknadType
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.EventHendelse
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.KodeverkDeserializer
 import no.nav.k9.los.domeneadaptere.eventlager.Fagsystem
+import no.nav.k9.los.forvaltning.SENSITIVE_FIELDS
+import no.nav.k9.los.forvaltning.SensitiveField
 import no.nav.k9.sak.kontrakt.aksjonspunkt.AksjonspunktTilstandDto
 import no.nav.k9.sak.typer.Periode
 import java.time.LocalDate
@@ -26,6 +28,7 @@ data class K9SakEventDto(
     val eksternId: UUID?,
     val fagsystem: Fagsystem,
     val saksnummer: String,
+    @field:SensitiveField(SENSITIVE_FIELDS.AKTOR_ID)
     val aktørId: String,
     val vedtaksdato: LocalDate?,
 
@@ -89,7 +92,9 @@ data class K9SakEventDto(
 
     val fagsakPeriode: Periode? = null,
 
+    @field:SensitiveField(SENSITIVE_FIELDS.AKTOR_ID)
     val pleietrengendeAktørId: String? = null,
+    @field:SensitiveField(SENSITIVE_FIELDS.AKTOR_ID)
     val relatertPartAktørId: String? = null,
     val aksjonspunktTilstander: List<AksjonspunktTilstandDto> = emptyList(),
     val nyeKrav: Boolean? = null,

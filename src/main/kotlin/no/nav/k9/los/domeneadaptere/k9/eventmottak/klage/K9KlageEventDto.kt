@@ -12,6 +12,8 @@ import no.nav.k9.klage.kontrakt.behandling.oppgavetillos.Aksjonspunkttilstand
 import no.nav.k9.klage.typer.AktørId
 import no.nav.k9.klage.typer.Periode
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.KodeverkDeserializer
+import no.nav.k9.los.forvaltning.SENSITIVE_FIELDS
+import no.nav.k9.los.forvaltning.SensitiveField
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
@@ -31,6 +33,7 @@ data class K9KlageEventDto(
     val behandlingstidFrist: LocalDate?,
 
     val saksnummer: String,
+    @field:SensitiveField(SENSITIVE_FIELDS.AKTOR_ID)
     val aktørId: String,
 
     @JsonSerialize(using = ToStringSerializer::class)
@@ -51,7 +54,9 @@ data class K9KlageEventDto(
     @JsonDeserialize(using = LocalDateTimeDeserializer::class)
     val opprettetBehandling: LocalDateTime,
     val fagsakPeriode: Periode?,
+    @field:SensitiveField(SENSITIVE_FIELDS.AKTOR_ID)
     val pleietrengendeAktørId: AktørId?,
+    @field:SensitiveField(SENSITIVE_FIELDS.AKTOR_ID)
     val relatertPartAktørId: AktørId?,
     val aksjonspunkttilstander: List<Aksjonspunkttilstand> = emptyList(),
 

@@ -42,7 +42,7 @@ class K9KlageEventHandler (
         val t0 = System.nanoTime()
 
         transactionalManager.transaction { tx ->
-            val eventnøkkel = eventRepository.lagre(Fagsystem.K9KLAGE, eksternId, eksternVersjon, event, Områder.fraFagsystem(Fagsystem.K9KLAGE), tx)
+            val eventnøkkel = eventRepository.lagre(Fagsystem.K9KLAGE, eksternId, eksternVersjon, event, tx)
             val alleEventer = eventRepository.hentAlleEventerMedLås(eventnøkkel, tx)
 
             if (feilRekkefølgeSjekker.sjekkFeilRekkefølge(alleEventer)) {

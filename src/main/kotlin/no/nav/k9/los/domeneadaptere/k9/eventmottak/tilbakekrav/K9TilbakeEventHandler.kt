@@ -44,7 +44,7 @@ class K9TilbakeEventHandler(
     ) {
         EventHandlerMetrics.time("k9tilbake", "gjennomført") {
             transactionalManager.transaction { tx ->
-                val eventnøkkel = eventRepository.lagre(Fagsystem.K9TILBAKE, eksternId, eksternVersjon, event, Områder.fraFagsystem(Fagsystem.K9TILBAKE), tx)
+                val eventnøkkel = eventRepository.lagre(Fagsystem.K9TILBAKE, eksternId, eksternVersjon, event, tx)
                 val alleEventer = eventRepository.hentAlleEventerMedLås(eventnøkkel, tx)
 
                 if (feilRekkefølgeSjekker.sjekkFeilRekkefølge(alleEventer)) {

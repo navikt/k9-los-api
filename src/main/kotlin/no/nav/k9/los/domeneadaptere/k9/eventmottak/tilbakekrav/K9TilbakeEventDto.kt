@@ -7,6 +7,8 @@ import com.fasterxml.jackson.databind.ser.std.ToStringSerializer
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.EventHendelse
+import no.nav.k9.los.forvaltning.SENSITIVE_FIELDS
+import no.nav.k9.los.forvaltning.SensitiveField
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
@@ -20,6 +22,7 @@ data class K9TilbakeEventDto(
     val eksternId: UUID?,
     val fagsystem: String,
     val saksnummer: String,
+    @field:SensitiveField(SENSITIVE_FIELDS.AKTOR_ID)
     val aktørId: String,
 
     val behandlingId: Long?, // fjernes etter overgang til eksternId

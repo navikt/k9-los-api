@@ -86,8 +86,7 @@ class HistorikkvaskTjeneste(
         val eventNøkkel = EventNøkkel(
             historikkvaskBestilling.fagsystem,
             historikkvaskBestilling.eksternId,
-            historikkvaskBestilling.eventlagerNøkkel,
-            Områder.fraFagsystem(historikkvaskBestilling.fagsystem)
+            historikkvaskBestilling.eventlagerNøkkel
         )
         val oppgavenøkkel = OppgaveNøkkelDto(
             historikkvaskBestilling.eksternId,
