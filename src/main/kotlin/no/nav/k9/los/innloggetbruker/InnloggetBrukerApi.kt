@@ -38,15 +38,15 @@ internal fun Route.InnloggetBrukerApi() {
                 }
                 val finnesISaksbehandlerTabell = saksbehandler != null
 
-                val autoritativeTilganger = pdpTilgangsskygge.observerOgReturnerAutoritative(token) {
-                    Tilganger(
-                        basis = pepClient.harBasisTilgang(),
-                        kode6 = pepClient.harTilgangTilKode6(),
-                        oppgavestyring = pepClient.erOppgaveStyrer(),
-                        reservering = pepClient.harTilgangTilReserveringAvOppgaver(),
-                        drift = pepClient.kanLeggeUtDriftsmelding(),
-                    )
-                }
+                val autoritativeTilganger = Tilganger(
+                    basis = pepClient.harBasisTilgang(),
+                    kode6 = pepClient.harTilgangTilKode6(),
+                    oppgavestyring = pepClient.erOppgaveStyrer(),
+                    reservering = pepClient.harTilgangTilReserveringAvOppgaver(),
+                    drift = pepClient.kanLeggeUtDriftsmelding(),
+                )
+                // Fire-and-forget: sammenligner mot sif-abac-pdp uten å påvirke svaret eller svartiden.
+                pdpTilgangsskygge.observer(token, autoritativeTilganger)
 
                 val innloggetBrukerDto = InnloggetBrukerDto(
                     token.getUsername(),

@@ -10,7 +10,7 @@ internal data class InnloggetAnsattK9V2Dto(
     val kanOppgavestyre: Boolean,
     val kanDrifte: Boolean,
 ) {
-    fun tilganger() = Tilganger(
+    fun tilTilganger() = Tilganger(
         basis = kanVeilede || k9SaksbehandlerTilgang.kanSaksbehandle,
         kode6 = kanBehandleKode6,
         oppgavestyring = kanOppgavestyre,

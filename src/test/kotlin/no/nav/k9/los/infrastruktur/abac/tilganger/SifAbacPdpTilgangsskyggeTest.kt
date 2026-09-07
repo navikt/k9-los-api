@@ -3,109 +3,103 @@ package no.nav.k9.los.infrastruktur.abac.tilganger
 import ch.qos.logback.classic.Logger
 import ch.qos.logback.classic.spi.ILoggingEvent
 import ch.qos.logback.core.read.ListAppender
-import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldNotContain
+import io.mockk.coEvery
 import io.mockk.mockk
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
+import no.nav.k9.los.infrastruktur.abac.ISifAbacPdpKlient
+import no.nav.k9.los.infrastruktur.abac.SifAbacPdpHttpException
 import no.nav.k9.los.infrastruktur.idtoken.IIdToken
 import org.junit.jupiter.api.Test
 import org.slf4j.LoggerFactory
-import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.time.Duration.Companion.seconds
 
 internal class SifAbacPdpTilgangsskyggeTest {
     private val token = mockk<IIdToken>()
-    private val alle = Tilganger(true, true, true, true, true)
-    private val ingen = Tilganger(false, false, false, false, false)
+    private val testTimeout = 2.seconds
+    private val alle = Tilganger(basis = true, kode6 = true, oppgavestyring = true, reservering = true, drift = true)
+    private val ingen = Tilganger(basis = false, kode6 = false, oppgavestyring = false, reservering = false, drift = false)
 
     @Test
-    fun `returnerer alltid dagens tilganger når PDP er enig`() = runTest {
-        val skygge = SifAbacPdpTilgangsskygge { PdpResultat.Suksess(alle) }
+    fun `logger hvilke tilgangstyper som avviker`() = runTest {
+        val skygge = skygge(this) { ingen.copy(drift = true) }
 
-        skygge.observerOgReturnerAutoritative(token) { alle } shouldBe alle
+        val logg = fangLogg {
+            skygge.observer(token, alle)
+        }
+
+        logg shouldBe "Avvik i skyggetilganger fra sif-abac-pdp: tilgangstyper=BASIS,KODE6,OPPGAVESTYRING,RESERVERING"
     }
 
     @Test
-    fun `returnerer alltid dagens tilganger når PDP er uenig i alle felt`() = runTest {
-        val skygge = SifAbacPdpTilgangsskygge { PdpResultat.Suksess(ingen) }
+    fun `logger at det ikke er avvik når PDP er enig`() = runTest {
+        val skygge = skygge(this) { alle }
 
         val logg = fangLogg {
-            skygge.observerOgReturnerAutoritative(token) { alle } shouldBe alle
+            skygge.observer(token, alle)
         }
-        skygge.finnAvvik(alle, PdpResultat.Suksess(ingen)).toList() shouldContainExactly listOf(
-            Tilgangstype.BASIS,
-            Tilgangstype.KODE6,
-            Tilgangstype.OPPGAVESTYRING,
-            Tilgangstype.RESERVERING,
-            Tilgangstype.DRIFT,
-        )
-        logg shouldBe "Avvik i skyggetilganger fra sif-abac-pdp: tilgangstyper=BASIS,KODE6,OPPGAVESTYRING,RESERVERING,DRIFT"
+
+        logg shouldBe "Ingen avvik i skyggetilganger fra sif-abac-pdp"
     }
 
     @Test
-    fun `returnerer alltid dagens tilganger ved PDP-feil`() = runTest {
-        val skygge = SifAbacPdpTilgangsskygge { PdpResultat.Feil("HTTP", 503) }
+    fun `gir opp skyggekallet etter timeout når PDP henger`() = runTest {
+        val skygge = skygge(this) { awaitCancellation() }
 
         val logg = fangLogg {
-            skygge.observerOgReturnerAutoritative(token) { ingen } shouldBe ingen
+            skygge.observer(token, alle)
         }
-        logg shouldBe "Skyggekall mot sif-abac-pdp feilet: feiltype=HTTP, status=503"
+
+        logg shouldBe "Skyggekall mot sif-abac-pdp brukte mer enn $testTimeout"
     }
 
     @Test
-    fun `returnerer alltid dagens tilganger når PDP-klienten kaster`() = runTest {
-        val skygge = SifAbacPdpTilgangsskygge { error("sensitiv feiltekst skal ikke logges") }
+    fun `logger feiltype og statuskode ved HTTP-feil`() = runTest {
+        val skygge = skygge(this) { throw SifAbacPdpHttpException(503, "hent-tilganger") }
 
         val logg = fangLogg {
-            skygge.observerOgReturnerAutoritative(token) { alle } shouldBe alle
+            skygge.observer(token, alle)
         }
+
+        logg shouldBe "Skyggekall mot sif-abac-pdp feilet: feiltype=SifAbacPdpHttpException, status=503"
+    }
+
+    @Test
+    fun `logger ikke feilmelding som kan inneholde sensitivt innhold`() = runTest {
+        val skygge = skygge(this) { error("sensitiv feiltekst") }
+
+        val logg = fangLogg {
+            skygge.observer(token, alle)
+        }
+
         logg shouldBe "Skyggekall mot sif-abac-pdp feilet: feiltype=IllegalStateException, status=ikke_tilgjengelig"
         logg.shouldNotContain("sensitiv feiltekst")
     }
 
-    @Test
-    fun `PDP kan aldri gi tilgang som dagens modell nekter`() = runTest {
-        val skygge = SifAbacPdpTilgangsskygge { PdpResultat.Suksess(alle) }
+    private fun skygge(scope: CoroutineScope, svar: suspend () -> Tilganger) = SifAbacPdpTilgangsskygge(
+        klient = mockk<ISifAbacPdpKlient> { coEvery { hentTilganger(any()) } coAnswers { svar() } },
+        skyggeScope = scope,
+        // Setter timeouten eksplisitt slik at testen ikke knytter seg til produksjonsdefaulten.
+        // Verdien er virtuell tid under runTest, så den koster ingenting i kjøretid.
+        timeout = testTimeout,
+    )
 
-        skygge.observerOgReturnerAutoritative(token) { ingen } shouldBe ingen
-    }
-
-    @Test
-    fun `starter PDP og dagens beregning parallelt og venter på begge`() = runTest {
-        val pdpStartet = AtomicBoolean(false)
-        val autoritativStartet = AtomicBoolean(false)
-        val skygge = SifAbacPdpTilgangsskygge {
-            pdpStartet.set(true)
-            while (!autoritativStartet.get()) delay(1)
-            PdpResultat.Suksess(alle)
-        }
-
-        val resultat = skygge.observerOgReturnerAutoritative(token) {
-            autoritativStartet.set(true)
-            while (!pdpStartet.get()) delay(1)
-            alle
-        }
-
-        resultat shouldBe alle
-        pdpStartet.get() shouldBe true
-        autoritativStartet.get() shouldBe true
-    }
-
-    @Test
-    fun `rapporterer avvik i drift`() {
-        val skygge = SifAbacPdpTilgangsskygge { PdpResultat.Suksess(ingen) }
-        val kunDrift = ingen.copy(drift = true)
-
-        skygge.finnAvvik(kunDrift, PdpResultat.Suksess(ingen)) shouldBe setOf(Tilgangstype.DRIFT)
-    }
-
-    private suspend fun fangLogg(block: suspend () -> Unit): String {
+    /**
+     * Skyggen har ingen returverdi å asserte på – logglinja er hele effekten. Kjører
+     * advanceUntilIdle() slik at den launch-ede skyggejobben er ferdig før vi leser loggen.
+     */
+    private fun TestScope.fangLogg(block: () -> Unit): String {
         val logger = LoggerFactory.getLogger(SifAbacPdpTilgangsskygge::class.java) as Logger
         val appender = ListAppender<ILoggingEvent>().apply { start() }
         logger.addAppender(appender)
         return try {
             block()
+            advanceUntilIdle()
             appender.list.single().formattedMessage
         } finally {
             logger.detachAppender(appender)

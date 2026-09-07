@@ -216,12 +216,6 @@
             <version>${ktor.version}</version>
         </dependency>
         <dependency>
-            <groupId>io.ktor</groupId>
-            <artifactId>ktor-client-mock-jvm</artifactId>
-            <version>${ktor.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>no.nav.helse</groupId>
             <artifactId>dusseldorf-oauth2-client</artifactId>
             <version>${dusseldorf-ktor.version}</version>
@@ -579,3 +573,4 @@
         </profile>
     </profiles>
 </project>
+

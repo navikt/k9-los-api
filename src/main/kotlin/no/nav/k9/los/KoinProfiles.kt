@@ -106,8 +106,8 @@ import javax.sql.DataSource
 fun selectModulesBasedOnProfile(application: Application, config: Configuration): List<Module> {
     return when (config.koinProfile()) {
         LOCAL -> listOf(common(application, config), localDevConfig())
-        PREPROD -> listOf(common(application, config), naisCommonConfig(config), preprodConfig(config))
-        PROD -> listOf(common(application, config), naisCommonConfig(config), prodConfig(config))
+        PREPROD -> listOf(common(application, config), naisCommonConfig(), preprodConfig(config))
+        PROD -> listOf(common(application, config), naisCommonConfig(), prodConfig(config))
     }
 }
 
@@ -645,7 +645,6 @@ fun common(app: Application, config: Configuration) = module {
 
 // Kun lokalt, og verdikjede
 fun localDevConfig() = module {
-    single<PdpTilgangsskygge> { IngenPdpTilgangsskygge }
     single<IAzureGraphService> {
         AzureGraphServiceLocal()
     }
@@ -679,7 +678,7 @@ fun localDevConfig() = module {
 }
 
 // For både preprod og prod
-fun naisCommonConfig(config: Configuration) = module {
+fun naisCommonConfig() = module {
     single {
         // Standard httpclient uten proxy. Er eksplisitt på engine for å unngå en uforutsett engine fra classpath.
         HttpClient(Java)
@@ -703,14 +702,6 @@ fun naisCommonConfig(config: Configuration) = module {
 
     single<IPepClient> {
         PepClient(azureGraphService = get(), get())
-    }
-    single<TilgangerKlient> {
-        SifAbacPdpTilgangerKlient(
-            configuration = get(),
-            accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
-            scope = "api://${if (config.koinProfile() == KoinProfile.PROD) "prod" else "dev"}-fss.k9saksbehandling.sif-abac-pdp/.default",
-            httpClient = get(),
-        )
     }
     single<PdpTilgangsskygge> { SifAbacPdpTilgangsskygge(get()) }
 }
