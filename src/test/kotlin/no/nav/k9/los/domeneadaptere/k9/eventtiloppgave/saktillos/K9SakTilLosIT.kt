@@ -153,7 +153,7 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         assertThat(antallIKø).isEqualTo(0)
 
         val resultat = oppgaveKøTjeneste.taReservasjonFraKø(
-            TestSaksbehandler.SARA.id!!,
+            TestSaksbehandler.SARA.id,
             kø.id,
             CoroutineRequestContext(mockk<IIdToken>(relaxed = true))
         )
@@ -432,7 +432,7 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
 
     private fun taReservasjonFra(kø: OppgaveKo, saksbehandler: Saksbehandler): OppgaveMuligReservert {
         return oppgaveKøTjeneste.taReservasjonFraKø(
-            saksbehandler.id!!,
+            saksbehandler.id,
             kø.id,
             CoroutineRequestContext(mockk<IIdToken>(relaxed = true))
         )

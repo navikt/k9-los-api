@@ -10,33 +10,35 @@ import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.OppgaveQuery
 import no.nav.k9.los.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
+import no.nav.k9.los.saksbehandleradmin.TestSaksbehandlerRepository
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.koin.test.get
+import no.nav.k9.los.saksbehandleradmin.OpprettSaksbehandler
 
 class LagretSøkRepositoryTest : AbstractK9LosIntegrationTest() {
 
     private lateinit var lagretSøkRepository: LagretSøkRepository
     private lateinit var saksbehandlerRepository: SaksbehandlerRepository
+    private lateinit var testSaksbehandlerRepository: TestSaksbehandlerRepository
     private lateinit var saksbehandler: Saksbehandler
 
     @BeforeEach
     fun setup() {
         lagretSøkRepository = get()
         saksbehandlerRepository = get()
+        testSaksbehandlerRepository = get()
 
         runBlocking {
-            saksbehandlerRepository.addSaksbehandler(
-                Saksbehandler(
-                    id = null,
+            saksbehandler = testSaksbehandlerRepository.opprettSaksbehandler(
+                OpprettSaksbehandler(
                     navident = "test",
                     navn = "Test Testersen",
                     epost = "test@nav.no",
                     enhet = null,
                 )
             )
-            saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedEpost("test@nav.no")!!
         }
     }
 
@@ -133,16 +135,14 @@ class LagretSøkRepositoryTest : AbstractK9LosIntegrationTest() {
     fun `skal kun hente søk som tilhører saksbehandleren`() {
         runBlocking {
             // Opprett en annen saksbehandler
-            saksbehandlerRepository.addSaksbehandler(
-                Saksbehandler(
-                    id = null,
+            val annenSaksbehandler = testSaksbehandlerRepository.opprettSaksbehandler(
+                OpprettSaksbehandler(
                     navident = "annen",
                     navn = "Annen Testersen",
                     epost = "annen@nav.no",
                     enhet = null,
                 )
             )
-            val annenSaksbehandler = saksbehandlerRepository.finnSaksbehandlerMedEpost("annen@nav.no")!!
 
             // Opprett søk for begge saksbehandlere
             val søkForFørsteSaksbehandler = LagretSøk.nyttSøk(

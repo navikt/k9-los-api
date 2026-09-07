@@ -113,7 +113,7 @@ fun Route.OppgaveKoApis() {
                 )!!
                 call.respond(
                     oppgaveKoTjeneste.hentKøerForSaksbehandler(
-                        saksbehandler.id!!,
+                        saksbehandler.id,
                         pepClient.harTilgangTilKode6()
                     )
                 )
@@ -213,7 +213,7 @@ fun Route.OppgaveKoApis() {
                     kotlin.coroutines.coroutineContext.idToken().getNavIdent()
                 )!!
                 val oppgaveMuligReservert = oppgaveKoTjeneste.taReservasjonFraKø(
-                    innloggetBrukerId = innloggetBruker.id!!,
+                    innloggetBrukerId = innloggetBruker.id,
                     oppgaveKoId = oppgavekøId.toLong(),
                     kotlin.coroutines.coroutineContext
                 )

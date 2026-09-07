@@ -7,7 +7,7 @@ data class SaksbehandlerForKolisteDto(
     val enhet: String?,
 ) {
     constructor(saksbehandler: no.nav.k9.los.saksbehandleradmin.Saksbehandler) : this(
-        id = saksbehandler.id!!,
+        id = saksbehandler.id,
         epost = saksbehandler.epost,
         navn = saksbehandler.navn,
         enhet = saksbehandler.enhet

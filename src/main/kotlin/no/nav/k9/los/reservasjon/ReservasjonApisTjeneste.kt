@@ -50,9 +50,9 @@ class ReservasjonApisTjeneste(
 
             reservasjonV3Tjeneste.forsøkReservasjonOgReturnerAktiv(
                 reservasjonsnøkkel = oppgave.reservasjonsnøkkel,
-                reserverForId = reserverForSaksbehandler.id!!,
+                reserverForId = reserverForSaksbehandler.id,
                 gyldigFra = reserverFra,
-                utføresAvId = innloggetBruker.id!!,
+                utføresAvId = innloggetBruker.id,
                 kommentar = oppgaveIdMedOverstyringDto.overstyrBegrunnelse,
                 gyldigTil = reserverFra.leggTilDagerHoppOverHelg(2),
                 tx = tx
@@ -95,7 +95,7 @@ class ReservasjonApisTjeneste(
         ).reservasjonsnøkkel
         val nyReservasjon = reservasjonV3Tjeneste.endreReservasjon(
             reservasjonsnøkkel = reservasjonsnøkkel,
-            endretAvBrukerId = innloggetBruker.id!!,
+            endretAvBrukerId = innloggetBruker.id,
             nyTildato = reserverTil?.let {
                 LocalDateTime.of(
                     reserverTil,
@@ -126,7 +126,7 @@ class ReservasjonApisTjeneste(
             reservasjonV3Tjeneste.forlengReservasjon(
                 reservasjonsnøkkel = reservasjonsnøkkel,
                 nyTildato = forlengReservasjonDto.nyTilDato,
-                utførtAvBrukerId = innloggetBruker.id!!,
+                utførtAvBrukerId = innloggetBruker.id,
                 kommentar = forlengReservasjonDto.kommentar
             )
 
@@ -153,8 +153,8 @@ class ReservasjonApisTjeneste(
         val nyReservasjon = reservasjonV3Tjeneste.overførReservasjon(
             reservasjonsnøkkel = reservasjonsnøkkel,
             reserverTil = LocalDateTime.now().leggTilDagerHoppOverHelg(1),
-            tilSaksbehandlerId = tilSaksbehandler.id!!,
-            utførtAvBrukerId = innloggetBruker.id!!,
+            tilSaksbehandlerId = tilSaksbehandler.id,
+            utførtAvBrukerId = innloggetBruker.id,
             kommentar = params.begrunnelse,
         )
         log.info("overførReservasjon: ${nyReservasjon.reservasjonV3}, utførtAv: $innloggetBruker., tilSaksbehandler: $tilSaksbehandler")
@@ -174,7 +174,7 @@ class ReservasjonApisTjeneste(
         val annulleringUtført = reservasjonV3Tjeneste.annullerReservasjonHvisFinnes(
             reservasjonsnøkkel = reservasjonsnøkkel,
             null,
-            annullertAvBrukerId = innloggetBruker.id!!
+            annullertAvBrukerId = innloggetBruker.id
         )
         log.info("annullerReservasjon, utførtAv: $innloggetBruker, $annulleringUtført")
     }
@@ -193,7 +193,7 @@ class ReservasjonApisTjeneste(
 
     suspend fun hentReserverteOppgaverForSaksbehandler(saksbehandler: Saksbehandler): List<ReservasjonV3Dto> {
         val reservasjonerMedOppgaver =
-            reservasjonV3Tjeneste.hentReservasjonerForSaksbehandler(saksbehandler.id!!)
+            reservasjonV3Tjeneste.hentReservasjonerForSaksbehandler(saksbehandler.id)
 
         return reservasjonerMedOppgaver.map { reservasjonMedOppgaver ->
             try {
@@ -244,7 +244,7 @@ class ReservasjonApisTjeneste(
                     ReservasjonDto(
                         reservertAvEpost = saksbehandler.epost,
                         reservertAvIdent = saksbehandler.navident!!,
-                        reservertAvId = saksbehandler.id!!,
+                        reservertAvId = saksbehandler.id,
                         reservertAvNavn = saksbehandler.navn,
                         saksnummer = oppgave.hentVerdi("saksnummer"), //TODO: Oppgaveagnostisk logikk. Løses antagelig ved å skrive om frontend i dette tilfellet
                         journalpostId = oppgave.hentVerdi("journalpostId"),

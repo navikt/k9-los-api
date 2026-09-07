@@ -45,26 +45,6 @@ class LagretSøkTest {
     }
 
     @Test
-    fun `opprettSøk skal kaste exception hvis saksbehandler mangler id`() {
-        val saksbehandlerUtenId = Saksbehandler(
-            id = null,
-            navident = "test",
-            navn = "Test Testersen",
-            epost = "test@nav.no",
-            enhet = null
-        )
-
-        val opprettLagretSøk = NyttLagretSøkRequest(
-            tittel = "Test søk",
-            query = LagretSøk.defaultQuery(false)
-        )
-
-        assertThrows<IllegalStateException> {
-            LagretSøk.nyttSøk(opprettLagretSøk, saksbehandlerUtenId)
-        }
-    }
-
-    @Test
     fun `endre skal oppdatere søk med nye verdier og inkrementere versjon`() {
         val opprettLagretSøk = NyttLagretSøkRequest(
             tittel = "Opprinnelig tittel",

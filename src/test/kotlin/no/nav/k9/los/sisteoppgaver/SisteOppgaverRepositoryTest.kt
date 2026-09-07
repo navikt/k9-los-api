@@ -10,16 +10,19 @@ import no.nav.k9.los.OppgaveTestDataBuilder
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
+import no.nav.k9.los.saksbehandleradmin.TestSaksbehandlerRepository
 import no.nav.k9.los.oppgaveuthenting.OppgaveNøkkelDto
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.koin.test.get
 import java.util.*
+import no.nav.k9.los.saksbehandleradmin.OpprettSaksbehandler
 
 class SisteOppgaverRepositoryTest : AbstractK9LosIntegrationTest() {
 
     private lateinit var sisteOppgaverRepository: SisteOppgaverRepository
     private lateinit var saksbehandlerRepository: SaksbehandlerRepository
+    private lateinit var testSaksbehandlerRepository: TestSaksbehandlerRepository
     private lateinit var transactionalManager: TransactionalManager
     private lateinit var saksbehandler: Saksbehandler
 
@@ -28,12 +31,12 @@ class SisteOppgaverRepositoryTest : AbstractK9LosIntegrationTest() {
         OppgaveTestDataBuilder()
         sisteOppgaverRepository = get()
         saksbehandlerRepository = get()
+        testSaksbehandlerRepository = get()
         transactionalManager = get()
 
         runBlocking {
-            saksbehandlerRepository.addSaksbehandler(
-                Saksbehandler(
-                    id = null,
+            testSaksbehandlerRepository.opprettSaksbehandler(
+                OpprettSaksbehandler(
                     navident = "test",
                     navn = "Test Testersen",
                     epost = "test@nav.no",

@@ -8,7 +8,6 @@ import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.azuregraph.IAzureGraphService
 import no.nav.k9.los.infrastruktur.idtoken.idToken
 import no.nav.k9.los.infrastruktur.rest.RequestContextService
-import no.nav.k9.los.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
 import org.koin.ktor.ext.inject
 import org.slf4j.LoggerFactory
@@ -18,6 +17,7 @@ internal fun Route.InnloggetBrukerApi() {
     val requestContextService by inject<RequestContextService>()
     val saksbehandlerRepository by inject<SaksbehandlerRepository>()
     val azureGraphService by inject<IAzureGraphService>()
+    val innloggetBrukerTjeneste by inject<InnloggetBrukerTjeneste>()
     val configuration by inject<Configuration>()
 
     val log = LoggerFactory.getLogger("InnloggetBrukerApi")
@@ -50,16 +50,12 @@ internal fun Route.InnloggetBrukerApi() {
                 if (!innloggetBrukerDto.kanSaksbehandle) {
                     log.warn("Saksbehandler med epost ${token.getUsername()} har ikke basistilgang, og kan derfor ikke bruke systemet")
                 }
-                if (finnesISaksbehandlerTabell) {
-                    //  oppdaterer saksbehandler i tabell etter at epost er lagt inn av avdelingsleder
-                    saksbehandlerRepository.addSaksbehandler(
-                        Saksbehandler(
-                            id = null,
-                            navident = saksbehandlerIdent,
-                            navn = token.getName(),
-                            epost = token.getUsername(),
-                            enhet = azureGraphService.hentEnhetForInnloggetBruker()
-                        )
+                if (saksbehandler != null) {
+                    innloggetBrukerTjeneste.vedlikeholdHvisUtdatert(
+                        saksbehandler = saksbehandler,
+                        navident = saksbehandlerIdent,
+                        navn = token.getName(),
+                        epost = token.getUsername()
                     )
                 }
                 call.respond(

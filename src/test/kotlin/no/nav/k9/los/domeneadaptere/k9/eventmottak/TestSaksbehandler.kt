@@ -3,8 +3,9 @@ package no.nav.k9.los.domeneadaptere.k9.eventmottak
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
+import no.nav.k9.los.saksbehandleradmin.OpprettSaksbehandler
 import no.nav.k9.los.saksbehandleradmin.Saksbehandler
-import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
+import no.nav.k9.los.saksbehandleradmin.TestSaksbehandlerRepository
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import org.koin.test.KoinTest
 import org.koin.test.get
@@ -14,9 +15,8 @@ class TestSaksbehandler: KoinTest {
 
     val datasource = get<DataSource>()
     val pepClient = mockk<IPepClient>(relaxed = true)
-    val repo = SaksbehandlerRepository(
+    val repo = TestSaksbehandlerRepository(
         datasource, pepClient = pepClient,
-        transactionalManager = get(),
     )
 
     companion object {
@@ -48,15 +48,22 @@ class TestSaksbehandler: KoinTest {
 
     fun init() {
         runBlocking {
-            repo.addSaksbehandler(SARA)
-            repo.addSaksbehandler(BIRGER_BESLUTTER)
+            repo.opprettSaksbehandler(SARA.tilOpprettSaksbehandler())
+            repo.opprettSaksbehandler(BIRGER_BESLUTTER.tilOpprettSaksbehandler())
             leggTilSkjermet()
         }
     }
 
     private suspend fun leggTilSkjermet() {
         coEvery { pepClient.harTilgangTilKode6() } returns true
-        repo.addSaksbehandler(KJERSTI_SKJERMET)
+        repo.opprettSaksbehandler(KJERSTI_SKJERMET.tilOpprettSaksbehandler())
         coEvery { pepClient.harTilgangTilKode6() } returns false
     }
+
+    private fun Saksbehandler.tilOpprettSaksbehandler() = OpprettSaksbehandler(
+        navident = navident!!,
+        navn = navn!!,
+        epost = epost,
+        enhet = enhet
+    )
 }

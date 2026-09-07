@@ -72,7 +72,6 @@ import no.nav.k9.los.saksbehandleradmin.SaksbehandlerAdminApis
 import no.nav.k9.los.sisteoppgaver.SisteOppgaverApi
 import no.nav.k9.los.søkeboks.SøkeboksApi
 import no.nav.k9.los.tjenester.mock.localSetup
-import no.nav.k9.los.uttrekk.MigrerUttrekkResultatJobb
 import no.nav.k9.los.uttrekk.UttrekkApi
 import no.nav.k9.los.uttrekk.UttrekkJobb
 import org.koin.core.Koin
@@ -279,7 +278,6 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
     val perEnhetService = koin.get<no.nav.k9.los.nøkkeltall.avdelingsleder.ferdigstilteperenhet.FerdigstiltePerEnhetService>()
     val nyeOgFerdigstilteService = koin.get<NyeOgFerdigstilteService>()
     val uttrekkJobb = koin.get<UttrekkJobb>()
-    val migrerUttrekkResultatJobb = MigrerUttrekkResultatJobb(koin.get())
 
     val k9sakBehandlingsoppfriskingJobb = K9sakBehandlingsoppfriskingJobb(
         reservasjonRepository = koin.get(),
@@ -474,15 +472,6 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
                 minutter = listOf(3), // vilkårlig valgt minutt tidlig i timen 5-6
             ) {
                 k9sakBehandlingsoppfriskingJobb.utfør()
-            }
-        )
-
-        add(
-            PlanlagtJobb.Oppstart(
-                navn = "MigrerUttrekkResultatFormat",
-                prioritet = lavPrioritet,
-            ) {
-                migrerUttrekkResultatJobb.kjør()
             }
         )
 

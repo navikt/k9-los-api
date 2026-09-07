@@ -27,18 +27,6 @@ internal fun Route.SaksbehandlerAdminApis() {
         }
     }
 
-    // TODO: slett når frontend har begynt å bruke nytt endepunkt
-    post("/saksbehandlere/sok") {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.erOppgaveStyrer()) {
-                val epost = call.receive<EpostDto>()
-                call.respond(saksbehandlerAdminTjeneste.søkSaksbehandler(epost))
-            } else {
-                call.respond(HttpStatusCode.Forbidden)
-            }
-        }
-    }
-
     post("/saksbehandlere/legg-til") {
         requestContextService.withRequestContext(call) {
             if (pepClient.erOppgaveStyrer()) {
