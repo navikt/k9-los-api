@@ -6,6 +6,7 @@ import com.zaxxer.hikari.HikariDataSource
 import com.zaxxer.hikari.metrics.prometheus.PrometheusMetricsTrackerFactory
 import io.ktor.server.application.*
 import no.nav.k9.los.Configuration
+import no.nav.k9.los.KoinProfile
 
 const val DB_POOL_SIZE = 6
 
@@ -30,8 +31,19 @@ fun createHikariConfig(jdbcUrl: String, username: String? = null, password: Stri
     }
 
 fun Application.hikariConfig(configuration: Configuration): HikariDataSource {
-    if (!configuration.migreringEtterOppstart) {
-        migrate(configuration)
+    if (configuration.koinProfile() == KoinProfile.LOCAL) {
+        log.info("Migrerer lokal database")
+        HikariDataSource(configuration.hikariConfig()).use { runMigration(it) }
+        return getDataSource(configuration)
     }
-    return getDataSource(configuration)
+
+    val dataSource = getDataSource(configuration)
+    try {
+        log.info("Verifiserer Flyway-historikk")
+        verifyMigrationHistory(dataSource, "SET ROLE \"${configuration.databaseName()}-${Role.User}\"")
+        return dataSource
+    } catch (error: Exception) {
+        dataSource.close()
+        throw error
+    }
 }

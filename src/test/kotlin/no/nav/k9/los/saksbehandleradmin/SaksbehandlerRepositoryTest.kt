@@ -4,7 +4,6 @@ import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.OppgaveTestDataBuilder
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
-import no.nav.k9.los.infrastruktur.idtoken.IdTokenLocal
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.reservasjon.ReservasjonV3Tjeneste
 import org.hamcrest.CoreMatchers.equalTo
@@ -21,6 +20,7 @@ class SaksbehandlerRepositoryTest : AbstractK9LosIntegrationTest() {
     fun `addSaksbehandler upserter uten a nullstille eksisterende felter`() {
         val saksbehandlerRepository = get<SaksbehandlerRepository>()
         val epost = "z999999@nav.no"
+        val oppdatertTidspunkt = LocalDateTime.parse("2026-08-28T10:00:00")
 
         runBlocking {
             // Saksbehandler får område via admin, og feltene vedlikeholdes ved innlogging
@@ -32,9 +32,11 @@ class SaksbehandlerRepositoryTest : AbstractK9LosIntegrationTest() {
                     navn = "Zed Saksbehandler",
                     epost = epost,
                     enhet = "9999",
-                    områder = listOf(Områder.K9)
+                    områder = listOf(Områder.K9),
+                    kode6 = false
                 ),
                 skjermet = false,
+                oppdatertTidspunkt = oppdatertTidspunkt,
             )
 
             // Simulerer admin-legg-til på eksisterende epost med kun område.
@@ -49,6 +51,7 @@ class SaksbehandlerRepositoryTest : AbstractK9LosIntegrationTest() {
         assertThat(lagret.navn, equalTo("Zed Saksbehandler"))
         assertThat(lagret.enhet, equalTo("9999"))
         assertThat(lagret.områder, equalTo(listOf(Områder.K9)))
+        assertThat(lagret.sistOppdatert, equalTo(oppdatertTidspunkt))
     }
 
     @Test
@@ -66,7 +69,8 @@ class SaksbehandlerRepositoryTest : AbstractK9LosIntegrationTest() {
                     ident,
                     ident + "@nav.no",
                     enhet = "1234",
-                    områder = listOf(Områder.K9)
+                    områder = listOf(Områder.K9),
+                    kode6 = false
                 ),
                 skjermet = false,
             )
@@ -81,7 +85,8 @@ class SaksbehandlerRepositoryTest : AbstractK9LosIntegrationTest() {
                     ident2,
                     ident2 + "@nav.no",
                     enhet = "1234",
-                    områder = listOf(Områder.K9)
+                    områder = listOf(Områder.K9),
+                    kode6 = false
                 ),
                 skjermet = false,
             )

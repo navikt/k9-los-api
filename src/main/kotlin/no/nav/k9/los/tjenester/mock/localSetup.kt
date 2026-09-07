@@ -46,7 +46,10 @@ val saksbehandlere = listOf(
         navn = "Saksbehandler Sara",
         epost = "saksbehandler@nav.no",
         enhet = "2830 NAV DRIFT",
-        områder = listOf(Områder.K9)
+        områder = listOf(Områder.K9,
+//            Områder.AKTIVITETSPENGER
+        ),
+        kode6 = false
     ),
     Saksbehandler(
         id = null,
@@ -54,15 +57,30 @@ val saksbehandlere = listOf(
         navn = "Lars Pokèmonsen",
         epost = "lars.monsen@nav.no",
         enhet = "2830 NAV DRIFT",
-        områder = listOf(Områder.K9)
+        områder = listOf(Områder.K9,
+//            Områder.AKTIVITETSPENGER
+        ),
+        kode6 = false
     ),
+//    Saksbehandler(
+//        id = null,
+//        navident = "A167457",
+//        navn = "Arild Aktivitetspenger",
+//        epost = "arild.aktivitetspenger@nav.no",
+//        enhet = "2830 NAV DRIFT",
+//        områder = listOf(
+//            Områder.AKTIVITETSPENGER
+//        ),
+//        kode6 = false
+//    ),
     Saksbehandler(
         id = null,
         navident = "Z321457",
         navn = "Lord Edgar Hansen",
         epost = "the.lord@nav.no",
         enhet = "2830 NAV DRIFT",
-        områder = listOf(Områder.K9)
+        områder = listOf(Områder.K9),
+        kode6 = false
     )
 )
 

@@ -7,9 +7,6 @@ import java.util.UUID
 
 class SifAbacPdpKlientAktivitetspenger : ISifAbacPdpKlient {
 
-    override suspend fun diskresjonskoderPerson(aktørId: AktørId): Set<Diskresjonskode> =
-        ikkeImplementert("diskresjonskoderPerson")
-
     override suspend fun diskresjonskoderSak(saksnummerDto: SaksnummerDto): Set<Diskresjonskode> =
         ikkeImplementert("diskresjonskoderSak")
 
@@ -17,14 +14,12 @@ class SifAbacPdpKlientAktivitetspenger : ISifAbacPdpKlient {
         action: Action,
         saksnummerDto: SaksnummerDto,
         saksbehandlersIdent: String,
-        saksbehandlersGrupper: Set<UUID>
     ): Boolean = ikkeImplementert("harTilgangTilSak(grupper)")
 
     override suspend fun harTilgangTilPersoner(
         action: Action,
         aktørIder: List<AktørId>,
         saksbehandlersIdent: String,
-        saksbehandlersGrupper: Set<UUID>
     ): Boolean = ikkeImplementert("harTilgangTilPersoner(grupper)")
 
     private fun ikkeImplementert(operasjon: String): Nothing =

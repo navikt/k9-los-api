@@ -13,7 +13,10 @@ import no.nav.k9.los.AbstractPostgresTest
 import no.nav.k9.los.KoinProfile
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.abac.PepClientLocal
+import no.nav.k9.los.infrastruktur.azuregraph.AzureGraphServiceLocal
+import no.nav.k9.los.infrastruktur.azuregraph.IAzureGraphService
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
+import no.nav.k9.los.områdeApi
 import no.nav.k9.los.oppgavedefinisjon.omraade.OmrådeRepository
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.saksbehandleradmin.Saksbehandler
@@ -21,12 +24,14 @@ import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
 import org.junit.jupiter.api.Test
 import org.koin.dsl.module
 import org.koin.ktor.plugin.Koin
+import java.time.Clock
+import kotlin.test.assertContains
 import kotlin.test.assertEquals
 
-class BrukersområderApiTest : AbstractPostgresTest() {
+class InnloggetBrukerApiTest : AbstractPostgresTest() {
 
     @Test
-    fun `returnerer innlogget brukers områder når bruker finnes på navident`() {
+    fun `returnerer alle områder PDP gir basistilgang til`() {
         val områdeRepository = OmrådeRepository(dataSource)
         områdeRepository.lagre(Områder.AKTIVITETSPENGER.eksternId)
 
@@ -42,7 +47,8 @@ class BrukersområderApiTest : AbstractPostgresTest() {
                     navn = "Saksbehandler Sara",
                     epost = "saksbehandler@nav.no",
                     enhet = "3450",
-                    områder = listOf(Områder.K9, Områder.AKTIVITETSPENGER)
+                    områder = listOf(Områder.K9, Områder.AKTIVITETSPENGER),
+                    kode6 = false
                 ),
                 skjermet = false,
             )
@@ -53,15 +59,17 @@ class BrukersområderApiTest : AbstractPostgresTest() {
                 testApp()
             }
 
-            val response = client.get("/brukersområder")
+            val response = client.get("/innlogget-bruker/områder")
 
             assertEquals(HttpStatusCode.OK, response.status)
-            assertEquals("[\"K9\",\"AKTIVITETSPENGER\"]", response.bodyAsText())
+            val bodyAsText = response.bodyAsText()
+            assertContains(bodyAsText, "AKTIVITETSPENGER")
+            assertContains(bodyAsText, "K9")
         }
     }
 
     @Test
-    fun `returnerer innlogget brukers områder når bruker kun finnes på epost`() {
+    fun `områdelisten er uavhengig av registrerte områder`() {
         val saksbehandlerRepository = saksbehandlerRepository()
 
         runBlocking {
@@ -73,15 +81,32 @@ class BrukersområderApiTest : AbstractPostgresTest() {
                 testApp()
             }
 
-            val response = client.get("/brukersområder")
+            val response = client.get("/innlogget-bruker/områder")
 
             assertEquals(HttpStatusCode.OK, response.status)
-            assertEquals("[\"K9\"]", response.bodyAsText())
+            assertEquals("[\"K9\",\"AKTIVITETSPENGER\"]", response.bodyAsText())
+        }
+    }
+
+    @Test
+    fun `områdespesifikt endepunkt returnerer innlogget bruker`() {
+        val saksbehandlerRepository = saksbehandlerRepository()
+        runBlocking {
+            saksbehandlerRepository.addSaksbehandler("saksbehandler@nav.no", Områder.K9)
+        }
+
+        testApplication {
+            application { testApp() }
+
+            val response = client.get("/k9/innlogget-bruker")
+
+            assertEquals(HttpStatusCode.OK, response.status)
+            val body = response.bodyAsText()
+            assertContains(body, "\"harBasisTilgang\":true")
         }
     }
 
     private fun saksbehandlerRepository(): SaksbehandlerRepository {
-        val pepClient = PepClientLocal()
         val områdeRepository = OmrådeRepository(dataSource)
         return SaksbehandlerRepository(
             dataSource = dataSource,
@@ -100,8 +125,9 @@ class BrukersområderApiTest : AbstractPostgresTest() {
                 module {
                     single { KoinProfile.LOCAL }
                     single<IPepClient> { PepClientLocal() }
-                    single { no.nav.k9.los.infrastruktur.abac.Gruppeoppsett() }
-                    single { no.nav.k9.los.infrastruktur.brukerkontekst.BrukerkontekstFactory(get(), lokaleTilganger = true) }
+                    single { no.nav.k9.los.infrastruktur.brukerkontekst.BrukerkontekstFactory(lokaleTilganger = true) }
+                    single<IAzureGraphService> { AzureGraphServiceLocal() }
+                    single { Clock.systemDefaultZone() }
                     single { OmrådeRepository(dataSource) }
                     single { TransactionalManager(dataSource) }
                     single {
@@ -111,13 +137,19 @@ class BrukersområderApiTest : AbstractPostgresTest() {
                             områdeRepository = get(),
                         )
                     }
+                    single { InnloggetBrukerTjeneste(get(), get(), get()) }
                 }
             )
         }
 
         routing {
-            route("brukersområder") {
-                BrukersområderApi()
+            route("innlogget-bruker/områder") {
+                InnloggetBrukersOmråderApi()
+            }
+            områdeApi {
+                route("innlogget-bruker") {
+                    InnloggetBrukerApi()
+                }
             }
         }
     }

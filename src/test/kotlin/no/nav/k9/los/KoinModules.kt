@@ -28,7 +28,6 @@ import no.nav.k9.los.driftsmelding.DriftsmeldingRepository
 import no.nav.k9.los.oppgavemottak.feltutlederforlagring.GyldigeFeltutledere
 import no.nav.k9.los.forvaltning.ForvaltningRepository
 import no.nav.k9.los.infrastruktur.abac.IPepClient
-import no.nav.k9.los.infrastruktur.abac.Gruppeoppsett
 import no.nav.k9.los.infrastruktur.brukerkontekst.BrukerkontekstFactory
 import no.nav.k9.los.infrastruktur.abac.PepClientLocal
 import no.nav.k9.los.infrastruktur.abac.cache.PepCacheRepository
@@ -37,6 +36,7 @@ import no.nav.k9.los.infrastruktur.azuregraph.AzureGraphServiceLocal
 import no.nav.k9.los.infrastruktur.azuregraph.IAzureGraphService
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.infrastruktur.metrikker.EventlagerNokkeltallRepository
+import no.nav.k9.los.innloggetbruker.InnloggetBrukerTjeneste
 import no.nav.k9.los.infrastruktur.pdl.IPdlService
 import no.nav.k9.los.infrastruktur.pdl.PdlServiceLocal
 import no.nav.k9.los.ko.KøpåvirkendeHendelse
@@ -88,6 +88,7 @@ import org.koin.core.module.Module
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
 import java.util.*
+import java.time.Clock
 import javax.sql.DataSource
 
 fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClientLocal()): Module = module {
@@ -121,9 +122,9 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     }
 
     single { dataSource }
+    single { Clock.systemDefaultZone() }
     single { pepClient }
-    single { Gruppeoppsett() }
-    single { BrukerkontekstFactory(get(), lokaleTilganger = true) }
+    single { BrukerkontekstFactory(lokaleTilganger = true) }
 
     single { DriftsmeldingRepository(get()) }
 
@@ -156,6 +157,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
         AzureGraphServiceLocal(
         ) as IAzureGraphService
     }
+    single { InnloggetBrukerTjeneste(get(), get(), get()) }
 
     single { TransactionalManager(dataSource = get()) }
 
@@ -558,7 +560,8 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
         LagretSøkTjeneste(
             saksbehandlerRepository = get(),
             lagretSøkRepository = get(),
-            oppgaveQueryService = get()
+            oppgaveQueryService = get(),
+            transactionalManager = get(),
         )
     }
 

@@ -46,6 +46,7 @@ class UttrekkJobbTest : AbstractK9LosIntegrationTest() {
                     epost = "test@nav.no",
                     enhet = null,
                     områder = listOf(Områder.K9),
+                    kode6 = false,
                 ),
                 skjermet = false,
             )
@@ -61,7 +62,7 @@ class UttrekkJobbTest : AbstractK9LosIntegrationTest() {
                         )
                     )
                 ),
-                saksbehandler,
+                saksbehandler, Områder.K9,
             )
             lagretSøkRepository.opprett(lagretSøk)
             testQuery = lagretSøk.query

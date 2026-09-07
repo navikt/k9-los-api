@@ -6,158 +6,128 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
-import no.nav.k9.los.infrastruktur.azuregraph.IAzureGraphService
-import no.nav.k9.los.infrastruktur.idtoken.IdToken
-import no.nav.k9.los.infrastruktur.abac.AktivitetspengerGrupper
-import no.nav.k9.los.infrastruktur.abac.Gruppeoppsett
-import no.nav.k9.los.infrastruktur.abac.K9Grupper
-import no.nav.k9.los.infrastruktur.abac.PepClient
 import no.nav.k9.los.infrastruktur.abac.Action
 import no.nav.k9.los.infrastruktur.abac.ISifAbacPdpKlient
+import no.nav.k9.los.infrastruktur.abac.PepClient
 import no.nav.k9.los.infrastruktur.abac.SifAbacPdpKlienter
+import no.nav.k9.los.infrastruktur.abac.tilganger.OmrådeTilganger
+import no.nav.k9.los.infrastruktur.azuregraph.IAzureGraphService
+import no.nav.k9.los.infrastruktur.idtoken.IdToken
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.Oppgave
 import org.junit.jupiter.api.Test
-import java.util.UUID
 
 class BrukerkontekstFactoryTest {
-    private val k9Saksbehandler = UUID.randomUUID()
-    private val aktivitetspengerLokalkontor = UUID.randomUUID()
-    private val aktivitetspengerNay = UUID.randomUUID()
-    private val k9Veileder = UUID.randomUUID()
-    private val k9Oppgavestyrer = UUID.randomUUID()
-    private val aktivitetspengerOppgavestyrer = UUID.randomUUID()
-    private val drift = UUID.randomUUID()
-    private val k9Kode6 = UUID.randomUUID()
-    private val aktivitetspengerKode6 = UUID.randomUUID()
 
-    private val oppsett = Gruppeoppsett(
-        k9 = K9Grupper(k9Saksbehandler, k9Veileder, k9Oppgavestyrer, k9Kode6),
-        aktivitetspenger = AktivitetspengerGrupper(
-            aktivitetspengerLokalkontor,
-            aktivitetspengerNay,
-            aktivitetspengerOppgavestyrer,
-            aktivitetspengerKode6
-        ),
-        drift = drift,
+    private fun tilganger(
+        harBasisTilgang: Boolean = false,
+        harTilgangTilKode6: Boolean = false,
+        erOppgavestyrer: Boolean = false,
+        harTilgangTilReserveringAvOppgaver: Boolean = false,
+        kanLeggeUtDriftsmelding: Boolean = false,
+    ) = OmrådeTilganger(
+        harBasisTilgang = harBasisTilgang,
+        harTilgangTilKode6 = harTilgangTilKode6,
+        erOppgavestyrer = erOppgavestyrer,
+        harTilgangTilReserveringAvOppgaver = harTilgangTilReserveringAvOppgaver,
+        kanLeggeUtDriftsmelding = kanLeggeUtDriftsmelding,
     )
 
     @Test
-    fun `bruker separate saksbehandlergrupper for K9 og AKTIVITETSPENGER`() {
+    fun `tilganger fra PDP gjelder per område`() {
         runBlocking {
-            val token = token(setOf(aktivitetspengerLokalkontor))
+            val kontekstK9 = kontekst(Områder.K9, tilganger())
+            val kontekstAktivitetspenger = kontekst(Områder.AKTIVITETSPENGER, tilganger(harBasisTilgang = true))
 
-            kontekst(token, Områder.K9).harBasisTilgang shouldBe false
-            kontekst(token, Områder.AKTIVITETSPENGER).harBasisTilgang shouldBe true
+            kontekstK9.harBasisTilgang shouldBe false
+            kontekstAktivitetspenger.harBasisTilgang shouldBe true
         }
     }
 
     @Test
-    fun `aktivitetspenger gir basistilgang for både lokalkontor og nay`() {
+    fun `alle tilganger mappes fra PDP per område`() {
         runBlocking {
-            val lokalkontorToken = token(setOf(aktivitetspengerLokalkontor))
-            val nayToken = token(setOf(aktivitetspengerNay))
-
-            kontekst(lokalkontorToken, Områder.AKTIVITETSPENGER).harBasisTilgang shouldBe true
-            kontekst(nayToken, Områder.AKTIVITETSPENGER).harBasisTilgang shouldBe true
-        }
-    }
-
-    @Test
-    fun `aktivitetspenger gir reserveringstilgang for både lokalkontor og nay`() {
-        runBlocking {
-            val lokalkontorToken = token(setOf(aktivitetspengerLokalkontor))
-            val nayToken = token(setOf(aktivitetspengerNay))
-
-            kontekst(lokalkontorToken, Områder.AKTIVITETSPENGER).harTilgangTilReserveringAvOppgaver shouldBe true
-            kontekst(nayToken, Områder.AKTIVITETSPENGER).harTilgangTilReserveringAvOppgaver shouldBe true
-        }
-    }
-
-    @Test
-    fun `bruker separate tokenbaserte grupper for alle roller`() {
-        runBlocking {
-            val aktivitetspengerGrupper = listOf(
-                aktivitetspengerLokalkontor,
-                aktivitetspengerNay,
-                aktivitetspengerOppgavestyrer,
-                aktivitetspengerKode6
+            val full = tilganger(
+                harBasisTilgang = true,
+                harTilgangTilKode6 = true,
+                erOppgavestyrer = true,
+                harTilgangTilReserveringAvOppgaver = true,
+                kanLeggeUtDriftsmelding = true,
             )
+            val kontekst = kontekst(Områder.AKTIVITETSPENGER, full)
 
-            for (gruppe in aktivitetspengerGrupper) {
-                val token = token(setOf(gruppe))
-                harRolle(gruppe, kontekst(token, Områder.K9)) shouldBe false
-                harRolle(gruppe, kontekst(token, Områder.AKTIVITETSPENGER)) shouldBe true
-            }
+            kontekst.harBasisTilgang shouldBe true
+            kontekst.harTilgangTilKode6 shouldBe true
+            kontekst.erOppgavestyrer shouldBe true
+            kontekst.harTilgangTilReserveringAvOppgaver shouldBe true
+            kontekst.harDriftstilgang shouldBe true
+
+            val tom = kontekst(Områder.K9, tilganger())
+            tom.harBasisTilgang shouldBe false
+            tom.harTilgangTilKode6 shouldBe false
+            tom.erOppgavestyrer shouldBe false
+            tom.harTilgangTilReserveringAvOppgaver shouldBe false
+            tom.harDriftstilgang shouldBe false
         }
     }
 
     @Test
-    fun `drift-gruppen er global og gir tilgang til driftsmeldinger uavhengig av område`() {
+    fun `driftstilgang er per område, og utenOmråde gir true hvis minst ett område kan drifte`() {
         runBlocking {
-            val token = token(setOf(drift))
+            val kunK9Drift = TestKontekstFactory.brukerkontekstUtenOmråde(
+                tilgangerPerOmråde = mapOf(
+                    Områder.K9 to tilganger(kanLeggeUtDriftsmelding = true),
+                    Områder.AKTIVITETSPENGER to tilganger(),
+                )
+            )
+            kunK9Drift.harDriftstilgangIEttEllerFlereOmråder shouldBe true
 
-            globalKontekst(token).kanLeggeUtDriftsmelding shouldBe true
+            val ingenDrift = TestKontekstFactory.brukerkontekstUtenOmråde(
+                tilgangerPerOmråde = mapOf(
+                    Områder.K9 to tilganger(),
+                    Områder.AKTIVITETSPENGER to tilganger(),
+                )
+            )
+            ingenDrift.harDriftstilgangIEttEllerFlereOmråder shouldBe false
         }
     }
 
     @Test
-    fun `bruker separat kode6-gruppe ved oppslag av annen saksbehandler`() {
+    fun `utenOmråde aggregerer tilganger på tvers av områder`() {
         runBlocking {
-            val azureGraphService = mockk<IAzureGraphService>()
-            coEvery { azureGraphService.hentGrupper("Z999999") } returns setOf(aktivitetspengerKode6)
-            val pepClient = pepClient(azureGraphService)
+            val kontekst = TestKontekstFactory.brukerkontekstUtenOmråde(
+                tilgangerPerOmråde = mapOf(
+                    Områder.K9 to tilganger(harTilgangTilKode6 = true, erOppgavestyrer = true),
+                    Områder.AKTIVITETSPENGER to tilganger(
+                        harBasisTilgang = true,
+                        harTilgangTilReserveringAvOppgaver = true,
+                    ),
+                )
+            )
+            kontekst.harBasisTilgangIEttEllerFlereOmråder shouldBe true
+            kontekst.områderMedBasisTilgang shouldBe listOf(Områder.AKTIVITETSPENGER)
+            kontekst.harKode6TilgangIEttEllerFlereOmråder shouldBe true
+            kontekst.erOppgavestyrerIEttEllerFlereOmråder shouldBe true
+            kontekst.harTilgangTilReserveringAvOppgaverIEttEllerFlereOmråder shouldBe true
 
-            pepClient.harSaksbehandlerTilgangTilKode6("Z999999", kontekst(token(emptySet()), Områder.K9)) shouldBe false
-            pepClient.harSaksbehandlerTilgangTilKode6("Z999999", kontekst(token(emptySet()), Områder.AKTIVITETSPENGER)) shouldBe true
+            val ingen = TestKontekstFactory.brukerkontekstUtenOmråde(
+                tilgangerPerOmråde = mapOf(
+                    Områder.K9 to tilganger(),
+                    Områder.AKTIVITETSPENGER to tilganger(),
+                )
+            )
+            ingen.harBasisTilgangIEttEllerFlereOmråder shouldBe false
+            ingen.områderMedBasisTilgang shouldBe emptyList()
+            ingen.harKode6TilgangIEttEllerFlereOmråder shouldBe false
+            ingen.erOppgavestyrerIEttEllerFlereOmråder shouldBe false
+            ingen.harTilgangTilReserveringAvOppgaverIEttEllerFlereOmråder shouldBe false
         }
     }
 
-    @Test
-    fun `bruker grupper fra kontekst uten Graph-oppslag ved oppgavetilgang`() {
-        runBlocking {
-            val azureGraphService = mockk<IAzureGraphService>()
-            val pdpKlient = mockk<ISifAbacPdpKlient>()
-            val pdpKlienter = mockk<SifAbacPdpKlienter>()
-            val oppgave = mockk<Oppgave>(relaxed = true)
-            val brukergrupper = setOf(k9Saksbehandler, k9Kode6)
-            val kontekst = kontekst(token(brukergrupper), Områder.K9)
-            every { pdpKlienter.forOmråde(Områder.K9) } returns pdpKlient
-            every { oppgave.oppgavetype.eksternId } returns "k9sak"
-            every { oppgave.hentVerdi("saksnummer") } returns "123"
-            coEvery {
-                pdpKlient.harTilgangTilSak(Action.read, any(), "Z123456", brukergrupper)
-            } returns true
-
-            PepClient(azureGraphService, pdpKlienter, oppsett)
-                .harTilgangTilOppgaveV3(oppgave, kontekst) shouldBe true
-
-            coVerify(exactly = 0) { azureGraphService.hentGrupper(any<String>()) }
-        }
-    }
-
-    private fun pepClient(azureGraphService: IAzureGraphService = mockk()) = PepClient(
-        azureGraphService = azureGraphService,
-        sifAbacPdpKlienter = mockk(),
-        gruppeoppsett = oppsett,
-    )
-
-    private fun token(grupper: Set<UUID>) = mockk<IdToken> {
-        coEvery { groups } returns grupper.map(UUID::toString).toSet()
+    private fun token() = mockk<IdToken> {
         coEvery { getNavIdent() } returns "Z123456"
     }
 
-    private fun harRolle(gruppe: UUID, brukerkontekst: BrukerkontekstMedOmråde): Boolean = when (gruppe) {
-        aktivitetspengerLokalkontor -> brukerkontekst.harTilgangTilReserveringAvOppgaver
-        aktivitetspengerNay -> brukerkontekst.harTilgangTilReserveringAvOppgaver
-        aktivitetspengerOppgavestyrer -> brukerkontekst.erOppgavestyrer
-        aktivitetspengerKode6 -> brukerkontekst.harTilgangTilKode6
-        else -> error("Ukjent testgruppe")
-    }
-
-    private fun kontekst(token: IdToken, område: Områder) =
-        TestKontekstFactory.brukerkontekst(område, token, gruppeoppsett = oppsett, lokaleTilganger = false)
-
-    private fun globalKontekst(token: IdToken) =
-        TestKontekstFactory.brukerkontekstUtenOmråde(token, gruppeoppsett = oppsett, lokaleTilganger = false)
+    private fun kontekst(område: Områder, tilganger: OmrådeTilganger) =
+        TestKontekstFactory.brukerkontekst(område, token(), tilganger)
 }

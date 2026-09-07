@@ -52,13 +52,13 @@ import no.nav.k9.los.forvaltning.forvaltningApis
 import no.nav.k9.los.forvaltning.forvaltningApisNy
 import no.nav.k9.los.infrastruktur.abac.cache.PepCacheService
 import no.nav.k9.los.infrastruktur.db.DB_AWARE_PARALLELISM
-import no.nav.k9.los.infrastruktur.db.migrate
 import no.nav.k9.los.infrastruktur.jobbplanlegger.Jobbplanlegger
 import no.nav.k9.los.infrastruktur.jobbplanlegger.PlanlagtJobb
 import no.nav.k9.los.infrastruktur.jobbplanlegger.Tidsvindu
 import no.nav.k9.los.infrastruktur.metrikker.EventlagerNokkeltallPrometheusCollector
-import no.nav.k9.los.innloggetbruker.BrukersområderApi
 import no.nav.k9.los.innloggetbruker.InnloggetBrukerApi
+import no.nav.k9.los.innloggetbruker.InnloggetBrukersOmråderApi
+import no.nav.k9.los.innloggetbruker.LegacyInnloggetBrukerApi
 import no.nav.k9.los.ko.KøpåvirkendeHendelse
 import no.nav.k9.los.ko.OppgaveKoApis
 import no.nav.k9.los.ko.OppgaveKoAvdelingslederApisNy
@@ -87,7 +87,6 @@ import no.nav.k9.los.sisteoppgaver.SisteOppgaverApiNy
 import no.nav.k9.los.søkeboks.SøkeboksApi
 import no.nav.k9.los.søkeboks.SøkeboksApiNy
 import no.nav.k9.los.tjenester.mock.localSetup
-import no.nav.k9.los.uttrekk.MigrerUttrekkResultatJobb
 import no.nav.k9.los.uttrekk.UttrekkApi
 import no.nav.k9.los.uttrekk.UttrekkApiNy
 import no.nav.k9.los.uttrekk.UttrekkJobb
@@ -264,7 +263,7 @@ private fun Route.legacyApi() {
                 SaksbehandlerAdminApis()
             }
 
-            InnloggetBrukerApi()
+            LegacyInnloggetBrukerApi()
 
             route("ny-oppgavestyring") {
                 route("ko") { OppgaveKoApis() }
@@ -297,9 +296,9 @@ private fun Route.legacyApi() {
 
 private fun Route.apiUnderConstruction() {
     route("driftsmeldinger", { tags("Driftsmelding") }) { DriftsmeldingerApis() }
-    route("brukersområder") { BrukersområderApi() }
+    route("innlogget-bruker/områder") { InnloggetBrukersOmråderApi() }
     områdeApi {
-        route("innloggetbruker") { InnloggetBrukerApi() }
+        route("innlogget-bruker") { InnloggetBrukerApi() }
         swaggerUI("openapi.json")
         route("openapi.json") { openApi() }
 
@@ -344,7 +343,6 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
         koin.get<no.nav.k9.los.nøkkeltall.avdelingsleder.ferdigstilteperenhet.FerdigstiltePerEnhetService>()
     val nyeOgFerdigstilteService = koin.get<NyeOgFerdigstilteService>()
     val uttrekkJobb = koin.get<UttrekkJobb>()
-    val migrerUttrekkResultatJobb = MigrerUttrekkResultatJobb(koin.get())
 
     val k9sakBehandlingsoppfriskingJobb = K9sakBehandlingsoppfriskingJobb(
         reservasjonRepository = koin.get(),
@@ -359,17 +357,6 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
     val heleTiden = Tidsvindu.alleDager()
 
     val planlagteJobber = buildSet {
-        if (configuration.migreringEtterOppstart) {
-            add(
-                PlanlagtJobb.Oppstart(
-                    navn = "FlywayMigrering",
-                    prioritet = 0,
-                ) {
-                    migrate(configuration)
-                }
-            )
-        }
-
         add(
             PlanlagtJobb.Oppstart(
                 navn = "Setup",
@@ -541,15 +528,6 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
                 minutter = listOf(3), // vilkårlig valgt minutt tidlig i timen 5-6
             ) {
                 k9sakBehandlingsoppfriskingJobb.utfør()
-            }
-        )
-
-        add(
-            PlanlagtJobb.Oppstart(
-                navn = "MigrerUttrekkResultatFormat",
-                prioritet = lavPrioritet,
-            ) {
-                migrerUttrekkResultatJobb.kjør()
             }
         )
 

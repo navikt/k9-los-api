@@ -25,14 +25,14 @@ internal fun Route.ReservasjonApis() {
         medBrukerkontekst { bruker ->
             val skjermet = bruker.harTilgangTilKode6
             if (bruker.harTilgangTilReserveringAvOppgaver) {
-                val oppgaveIdMedOverstyringDto = call.receive<OppgaveIdMedOverstyringDto>()
+                val (oppgaveNøkkel) = call.receive<OppgaveNøkkelWrapperDto>()
                 val navident = bruker.navIdent
                 val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedIdent(navident, skjermet)
                     ?: throw IllegalStateException("Fant ikke saksbehandler $navident ved forsøk på å reservasjon av oppgave")
 
                 try {
-                    log.info("Forsøker å ta reservasjon direkte på ${oppgaveIdMedOverstyringDto.oppgaveNøkkel.oppgaveEksternId} for ${innloggetBruker.navident}")
-                    val oppgave = reservasjonApisTjeneste.reserverOppgave(innloggetBruker, oppgaveIdMedOverstyringDto, skjermet, bruker.område)
+                    log.info("Forsøker å ta reservasjon direkte på ${oppgaveNøkkel.oppgaveEksternId} for ${innloggetBruker.navident}")
+                    val oppgave = reservasjonApisTjeneste.reserverOppgave(innloggetBruker, oppgaveNøkkel, skjermet, bruker.område)
                     call.respond(oppgave)
                 } catch (e: ManglerTilgangException) {
                     call.respond(HttpStatusCode.Forbidden, e.message!!)

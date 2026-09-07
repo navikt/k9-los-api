@@ -8,7 +8,6 @@ internal fun authorizationHeader(
     audience: String = "k9-los-api",
     username: String = "Saksbehandler",
     navIdent : String = "Z000000",
-    groups: List<UUID>? = null,
     clientAuthenticationMode: Azure.ClientAuthenticationMode = Azure.ClientAuthenticationMode.CERTIFICATE) = "${UUID.randomUUID()}".let { uuid -> Azure.V2_0.generateJwt(
     clientId = clientId,
     audience = audience,
@@ -18,7 +17,6 @@ internal fun authorizationHeader(
         "aio" to uuid,
         "preferred_username" to username,
         "name" to "$username Nordmann",
-        "groups" to (groups ?: listOf(UUID.fromString(uuid))),
         "tid" to uuid,
         "uti" to uuid,
         "oid" to uuid,

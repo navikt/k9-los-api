@@ -15,7 +15,6 @@ import no.nav.k9.los.infrastruktur.abac.cache.PepCache
 import no.nav.k9.los.infrastruktur.abac.cache.PepCacheRepository
 import no.nav.k9.los.infrastruktur.abac.cache.TestRepository
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
-import no.nav.k9.los.infrastruktur.idtoken.IdTokenLocal
 import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.kodeverk.PersonBeskyttelseType
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
@@ -760,7 +759,8 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
                 ident,
                 ident + "@nav.no",
                 enhet = "1234",
-                områder = listOf(Områder.K9)
+                områder = listOf(Områder.K9),
+                false
             ),
             skjermet = false,
         )

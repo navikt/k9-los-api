@@ -42,7 +42,7 @@ internal fun Route.EventlagerApi() {
         }
     }) {
         medBrukerkontekstUtenOmråde { bruker ->
-            if (bruker.kanLeggeUtDriftsmelding) {
+            if (bruker.harDriftstilgangIEttEllerFlereOmråder) {
                 val fagsystem = Fagsystem.fraParameter(call.parameters["fagsystem"]!!)
                 val eksternId = call.parameters["eksternId"]!!
 

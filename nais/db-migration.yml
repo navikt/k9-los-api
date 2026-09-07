@@ -1,0 +1,35 @@
+apiVersion: nais.io/v1
+kind: Naisjob
+metadata:
+  name: k9-los-api-db-migration
+  namespace: k9saksbehandling
+  labels:
+    team: k9saksbehandling
+spec:
+  image: {{ image }}
+  command:
+    - java
+    - -cp
+    - /app/app.jar:/app/lib/*
+    - no.nav.k9.los.infrastruktur.db.DatabaseMigrationKt
+  backoffLimit: 0
+  restartPolicy: Never
+  ttl: 24h
+  resources:
+    limits:
+      memory: 1Gi
+    requests:
+      cpu: 200m
+      memory: 512Mi
+  observability:
+    logging:
+      destinations:
+        - id: loki
+        - id: elastic
+  vault:
+    enabled: true
+  env:
+    - name: DB_URL
+      value: {{ db_url }}
+    - name: DB_VAULT_MOUNTPATH
+      value: {{ db_vault_mountpath }}
