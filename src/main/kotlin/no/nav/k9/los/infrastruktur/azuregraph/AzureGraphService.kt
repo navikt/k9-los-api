@@ -93,25 +93,20 @@ open class AzureGraphService(
 
             håndterResultat(response)
         }
-        return try {
-            val officeLocation = if (onBehalfOf != null) {
-                LosObjectMapper.instance.readValue<OfficeLocation>(json).officeLocation
-            } else {
-                val result = LosObjectMapper.instance.readValue<OfficeLocationFilterResult>(json).value.also {
-                    if (it.size > 1) log.warn("Flere enn 1 treff på ident")
-                }
-                if (result.isEmpty()) {
-                    log.warn("Fant ingen treff på enhet for saksbehandler $brukernavn, bruker tom streng som enhet")
-                    ""
-                } else {
-                    result.first().officeLocation
-                }
+        val officeLocation = if (onBehalfOf != null) {
+            LosObjectMapper.instance.readValue<OfficeLocation>(json).officeLocation
+        } else {
+            val result = LosObjectMapper.instance.readValue<OfficeLocationFilterResult>(json).value.also {
+                if (it.size > 1) log.warn("Flere enn 1 treff på ident")
             }
-            return officeLocation
-        } catch (e: Exception) {
-            log.warn("Feilet i oppslag av enhet for saksbehandler $brukernavn, bruker tom streng som enhet", e)
-            ""
+            if (result.isEmpty()) {
+                log.warn("Fant ingen treff på enhet for saksbehandler $brukernavn, bruker tom streng som enhet")
+                ""
+            } else {
+                result.first().officeLocation
+            }
         }
+        return officeLocation
     }
 
     override suspend fun hentGrupperForSaksbehandler(saksbehandlerIdent: String): Set<UUID> {
@@ -221,6 +216,5 @@ open class AzureGraphService(
         } ?: cachedAccessTokenClient.getClientCredentialsAccessToken(setOf("https://graph.microsoft.com/.default"))
     }
 }
-
 
 
