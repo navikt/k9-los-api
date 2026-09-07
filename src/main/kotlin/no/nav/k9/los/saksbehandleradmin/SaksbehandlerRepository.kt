@@ -24,7 +24,7 @@ class SaksbehandlerRepository(
                 val saksbehandlerId = tx.run(
                     queryOf(
                         """
-                        insert into saksbehandler as k (epost, skjermet)
+                        insert into saksbehandler (epost, skjermet)
                         values (:epost, :skjermet)
                         returning id
                      """,
