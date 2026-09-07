@@ -4,6 +4,7 @@ import kotlinx.coroutines.CancellationException
 import no.nav.k9.los.infrastruktur.azuregraph.IAzureGraphService
 import no.nav.k9.los.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
+import org.postgresql.util.PSQLException
 import org.slf4j.LoggerFactory
 import java.time.Clock
 import java.time.LocalDateTime
@@ -36,15 +37,25 @@ class InnloggetBrukerTjeneste(
             return
         }
 
-        saksbehandlerRepository.vedlikeholdSaksbehandler(
-            Saksbehandler(
-                id = saksbehandler.id,
-                navident = navident,
-                navn = navn,
-                epost = epost,
-                enhet = enhet
-            ),
-            oppdatertTidspunkt = nå
-        )
+        try {
+            saksbehandlerRepository.vedlikeholdSaksbehandler(
+                Saksbehandler(
+                    id = saksbehandler.id,
+                    navident = navident,
+                    navn = navn,
+                    epost = epost,
+                    enhet = enhet
+                ),
+                oppdatertTidspunkt = nå
+            )
+        } catch (e: PSQLException) {
+            if (e.sqlState != "23505" || e.serverErrorMessage?.constraint != "saksbehandler_epost_key") {
+                throw e
+            }
+            log.warn(
+                "E-postkonflikt ved vedlikehold av saksbehandler med id={}. Krever manuell opprydding. Innlogging fortsetter uten vedlikehold",
+                saksbehandler.id
+            )
+        }
     }
 }

@@ -1,9 +1,13 @@
 package no.nav.k9.los.saksbehandleradmin
 
+import io.mockk.coEvery
+import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.OppgaveTestDataBuilder
+import no.nav.k9.los.infrastruktur.azuregraph.IAzureGraphService
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
+import no.nav.k9.los.innloggetbruker.InnloggetBrukerTjeneste
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.reservasjon.ReservasjonV3Tjeneste
 import org.hamcrest.CoreMatchers.equalTo
@@ -12,7 +16,9 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.koin.test.get
 import org.postgresql.util.PSQLException
+import java.time.Clock
 import java.time.LocalDateTime
+import java.time.ZoneOffset
 
 class SaksbehandlerRepositoryTest : AbstractK9LosIntegrationTest() {
     @Test
@@ -88,6 +94,52 @@ class SaksbehandlerRepositoryTest : AbstractK9LosIntegrationTest() {
         assertThat(uendret.enhet, equalTo(opprinnelig.enhet))
         assertThat(uendret.sistOppdatert, equalTo(opprinnelig.sistOppdatert))
         assertThat(repository.finnSaksbehandlerMedId(annen.id)!!.epost, equalTo(annen.epost))
+    }
+
+    @Test
+    fun `vedlikehold fortsetter etter opprydding av epostkonflikt`() = runBlocking {
+        val repository = get<SaksbehandlerRepository>()
+        val opprinnelig = get<TestSaksbehandlerRepository>().opprettSaksbehandler(
+            OpprettSaksbehandler("Z123456", "Gammelt navn", "x@nav.no", "1234")
+        )
+        val duplikatId = repository.opprettSaksbehandler("y@nav.no")
+        val duplikat = repository.finnSaksbehandlerMedId(duplikatId)!!
+        val tidspunkt = LocalDateTime.parse("2026-08-28T10:00:00")
+        val graph = mockk<IAzureGraphService>()
+        coEvery { graph.hentEnhetForInnloggetBruker() } returns "3450"
+        val tjeneste = InnloggetBrukerTjeneste(
+            repository, graph, Clock.fixed(tidspunkt.toInstant(ZoneOffset.UTC), ZoneOffset.UTC)
+        )
+
+        tjeneste.vedlikeholdHvisUtdatert(opprinnelig, "Z123456", "Nytt navn", "y@nav.no")
+
+        listOf(opprinnelig, duplikat).forEach { før ->
+            val etter = repository.finnSaksbehandlerMedId(før.id)!!
+            assertThat(etter.id, equalTo(før.id))
+            assertThat(etter.epost, equalTo(før.epost))
+            assertThat(etter.navident, equalTo(før.navident))
+            assertThat(etter.navn, equalTo(før.navn))
+            assertThat(etter.enhet, equalTo(før.enhet))
+            assertThat(etter.sistOppdatert, equalTo(før.sistOppdatert))
+        }
+
+        dataSource.connection.use { connection ->
+            connection.prepareStatement("delete from saksbehandler where id = ?").use { statement ->
+                statement.setLong(1, duplikatId)
+                assertThat(statement.executeUpdate(), equalTo(1))
+            }
+        }
+        tjeneste.vedlikeholdHvisUtdatert(
+            repository.finnSaksbehandlerMedId(opprinnelig.id)!!, "Z123456", "Nytt navn", "y@nav.no"
+        )
+
+        val oppdatert = repository.finnSaksbehandlerMedId(opprinnelig.id)!!
+        assertThat(oppdatert.id, equalTo(opprinnelig.id))
+        assertThat(oppdatert.epost, equalTo("y@nav.no"))
+        assertThat(oppdatert.navident, equalTo("Z123456"))
+        assertThat(oppdatert.navn, equalTo("Nytt navn"))
+        assertThat(oppdatert.enhet, equalTo("3450"))
+        assertThat(oppdatert.sistOppdatert, equalTo(tidspunkt))
     }
 
     @Test

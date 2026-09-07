@@ -6,6 +6,10 @@ import no.nav.k9.los.infrastruktur.azuregraph.IAzureGraphService
 import no.nav.k9.los.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Assertions.assertSame
+import org.junit.jupiter.api.assertThrows
+import org.postgresql.util.PSQLException
+import org.postgresql.util.ServerErrorMessage
 import java.time.Clock
 import java.time.LocalDateTime
 import java.time.ZoneOffset
@@ -63,6 +67,39 @@ class InnloggetBrukerTjenesteTest {
         tjeneste.vedlikeholdHvisUtdatert(saksbehandler(nå.minusDays(2)), "Z123456", "Saksbehandler Sara", "ny.epost@nav.no")
 
         coVerify(exactly = 0) { repository.vedlikeholdSaksbehandler(any(), any()) }
+    }
+
+    @Test
+    fun `epostkonflikt avbryter ikke innlogging og vedlikehold forsokes igjen`() = runBlocking {
+        coEvery { azureGraphService.hentEnhetForInnloggetBruker() } returns "3450"
+        coEvery { repository.vedlikeholdSaksbehandler(any(), any()) } throws
+            PSQLException(ServerErrorMessage("C23505\u0000nsaksbehandler_epost_key\u0000"))
+        val opprinnelig = saksbehandler(null)
+
+        repeat(2) {
+            tjeneste.vedlikeholdHvisUtdatert(opprinnelig, "Z123456", "Saksbehandler Sara", "ny.epost@nav.no")
+        }
+
+        coVerify(exactly = 2) { repository.vedlikeholdSaksbehandler(match { it.id == opprinnelig.id }, nå) }
+    }
+
+    @Test
+    fun `andre databasefeil kastes videre`() = runBlocking {
+        coEvery { azureGraphService.hentEnhetForInnloggetBruker() } returns "3450"
+        listOf(
+            "23505" to "saksbehandler_id_key",
+            "23503" to "saksbehandler_epost_key",
+            "23505" to null
+        ).forEach { (sqlState, constraint) ->
+            val feil = PSQLException(ServerErrorMessage("C$sqlState\u0000" + (constraint?.let { "n$it\u0000" } ?: "")))
+            coEvery { repository.vedlikeholdSaksbehandler(any(), any()) } throws feil
+
+            val kastet = assertThrows<PSQLException> {
+                tjeneste.vedlikeholdHvisUtdatert(saksbehandler(null), "Z123456", "Saksbehandler Sara", "ny.epost@nav.no")
+            }
+
+            assertSame(feil, kastet)
+        }
     }
 
     private fun saksbehandler(sistOppdatert: LocalDateTime?) = Saksbehandler(
