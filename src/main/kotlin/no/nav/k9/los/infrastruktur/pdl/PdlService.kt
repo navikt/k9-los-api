@@ -56,7 +56,7 @@ class PdlService(
             mapOf("ident" to aktorId)
         )
 
-        val saksbehandlerIdent = azureGraphService.hentIdentTilInnloggetBruker()
+        val saksbehandlerIdent = coroutineContext.idToken().getNavIdent()
         val cacheKey = AktørIdTilPersonCacheKey(saksbehandlerIdent, aktorId)
         val cachedObject = aktørIdTilPersonCache.get(cacheKey)
         if (cachedObject != null) {
@@ -130,7 +130,7 @@ class PdlService(
             )
         )
 
-        val saksbehandlerIdent = azureGraphService.hentIdentTilInnloggetBruker()
+        val saksbehandlerIdent = coroutineContext.idToken().getNavIdent()
         val cacheKey = FrnTilAktørIdCacheKey(saksbehandlerIdent, fnummer)
         val cachedObject = fnrTilAktørIdCache.get(cacheKey)
         if (cachedObject != null) {

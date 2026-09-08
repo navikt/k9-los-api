@@ -2,9 +2,13 @@ package no.nav.k9.los.infrastruktur.azuregraph
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import io.ktor.client.*
-import io.ktor.client.request.*
+import io.ktor.client.request.get
+import io.ktor.client.request.header
+import io.ktor.client.request.parameter
+import io.ktor.client.request.url
 import io.ktor.client.statement.*
 import io.ktor.http.*
+import io.ktor.http.HttpHeaders
 import kotlinx.coroutines.runBlocking
 import no.nav.helse.dusseldorf.ktor.core.Retry
 import no.nav.helse.dusseldorf.ktor.metrics.Operation
@@ -17,6 +21,7 @@ import no.nav.k9.los.infrastruktur.utils.Cache
 import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
 import org.slf4j.LoggerFactory
 import java.time.Duration
+import java.time.Duration.ofMillis
 import java.util.*
 import kotlin.coroutines.coroutineContext
 
@@ -28,10 +33,6 @@ open class AzureGraphService(
     private val saksbehandlerUserIdCache = Cache<String, UUID>(cacheSizeLimit = 1000)
     private val saksbehandlerGrupperCache = Cache<String, Set<UUID>>(cacheSizeLimit = 1000)
     private val log = LoggerFactory.getLogger("AzureGraphService")!!
-
-    override suspend fun hentIdentTilInnloggetBruker(): String {
-        return coroutineContext.idToken().getNavIdent()
-    }
 
     private suspend fun håndterResultat(
         response: HttpResponse
@@ -49,25 +50,10 @@ open class AzureGraphService(
 
     override suspend fun hentEnhetForInnloggetBruker(): String {
         val token = coroutineContext.idToken()
-        return hentEnhetForBruker(brukernavn = token.getUsername(), onBehalfOf = token)
-    }
-
-    override suspend fun hentEnhetForBrukerMedSystemToken(brukernavn: String): String? {
-        return try {
-            hentEnhetForBruker(brukernavn = brukernavn)
-                .takeIf { EnheterSomSkalUtelatesFraLos.sjekkKanBrukes(it) }
-        } catch (e: Exception) {
-            log.warn("Klarte ikke å hente behandlende enhet for $brukernavn", e)
-            null
-        }
-    }
-
-    private suspend fun hentEnhetForBruker(brukernavn: String, onBehalfOf: IIdToken? = null): String {
-        val accessToken = accessToken(onBehalfOf)
-
+        val accessToken = accessToken(onBehalfOf = token)
         val json = Retry.retry(
             operation = "office-location",
-            initialDelay = Duration.ofMillis(200),
+            initialDelay = ofMillis(200),
             factor = 2.0,
             logger = log
         ) {
@@ -77,14 +63,8 @@ open class AzureGraphService(
                 resultResolver = { 200 == it.status.value }
             ) {
                 httpClient.get {
-                    if (onBehalfOf != null) {
-                        url("https://graph.microsoft.com/v1.0/me")
-                        parameter("\$select", "officeLocation")
-                    } else {
-                        url("https://graph.microsoft.com/v1.0/users")
-                        parameter("\$filter", "mailNickname eq '$brukernavn'")
-                        parameter("\$select", "officeLocation")
-                    }
+                    this.url("https://graph.microsoft.com/v1.0/me")
+                    parameter("\$select", "officeLocation")
                     header(HttpHeaders.Accept, "application/json")
                     header(HttpHeaders.Authorization, "Bearer ${accessToken.token}")
                     header("ConsistencyLevel", "eventual")
@@ -93,19 +73,7 @@ open class AzureGraphService(
 
             håndterResultat(response)
         }
-        val officeLocation = if (onBehalfOf != null) {
-            LosObjectMapper.instance.readValue<OfficeLocation>(json).officeLocation
-        } else {
-            val result = LosObjectMapper.instance.readValue<OfficeLocationFilterResult>(json).value.also {
-                if (it.size > 1) log.warn("Flere enn 1 treff på ident")
-            }
-            if (result.isEmpty()) {
-                log.warn("Fant ingen treff på enhet for saksbehandler $brukernavn, bruker tom streng som enhet")
-                ""
-            } else {
-                result.first().officeLocation
-            }
-        }
+        val officeLocation = LosObjectMapper.instance.readValue<OfficeLocation>(json).officeLocation
         return officeLocation
     }
 

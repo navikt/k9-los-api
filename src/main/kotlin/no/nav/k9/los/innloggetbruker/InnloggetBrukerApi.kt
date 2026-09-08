@@ -5,9 +5,9 @@ import io.ktor.server.routing.*
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.KoinProfile
 import no.nav.k9.los.infrastruktur.abac.ISifAbacPdpKlient
-import no.nav.k9.los.infrastruktur.azuregraph.IAzureGraphService
 import no.nav.k9.los.infrastruktur.idtoken.idToken
 import no.nav.k9.los.infrastruktur.rest.RequestContextService
+import no.nav.k9.los.infrastruktur.rest.idToken
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
 import org.koin.ktor.ext.inject
 import org.slf4j.LoggerFactory
@@ -15,7 +15,6 @@ import org.slf4j.LoggerFactory
 internal fun Route.InnloggetBrukerApi() {
     val requestContextService by inject<RequestContextService>()
     val saksbehandlerRepository by inject<SaksbehandlerRepository>()
-    val azureGraphService by inject<IAzureGraphService>()
     val innloggetBrukerTjeneste by inject<InnloggetBrukerTjeneste>()
     val configuration by inject<Configuration>()
     val sifAbacPdpKlient by inject<ISifAbacPdpKlient>()
@@ -26,7 +25,7 @@ internal fun Route.InnloggetBrukerApi() {
         if (configuration.koinProfile() != KoinProfile.LOCAL) {
             requestContextService.withRequestContext(call) {
                 val token = call.idToken()
-                val saksbehandlerIdent = azureGraphService.hentIdentTilInnloggetBruker()
+                val saksbehandlerIdent = coroutineContext.idToken().getNavIdent()
                 val saksbehandler =
                     saksbehandlerRepository.finnSaksbehandlerMedIdent(token.getNavIdent())
                         ?: saksbehandlerRepository.finnSaksbehandlerMedEpost(token.getUsername())

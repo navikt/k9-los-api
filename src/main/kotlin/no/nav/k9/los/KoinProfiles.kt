@@ -561,11 +561,10 @@ fun common(app: Application, config: Configuration) = module {
 
     single {
         SisteOppgaverTjeneste(
+            sisteOppgaverRepository = get(),
             oppgaveRepository = get(),
             pepClient = get(),
-            sisteOppgaverRepository = get(),
             pdlService = get(),
-            azureGraphService = get(),
             transactionalManager = get(),
         )
     }

@@ -79,8 +79,8 @@ class OppgaveKoTjenesteTest {
                 )
             )
         } returns listOf(utenTilgang, førsteMedTilgang)
-        coEvery { pepClient.harTilgangTilOppgaveV3(utenTilgang, Action.read, null) } returns false
-        coEvery { pepClient.harTilgangTilOppgaveV3(førsteMedTilgang, Action.read, null) } returns true
+        coEvery { pepClient.harTilgangTilOppgaveV3(utenTilgang, Action.read) } returns false
+        coEvery { pepClient.harTilgangTilOppgaveV3(førsteMedTilgang, Action.read) } returns true
 
         val resultat = tjeneste.hentOppgaverFraKø(
             oppgaveKoId = 1L,

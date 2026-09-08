@@ -10,7 +10,6 @@ import no.nav.sif.abac.kontrakt.abac.dto.SaksnummerDto
 import no.nav.sif.abac.kontrakt.person.AktørId
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import java.util.*
 import kotlin.coroutines.coroutineContext
 
 class PepClient(
@@ -69,17 +68,15 @@ class PepClient(
 
     override suspend fun harTilgangTilOppgaveV3(
         oppgave: Oppgave,
-        action: Action,
-        grupperForSaksbehandler: Set<UUID>?
+        action: Action
     ): Boolean {
         return harTilgang(
             oppgavetype = oppgave.oppgavetype.eksternId,
-            identTilInnloggetBruker = azureGraphService.hentIdentTilInnloggetBruker(),
+            identTilInnloggetBruker = coroutineContext.idToken().getNavIdent(),
             action = action,
             saksnummer = oppgave.hentVerdi("saksnummer"),
             aktørIdSøker = oppgave.hentVerdi("aktorId"),
-            aktørIdPleietrengende = oppgave.hentVerdi("pleietrengendeAktorId"),
-            grupperForSaksbehandler = grupperForSaksbehandler
+            aktørIdPleietrengende = oppgave.hentVerdi("pleietrengendeAktorId")
         )
     }
 
@@ -106,13 +103,12 @@ class PepClient(
         action: Action,
         saksnummer: String?,
         aktørIdSøker: String?,
-        aktørIdPleietrengende: String?,
-        grupperForSaksbehandler: Set<UUID>? = null
+        aktørIdPleietrengende: String?
     ): Boolean {
         return when (oppgavetype) {
             "k9sak", "k9klage", "k9tilbake" -> {
                 //TODO når abac-k9 er ryddet bort: vurder å bruk sifAbacPdpKlient.harTilgangTilSak(action, saksnummer) de steder hvor vi sjekker innlogget bruker
-                val saksbehandlersGrupper = grupperForSaksbehandler ?: azureGraphService.hentGrupperForSaksbehandler(identTilInnloggetBruker)
+                val saksbehandlersGrupper = azureGraphService.hentGrupperForSaksbehandler(identTilInnloggetBruker)
                 val tilgang = sifAbacPdpKlient.harTilgangTilSak(
                     action = action,
                     saksnummerDto = SaksnummerDto(saksnummer!!),
@@ -126,7 +122,7 @@ class PepClient(
             "k9punsj" -> {
                 val berørteAktørId = setOfNotNull(aktørIdSøker, aktørIdPleietrengende)
                 val aktørIder = berørteAktørId.map { AktørId(it) }
-                val saksbehandlersGrupper = grupperForSaksbehandler ?: azureGraphService.hentGrupperForSaksbehandler(identTilInnloggetBruker)
+                val saksbehandlersGrupper = azureGraphService.hentGrupperForSaksbehandler(identTilInnloggetBruker)
                 val tilgang = if (aktørIder.isNotEmpty()) sifAbacPdpKlient.harTilgangTilPersoner(
                     action = action,
                     aktørIder = aktørIder,

@@ -518,11 +518,10 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
 
     single {
         SisteOppgaverTjeneste(
+            sisteOppgaverRepository = get(),
             oppgaveRepository = get(),
             pepClient = get(),
-            sisteOppgaverRepository = get(),
             pdlService = get(),
-            azureGraphService = get(),
             transactionalManager = get(),
         )
     }

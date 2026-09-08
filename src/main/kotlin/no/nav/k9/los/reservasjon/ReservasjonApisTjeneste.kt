@@ -210,11 +210,7 @@ class ReservasjonApisTjeneste(
                 oppgaveNøkkel.oppgaveEksternId,
                 oppgaveNøkkel.oppgaveTypeEksternId,
             )
-        if (!pepClient.harTilgangTilOppgaveV3(
-                oppgave = oppgave,
-                grupperForSaksbehandler = azureGraphService.hentGrupperForInnloggetSaksbehandler()
-            )
-        ) {
+        if (!pepClient.harTilgangTilOppgaveV3(oppgave)) {
             throw ManglerTilgangException("Mangler tilgang til oppgave ${oppgave.eksternId}")
         }
         val reservasjon = reservasjonV3Tjeneste.finnAktivReservasjon(oppgave.reservasjonsnøkkel)
