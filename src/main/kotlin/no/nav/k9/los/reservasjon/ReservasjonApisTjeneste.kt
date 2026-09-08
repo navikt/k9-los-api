@@ -1,7 +1,6 @@
 package no.nav.k9.los.reservasjon
 
 import no.nav.k9.los.infrastruktur.abac.IPepClient
-import no.nav.k9.los.infrastruktur.azuregraph.IAzureGraphService
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.infrastruktur.utils.leggTilDagerHoppOverHelg
 import no.nav.k9.los.kodeverk.BehandlingType
@@ -23,7 +22,6 @@ class ReservasjonApisTjeneste(
     private val reservasjonV3DtoBuilder: ReservasjonV3DtoBuilder,
     private val aktivOppgaveOppslag: AktivOppgaveOppslag,
     private val pepClient: IPepClient,
-    private val azureGraphService: IAzureGraphService,
 ) {
 
     companion object {
