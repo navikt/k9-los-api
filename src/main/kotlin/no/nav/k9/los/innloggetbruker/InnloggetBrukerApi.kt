@@ -5,6 +5,8 @@ import io.ktor.server.routing.*
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.KoinProfile
 import no.nav.k9.los.infrastruktur.abac.IPepClient
+import no.nav.k9.los.infrastruktur.abac.tilganger.PdpTilgangsskygge
+import no.nav.k9.los.infrastruktur.abac.tilganger.Tilganger
 import no.nav.k9.los.infrastruktur.azuregraph.IAzureGraphService
 import no.nav.k9.los.infrastruktur.idtoken.idToken
 import no.nav.k9.los.infrastruktur.rest.RequestContextService
@@ -19,6 +21,7 @@ internal fun Route.InnloggetBrukerApi() {
     val azureGraphService by inject<IAzureGraphService>()
     val innloggetBrukerTjeneste by inject<InnloggetBrukerTjeneste>()
     val configuration by inject<Configuration>()
+    val pdpTilgangsskygge by inject<PdpTilgangsskygge>()
 
     val log = LoggerFactory.getLogger("InnloggetBrukerApi")
 
@@ -26,29 +29,38 @@ internal fun Route.InnloggetBrukerApi() {
         if (configuration.koinProfile() != KoinProfile.LOCAL) {
             requestContextService.withRequestContext(call) {
                 val token = call.idToken()
-                log.info("Henter innlogget saksbehandler med epost ${token.getUsername()} og navn ${token.getName()}")
                 val saksbehandlerIdent = azureGraphService.hentIdentTilInnloggetBruker()
                 val saksbehandler =
                     saksbehandlerRepository.finnSaksbehandlerMedIdent(token.getNavIdent())
                         ?: saksbehandlerRepository.finnSaksbehandlerMedEpost(token.getUsername())
                 if (saksbehandler == null) {
-                    log.warn("Saksbehandler med epost ${token.getUsername()} finnes ikke i saksbehandlertabell, og kan derfor ikke oppdateres")
+                    log.warn("Innlogget bruker finnes ikke i saksbehandlertabell, og kan derfor ikke oppdateres")
                 }
                 val finnesISaksbehandlerTabell = saksbehandler != null
+
+                val autoritativeTilganger = Tilganger(
+                    basis = pepClient.harBasisTilgang(),
+                    kode6 = pepClient.harTilgangTilKode6(),
+                    oppgavestyring = pepClient.erOppgaveStyrer(),
+                    reservering = pepClient.harTilgangTilReserveringAvOppgaver(),
+                    drift = pepClient.kanLeggeUtDriftsmelding(),
+                )
+                // Fire-and-forget: sammenligner mot sif-abac-pdp uten å påvirke svaret eller svartiden.
+                pdpTilgangsskygge.observer(token, autoritativeTilganger)
 
                 val innloggetBrukerDto = InnloggetBrukerDto(
                     token.getUsername(),
                     token.getName(),
                     brukerIdent = saksbehandlerIdent,
                     id = saksbehandler?.let { saksbehandler.id },
-                    kanSaksbehandle = pepClient.harBasisTilgang(), //TODO mismatch mellom navnet 'kanSaksbehandle' og at alle som har tilgang til systemet har basistilgang
-                    kanOppgavestyre = pepClient.erOppgaveStyrer(),
-                    kanReservere = pepClient.harTilgangTilReserveringAvOppgaver(),
-                    kanDrifte = pepClient.kanLeggeUtDriftsmelding(),
+                    kanSaksbehandle = autoritativeTilganger.basis, //TODO mismatch mellom navnet 'kanSaksbehandle' og at alle som har tilgang til systemet har basistilgang
+                    kanOppgavestyre = autoritativeTilganger.oppgavestyring,
+                    kanReservere = autoritativeTilganger.reservering,
+                    kanDrifte = autoritativeTilganger.drift,
                     finnesISaksbehandlerTabell = finnesISaksbehandlerTabell
                 )
                 if (!innloggetBrukerDto.kanSaksbehandle) {
-                    log.warn("Saksbehandler med epost ${token.getUsername()} har ikke basistilgang, og kan derfor ikke bruke systemet")
+                    log.warn("Innlogget saksbehandler har ikke basistilgang, og kan derfor ikke bruke systemet")
                 }
                 if (saksbehandler != null) {
                     innloggetBrukerTjeneste.vedlikeholdHvisUtdatert(

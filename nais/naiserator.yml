@@ -87,6 +87,8 @@ spec:
         - application: k9-punsj
           namespace: k9saksbehandling
           cluster: {{cluster_name_punsj}}
+        - application: sif-abac-pdp
+          namespace: k9saksbehandling
     inbound:
       rules:
         - application: k9-los-web

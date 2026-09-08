@@ -47,6 +47,7 @@ import no.nav.k9.los.forvaltning.ForvaltningRepository
 import no.nav.k9.los.infrastruktur.abac.*
 import no.nav.k9.los.infrastruktur.abac.cache.PepCacheRepository
 import no.nav.k9.los.infrastruktur.abac.cache.PepCacheService
+import no.nav.k9.los.infrastruktur.abac.tilganger.*
 import no.nav.k9.los.infrastruktur.azuregraph.AzureGraphService
 import no.nav.k9.los.infrastruktur.azuregraph.AzureGraphServiceLocal
 import no.nav.k9.los.infrastruktur.azuregraph.IAzureGraphService
@@ -702,6 +703,7 @@ fun naisCommonConfig() = module {
     single<IPepClient> {
         PepClient(azureGraphService = get(), get())
     }
+    single<PdpTilgangsskygge> { SifAbacPdpTilgangsskygge(get()) }
 }
 
 // Unik konfigurasjon for preprod
