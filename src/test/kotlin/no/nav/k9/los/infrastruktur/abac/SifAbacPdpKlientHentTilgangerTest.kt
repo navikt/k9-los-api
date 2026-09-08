@@ -75,6 +75,9 @@ internal class SifAbacPdpKlientHentTilgangerTest {
     private val idToken = mockk<IIdToken> {
         every { value } returns "validert-innkommende-token"
         every { getNavIdent() } returns "brukerident"
+        every { jwt } returns mockk {
+            every { uti } returns "token-id"
+        }
     }
 
     private fun klient() = SifAbacPdpKlient(

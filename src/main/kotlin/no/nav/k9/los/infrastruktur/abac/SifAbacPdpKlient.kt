@@ -30,6 +30,14 @@ import java.time.Duration
 import java.util.*
 import kotlin.coroutines.coroutineContext
 
+data class TilgangerCacheKey(
+    val områdeEksternId: String, // Bruker Områder-enum på sikt
+    val navIdent: String,
+    val tokenId: String,
+) {
+    constructor(idToken: IIdToken) : this("K9", idToken.getNavIdent(), idToken.jwt!!.uti)
+}
+
 class SifAbacPdpKlient(
     configuration: Configuration,
     accessTokenClient: AccessTokenClient,
@@ -41,10 +49,10 @@ class SifAbacPdpKlient(
     private val url = configuration.sifAbacPdpUrl()
     private val scopes = setOf(scope)
     private val environment = configuration.koinProfile
-    private val tilgangerCache = Cache<String, Tilganger>()
+    private val tilgangerCache = Cache<TilgangerCacheKey, Tilganger>()
 
     override suspend fun hentTilganger(idToken: IIdToken): Tilganger {
-        return tilgangerCache.hentSuspend(idToken.getNavIdent()) {
+        return tilgangerCache.hentSuspend(TilgangerCacheKey(idToken)) {
             val antallForsøk = 3
             val oboToken = cachedAccessTokenClient.getOnBehalfOfAccessToken(scopes, idToken.value)
             val response = Retry.retry(
@@ -139,7 +147,10 @@ class SifAbacPdpKlient(
     }
 
     override suspend fun harTilgangTilSak(action: Action, saksnummerDto: SaksnummerDto): Boolean {
-        val request = SaksnummerOperasjonDto(saksnummerDto, OperasjonDto(ResourceType.FAGSAK, map(action), emptySet<AksjonspunktType>()))
+        val request = SaksnummerOperasjonDto(
+            saksnummerDto,
+            OperasjonDto(ResourceType.FAGSAK, map(action), emptySet<AksjonspunktType>())
+        )
         val antallForsøk = 3
         val jwt = coroutineContext.idToken().value
         val oboToken = cachedAccessTokenClient.getOnBehalfOfAccessToken(scopes, jwt)
@@ -220,7 +231,11 @@ class SifAbacPdpKlient(
     }
 
     override suspend fun harTilgangTilPersoner(action: Action, aktørIder: List<AktørId>): Boolean {
-        val request = PersonerOperasjonDto(aktørIder, emptyList(), OperasjonDto(ResourceType.FAGSAK, map(action), emptySet<AksjonspunktType>()))
+        val request = PersonerOperasjonDto(
+            aktørIder,
+            emptyList(),
+            OperasjonDto(ResourceType.FAGSAK, map(action), emptySet<AksjonspunktType>())
+        )
         val antallForsøk = 3
         val jwt = coroutineContext.idToken().value
         val oboToken = cachedAccessTokenClient.getOnBehalfOfAccessToken(scopes, jwt)
