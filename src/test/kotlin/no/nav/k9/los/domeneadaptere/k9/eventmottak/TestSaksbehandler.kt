@@ -25,7 +25,8 @@ class TestSaksbehandler: KoinTest {
             navident = "Z123456",
             navn = "Sara Saksbehandler",
             epost = "sara.saksbehandler@nav.no",
-            enhet = "2830 NAV DRIFT"
+            enhet = "2830 NAV DRIFT",
+            skjermet = false
         )
 
         val BIRGER_BESLUTTER = Saksbehandler(
@@ -33,7 +34,8 @@ class TestSaksbehandler: KoinTest {
             navident = "Z654321",
             navn = "Birger Beslutter",
             epost = "birger.beslutter@nav.no",
-            enhet = "2830 NAV DRIFT"
+            enhet = "2830 NAV DRIFT",
+            skjermet = false
         )
 
         val KJERSTI_SKJERMET = Saksbehandler(
@@ -41,7 +43,8 @@ class TestSaksbehandler: KoinTest {
             navident = "Z999999",
             navn = "Kjersti Skjermet",
             epost = "kjersti.skjermet@nav.no",
-            enhet = "SKJERMET"
+            enhet = "SKJERMET",
+            skjermet = true
         )
 
     }

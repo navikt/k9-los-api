@@ -10,8 +10,6 @@ interface IPepClient {
 
     suspend fun harTilgangTilKode6(): Boolean
 
-    suspend fun harTilgangTilKode6(ident: String): Boolean
-
     suspend fun harBasisTilgang(): Boolean
 
     suspend fun kanLeggeUtDriftsmelding(): Boolean

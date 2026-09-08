@@ -30,8 +30,7 @@ class SaksbehandlerRepositoryTest : AbstractK9LosIntegrationTest() {
         val tidspunkt = LocalDateTime.parse("2026-08-28T10:00:00")
 
         repository.vedlikeholdSaksbehandler(
-            Saksbehandler(id, "Z654321", "Nytt navn", "Ny.Epost@nav.no", "3450"),
-            tidspunkt
+            Saksbehandler(id, "Z654321", "Nytt navn", "Ny.Epost@nav.no", "3450", false, tidspunkt)
         )
 
         val oppdatert = repository.finnSaksbehandlerMedId(id)!!
@@ -81,8 +80,7 @@ class SaksbehandlerRepositoryTest : AbstractK9LosIntegrationTest() {
 
         val feil = assertThrows<PSQLException> {
             repository.vedlikeholdSaksbehandler(
-                Saksbehandler(opprinnelig.id, "Z654321", "Nytt navn", annen.epost, "3450"),
-                LocalDateTime.parse("2026-08-28T10:00:00")
+                Saksbehandler(opprinnelig.id, "Z654321", "Nytt navn", annen.epost, "3450", skjermet = false, LocalDateTime.parse("2026-08-28T10:00:00"))
             )
         }
 

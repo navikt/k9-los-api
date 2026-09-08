@@ -26,10 +26,6 @@ class PepClientLocal : IPepClient {
         return false
     }
 
-    override suspend fun harTilgangTilKode6(ident: String): Boolean {
-        return false
-    }
-
     override suspend fun diskresjonskoderForSak(fagsakNummer: String): Set<Diskresjonskode> {
         return setOf()
     }

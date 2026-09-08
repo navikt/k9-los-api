@@ -38,14 +38,6 @@ class PepClient(
         return sifAbacPdpKlient.hentTilganger(coroutineContext.idToken()).reservering
     }
 
-    override suspend fun harTilgangTilKode6(ident: String): Boolean {
-        if (ident == coroutineContext.idToken().getNavIdent()) {
-            return harTilgangTilKode6()
-        }
-        val grupper = azureGraphService.hentGrupperForSaksbehandler(ident)
-        return grupper.contains(UUID.fromString(System.getenv("BRUKER_GRUPPE_ID_KODE6")))
-    }
-
     override suspend fun harTilgangTilKode6(): Boolean {
         return sifAbacPdpKlient.hentTilganger(coroutineContext.idToken()).kode6
     }

@@ -44,9 +44,10 @@ class InnloggetBrukerTjeneste(
                     navident = navident,
                     navn = navn,
                     epost = epost,
-                    enhet = enhet
-                ),
-                oppdatertTidspunkt = nå
+                    enhet = enhet,
+                    skjermet = saksbehandler.skjermet,
+                    sistOppdatert = nå,
+                )
             )
         } catch (e: PSQLException) {
             if (e.sqlState != "23505" || e.serverErrorMessage?.constraint != "saksbehandler_epost_key") {

@@ -29,8 +29,7 @@ class InnloggetBrukerTjenesteTest {
 
         coVerify(exactly = 1) {
             repository.vedlikeholdSaksbehandler(
-                match { it.id == 1L && it.enhet == "3450" && it.navident == "Z123456" && it.epost == "ny.epost@nav.no" },
-                nå
+                match { it.id == 1L && it.enhet == "3450" && it.navident == "Z123456" && it.epost == "ny.epost@nav.no" && it.sistOppdatert == nå }
             )
         }
     }
@@ -40,7 +39,7 @@ class InnloggetBrukerTjenesteTest {
         tjeneste.vedlikeholdHvisUtdatert(saksbehandler(nå.minusHours(23)), "Z123456", "Saksbehandler Sara", "ny.epost@nav.no")
 
         coVerify(exactly = 0) { azureGraphService.hentEnhetForInnloggetBruker() }
-        coVerify(exactly = 0) { repository.vedlikeholdSaksbehandler(any(), any()) }
+        coVerify(exactly = 0) { repository.vedlikeholdSaksbehandler(any()) }
     }
 
     @Test
@@ -48,7 +47,7 @@ class InnloggetBrukerTjenesteTest {
         tjeneste.vedlikeholdHvisUtdatert(saksbehandler(nå.minusHours(24)), "Z123456", "Saksbehandler Sara", "ny.epost@nav.no")
 
         coVerify(exactly = 0) { azureGraphService.hentEnhetForInnloggetBruker() }
-        coVerify(exactly = 0) { repository.vedlikeholdSaksbehandler(any(), any()) }
+        coVerify(exactly = 0) { repository.vedlikeholdSaksbehandler(any()) }
     }
 
     @Test
@@ -57,7 +56,7 @@ class InnloggetBrukerTjenesteTest {
 
         tjeneste.vedlikeholdHvisUtdatert(saksbehandler(nå.minusHours(25)), "Z123456", "Saksbehandler Sara", "ny.epost@nav.no")
 
-        coVerify(exactly = 1) { repository.vedlikeholdSaksbehandler(any(), nå) }
+        coVerify(exactly = 1) { repository.vedlikeholdSaksbehandler(any()) }
     }
 
     @Test
@@ -66,13 +65,13 @@ class InnloggetBrukerTjenesteTest {
 
         tjeneste.vedlikeholdHvisUtdatert(saksbehandler(nå.minusDays(2)), "Z123456", "Saksbehandler Sara", "ny.epost@nav.no")
 
-        coVerify(exactly = 0) { repository.vedlikeholdSaksbehandler(any(), any()) }
+        coVerify(exactly = 0) { repository.vedlikeholdSaksbehandler(any()) }
     }
 
     @Test
     fun `epostkonflikt avbryter ikke innlogging og vedlikehold forsokes igjen`() = runBlocking {
         coEvery { azureGraphService.hentEnhetForInnloggetBruker() } returns "3450"
-        coEvery { repository.vedlikeholdSaksbehandler(any(), any()) } throws
+        coEvery { repository.vedlikeholdSaksbehandler(any()) } throws
             PSQLException(ServerErrorMessage("C23505\u0000nsaksbehandler_epost_key\u0000"))
         val opprinnelig = saksbehandler(null)
 
@@ -80,7 +79,7 @@ class InnloggetBrukerTjenesteTest {
             tjeneste.vedlikeholdHvisUtdatert(opprinnelig, "Z123456", "Saksbehandler Sara", "ny.epost@nav.no")
         }
 
-        coVerify(exactly = 2) { repository.vedlikeholdSaksbehandler(match { it.id == opprinnelig.id }, nå) }
+        coVerify(exactly = 2) { repository.vedlikeholdSaksbehandler(match { it.id == opprinnelig.id && it.sistOppdatert == nå }) }
     }
 
     @Test
@@ -92,7 +91,7 @@ class InnloggetBrukerTjenesteTest {
             "23505" to null
         ).forEach { (sqlState, constraint) ->
             val feil = PSQLException(ServerErrorMessage("C$sqlState\u0000" + (constraint?.let { "n$it\u0000" } ?: "")))
-            coEvery { repository.vedlikeholdSaksbehandler(any(), any()) } throws feil
+            coEvery { repository.vedlikeholdSaksbehandler(any()) } throws feil
 
             val kastet = assertThrows<PSQLException> {
                 tjeneste.vedlikeholdHvisUtdatert(saksbehandler(null), "Z123456", "Saksbehandler Sara", "ny.epost@nav.no")
@@ -108,6 +107,7 @@ class InnloggetBrukerTjenesteTest {
         navn = "Saksbehandler Sara",
         epost = "saksbehandler@nav.no",
         enhet = "3450",
+        skjermet = false,
         sistOppdatert = sistOppdatert
     )
 }
