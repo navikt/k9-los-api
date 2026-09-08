@@ -49,7 +49,7 @@ class SifAbacPdpKlient(
     private val url = configuration.sifAbacPdpUrl()
     private val scopes = setOf(scope)
     private val environment = configuration.koinProfile
-    private val tilgangerCache = Cache<TilgangerCacheKey, Tilganger>()
+    private val tilgangerCache = Cache<TilgangerCacheKey, Tilganger>(300)
 
     override suspend fun hentTilganger(idToken: IIdToken): Tilganger {
         return tilgangerCache.hentSuspend(TilgangerCacheKey(idToken)) {
