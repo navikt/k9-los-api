@@ -72,7 +72,10 @@ internal class SifAbacPdpKlientHentTilgangerTest {
         feil.message shouldBe "Feil ved 'hent-tilganger' mot sif-abac-pdp: HTTP 503"
     }
 
-    private val idToken = mockk<IIdToken> { every { value } returns "validert-innkommende-token" }
+    private val idToken = mockk<IIdToken> {
+        every { value } returns "validert-innkommende-token"
+        every { getNavIdent() } returns "brukerident"
+    }
 
     private fun klient() = SifAbacPdpKlient(
         configuration = configuration,

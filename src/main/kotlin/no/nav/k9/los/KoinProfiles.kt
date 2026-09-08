@@ -703,7 +703,6 @@ fun naisCommonConfig() = module {
     single<IPepClient> {
         PepClient(azureGraphService = get(), get())
     }
-    single<PdpTilgangsskygge> { SifAbacPdpTilgangsskygge(get()) }
 }
 
 // Unik konfigurasjon for preprod

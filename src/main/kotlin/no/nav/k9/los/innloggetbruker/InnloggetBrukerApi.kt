@@ -4,9 +4,7 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.KoinProfile
-import no.nav.k9.los.infrastruktur.abac.IPepClient
-import no.nav.k9.los.infrastruktur.abac.tilganger.PdpTilgangsskygge
-import no.nav.k9.los.infrastruktur.abac.tilganger.Tilganger
+import no.nav.k9.los.infrastruktur.abac.ISifAbacPdpKlient
 import no.nav.k9.los.infrastruktur.azuregraph.IAzureGraphService
 import no.nav.k9.los.infrastruktur.idtoken.idToken
 import no.nav.k9.los.infrastruktur.rest.RequestContextService
@@ -15,13 +13,12 @@ import org.koin.ktor.ext.inject
 import org.slf4j.LoggerFactory
 
 internal fun Route.InnloggetBrukerApi() {
-    val pepClient by inject<IPepClient>()
     val requestContextService by inject<RequestContextService>()
     val saksbehandlerRepository by inject<SaksbehandlerRepository>()
     val azureGraphService by inject<IAzureGraphService>()
     val innloggetBrukerTjeneste by inject<InnloggetBrukerTjeneste>()
     val configuration by inject<Configuration>()
-    val pdpTilgangsskygge by inject<PdpTilgangsskygge>()
+    val sifAbacPdpKlient by inject<ISifAbacPdpKlient>()
 
     val log = LoggerFactory.getLogger("InnloggetBrukerApi")
 
@@ -38,25 +35,17 @@ internal fun Route.InnloggetBrukerApi() {
                 }
                 val finnesISaksbehandlerTabell = saksbehandler != null
 
-                val autoritativeTilganger = Tilganger(
-                    basis = pepClient.harBasisTilgang(),
-                    kode6 = pepClient.harTilgangTilKode6(),
-                    oppgavestyring = pepClient.erOppgaveStyrer(),
-                    reservering = pepClient.harTilgangTilReserveringAvOppgaver(),
-                    drift = pepClient.kanLeggeUtDriftsmelding(),
-                )
-                // Fire-and-forget: sammenligner mot sif-abac-pdp uten å påvirke svaret eller svartiden.
-                pdpTilgangsskygge.observer(token, autoritativeTilganger)
+                val tilganger = sifAbacPdpKlient.hentTilganger(token)
 
                 val innloggetBrukerDto = InnloggetBrukerDto(
                     token.getUsername(),
                     token.getName(),
                     brukerIdent = saksbehandlerIdent,
                     id = saksbehandler?.let { saksbehandler.id },
-                    kanSaksbehandle = autoritativeTilganger.basis, //TODO mismatch mellom navnet 'kanSaksbehandle' og at alle som har tilgang til systemet har basistilgang
-                    kanOppgavestyre = autoritativeTilganger.oppgavestyring,
-                    kanReservere = autoritativeTilganger.reservering,
-                    kanDrifte = autoritativeTilganger.drift,
+                    kanSaksbehandle = tilganger.basis, //TODO mismatch mellom navnet 'kanSaksbehandle' og at alle som har tilgang til systemet har basistilgang
+                    kanOppgavestyre = tilganger.oppgavestyring,
+                    kanReservere = tilganger.reservering,
+                    kanDrifte = tilganger.drift,
                     finnesISaksbehandlerTabell = finnesISaksbehandlerTabell
                 )
                 if (!innloggetBrukerDto.kanSaksbehandle) {

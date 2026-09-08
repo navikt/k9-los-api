@@ -1,8 +1,10 @@
 package no.nav.k9.los.infrastruktur.abac
 
 import kotlinx.coroutines.runBlocking
+import no.nav.k9.los.infrastruktur.abac.tilganger.Tilganger
 import no.nav.k9.los.infrastruktur.azuregraph.IAzureGraphService
 import no.nav.k9.los.infrastruktur.rest.idToken
+import no.nav.k9.los.infrastruktur.utils.Cache
 import no.nav.k9.los.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.oppgaveuthenting.Oppgave
 import no.nav.sif.abac.kontrakt.abac.Diskresjonskode
@@ -18,25 +20,22 @@ class PepClient(
     private val sifAbacPdpKlient: ISifAbacPdpKlient
 ) : IPepClient {
     private val log: Logger = LoggerFactory.getLogger(PepClient::class.java)
+    private val cache = Cache<String, Tilganger>()
 
     override suspend fun erOppgaveStyrer(): Boolean {
-        //TODO inline metode
-        return coroutineContext.idToken().erOppgavebehandler()
+        return sifAbacPdpKlient.hentTilganger(coroutineContext.idToken()).oppgavestyring
     }
 
     override suspend fun harBasisTilgang(): Boolean {
-        //TODO inline metode
-        return coroutineContext.idToken().harBasistilgang()
+        return sifAbacPdpKlient.hentTilganger(coroutineContext.idToken()).basis
     }
 
     override suspend fun kanLeggeUtDriftsmelding(): Boolean {
-        //TODO inline metode
-        return coroutineContext.idToken().erDrifter()
+        return sifAbacPdpKlient.hentTilganger(coroutineContext.idToken()).drift
     }
 
     override suspend fun harTilgangTilReserveringAvOppgaver(): Boolean {
-        //TODO inline metode
-        return coroutineContext.idToken().erSaksbehandler()
+        return sifAbacPdpKlient.hentTilganger(coroutineContext.idToken()).reservering
     }
 
     override suspend fun harTilgangTilKode6(ident: String): Boolean {
@@ -48,8 +47,7 @@ class PepClient(
     }
 
     override suspend fun harTilgangTilKode6(): Boolean {
-        //TODO inline metode
-        return coroutineContext.idToken().kanBehandleKode6()
+        return sifAbacPdpKlient.hentTilganger(coroutineContext.idToken()).kode6
     }
 
     override suspend fun erSakKode6(fagsakNummer: String): Boolean {
