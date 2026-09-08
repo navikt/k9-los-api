@@ -3,6 +3,8 @@ package no.nav.k9.los
 import io.ktor.client.*
 import io.ktor.client.engine.*
 import io.ktor.client.engine.java.*
+import io.ktor.client.network.sockets.ConnectTimeoutException
+import io.ktor.client.plugins.*
 import io.ktor.server.application.*
 import kotlinx.coroutines.channels.Channel
 import no.nav.helse.dusseldorf.ktor.health.HealthService
@@ -98,6 +100,7 @@ import no.nav.k9.los.uttrekk.UttrekkTjeneste
 import org.koin.core.module.Module
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
+import java.net.SocketTimeoutException
 import org.slf4j.LoggerFactory
 import java.time.Clock
 import java.util.*
@@ -684,6 +687,26 @@ fun naisCommonConfig() = module {
         HttpClient(Java)
     }
 
+    single(named("sifAbacPdpHttpClient")) {
+        HttpClient(Java) {
+            install(HttpTimeout) {
+                connectTimeoutMillis = 1_000
+                socketTimeoutMillis = 2_000
+                requestTimeoutMillis = 2_000
+            }
+            HttpResponseValidator {
+                handleResponseExceptionWithRequest { cause, _ ->
+                    if (cause is HttpRequestTimeoutException ||
+                        cause is ConnectTimeoutException ||
+                        cause is SocketTimeoutException
+                    ) {
+                        throw SifAbacPdpUtilgjengeligException(cause)
+                    }
+                }
+            }
+        }
+    }
+
     single(named("webproxyHttpClient")) {
         // Httpclient med webproxy, for trafikk ut på internett
         HttpClient(Java) {
@@ -752,7 +775,7 @@ fun preprodConfig(config: Configuration) = module {
             configuration = get(),
             accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
             scope = "api://dev-fss.k9saksbehandling.sif-abac-pdp/.default",
-            httpClient = get()
+            httpClient = get(named("sifAbacPdpHttpClient"))
         )
     }
 
@@ -830,7 +853,7 @@ fun prodConfig(config: Configuration) = module {
             configuration = get(),
             accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
             scope = "api://prod-fss.k9saksbehandling.sif-abac-pdp/.default",
-            httpClient = get()
+            httpClient = get(named("sifAbacPdpHttpClient"))
         )
     }
 

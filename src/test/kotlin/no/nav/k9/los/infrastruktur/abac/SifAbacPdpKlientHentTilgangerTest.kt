@@ -22,6 +22,8 @@ import no.nav.k9.los.infrastruktur.idtoken.IIdToken
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
 
 internal class SifAbacPdpKlientHentTilgangerTest {
 
@@ -72,6 +74,21 @@ internal class SifAbacPdpKlientHentTilgangerTest {
         feil.message shouldBe "Feil ved 'hent-tilganger' mot sif-abac-pdp: HTTP 503"
     }
 
+    @Test
+    fun `avbryter hengende kall og cacher ikke timeout`() = runBlocking<Unit> {
+        WireMock.stubFor(
+            WireMock.get(WireMock.urlPathEqualTo("$stiPrefiks/api/k9/nav-ansatt/v2"))
+                .willReturn(WireMock.aResponse().withStatus(200).withFixedDelay(1_000))
+        )
+        val klient = klient(hentTilgangerTimeout = 100.milliseconds)
+
+        shouldThrow<SifAbacPdpUtilgjengeligException> { klient.hentTilganger(idToken) }
+
+        WireMock.reset()
+        stubGyldigeTilganger()
+        klient.hentTilganger(idToken).basis shouldBe true
+    }
+
     private val idToken = mockk<IIdToken> {
         every { value } returns "validert-innkommende-token"
         every { getNavIdent() } returns "brukerident"
@@ -80,15 +97,38 @@ internal class SifAbacPdpKlientHentTilgangerTest {
         }
     }
 
-    private fun klient() = SifAbacPdpKlient(
+    private fun klient(hentTilgangerTimeout: Duration = Duration.INFINITE) = SifAbacPdpKlient(
         configuration = configuration,
         accessTokenClient = mockk<AccessTokenClient> {
             every { getOnBehalfOfAccessToken(any(), "validert-innkommende-token") } returns
                     AccessTokenResponse("obo-token", 3600, "Bearer")
         },
         scope = "api://dev-fss.k9saksbehandling.sif-abac-pdp/.default",
-        httpClient = HttpClient(Java)
+        httpClient = HttpClient(Java),
+        hentTilgangerTimeout = hentTilgangerTimeout,
     )
+
+    private fun stubGyldigeTilganger() {
+        WireMock.stubFor(
+            WireMock.get(WireMock.urlPathEqualTo("$stiPrefiks/api/k9/nav-ansatt/v2"))
+                .willReturn(
+                    WireMock.aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody(
+                            """
+                            {
+                              "kanVeilede": true,
+                              "kanBehandleKode6": false,
+                              "k9SaksbehandlerTilgang": { "kanSaksbehandle": false },
+                              "kanOppgavestyre": false,
+                              "kanDrifte": false
+                            }
+                            """.trimIndent()
+                        )
+                )
+        )
+    }
 
     @BeforeEach
     fun nullstillStubber() = WireMock.reset()

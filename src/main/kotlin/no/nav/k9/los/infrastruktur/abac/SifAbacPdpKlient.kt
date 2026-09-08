@@ -5,6 +5,7 @@ import io.ktor.client.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
+import kotlinx.coroutines.withTimeoutOrNull
 import no.nav.helse.dusseldorf.ktor.core.Retry
 import no.nav.helse.dusseldorf.oauth2.client.AccessTokenClient
 import no.nav.helse.dusseldorf.oauth2.client.CachedAccessTokenClient
@@ -29,6 +30,7 @@ import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.util.*
 import kotlin.coroutines.coroutineContext
+import kotlin.time.Duration.Companion.seconds
 
 data class TilgangerCacheKey(
     val områdeEksternId: String, // Bruker Områder-enum på sikt
@@ -42,7 +44,8 @@ class SifAbacPdpKlient(
     configuration: Configuration,
     accessTokenClient: AccessTokenClient,
     scope: String,
-    private val httpClient: HttpClient
+    private val httpClient: HttpClient,
+    private val hentTilgangerTimeout: kotlin.time.Duration = 5.seconds,
 ) : ISifAbacPdpKlient {
     val log: Logger = LoggerFactory.getLogger("SifAbacPdpKlient")
     private val cachedAccessTokenClient = CachedAccessTokenClient(accessTokenClient)
@@ -53,29 +56,31 @@ class SifAbacPdpKlient(
 
     override suspend fun hentTilganger(idToken: IIdToken): Tilganger {
         return tilgangerCache.hentSuspend(TilgangerCacheKey(idToken)) {
-            val antallForsøk = 3
-            val oboToken = cachedAccessTokenClient.getOnBehalfOfAccessToken(scopes, idToken.value)
-            val response = Retry.retry(
-                tries = antallForsøk,
-                operation = "hent-tilganger",
-                initialDelay = Duration.ofMillis(200),
-                factor = 2.0,
-                logger = log
-            ) {
-                httpClient.get("${url}/api/k9/nav-ansatt/v2") {
-                    header(
-                        HttpHeaders.Authorization, oboToken.asAuthoriationHeader()
-                    )
-                    header(HttpHeaders.Accept, "application/json")
-                    header(NavHeaders.CallId, UUID.randomUUID().toString())
-                }
-            }
+            withTimeoutOrNull(hentTilgangerTimeout) {
+                    val antallForsøk = 3
+                    val oboToken = cachedAccessTokenClient.getOnBehalfOfAccessToken(scopes, idToken.value)
+                    val response = Retry.retry(
+                        tries = antallForsøk,
+                        operation = "hent-tilganger",
+                        initialDelay = Duration.ofMillis(200),
+                        factor = 2.0,
+                        logger = log
+                    ) {
+                        httpClient.get("${url}/api/k9/nav-ansatt/v2") {
+                            header(
+                                HttpHeaders.Authorization, oboToken.asAuthoriationHeader()
+                            )
+                            header(HttpHeaders.Accept, "application/json")
+                            header(NavHeaders.CallId, UUID.randomUUID().toString())
+                        }
+                    }
 
-            if (!response.status.isSuccess()) {
-                throw SifAbacPdpHttpException(response.status.value, "hent-tilganger")
-            }
+                    if (!response.status.isSuccess()) {
+                        throw SifAbacPdpHttpException(response.status.value, "hent-tilganger")
+                    }
 
-            LosObjectMapper.instance.readValue<InnloggetAnsattK9V2Dto>(response.bodyAsText()).tilTilganger()
+                    LosObjectMapper.instance.readValue<InnloggetAnsattK9V2Dto>(response.bodyAsText()).tilTilganger()
+            } ?: throw SifAbacPdpUtilgjengeligException()
         }
     }
 

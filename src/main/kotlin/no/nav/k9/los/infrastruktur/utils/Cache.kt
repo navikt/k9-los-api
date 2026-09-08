@@ -1,6 +1,8 @@
 package no.nav.k9.los.infrastruktur.utils
 
 import io.opentelemetry.instrumentation.annotations.WithSpan
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import java.time.Duration
 import java.time.LocalDateTime
 import java.util.concurrent.locks.ReentrantLock
@@ -16,6 +18,7 @@ open class Cache<K, V>(val cacheSizeLimit: Int? = null) {
         }
     }
     private val låserForHentFunksjon: MutableMap<K, ReentrantLock> = HashMap()
+    private val låserForSuspendertHenting: MutableMap<K, SuspendertHentingLås> = HashMap()
 
     fun set(key: K, value: CacheObject<V>) {
         withWriteLock {
@@ -85,19 +88,25 @@ open class Cache<K, V>(val cacheSizeLimit: Int? = null) {
     suspend fun hentSuspend(nøkkel: K, duration: Duration = Duration.ofMinutes(30), populerCache: suspend () -> V): V {
         get(nøkkel)?.let { return it.value }
 
-        //egen lås pr nøkkel for å kunne oppdatere for flere nøkler samtidig, og samtidig unngå at flere tråder forsøker å kjøre unødvendige kall for samme nøkkel
-        val låsForHenting = finnLåsForHenting(nøkkel)
-        låsForHenting.lock()
+        val låsForHenting = withWriteLock {
+            låserForSuspendertHenting.getOrPut(nøkkel) { SuspendertHentingLås() }
+                .also { it.antallBrukere++ }
+        }
         try {
-            //sjekk på nytt for å unngå å hente om en annen tråd allerde har gjort det
-            get(nøkkel)?.let { return it.value }
+            return låsForHenting.mutex.withLock {
+                get(nøkkel)?.let { return@withLock it.value }
 
-            val hentetVerdi = OpentelemetrySpanUtil.spanSuspend("cache-hent-verdi") { populerCache.invoke() }
-            this.set(nøkkel, CacheObject(value = hentetVerdi, expire = LocalDateTime.now().plus(duration)))
-            return hentetVerdi
+                val hentetVerdi = OpentelemetrySpanUtil.spanSuspend("cache-hent-verdi") { populerCache.invoke() }
+                this.set(nøkkel, CacheObject(value = hentetVerdi, expire = LocalDateTime.now().plus(duration)))
+                hentetVerdi
+            }
         } finally {
-            låsForHenting.unlock()
-            withWriteLock { låserForHentFunksjon.remove(nøkkel) }
+            withWriteLock {
+                låsForHenting.antallBrukere--
+                if (låsForHenting.antallBrukere == 0) {
+                    låserForSuspendertHenting.remove(nøkkel, låsForHenting)
+                }
+            }
         }
     }
 
@@ -133,3 +142,8 @@ open class Cache<K, V>(val cacheSizeLimit: Int? = null) {
         }
     }
 }
+
+private class SuspendertHentingLås(
+    val mutex: Mutex = Mutex(),
+    var antallBrukere: Int = 0,
+)
