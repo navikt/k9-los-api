@@ -12,7 +12,6 @@ import no.nav.k9.los.oppgaveuthenting.OppgaveNøkkelDto
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import kotlin.time.measureTime
-import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 
 class HistorikkvaskTjeneste(
     private val eventRepository: EventRepository,
@@ -86,8 +85,7 @@ class HistorikkvaskTjeneste(
         val eventNøkkel = EventNøkkel(
             historikkvaskBestilling.fagsystem,
             historikkvaskBestilling.eksternId,
-            historikkvaskBestilling.eventlagerNøkkel,
-            Områder.fraFagsystem(historikkvaskBestilling.fagsystem)
+            historikkvaskBestilling.eventlagerNøkkel
         )
         val oppgavenøkkel = OppgaveNøkkelDto(
             historikkvaskBestilling.eksternId,

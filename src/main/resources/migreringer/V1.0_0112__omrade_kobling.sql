@@ -43,9 +43,6 @@ begin
     execute format('alter table oppgave_pep_cache add column omrade_id bigint not null default %s', k9_id);
     alter table oppgave_pep_cache add constraint fk_oppgave_pep_cache_omrade foreign key (omrade_id) references omrade (id) not valid;
 
-    execute format('alter table event_nokkel add column omrade_id bigint not null default %s', k9_id);
-    alter table event_nokkel add constraint fk_event_nokkel_omrade foreign key (omrade_id) references omrade (id) not valid;
-
     execute format('alter table oppgave_id_part add column omrade_id bigint not null default %s', k9_id);
     alter table oppgave_id_part add constraint fk_oppgave_id_part_omrade foreign key (omrade_id) references omrade (id) not valid;
 end

@@ -222,7 +222,6 @@ fun common(app: Application, config: Configuration) = module {
     single {
         EventRepository(
             dataSource = get(),
-            områdeRepository = get(),
         )
     }
 
@@ -239,7 +238,6 @@ fun common(app: Application, config: Configuration) = module {
     single {
         EventRepository(
             dataSource = get(),
-            områdeRepository = get(),
         )
     }
 

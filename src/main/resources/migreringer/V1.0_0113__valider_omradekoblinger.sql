@@ -11,9 +11,6 @@ alter table lagret_sok
 alter table oppgave_pep_cache
     validate constraint fk_oppgave_pep_cache_omrade;
 
-alter table event_nokkel
-    validate constraint fk_event_nokkel_omrade;
-
 alter table oppgave_id_part
     validate constraint fk_oppgave_id_part_omrade;
 

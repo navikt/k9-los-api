@@ -4,7 +4,6 @@ import no.nav.k9.los.domeneadaptere.eventlager.EventRepository
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.FeilRekkefølgeSjekker
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.kodeverk.Fagsystem
-import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import org.slf4j.LoggerFactory
 
 class UngTilbakeEventHandler(
@@ -16,7 +15,7 @@ class UngTilbakeEventHandler(
 
     fun prosesser(eksternId: String, eksternVersjon: String, event: String) {
         transactionalManager.transaction { tx ->
-            eventRepository.lagre(Fagsystem.UNGTILBAKE, eksternId, eksternVersjon, event, Områder.AKTIVITETSPENGER, tx)
+            eventRepository.lagre(Fagsystem.UNGTILBAKE, eksternId, eksternVersjon, event, tx)
             // TODO: koble på EventTilOppgaveAdapter når ung-tilbake oppgavehåndtering er implementert
         }
     }
