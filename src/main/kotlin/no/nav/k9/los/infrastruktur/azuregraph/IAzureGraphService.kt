@@ -5,5 +5,4 @@ import java.util.*
 interface IAzureGraphService {
     suspend fun hentEnhetForInnloggetBruker(): String
     suspend fun hentGrupperForSaksbehandler(saksbehandlerIdent: String): Set<UUID>
-    suspend fun hentGrupperForInnloggetSaksbehandler(): Set<UUID>
 }
