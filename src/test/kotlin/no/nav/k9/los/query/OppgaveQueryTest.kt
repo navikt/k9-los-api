@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import no.nav.helse.dusseldorf.ktor.jackson.dusseldorfConfigured
 import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.FeltType
@@ -722,7 +723,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
     }
 
     @Test
-    fun `queryRequest som vil fjerne reserverte oppgaver skal kun få ureserverte`() {
+    fun `queryRequest som vil fjerne reserverte oppgaver skal kun få ureserverte`() = runTest {
         val testSaksbehandlerRepository = get<TestSaksbehandlerRepository>()
 
         val saksbehandler = runBlocking {
@@ -1293,7 +1294,8 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
                     kode6 = kode6,
                     kode7 = kode7,
                     egenAnsatt = egenAnsatt,
-                    oppdatert = LocalDateTime.now()
+                    oppdatert = LocalDateTime.now(),
+                    område = Områder.K9
                 ), tx
             )
         }

@@ -39,7 +39,7 @@ private fun RoutingContext.idToken(): IIdToken {
         val authorizationHeader = call.request.parseAuthorizationHeader()?.render()
             ?: throw IllegalStateException("Token ikke satt")
         val jwt = authorizationHeader.substringAfter("Bearer ")
-        IdToken.fra(jwt, principal)
+        IdToken(jwt)
     } else {
         val profile = call.application.getKoin().getOrNull<KoinProfile>()
         check(profile == KoinProfile.LOCAL) { "Validert principal ikke satt" }

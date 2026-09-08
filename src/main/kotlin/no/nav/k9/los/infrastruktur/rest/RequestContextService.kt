@@ -9,6 +9,9 @@ import no.nav.k9.los.KoinProfile
 import no.nav.k9.los.infrastruktur.idtoken.IIdToken
 import no.nav.k9.los.infrastruktur.idtoken.IdTokenLocal
 import no.nav.k9.los.infrastruktur.idtoken.idToken
+import no.nav.k9.los.infrastruktur.rest.område
+import no.nav.k9.los.områdeAttributeKey
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import kotlin.coroutines.AbstractCoroutineContextElement
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.coroutineContext
@@ -16,7 +19,8 @@ import kotlin.coroutines.coroutineContext
 // For bruk i suspending functions
 // https://blog.tpersson.io/2018/04/22/emulating-request-scoped-objects-with-kotlin-coroutines/
 public class CoroutineRequestContext(
-    val idToken: IIdToken
+    val idToken: IIdToken,
+    val område: Områder?,
 ) : AbstractCoroutineContextElement(Key) {
     companion object Key : CoroutineContext.Key<CoroutineRequestContext>
 }
@@ -25,6 +29,7 @@ private fun CoroutineContext.requestContext() =
     get(CoroutineRequestContext) ?: throw IllegalStateException("Request Context ikke satt.")
 
 internal fun CoroutineContext.idToken() = requestContext().idToken
+internal fun CoroutineContext.område() = checkNotNull(requestContext().område) { "Kan bare kalles i område-kontekst" }
 
 internal class RequestContextService(
     private val profile: KoinProfile
@@ -40,6 +45,7 @@ internal class RequestContextService(
         idToken = when (profile == KoinProfile.LOCAL) {
             true -> IdTokenLocal()
             false -> call.idToken()
-        }
+        },
+        område = call.attributes[områdeAttributeKey]
     )
 }

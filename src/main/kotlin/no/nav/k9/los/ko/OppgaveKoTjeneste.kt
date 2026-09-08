@@ -247,8 +247,8 @@ class OppgaveKoTjeneste(
                 )
             }
             log.info("Spurte etter $antallKandidaterEtterspurt kandidater fra køen med id $oppgaveKoId, fikk ${kandidatOppgaver.size}")
-            val muligReservert = DetaljerMetrikker.time("taReservasjonFraKø", "finnReservasjonFraKø", "$oppgaveKoId") {
-                transactionalManager.transaction { tx ->
+            val muligReservert = DetaljerMetrikker.timeSuspended("taReservasjonFraKø", "finnReservasjonFraKø", "$oppgaveKoId") {
+                transactionalManager.transactionSuspend { tx ->
                     finnReservasjonFraKø(kandidatOppgaver, tx, innloggetBrukerId)
                 }
             }
@@ -265,7 +265,7 @@ class OppgaveKoTjeneste(
     }
 
     @WithSpan
-    private fun finnReservasjonFraKø(
+    private suspend fun finnReservasjonFraKø(
         kandidatoppgaver: List<Oppgave>,
         tx: TransactionalSession,
         innloggetBrukerId: Long,

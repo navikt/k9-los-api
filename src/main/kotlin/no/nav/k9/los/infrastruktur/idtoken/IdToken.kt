@@ -18,6 +18,7 @@ data class IdToken(
         throw IdTokenInvalidFormatException(this, cause)
     }
 
+    override fun getTokenId(): String = jwt.uti
     override fun getNavIdent(): String = jwt.NAVident
     override fun getName(): String = jwt.name
     override fun getUsername(): String = jwt.preferredUsername

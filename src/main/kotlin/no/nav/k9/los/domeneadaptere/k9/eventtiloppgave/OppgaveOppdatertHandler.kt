@@ -41,8 +41,10 @@ class OppgaveOppdatertHandler(
                     listOfNotNull(
                         oppgave.hentVerdi("aktorId"),
                         oppgave.hentVerdi("pleietrengendeAktorId"),
-                        oppgave.hentVerdi("relatertPartAktorid")
-                    )
+                        oppgave.hentVerdi("relatertPartAktorid"),
+                    ),
+                    oppgave.oppgavetype.område.tilOmråderEnum(),
+                    oppgave.oppgavetype.eksternId,
                 )
             )
         }

@@ -46,24 +46,31 @@ class PepCacheService(
     }
 
     private suspend fun lagPepCacheFra(oppgaveIdOgAktører: PepCacheInput): PepCache {
+        // K9-punsj kan motta journalposter før noen person er identifisert.
+        val erK9Punsj = oppgaveIdOgAktører.område == Områder.K9 && oppgaveIdOgAktører.oppgavetype == "k9punsj"
+        require(oppgaveIdOgAktører.saksnummer != null || oppgaveIdOgAktører.aktører.isNotEmpty() || erK9Punsj) {
+            "Kan ikke klassifisere oppgave uten sak eller personer"
+        }
+        val område = oppgaveIdOgAktører.område
         val pep = PepCache(
             eksternId = oppgaveIdOgAktører.eksternId,
-            kildeområde = Områder.K9,
+            kildeområde = område,
             kode6 = false,
             kode7 = false,
             egenAnsatt = false,
-            oppdatert = LocalDateTime.now()
+            oppdatert = LocalDateTime.now(),
+            område = område
         )
 
         return if (oppgaveIdOgAktører.saksnummer != null) {
-            pep.oppdater(oppgaveIdOgAktører.saksnummer)
+            pep.oppdater(oppgaveIdOgAktører.saksnummer, område)
         } else {
-            pep.oppdater(oppgaveIdOgAktører.aktører)
+            pep.oppdater(oppgaveIdOgAktører.aktører, område)
         }
     }
 
-    private suspend fun PepCache.oppdater(saksnummer: String): PepCache {
-        val diskresjonskoder = pepClient.diskresjonskoderForSak(saksnummer)
+    private suspend fun PepCache.oppdater(saksnummer: String, område: Områder): PepCache {
+        val diskresjonskoder = pepClient.diskresjonskoderForSak(saksnummer, område)
 
         //TODO ikke sette kode7 og egenansatt til samme verdi, det er misvisende ifht modellen som finnes. Det fungerer funksjonelt p.t fordi kode7 og egen ansatt (skjermet) håndteres samlet i køene
         val kode7ellerEgenAnsatt =
@@ -75,14 +82,11 @@ class PepCacheService(
         )
     }
 
-    private suspend fun PepCache.oppdater(aktører: List<String>): PepCache {
-        if (aktører.isEmpty()) {
-            return oppdater(kode6 = false, kode7 = false, egenAnsatt = false)
-        }
+    private suspend fun PepCache.oppdater(aktører: List<String>, område: Områder): PepCache {
         return coroutineScope {
             val requests = aktører.map {
                 async(Span.current().asContextElement()) {
-                    pepClient.diskresjonskoderForPerson(it)
+                    pepClient.diskresjonskoderForPerson(it, område)
                 }
             }
 
@@ -105,5 +109,7 @@ class PepCacheService(
 data class PepCacheInput(
     val eksternId: String,
     val saksnummer: String?,
-    val aktører: List<String>
+    val aktører: List<String>,
+    val område: Områder,
+    val oppgavetype: String,
 )

@@ -19,6 +19,7 @@ import no.nav.k9.los.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventDto
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.sak.K9SakEventDto
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.sak.K9SakEventHandler
 import no.nav.k9.los.domeneadaptere.k9.eventtiloppgave.EventTilOppgaveAdapter
+import no.nav.k9.los.infrastruktur.abac.Action
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.infrastruktur.jobbplanlegger.Jobbplanlegger
@@ -28,6 +29,7 @@ import no.nav.k9.los.kodeverk.BehandlingStatus
 import no.nav.k9.los.kodeverk.Fagsystem
 import no.nav.k9.los.kodeverk.PersonBeskyttelseType
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
+import no.nav.k9.los.oppgaveuthenting.Oppgave
 import no.nav.k9.los.oppgaveuthenting.query.OppgaveQueryService
 import no.nav.k9.los.oppgaveuthenting.query.QueryRequest
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.EnkelSelectFelt
@@ -35,6 +37,7 @@ import no.nav.k9.los.oppgaveuthenting.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.OppgaveQuery
 import no.nav.k9.los.oppgaveuthenting.query.mapping.EksternFeltverdiOperator
 import no.nav.k9.los.oppgaveuthenting.OppgaveRepository
+import no.nav.k9.los.saksbehandleradmin.Saksbehandler
 import no.nav.k9.sak.typer.AktørId
 import no.nav.k9.sak.typer.JournalpostId
 import no.nav.sif.abac.kontrakt.abac.Diskresjonskode
@@ -72,7 +75,7 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
 
         runBlocking {
             // Gir tilgang til kode6 for å isolere testing av cache-oppdatering
-            coEvery { pepClient.harTilgangTilOppgaveV3(any(), any()) } returns true
+            coEvery { pepClient.harTilgangTilOppgaveV3(any<Oppgave>(), any<Saksbehandler>(), any<Action>()) } returns true
         }
 
         val områdeSetup = get<OmrådeSetup>()
@@ -81,41 +84,41 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
 
     fun gjørSakKode6(saksnummer: String) {
         runBlocking {
-            coEvery { pepClient.erSakKode6(eq(saksnummer)) } returns true
-            coEvery { pepClient.erSakKode7EllerEgenAnsatt(eq(saksnummer)) } returns false
-            coEvery { pepClient.diskresjonskoderForSak(eq(saksnummer)) } returns setOf(Diskresjonskode.KODE6)
+//            coEvery { pepClient.erSakKode6(eq(saksnummer)) } returns true
+//            coEvery { pepClient.erSakKode7EllerEgenAnsatt(eq(saksnummer)) } returns false
+            coEvery { pepClient.diskresjonskoderForSak(eq(saksnummer), Områder.K9) } returns setOf(Diskresjonskode.KODE6)
         }
     }
 
     fun gjørSakOrdinær(saksnummer: String) {
         runBlocking {
-            coEvery { pepClient.erSakKode6(eq(saksnummer)) } returns false
-            coEvery { pepClient.erSakKode7EllerEgenAnsatt(eq(saksnummer)) } returns false
-            coEvery { pepClient.diskresjonskoderForSak(eq(saksnummer)) } returns setOf()
+//            coEvery { pepClient.erSakKode6(eq(saksnummer)) } returns false
+//            coEvery { pepClient.erSakKode7EllerEgenAnsatt(eq(saksnummer)) } returns false
+            coEvery { pepClient.diskresjonskoderForSak(eq(saksnummer), eq(Områder.K9)) } returns setOf()
         }
     }
 
     fun gjørAktørKode6(aktørId: String) {
         runBlocking {
-            coEvery { pepClient.erAktørKode6(eq(aktørId)) } returns true
-            coEvery { pepClient.erAktørKode7EllerEgenAnsatt(eq(aktørId)) } returns false
-            coEvery { pepClient.diskresjonskoderForPerson(eq(aktørId)) } returns setOf(Diskresjonskode.KODE6)
+//            coEvery { pepClient.erAktørKode6(eq(aktørId)) } returns true
+//            coEvery { pepClient.erAktørKode7EllerEgenAnsatt(eq(aktørId)) } returns false
+            coEvery { pepClient.diskresjonskoderForPerson(eq(aktørId), eq(Områder.K9)) } returns setOf(Diskresjonskode.KODE6)
         }
     }
 
     fun gjørAktørKode7(aktørId: String) {
         runBlocking {
-            coEvery { pepClient.erAktørKode6(eq(aktørId)) } returns false
-            coEvery { pepClient.erAktørKode7EllerEgenAnsatt(eq(aktørId)) } returns true
-            coEvery { pepClient.diskresjonskoderForPerson(eq(aktørId)) } returns setOf(Diskresjonskode.KODE7)
+//            coEvery { pepClient.erAktørKode6(eq(aktørId)) } returns false
+//            coEvery { pepClient.erAktørKode7EllerEgenAnsatt(eq(aktørId)) } returns true
+            coEvery { pepClient.diskresjonskoderForPerson(eq(aktørId), eq(Områder.K9)) } returns setOf(Diskresjonskode.KODE7)
         }
     }
 
     fun gjørAktørOrdinær(aktørId: String) {
         runBlocking {
-            coEvery { pepClient.erAktørKode6(eq(aktørId)) } returns false
-            coEvery { pepClient.erAktørKode7EllerEgenAnsatt(eq(aktørId)) } returns false
-            coEvery { pepClient.diskresjonskoderForPerson(eq(aktørId)) } returns setOf()
+//            coEvery { pepClient.erAktørKode6(eq(aktørId)) } returns false
+//            coEvery { pepClient.erAktørKode7EllerEgenAnsatt(eq(aktørId)) } returns false
+            coEvery { pepClient.diskresjonskoderForPerson(eq(aktørId), eq(Områder.K9)) } returns setOf()
         }
     }
 
@@ -332,8 +335,8 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
         verify(exactly = 3) {
             runBlocking {
                 pepClient.harTilgangTilOppgaveV3(
-                    any(),
-                    any()
+                    any<Oppgave>(),
+                    any<Action>()
                 )
             }
         } //oppgaven var bare i kode6-køa, så ble ett ekstra kall til pep-klent

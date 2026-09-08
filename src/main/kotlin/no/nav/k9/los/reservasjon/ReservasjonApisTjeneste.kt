@@ -2,6 +2,7 @@ package no.nav.k9.los.reservasjon
 
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
+import no.nav.k9.los.infrastruktur.rest.CoroutineRequestContext
 import no.nav.k9.los.infrastruktur.utils.leggTilDagerHoppOverHelg
 import no.nav.k9.los.kodeverk.BehandlingType
 import no.nav.k9.los.kodeverk.FagsakYtelseType
@@ -39,7 +40,7 @@ class ReservasjonApisTjeneste(
             oppgaveIdMedOverstyringDto.overstyrIdent ?: innloggetBruker.navident!!
         )!!
 
-        val reservasjonV3 = transactionalManager.transaction { tx ->
+        val reservasjonV3 = transactionalManager.transactionSuspend { tx ->
             val oppgave = aktivOppgaveOppslag.hentAktivOppgave(
                 oppgaveNøkkel.oppgaveEksternId,
                 oppgaveNøkkel.oppgaveTypeEksternId,

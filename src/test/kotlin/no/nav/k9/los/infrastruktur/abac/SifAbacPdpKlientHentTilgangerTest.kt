@@ -97,7 +97,7 @@ internal class SifAbacPdpKlientHentTilgangerTest {
         }
     }
 
-    private fun klient(hentTilgangerTimeout: Duration = Duration.INFINITE) = SifAbacPdpKlient(
+    private fun klient(hentTilgangerTimeout: Duration = Duration.INFINITE) = SifAbacPdpKlientK9(
         configuration = configuration,
         accessTokenClient = mockk<AccessTokenClient> {
             every { getOnBehalfOfAccessToken(any(), "validert-innkommende-token") } returns

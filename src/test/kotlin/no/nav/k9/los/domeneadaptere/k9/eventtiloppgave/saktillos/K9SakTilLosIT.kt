@@ -153,7 +153,7 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         )
         assertThat(antallIKø).isEqualTo(0)
 
-        val resultat = runBlocking(CoroutineRequestContext(mockk<IIdToken>(relaxed = true))) {
+        val resultat = runBlocking(CoroutineRequestContext(mockk<IIdToken>(relaxed = true), Områder.K9)) {
             oppgaveKøTjeneste.taReservasjonFraKø(
                 TestSaksbehandler.SARA.id,
                 kø.id
@@ -433,7 +433,7 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
     }
 
     private fun taReservasjonFra(kø: OppgaveKo, saksbehandler: Saksbehandler): OppgaveMuligReservert {
-        return runBlocking(CoroutineRequestContext(mockk<IIdToken>(relaxed = true))) {
+        return runBlocking(CoroutineRequestContext(mockk<IIdToken>(relaxed = true), Områder.K9)) {
             oppgaveKøTjeneste.taReservasjonFraKø(
                 saksbehandler.id,
                 kø.id,

@@ -5,6 +5,7 @@ data class IdTokenLocal(
 
 ) : IIdToken {
     override val jwt: Nothing? = null
+    override fun getTokenId(): String = "token-id"
     override fun getNavIdent(): String = "Z123456"
     override fun getName(): String = "saksbehandler@nav.no"
     override fun getUsername(): String = "saksbehandler@nav.no"

@@ -1,6 +1,7 @@
 package no.nav.k9.los.reservasjon
 
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.oppgaveuthenting.query.equalsWithPrecision
@@ -47,11 +48,11 @@ class ReservasjonV3TjenesteTest : AbstractK9LosIntegrationTest() {
     }
 
     @Test
-    fun `ta reservasjon`() {
+    fun `ta reservasjon`() = runTest {
         val transactionalManager = get<TransactionalManager>()
         val reservasjonV3Tjeneste = get<ReservasjonV3Tjeneste>()
 
-        val reservasjon = transactionalManager.transaction { tx ->
+        val reservasjon = transactionalManager.transactionSuspend { tx ->
             reservasjonV3Tjeneste.forsøkReservasjonOgReturnerAktiv(
                 reservasjonsnøkkel = "test1",
                 reserverForId = saksbehandler1.id,
@@ -78,11 +79,11 @@ class ReservasjonV3TjenesteTest : AbstractK9LosIntegrationTest() {
 
 
     @Test
-    fun `annullerReservasjon`() {
+    fun `annullerReservasjon`() = runTest {
         val transactionalManager = get<TransactionalManager>()
         val reservasjonV3Tjeneste = get<ReservasjonV3Tjeneste>()
 
-        transactionalManager.transaction { tx ->
+        transactionalManager.transactionSuspend { tx ->
             reservasjonV3Tjeneste.forsøkReservasjonOgReturnerAktiv(
                 reservasjonsnøkkel = "test1",
                 reserverForId = saksbehandler1.id,
