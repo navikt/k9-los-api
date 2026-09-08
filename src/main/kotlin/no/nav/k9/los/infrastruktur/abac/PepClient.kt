@@ -1,12 +1,10 @@
 package no.nav.k9.los.infrastruktur.abac
 
 import kotlinx.coroutines.runBlocking
-import no.nav.k9.los.infrastruktur.abac.tilganger.Tilganger
 import no.nav.k9.los.infrastruktur.azuregraph.IAzureGraphService
 import no.nav.k9.los.infrastruktur.rest.idToken
-import no.nav.k9.los.infrastruktur.utils.Cache
-import no.nav.k9.los.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.oppgaveuthenting.Oppgave
+import no.nav.k9.los.saksbehandleradmin.Saksbehandler
 import no.nav.sif.abac.kontrakt.abac.Diskresjonskode
 import no.nav.sif.abac.kontrakt.abac.dto.SaksnummerDto
 import no.nav.sif.abac.kontrakt.person.AktørId
@@ -20,7 +18,6 @@ class PepClient(
     private val sifAbacPdpKlient: ISifAbacPdpKlient
 ) : IPepClient {
     private val log: Logger = LoggerFactory.getLogger(PepClient::class.java)
-    private val cache = Cache<String, Tilganger>()
 
     override suspend fun erOppgaveStyrer(): Boolean {
         return sifAbacPdpKlient.hentTilganger(coroutineContext.idToken()).oppgavestyring
