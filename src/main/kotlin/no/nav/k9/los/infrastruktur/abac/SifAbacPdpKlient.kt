@@ -55,7 +55,7 @@ class SifAbacPdpKlient(
     private val tilgangerCache = Cache<TilgangerCacheKey, Tilganger>(300)
 
     override suspend fun hentTilganger(idToken: IIdToken): Tilganger {
-        return tilgangerCache.hentSuspend(TilgangerCacheKey(idToken)) {
+        return tilgangerCache.hentSuspend(TilgangerCacheKey(idToken), Duration.ofMinutes(60)) {
             withTimeoutOrNull(hentTilgangerTimeout) {
                     val antallForsøk = 3
                     val oboToken = cachedAccessTokenClient.getOnBehalfOfAccessToken(scopes, idToken.value)
