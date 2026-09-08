@@ -123,8 +123,8 @@ fun Application.k9Los() {
         DefaultStatusPages()
         JacksonStatusPages()
         AuthStatusPages()
-        exception<SifAbacPdpUtilgjengeligException> { call, _ ->
-            call.respond(HttpStatusCode.ServiceUnavailable, "Tidsavbrudd mot sif-abac-pdp")
+        exception<SifAbacPdpUtilgjengeligException> { call, e ->
+            call.respond(HttpStatusCode.ServiceUnavailable, e.message ?: "Tidsavbrudd mot sif-abac-pdp")
         }
     }
 
