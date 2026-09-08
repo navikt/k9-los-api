@@ -10,7 +10,6 @@ import no.nav.k9.los.OppgaveTestDataBuilder
 import no.nav.k9.los.domeneadaptere.k9.K9Oppgavetypenavn
 import no.nav.k9.los.kodeverk.FagsakYtelseType
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
-import no.nav.k9.los.oppgavedefinisjon.omraade.Område
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.koin.test.get
@@ -89,9 +88,7 @@ class OppgaveV3TjenesteTest : AbstractK9LosIntegrationTest() {
         return OppgaveDto(
             eksternId = eksternId,
             eksternVersjon = versjon.toString(),
-            område = Område(eksternId = "K9").eksternId,
-            kildeområde = "k9-sak-til-los",
-            type = "k9sak",
+            type = K9Oppgavetypenavn.SAK,
             status = oppgavestatus.kode,
             endretTidspunkt = LocalDateTime.now(),
             reservasjonsnøkkel = "K9_b_${FagsakYtelseType.FRISINN}_273857",

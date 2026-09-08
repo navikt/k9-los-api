@@ -3,6 +3,7 @@ package no.nav.k9.los.oppgaveuthenting.query.mapping.transientfeltutleder
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.shouldBe
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
+import no.nav.k9.los.domeneadaptere.k9.K9Oppgavetypenavn
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgavemottak.AktivOgPartisjonertOppgaveAjourholdTjeneste
 import no.nav.k9.los.oppgavemottak.NyOppgaveversjon
@@ -256,9 +257,7 @@ class K9SakAntallOmsøkteDagerSomErPassertUtlederSpec : KoinTest, FreeSpec() {
         return OppgaveDto(
             eksternId = UUID.randomUUID().toString(),
             eksternVersjon = LocalDateTime.now().toString(),
-            område = Områder.K9.eksternId,
-            kildeområde = "k9-sak-til-los",
-            type = "k9sak",
+            type = K9Oppgavetypenavn.SAK,
             status = "AAPEN",
             endretTidspunkt = LocalDateTime.now(),
             reservasjonsnøkkel = UUID.randomUUID().toString(),

@@ -15,7 +15,7 @@ data class OppgaveNøkkelDto(
 
     constructor(oppgaveDto: OppgaveDto): this(
         oppgaveEksternId = oppgaveDto.eksternId,
-        oppgaveTypeEksternId = oppgaveDto.type,
-        områdeEksternId = oppgaveDto.område
+        oppgaveTypeEksternId = oppgaveDto.type.kode,
+        områdeEksternId = oppgaveDto.område.eksternId
     )
 }

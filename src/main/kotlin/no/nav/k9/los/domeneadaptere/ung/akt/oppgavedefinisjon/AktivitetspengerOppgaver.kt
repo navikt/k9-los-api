@@ -4,6 +4,7 @@ import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgavedefinisjon.oppgavetype.OppgavefeltDto
 import no.nav.k9.los.oppgavedefinisjon.oppgavetype.OppgavetypeDto
 import no.nav.k9.los.oppgavedefinisjon.oppgavetype.OppgavetyperDto
+import no.nav.k9.los.oppgaveuthenting.Oppgave
 
 object AktivitetspengerOppgaver {
     fun lagOppgaveDefinisjon(): OppgavetyperDto {
@@ -29,6 +30,7 @@ object AktivitetspengerOppgaver {
                 OppgavefeltDto(AktivitetspengerFeltIder.Behandling.STATUS, visPåOppgave = true, påkrevd = true),
                 OppgavefeltDto(AktivitetspengerFeltIder.Behandling.STEG, visPåOppgave = true, påkrevd = false),
                 OppgavefeltDto(AktivitetspengerFeltIder.Behandling.ARSAK, visPåOppgave = true, påkrevd = false),
+                OppgavefeltDto(AktivitetspengerFeltIder.Behandling.RESULTATTYPE, visPåOppgave = true, påkrevd = true),
                 // Soknad
                 OppgavefeltDto(AktivitetspengerFeltIder.Soknad.NYE_KRAV, visPåOppgave = true, påkrevd = false),
                 OppgavefeltDto(AktivitetspengerFeltIder.Soknad.ARSAK, visPåOppgave = true, påkrevd = false),
@@ -39,9 +41,9 @@ object AktivitetspengerOppgaver {
                 OppgavefeltDto(AktivitetspengerFeltIder.Sak.SAKSNUMMER, visPåOppgave = true, påkrevd = true),
                 OppgavefeltDto(AktivitetspengerFeltIder.Sak.MOTTATT_DATO, visPåOppgave = true, påkrevd = false),
                 OppgavefeltDto(AktivitetspengerFeltIder.Sak.TID_SIDEN_MOTTATT_DATO, visPåOppgave = true, påkrevd = false),
+                OppgavefeltDto(AktivitetspengerFeltIder.Sak.REGISTRERT_DATO, visPåOppgave = true, påkrevd = false),
                 // Vedtak
                 OppgavefeltDto(AktivitetspengerFeltIder.Vedtak.DATO, visPåOppgave = true, påkrevd = false),
-                OppgavefeltDto(AktivitetspengerFeltIder.Vedtak.RESULTATTYPE, visPåOppgave = true, påkrevd = true),
                 OppgavefeltDto(AktivitetspengerFeltIder.Vedtak.YTELSESTYPE, visPåOppgave = true, påkrevd = true),
                 OppgavefeltDto(AktivitetspengerFeltIder.Vedtak.BEHANDLENDE_ENHET, visPåOppgave = true, påkrevd = false),
                 OppgavefeltDto(AktivitetspengerFeltIder.Vedtak.TOTRINNSKONTROLL, visPåOppgave = true, påkrevd = true),
@@ -52,10 +54,11 @@ object AktivitetspengerOppgaver {
                 OppgavefeltDto(AktivitetspengerFeltIder.Aksjonspunkt.UTFORT, visPåOppgave = true, påkrevd = false),
                 OppgavefeltDto(AktivitetspengerFeltIder.Aksjonspunkt.AVBRUTT, visPåOppgave = true, påkrevd = false),
                 OppgavefeltDto(AktivitetspengerFeltIder.Aksjonspunkt.FREMTIDIG, visPåOppgave = true, påkrevd = false),
-                // Beslutter
-                OppgavefeltDto(AktivitetspengerFeltIder.Beslutter.ANSVARLIG, visPåOppgave = true, påkrevd = false),
-                OppgavefeltDto(AktivitetspengerFeltIder.Beslutter.LIGGER_HOS, visPåOppgave = true, påkrevd = false),
-                OppgavefeltDto(AktivitetspengerFeltIder.Beslutter.TID_FORSTE_GANG_HOS, visPåOppgave = true, påkrevd = false),
+                // Saksbehandling
+                OppgavefeltDto(AktivitetspengerFeltIder.Saksbehandling.ANSVARLIG_SAKSBEHANDLER, visPåOppgave = true, påkrevd = false),
+                OppgavefeltDto(AktivitetspengerFeltIder.Saksbehandling.ANSVARLIG_BESLUTTER, visPåOppgave = true, påkrevd = false),
+                OppgavefeltDto(AktivitetspengerFeltIder.Saksbehandling.LIGGER_HOS_BESLUTTER, visPåOppgave = true, påkrevd = false),
+                OppgavefeltDto(AktivitetspengerFeltIder.Saksbehandling.TID_FORSTE_GANG_HOS, visPåOppgave = true, påkrevd = false),
                 // Ventetid
                 OppgavefeltDto(AktivitetspengerFeltIder.Ventetid.AKTIV_ARSAK, visPåOppgave = true, påkrevd = false),
                 OppgavefeltDto(AktivitetspengerFeltIder.Ventetid.AKTIV_FRIST, visPåOppgave = true, påkrevd = false),

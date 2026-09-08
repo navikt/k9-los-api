@@ -1,5 +1,6 @@
 package no.nav.k9.los.oppgavemottak
 
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import java.time.LocalDateTime
 
 sealed class NyOppgaveVersjonInnsending(
@@ -18,21 +19,20 @@ data class VaskOppgaveversjon(
 data class OppgaveDto(
     val eksternId: String,
     val eksternVersjon: String,
-    val område: String,
-    val kildeområde: String,
-    val type: String,
+    val type: OppgaveDtoType,
     val status: String,
     val endretTidspunkt: LocalDateTime,
     val reservasjonsnøkkel: String,
     val feltverdier: List<OppgaveFeltverdiDto>
 ) {
+    val område: Områder get() = type.område
+    val kildeområde: Områder get() = område
+
 
     constructor(oppgaveV3: OppgaveV3) : this(
         eksternId = oppgaveV3.eksternId,
         eksternVersjon = oppgaveV3.eksternVersjon,
-        område = oppgaveV3.oppgavetype.område.eksternId,
-        kildeområde = oppgaveV3.kildeområde,
-        type = oppgaveV3.oppgavetype.eksternId,
+        type = OppgaveDtoType.fraEksternId(oppgaveV3.oppgavetype.område.eksternId, oppgaveV3.oppgavetype.eksternId),
         status = oppgaveV3.status.kode,
         endretTidspunkt = oppgaveV3.endretTidspunkt,
         reservasjonsnøkkel = oppgaveV3.reservasjonsnøkkel,
@@ -47,8 +47,6 @@ data class OppgaveDto(
     constructor(oppgaveDto: OppgaveDto, feltverdier: List<OppgaveFeltverdiDto>) : this(
         eksternId = oppgaveDto.eksternId,
         eksternVersjon = oppgaveDto.eksternVersjon,
-        område = oppgaveDto.område,
-        kildeområde = oppgaveDto.kildeområde,
         type = oppgaveDto.type,
         status = oppgaveDto.status,
         endretTidspunkt = oppgaveDto.endretTidspunkt,

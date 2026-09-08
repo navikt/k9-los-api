@@ -1,6 +1,6 @@
 package no.nav.k9.los.domeneadaptere.ung.akt.oppgavedefinisjon
 
-import no.nav.k9.los.kodeverk.AktFagsystem
+import no.nav.k9.los.domeneadaptere.ung.akt.kodeverk.AktFagsystem
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.Datatype
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.FeltdefinisjonDto
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.FeltdefinisjonerDto
@@ -9,10 +9,14 @@ import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.Synlighet
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.query.mapping.transientfeltutleder.K9SakTidSidenMottattDatoUtleder
 import no.nav.k9.los.oppgaveuthenting.query.mapping.transientfeltutleder.TransientFeltutleder
+import no.nav.ung.kodeverk.behandling.BehandlingResultatType
 import no.nav.ung.kodeverk.behandling.BehandlingStatus
 import no.nav.ung.kodeverk.behandling.BehandlingStegType
 import no.nav.ung.kodeverk.behandling.BehandlingType
 import no.nav.ung.kodeverk.behandling.BehandlingÅrsakType
+import no.nav.ung.kodeverk.behandling.FagsakYtelseType
+import no.nav.ung.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
+import no.nav.ung.kodeverk.behandling.aksjonspunkt.Venteårsak
 import kotlin.reflect.KClass
 
 object AktivitetspengerFeltdefinisjoner {
@@ -106,6 +110,13 @@ object AktivitetspengerFeltdefinisjoner {
                     synlighet = Synlighet.OVER_STREKEN,
                     transientFeltutleder = K9SakTidSidenMottattDatoUtleder::class,
                 ),
+                felt(
+                    id = AktivitetspengerFeltIder.Sak.REGISTRERT_DATO,
+                    visningsnavn = "Registrert dato",
+                    listetype = false,
+                    tolkesSom = Datatype.TIMESTAMP,
+                    synlighet = Synlighet.UNDER_STREKEN,
+                ),
                 // Vedtak
                 felt(
                     id = AktivitetspengerFeltIder.Vedtak.DATO,
@@ -115,12 +126,12 @@ object AktivitetspengerFeltdefinisjoner {
                     synlighet = Synlighet.UNDER_STREKEN,
                 ),
                 felt(
-                    id = AktivitetspengerFeltIder.Vedtak.RESULTATTYPE,
+                    id = AktivitetspengerFeltIder.Behandling.RESULTATTYPE,
                     visningsnavn = "Resultattype",
                     listetype = false,
                     tolkesSom = Datatype.STRING,
                     synlighet = Synlighet.UNDER_STREKEN,
-                    kodeverkreferanse = kodeverk(Områder.AKTIVITETSPENGER, "Resultattype"),
+                    kodeverkreferanse = kodeverk(Områder.AKTIVITETSPENGER, BehandlingResultatType::class.java.simpleName),
                 ),
                 felt(
                     id = AktivitetspengerFeltIder.Vedtak.YTELSESTYPE,
@@ -128,7 +139,7 @@ object AktivitetspengerFeltdefinisjoner {
                     listetype = false,
                     tolkesSom = Datatype.STRING,
                     synlighet = Synlighet.OVER_STREKEN,
-                    kodeverkreferanse = kodeverk(Områder.AKTIVITETSPENGER, "Ytelsetype"),
+                    kodeverkreferanse = kodeverk(Områder.AKTIVITETSPENGER, FagsakYtelseType::class.java.simpleName),
                 ),
                 felt(
                     id = AktivitetspengerFeltIder.Vedtak.BEHANDLENDE_ENHET,
@@ -153,7 +164,7 @@ object AktivitetspengerFeltdefinisjoner {
                     listetype = true,
                     tolkesSom = Datatype.STRING,
                     synlighet = Synlighet.UNDER_STREKEN,
-                    kodeverkreferanse = kodeverk(Områder.AKTIVITETSPENGER, "Aksjonspunkt"),
+                    kodeverkreferanse = kodeverk(Områder.AKTIVITETSPENGER, AksjonspunktDefinisjon::class.java.simpleName),
                 ),
                 felt(
                     id = AktivitetspengerFeltIder.Aksjonspunkt.AKTIVE,
@@ -162,7 +173,7 @@ object AktivitetspengerFeltdefinisjoner {
                     listetype = true,
                     tolkesSom = Datatype.STRING,
                     synlighet = Synlighet.UNDER_STREKEN,
-                    kodeverkreferanse = kodeverk(Områder.AKTIVITETSPENGER, "Aksjonspunkt"),
+                    kodeverkreferanse = kodeverk(Områder.AKTIVITETSPENGER, AksjonspunktDefinisjon::class.java.simpleName),
                 ),
                 felt(
                     id = AktivitetspengerFeltIder.Aksjonspunkt.LOSBART,
@@ -171,7 +182,7 @@ object AktivitetspengerFeltdefinisjoner {
                     listetype = false,
                     tolkesSom = Datatype.STRING,
                     synlighet = Synlighet.OVER_STREKEN,
-                    kodeverkreferanse = kodeverk(Områder.AKTIVITETSPENGER, "Aksjonspunkt"),
+                    kodeverkreferanse = kodeverk(Områder.AKTIVITETSPENGER, AksjonspunktDefinisjon::class.java.simpleName),
                 ),
                 felt(
                     id = AktivitetspengerFeltIder.Aksjonspunkt.UTFORT,
@@ -180,7 +191,7 @@ object AktivitetspengerFeltdefinisjoner {
                     listetype = true,
                     tolkesSom = Datatype.STRING,
                     synlighet = Synlighet.UNDER_STREKEN,
-                    kodeverkreferanse = kodeverk(Områder.AKTIVITETSPENGER, "Aksjonspunkt"),
+                    kodeverkreferanse = kodeverk(Områder.AKTIVITETSPENGER, AksjonspunktDefinisjon::class.java.simpleName),
                 ),
                 felt(
                     id = AktivitetspengerFeltIder.Aksjonspunkt.AVBRUTT,
@@ -189,7 +200,7 @@ object AktivitetspengerFeltdefinisjoner {
                     listetype = true,
                     tolkesSom = Datatype.STRING,
                     synlighet = Synlighet.UNDER_STREKEN,
-                    kodeverkreferanse = kodeverk(Områder.AKTIVITETSPENGER, "Aksjonspunkt"),
+                    kodeverkreferanse = kodeverk(Områder.AKTIVITETSPENGER, AksjonspunktDefinisjon::class.java.simpleName),
                 ),
                 felt(
                     id = AktivitetspengerFeltIder.Aksjonspunkt.FREMTIDIG,
@@ -198,25 +209,32 @@ object AktivitetspengerFeltdefinisjoner {
                     listetype = true,
                     tolkesSom = Datatype.STRING,
                     synlighet = Synlighet.UNDER_STREKEN,
-                    kodeverkreferanse = kodeverk(Områder.AKTIVITETSPENGER, "Aksjonspunkt"),
+                    kodeverkreferanse = kodeverk(Områder.AKTIVITETSPENGER, AksjonspunktDefinisjon::class.java.simpleName),
                 ),
-                // Beslutter
+                // Saksbehandling
                 felt(
-                    id = AktivitetspengerFeltIder.Beslutter.ANSVARLIG,
+                    id = AktivitetspengerFeltIder.Saksbehandling.ANSVARLIG_SAKSBEHANDLER,
+                    visningsnavn = "Ansvarlig saksbehandler",
+                    listetype = false,
+                    tolkesSom = Datatype.STRING,
+                    synlighet = Synlighet.UNDER_STREKEN,
+                ),
+                felt(
+                    id = AktivitetspengerFeltIder.Saksbehandling.ANSVARLIG_BESLUTTER,
                     visningsnavn = "Ansvarlig beslutter",
                     listetype = false,
                     tolkesSom = Datatype.STRING,
                     synlighet = Synlighet.UNDER_STREKEN,
                 ),
                 felt(
-                    id = AktivitetspengerFeltIder.Beslutter.LIGGER_HOS,
+                    id = AktivitetspengerFeltIder.Saksbehandling.LIGGER_HOS_BESLUTTER,
                     visningsnavn = "Til beslutter",
                     listetype = false,
                     tolkesSom = Datatype.BOOLEAN,
                     synlighet = Synlighet.OVER_STREKEN,
                 ),
                 felt(
-                    id = AktivitetspengerFeltIder.Beslutter.TID_FORSTE_GANG_HOS,
+                    id = AktivitetspengerFeltIder.Saksbehandling.TID_FORSTE_GANG_HOS,
                     visningsnavn = "Tidspunkt oppgaven gikk til beslutter første gang",
                     listetype = false,
                     tolkesSom = Datatype.TIMESTAMP,
@@ -229,7 +247,7 @@ object AktivitetspengerFeltdefinisjoner {
                     listetype = false,
                     tolkesSom = Datatype.STRING,
                     synlighet = Synlighet.UNDER_STREKEN,
-                    kodeverkreferanse = kodeverk(Områder.K9, "Venteårsak"),
+                    kodeverkreferanse = kodeverk(Områder.AKTIVITETSPENGER, Venteårsak::class.java.simpleName),
                 ),
                 felt(
                     id = AktivitetspengerFeltIder.Ventetid.AKTIV_FRIST,

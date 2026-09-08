@@ -12,6 +12,7 @@ import no.nav.k9.klage.kodeverk.behandling.oppgavetillos.EventHendelse
 import no.nav.k9.klage.kontrakt.behandling.oppgavetillos.Aksjonspunkttilstand
 import no.nav.k9.klage.typer.AktørId
 import no.nav.k9.los.domeneadaptere.eventlager.EventLagret
+import no.nav.k9.los.domeneadaptere.k9.K9Oppgavetypenavn
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.klage.K9KlageEventDto
 import no.nav.k9.los.domeneadaptere.k9.eventtiloppgave.klagetillos.beriker.K9KlageBerikerInterfaceKludge
 import no.nav.k9.los.domeneadaptere.eventlager.Fagsystem
@@ -48,9 +49,7 @@ class KlageEventTilOppgaveMapper(
         val oppgaveDto = OppgaveDto(
             eksternId = eventBeriket.eksternId.toString(),
             eksternVersjon = eventBeriket.eventTid.toString(),
-            område = "K9",
-            kildeområde = "K9",
-            type = "k9klage",
+            type = K9Oppgavetypenavn.KLAGE,
             status = utledOppgavestatus(eventBeriket).kode,
             endretTidspunkt = eventBeriket.eventTid,
             reservasjonsnøkkel = utledReservasjonsnøkkel(eventBeriket, erTilBeslutter(eventBeriket)),
@@ -91,9 +90,7 @@ class KlageEventTilOppgaveMapper(
         ) = OppgaveDto(
             eksternId = event.eksternId.toString(),
             eksternVersjon = event.eventTid.toString(),
-            område = "K9",
-            kildeområde = "K9",
-            type = "k9klage",
+            type = K9Oppgavetypenavn.KLAGE,
             status = utledOppgavestatus(event).kode,
             endretTidspunkt = event.eventTid,
             reservasjonsnøkkel = utledReservasjonsnøkkel(event, erTilBeslutter(event)),

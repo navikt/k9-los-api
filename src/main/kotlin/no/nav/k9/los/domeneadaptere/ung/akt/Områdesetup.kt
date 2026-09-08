@@ -1,13 +1,13 @@
 package no.nav.k9.los.domeneadaptere.ung.akt
 
+import no.nav.k9.los.domeneadaptere.ung.akt.kodeverk.BehandlendeEnhet
 import no.nav.k9.los.domeneadaptere.ung.akt.oppgavedefinisjon.AktivitetspengerFeltdefinisjoner
 import no.nav.k9.los.domeneadaptere.ung.akt.oppgavedefinisjon.AktivitetspengerOppgaver
-import no.nav.k9.los.kodeverk.AktFagsystem
+import no.nav.k9.los.domeneadaptere.ung.akt.kodeverk.AktFagsystem
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.FeltdefinisjonTjeneste
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.KodeverkDto
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.KodeverkVerdiDto
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.Synlighet
-import no.nav.k9.los.kodeverk.BehandlendeEnhet
 import no.nav.k9.los.oppgavedefinisjon.omraade.OmrådeRepository
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgavedefinisjon.oppgavetype.OppgavetypeTjeneste
@@ -19,6 +19,7 @@ import no.nav.ung.kodeverk.behandling.BehandlingType
 import no.nav.ung.kodeverk.behandling.BehandlingÅrsakType
 import no.nav.ung.kodeverk.behandling.FagsakYtelseType
 import no.nav.ung.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
+import no.nav.ung.kodeverk.behandling.aksjonspunkt.Venteårsak
 
 class Områdesetup(
     private val områdeRepository: OmrådeRepository,
@@ -44,7 +45,8 @@ class Områdesetup(
             kodeverkResultattype(),
             kodeverkYtelsetype(),
             kodeverkBehandlendeEnhet(),
-            kodeverkAksjonspunkt()
+            kodeverkAksjonspunkt(),
+            kodeverkVenteårsak()
         )
     }
 
@@ -151,7 +153,7 @@ class Områdesetup(
     private fun kodeverkBehandlendeEnhet(): KodeverkDto {
         return KodeverkDto(
             område = område,
-            eksternId = "behandlendeEnhet",
+            eksternId = BehandlendeEnhet::class.java.simpleName,
             beskrivelse = null,
             uttømmende = false,
             verdier = BehandlendeEnhet.entries
@@ -169,10 +171,20 @@ class Områdesetup(
     private fun kodeverkAksjonspunkt(): KodeverkDto {
         return KodeverkDto(
             område = område,
-            eksternId = "Aksjonspunkt",
+            eksternId = AksjonspunktDefinisjon::class.java.simpleName,
             beskrivelse = null,
             uttømmende = false,
             verdier = AksjonspunktDefinisjon.entries.lagDto()
+        )
+    }
+
+    private fun kodeverkVenteårsak(): KodeverkDto {
+        return KodeverkDto(
+            område = område,
+            eksternId = Venteårsak::class.java.simpleName,
+            beskrivelse = null,
+            uttømmende = false,
+            verdier = Venteårsak.entries.lagDto()
         )
     }
 

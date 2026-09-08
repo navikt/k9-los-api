@@ -1,8 +1,10 @@
 package no.nav.k9.los.oppgavemottak
 
 import no.nav.k9.los.AbstractK9LosIntegrationTest
+import no.nav.k9.los.domeneadaptere.k9.K9Oppgavetypenavn
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.oppgavemottak.feltutlederforlagring.GyldigeFeltutledere
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.Feltdefinisjoner
 import no.nav.k9.los.oppgavedefinisjon.oppgavetype.*
 import org.junit.jupiter.api.BeforeEach
@@ -28,14 +30,10 @@ class OppgaveV3Test : AbstractK9LosIntegrationTest() {
     }
 
     @Test
-    fun `test at oppgave ikke blir opprettet om området ikke finnes`() {
-        val innkommendeOppgaveMedUkjentOmråde = oppgavemodellBuilder.lagOppgaveDto().copy(område = "ukjent-område")
-        val exception = assertThrows<IllegalArgumentException> {
-            transactionalManager.transaction { tx ->
-                oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(NyOppgaveversjon(innkommendeOppgaveMedUkjentOmråde), tx)
-            }
-        }
-        assertEquals("Området finnes ikke: ukjent-område", exception.message!!)
+    fun `område er alltid utledet fra oppgavetype`() {
+        val oppgaveDto = oppgavemodellBuilder.lagOppgaveDto().copy(type = K9Oppgavetypenavn.SAK)
+        assertEquals(Områder.K9, oppgaveDto.område)
+        assertEquals(Områder.K9, oppgaveDto.kildeområde)
     }
 
     @Test

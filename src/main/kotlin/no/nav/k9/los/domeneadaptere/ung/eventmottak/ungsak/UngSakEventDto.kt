@@ -35,7 +35,7 @@ data class UngSakEventDto(
     val navKontorAnsvarligSaksbehandler: String? = null,
     val navKontorBeslutter: String? = null,
 
-    val resultatType: String? = null,
+    val resultatType: String? = null, //behandlingsresultat
     val ytelseTypeKode: String,
     val behandlingTypeKode: String,
 

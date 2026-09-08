@@ -2,6 +2,7 @@ package no.nav.k9.los.domeneadaptere.k9.eventtiloppgave.punsjtillos
 
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus
 import no.nav.k9.los.domeneadaptere.eventlager.EventLagret
+import no.nav.k9.los.domeneadaptere.k9.K9Oppgavetypenavn
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventDto
 import no.nav.k9.los.kodeverk.BehandlingType
 import no.nav.k9.los.kodeverk.FagsakYtelseType
@@ -20,9 +21,7 @@ class PunsjEventTilOppgaveMapper {
             dto = OppgaveDto(
                 eksternId = event.eksternId.toString(),
                 eksternVersjon = event.eventTid.toString(),
-                område = "K9",
-                kildeområde = "K9",
-                type = "k9punsj",
+                type = K9Oppgavetypenavn.PUNSJ,
                 status = utledOppgavestatus(event).kode,
                 endretTidspunkt = event.eventTid,
                 reservasjonsnøkkel = utledReservasjonsnøkkel(eventLagret),
@@ -36,9 +35,7 @@ class PunsjEventTilOppgaveMapper {
             return OppgaveDto(
                 eksternId = event.eksternId.toString(),
                 eksternVersjon = event.eventTid.toString(),
-                område = "K9",
-                kildeområde = "K9",
-                type = "k9punsj",
+                type = K9Oppgavetypenavn.PUNSJ,
                 status = utledOppgavestatus(event).kode,
                 endretTidspunkt = event.eventTid,
                 reservasjonsnøkkel = utledReservasjonsnøkkel(event),

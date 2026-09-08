@@ -19,7 +19,7 @@ import java.util.*
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-class UtledFørsteTidHosBeslutterTest : AbstractK9LosIntegrationTest() {
+class UtledFørsteTidHosSaksbehandlingTest : AbstractK9LosIntegrationTest() {
 
     @Test
     fun `aldri vært hos beslutter gir ingen timestamp for første gang hos beslutter`() {

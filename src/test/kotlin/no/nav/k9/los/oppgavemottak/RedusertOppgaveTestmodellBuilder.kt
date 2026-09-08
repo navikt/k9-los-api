@@ -7,6 +7,7 @@ import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.FeltdefinisjonerDto
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.Synlighet
 import no.nav.k9.los.oppgavedefinisjon.omraade.Område
 import no.nav.k9.los.oppgavedefinisjon.omraade.OmrådeRepository
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgavedefinisjon.oppgavetype.OppgavefeltDto
 import no.nav.k9.los.oppgavedefinisjon.oppgavetype.OppgavetypeDto
 import no.nav.k9.los.oppgavedefinisjon.oppgavetype.OppgavetypeTjeneste
@@ -140,9 +141,7 @@ class RedusertOppgaveTestmodellBuilder(
         return OppgaveDto(
             eksternId = "aksjonspunkt",
             eksternVersjon = LocalDateTime.now().toString(),
-            område = område.eksternId,
-            kildeområde = "k9-sak-til-los",
-            type = "aksjonspunkt",
+            type = GeneriskOppgaveDtoType("aksjonspunkt", Områder.K9),
             status = status,
             endretTidspunkt = LocalDateTime.now(),
             reservasjonsnøkkel = reservasjonsnøkkel,
@@ -171,9 +170,7 @@ class RedusertOppgaveTestmodellBuilder(
         return OppgaveDto(
             eksternId = "aksjonspunkt",
             eksternVersjon = LocalDateTime.now().toString(),
-            område = område.eksternId,
-            kildeområde = "k9-sak-til-los",
-            type = "aksjonspunkt",
+            type = GeneriskOppgaveDtoType("aksjonspunkt", Områder.K9),
             status = "ÅPEN",
             endretTidspunkt = LocalDateTime.now(),
             reservasjonsnøkkel = "test",

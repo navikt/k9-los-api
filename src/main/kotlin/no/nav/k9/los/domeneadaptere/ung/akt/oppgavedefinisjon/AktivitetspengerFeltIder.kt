@@ -7,6 +7,7 @@ object AktivitetspengerFeltIder {
         const val STATUS = "behandlingsstatus"
         const val STEG = "behandlingssteg"
         const val ARSAK = "behandlingsårsak"
+        const val RESULTATTYPE = "resultattype"
     }
 
     object Soknad {
@@ -21,11 +22,11 @@ object AktivitetspengerFeltIder {
         const val SAKSNUMMER = "saksnummer"
         const val MOTTATT_DATO = "mottattDato"
         const val TID_SIDEN_MOTTATT_DATO = "tidSidenMottattDato"
+        const val REGISTRERT_DATO = "registrertDato"
     }
 
     object Vedtak {
         const val DATO = "vedtaksdato"
-        const val RESULTATTYPE = "resultattype"
         const val YTELSESTYPE = "ytelsestype"
         const val BEHANDLENDE_ENHET = "behandlendeEnhet"
         const val TOTRINNSKONTROLL = "totrinnskontroll"
@@ -40,9 +41,10 @@ object AktivitetspengerFeltIder {
         const val FREMTIDIG = "fremtidigAksjonspunkt"
     }
 
-    object Beslutter {
-        const val ANSVARLIG = "ansvarligBeslutter"
-        const val LIGGER_HOS = "liggerHosBeslutter"
+    object Saksbehandling {
+        const val ANSVARLIG_SAKSBEHANDLER = "ansvarligSaksbehandler"
+        const val ANSVARLIG_BESLUTTER = "ansvarligBeslutter"
+        const val LIGGER_HOS_BESLUTTER = "liggerHosBeslutter"
         const val TID_FORSTE_GANG_HOS = "tidFørsteGangHosBeslutter"
     }
 

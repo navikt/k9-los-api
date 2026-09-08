@@ -3,6 +3,7 @@ package no.nav.k9.los.domeneadaptere.k9.eventtiloppgave.tilbaketillos
 import no.nav.k9.kodeverk.behandling.BehandlingResultatType
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.EventHendelse
 import no.nav.k9.los.domeneadaptere.eventlager.EventLagret
+import no.nav.k9.los.domeneadaptere.k9.K9Oppgavetypenavn
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.tilbakekrav.AksjonspunktDefinisjonK9Tilbake
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.tilbakekrav.K9TilbakeEventDto
 import no.nav.k9.los.kodeverk.AksjonspunktStatus
@@ -27,9 +28,7 @@ class TilbakeEventTilOppgaveMapper {
         val oppgaveDto = OppgaveDto(
             eksternId = event.eksternId.toString(),
             eksternVersjon = event.eventTid.toString(),
-            område = "K9",
-            kildeområde = "K9",
-            type = "k9tilbake",
+            type = K9Oppgavetypenavn.TILBAKE,
             status = utledOppgavestatus(event).kode,
             endretTidspunkt = event.eventTid,
             reservasjonsnøkkel = utledReservasjonsnøkkel(event, erTilBeslutter(event)),
@@ -51,9 +50,7 @@ class TilbakeEventTilOppgaveMapper {
             OppgaveDto(
                 eksternId = event.eksternId.toString(),
                 eksternVersjon = event.eventTid.toString(),
-                område = "K9",
-                kildeområde = "K9",
-                type = "k9tilbake",
+                type = K9Oppgavetypenavn.TILBAKE,
                 status = utledOppgavestatus(event).kode,
                 endretTidspunkt = event.eventTid,
                 reservasjonsnøkkel = utledReservasjonsnøkkel(event, erTilBeslutter(event)),

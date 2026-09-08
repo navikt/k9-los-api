@@ -3,12 +3,16 @@ package no.nav.k9.los.domeneadaptere.k9
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonValue
 import no.nav.k9.los.domeneadaptere.eventlager.Fagsystem
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
+import no.nav.k9.los.oppgavemottak.OppgaveDtoType
 
-enum class K9Oppgavetypenavn(@JsonValue val kode: String) {
+enum class K9Oppgavetypenavn(@JsonValue override val kode: String) : OppgaveDtoType {
     SAK("k9sak"),
     KLAGE("k9klage"),
     TILBAKE("k9tilbake"),
     PUNSJ("k9punsj");
+
+    override val område: Områder = Områder.K9
 
     companion object {
         @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
