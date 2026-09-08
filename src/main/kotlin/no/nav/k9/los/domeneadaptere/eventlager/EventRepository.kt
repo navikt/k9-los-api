@@ -14,11 +14,7 @@ class EventRepository(
 ) {
     private val log = LoggerFactory.getLogger(EventRepository::class.java)
 
-    fun upsertOgLåsEventnøkkel(
-        fagsystem: Fagsystem,
-        eksternId: String,
-        tx: TransactionalSession
-    ): Long {
+    fun upsertOgLåsEventnøkkel(fagsystem: Fagsystem, eksternId: String, tx: TransactionalSession): Long {
         val id = tx.run(
             queryOf(
                 """
