@@ -60,8 +60,8 @@ open class AzureGraphService(
                 resultResolver = { 200 == it.status.value }
             ) {
                 httpClient.get {
-                    this.url("https://graph.microsoft.com/v1.0/me")
-                    parameter("\$select", "officeLocation")
+                    url("https://graph.microsoft.com/v1.0/me")
+                    parameter($$"$select", "officeLocation")
                     header(HttpHeaders.Accept, "application/json")
                     header(HttpHeaders.Authorization, "Bearer ${accessToken.token}")
                     header("ConsistencyLevel", "eventual")
@@ -95,9 +95,9 @@ open class AzureGraphService(
                 ) {
                     httpClient.get {
                         url("https://graph.microsoft.com/v1.0/users")
-                        parameter("\$filter", "onPremisesSamAccountName eq '$saksbehandlerIdent'")
-                        parameter("\$count", "true")
-                        parameter("\$select", "id")
+                        parameter($$"$filter", "onPremisesSamAccountName eq '$saksbehandlerIdent'")
+                        parameter($$"$count", "true")
+                        parameter($$"$select", "id")
                         header(HttpHeaders.Accept, "application/json")
                         header(HttpHeaders.Authorization, "Bearer ${accessToken.token}")
                         header("ConsistencyLevel", "eventual")
