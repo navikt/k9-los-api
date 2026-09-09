@@ -38,15 +38,15 @@ import no.nav.helse.dusseldorf.ktor.health.HealthRoute
 import no.nav.helse.dusseldorf.ktor.jackson.JacksonStatusPages
 import no.nav.helse.dusseldorf.ktor.jackson.dusseldorfConfigured
 import no.nav.helse.dusseldorf.ktor.metrics.init
-import no.nav.k9.los.domeneadaptere.eventlager.EventlagerApi
 import no.nav.k9.los.domeneadaptere.k9.OmrådeSetup
+import no.nav.k9.los.domeneadaptere.eventlager.EventlagerApi
+import no.nav.k9.los.domeneadaptere.kafka.AsynkronProsesseringV1Service
 import no.nav.k9.los.domeneadaptere.k9.eventtiloppgave.EventTilOppgaveAdapter
 import no.nav.k9.los.domeneadaptere.k9.eventtiloppgave.HistorikkvaskTjeneste
 import no.nav.k9.los.domeneadaptere.k9.refreshk9sakoppgaver.K9sakBehandlingsoppfriskingJobb
 import no.nav.k9.los.domeneadaptere.k9.refreshk9sakoppgaver.RefreshK9v3
 import no.nav.k9.los.domeneadaptere.k9.statistikk.OppgavestatistikkTjeneste
 import no.nav.k9.los.domeneadaptere.k9.statistikk.StatistikkApi
-import no.nav.k9.los.domeneadaptere.kafka.AsynkronProsesseringV1Service
 import no.nav.k9.los.driftsmelding.DriftsmeldingerApis
 import no.nav.k9.los.forvaltning.forvaltningApis
 import no.nav.k9.los.infrastruktur.abac.SifAbacPdpUtilgjengeligException
@@ -134,6 +134,7 @@ fun Application.k9Los() {
             refreshK9v3Tjeneste = koin.get()
         )
     ) { start(koin.get<Channel<KøpåvirkendeHendelse>>(named("KøpåvirkendeHendelseChannel"))) }
+
 
 
     val asynkronProsesseringV1Service = koin.get<AsynkronProsesseringV1Service>()
@@ -276,11 +277,9 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
     val oppgavestatistikkTjeneste = koin.get<OppgavestatistikkTjeneste>()
 
     val pepCacheService = koin.get<PepCacheService>()
-    val statusFordelingService =
-        koin.get<no.nav.k9.los.nøkkeltall.avdelingsleder.statusfordeling.StatusFordelingService>()
+    val statusFordelingService = koin.get<no.nav.k9.los.nøkkeltall.avdelingsleder.statusfordeling.StatusFordelingService>()
     val dagensTallService = koin.get<no.nav.k9.los.nøkkeltall.avdelingsleder.dagenstall.DagensTallService>()
-    val perEnhetService =
-        koin.get<no.nav.k9.los.nøkkeltall.avdelingsleder.ferdigstilteperenhet.FerdigstiltePerEnhetService>()
+    val perEnhetService = koin.get<no.nav.k9.los.nøkkeltall.avdelingsleder.ferdigstilteperenhet.FerdigstiltePerEnhetService>()
     val nyeOgFerdigstilteService = koin.get<NyeOgFerdigstilteService>()
     val uttrekkJobb = koin.get<UttrekkJobb>()
 
@@ -308,25 +307,23 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
             )
         }
 
-        add(
-            PlanlagtJobb.Oppstart(
-                navn = "Setup",
-                prioritet = 1,
-            ) {
-                koin.get<OmrådeSetup>().setup()
-            })
+        add(PlanlagtJobb.Oppstart(
+            navn = "Setup",
+            prioritet = 1,
+        ) {
+            koin.get<OmrådeSetup>().setup()
+        })
 
         if (configuration.koinProfile == KoinProfile.LOCAL) {
-            add(
-                PlanlagtJobb.Oppstart(
-                    navn = "Testdata",
-                    prioritet = 1,
-                ) {
-                    localSetup.initSaksbehandlere()
-                    localSetup.initPunsjoppgaver(0)
-                    localSetup.initTilbakeoppgaver(0)
-                    localSetup.initK9SakOppgaver(0)
-                })
+            add(PlanlagtJobb.Oppstart(
+                navn = "Testdata",
+                prioritet = 1,
+            ) {
+                localSetup.initSaksbehandlere()
+                localSetup.initPunsjoppgaver(0)
+                localSetup.initTilbakeoppgaver(0)
+                localSetup.initK9SakOppgaver(0)
+            })
         }
 
         // Hyppig oppdatering i arbeidstiden
@@ -483,8 +480,7 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
         )
 
         add(
-            PlanlagtJobb.Periodisk(
-                navn = "RyddOppUttrekkJobb",
+            PlanlagtJobb.Periodisk(navn = "RyddOppUttrekkJobb",
                 prioritet = lavPrioritet,
                 tidsvindu = heleTiden,
                 startForsinkelse = 0.seconds,
@@ -495,8 +491,7 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
         )
 
         add(
-            PlanlagtJobb.Periodisk(
-                navn = "KjørUttrekkJobb",
+            PlanlagtJobb.Periodisk(navn = "KjørUttrekkJobb",
                 prioritet = lavPrioritet,
                 tidsvindu = heleTiden,
                 startForsinkelse = 10.seconds,
