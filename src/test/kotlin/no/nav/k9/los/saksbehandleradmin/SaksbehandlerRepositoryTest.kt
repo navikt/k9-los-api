@@ -109,7 +109,7 @@ class SaksbehandlerRepositoryTest : AbstractK9LosIntegrationTest() {
             repository, graph, Clock.fixed(tidspunkt.toInstant(ZoneOffset.UTC), ZoneOffset.UTC)
         )
 
-        tjeneste.vedlikeholdHvisUtdatert(opprinnelig, "Z123456", "Nytt navn", "y@nav.no")
+        tjeneste.vedlikeholdHvisUtdatert(opprinnelig, "Z123456", "Nytt navn", "y@nav.no", false)
 
         listOf(opprinnelig, duplikat).forEach { før ->
             val etter = repository.finnSaksbehandlerMedId(før.id)!!
@@ -128,7 +128,7 @@ class SaksbehandlerRepositoryTest : AbstractK9LosIntegrationTest() {
             }
         }
         tjeneste.vedlikeholdHvisUtdatert(
-            repository.finnSaksbehandlerMedId(opprinnelig.id)!!, "Z123456", "Nytt navn", "y@nav.no"
+            repository.finnSaksbehandlerMedId(opprinnelig.id)!!, "Z123456", "Nytt navn", "y@nav.no", false
         )
 
         val oppdatert = repository.finnSaksbehandlerMedId(opprinnelig.id)!!

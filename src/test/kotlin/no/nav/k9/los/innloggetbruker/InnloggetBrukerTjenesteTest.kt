@@ -25,7 +25,7 @@ class InnloggetBrukerTjenesteTest {
     fun `vedlikeholder saksbehandler når tidspunkt mangler`() = runBlocking {
         coEvery { azureGraphService.hentEnhetForInnloggetBruker() } returns "3450"
 
-        tjeneste.vedlikeholdHvisUtdatert(saksbehandler(null), "Z123456", "Saksbehandler Sara", "ny.epost@nav.no")
+        tjeneste.vedlikeholdHvisUtdatert(saksbehandler(null), "Z123456", "Saksbehandler Sara", "ny.epost@nav.no", false)
 
         coVerify(exactly = 1) {
             repository.vedlikeholdSaksbehandler(
@@ -36,7 +36,13 @@ class InnloggetBrukerTjenesteTest {
 
     @Test
     fun `vedlikeholder ikke saksbehandler før det har gått 24 timer`() = runBlocking {
-        tjeneste.vedlikeholdHvisUtdatert(saksbehandler(nå.minusHours(23)), "Z123456", "Saksbehandler Sara", "ny.epost@nav.no")
+        tjeneste.vedlikeholdHvisUtdatert(
+            saksbehandler(nå.minusHours(23)),
+            "Z123456",
+            "Saksbehandler Sara",
+            "ny.epost@nav.no",
+            false
+        )
 
         coVerify(exactly = 0) { azureGraphService.hentEnhetForInnloggetBruker() }
         coVerify(exactly = 0) { repository.vedlikeholdSaksbehandler(any()) }
@@ -44,7 +50,13 @@ class InnloggetBrukerTjenesteTest {
 
     @Test
     fun `vedlikeholder ikke saksbehandler når det har gått nøyaktig 24 timer`() = runBlocking {
-        tjeneste.vedlikeholdHvisUtdatert(saksbehandler(nå.minusHours(24)), "Z123456", "Saksbehandler Sara", "ny.epost@nav.no")
+        tjeneste.vedlikeholdHvisUtdatert(
+            saksbehandler(nå.minusHours(24)),
+            "Z123456",
+            "Saksbehandler Sara",
+            "ny.epost@nav.no",
+            false
+        )
 
         coVerify(exactly = 0) { azureGraphService.hentEnhetForInnloggetBruker() }
         coVerify(exactly = 0) { repository.vedlikeholdSaksbehandler(any()) }
@@ -54,7 +66,13 @@ class InnloggetBrukerTjenesteTest {
     fun `vedlikeholder saksbehandler når det har gått mer enn 24 timer`() = runBlocking {
         coEvery { azureGraphService.hentEnhetForInnloggetBruker() } returns "3450"
 
-        tjeneste.vedlikeholdHvisUtdatert(saksbehandler(nå.minusHours(25)), "Z123456", "Saksbehandler Sara", "ny.epost@nav.no")
+        tjeneste.vedlikeholdHvisUtdatert(
+            saksbehandler(nå.minusHours(25)),
+            "Z123456",
+            "Saksbehandler Sara",
+            "ny.epost@nav.no",
+            false
+        )
 
         coVerify(exactly = 1) { repository.vedlikeholdSaksbehandler(any()) }
     }
@@ -63,7 +81,13 @@ class InnloggetBrukerTjenesteTest {
     fun `vedlikeholder ikke saksbehandler når Azure er utilgjengelig (prøver igjen ved neste kall)`() = runBlocking {
         coEvery { azureGraphService.hentEnhetForInnloggetBruker() } throws IllegalStateException("Azure er utilgjengelig")
 
-        tjeneste.vedlikeholdHvisUtdatert(saksbehandler(nå.minusDays(2)), "Z123456", "Saksbehandler Sara", "ny.epost@nav.no")
+        tjeneste.vedlikeholdHvisUtdatert(
+            saksbehandler(nå.minusDays(2)),
+            "Z123456",
+            "Saksbehandler Sara",
+            "ny.epost@nav.no",
+            false
+        )
 
         coVerify(exactly = 0) { repository.vedlikeholdSaksbehandler(any()) }
     }
@@ -76,7 +100,7 @@ class InnloggetBrukerTjenesteTest {
         val opprinnelig = saksbehandler(null)
 
         repeat(2) {
-            tjeneste.vedlikeholdHvisUtdatert(opprinnelig, "Z123456", "Saksbehandler Sara", "ny.epost@nav.no")
+            tjeneste.vedlikeholdHvisUtdatert(opprinnelig, "Z123456", "Saksbehandler Sara", "ny.epost@nav.no", false)
         }
 
         coVerify(exactly = 2) { repository.vedlikeholdSaksbehandler(match { it.id == opprinnelig.id && it.sistOppdatert == nå }) }
@@ -94,7 +118,13 @@ class InnloggetBrukerTjenesteTest {
             coEvery { repository.vedlikeholdSaksbehandler(any()) } throws feil
 
             val kastet = assertThrows<PSQLException> {
-                tjeneste.vedlikeholdHvisUtdatert(saksbehandler(null), "Z123456", "Saksbehandler Sara", "ny.epost@nav.no")
+                tjeneste.vedlikeholdHvisUtdatert(
+                    saksbehandler(null),
+                    "Z123456",
+                    "Saksbehandler Sara",
+                    "ny.epost@nav.no",
+                    false
+                )
             }
 
             assertSame(feil, kastet)

@@ -20,7 +20,8 @@ class InnloggetBrukerTjeneste(
         saksbehandler: Saksbehandler,
         navident: String,
         navn: String,
-        epost: String
+        epost: String,
+        skjermet: Boolean,
     ) {
         val nå = LocalDateTime.now(clock)
         val sistOppdatert = saksbehandler.sistOppdatert
@@ -45,7 +46,7 @@ class InnloggetBrukerTjeneste(
                     navn = navn,
                     epost = epost,
                     enhet = enhet,
-                    skjermet = saksbehandler.skjermet,
+                    skjermet = skjermet,
                     sistOppdatert = nå,
                 )
             )

@@ -55,7 +55,8 @@ internal fun Route.InnloggetBrukerApi() {
                         saksbehandler = saksbehandler,
                         navident = saksbehandlerIdent,
                         navn = token.getName(),
-                        epost = token.getUsername()
+                        epost = token.getUsername(),
+                        skjermet = tilganger.kode6
                     )
                 }
                 call.respond(
