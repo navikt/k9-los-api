@@ -1,7 +1,6 @@
 package no.nav.k9.los.reservasjon
 
 import no.nav.k9.los.infrastruktur.abac.IPepClient
-import no.nav.k9.los.infrastruktur.azuregraph.IAzureGraphService
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.infrastruktur.utils.leggTilDagerHoppOverHelg
 import no.nav.k9.los.kodeverk.BehandlingType
@@ -23,7 +22,6 @@ class ReservasjonApisTjeneste(
     private val reservasjonV3DtoBuilder: ReservasjonV3DtoBuilder,
     private val aktivOppgaveOppslag: AktivOppgaveOppslag,
     private val pepClient: IPepClient,
-    private val azureGraphService: IAzureGraphService,
 ) {
 
     companion object {
@@ -210,11 +208,7 @@ class ReservasjonApisTjeneste(
                 oppgaveNøkkel.oppgaveEksternId,
                 oppgaveNøkkel.oppgaveTypeEksternId,
             )
-        if (!pepClient.harTilgangTilOppgaveV3(
-                oppgave = oppgave,
-                grupperForSaksbehandler = azureGraphService.hentGrupperForInnloggetSaksbehandler()
-            )
-        ) {
+        if (!pepClient.harTilgangTilOppgaveV3(oppgave)) {
             throw ManglerTilgangException("Mangler tilgang til oppgave ${oppgave.eksternId}")
         }
         val reservasjon = reservasjonV3Tjeneste.finnAktivReservasjon(oppgave.reservasjonsnøkkel)
@@ -235,7 +229,7 @@ class ReservasjonApisTjeneste(
         return reservasjonV3Tjeneste.hentAlleAktiveReservasjoner().flatMap { reservasjonMedOppgaver ->
             val saksbehandler =
                 saksbehandlerRepository.finnSaksbehandlerMedId(reservasjonMedOppgaver.reservasjonV3.reservertAv)!!
-            val saksbehandlerHarKode6Tilgang = pepClient.harTilgangTilKode6(saksbehandler.navident!!)
+            val saksbehandlerHarKode6Tilgang = saksbehandler.skjermet
 
             if (innloggetBrukerHarKode6Tilgang != saksbehandlerHarKode6Tilgang) {
                 emptyList()

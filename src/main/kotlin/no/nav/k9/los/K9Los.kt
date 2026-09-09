@@ -49,6 +49,7 @@ import no.nav.k9.los.domeneadaptere.k9.statistikk.OppgavestatistikkTjeneste
 import no.nav.k9.los.domeneadaptere.k9.statistikk.StatistikkApi
 import no.nav.k9.los.driftsmelding.DriftsmeldingerApis
 import no.nav.k9.los.forvaltning.forvaltningApis
+import no.nav.k9.los.infrastruktur.abac.SifAbacPdpUtilgjengeligException
 import no.nav.k9.los.infrastruktur.abac.cache.PepCacheService
 import no.nav.k9.los.infrastruktur.db.DB_AWARE_PARALLELISM
 import no.nav.k9.los.infrastruktur.db.migrate
@@ -122,6 +123,9 @@ fun Application.k9Los() {
         DefaultStatusPages()
         JacksonStatusPages()
         AuthStatusPages()
+        exception<SifAbacPdpUtilgjengeligException> { call, _ ->
+            call.respond(HttpStatusCode.ServiceUnavailable, "Tidsavbrudd mot sif-abac-pdp")
+        }
     }
 
     // må se på om dette skal settes opp med Jobbplanlegger oppstartsjobb

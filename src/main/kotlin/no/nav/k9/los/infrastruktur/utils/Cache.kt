@@ -1,6 +1,8 @@
 package no.nav.k9.los.infrastruktur.utils
 
 import io.opentelemetry.instrumentation.annotations.WithSpan
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import java.time.Duration
 import java.time.LocalDateTime
 import java.util.concurrent.locks.ReentrantLock
@@ -16,6 +18,7 @@ open class Cache<K, V>(val cacheSizeLimit: Int? = null) {
         }
     }
     private val låserForHentFunksjon: MutableMap<K, ReentrantLock> = HashMap()
+    private val låserForSuspendertHenting: MutableMap<K, SuspendertHentingLås> = HashMap()
 
     fun set(key: K, value: CacheObject<V>) {
         withWriteLock {
@@ -81,6 +84,32 @@ open class Cache<K, V>(val cacheSizeLimit: Int? = null) {
         }
     }
 
+    @WithSpan
+    suspend fun hentSuspend(nøkkel: K, duration: Duration = Duration.ofMinutes(30), populerCache: suspend () -> V): V {
+        get(nøkkel)?.let { return it.value }
+
+        val låsForHenting = withWriteLock {
+            låserForSuspendertHenting.getOrPut(nøkkel) { SuspendertHentingLås() }
+                .also { it.antallBrukere++ }
+        }
+        try {
+            return låsForHenting.mutex.withLock {
+                get(nøkkel)?.let { return@withLock it.value }
+
+                val hentetVerdi = OpentelemetrySpanUtil.spanSuspend("cache-hent-verdi") { populerCache.invoke() }
+                this.set(nøkkel, CacheObject(value = hentetVerdi, expire = LocalDateTime.now().plus(duration)))
+                hentetVerdi
+            }
+        } finally {
+            withWriteLock {
+                låsForHenting.antallBrukere--
+                if (låsForHenting.antallBrukere == 0) {
+                    låserForSuspendertHenting.remove(nøkkel, låsForHenting)
+                }
+            }
+        }
+    }
+
 
     private fun finnLåsForHenting(nøkkel: K) = withWriteLock {
         var lås = låserForHentFunksjon.get(nøkkel)
@@ -113,3 +142,8 @@ open class Cache<K, V>(val cacheSizeLimit: Int? = null) {
         }
     }
 }
+
+private class SuspendertHentingLås(
+    val mutex: Mutex = Mutex(),
+    var antallBrukere: Int = 0,
+)

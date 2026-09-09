@@ -56,6 +56,7 @@ class TestSaksbehandlerRepository(
                             navn = row.stringOrNull("navn"),
                             epost = row.string("epost").lowercase(getDefault()),
                             enhet = row.stringOrNull("enhet"),
+                            skjermet = row.boolean("skjermet"),
                             sistOppdatert = row.localDateTimeOrNull("sist_oppdatert")
                         )
                     }.asSingle
@@ -80,6 +81,7 @@ class TestSaksbehandlerRepository(
                             navn = row.stringOrNull("navn"),
                             epost = row.string("epost").lowercase(getDefault()),
                             enhet = row.stringOrNull("enhet"),
+                            skjermet = row.boolean("skjermet"),
                             sistOppdatert = row.localDateTimeOrNull("sist_oppdatert")
                         )
                     }.asList

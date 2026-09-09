@@ -20,7 +20,8 @@ class InnloggetBrukerTjeneste(
         saksbehandler: Saksbehandler,
         navident: String,
         navn: String,
-        epost: String
+        epost: String,
+        skjermet: Boolean,
     ) {
         val nå = LocalDateTime.now(clock)
         val sistOppdatert = saksbehandler.sistOppdatert
@@ -44,9 +45,10 @@ class InnloggetBrukerTjeneste(
                     navident = navident,
                     navn = navn,
                     epost = epost,
-                    enhet = enhet
-                ),
-                oppdatertTidspunkt = nå
+                    enhet = enhet,
+                    skjermet = skjermet,
+                    sistOppdatert = nå,
+                )
             )
         } catch (e: PSQLException) {
             if (e.sqlState != "23505" || e.serverErrorMessage?.constraint != "saksbehandler_epost_key") {

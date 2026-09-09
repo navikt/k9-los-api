@@ -3,10 +3,13 @@ package no.nav.k9.los
 import io.ktor.client.*
 import io.ktor.client.engine.*
 import io.ktor.client.engine.java.*
+import io.ktor.client.network.sockets.*
+import io.ktor.client.plugins.*
 import io.ktor.server.application.*
 import kotlinx.coroutines.channels.Channel
 import no.nav.helse.dusseldorf.ktor.health.HealthService
 import no.nav.k9.los.KoinProfile.*
+import no.nav.k9.los.domeneadaptere.eventlager.EventRepository
 import no.nav.k9.los.domeneadaptere.k9.OmrådeSetup
 import no.nav.k9.los.domeneadaptere.k9.adhocjobber.reservasjonkonvertering.ReservasjonKonverteringJobb
 import no.nav.k9.los.domeneadaptere.k9.avstemming.AvstemmingsTjeneste
@@ -14,16 +17,12 @@ import no.nav.k9.los.domeneadaptere.k9.avstemming.punsj.systemklient.LocalPunsjA
 import no.nav.k9.los.domeneadaptere.k9.avstemming.punsj.systemklient.RestPunsjAvstemmingsklient
 import no.nav.k9.los.domeneadaptere.k9.avstemming.saksbehandling.systemklient.LocalSakAvstemmingsklient
 import no.nav.k9.los.domeneadaptere.k9.avstemming.saksbehandling.systemklient.RestSakAvstemmingsklient
-import no.nav.k9.los.domeneadaptere.eventlager.EventRepository
-import no.nav.k9.los.domeneadaptere.kafka.AsynkronProsesseringV1Service
-import no.nav.k9.los.domeneadaptere.k9.eventmottak.klage.K9KlageEventHandler
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.FeilRekkefølgeSjekker
+import no.nav.k9.los.domeneadaptere.k9.eventmottak.klage.K9KlageEventHandler
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventHandler
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.sak.K9SakEventHandler
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.tilbakekrav.K9TilbakeEventHandler
 import no.nav.k9.los.domeneadaptere.k9.eventtiloppgave.*
-import no.nav.k9.los.domeneadaptere.ungsak.eventmottak.ungsak.UngSakEventHandler
-import no.nav.k9.los.domeneadaptere.ungsak.eventmottak.ungtilbake.UngTilbakeEventHandler
 import no.nav.k9.los.domeneadaptere.k9.eventtiloppgave.klagetillos.KlageEventTilOppgaveMapper
 import no.nav.k9.los.domeneadaptere.k9.eventtiloppgave.klagetillos.beriker.K9KlageBerikerInterfaceKludge
 import no.nav.k9.los.domeneadaptere.k9.eventtiloppgave.klagetillos.beriker.K9KlageBerikerKlientLocal
@@ -40,14 +39,15 @@ import no.nav.k9.los.domeneadaptere.k9.refreshk9sakoppgaver.restklient.K9SakBeha
 import no.nav.k9.los.domeneadaptere.k9.refreshk9sakoppgaver.restklient.K9SakServiceLocal
 import no.nav.k9.los.domeneadaptere.k9.refreshk9sakoppgaver.restklient.K9SakServiceSystemClient
 import no.nav.k9.los.domeneadaptere.k9.statistikk.*
+import no.nav.k9.los.domeneadaptere.kafka.AsynkronProsesseringV1Service
+import no.nav.k9.los.domeneadaptere.ungsak.eventmottak.ungsak.UngSakEventHandler
+import no.nav.k9.los.domeneadaptere.ungsak.eventmottak.ungtilbake.UngTilbakeEventHandler
 import no.nav.k9.los.driftsmelding.DriftsmeldingRepository
 import no.nav.k9.los.driftsmelding.DriftsmeldingTjeneste
-import no.nav.k9.los.oppgavemottak.feltutlederforlagring.GyldigeFeltutledere
 import no.nav.k9.los.forvaltning.ForvaltningRepository
 import no.nav.k9.los.infrastruktur.abac.*
 import no.nav.k9.los.infrastruktur.abac.cache.PepCacheRepository
 import no.nav.k9.los.infrastruktur.abac.cache.PepCacheService
-import no.nav.k9.los.infrastruktur.abac.tilganger.*
 import no.nav.k9.los.infrastruktur.azuregraph.AzureGraphService
 import no.nav.k9.los.infrastruktur.azuregraph.AzureGraphServiceLocal
 import no.nav.k9.los.infrastruktur.azuregraph.IAzureGraphService
@@ -73,13 +73,9 @@ import no.nav.k9.los.oppgavemottak.AktivOgPartisjonertOppgaveAjourholdTjeneste
 import no.nav.k9.los.oppgavemottak.OppgaveV3Repository
 import no.nav.k9.los.oppgavemottak.OppgaveV3Tjeneste
 import no.nav.k9.los.oppgavemottak.PartisjonertOppgaveRepository
-import no.nav.k9.los.oppgaveuthenting.*
-import no.nav.k9.los.oppgaveuthenting.enkeltoppslag.AktivOppgaveOppslag
-import no.nav.k9.los.oppgaveuthenting.enkeltoppslag.AktivOppgaveOppslagPartisjonert
-import no.nav.k9.los.oppgaveuthenting.enkeltoppslag.ReservasjonsnøkkelOppgaveOppslag
-import no.nav.k9.los.oppgaveuthenting.enkeltoppslag.ReservasjonsnøkkelOppgaveOppslagPartisjonert
-import no.nav.k9.los.oppgaveuthenting.enkeltoppslag.TemporalOppgaveOppslag
-import no.nav.k9.los.oppgaveuthenting.enkeltoppslag.TemporalOppgaveOppslagOppgaveV3
+import no.nav.k9.los.oppgavemottak.feltutlederforlagring.GyldigeFeltutledere
+import no.nav.k9.los.oppgaveuthenting.OppgaveRepository
+import no.nav.k9.los.oppgaveuthenting.enkeltoppslag.*
 import no.nav.k9.los.oppgaveuthenting.query.OppgaveQueryService
 import no.nav.k9.los.oppgaveuthenting.query.db.OppgaveQueryRepository
 import no.nav.k9.los.reservasjon.ReservasjonApisTjeneste
@@ -519,7 +515,6 @@ fun common(app: Application, config: Configuration) = module {
             reservasjonV3DtoBuilder = get(),
             aktivOppgaveOppslag = get(),
             pepClient = get(),
-            azureGraphService = get(),
         )
     }
 
@@ -565,11 +560,10 @@ fun common(app: Application, config: Configuration) = module {
 
     single {
         SisteOppgaverTjeneste(
+            sisteOppgaverRepository = get(),
             oppgaveRepository = get(),
             pepClient = get(),
-            sisteOppgaverRepository = get(),
             pdlService = get(),
-            azureGraphService = get(),
             transactionalManager = get(),
         )
     }
@@ -684,6 +678,26 @@ fun naisCommonConfig() = module {
         HttpClient(Java)
     }
 
+    single(named("sifAbacPdpHttpClient")) {
+        HttpClient(Java) {
+            install(HttpTimeout) {
+                connectTimeoutMillis = 1_000
+                socketTimeoutMillis = 2_000
+                requestTimeoutMillis = 2_000
+            }
+            HttpResponseValidator {
+                handleResponseExceptionWithRequest { cause, _ ->
+                    if (cause is HttpRequestTimeoutException ||
+                        cause is ConnectTimeoutException ||
+                        cause is SocketTimeoutException
+                    ) {
+                        throw SifAbacPdpUtilgjengeligException(cause)
+                    }
+                }
+            }
+        }
+    }
+
     single(named("webproxyHttpClient")) {
         // Httpclient med webproxy, for trafikk ut på internett
         HttpClient(Java) {
@@ -703,7 +717,6 @@ fun naisCommonConfig() = module {
     single<IPepClient> {
         PepClient(azureGraphService = get(), get())
     }
-    single<PdpTilgangsskygge> { SifAbacPdpTilgangsskygge(get()) }
 }
 
 // Unik konfigurasjon for preprod
@@ -753,7 +766,7 @@ fun preprodConfig(config: Configuration) = module {
             configuration = get(),
             accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
             scope = "api://dev-fss.k9saksbehandling.sif-abac-pdp/.default",
-            httpClient = get()
+            httpClient = get(named("sifAbacPdpHttpClient"))
         )
     }
 
@@ -831,7 +844,7 @@ fun prodConfig(config: Configuration) = module {
             configuration = get(),
             accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
             scope = "api://prod-fss.k9saksbehandling.sif-abac-pdp/.default",
-            httpClient = get()
+            httpClient = get(named("sifAbacPdpHttpClient"))
         )
     }
 

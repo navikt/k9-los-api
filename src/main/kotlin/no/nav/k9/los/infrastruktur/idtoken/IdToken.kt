@@ -21,14 +21,6 @@ data class IdToken(
     override fun getNavIdent(): String = jwt.NAVident
     override fun getName(): String = jwt.name
     override fun getUsername(): String = jwt.preferredUsername
-    override fun kanBehandleKode6(): Boolean = jwt.groups.any { s -> s == System.getenv("BRUKER_GRUPPE_ID_KODE6")!! }
-    override fun kanBehandleKode7(): Boolean = jwt.groups.any { s -> s ==  System.getenv("BRUKER_GRUPPE_ID_KODE7")!! }
-    override fun kanBehandleEgneAnsatte(): Boolean = jwt.groups.any { s -> s == System.getenv("BRUKER_GRUPPE_ID_EGENANSATT")!! }
-    override fun erOppgavebehandler(): Boolean = jwt.groups.any { s -> s == System.getenv("BRUKER_GRUPPE_ID_OPPGAVESTYRER")!! }
-    override fun erSaksbehandler(): Boolean = jwt.groups.any { s -> s == System.getenv("BRUKER_GRUPPE_ID_SAKSBEHANDLER")!! }
-    override fun erVeileder(): Boolean = jwt.groups.any { s -> s == System.getenv("BRUKER_GRUPPE_ID_VEILEDER")!! }
-    override fun erDrifter(): Boolean = jwt.groups.any { s -> s == System.getenv("BRUKER_GRUPPE_ID_DRIFT")!! }
-    override fun harBasistilgang(): Boolean = erSaksbehandler() || erVeileder()
 
 }
 

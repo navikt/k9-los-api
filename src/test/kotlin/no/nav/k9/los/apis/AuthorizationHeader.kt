@@ -17,7 +17,6 @@ internal fun authorizationHeader(
         "aio" to uuid,
         "preferred_username" to username,
         "name" to "$username Nordmann",
-        "groups" to listOf(uuid),
         "tid" to uuid,
         "uti" to uuid,
         "oid" to uuid,

@@ -10,13 +10,15 @@ class SaksbehandlerTest {
     @Test // Enhet skal aldri logges. Navn og epost bør heller ikke logges
     fun `Skal kun bruke brukerIdent ved toString eller logging`() {
         val sensitiv = "SENSITIV"
-        val sb = Saksbehandler(id = 123L,
+        val saksbehandler = Saksbehandler(id = 123L,
             navident = "Test",
             navn = sensitiv,
             epost = sensitiv,
             enhet = sensitiv,
+            skjermet = true
         )
 
-        assertThat(sb.toString()).doesNotContain(sensitiv)
+        assertThat(saksbehandler.toString()).doesNotContain(sensitiv)
+        assertThat(saksbehandler.toString()).doesNotContain("skjermet")
     }
 }

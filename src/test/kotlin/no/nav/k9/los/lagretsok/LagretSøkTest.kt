@@ -17,7 +17,8 @@ class LagretSøkTest {
         navident = "test",
         navn = "Test Testersen",
         epost = "test@nav.no",
-        enhet = null
+        enhet = null,
+        skjermet = false,
     )
 
     private val annenSaksbehandler = Saksbehandler(
@@ -25,7 +26,8 @@ class LagretSøkTest {
         navident = "annen",
         navn = "Annen Testersen",
         epost = "annen@nav.no",
-        enhet = null
+        enhet = null,
+        skjermet = false,
     )
 
     @Test

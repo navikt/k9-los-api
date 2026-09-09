@@ -455,7 +455,6 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             reservasjonV3DtoBuilder = get(),
             aktivOppgaveOppslag = get(),
             pepClient = get(),
-            azureGraphService = get(),
         )
     }
 
@@ -518,11 +517,10 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
 
     single {
         SisteOppgaverTjeneste(
+            sisteOppgaverRepository = get(),
             oppgaveRepository = get(),
             pepClient = get(),
-            sisteOppgaverRepository = get(),
             pdlService = get(),
-            azureGraphService = get(),
             transactionalManager = get(),
         )
     }

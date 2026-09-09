@@ -2,15 +2,12 @@ package no.nav.k9.los.infrastruktur.abac
 
 import no.nav.k9.los.saksbehandleradmin.Saksbehandler
 import no.nav.sif.abac.kontrakt.abac.Diskresjonskode
-import java.util.*
 
 interface IPepClient {
 
     suspend fun erOppgaveStyrer(): Boolean
 
     suspend fun harTilgangTilKode6(): Boolean
-
-    suspend fun harTilgangTilKode6(ident: String): Boolean
 
     suspend fun harBasisTilgang(): Boolean
 
@@ -34,8 +31,7 @@ interface IPepClient {
 
     suspend fun harTilgangTilOppgaveV3(
         oppgave: no.nav.k9.los.oppgaveuthenting.Oppgave,
-        action: Action = Action.read,
-        grupperForSaksbehandler: Set<UUID>? = null
+        action: Action = Action.read
     ) : Boolean
 
     fun harTilgangTilOppgaveV3(

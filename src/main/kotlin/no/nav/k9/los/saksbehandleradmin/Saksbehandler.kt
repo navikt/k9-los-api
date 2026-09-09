@@ -3,11 +3,12 @@ package no.nav.k9.los.saksbehandleradmin
 import java.time.LocalDateTime
 
 class Saksbehandler(
-    var id: Long,
-    var navident: String?,
-    var navn: String?,
-    var epost: String,
-    var enhet: String?,
+    val id: Long,
+    val navident: String?,
+    val navn: String?,
+    val epost: String,
+    val enhet: String?,
+    val skjermet: Boolean,
     val sistOppdatert: LocalDateTime? = null
 ) {
     override fun toString(): String {

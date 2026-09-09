@@ -8,14 +8,3 @@ data class OfficeLocation(
     val odataContext: String,
     val officeLocation: String
 )
-
-data class OfficeLocationFilterResult(
-    @JsonProperty("@odata.context")
-    val odataContext: String,
-    val value: List<OfficeLocation>
-
-) {
-    data class OfficeLocation(
-        val officeLocation: String
-    )
-}
