@@ -1,20 +1,11 @@
 package no.nav.k9.los.domeneadaptere.ung.akt.oppgavedefinisjon
 
 import no.nav.k9.los.domeneadaptere.ung.akt.kodeverk.AktFagsystem
-import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.Datatype
-import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.FeltdefinisjonDto
-import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.FeltdefinisjonerDto
-import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.KodeverkReferanseDto
-import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.Synlighet
+import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.*
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
-import no.nav.k9.los.oppgaveuthenting.query.mapping.transientfeltutleder.K9SakTidSidenMottattDatoUtleder
+import no.nav.k9.los.oppgaveuthenting.query.mapping.transientfeltutleder.AktivitetspengerTidSidenMottattDatoUtleder
 import no.nav.k9.los.oppgaveuthenting.query.mapping.transientfeltutleder.TransientFeltutleder
-import no.nav.ung.kodeverk.behandling.BehandlingResultatType
-import no.nav.ung.kodeverk.behandling.BehandlingStatus
-import no.nav.ung.kodeverk.behandling.BehandlingStegType
-import no.nav.ung.kodeverk.behandling.BehandlingType
-import no.nav.ung.kodeverk.behandling.BehandlingÅrsakType
-import no.nav.ung.kodeverk.behandling.FagsakYtelseType
+import no.nav.ung.kodeverk.behandling.*
 import no.nav.ung.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
 import no.nav.ung.kodeverk.behandling.aksjonspunkt.Venteårsak
 import kotlin.reflect.KClass
@@ -108,7 +99,7 @@ object AktivitetspengerFeltdefinisjoner {
                     listetype = false,
                     tolkesSom = Datatype.DURATION,
                     synlighet = Synlighet.OVER_STREKEN,
-                    transientFeltutleder = K9SakTidSidenMottattDatoUtleder::class,
+                    transientFeltutleder = AktivitetspengerTidSidenMottattDatoUtleder::class,
                 ),
                 felt(
                     id = AktivitetspengerFeltIder.Sak.REGISTRERT_DATO,
@@ -234,7 +225,7 @@ object AktivitetspengerFeltdefinisjoner {
                     synlighet = Synlighet.OVER_STREKEN,
                 ),
                 felt(
-                    id = AktivitetspengerFeltIder.Saksbehandling.TID_FORSTE_GANG_HOS,
+                    id = AktivitetspengerFeltIder.Saksbehandling.TID_FORSTE_GANG_HOS_BESLUTTER,
                     visningsnavn = "Tidspunkt oppgaven gikk til beslutter første gang",
                     listetype = false,
                     tolkesSom = Datatype.TIMESTAMP,

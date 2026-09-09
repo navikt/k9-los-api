@@ -50,7 +50,7 @@ class KlageEventTilOppgaveMapper(
             eksternId = eventBeriket.eksternId.toString(),
             eksternVersjon = eventBeriket.eventTid.toString(),
             type = K9Oppgavetypenavn.KLAGE,
-            status = utledOppgavestatus(eventBeriket).kode,
+            status = utledOppgavestatus(eventBeriket),
             endretTidspunkt = eventBeriket.eventTid,
             reservasjonsnøkkel = utledReservasjonsnøkkel(eventBeriket, erTilBeslutter(eventBeriket)),
             feltverdier = lagFeltverdier(eventBeriket, forrigeOppgave)
@@ -91,7 +91,7 @@ class KlageEventTilOppgaveMapper(
             eksternId = event.eksternId.toString(),
             eksternVersjon = event.eventTid.toString(),
             type = K9Oppgavetypenavn.KLAGE,
-            status = utledOppgavestatus(event).kode,
+            status = utledOppgavestatus(event),
             endretTidspunkt = event.eventTid,
             reservasjonsnøkkel = utledReservasjonsnøkkel(event, erTilBeslutter(event)),
             feltverdier = lagFeltverdier(event, forrigeOppgave)

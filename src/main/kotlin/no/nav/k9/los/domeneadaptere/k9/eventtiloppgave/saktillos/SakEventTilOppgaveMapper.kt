@@ -32,7 +32,7 @@ class SakEventTilOppgaveMapper(
             eksternId = event.eksternId.toString(),
             eksternVersjon = event.eventTid.toString(),
             type = K9Oppgavetypenavn.SAK,
-            status = utledOppgavestatus(event).kode,
+            status = utledOppgavestatus(event),
             endretTidspunkt = event.eventTid,
             reservasjonsnøkkel = utledReservasjonsnøkkel(event, erTilBeslutter(event)),
             feltverdier = lagFeltverdier(event, forrigeOppgave)
@@ -64,7 +64,7 @@ class SakEventTilOppgaveMapper(
     ): OppgaveDto {
         // OBSOLETE ytelsetype kan avgjøres uten k9-sak-kall
         if (event.ytelseTypeKode == FagsakYtelseType.OBSOLETE.kode) {
-            return oppgaveDto.copy(status = "LUKKET").erstattFeltverdi(
+            return oppgaveDto.copy(status = Oppgavestatus.LUKKET).erstattFeltverdi(
                 OppgaveFeltverdiDto(
                     "resultattype", BehandlingResultatType.HENLAGT_FEILOPPRETTET.kode
                 )
@@ -91,14 +91,14 @@ class SakEventTilOppgaveMapper(
     ): OppgaveDto {
         //behandlingen finnes ikke i k9-sak, pga rollback i transaksjon i k9-sak som skulle opprette behandlingen
         if (nyeBehandlingsopplysningerFraK9Sak == null) {
-            return oppgaveDto.copy(status = "LUKKET").erstattFeltverdi(
+            return oppgaveDto.copy(status = Oppgavestatus.LUKKET).erstattFeltverdi(
                 OppgaveFeltverdiDto(
                     "resultattype", BehandlingResultatType.HENLAGT_FEILOPPRETTET.kode
                 )
             )
         }
         if (nyeBehandlingsopplysningerFraK9Sak.sakstype == FagsakYtelseType.OBSOLETE) {
-            return oppgaveDto.copy(status = "LUKKET").erstattFeltverdi(
+            return oppgaveDto.copy(status = Oppgavestatus.LUKKET).erstattFeltverdi(
                 OppgaveFeltverdiDto(
                     "resultattype", BehandlingResultatType.HENLAGT_FEILOPPRETTET.kode
                 )
@@ -112,20 +112,12 @@ class SakEventTilOppgaveMapper(
     }
 
     companion object {
-        private val MANUELLE_AKSJONSPUNKTER = AksjonspunktDefinisjon.values().filter { aksjonspunktDefinisjon ->
-            aksjonspunktDefinisjon.aksjonspunktType == AksjonspunktType.MANUELL
-        }.map { aksjonspunktDefinisjon -> aksjonspunktDefinisjon.kode }
-
-        private val AUTOPUNKTER = AksjonspunktDefinisjon.values().filter { aksjonspunktDefinisjon ->
-            aksjonspunktDefinisjon.aksjonspunktType == AksjonspunktType.AUTOPUNKT
-        }.map { aksjonspunktDefinisjon -> aksjonspunktDefinisjon.kode }
-
         fun lagOppgaveDto(event: K9SakEventDto, forrigeOppgave: OppgaveV3?) =
             OppgaveDto(
                 eksternId = event.eksternId.toString(),
                 eksternVersjon = event.eventTid.toString(),
                 type = K9Oppgavetypenavn.SAK,
-                status = utledOppgavestatus(event).kode,
+                status = utledOppgavestatus(event),
                 endretTidspunkt = event.eventTid,
                 reservasjonsnøkkel = utledReservasjonsnøkkel(event, erTilBeslutter(event)),
                 feltverdier = lagFeltverdier(event, forrigeOppgave)

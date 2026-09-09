@@ -12,8 +12,6 @@ object AktivitetspengerFeltIder {
 
     object Soknad {
         const val NYE_KRAV = "nyeKrav"
-        const val ARSAK = "søknadsårsak"
-        const val FRA_ENDRINGSDIALOG = "fraEndringsdialog"
     }
 
     object Sak {
@@ -45,7 +43,7 @@ object AktivitetspengerFeltIder {
         const val ANSVARLIG_SAKSBEHANDLER = "ansvarligSaksbehandler"
         const val ANSVARLIG_BESLUTTER = "ansvarligBeslutter"
         const val LIGGER_HOS_BESLUTTER = "liggerHosBeslutter"
-        const val TID_FORSTE_GANG_HOS = "tidFørsteGangHosBeslutter"
+        const val TID_FORSTE_GANG_HOS_BESLUTTER = "tidFørsteGangHosBeslutter"
     }
 
     object Ventetid {

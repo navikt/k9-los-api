@@ -29,7 +29,7 @@ class TilbakeEventTilOppgaveMapper {
             eksternId = event.eksternId.toString(),
             eksternVersjon = event.eventTid.toString(),
             type = K9Oppgavetypenavn.TILBAKE,
-            status = utledOppgavestatus(event).kode,
+            status = utledOppgavestatus(event),
             endretTidspunkt = event.eventTid,
             reservasjonsnøkkel = utledReservasjonsnøkkel(event, erTilBeslutter(event)),
             feltverdier = lagFeltverdier(event, forrigeOppgave)
@@ -51,7 +51,7 @@ class TilbakeEventTilOppgaveMapper {
                 eksternId = event.eksternId.toString(),
                 eksternVersjon = event.eventTid.toString(),
                 type = K9Oppgavetypenavn.TILBAKE,
-                status = utledOppgavestatus(event).kode,
+                status = utledOppgavestatus(event),
                 endretTidspunkt = event.eventTid,
                 reservasjonsnøkkel = utledReservasjonsnøkkel(event, erTilBeslutter(event)),
                 feltverdier = lagFeltverdier(event, forrigeOppgave)

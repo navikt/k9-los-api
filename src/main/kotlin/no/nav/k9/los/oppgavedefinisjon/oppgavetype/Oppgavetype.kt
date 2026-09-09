@@ -50,7 +50,7 @@ class Oppgavetype(
                 visPåOppgave = innkommendeFeltdefinisjon.visPåOppgave,
                 påkrevd = innkommendeFeltdefinisjon.påkrevd,
                 defaultverdi = innkommendeFeltdefinisjon.defaultverdi,
-                feltutleder = innkommendeFeltdefinisjon.feltutleder?.let { gyldigeFeltutledere.hentFeltutleder(innkommendeFeltdefinisjon.feltutleder) }
+                feltutleder = innkommendeFeltdefinisjon.feltutlederForLagring?.let { gyldigeFeltutledere.hentFeltutleder(innkommendeFeltdefinisjon.feltutlederForLagring) }
             )
         }.toSet()
     )

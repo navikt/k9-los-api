@@ -22,7 +22,7 @@ class PunsjEventTilOppgaveMapper {
                 eksternId = event.eksternId.toString(),
                 eksternVersjon = event.eventTid.toString(),
                 type = K9Oppgavetypenavn.PUNSJ,
-                status = utledOppgavestatus(event).kode,
+                status = utledOppgavestatus(event),
                 endretTidspunkt = event.eventTid,
                 reservasjonsnøkkel = utledReservasjonsnøkkel(eventLagret),
                 feltverdier = lagFeltverdier(event, forrigeOppgave)
@@ -36,7 +36,7 @@ class PunsjEventTilOppgaveMapper {
                 eksternId = event.eksternId.toString(),
                 eksternVersjon = event.eventTid.toString(),
                 type = K9Oppgavetypenavn.PUNSJ,
-                status = utledOppgavestatus(event).kode,
+                status = utledOppgavestatus(event),
                 endretTidspunkt = event.eventTid,
                 reservasjonsnøkkel = utledReservasjonsnøkkel(event),
                 feltverdier = lagFeltverdier(event, forrigeOppgave)

@@ -89,7 +89,7 @@ class OppgaveV3TjenesteTest : AbstractK9LosIntegrationTest() {
             eksternId = eksternId,
             eksternVersjon = versjon.toString(),
             type = K9Oppgavetypenavn.SAK,
-            status = oppgavestatus.kode,
+            status = oppgavestatus,
             endretTidspunkt = LocalDateTime.now(),
             reservasjonsnøkkel = "K9_b_${FagsakYtelseType.FRISINN}_273857",
             feltverdier = listOfNotNull(

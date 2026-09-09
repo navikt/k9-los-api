@@ -123,7 +123,7 @@ class BehandlingObsoleteTest : AbstractK9LosIntegrationTest() {
             eksternId = "12345",
             eksternVersjon = "1",
             type = K9Oppgavetypenavn.SAK,
-            status = Oppgavestatus.AAPEN.kode,
+            status = Oppgavestatus.AAPEN,
             endretTidspunkt = LocalDateTime.now(),
             reservasjonsnøkkel = "12345",
             feltverdier = listOf(OppgaveFeltverdiDto(

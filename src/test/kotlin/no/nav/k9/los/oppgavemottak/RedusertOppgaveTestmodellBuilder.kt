@@ -1,5 +1,6 @@
 package no.nav.k9.los.oppgavemottak
 
+import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.Datatype
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.FeltdefinisjonDto
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.FeltdefinisjonTjeneste
@@ -124,7 +125,7 @@ class RedusertOppgaveTestmodellBuilder(
                             id = "akkumulertVentetidSaksbehandler",
                             visPåOppgave = false,
                             påkrevd = false,
-                            feltutleder = "no.nav.k9.los.oppgavemottak.feltutlederforlagring.AkkumulertVentetidSaksbehandler",
+                            feltutlederForLagring = "no.nav.k9.los.oppgavemottak.feltutlederforlagring.AkkumulertVentetidSaksbehandler",
                         ),
                         OppgavefeltDto(
                             id = "avventerSaksbehandler",
@@ -142,7 +143,7 @@ class RedusertOppgaveTestmodellBuilder(
             eksternId = "aksjonspunkt",
             eksternVersjon = LocalDateTime.now().toString(),
             type = GeneriskOppgaveDtoType("aksjonspunkt", Områder.K9),
-            status = status,
+            status = Oppgavestatus.fraKode(status),
             endretTidspunkt = LocalDateTime.now(),
             reservasjonsnøkkel = reservasjonsnøkkel,
             feltverdier = listOf(
@@ -171,7 +172,7 @@ class RedusertOppgaveTestmodellBuilder(
             eksternId = "aksjonspunkt",
             eksternVersjon = LocalDateTime.now().toString(),
             type = GeneriskOppgaveDtoType("aksjonspunkt", Områder.K9),
-            status = "ÅPEN",
+            status = Oppgavestatus.fraKode("AAPEN"),
             endretTidspunkt = LocalDateTime.now(),
             reservasjonsnøkkel = "test",
             feltverdier = listOf(

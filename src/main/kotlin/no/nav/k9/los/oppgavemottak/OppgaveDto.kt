@@ -1,6 +1,8 @@
 package no.nav.k9.los.oppgavemottak
 
+import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
+import no.nav.k9.los.reservasjon.OppgaveStatusDto
 import java.time.LocalDateTime
 
 sealed class NyOppgaveVersjonInnsending(
@@ -20,7 +22,7 @@ data class OppgaveDto(
     val eksternId: String,
     val eksternVersjon: String,
     val type: OppgaveDtoType,
-    val status: String,
+    val status: Oppgavestatus,
     val endretTidspunkt: LocalDateTime,
     val reservasjonsnøkkel: String,
     val feltverdier: List<OppgaveFeltverdiDto>
@@ -33,7 +35,7 @@ data class OppgaveDto(
         eksternId = oppgaveV3.eksternId,
         eksternVersjon = oppgaveV3.eksternVersjon,
         type = OppgaveDtoType.fraEksternId(oppgaveV3.oppgavetype.område.eksternId, oppgaveV3.oppgavetype.eksternId),
-        status = oppgaveV3.status.kode,
+        status = oppgaveV3.status,
         endretTidspunkt = oppgaveV3.endretTidspunkt,
         reservasjonsnøkkel = oppgaveV3.reservasjonsnøkkel,
         feltverdier = oppgaveV3.felter.map { felt ->
