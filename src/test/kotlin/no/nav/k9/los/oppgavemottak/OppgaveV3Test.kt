@@ -1,9 +1,9 @@
 package no.nav.k9.los.oppgavemottak
 
 import no.nav.k9.los.AbstractK9LosIntegrationTest
-import no.nav.k9.los.domeneadaptere.k9.K9Oppgavetypenavn
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.oppgavemottak.feltutlederforlagring.GyldigeFeltutledere
+import no.nav.k9.los.oppgavedefinisjon.omraade.Område
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.Feltdefinisjoner
 import no.nav.k9.los.oppgavedefinisjon.oppgavetype.*
@@ -25,13 +25,13 @@ class OppgaveV3Test : AbstractK9LosIntegrationTest() {
         oppgaveV3Tjeneste = get()
         transactionalManager = get()
         gyldigeFeltutledere = get()
-        oppgavemodellBuilder = RedusertOppgaveTestmodellBuilder()
+        oppgavemodellBuilder = RedusertOppgaveTestmodellBuilder(område = Område(eksternId = Områder.K9.eksternId))
         oppgavemodellBuilder.byggOppgavemodell()
     }
 
     @Test
     fun `område er alltid utledet fra oppgavetype`() {
-        val oppgaveDto = oppgavemodellBuilder.lagOppgaveDto().copy(type = K9Oppgavetypenavn.SAK)
+        val oppgaveDto = oppgavemodellBuilder.lagOppgaveDto()
         assertEquals(Områder.K9, oppgaveDto.område)
         assertEquals(Områder.K9, oppgaveDto.kildeområde)
     }

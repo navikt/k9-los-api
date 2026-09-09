@@ -42,7 +42,7 @@ class EventRepository(
                 queryOf(
                     """
                     insert into event_nokkel (ekstern_id, fagsystem)
-                    values(:eksternId, :fagsystem, :omradeId)
+                    values(:eksternId, :fagsystem)
                     returning id
                 """.trimIndent(),
                     mapOf(
