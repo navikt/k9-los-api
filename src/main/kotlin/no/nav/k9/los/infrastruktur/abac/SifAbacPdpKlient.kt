@@ -37,7 +37,7 @@ data class TilgangerCacheKey(
     val navIdent: String,
     val tokenId: String,
 ) {
-    constructor(idToken: IIdToken) : this("K9", idToken.getNavIdent(), idToken.jwt!!.uti)
+    constructor(idToken: IIdToken) : this("K9", idToken.getNavIdent(), idToken.jwt?.uti ?: "") // jwt kan bare være null med IdTokenLocal
 }
 
 class SifAbacPdpKlient(
