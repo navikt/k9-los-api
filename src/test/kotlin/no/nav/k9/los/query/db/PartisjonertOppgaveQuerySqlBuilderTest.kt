@@ -3,6 +3,7 @@ package no.nav.k9.los.oppgaveuthenting.query.db
 import no.nav.k9.los.kodeverk.PersonBeskyttelseType
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.Synlighet
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.query.dto.felter.Oppgavefelt
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.Aggregeringsfunksjon
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.AggregertSelectFelt
@@ -16,9 +17,9 @@ import java.time.LocalDateTime
 class PartisjonertOppgaveQuerySqlBuilderTest {
 
     private val mockFelter = mapOf(
-        OmrådeOgKode("TEST", "testfelt") to OppgavefeltMedMer(
+        OmrådeOgKode(Områder.K9, "testfelt") to OppgavefeltMedMer(
             Oppgavefelt(
-                område = "TEST",
+                område = Områder.K9,
                 kode = "testfelt",
                 visningsnavn = "Test Felt",
                 tolkes_som = "String",
@@ -40,7 +41,7 @@ class PartisjonertOppgaveQuerySqlBuilderTest {
 
         builder.medFeltverdi(
             CombineOperator.AND,
-            "TEST",
+            Områder.K9,
             "testfelt", 
             FeltverdiOperator.EQUALS,
             listOf("testverdi")
@@ -99,7 +100,7 @@ class PartisjonertOppgaveQuerySqlBuilderTest {
             ferdigstiltDatoFilter = null
         )
 
-        builder.medEnkelOrder("TEST", "testfelt", true)
+        builder.medEnkelOrder(Områder.K9, "testfelt", true)
         val sql = builder.getQuery()
 
         assertTrue(sql.contains("SELECT ov.verdi"), "SQL burde inneholde korrekt sorteringsuttrykk")
@@ -117,7 +118,7 @@ class PartisjonertOppgaveQuerySqlBuilderTest {
 
         builder.medFeltverdi(
             CombineOperator.AND,
-            "TEST",
+            Områder.K9,
             "testfelt", 
             FeltverdiOperator.EQUALS,
             listOf("testverdi")
@@ -131,7 +132,7 @@ class PartisjonertOppgaveQuerySqlBuilderTest {
             listOf("type1", "type2")
         )
         
-        builder.medEnkelOrder("TEST", "testfelt", false)
+        builder.medEnkelOrder(Områder.K9, "testfelt", false)
         builder.medPaging(100, 0)
         
         val sql = builder.getQuery()
@@ -156,7 +157,7 @@ class PartisjonertOppgaveQuerySqlBuilderTest {
         builder.medAggregering(emptyList(), listOf(AggregertSelectFelt(Aggregeringsfunksjon.ANTALL)))
         builder.medFeltverdi(
             CombineOperator.AND,
-            "TEST",
+            Områder.K9,
             "testfelt", 
             FeltverdiOperator.EQUALS,
             listOf("testverdi")

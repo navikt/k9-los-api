@@ -5,12 +5,12 @@ import assertk.assertions.isEqualTo
 import assertk.assertions.isFalse
 import assertk.assertions.isTrue
 import no.nav.k9.los.AbstractK9LosIntegrationTest
-import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.OppgaveTestDataBuilder
 import no.nav.k9.los.domeneadaptere.k9.K9Oppgavetypenavn
+import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.kodeverk.FagsakYtelseType
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
-import no.nav.k9.los.oppgavedefinisjon.omraade.Område
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.koin.test.get
@@ -67,11 +67,11 @@ class OppgaveV3TjenesteTest : AbstractK9LosIntegrationTest() {
         }
 
         val vasketOppgave1 = transactionalManager.transaction { tx ->
-            oppgaveV3Tjeneste.hentOppgaveversjon("K9", K9Oppgavetypenavn.SAK.kode, oppgaveVersjon1.eksternId, oppgaveVersjon1.eksternVersjon, tx)
+            oppgaveV3Tjeneste.hentOppgaveversjon(Områder.K9, K9Oppgavetypenavn.SAK.kode, oppgaveVersjon1.eksternId, oppgaveVersjon1.eksternVersjon, tx)
         }
 
         val vasketOppgave2 = transactionalManager.transaction { tx ->
-            oppgaveV3Tjeneste.hentOppgaveversjon("K9", K9Oppgavetypenavn.SAK.kode, oppgaveVersjon2.eksternId, oppgaveVersjon2.eksternVersjon, tx)
+            oppgaveV3Tjeneste.hentOppgaveversjon(Områder.K9, K9Oppgavetypenavn.SAK.kode, oppgaveVersjon2.eksternId, oppgaveVersjon2.eksternVersjon, tx)
         }
 
         assertThat(vasketOppgave1.aktiv).isFalse()
@@ -89,8 +89,8 @@ class OppgaveV3TjenesteTest : AbstractK9LosIntegrationTest() {
         return OppgaveDto(
             eksternId = eksternId,
             eksternVersjon = versjon.toString(),
-            område = Område(eksternId = "K9").eksternId,
-            kildeområde = "k9-sak-til-los",
+            område = Områder.K9,
+            kildeområde = Områder.K9,
             type = "k9sak",
             status = oppgavestatus.kode,
             endretTidspunkt = LocalDateTime.now(),

@@ -1,9 +1,10 @@
 package no.nav.k9.los.oppgaveuthenting.query.dto.felter
 
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.Synlighet
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 
 class Oppgavefelt(
-    val område: String?,
+    val område: Områder?,
     val kode: String,
     val visningsnavn: String,
     val tolkes_som: String,

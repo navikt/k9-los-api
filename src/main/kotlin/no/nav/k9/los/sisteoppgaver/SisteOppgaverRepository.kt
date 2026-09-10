@@ -2,6 +2,7 @@ package no.nav.k9.los.sisteoppgaver
 
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.query.db.EksternOppgaveId
 import no.nav.k9.los.oppgaveuthenting.OppgaveNøkkelDto
 import javax.sql.DataSource
@@ -24,7 +25,7 @@ class SisteOppgaverRepository(
                 """.trimIndent(),
                 mapOf("bruker_ident" to brukerIdent)
             ).map { row ->
-                EksternOppgaveId("K9", row.string("oppgave_ekstern_id"))
+                EksternOppgaveId(Områder.K9, row.string("oppgave_ekstern_id"))
             }.asList
         )
     }

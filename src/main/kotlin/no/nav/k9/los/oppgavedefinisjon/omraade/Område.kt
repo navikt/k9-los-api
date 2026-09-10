@@ -18,4 +18,8 @@ class Område (
     override fun hashCode(): Int {
         return eksternId.hashCode()
     }
+
+    fun tilOmråderEnum(): Områder {
+        return Områder.fraEksternId(eksternId)
+    }
 }

@@ -6,6 +6,7 @@ import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.oppgavedefinisjon.omraade.Område
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgavedefinisjon.oppgavetype.Oppgavetype
 import no.nav.k9.los.oppgavedefinisjon.oppgavetype.OppgavetypeRepository
 import no.nav.k9.los.oppgaveuthenting.query.db.OppgaveId
@@ -28,7 +29,7 @@ class OppgaveV3Repository(
             tx,
             oppgave.eksternId,
             oppgave.oppgavetype.eksternId,
-            oppgave.oppgavetype.område.eksternId
+            oppgave.oppgavetype.område.tilOmråderEnum()
         )
 
         eksisterendeId?.let {
@@ -73,19 +74,19 @@ class OppgaveV3Repository(
                     eksternId = row.string("ekstern_id"),
                     eksternVersjon = row.string("ekstern_versjon"),
                     oppgavetype = oppgavetypeRepository.hentOppgavetype(
-                        område = område.eksternId,
+                        område = område.tilOmråderEnum(),
                         row.long("oppgavetype_id"),
                         tx
                     ),
                     status = Oppgavestatus.valueOf(row.string("status")),
                     endretTidspunkt = row.localDateTime("endret_tidspunkt"),
-                    kildeområde = row.string("kildeomrade"),
+                    kildeområde = Områder.fraEksternId(row.string("kildeomrade")),
                     reservasjonsnøkkel = row.stringOrNull("reservasjonsnokkel") ?: "mangler_historikkvask",
                     aktiv = row.boolean("aktiv"),
                     felter = hentFeltverdier(
                         OppgaveV3Id(row.long("id")),
                         oppgavetypeRepository.hentOppgavetype(
-                            område = område.eksternId,
+                            område = område.tilOmråderEnum(),
                             row.long("oppgavetype_id"),
                             tx
                         ),
@@ -130,7 +131,7 @@ class OppgaveV3Repository(
                     oppgavetype = oppgavetype,
                     status = Oppgavestatus.valueOf(row.string("status")),
                     endretTidspunkt = row.localDateTime("endret_tidspunkt"),
-                    kildeområde = row.string("kildeomrade"),
+                    kildeområde = Områder.fraEksternId(row.string("kildeomrade")),
                     reservasjonsnøkkel = row.stringOrNull("reservasjonsnokkel") ?: "mangler_historikkvask",
                     aktiv = row.boolean("aktiv"),
                     felter = hentFeltverdier(OppgaveV3Id(row.long("id")), oppgavetype, tx)
@@ -190,7 +191,7 @@ class OppgaveV3Repository(
                     oppgavetype = oppgavetype,
                     status = Oppgavestatus.valueOf(row.string("status")),
                     endretTidspunkt = row.localDateTime("endret_tidspunkt"),
-                    kildeområde = oppgavetype.område.eksternId,
+                    kildeområde = oppgavetype.område.tilOmråderEnum(),
                     reservasjonsnøkkel = row.stringOrNull("reservasjonsnokkel") ?: "mangler_historikkvask",
                     aktiv = row.boolean("aktiv"),
                     felter = hentFeltverdier(OppgaveV3Id(row.long("id")), oppgavetype, tx)
@@ -270,7 +271,7 @@ class OppgaveV3Repository(
                         "endretTidspunkt" to oppgave.endretTidspunkt,
                         "versjon" to nyVersjon,
                         "aktiv" to true,
-                        "kildeomrade" to oppgave.kildeområde,
+                        "kildeomrade" to oppgave.kildeområde.eksternId,
                         "reservasjonsnokkel" to oppgave.reservasjonsnøkkel,
                         "oppgavetype_ekstern_id" to oppgave.oppgavetype.eksternId,
                         "omrade_ekstern_id" to oppgave.oppgavetype.område.eksternId
@@ -388,7 +389,7 @@ class OppgaveV3Repository(
                 mapOf(
                     "ekstern_id" to oppgavenøkkel.oppgaveEksternId,
                     "oppgavetype_ekstern_id" to oppgavenøkkel.oppgaveTypeEksternId,
-                    "omrade_ekstern_id" to oppgavenøkkel.områdeEksternId
+                    "omrade_ekstern_id" to oppgavenøkkel.områdeEksternId.eksternId
                 )
             )
         )
@@ -410,7 +411,7 @@ class OppgaveV3Repository(
                 mapOf(
                     "ekstern_id" to oppgavenøkkel.oppgaveEksternId,
                     "oppgavetype_ekstern_id" to oppgavenøkkel.oppgaveTypeEksternId,
-                    "omrade_ekstern_id" to oppgavenøkkel.områdeEksternId
+                    "omrade_ekstern_id" to oppgavenøkkel.områdeEksternId.eksternId
                 )
             )
         )
@@ -446,7 +447,7 @@ class OppgaveV3Repository(
         tx: TransactionalSession,
         oppgaveEksternId: String,
         oppgaveTypeEksternId: String,
-        områdeEksternId: String
+        område: Områder
     ): Triple<OppgaveV3Id?, Oppgavestatus?, Int?> {
         return tx.run(
             queryOf(
@@ -467,7 +468,7 @@ class OppgaveV3Repository(
                 mapOf(
                     "ekstern_id" to oppgaveEksternId,
                     "oppgavetype_ekstern_id" to oppgaveTypeEksternId,
-                    "omrade_ekstern_id" to områdeEksternId
+                    "omrade_ekstern_id" to område.eksternId
                 )
             ).map { row ->
                 Triple(

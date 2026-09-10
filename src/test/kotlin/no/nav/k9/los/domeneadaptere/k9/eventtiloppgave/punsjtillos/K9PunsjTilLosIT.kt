@@ -15,6 +15,7 @@ import no.nav.k9.los.ko.OppgaveKoTjeneste
 import no.nav.k9.los.kodeverk.FagsakYtelseType
 import no.nav.k9.los.kodeverk.Fagsystem
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.OppgaveRepository
 import no.nav.k9.los.reservasjon.ReservasjonApisTjeneste
 import no.nav.k9.sak.typer.AktørId
@@ -104,7 +105,7 @@ class K9PunsjTilLosIT : AbstractK9LosIntegrationTest() {
 
         eventTilOppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(Fagsystem.PUNSJ, punsjId.toString()))
 
-        val oppgave = transactionalManager.transaction { tx -> oppgaveRepository.hentNyesteOppgaveForEksternIdHvisFinnes(tx, "K9", punsjId.toString()) }
+        val oppgave = transactionalManager.transaction { tx -> oppgaveRepository.hentNyesteOppgaveForEksternIdHvisFinnes(tx, Områder.K9, punsjId.toString()) }
         assertThat(oppgave!!.status).isEqualTo(Oppgavestatus.LUKKET)
 
     }

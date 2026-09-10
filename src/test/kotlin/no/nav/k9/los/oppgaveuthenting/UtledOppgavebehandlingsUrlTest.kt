@@ -3,6 +3,7 @@ package no.nav.k9.los.oppgaveuthenting
 import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.oppgavedefinisjon.omraade.Område
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgavedefinisjon.oppgavetype.Oppgavetype
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -15,15 +16,15 @@ class UtledOppgavebehandlingsUrlTest : AbstractK9LosIntegrationTest(){
     fun `mapUrlTemplateHappycase`() {
         val oppgavetype = Oppgavetype(
             eksternId = "test123",
-            område = Område(eksternId = "K9"),
-            definisjonskilde = "K9",
+            område = Område(eksternId = Områder.K9.eksternId),
+            definisjonskilde = Områder.K9.eksternId,
             oppgavebehandlingsUrlTemplate = "http://localhost:9000/fagsak/{K9.saksnummer}/behandling/{K9.behandlingUuid}?fakta=default&punkt=default",
             oppgavefelter = emptySet(),
         )
         val oppgavefelter = listOf(
             Oppgavefelt(
                 eksternId = "saksnummer",
-                område = "K9",
+                område = Områder.K9,
                 listetype = false,
                 påkrevd = false,
                 verdi = "ABC123",
@@ -31,7 +32,7 @@ class UtledOppgavebehandlingsUrlTest : AbstractK9LosIntegrationTest(){
             ),
             Oppgavefelt(
                 eksternId = "behandlingUuid",
-                område = "K9",
+                område = Områder.K9,
                 listetype = false,
                 påkrevd = false,
                 verdi = "beh456",
@@ -55,15 +56,15 @@ class UtledOppgavebehandlingsUrlTest : AbstractK9LosIntegrationTest(){
     fun `mapUrlUtenOmrådeanvisning`() {
         val oppgavetype = Oppgavetype(
             eksternId = "test123",
-            område = Område(eksternId = "K9"),
-            definisjonskilde = "K9",
+            område = Område(eksternId = Områder.K9.eksternId),
+            definisjonskilde = Områder.K9.eksternId,
             oppgavebehandlingsUrlTemplate = "http://localhost:9000/fagsak/{saksnummer}/behandling/{behandlingUuid}?fakta=default&punkt=default",
             oppgavefelter = emptySet(),
         )
         val oppgavefelter = listOf(
             Oppgavefelt(
                 eksternId = "saksnummer",
-                område = "K9",
+                område = Områder.K9,
                 listetype = false,
                 påkrevd = false,
                 verdi = "ABC123",
@@ -71,7 +72,7 @@ class UtledOppgavebehandlingsUrlTest : AbstractK9LosIntegrationTest(){
             ),
             Oppgavefelt(
                 eksternId = "behandlingUuid",
-                område = "K9",
+                område = Områder.K9,
                 listetype = false,
                 påkrevd = false,
                 verdi = "beh456",
@@ -95,15 +96,15 @@ class UtledOppgavebehandlingsUrlTest : AbstractK9LosIntegrationTest(){
     fun `mapUrlManglerOppgavefelt`() {
         val oppgavetype = Oppgavetype(
             eksternId = "test123",
-            område = Område(eksternId = "K9"),
-            definisjonskilde = "K9",
+            område = Område(eksternId = Områder.K9.eksternId),
+            definisjonskilde = Områder.K9.eksternId,
             oppgavebehandlingsUrlTemplate = "http://localhost:9000/fagsak/{saksnummer}/behandling/{behandlingUuid}?fakta=default&punkt=default",
             oppgavefelter = emptySet(),
         )
         val oppgavefelter = listOf(
             Oppgavefelt(
                 eksternId = "saksnummer",
-                område = "K9",
+                område = Områder.K9,
                 listetype = false,
                 påkrevd = false,
                 verdi = "ABC123",
@@ -111,7 +112,7 @@ class UtledOppgavebehandlingsUrlTest : AbstractK9LosIntegrationTest(){
             ),
             Oppgavefelt(
                 eksternId = "løsbartAksjonspunkt",
-                område = "K9",
+                område = Områder.K9,
                 listetype = false,
                 påkrevd = false,
                 verdi = "9001",

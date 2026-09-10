@@ -13,6 +13,7 @@ import no.nav.k9.los.domeneadaptere.k9.eventmottak.sak.K9SakEventDto
 import no.nav.k9.los.domeneadaptere.k9.eventtiloppgave.saktillos.beriker.K9SakSystemKlientInterfaceKludge
 import no.nav.k9.los.kodeverk.Fagsystem
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgavemottak.*
 import no.nav.k9.sak.kontrakt.aksjonspunkt.AksjonspunktTilstandDto
 import no.nav.k9.sak.kontrakt.produksjonsstyring.los.BehandlingMedFagsakDto
@@ -30,8 +31,8 @@ class SakEventTilOppgaveMapper(
         var oppgaveDto = OppgaveDto(
             eksternId = event.eksternId.toString(),
             eksternVersjon = event.eventTid.toString(),
-            område = "K9",
-            kildeområde = "K9",
+            område = Områder.K9,
+            kildeområde = Områder.K9,
             type = "k9sak",
             status = utledOppgavestatus(event).kode,
             endretTidspunkt = event.eventTid,
@@ -125,8 +126,8 @@ class SakEventTilOppgaveMapper(
             OppgaveDto(
                 eksternId = event.eksternId.toString(),
                 eksternVersjon = event.eventTid.toString(),
-                område = "K9",
-                kildeområde = "K9",
+                område = Områder.K9,
+                kildeområde = Områder.K9,
                 type = "k9sak",
                 status = utledOppgavestatus(event).kode,
                 endretTidspunkt = event.eventTid,

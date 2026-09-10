@@ -20,6 +20,7 @@ import no.nav.k9.los.infrastruktur.rest.RequestContextService
 import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.ko.OppgaveKoTjeneste
 import no.nav.k9.los.kodeverk.Fagsystem
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgavedefinisjon.oppgavetype.OppgavetypeRepository
 import no.nav.k9.los.oppgaveuthenting.Oppgave
 import no.nav.k9.los.oppgaveuthenting.enkeltoppslag.AktivOppgaveOppslag
@@ -160,7 +161,7 @@ fun Route.forvaltningApis() {
                                 verdi = listOf(oppgavetypeKode)
                             ),
                             FeltverdiOppgavefilter(
-                                område = "K9",
+                                område = Områder.K9,
                                 kode = sokefelt,
                                 operator = EksternFeltverdiOperator.EQUALS,
                                 verdi = listOf(saksnummer)
@@ -168,13 +169,13 @@ fun Route.forvaltningApis() {
                         ),
                         select = listOf(
                             EnkelSelectFelt(
-                                område = "K9",
+                                område = Områder.K9,
                                 kode = "opprettetTidspunkt"
                             )
                         ),
                         order = listOf(
                             EnkelOrderFelt(
-                                område = "K9",
+                                område = Områder.K9,
                                 kode = "opprettetTidspunkt",
                                 økende = true
                             )
@@ -191,7 +192,7 @@ fun Route.forvaltningApis() {
                         område = eksternOppgaveId.område,
                         eksternId = eksternOppgaveId.eksternId,
                         opprettetTidspunkt = rad.feltverdier
-                            .firstOrNull { it.område == "K9" && it.kode == "opprettetTidspunkt" }
+                            .firstOrNull { it.område == Områder.K9 && it.kode == "opprettetTidspunkt" }
                             ?.verdi
                             ?.toString()
                     )
@@ -295,7 +296,7 @@ fun Route.forvaltningApis() {
     }) {
         requestContextService.withRequestContext(call) {
             if (pepClient.kanLeggeUtDriftsmelding()) {
-                val område = call.parameters["omrade"]!!
+                val område = Områder.fraEksternId(call.parameters["omrade"]!!)
                 val oppgavetypeEksternId = call.parameters["oppgavetype"]!!
                 val oppgaveEksternId = call.parameters["oppgaveEksternId"]!!
 
@@ -414,7 +415,7 @@ fun Route.forvaltningApis() {
     }) {
         requestContextService.withRequestContext(call) {
             if (pepClient.kanLeggeUtDriftsmelding()) {
-                val område = call.parameters["omrade"].let { if (it == "null" || it == null) null else it }
+                val område = call.parameters["omrade"].let { if (it == "null" || it == null) null else Områder.fraEksternId(it) }
                 val kode = call.parameters["kode"]!!
 
                 val (køer, lagredeSøk) = transactionalManager.transaction { tx ->
@@ -619,7 +620,7 @@ fun lagNøkkelAktør(oppgave: Oppgave, tilBeslutter: Boolean): String {
 }
 
 data class FinnEksternIdResponse(
-    val område: String,
+    val område: Områder,
     val eksternId: String,
     val opprettetTidspunkt: String?,
 )

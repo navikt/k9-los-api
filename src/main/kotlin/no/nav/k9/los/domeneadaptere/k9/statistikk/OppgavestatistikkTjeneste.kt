@@ -5,6 +5,7 @@ import io.opentelemetry.instrumentation.annotations.WithSpan
 import kotliquery.TransactionalSession
 import no.nav.k9.los.infrastruktur.abac.cache.PepCacheRepository
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import org.slf4j.LoggerFactory
 
 class OppgavestatistikkTjeneste(
@@ -32,7 +33,7 @@ class OppgavestatistikkTjeneste(
             }
 
             return kode6PerOppgaveEksternId.getOrPut(oppgaveEksternId) {
-                pepCacheRepository.hent("K9", oppgaveEksternId, tx)?.kode6 ?: false
+                pepCacheRepository.hent(Områder.K9, oppgaveEksternId, tx)?.kode6 ?: false
             }
         }
     }

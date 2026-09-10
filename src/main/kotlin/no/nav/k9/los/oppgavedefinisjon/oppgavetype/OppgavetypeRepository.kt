@@ -14,6 +14,7 @@ import no.nav.k9.los.infrastruktur.utils.Cache
 import org.postgresql.util.PSQLException
 import org.slf4j.LoggerFactory
 import javax.sql.DataSource
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 
 class OppgavetypeRepository(
     private val dataSource: DataSource,
@@ -34,7 +35,7 @@ class OppgavetypeRepository(
         )
     }
 
-    fun hentOppgavetype(område: String, eksternId: String): Oppgavetype {
+    fun hentOppgavetype(område: Områder, eksternId: String): Oppgavetype {
         return using(sessionOf(dataSource)) {
             it.transaction { tx ->
                 hentOppgavetype(område, eksternId, tx)
@@ -42,8 +43,8 @@ class OppgavetypeRepository(
         }
     }
 
-    fun hentOppgavetype(område: String, eksternId: String, tx: TransactionalSession): Oppgavetype {
-        return hentOppgavetype(områdeRepository.hentOmråde(område, tx), eksternId, tx)
+    fun hentOppgavetype(område: Områder, eksternId: String, tx: TransactionalSession): Oppgavetype {
+        return hentOppgavetype(områdeRepository.hentOmråde(område.eksternId, tx), eksternId, tx)
     }
 
     fun hentOppgavetype(område: Område, eksternId: String, tx: TransactionalSession): Oppgavetype {
@@ -51,8 +52,8 @@ class OppgavetypeRepository(
             ?: throw IllegalArgumentException("Finner ikke oppgavetype: ${eksternId} for område: ${område.eksternId}")
     }
 
-    fun hentOppgavetype(område: String, oppgavetypeId: Long, tx: TransactionalSession): Oppgavetype {
-        return hent(områdeRepository.hentOmråde(område, tx), tx).oppgavetyper.find { it.id!! == oppgavetypeId }
+    fun hentOppgavetype(område: Områder, oppgavetypeId: Long, tx: TransactionalSession): Oppgavetype {
+        return hent(områdeRepository.hentOmråde(område.eksternId, tx), tx).oppgavetyper.find { it.id!! == oppgavetypeId }
             ?: throw IllegalArgumentException("Finner ikke omsøkt oppgavetypeId: ${oppgavetypeId} for område: ${område}")
     }
 

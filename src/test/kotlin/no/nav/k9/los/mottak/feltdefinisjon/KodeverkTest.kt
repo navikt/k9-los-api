@@ -7,6 +7,7 @@ import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.oppgavedefinisjon.omraade.Område
 import no.nav.k9.los.oppgavedefinisjon.omraade.OmrådeRepository
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.koin.test.get
@@ -25,9 +26,9 @@ class KodeverkTest : AbstractK9LosIntegrationTest() {
         transactionalManager = get()
         områdeRepository = get()
 
-        områdeRepository.lagre(eksternId = "K9")
+        områdeRepository.lagre(Områder.K9)
 
-        område = områdeRepository.hent("K9")!!
+        område = områdeRepository.hent(Områder.K9)!!
     }
 
     @Test

@@ -1,8 +1,8 @@
 package no.nav.k9.los.domeneadaptere.k9.eventtiloppgave.tilbaketillos
 
 import no.nav.k9.kodeverk.behandling.BehandlingResultatType
-import no.nav.k9.los.domeneadaptere.k9.eventmottak.EventHendelse
 import no.nav.k9.los.domeneadaptere.eventlager.EventLagret
+import no.nav.k9.los.domeneadaptere.k9.eventmottak.EventHendelse
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.tilbakekrav.AksjonspunktDefinisjonK9Tilbake
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.tilbakekrav.K9TilbakeEventDto
 import no.nav.k9.los.kodeverk.AksjonspunktStatus
@@ -10,6 +10,7 @@ import no.nav.k9.los.kodeverk.AksjonspunktStatus.OPPRETTET
 import no.nav.k9.los.kodeverk.BehandlingStatus
 import no.nav.k9.los.kodeverk.Fagsystem
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgavemottak.*
 import org.jetbrains.annotations.VisibleForTesting
 import java.time.temporal.ChronoUnit
@@ -27,8 +28,8 @@ class TilbakeEventTilOppgaveMapper {
         val oppgaveDto = OppgaveDto(
             eksternId = event.eksternId.toString(),
             eksternVersjon = event.eventTid.toString(),
-            område = "K9",
-            kildeområde = "K9",
+            område = Områder.K9,
+            kildeområde = Områder.K9,
             type = "k9tilbake",
             status = utledOppgavestatus(event).kode,
             endretTidspunkt = event.eventTid,
@@ -51,8 +52,8 @@ class TilbakeEventTilOppgaveMapper {
             OppgaveDto(
                 eksternId = event.eksternId.toString(),
                 eksternVersjon = event.eventTid.toString(),
-                område = "K9",
-                kildeområde = "K9",
+                område = Områder.K9,
+                kildeområde = Områder.K9,
                 type = "k9tilbake",
                 status = utledOppgavestatus(event).kode,
                 endretTidspunkt = event.eventTid,

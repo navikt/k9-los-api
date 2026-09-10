@@ -24,6 +24,7 @@ import no.nav.k9.los.ko.db.OppgaveKoRepository
 import no.nav.k9.los.ko.dto.OppgaveKo
 import no.nav.k9.los.kodeverk.BehandlingStatus
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.query.OppgaveQueryService
 import no.nav.k9.los.oppgaveuthenting.query.QueryRequest
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.FeltverdiOppgavefilter
@@ -521,7 +522,7 @@ object TestOppgaveNøkkel {
     fun forK9sak(eksternId: UUID) = OppgaveNøkkelDto(
         oppgaveEksternId = eksternId.toString(),
         oppgaveTypeEksternId = "k9sak",
-        områdeEksternId = "K9",
+        områdeEksternId = Områder.K9,
     )
 }
 

@@ -1,44 +1,34 @@
 package no.nav.k9.los.oppgavemottak
 
+import no.nav.k9.los.domeneadaptere.k9.OmrådeSetup
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.FeltdefinisjonDto
-import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.FeltdefinisjonTjeneste
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.FeltdefinisjonerDto
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.Synlighet
 import no.nav.k9.los.oppgavedefinisjon.omraade.Område
-import no.nav.k9.los.oppgavedefinisjon.omraade.OmrådeRepository
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgavedefinisjon.oppgavetype.OppgavefeltDto
 import no.nav.k9.los.oppgavedefinisjon.oppgavetype.OppgavetypeDto
-import no.nav.k9.los.oppgavedefinisjon.oppgavetype.OppgavetypeTjeneste
 import no.nav.k9.los.oppgavedefinisjon.oppgavetype.OppgavetyperDto
 import org.koin.test.KoinTest
 import org.koin.test.get
 import java.time.LocalDateTime
 
 class RedusertOppgaveTestmodellBuilder(
-    val område: Område = Område(eksternId = "OppgaveV3Test")
-): KoinTest {
+    val område: Område = Område(eksternId = Områder.K9.eksternId)
+) : KoinTest {
 
-    private var områdeRepository: OmrådeRepository = get()
-    private var feltdefinisjonTjeneste: FeltdefinisjonTjeneste = get()
-    private var oppgavetypeTjeneste: OppgavetypeTjeneste = get()
-
-
+    /**
+     * Seeder K9-området med produksjons-feltdefinisjoner og -oppgavetyper via OmrådeSetup.
+     * Nødvendig for JUnit-tester som truncater alle tabeller etter hver test.
+     * Idempotent, og allerede kjørt én gang for Kotest-tester i ProjectConfig.beforeProject.
+     */
     fun byggOppgavemodell() {
-        områdeRepository.lagre(eksternId = område.eksternId)
-        oppgavetypeTjeneste.oppdater(
-            OppgavetyperDto(
-                område.eksternId,
-                definisjonskilde = "unittest",
-                oppgavetyper = emptySet()
-            )
-        )
-        feltdefinisjonTjeneste.oppdater(lagFeltdefinisjonDto())
-        oppgavetypeTjeneste.oppdater(lagOppgavetypeDto())
+        get<OmrådeSetup>().setup()
     }
 
     fun lagFeltdefinisjonDto(): FeltdefinisjonerDto {
         return FeltdefinisjonerDto(
-            område = område.eksternId,
+            område = område.tilOmråderEnum(),
             feltdefinisjoner = setOf(
                 FeltdefinisjonDto(
                     id = "aksjonspunkt",
@@ -99,7 +89,7 @@ class RedusertOppgaveTestmodellBuilder(
 
     fun lagOppgavetypeDto(): OppgavetyperDto {
         return OppgavetyperDto(
-            område = område.eksternId,
+            område = område.tilOmråderEnum(),
             definisjonskilde = "k9-sak-til-los",
             oppgavetyper = setOf(
                 OppgavetypeDto(
@@ -140,11 +130,11 @@ class RedusertOppgaveTestmodellBuilder(
 
     fun lagOppgaveDto(id: String = "test", reservasjonsnøkkel: String = "test", status: String = "AAPEN"): OppgaveDto {
         return OppgaveDto(
-            eksternId = "aksjonspunkt",
+            eksternId = id,
             eksternVersjon = LocalDateTime.now().toString(),
-            område = område.eksternId,
-            kildeområde = "k9-sak-til-los",
-            type = "aksjonspunkt",
+            område = område.tilOmråderEnum(),
+            kildeområde = område.tilOmråderEnum(),
+            type = "k9sak",
             status = status,
             endretTidspunkt = LocalDateTime.now(),
             reservasjonsnøkkel = reservasjonsnøkkel,
@@ -154,12 +144,44 @@ class RedusertOppgaveTestmodellBuilder(
                     verdi = "9001"
                 ),
                 OppgaveFeltverdiDto(
-                    nøkkel = "opprettet",
-                    verdi = LocalDateTime.now().toString()
+                    nøkkel = "aktorId",
+                    verdi = "SKAL IKKE LOGGES"
+                ),
+                OppgaveFeltverdiDto(
+                    nøkkel = "avventerSaksbehandler",
+                    verdi = "true"
+                ),
+                // Påkrevde felter i k9sak-oppgavetypen (seedet fra k9-oppgavetyper-k9sak.json)
+                OppgaveFeltverdiDto(nøkkel = "behandlingUuid", verdi = "00000000-0000-0000-0000-000000000000"),
+                OppgaveFeltverdiDto(nøkkel = "fagsystem", verdi = "K9SAK"),
+                OppgaveFeltverdiDto(nøkkel = "saksnummer", verdi = "TESTSAK1"),
+                OppgaveFeltverdiDto(nøkkel = "resultattype", verdi = "IKKE_FASTSATT"),
+                OppgaveFeltverdiDto(nøkkel = "ytelsestype", verdi = "PSB"),
+                OppgaveFeltverdiDto(nøkkel = "behandlingsstatus", verdi = "UTRED"),
+                OppgaveFeltverdiDto(nøkkel = "behandlingTypekode", verdi = "BT-002"),
+                OppgaveFeltverdiDto(nøkkel = "totrinnskontroll", verdi = "false"),
+                OppgaveFeltverdiDto(nøkkel = "avventerSøker", verdi = "false"),
+                OppgaveFeltverdiDto(nøkkel = "avventerArbeidsgiver", verdi = "false"),
+                OppgaveFeltverdiDto(nøkkel = "avventerTekniskFeil", verdi = "false"),
+                OppgaveFeltverdiDto(nøkkel = "avventerAnnet", verdi = "false"),
+                OppgaveFeltverdiDto(nøkkel = "avventerAnnetIkkeSaksbehandlingstid", verdi = "false"),
+                OppgaveFeltverdiDto(nøkkel = "helautomatiskBehandlet", verdi = "false"),
+                OppgaveFeltverdiDto(nøkkel = "utenlandstilsnitt", verdi = "false"),
+                OppgaveFeltverdiDto(nøkkel = "direkteutbetaling", verdi = "false")
+            )
+        )
+    }
+
+    fun lagOppgaveDtoMedManglendeVerdiIObligFelt(): OppgaveDto {
+        return lagOppgaveDto().copy(
+            feltverdier = listOf(
+                OppgaveFeltverdiDto(
+                    nøkkel = "aksjonspunkt",
+                    verdi = "9001"
                 ),
                 OppgaveFeltverdiDto(
                     nøkkel = "aktorId",
-                    verdi = "SKAL IKKE LOGGES"
+                    verdi = null
                 ),
                 OppgaveFeltverdiDto(
                     nøkkel = "avventerSaksbehandler",
@@ -168,32 +190,4 @@ class RedusertOppgaveTestmodellBuilder(
             )
         )
     }
-
-    fun lagOppgaveDtoMedManglendeVerdiIObligFelt(): OppgaveDto {
-        return OppgaveDto(
-            eksternId = "aksjonspunkt",
-            eksternVersjon = LocalDateTime.now().toString(),
-            område = område.eksternId,
-            kildeområde = "k9-sak-til-los",
-            type = "aksjonspunkt",
-            status = "ÅPEN",
-            endretTidspunkt = LocalDateTime.now(),
-            reservasjonsnøkkel = "test",
-            feltverdier = listOf(
-                OppgaveFeltverdiDto(
-                    nøkkel = "aksjonspunkt",
-                    verdi = "9001"
-                ),
-                OppgaveFeltverdiDto(
-                    nøkkel = "opprettet",
-                    verdi = null
-                ),
-                OppgaveFeltverdiDto(
-                    nøkkel = "aktorId",
-                    verdi = "SKAL IKKE LOGGES"
-                )
-            )
-        )
-    }
-
 }

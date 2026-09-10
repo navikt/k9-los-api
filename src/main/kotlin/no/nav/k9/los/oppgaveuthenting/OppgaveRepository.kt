@@ -10,6 +10,7 @@ import no.nav.k9.los.oppgaveuthenting.query.db.OppgaveV3Id
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 
 class OppgaveRepository(
     private val oppgavetypeRepository: OppgavetypeRepository
@@ -37,11 +38,11 @@ class OppgaveRepository(
             ).map { mapOppgave(it, now, tx) }.asSingle) ?: throw IllegalStateException("Fant ikke oppgave med eksternId $oppgaveEksternId og oppgavetype $oppgavetypeEksternId")
     }
 
-    fun hentNyesteOppgaveForEksternId(tx: TransactionalSession, kildeområde: String, eksternId: String, now: LocalDateTime = LocalDateTime.now()): Oppgave {
+    fun hentNyesteOppgaveForEksternId(tx: TransactionalSession, kildeområde: Områder, eksternId: String, now: LocalDateTime = LocalDateTime.now()): Oppgave {
         return hentNyesteOppgaveForEksternIdHvisFinnes(tx, kildeområde, eksternId, now) ?: throw IllegalStateException("Fant ikke oppgave med kilde $kildeområde og eksternId $eksternId")
     }
 
-    fun hentNyesteOppgaveForEksternIdHvisFinnes(tx: TransactionalSession, kildeområde: String, eksternId: String, now: LocalDateTime = LocalDateTime.now()): Oppgave? {
+    fun hentNyesteOppgaveForEksternIdHvisFinnes(tx: TransactionalSession, kildeområde: Områder, eksternId: String, now: LocalDateTime = LocalDateTime.now()): Oppgave? {
         val queryString = """
                 select * 
                 from oppgave_v3 ov
@@ -54,7 +55,7 @@ class OppgaveRepository(
             queryOf(
                 queryString,
                 mapOf(
-                    "kildeomrade" to kildeområde,
+                    "kildeomrade" to kildeområde.eksternId,
                     "eksternId" to eksternId
                 )
             ).map { row -> mapOppgave(row, now, tx) }.asSingle
@@ -109,7 +110,7 @@ class OppgaveRepository(
         now: LocalDateTime,
         tx: TransactionalSession
     ): Oppgave {
-        val kildeområde = row.string("kildeomrade")
+        val kildeområde = Områder.fraEksternId(row.string("kildeomrade"))
         val oppgaveTypeId = row.long("oppgavetype_id")
         val oppgavetype = oppgavetypeRepository.hentOppgavetype(kildeområde, oppgaveTypeId, tx)
         val oppgavefelter = hentOppgavefelter(tx, row.long("id"))
@@ -140,7 +141,7 @@ class OppgaveRepository(
             ).map { row ->
                 Oppgavefelt(
                     eksternId = row.string("ekstern_id"),
-                    område = row.string("omrade"),
+                    område = Områder.fraEksternId(row.string("omrade")),
                     listetype = row.boolean("liste_type"),
                     påkrevd = row.boolean("pakrevd"),
                     verdi = row.string("verdi"),

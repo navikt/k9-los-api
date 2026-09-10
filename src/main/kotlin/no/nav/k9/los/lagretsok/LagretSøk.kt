@@ -2,6 +2,7 @@ package no.nav.k9.los.lagretsok
 
 import no.nav.k9.los.kodeverk.PersonBeskyttelseType
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.OppgaveQuery
 import no.nav.k9.los.oppgaveuthenting.query.mapping.EksternFeltverdiOperator
@@ -102,7 +103,7 @@ class LagretSøk private constructor(
                     verdi = listOf(if (kode6) PersonBeskyttelseType.KODE6.kode else PersonBeskyttelseType.UGRADERT.kode)
                 ),
                 FeltverdiOppgavefilter(
-                    område = "K9",
+                    område = Områder.K9,
                     kode = "ytelsestype",
                     operator = EksternFeltverdiOperator.IN,
                     verdi = emptyList()

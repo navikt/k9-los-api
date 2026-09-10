@@ -3,7 +3,7 @@ package no.nav.k9.los.domeneadaptere.k9.eventtiloppgave
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.core.test.TestCase
 import io.kotest.matchers.shouldBe
-import io.mockk.clearAllMocks
+import io.mockk.clearMocks
 import io.mockk.spyk
 import io.mockk.verify
 import kotliquery.TransactionalSession
@@ -23,6 +23,7 @@ import no.nav.k9.los.kodeverk.BehandlingType
 import no.nav.k9.los.kodeverk.Fagsystem
 import no.nav.k9.los.oppgavemottak.OppgaveV3Tjeneste
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.query.OppgaveQueryService
 import no.nav.k9.los.oppgaveuthenting.query.QueryRequest
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.FeltverdiOppgavefilter
@@ -74,7 +75,10 @@ class EventTilOppgaveAdapterSpec : KoinTest, FreeSpec() {
 
         oppgaveQueryService = get()
 
-        clearAllMocks()
+        // Spyene nullstilles slik at opptelling av kall starter på null for hver test.
+        // Må IKKE bruke clearAllMocks() her, for den nullstiller også den delte
+        // Configuration-mocken i Koin og ødelegger stubbingen for andre tester.
+        clearMocks(eventRepository, oppgaveOppdatertHandler)
     }
 
     init {
@@ -88,7 +92,7 @@ class EventTilOppgaveAdapterSpec : KoinTest, FreeSpec() {
                     "og oppdatertOppgaveHåndterer skal bli kalt" {
                         oppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(Fagsystem.PUNSJ, event.eksternId.toString()))
                         val internVersjon = transactionalManager.transaction { tx ->
-                            oppgaveV3Tjeneste.hentHøyesteInternVersjon(event.eksternId.toString(), K9Oppgavetypenavn.PUNSJ.kode, "K9", tx)
+                            oppgaveV3Tjeneste.hentHøyesteInternVersjon(event.eksternId.toString(), K9Oppgavetypenavn.PUNSJ.kode, Områder.K9, tx)
                         }
                         internVersjon shouldBe 0
                         verify(exactly = 1) {
@@ -120,7 +124,7 @@ class EventTilOppgaveAdapterSpec : KoinTest, FreeSpec() {
                         eventRepository.bestillHistorikkvask(any<Fagsystem>(), any<String>(), any<TransactionalSession>())
                     }
                     val internVersjon = transactionalManager.transaction { tx ->
-                        oppgaveV3Tjeneste.hentHøyesteInternVersjon(event.eksternId.toString(), K9Oppgavetypenavn.PUNSJ.kode, "K9", tx)
+                        oppgaveV3Tjeneste.hentHøyesteInternVersjon(event.eksternId.toString(), K9Oppgavetypenavn.PUNSJ.kode, Områder.K9, tx)
                     }
                     internVersjon shouldBe 1
                 }
@@ -143,7 +147,7 @@ class EventTilOppgaveAdapterSpec : KoinTest, FreeSpec() {
                             eventRepository.bestillHistorikkvask(any<Fagsystem>(), any<String>(), any<TransactionalSession>())
                         }
                         val internVersjon = transactionalManager.transaction { tx ->
-                            oppgaveV3Tjeneste.hentHøyesteInternVersjon(event.eksternId.toString(), K9Oppgavetypenavn.PUNSJ.kode, "K9", tx)
+                            oppgaveV3Tjeneste.hentHøyesteInternVersjon(event.eksternId.toString(), K9Oppgavetypenavn.PUNSJ.kode, Områder.K9, tx)
                         }
                         internVersjon shouldBe 1
                     }
@@ -167,11 +171,11 @@ class EventTilOppgaveAdapterSpec : KoinTest, FreeSpec() {
                         eventRepository.bestillHistorikkvask(any<Fagsystem>(), any<String>(), any<TransactionalSession>())
                     }
                     val internVersjon = transactionalManager.transaction { tx ->
-                        oppgaveV3Tjeneste.hentHøyesteInternVersjon(event.eksternId.toString(), K9Oppgavetypenavn.PUNSJ.kode, "K9", tx)
+                        oppgaveV3Tjeneste.hentHøyesteInternVersjon(event.eksternId.toString(), K9Oppgavetypenavn.PUNSJ.kode, Områder.K9, tx)
                     }
                     internVersjon shouldBe 1
                     val aktivOppgave = transactionalManager.transaction { tx ->
-                        oppgaveV3Tjeneste.hentAktivOppgave(event.eksternId.toString(), K9Oppgavetypenavn.PUNSJ.kode, "K9", tx)
+                        oppgaveV3Tjeneste.hentAktivOppgave(event.eksternId.toString(), K9Oppgavetypenavn.PUNSJ.kode, Områder.K9, tx)
                     }
 
                     aktivOppgave.hentVerdi("ytelsestype") shouldBe "ytelse"
@@ -188,7 +192,7 @@ class EventTilOppgaveAdapterSpec : KoinTest, FreeSpec() {
                 "skal opprette oppgaven i henhhold til innsendt event" {
                     oppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(Fagsystem.K9SAK, eksternId.toString()))
                     transactionalManager.transaction { tx ->
-                        oppgaveV3Tjeneste.hentHøyesteInternVersjon(eksternId.toString(), K9Oppgavetypenavn.SAK.kode, "K9", tx) shouldBe 0
+                        oppgaveV3Tjeneste.hentHøyesteInternVersjon(eksternId.toString(), K9Oppgavetypenavn.SAK.kode, Områder.K9, tx) shouldBe 0
                     }
                 }
             }
@@ -202,8 +206,8 @@ class EventTilOppgaveAdapterSpec : KoinTest, FreeSpec() {
                 "Skal overskrive den ordinære oppdateringen" {
                     oppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(Fagsystem.K9SAK, eksternId.toString()))
                     transactionalManager.transaction { tx ->
-                        oppgaveV3Tjeneste.hentHøyesteInternVersjon(eksternId.toString(), K9Oppgavetypenavn.SAK.kode, "K9", tx) shouldBe 0
-                        oppgaveV3Tjeneste.hentAktivOppgave(eksternId.toString(), K9Oppgavetypenavn.SAK.kode, "K9", tx).hentVerdi("saksnummer") shouldBe "99"
+                        oppgaveV3Tjeneste.hentHøyesteInternVersjon(eksternId.toString(), K9Oppgavetypenavn.SAK.kode, Områder.K9, tx) shouldBe 0
+                        oppgaveV3Tjeneste.hentAktivOppgave(eksternId.toString(), K9Oppgavetypenavn.SAK.kode, Områder.K9, tx).hentVerdi("saksnummer") shouldBe "99"
                     }
                 }
             }
@@ -222,8 +226,8 @@ class EventTilOppgaveAdapterSpec : KoinTest, FreeSpec() {
                 "Skal overskrive den siste ordinære oppdateringen" {
                     oppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(Fagsystem.K9SAK, eksternId.toString()))
                     transactionalManager.transaction { tx ->
-                        oppgaveV3Tjeneste.hentHøyesteInternVersjon(eksternId.toString(), K9Oppgavetypenavn.SAK.kode, "K9", tx) shouldBe 1
-                        oppgaveV3Tjeneste.hentAktivOppgave(eksternId.toString(), K9Oppgavetypenavn.SAK.kode, "K9", tx).hentVerdi("saksnummer") shouldBe "99"
+                        oppgaveV3Tjeneste.hentHøyesteInternVersjon(eksternId.toString(), K9Oppgavetypenavn.SAK.kode, Områder.K9, tx) shouldBe 1
+                        oppgaveV3Tjeneste.hentAktivOppgave(eksternId.toString(), K9Oppgavetypenavn.SAK.kode, Områder.K9, tx).hentVerdi("saksnummer") shouldBe "99"
                     }
                 }
             }
@@ -239,9 +243,9 @@ class EventTilOppgaveAdapterSpec : KoinTest, FreeSpec() {
                 "Skal overskrive den første ordinære oppdateringen" {
                     oppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(Fagsystem.K9SAK, eksternId.toString()))
                     transactionalManager.transaction { tx ->
-                        oppgaveV3Tjeneste.hentHøyesteInternVersjon(eksternId.toString(), K9Oppgavetypenavn.SAK.kode, "K9", tx) shouldBe 1
-                        oppgaveV3Tjeneste.hentAktivOppgave(eksternId.toString(), K9Oppgavetypenavn.SAK.kode, "K9", tx).hentVerdi("saksnummer") shouldBe "624QM"
-                        oppgaveV3Tjeneste.hentOppgaveversjon("K9", K9Oppgavetypenavn.SAK.kode, eksternId.toString(), 0, tx)!!.hentVerdi("saksnummer") shouldBe "99"
+                        oppgaveV3Tjeneste.hentHøyesteInternVersjon(eksternId.toString(), K9Oppgavetypenavn.SAK.kode, Områder.K9, tx) shouldBe 1
+                        oppgaveV3Tjeneste.hentAktivOppgave(eksternId.toString(), K9Oppgavetypenavn.SAK.kode, Områder.K9, tx).hentVerdi("saksnummer") shouldBe "624QM"
+                        oppgaveV3Tjeneste.hentOppgaveversjon(Områder.K9, K9Oppgavetypenavn.SAK.kode, eksternId.toString(), 0, tx)!!.hentVerdi("saksnummer") shouldBe "99"
                     }
                 }
             }
@@ -260,13 +264,13 @@ class EventTilOppgaveAdapterSpec : KoinTest, FreeSpec() {
                 "Skal overskrive den ordinære oppdateringen begge ganger" {
                     oppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(Fagsystem.K9SAK, eksternId.toString()))
                     transactionalManager.transaction { tx ->
-                        oppgaveV3Tjeneste.hentHøyesteInternVersjon(eksternId.toString(), K9Oppgavetypenavn.SAK.kode, "K9", tx) shouldBe 0
-                        oppgaveV3Tjeneste.hentAktivOppgave(eksternId.toString(), K9Oppgavetypenavn.SAK.kode, "K9", tx).hentVerdi("saksnummer") shouldBe "76"
+                        oppgaveV3Tjeneste.hentHøyesteInternVersjon(eksternId.toString(), K9Oppgavetypenavn.SAK.kode, Områder.K9, tx) shouldBe 0
+                        oppgaveV3Tjeneste.hentAktivOppgave(eksternId.toString(), K9Oppgavetypenavn.SAK.kode, Områder.K9, tx).hentVerdi("saksnummer") shouldBe "76"
                         oppgaveQueryService.queryForAntall(QueryRequest( //for å sjekke innhold i oppgave_v3_part
                             OppgaveQuery(
                                 listOf(
                                     FeltverdiOppgavefilter(
-                                        "K9",
+                                        Områder.K9,
                                         "saksnummer",
                                         EksternFeltverdiOperator.EQUALS,
                                         listOf("76")

@@ -1,7 +1,9 @@
 package no.nav.k9.los.oppgavedefinisjon.feltdefinisjon
 
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
+
 class Kodeverkreferanse(
-    val område: String,
+    val område: Områder,
     val eksternId: String
 ) {
     constructor(kodeverkReferanseDto: KodeverkReferanseDto): this(
@@ -10,12 +12,12 @@ class Kodeverkreferanse(
     )
 
     constructor(kodeverk: Kodeverk): this (
-        område = kodeverk.område.eksternId,
+        område = kodeverk.område.tilOmråderEnum(),
         eksternId = kodeverk.eksternId
     )
 
     constructor(databasestreng: String): this (
-        område = databasestreng.substringBefore("."),
+        område = Områder.fraEksternId(databasestreng.substringBefore(".")),
         eksternId = databasestreng.substringAfter(".")
     )
 

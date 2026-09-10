@@ -7,6 +7,7 @@ import io.ktor.server.routing.*
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.infrastruktur.rest.RequestContextService
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import org.koin.ktor.ext.inject
 
 // Må legge til tilgangskontroll dersom disse endepunktene aktiveres
@@ -38,7 +39,7 @@ internal fun Route.OppgaveV3Api() {
                 call.respond(
                     transactionalManager.transaction { tx ->
                         oppgaveV3Tjeneste.hentOppgaveversjon(
-                            område = call.parameters["område"]!!,
+                            område = Områder.fraEksternId(call.parameters["område"]!!),
                             oppgavetype = call.parameters["oppgavetype"]!!,
                             eksternId = call.parameters["eksternId"]!!,
                             eksternVersjon = call.parameters["eksternVersjon"]!!,

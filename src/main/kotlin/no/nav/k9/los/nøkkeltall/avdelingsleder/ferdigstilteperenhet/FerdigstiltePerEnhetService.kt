@@ -8,6 +8,7 @@ import no.nav.k9.los.infrastruktur.utils.CacheObject
 import no.nav.k9.los.kodeverk.BehandlendeEnhet
 import no.nav.k9.los.kodeverk.FagsakYtelseType
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.query.OppgaveQueryService
 import no.nav.k9.los.oppgaveuthenting.query.QueryRequest
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.FeltverdiOppgavefilter
@@ -152,7 +153,7 @@ class FerdigstiltePerEnhetService(
                         is FerdigstiltParameter.Enhet -> {
                             add(
                                 FeltverdiOppgavefilter(
-                                    "K9",
+                                    Områder.K9,
                                     "ferdigstiltEnhet",
                                     EksternFeltverdiOperator.EQUALS,
                                     listOf(parameter.enhet.kode)
@@ -162,7 +163,7 @@ class FerdigstiltePerEnhetService(
                         is FerdigstiltParameter.Helautomatisk -> {
                             add(
                                 FeltverdiOppgavefilter(
-                                    "K9",
+                                    Områder.K9,
                                     "helautomatiskBehandlet",
                                     EksternFeltverdiOperator.EQUALS,
                                     listOf(true.toString())
@@ -173,7 +174,7 @@ class FerdigstiltePerEnhetService(
                         FerdigstiltParameter.Andre -> {
                             add(
                                 FeltverdiOppgavefilter(
-                                    "K9",
+                                    Områder.K9,
                                     "ferdigstiltEnhet",
                                     EksternFeltverdiOperator.NOT_IN,
                                     enheter.map { it.kode }
@@ -181,7 +182,7 @@ class FerdigstiltePerEnhetService(
                             )
                             add(
                                 FeltverdiOppgavefilter(
-                                    "K9",
+                                    Områder.K9,
                                     "helautomatiskBehandlet",
                                     EksternFeltverdiOperator.NOT_EQUALS,
                                     listOf(true.toString())
@@ -194,7 +195,7 @@ class FerdigstiltePerEnhetService(
                     if (ytelser != null) {
                         add(
                             FeltverdiOppgavefilter(
-                                "K9",
+                                Områder.K9,
                                 "ytelsestype",
                                 EksternFeltverdiOperator.IN,
                                 ytelser.map { it.kode }

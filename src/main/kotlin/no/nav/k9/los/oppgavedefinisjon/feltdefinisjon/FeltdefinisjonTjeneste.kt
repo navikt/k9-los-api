@@ -2,6 +2,7 @@ package no.nav.k9.los.oppgavedefinisjon.feltdefinisjon
 
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.oppgavedefinisjon.omraade.Område
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgavedefinisjon.omraade.OmrådeRepository
 
 class FeltdefinisjonTjeneste(
@@ -12,7 +13,7 @@ class FeltdefinisjonTjeneste(
 
     fun oppdater(innkommendeFeltdefinisjonerDto: FeltdefinisjonerDto) {
         transactionalManager.transaction { tx ->
-            val område = områdeRepository.hentOmråde(innkommendeFeltdefinisjonerDto.område, tx)
+            val område = områdeRepository.hentOmråde(innkommendeFeltdefinisjonerDto.område.eksternId, tx)
             val eksisterendeFeltdefinisjoner = feltdefinisjonRepository.hent(område, tx)
             val innkommendeFeltdefinisjoner = Feltdefinisjoner(innkommendeFeltdefinisjonerDto, område)
 
@@ -34,7 +35,7 @@ class FeltdefinisjonTjeneste(
         }
     }
 
-    fun hent(område: String): Feltdefinisjoner {
+    fun hent(område: Områder): Feltdefinisjoner {
         return transactionalManager.transaction { tx ->
             feltdefinisjonRepository.hent(områdeRepository.hentOmråde(område, tx), tx)
         }

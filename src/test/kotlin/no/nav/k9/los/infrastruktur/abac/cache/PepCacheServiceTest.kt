@@ -27,6 +27,7 @@ import no.nav.k9.los.infrastruktur.jobbplanlegger.Tidsvindu
 import no.nav.k9.los.kodeverk.BehandlingStatus
 import no.nav.k9.los.kodeverk.Fagsystem
 import no.nav.k9.los.kodeverk.PersonBeskyttelseType
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.query.OppgaveQueryService
 import no.nav.k9.los.oppgaveuthenting.query.QueryRequest
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.EnkelSelectFelt
@@ -129,7 +130,7 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
         gjørSakOrdinær(saksnummer)
         k9sakEventHandler.prosesser(lagBehandlingprosessEventMedStatus(eksternId, saksnummer))
 
-        val pepCache = pepRepository.hent("K9", eksternId)!!
+        val pepCache = pepRepository.hent(Områder.K9, eksternId)!!
         assertThat(pepCache.kode6).isFalse()
         assertThat(pepCache.kode7).isFalse()
         assertThat(pepCache.egenAnsatt).isFalse()
@@ -149,7 +150,7 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
         k9punsjEventHandler.prosesser(lagPunsjBehandlingprosessEventMedStatus(eksternId, aktørId))
         oppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(Fagsystem.PUNSJ, eksternId))
 
-        val pepCache = pepRepository.hent("K9", eksternId)!!
+        val pepCache = pepRepository.hent(Områder.K9, eksternId)!!
         assertThat(pepCache.kode6).isFalse()
         assertThat(pepCache.kode7).isFalse()
         assertThat(pepCache.egenAnsatt).isFalse()
@@ -169,7 +170,7 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
         k9punsjEventHandler.prosesser(lagPunsjBehandlingprosessEventMedStatus(eksternId, aktørId))
         oppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(Fagsystem.PUNSJ, eksternId))
 
-        val pepCache = pepRepository.hent("K9", eksternId)!!
+        val pepCache = pepRepository.hent(Områder.K9, eksternId)!!
         assertThat(pepCache.kode6).isTrue()
         assertThat(pepCache.kode7).isFalse()
         assertThat(pepCache.egenAnsatt).isFalse()
@@ -189,7 +190,7 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
         k9punsjEventHandler.prosesser(lagPunsjBehandlingprosessEventMedStatus(eksternId, aktørId))
         oppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(Fagsystem.PUNSJ, eksternId))
 
-        val pepCache = pepRepository.hent("K9", eksternId)!!
+        val pepCache = pepRepository.hent(Områder.K9, eksternId)!!
         assertThat(pepCache.kode6).isFalse()
         assertThat(pepCache.kode7).isTrue()
         assertThat(pepCache.oppdatert).isGreaterThan(LocalDateTime.now().minusMinutes(1))
@@ -207,7 +208,7 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
         k9sakEventHandler.prosesser(lagBehandlingprosessEventMedStatus(eksternId, saksnummer))
         oppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(Fagsystem.K9SAK, eksternId))
 
-        val pepCache = pepRepository.hent("K9", eksternId)!!
+        val pepCache = pepRepository.hent(Områder.K9, eksternId)!!
         assertThat(pepCache.kode6).isTrue()
         assertThat(pepCache.kode7).isFalse()
         assertThat(pepCache.egenAnsatt).isFalse()
@@ -296,7 +297,7 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
         verify(exactly = 2) { runBlocking { pepClient.harTilgangTilOppgaveV3(any()) } } //oppgaven var ikke i køa, så gjør ikke ekstra kall til pep-klent
 
         gjørSakKode6(saksnummer)
-        ventPåAntallForsøk(10, "Pepcache") { pepRepository.hent("K9", eksternId)?.kode6 == true }
+        ventPåAntallForsøk(10, "Pepcache") { pepRepository.hent(Områder.K9, eksternId)?.kode6 == true }
 
         assertThat(
             hentOppgaverMedSikkerhetsklassifisering(
@@ -350,11 +351,11 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
                 logger.info(
                     "Oppgave: " + oppgaveRepository.hentNyesteOppgaveForEksternId(
                         tx,
-                        "K9",
+                        Områder.K9,
                         eksternId
                     ).felter.joinToString(", ") { it.eksternId + "-" + it.verdi })
                 logger.info(
-                    "Pep: " + pepCache.hent("K9", eksternId, tx)
+                    "Pep: " + pepCache.hent(Områder.K9, eksternId, tx)
                         ?.run { "kode6-$kode6, kode7-$kode7, egenansatt-$egenAnsatt, oppdater-$oppdatert" })
             }
         }
@@ -368,7 +369,7 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
         val resultat = oppgaveQueryService.query(
             QueryRequest(
                 OppgaveQuery(
-                    select = listOf(EnkelSelectFelt(område = "K9", kode = "ekstern_id")),
+                    select = listOf(EnkelSelectFelt(område = Områder.K9, kode = "ekstern_id")),
                     filtere = listOf(
                         FeltverdiOppgavefilter(
                             område = null,
@@ -377,7 +378,7 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
                             verdi = listOf(sikkerhetsklassifiseringtype.kode)
                         ),
                         FeltverdiOppgavefilter(
-                            område = "K9",
+                            område = Områder.K9,
                             kode = FeltType.BEHANDLINGUUID.eksternId,
                             operator = EksternFeltverdiOperator.EQUALS,
                             verdi = listOf(eksternId)

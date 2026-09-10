@@ -18,6 +18,7 @@ import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.kodeverk.Fagsystem
 import no.nav.k9.los.oppgavemottak.OppgaveV3Tjeneste
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.sak.typer.AktørId
 import no.nav.k9.sak.typer.JournalpostId
 import org.koin.test.KoinTest
@@ -50,7 +51,7 @@ class HistorikkvaskTjenesteSpec: FreeSpec(), KoinTest {
                 "skal få korrigerte verdier av historikkvasker" {
                     val oppgaveUvasket = transactionalManager.transaction { tx ->
                         eventRepository.bestillHistorikkvask(Fagsystem.PUNSJ)
-                        oppgaveTjeneste.hentAktivOppgave(eksternId.toString(), K9Oppgavetypenavn.PUNSJ.kode, "K9", tx)
+                        oppgaveTjeneste.hentAktivOppgave(eksternId.toString(), K9Oppgavetypenavn.PUNSJ.kode, Områder.K9, tx)
                     }
                     oppgaveUvasket.hentVerdi("ytelsestype") shouldBe "ytelse"
                     oppgaveUvasket.felter shouldHaveSize 12
@@ -58,7 +59,7 @@ class HistorikkvaskTjenesteSpec: FreeSpec(), KoinTest {
                     historikkvaskTjeneste.vaskBestilling(HistorikkvaskBestilling(null, eksternId.toString(), Fagsystem.PUNSJ))
 
                     val oppgaveVasket = transactionalManager.transaction { tx ->
-                        oppgaveTjeneste.hentAktivOppgave(eksternId.toString(), K9Oppgavetypenavn.PUNSJ.kode, "K9", tx)
+                        oppgaveTjeneste.hentAktivOppgave(eksternId.toString(), K9Oppgavetypenavn.PUNSJ.kode, Områder.K9, tx)
                     }
                     oppgaveVasket.hentVerdi("ytelsestype") shouldBe "ytelsekorrigert"
                     oppgaveVasket.felter shouldHaveSize 12

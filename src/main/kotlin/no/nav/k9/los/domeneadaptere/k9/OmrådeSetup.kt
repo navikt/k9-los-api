@@ -21,6 +21,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon as KlageAksjonspunktDefinisjon
 import no.nav.k9.kodeverk.api.Kodeverdi as KodeverdiK9Sak
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 
 class OmrådeSetup(
     private val områdeRepository: no.nav.k9.los.oppgavedefinisjon.omraade.OmrådeRepository,
@@ -29,7 +30,7 @@ class OmrådeSetup(
     private val config: Configuration,
 ) {
     private val log: Logger = LoggerFactory.getLogger(OmrådeSetup::class.java)
-    private val område: String = "K9"
+    private val område: Områder = Områder.K9
 
     fun setup() {
         opprettOmråde()
@@ -44,7 +45,7 @@ class OmrådeSetup(
 
     private fun opprettOmråde() {
         log.info("oppretter område $område")
-        områdeRepository.lagre(område)
+        områdeRepository.lagre(område.eksternId)
     }
 
     private fun oppdaterFeltdefinisjoner() {

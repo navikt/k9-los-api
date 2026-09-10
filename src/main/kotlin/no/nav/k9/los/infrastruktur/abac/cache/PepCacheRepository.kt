@@ -9,6 +9,7 @@ import no.nav.k9.los.infrastruktur.db.util.InClauseHjelper
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import java.time.LocalDateTime
 import javax.sql.DataSource
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 
 class PepCacheRepository(
     val dataSource: DataSource
@@ -69,7 +70,7 @@ class PepCacheRepository(
                     egen_ansatt = :egen_ansatt, 
                     oppdatert = :oppdatert
             """, mapOf(
-                "kildeomrade" to cache.kildeområde,
+                "kildeomrade" to cache.kildeområde.eksternId,
                 "ekstern_id" to cache.eksternId,
                 "kode6" to cache.kode6,
                 "kode7" to cache.kode7,
@@ -79,7 +80,7 @@ class PepCacheRepository(
         )
     }
 
-    fun slett(kildeområde: String, eksternId: String, tx: TransactionalSession) {
+    fun slett(kildeområde: Områder, eksternId: String, tx: TransactionalSession) {
         tx.run(
             queryOf("""
                     DELETE FROM OPPGAVE_PEP_CACHE WHERE kildeomrade = :kildeomrade AND ekstern_id = :ekstern_id 
@@ -91,18 +92,18 @@ class PepCacheRepository(
         )
     }
 
-    fun hent(kildeområde: String, eksternId: String): PepCache? {
+    fun hent(kildeområde: Områder, eksternId: String): PepCache? {
         return using(sessionOf(dataSource)) {
             it.transaction { tx -> hent(kildeområde, eksternId, tx) }
         }
     }
 
-    fun hent(kildeområde: String, eksternId: String, tx: TransactionalSession): PepCache? {
+    fun hent(kildeområde: Områder, eksternId: String, tx: TransactionalSession): PepCache? {
         return tx.run(
             queryOf("""
                     SELECT * FROM OPPGAVE_PEP_CACHE WHERE kildeomrade = :kildeomrade AND ekstern_id = :ekstern_id 
                 """, mapOf(
-                    "kildeomrade" to kildeområde,
+                    "kildeomrade" to kildeområde.eksternId,
                     "ekstern_id" to eksternId
                 )
             ).map { it.tilPepCache() }.asSingle
@@ -111,7 +112,7 @@ class PepCacheRepository(
 
 
     private fun Row.tilPepCache() = PepCache(
-        kildeområde = string("kildeomrade"),
+        kildeområde = Områder.fraEksternId(string("kildeomrade")),
         eksternId = string("ekstern_id"),
         kode6 = boolean("kode6"),
         kode7 = boolean("kode7"),
@@ -123,7 +124,7 @@ class PepCacheRepository(
 
 data class PepCache(
     val eksternId: String,
-    val kildeområde: String,
+    val kildeområde: Områder,
     val kode6: Boolean,
     val kode7: Boolean,
     val egenAnsatt: Boolean,

@@ -6,6 +6,7 @@ import no.nav.k9.los.infrastruktur.pdl.navn
 import no.nav.k9.los.kodeverk.BehandlingStatus
 import no.nav.k9.los.kodeverk.FagsakYtelseType
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.query.OppgaveQueryService
 import no.nav.k9.los.oppgaveuthenting.query.QueryRequest
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.EnkelOrderFelt
@@ -43,12 +44,12 @@ class SøkeboksTjeneste(
         val query = OppgaveQuery(
             filtere = listOf(
                 FeltverdiOppgavefilter(
-                    område = "K9",
+                    område = Områder.K9,
                     kode = "journalpostId",
                     operator = EksternFeltverdiOperator.EQUALS,
                     verdi = listOf(journalpostId)
                 )
-            ), order = listOf(EnkelOrderFelt("K9", "mottattDato", false))
+            ), order = listOf(EnkelOrderFelt(Områder.K9, "mottattDato", false))
         )
         return queryService.queryForOppgave(QueryRequest(oppgaveQuery = query))
     }
@@ -59,12 +60,12 @@ class SøkeboksTjeneste(
         val query = OppgaveQuery(
             filtere = listOf(
                 FeltverdiOppgavefilter(
-                    område = "K9",
+                    område = Områder.K9,
                     kode = "aktorId",
                     operator = EksternFeltverdiOperator.IN,
                     verdi = listOf(aktørId, fnr)
                 )
-            ), order = listOf(EnkelOrderFelt("K9", "mottattDato", false))
+            ), order = listOf(EnkelOrderFelt(Områder.K9, "mottattDato", false))
         )
         return queryService.queryForOppgave(QueryRequest(oppgaveQuery = query))
     }
@@ -73,12 +74,12 @@ class SøkeboksTjeneste(
         val query = OppgaveQuery(
             filtere = listOf(
                 FeltverdiOppgavefilter(
-                    område = "K9",
+                    område = Områder.K9,
                     kode = "aktorId",
                     operator = EksternFeltverdiOperator.IN,
                     verdi = aktørIder
                 )
-            ), order = listOf(EnkelOrderFelt("K9", "mottattDato", false))
+            ), order = listOf(EnkelOrderFelt(Områder.K9, "mottattDato", false))
         )
         return queryService.queryForOppgave(QueryRequest(oppgaveQuery = query))
     }
@@ -87,12 +88,12 @@ class SøkeboksTjeneste(
         val query = OppgaveQuery(
             filtere = listOf(
                 FeltverdiOppgavefilter(
-                    område = "K9",
+                    område = Områder.K9,
                     kode = "saksnummer",
                     operator = EksternFeltverdiOperator.EQUALS,
                     verdi = listOf(saksnummer.uppercase().replace("O", "o").replace("I", "i"))
                 )
-            ), order = listOf(EnkelOrderFelt("K9", "mottattDato", false))
+            ), order = listOf(EnkelOrderFelt(Områder.K9, "mottattDato", false))
         )
         return queryService.queryForOppgave(QueryRequest(oppgaveQuery = query))
     }
