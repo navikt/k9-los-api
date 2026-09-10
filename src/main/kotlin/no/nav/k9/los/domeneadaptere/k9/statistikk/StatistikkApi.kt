@@ -4,7 +4,7 @@ import io.github.smiley4.ktoropenapi.get
 import io.ktor.http.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import no.nav.k9.los.infrastruktur.abac.PepClient
+import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.rest.RequestContextService
 import org.koin.ktor.ext.inject
 import kotlin.concurrent.thread
@@ -12,7 +12,7 @@ import kotlin.concurrent.thread
 internal fun Route.StatistikkApi() {
     val requestContextService by inject<RequestContextService>()
     val oppgavestatistikkTjeneste by inject<OppgavestatistikkTjeneste>()
-    val pepClient by inject<PepClient>()
+    val pepClient by inject<IPepClient>()
 
     put {
         requestContextService.withRequestContext(call) {
