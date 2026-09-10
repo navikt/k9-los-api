@@ -10,6 +10,7 @@ import no.nav.k9.los.domeneadaptere.k9.eventmottak.K9TilbakeEventDtoBuilder
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.TestSaksbehandler
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.tilbakekrav.K9TilbakeEventHandler
 import no.nav.k9.los.ko.OppgaveKoTjeneste
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.reservasjon.OppgaveIdMedOverstyringDto
 import no.nav.k9.los.reservasjon.ReservasjonApisTjeneste
 import no.nav.k9.los.oppgaveuthenting.OppgaveNøkkelDto
@@ -81,7 +82,7 @@ class K9TilbakeTilLosIT : AbstractK9LosIntegrationTest() {
                     OppgaveNøkkelDto(
                         oppgaveEksternId = eksternId.toString(),
                         oppgaveTypeEksternId = "k9tilbake",
-                        områdeEksternId = "K9"
+                        områdeEksternId = Områder.K9
                     )
                 )
             )

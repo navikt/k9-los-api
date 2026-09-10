@@ -16,6 +16,7 @@ import no.nav.k9.los.domeneadaptere.k9.eventmottak.klage.K9KlageEventDto
 import no.nav.k9.los.domeneadaptere.k9.eventtiloppgave.klagetillos.beriker.K9KlageBerikerInterfaceKludge
 import no.nav.k9.los.kodeverk.Fagsystem
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgavemottak.*
 import org.jetbrains.annotations.VisibleForTesting
 
@@ -48,8 +49,8 @@ class KlageEventTilOppgaveMapper(
         val oppgaveDto = OppgaveDto(
             eksternId = eventBeriket.eksternId.toString(),
             eksternVersjon = eventBeriket.eventTid.toString(),
-            område = "K9",
-            kildeområde = "K9",
+            område = Områder.K9,
+            kildeområde = Områder.K9,
             type = "k9klage",
             status = utledOppgavestatus(eventBeriket).kode,
             endretTidspunkt = eventBeriket.eventTid,
@@ -91,8 +92,8 @@ class KlageEventTilOppgaveMapper(
         ) = OppgaveDto(
             eksternId = event.eksternId.toString(),
             eksternVersjon = event.eventTid.toString(),
-            område = "K9",
-            kildeområde = "K9",
+            område = Områder.K9,
+            kildeområde = Områder.K9,
             type = "k9klage",
             status = utledOppgavestatus(event).kode,
             endretTidspunkt = event.eventTid,

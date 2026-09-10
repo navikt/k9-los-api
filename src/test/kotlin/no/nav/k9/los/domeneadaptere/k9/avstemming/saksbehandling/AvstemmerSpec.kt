@@ -7,6 +7,7 @@ import no.nav.k9.los.kodeverk.FagsakYtelseType
 import no.nav.k9.los.kodeverk.Fagsystem
 import no.nav.k9.los.oppgavedefinisjon.omraade.Område
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgavedefinisjon.oppgavetype.Oppgavetype
 import no.nav.k9.los.oppgaveuthenting.Oppgave
 import no.nav.k9.los.oppgaveuthenting.Oppgavefelt
@@ -134,7 +135,7 @@ object Testdata {
             endretTidspunkt = LocalDateTime.now(),
             felter = listOf(
                 Oppgavefelt(
-                    område = "K9",
+                    område = Områder.K9,
                     eksternId = "saksnummer",
                     verdi = "saksnummer123",
                     listetype = false,
@@ -142,7 +143,7 @@ object Testdata {
                     verdiBigInt = null,
                 ),
                 Oppgavefelt(
-                    område = "K9",
+                    område = Områder.K9,
                     eksternId = "ytelsestype",
                     verdi = "ytelse",
                     listetype = false,

@@ -31,13 +31,14 @@ import java.time.Duration
 import java.util.*
 import kotlin.coroutines.coroutineContext
 import kotlin.time.Duration.Companion.seconds
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 
 data class TilgangerCacheKey(
-    val områdeEksternId: String, // Bruker Områder-enum på sikt
+    val område: Områder,
     val navIdent: String,
     val tokenId: String,
 ) {
-    constructor(idToken: IIdToken) : this("K9", idToken.getNavIdent(), idToken.jwt?.uti ?: "") // jwt kan bare være null med IdTokenLocal
+    constructor(idToken: IIdToken) : this(Områder.K9, idToken.getNavIdent(), idToken.jwt?.uti ?: "") // jwt kan bare være null med IdTokenLocal
 }
 
 class SifAbacPdpKlient(

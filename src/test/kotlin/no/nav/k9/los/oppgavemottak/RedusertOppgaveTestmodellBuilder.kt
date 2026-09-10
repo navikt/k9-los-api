@@ -6,6 +6,7 @@ import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.FeltdefinisjonerDto
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.Synlighet
 import no.nav.k9.los.oppgavedefinisjon.omraade.Område
 import no.nav.k9.los.oppgavedefinisjon.omraade.OmrådeRepository
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgavedefinisjon.oppgavetype.OppgavefeltDto
 import no.nav.k9.los.oppgavedefinisjon.oppgavetype.OppgavetypeDto
 import no.nav.k9.los.oppgavedefinisjon.oppgavetype.OppgavetypeTjeneste
@@ -15,7 +16,7 @@ import org.koin.test.get
 import java.time.LocalDateTime
 
 class RedusertOppgaveTestmodellBuilder(
-    val område: Område = Område(eksternId = "OppgaveV3Test")
+    val område: Område = Område(eksternId = Områder.K9.eksternId)
 ): KoinTest {
 
     private var områdeRepository: OmrådeRepository = get()
@@ -27,7 +28,7 @@ class RedusertOppgaveTestmodellBuilder(
         områdeRepository.lagre(eksternId = område.eksternId)
         oppgavetypeTjeneste.oppdater(
             OppgavetyperDto(
-                område.eksternId,
+                område.tilOmråderEnum(),
                 definisjonskilde = "unittest",
                 oppgavetyper = emptySet()
             )
@@ -38,7 +39,7 @@ class RedusertOppgaveTestmodellBuilder(
 
     fun lagFeltdefinisjonDto(): FeltdefinisjonerDto {
         return FeltdefinisjonerDto(
-            område = område.eksternId,
+            område = område.tilOmråderEnum(),
             feltdefinisjoner = setOf(
                 FeltdefinisjonDto(
                     id = "aksjonspunkt",
@@ -99,7 +100,7 @@ class RedusertOppgaveTestmodellBuilder(
 
     fun lagOppgavetypeDto(): OppgavetyperDto {
         return OppgavetyperDto(
-            område = område.eksternId,
+            område = område.tilOmråderEnum(),
             definisjonskilde = "k9-sak-til-los",
             oppgavetyper = setOf(
                 OppgavetypeDto(
@@ -142,8 +143,8 @@ class RedusertOppgaveTestmodellBuilder(
         return OppgaveDto(
             eksternId = "aksjonspunkt",
             eksternVersjon = LocalDateTime.now().toString(),
-            område = område.eksternId,
-            kildeområde = "k9-sak-til-los",
+            område = område.tilOmråderEnum(),
+            kildeområde = område.tilOmråderEnum(),
             type = "aksjonspunkt",
             status = status,
             endretTidspunkt = LocalDateTime.now(),
@@ -173,8 +174,8 @@ class RedusertOppgaveTestmodellBuilder(
         return OppgaveDto(
             eksternId = "aksjonspunkt",
             eksternVersjon = LocalDateTime.now().toString(),
-            område = område.eksternId,
-            kildeområde = "k9-sak-til-los",
+            område = område.tilOmråderEnum(),
+            kildeområde = område.tilOmråderEnum(),
             type = "aksjonspunkt",
             status = "ÅPEN",
             endretTidspunkt = LocalDateTime.now(),

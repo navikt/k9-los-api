@@ -9,6 +9,7 @@ import no.nav.k9.los.oppgavemottak.feltutlederforlagring.GyldigeFeltutledere
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.FeltdefinisjonRepository
 import no.nav.k9.los.oppgavedefinisjon.omraade.OmrådeRepository
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgavedefinisjon.oppgavetype.Oppgavetype
 import no.nav.k9.los.oppgavedefinisjon.oppgavetype.OppgavetypeRepository
 import no.nav.k9.los.oppgaveuthenting.query.db.OppgaveV3Id
@@ -41,7 +42,7 @@ class TestOppgaveV3Repository(
                 """.trimIndent()
                 ).map { row ->
                     val oppgavetype =
-                        oppgavetypeRepository.hentOppgavetype(row.string("kildeomrade"), row.string("ot_ekstern_id"))
+                        oppgavetypeRepository.hentOppgavetype(Områder.fraEksternId(row.string("kildeomrade")), row.string("ot_ekstern_id"))
                     OppgaveV3(
                         id = OppgaveV3Id(row.long("id")),
                         eksternId = row.string("ekstern_id"),
@@ -49,7 +50,7 @@ class TestOppgaveV3Repository(
                         oppgavetype = oppgavetype,
                         status = Oppgavestatus.valueOf(row.string("status")),
                         endretTidspunkt = row.localDateTime("endret_tidspunkt"),
-                        kildeområde = row.string("kildeomrade"),
+                        kildeområde = Områder.fraEksternId(row.string("kildeomrade")),
                         reservasjonsnøkkel = row.stringOrNull("reservasjonsnokkel") ?: "mangler_historikkvask",
                         aktiv = row.boolean("aktiv"),
                         felter = hentFeltverdier(OppgaveV3Id(row.long("id")), oppgavetype, tx)

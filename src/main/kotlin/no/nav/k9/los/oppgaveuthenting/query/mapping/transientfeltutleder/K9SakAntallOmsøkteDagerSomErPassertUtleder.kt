@@ -1,5 +1,6 @@
 package no.nav.k9.los.oppgaveuthenting.query.mapping.transientfeltutleder
 
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.query.db.OmrådeOgKode
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -14,7 +15,7 @@ import java.time.temporal.ChronoUnit
 class K9SakAntallOmsøkteDagerSomErPassertUtleder : TransientFeltutleder {
 
     companion object {
-        private val PERIODER_FELT = OmrådeOgKode("K9", "relevanteSøknadsperioder")
+        private val PERIODER_FELT = OmrådeOgKode(Områder.K9, "relevanteSøknadsperioder")
 
         fun antallDagerFørDato(perioder: List<String>, dato: LocalDate): Long {
             return perioder.sumOf { periodeStr ->

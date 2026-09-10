@@ -28,17 +28,6 @@ class OppgaveV3Test : AbstractK9LosIntegrationTest() {
     }
 
     @Test
-    fun `test at oppgave ikke blir opprettet om området ikke finnes`() {
-        val innkommendeOppgaveMedUkjentOmråde = oppgavemodellBuilder.lagOppgaveDto().copy(område = "ukjent-område")
-        val exception = assertThrows<IllegalArgumentException> {
-            transactionalManager.transaction { tx ->
-                oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(NyOppgaveversjon(innkommendeOppgaveMedUkjentOmråde), tx)
-            }
-        }
-        assertEquals("Området finnes ikke: ukjent-område", exception.message!!)
-    }
-
-    @Test
     fun `test at oppgave ikke blir opprettet om den inneholder felter som ikke finnes i oppgavetype`() {
         val ukjentOppgaveFeltVerdi = OppgaveFeltverdiDto("ukjent", "verdi")
         val oppgaveDto = oppgavemodellBuilder.lagOppgaveDto()

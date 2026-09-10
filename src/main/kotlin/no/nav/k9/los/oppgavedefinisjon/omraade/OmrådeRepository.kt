@@ -33,6 +33,10 @@ class OmrådeRepository(private val dataSource: DataSource) {
         }
     }
 
+    fun hentOmråde(område: Områder, tx: TransactionalSession): Område {
+        return hentOmråde(område.eksternId, tx)
+    }
+
     fun lagre(eksternId: String) {
         using(sessionOf(dataSource)) { session ->
             session.transaction { tx ->
@@ -44,6 +48,10 @@ class OmrådeRepository(private val dataSource: DataSource) {
                 )
             }
         }
+    }
+
+    fun lagre(område: Områder) {
+        lagre(område.eksternId)
     }
 
     fun hent(eksternId: String): Område? {
@@ -60,6 +68,10 @@ class OmrådeRepository(private val dataSource: DataSource) {
                 )
             }
         }
+    }
+
+    fun hent(område: Områder): Område? {
+        return hent(område.eksternId)
     }
 
     fun invaliderCache() {

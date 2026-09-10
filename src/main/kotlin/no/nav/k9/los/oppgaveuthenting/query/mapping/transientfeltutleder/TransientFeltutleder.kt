@@ -4,6 +4,7 @@ import no.nav.k9.los.oppgaveuthenting.query.db.Spørringstrategi
 import no.nav.k9.los.oppgaveuthenting.query.mapping.FeltverdiOperator
 import no.nav.k9.los.oppgaveuthenting.Oppgave
 import java.time.LocalDateTime
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 
 interface TransientFeltutleder {
 
@@ -25,14 +26,14 @@ interface TransientFeltutleder {
 data class HentVerdiInput(
     val now: LocalDateTime,
     val oppgave: Oppgave,
-    val feltområde: String,
+    val feltområde: Områder,
     val feltkode: String
 )
 
 data class WhereInput(
     val spørringstrategi: Spørringstrategi,
     val now: LocalDateTime,
-    val feltområde: String,
+    val feltområde: Områder,
     val feltkode: String,
     val operator: FeltverdiOperator, // TODO: Egen eksponert enum her.
     val feltverdi: Any?
@@ -41,7 +42,7 @@ data class WhereInput(
 data class OrderByInput(
     val spørringstrategi: Spørringstrategi,
     val now: LocalDateTime,
-    val feltområde: String,
+    val feltområde: Områder,
     val feltkode: String,
     val økende: Boolean
 )
@@ -49,7 +50,7 @@ data class OrderByInput(
 data class SelectInput(
     val spørringstrategi: Spørringstrategi,
     val now: LocalDateTime,
-    val feltområde: String,
+    val feltområde: Områder,
     val feltkode: String
 )
 

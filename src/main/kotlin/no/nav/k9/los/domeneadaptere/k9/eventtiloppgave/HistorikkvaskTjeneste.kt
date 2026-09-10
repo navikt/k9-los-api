@@ -7,6 +7,7 @@ import no.nav.k9.los.domeneadaptere.eventlager.EventRepository
 import no.nav.k9.los.domeneadaptere.eventlager.HistorikkvaskBestilling
 import no.nav.k9.los.infrastruktur.db.DB_AWARE_PARALLELISM
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgavemottak.OppgaveV3Tjeneste
 import no.nav.k9.los.oppgaveuthenting.OppgaveNøkkelDto
 import org.slf4j.Logger
@@ -90,7 +91,7 @@ class HistorikkvaskTjeneste(
         val oppgavenøkkel = OppgaveNøkkelDto(
             historikkvaskBestilling.eksternId,
             K9Oppgavetypenavn.fraFagsystem(historikkvaskBestilling.fagsystem).kode,
-            "K9"
+            Områder.K9
         )
 
         var eventNrForBehandling = 0

@@ -8,6 +8,7 @@ import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.OppgaveTestDataBuilder
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
 import no.nav.k9.los.saksbehandleradmin.TestSaksbehandlerRepository
@@ -57,7 +58,7 @@ class SisteOppgaverRepositoryTest : AbstractK9LosIntegrationTest() {
                 tx,
                 saksbehandler.epost,
                 OppgaveNøkkelDto(
-                    områdeEksternId = "K9",
+                    områdeEksternId = Områder.K9,
                     oppgaveEksternId = behandlingUuid1,
                     oppgaveTypeEksternId = "k9sak"
                 )
@@ -69,7 +70,7 @@ class SisteOppgaverRepositoryTest : AbstractK9LosIntegrationTest() {
                 tx,
                 saksbehandler.epost,
                 OppgaveNøkkelDto(
-                    områdeEksternId = "K9",
+                    områdeEksternId = Områder.K9,
                     oppgaveEksternId = behandlingUuid2,
                     oppgaveTypeEksternId = "k9sak"
                 )
@@ -96,7 +97,7 @@ class SisteOppgaverRepositoryTest : AbstractK9LosIntegrationTest() {
                 tx,
                 saksbehandler.epost,
                 OppgaveNøkkelDto(
-                    områdeEksternId = "K9",
+                    områdeEksternId = Områder.K9,
                     oppgaveEksternId = behandlingUuid1,
                     oppgaveTypeEksternId = "k9sak"
                 )
@@ -108,7 +109,7 @@ class SisteOppgaverRepositoryTest : AbstractK9LosIntegrationTest() {
                 tx,
                 saksbehandler.epost,
                 OppgaveNøkkelDto(
-                    områdeEksternId = "K9",
+                    områdeEksternId = Områder.K9,
                     oppgaveEksternId = behandlingUuid2,
                     oppgaveTypeEksternId = "k9sak"
                 )
@@ -120,7 +121,7 @@ class SisteOppgaverRepositoryTest : AbstractK9LosIntegrationTest() {
                 tx,
                 saksbehandler.epost,
                 OppgaveNøkkelDto(
-                    områdeEksternId = "K9",
+                    områdeEksternId = Områder.K9,
                     oppgaveEksternId = behandlingUuid3,
                     oppgaveTypeEksternId = "k9sak"
                 )
@@ -133,7 +134,7 @@ class SisteOppgaverRepositoryTest : AbstractK9LosIntegrationTest() {
                 tx,
                 saksbehandler.epost,
                 OppgaveNøkkelDto(
-                    områdeEksternId = "K9",
+                    områdeEksternId = Områder.K9,
                     oppgaveEksternId = behandlingUuid1,
                     oppgaveTypeEksternId = "k9sak"
                 )
@@ -160,7 +161,7 @@ class SisteOppgaverRepositoryTest : AbstractK9LosIntegrationTest() {
                     tx,
                     saksbehandler.epost,
                     OppgaveNøkkelDto(
-                        områdeEksternId = "K9",
+                        områdeEksternId = Områder.K9,
                         oppgaveEksternId = uuid,
                         oppgaveTypeEksternId = "k9sak"
                     )

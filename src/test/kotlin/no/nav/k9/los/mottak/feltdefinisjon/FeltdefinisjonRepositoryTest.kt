@@ -5,7 +5,9 @@ import assertk.assertions.isEqualTo
 import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.oppgavedefinisjon.omraade.OmrådeRepository
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.koin.test.get
@@ -19,12 +21,12 @@ class FeltdefinisjonRepositoryTest: AbstractK9LosIntegrationTest() {
     fun setup() {
         transactionalManager = get()
         områdeRepository = get()
-        områdeRepository.lagre("test")
+        områdeRepository.lagre(Områder.K9)
         fdRepository = get()
     }
     @Test
     fun `lagre og hente feltdefinisjon`() {
-            val område = områdeRepository.hent("test")!!
+            val område = områdeRepository.hent(Områder.K9)!!
             val feltdefinisjon = setOf(Feltdefinisjon(
                 eksternId = "test123",
                 område = område,
@@ -94,7 +96,7 @@ class FeltdefinisjonRepositoryTest: AbstractK9LosIntegrationTest() {
 
     @Test
     fun `crud kodeverk`() {
-        val område = områdeRepository.hent("test")!!
+        val område = områdeRepository.hent(Områder.K9)!!
         val kodeverk = Kodeverk(
             område = område,
             eksternId = "testkodeverk",
@@ -120,13 +122,14 @@ class FeltdefinisjonRepositoryTest: AbstractK9LosIntegrationTest() {
             assertThat(hentetForOmråde.kodeverk.size).isEqualTo(1)
             assertThat(hentetForOmråde.kodeverk[0].eksternId).isEqualTo("testkodeverk")
 
-            val hentetForReferanse = fdRepository.hentKodeverk(Kodeverkreferanse(område.eksternId, kodeverk.eksternId), tx)
+            val hentetForReferanse = fdRepository.hentKodeverk(Kodeverkreferanse(område.tilOmråderEnum(), kodeverk.eksternId), tx)
 
             assertThat(hentetForReferanse.eksternId).isEqualTo("testkodeverk")
         }
     }
 
-    @Test //TODO?
+    @Test
+    @Disabled("Har bare K9 i Områder-enum, når AKTIVITETSPENGER kommer kan kanskje denne reaktiveres")
     fun `kan ikke lagre feltdefinisjon på tvers av område`() {
         områdeRepository.lagre("test2")
         val område2 = områdeRepository.hent("test2")!!

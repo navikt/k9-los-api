@@ -19,6 +19,7 @@ import no.nav.k9.los.kodeverk.BehandlingType
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.FeltdefinisjonTjeneste
 import no.nav.k9.los.oppgavedefinisjon.omraade.Område
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgavedefinisjon.oppgavetype.Oppgavetype
 import no.nav.k9.los.oppgaveuthenting.query.Avgrensning
 import no.nav.k9.los.oppgaveuthenting.query.OppgaveQueryService
@@ -57,7 +58,7 @@ class OppgaveKoTjenesteTest {
             versjon = 1L,
             tittel = "Testkø",
             beskrivelse = "",
-            oppgaveQuery = OppgaveQuery(filtere = emptyList(), order = listOf(EnkelOrderFelt(område = "K9", kode = "mottattDato", økende = false))),
+            oppgaveQuery = OppgaveQuery(filtere = emptyList(), order = listOf(EnkelOrderFelt(område = Områder.K9, kode = "mottattDato", økende = false))),
             frittValgAvOppgave = false,
             saksbehandlerIds = emptyList(),
             saksbehandlere = emptyList(),
@@ -103,7 +104,7 @@ class OppgaveKoTjenesteTest {
     private fun oppgave(eksternId: String, saksnummer: String): Oppgave {
         val oppgavetype = mockk<Oppgavetype>()
         every { oppgavetype.eksternId } returns "k9sak"
-        every { oppgavetype.område } returns Område(id = 1, eksternId = "K9")
+        every { oppgavetype.område } returns Område(id = 1, eksternId = Områder.K9.eksternId)
         every { oppgavetype.oppgavebehandlingsUrlTemplate } returns null
 
         return Oppgave(
@@ -116,7 +117,7 @@ class OppgaveKoTjenesteTest {
             felter = listOf(
                 Oppgavefelt(
                     eksternId = "saksnummer",
-                    område = "K9",
+                    område = Områder.K9,
                     listetype = false,
                     påkrevd = false,
                     verdi = saksnummer,
@@ -124,7 +125,7 @@ class OppgaveKoTjenesteTest {
                 ),
                 Oppgavefelt(
                     eksternId = "behandlingTypekode",
-                    område = "K9",
+                    område = Områder.K9,
                     listetype = false,
                     påkrevd = false,
                     verdi = BehandlingType.FORSTEGANGSSOKNAD.kode,

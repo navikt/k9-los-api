@@ -2,6 +2,7 @@ package no.nav.k9.los.oppgavemottak
 
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.Datatype
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgavedefinisjon.oppgavetype.Oppgavefelt
 import no.nav.k9.los.oppgavedefinisjon.oppgavetype.Oppgavetype
 import no.nav.k9.los.oppgaveuthenting.query.db.OppgaveId
@@ -15,7 +16,7 @@ class OppgaveV3(
     val status: Oppgavestatus,
     val endretTidspunkt: LocalDateTime,
     @Deprecated("kildeområde skal vekk. Bruk oppgavetype.område i stedet")
-    val kildeområde: String,
+    val kildeområde: Områder,
     val reservasjonsnøkkel: String,
     val aktiv: Boolean,
     val felter: List<OppgaveFeltverdi>

@@ -7,6 +7,7 @@ import no.nav.k9.los.infrastruktur.utils.Cache
 import no.nav.k9.los.infrastruktur.utils.CacheObject
 import no.nav.k9.los.kodeverk.FagsakYtelseType
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.query.OppgaveQueryService
 import no.nav.k9.los.oppgaveuthenting.query.QueryRequest
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.FeltverdiOppgavefilter
@@ -83,7 +84,7 @@ class NyeOgFerdigstilteService(
                     leggTilKriterier(gruppe)
                     add(
                         FeltverdiOppgavefilter(
-                            "K9", "mottattDato", EksternFeltverdiOperator.EQUALS, listOf(dato.toString())
+                            Områder.K9, "mottattDato", EksternFeltverdiOperator.EQUALS, listOf(dato.toString())
                         )
                     )
                 })
@@ -117,7 +118,7 @@ class NyeOgFerdigstilteService(
             NyeOgFerdigstilteGruppe.OMSORGSPENGER -> {
                 add(
                     FeltverdiOppgavefilter(
-                        "K9",
+                        Områder.K9,
                         "ytelsestype",
                         EksternFeltverdiOperator.EQUALS,
                         listOf(FagsakYtelseType.OMSORGSPENGER.kode)
@@ -128,7 +129,7 @@ class NyeOgFerdigstilteService(
             NyeOgFerdigstilteGruppe.OMSORGSDAGER -> {
                 add(
                     FeltverdiOppgavefilter(
-                        "K9",
+                        Områder.K9,
                         "ytelsestype",
                         EksternFeltverdiOperator.IN,
                         listOf(
@@ -144,7 +145,7 @@ class NyeOgFerdigstilteService(
             NyeOgFerdigstilteGruppe.OPPLÆRINGSPENGER -> {
                 add(
                     FeltverdiOppgavefilter(
-                        "K9",
+                        Områder.K9,
                         "ytelsestype",
                         EksternFeltverdiOperator.EQUALS,
                         listOf(FagsakYtelseType.OLP.kode)
@@ -155,7 +156,7 @@ class NyeOgFerdigstilteService(
             NyeOgFerdigstilteGruppe.PLEIEPENGER_SYKT_BARN -> {
                 add(
                     FeltverdiOppgavefilter(
-                        "K9",
+                        Områder.K9,
                         "ytelsestype",
                         EksternFeltverdiOperator.EQUALS,
                         listOf(FagsakYtelseType.PLEIEPENGER_SYKT_BARN.kode)
@@ -166,7 +167,7 @@ class NyeOgFerdigstilteService(
             NyeOgFerdigstilteGruppe.PPN -> {
                 add(
                     FeltverdiOppgavefilter(
-                        "K9", "ytelsestype", EksternFeltverdiOperator.EQUALS, listOf(FagsakYtelseType.PPN.kode)
+                        Områder.K9, "ytelsestype", EksternFeltverdiOperator.EQUALS, listOf(FagsakYtelseType.PPN.kode)
                     )
                 )
             }

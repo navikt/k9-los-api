@@ -1,6 +1,7 @@
 package no.nav.k9.los.oppgavemottak
 
 import kotliquery.TransactionalSession
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.oppgavedefinisjon.omraade.OmrådeRepository
 import no.nav.k9.los.oppgavedefinisjon.oppgavetype.OppgavetypeRepository
@@ -47,7 +48,7 @@ class OppgaveV3Tjeneste(
     ): OppgaveV3 {
         val område = områdeRepository.hentOmråde(oppgaveDto.område, tx)
         val oppgavetype = oppgavetypeRepository.hentOppgavetype(
-            område = område.eksternId,
+            område = område.tilOmråderEnum(),
             eksternId = oppgaveDto.type,
             tx = tx
         )
@@ -81,16 +82,16 @@ class OppgaveV3Tjeneste(
     }
 
     @VisibleForTesting
-    fun hentAktivOppgave(eksternId: String, oppgavetypeEksternId: String, områdeEksternId: String, tx: TransactionalSession) : OppgaveV3 {
+    fun hentAktivOppgave(eksternId: String, oppgavetypeEksternId: String, område: Områder, tx: TransactionalSession) : OppgaveV3 {
         tx.run {
-            val område = områdeRepository.hentOmråde(områdeEksternId, tx)
-            val oppgavetype = oppgavetypeRepository.hentOppgavetype(område, oppgavetypeEksternId, tx)
+            val områdeEntitet = områdeRepository.hentOmråde(område, tx)
+            val oppgavetype = oppgavetypeRepository.hentOppgavetype(områdeEntitet, oppgavetypeEksternId, tx)
             return oppgaveV3Repository.hentAktivOppgave(eksternId, oppgavetype, tx)!!
         }
     }
 
     fun hentOppgaveversjon(
-        område: String,
+        område: Områder,
         oppgavetype: String,
         eksternId: String,
         eksternVersjon: String,
@@ -106,7 +107,7 @@ class OppgaveV3Tjeneste(
     }
 
     fun hentOppgaveversjon(
-        område: String,
+        område: Områder,
         oppgavetype: String,
         eksternId: String,
         internVersjon: Int,
@@ -191,8 +192,8 @@ class OppgaveV3Tjeneste(
         )!!
     }
 
-    fun hentHøyesteInternVersjon(oppgaveEksternId: String, opppgaveTypeEksternId: String, områdeEksternId: String, tx: TransactionalSession): Int? {
-        val (_, _, versjon) = oppgaveV3Repository.hentOppgaveIdStatusOgHøyesteInternversjon(tx, oppgaveEksternId, opppgaveTypeEksternId, områdeEksternId)
+    fun hentHøyesteInternVersjon(oppgaveEksternId: String, opppgaveTypeEksternId: String, område: Områder, tx: TransactionalSession): Int? {
+        val (_, _, versjon) = oppgaveV3Repository.hentOppgaveIdStatusOgHøyesteInternversjon(tx, oppgaveEksternId, opppgaveTypeEksternId, område)
         return versjon
     }
 

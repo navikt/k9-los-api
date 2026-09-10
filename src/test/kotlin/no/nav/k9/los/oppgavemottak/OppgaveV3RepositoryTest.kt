@@ -9,6 +9,7 @@ import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.FeltType
 import no.nav.k9.los.OppgaveTestDataBuilder
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.OppgaveRepository
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -108,7 +109,7 @@ class OppgaveV3RepositoryTest : AbstractK9LosIntegrationTest() {
         }
 
         var oppgaveFraUttrekk = transactionalManager.transaction { tx ->
-            oppgaveUttrekkRepository.hentNyesteOppgaveForEksternId(tx, "K9", oppgave1.eksternId)
+            oppgaveUttrekkRepository.hentNyesteOppgaveForEksternId(tx, Områder.K9, oppgave1.eksternId)
         }
 
         assertThat(oppgaveFraUttrekk.hentVerdi(FeltType.BEHANDLINGUUID.eksternId)).isEqualTo(oppgave1.hentVerdi(FeltType.BEHANDLINGUUID.eksternId))
@@ -133,7 +134,7 @@ class OppgaveV3RepositoryTest : AbstractK9LosIntegrationTest() {
         assertThat(lagretOppgave3.status).isEqualTo(Oppgavestatus.LUKKET)
 
         oppgaveFraUttrekk = transactionalManager.transaction { tx ->
-            oppgaveUttrekkRepository.hentNyesteOppgaveForEksternId(tx, "K9", oppgave1.eksternId)
+            oppgaveUttrekkRepository.hentNyesteOppgaveForEksternId(tx, Områder.K9, oppgave1.eksternId)
         }
 
         assertThat(oppgaveFraUttrekk.hentVerdi(FeltType.BEHANDLINGUUID.eksternId)).isEqualTo(oppgave1.hentVerdi(FeltType.BEHANDLINGUUID.eksternId))

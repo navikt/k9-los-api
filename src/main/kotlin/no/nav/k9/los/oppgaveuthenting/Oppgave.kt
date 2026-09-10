@@ -5,6 +5,7 @@ import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.Datatype
 import no.nav.k9.los.oppgavedefinisjon.oppgavetype.Oppgavetype
 import no.nav.k9.los.oppgaveuthenting.query.mapping.transientfeltutleder.HentVerdiInput
 import java.time.LocalDateTime
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 
 data class Oppgave(
     val eksternId: String,
@@ -23,7 +24,7 @@ data class Oppgave(
             val split = match.groupValues[1].split('.')
             when (split.size) {
                 2 -> { //Det er frivillig å oppgi område. Brukes om man vil hente felt som hører til et annet område enn oppgaven
-                    val område = split[0]
+                    val område = Områder.fraEksternId(split[0])
                     val feltnavn = split[1]
                     val oppgavefelt = felter.find { oppgavefelt ->
                         oppgavefelt.område == område && oppgavefelt.eksternId == feltnavn
@@ -59,7 +60,7 @@ data class Oppgave(
         return oppgavefelt?.verdi
     }
 
-    fun hentVerdi(område: String, feltnavn: String): String? {
+    fun hentVerdi(område: Områder, feltnavn: String): String? {
         val oppgavefelt = hentOppgavefelt(område, feltnavn)
 
         if (oppgavefelt?.listetype == true) {
@@ -69,7 +70,7 @@ data class Oppgave(
         return oppgavefelt?.verdi
     }
 
-    fun hentVerdiEllerListe(område: String?, feltnavn: String): Any? {
+    fun hentVerdiEllerListe(område: Områder?, feltnavn: String): Any? {
         val oppgavefelt = hentOppgavefelt(område, feltnavn) ?: return null
         return if (!oppgavefelt.listetype) {
             oppgavefelt.verdi
@@ -100,7 +101,7 @@ data class Oppgave(
         }
     }
 
-    private fun hentOppgavefelt(område: String?, feltnavn: String): Oppgavefelt? {
+    private fun hentOppgavefelt(område: Områder?, feltnavn: String): Oppgavefelt? {
         return felter.find { oppgavefelt ->
             oppgavefelt.område == område && oppgavefelt.eksternId == feltnavn
         }
@@ -113,13 +114,13 @@ data class Oppgave(
                     HentVerdiInput(
                         now,
                         this,
-                        oppgavefelt.feltDefinisjon.område.eksternId,
+                        oppgavefelt.feltDefinisjon.område.tilOmråderEnum(),
                         oppgavefelt.feltDefinisjon.eksternId
                     )
                 ).map { verdi ->
                     Oppgavefelt(
                         eksternId = oppgavefelt.feltDefinisjon.eksternId,
-                        område = oppgavefelt.feltDefinisjon.område.eksternId,
+                        område = oppgavefelt.feltDefinisjon.område.tilOmråderEnum(),
                         listetype = oppgavefelt.feltDefinisjon.listetype,
                         påkrevd = false,
                         verdi = verdi,
@@ -138,7 +139,7 @@ data class Oppgave(
                 if (felter.find { it.eksternId == påkrevdFelt.feltDefinisjon.eksternId && !påkrevdFelt.feltDefinisjon.listetype } == null) {
                     Oppgavefelt(
                         eksternId = påkrevdFelt.feltDefinisjon.eksternId,
-                        område = "K9",
+                        område = Områder.K9,
                         listetype = false, //listetyper er aldri påkrevd
                         påkrevd = true,
                         verdi = påkrevdFelt.defaultverdi.toString(),

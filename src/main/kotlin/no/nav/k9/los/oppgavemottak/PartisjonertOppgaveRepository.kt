@@ -5,6 +5,7 @@ import kotliquery.Row
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgavedefinisjon.oppgavetype.Oppgavetype
 import no.nav.k9.los.oppgavedefinisjon.oppgavetype.OppgavetypeRepository
 import no.nav.k9.los.oppgaveuthenting.query.db.PartisjonertOppgaveId
@@ -117,7 +118,7 @@ class PartisjonertOppgaveRepository(val oppgavetypeRepository: OppgavetypeReposi
                     reservasjonsnøkkel = row.string("reservasjonsnokkel"),
                     felter = hentFeltverdier(oppgaveId, oppgavetype, tx),
                     aktiv = true,
-                    kildeområde = oppgavetype.område.eksternId,
+                    kildeområde = oppgavetype.område.tilOmråderEnum(),
                 )
             }.asSingle
         )
@@ -275,7 +276,7 @@ class PartisjonertOppgaveRepository(val oppgavetypeRepository: OppgavetypeReposi
         tx: TransactionalSession
     ): Oppgave {
         val oppgavetypeEksternId = row.string("oppgavetype_ekstern_id")
-        val oppgavetype = oppgavetypeRepository.hentOppgavetype("K9", oppgavetypeEksternId, tx)
+        val oppgavetype = oppgavetypeRepository.hentOppgavetype(Områder.K9, oppgavetypeEksternId, tx)
         val oppgavefelter = hentOppgavefelter(tx, row.long("id"), oppgavetype)
         return Oppgave(
             eksternId = row.string("oppgave_ekstern_id"),
@@ -303,7 +304,7 @@ class PartisjonertOppgaveRepository(val oppgavetypeRepository: OppgavetypeReposi
             ).map { row ->
                 Oppgavefelt(
                     eksternId = row.string("ekstern_id"),
-                    område = "K9",
+                    område = Områder.K9,
                     listetype = row.boolean("liste_type"),
                     påkrevd = row.boolean("pakrevd"),
                     verdi = row.string("verdi"),

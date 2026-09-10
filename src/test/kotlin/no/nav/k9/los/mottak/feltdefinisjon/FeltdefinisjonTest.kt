@@ -4,11 +4,12 @@ import assertk.assertThat
 import assertk.assertions.hasSize
 import assertk.assertions.isEmpty
 import no.nav.k9.los.oppgavedefinisjon.omraade.Område
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 
 class FeltdefinisjonTest {
-    private val område = Område(eksternId = "K9")
+    private val område = Område(eksternId = Områder.K9.eksternId)
     @Test
     fun `test at vi legger til feltdefinisjoner om de ikke finnes fra før`() {
         val innkommendeFeltdefinisjoner = lagFeltdefinisjoner()

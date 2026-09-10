@@ -6,6 +6,7 @@ import no.nav.k9.los.oppgavedefinisjon.omraade.Område
 import no.nav.k9.los.oppgavemottak.OppgaveFeltverdi
 import no.nav.k9.los.oppgavemottak.OppgaveV3
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgavemottak.feltutlederforlagring.AkkumulertVentetidSaksbehandler
 import no.nav.k9.los.oppgavedefinisjon.oppgavetype.Oppgavefelt
 import no.nav.k9.los.oppgavedefinisjon.oppgavetype.Oppgavetype
@@ -88,7 +89,7 @@ internal class AkkumulertVentetidTest {
             eksternVersjon = "456",
             oppgavetype = lagOppgaveType(),
             status = Oppgavestatus.AAPEN,
-            kildeområde = "junit",
+            kildeområde = Områder.K9,
             endretTidspunkt = endretTidspunkt,
             reservasjonsnøkkel = "reservasjonsnøkkel",
             felter = ekstraFeltverdi?.let {
@@ -109,7 +110,7 @@ internal class AkkumulertVentetidTest {
     private fun lagOppgaveType(): Oppgavetype {
         return Oppgavetype(
             eksternId = "123",
-            område = Område(eksternId = "test"),
+            område = Område(eksternId = "K9"),
             definisjonskilde = "junit",
             oppgavebehandlingsUrlTemplate = "\${baseUrl}/fagsak/\${K9.saksnummer}/behandling/\${K9.behandlingUuid}?fakta=default&punkt=default",
             oppgavefelter = setOf(

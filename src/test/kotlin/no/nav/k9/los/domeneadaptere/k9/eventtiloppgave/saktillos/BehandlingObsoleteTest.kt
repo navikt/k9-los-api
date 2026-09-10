@@ -15,6 +15,7 @@ import no.nav.k9.los.domeneadaptere.k9.eventtiloppgave.saktillos.beriker.K9SakSy
 import no.nav.k9.los.oppgavemottak.OppgaveDto
 import no.nav.k9.los.oppgavemottak.OppgaveFeltverdiDto
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.sak.kontrakt.produksjonsstyring.los.BehandlingMedFagsakDto
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -121,8 +122,8 @@ class BehandlingObsoleteTest : AbstractK9LosIntegrationTest() {
         return OppgaveDto(
             eksternId = "12345",
             eksternVersjon = "1",
-            område = "K9",
-            kildeområde = "K9",
+            område = Områder.K9,
+            kildeområde = Områder.K9,
             type = "k9-sak",
             status = Oppgavestatus.AAPEN.kode,
             endretTidspunkt = LocalDateTime.now(),

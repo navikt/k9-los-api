@@ -3,6 +3,7 @@ package no.nav.k9.los.oppgaveuthenting.enkeltoppslag
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgavedefinisjon.oppgavetype.Oppgavetype
 import no.nav.k9.los.oppgavedefinisjon.oppgavetype.OppgavetypeRepository
 import no.nav.k9.los.oppgaveuthenting.Oppgave
@@ -39,7 +40,7 @@ class ReservasjonsnøkkelOppgaveOppslagPartisjonert(
             ).map { it.tilOppgaveRad() }.asList
         )
         return rader.map { rad ->
-            val oppgavetypeObj = oppgavetypeRepository.hentOppgavetype("K9", rad.oppgavetypeEksternId, tx)
+            val oppgavetypeObj = oppgavetypeRepository.hentOppgavetype(Områder.K9, rad.oppgavetypeEksternId, tx)
             val oppgavefelter = hentOppgavefelter(tx, rad.id, oppgavetypeObj)
             Oppgave(
                 eksternId = rad.oppgaveEksternId,
@@ -72,7 +73,7 @@ class ReservasjonsnøkkelOppgaveOppslagPartisjonert(
             ).map { row ->
                 Oppgavefelt(
                     eksternId = row.string("ekstern_id"),
-                    område = "K9",
+                    område = Områder.K9,
                     listetype = row.boolean("liste_type"),
                     påkrevd = row.boolean("pakrevd"),
                     verdi = row.string("verdi"),

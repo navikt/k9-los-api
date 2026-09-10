@@ -3,6 +3,7 @@ package no.nav.k9.los.domeneadaptere.k9.adhocjobber.reservasjonkonvertering
 import kotliquery.queryOf
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.reservasjon.ManglerTilgangException
 import no.nav.k9.los.reservasjon.ReservasjonUtløptException
 import no.nav.k9.los.reservasjon.ReservasjonV3Tjeneste
@@ -71,7 +72,7 @@ class ReservasjonKonverteringJobb(
                 try {
                     reservasjonV3Tjeneste.annullerReservasjonHvisFinnes(nokkel, "Annullert av konvertering", legacyReservasjon.reservertAv, tx = tx)
 
-                    val oppgave = oppgaveRepository.hentNyesteOppgaveForEksternId(tx, "K9", nokkel.drop("legacy_".length))
+                    val oppgave = oppgaveRepository.hentNyesteOppgaveForEksternId(tx, Områder.K9, nokkel.drop("legacy_".length))
                     val reservasjon = reservasjonV3Tjeneste.forsøkReservasjonOgReturnerAktiv(
                         reservasjonsnøkkel = oppgave.reservasjonsnøkkel,
                         reserverForId = legacyReservasjon.reservertAv,

@@ -2,6 +2,7 @@ package no.nav.k9.los.uttrekk
 
 import assertk.assertThat
 import assertk.assertions.isEqualTo
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.AggregertSelectFelt
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.Aggregeringsfunksjon
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.EnkelSelectFelt
@@ -13,8 +14,8 @@ class UttrekkCsvGeneratorTest {
     @Test
     fun `skal generere CSV med flere kolonner`() {
         val select = listOf(
-            EnkelSelectFelt(område = "K9", kode = "saksnummer"),
-            EnkelSelectFelt(område = "K9", kode = "behandlingstype"),
+            EnkelSelectFelt(område = Områder.K9, kode = "saksnummer"),
+            EnkelSelectFelt(område = Områder.K9, kode = "behandlingstype"),
         )
         val resultatJson = """
             [
@@ -34,8 +35,8 @@ class UttrekkCsvGeneratorTest {
     @Test
     fun `skal håndtere null verdier`() {
         val select = listOf(
-            EnkelSelectFelt(område = "K9", kode = "saksnummer"),
-            EnkelSelectFelt(område = "K9", kode = "enhet"),
+            EnkelSelectFelt(område = Områder.K9, kode = "saksnummer"),
+            EnkelSelectFelt(område = Områder.K9, kode = "enhet"),
         )
         val resultatJson = """
             [
@@ -59,9 +60,9 @@ class UttrekkCsvGeneratorTest {
     @Test
     fun `skal generere CSV for aggregert uttrekk`() {
         val select = listOf(
-            EnkelSelectFelt(område = "K9", kode = "behandlingTypekode"),
+            EnkelSelectFelt(område = Områder.K9, kode = "behandlingTypekode"),
             AggregertSelectFelt(funksjon = Aggregeringsfunksjon.ANTALL),
-            AggregertSelectFelt(funksjon = Aggregeringsfunksjon.SUM, område = "K9", kode = "feilutbetaltBelop"),
+            AggregertSelectFelt(funksjon = Aggregeringsfunksjon.SUM, område = Områder.K9, kode = "feilutbetaltBelop"),
         )
         val resultatJson = """
             [

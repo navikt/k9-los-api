@@ -7,6 +7,7 @@ import no.nav.k9.los.kodeverk.BehandlingType
 import no.nav.k9.los.kodeverk.FagsakYtelseType
 import no.nav.k9.los.kodeverk.Fagsystem
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgavemottak.*
 
 class PunsjEventTilOppgaveMapper {
@@ -20,8 +21,8 @@ class PunsjEventTilOppgaveMapper {
             dto = OppgaveDto(
                 eksternId = event.eksternId.toString(),
                 eksternVersjon = event.eventTid.toString(),
-                område = "K9",
-                kildeområde = "K9",
+                område = Områder.K9,
+                kildeområde = Områder.K9,
                 type = "k9punsj",
                 status = utledOppgavestatus(event).kode,
                 endretTidspunkt = event.eventTid,
@@ -36,8 +37,8 @@ class PunsjEventTilOppgaveMapper {
             return OppgaveDto(
                 eksternId = event.eksternId.toString(),
                 eksternVersjon = event.eventTid.toString(),
-                område = "K9",
-                kildeområde = "K9",
+                område = Områder.K9,
+                kildeområde = Områder.K9,
                 type = "k9punsj",
                 status = utledOppgavestatus(event).kode,
                 endretTidspunkt = event.eventTid,

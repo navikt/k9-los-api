@@ -31,6 +31,7 @@ import org.junit.jupiter.api.Test
 import org.koin.test.get
 import java.util.*
 import kotlinx.coroutines.withContext
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 
 class SisteOppgaverTjenesteTest : AbstractK9LosIntegrationTest() {
 
@@ -93,7 +94,7 @@ class SisteOppgaverTjenesteTest : AbstractK9LosIntegrationTest() {
 
             sisteOppgaverTjeneste.lagreSisteOppgave(
                 OppgaveNøkkelDto(
-                    områdeEksternId = "K9",
+                    områdeEksternId = Områder.K9,
                     oppgaveEksternId = oppgave1.eksternId,
                     oppgaveTypeEksternId = oppgave1.oppgavetype.eksternId
                 )
@@ -132,7 +133,7 @@ class SisteOppgaverTjenesteTest : AbstractK9LosIntegrationTest() {
 
             sisteOppgaverTjeneste.lagreSisteOppgave(
                 OppgaveNøkkelDto(
-                    områdeEksternId = "K9",
+                    områdeEksternId = Områder.K9,
                     oppgaveEksternId = oppgave1.eksternId,
                     oppgaveTypeEksternId = "k9sak"
                 )
@@ -140,7 +141,7 @@ class SisteOppgaverTjenesteTest : AbstractK9LosIntegrationTest() {
 
             sisteOppgaverTjeneste.lagreSisteOppgave(
                 OppgaveNøkkelDto(
-                    områdeEksternId = "K9",
+                    områdeEksternId = Områder.K9,
                     oppgaveEksternId = oppgave2.eksternId,
                     oppgaveTypeEksternId = "k9sak"
                 )

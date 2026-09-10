@@ -8,6 +8,7 @@ import kotliquery.TransactionalSession
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.sif.abac.kontrakt.abac.Diskresjonskode
 import java.time.Duration
 import java.time.LocalDateTime
@@ -47,7 +48,7 @@ class PepCacheService(
     private suspend fun lagPepCacheFra(oppgaveIdOgAktører: PepCacheInput): PepCache {
         val pep = PepCache(
             eksternId = oppgaveIdOgAktører.eksternId,
-            kildeområde = "K9",
+            kildeområde = Områder.K9,
             kode6 = false,
             kode7 = false,
             egenAnsatt = false,

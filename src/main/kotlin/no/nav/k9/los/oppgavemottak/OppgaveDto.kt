@@ -1,5 +1,6 @@
 package no.nav.k9.los.oppgavemottak
 
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import java.time.LocalDateTime
 
 sealed class NyOppgaveVersjonInnsending(
@@ -18,8 +19,8 @@ data class VaskOppgaveversjon(
 data class OppgaveDto(
     val eksternId: String,
     val eksternVersjon: String,
-    val område: String,
-    val kildeområde: String,
+    val område: Områder,
+    val kildeområde: Områder,
     val type: String,
     val status: String,
     val endretTidspunkt: LocalDateTime,
@@ -30,7 +31,7 @@ data class OppgaveDto(
     constructor(oppgaveV3: OppgaveV3) : this(
         eksternId = oppgaveV3.eksternId,
         eksternVersjon = oppgaveV3.eksternVersjon,
-        område = oppgaveV3.oppgavetype.område.eksternId,
+        område = oppgaveV3.oppgavetype.område.tilOmråderEnum(),
         kildeområde = oppgaveV3.kildeområde,
         type = oppgaveV3.oppgavetype.eksternId,
         status = oppgaveV3.status.kode,
