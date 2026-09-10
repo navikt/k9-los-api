@@ -4,6 +4,7 @@ import assertk.assertThat
 import assertk.assertions.isFalse
 import assertk.assertions.isTrue
 import no.nav.k9.los.domeneadaptere.eventlager.EventLagret
+import no.nav.k9.los.domeneadaptere.eventmottak.FeilRekkefølgeSjekker
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 

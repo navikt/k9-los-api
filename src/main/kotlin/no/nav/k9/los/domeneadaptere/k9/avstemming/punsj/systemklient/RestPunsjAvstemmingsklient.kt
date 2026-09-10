@@ -10,7 +10,7 @@ import no.nav.helse.dusseldorf.ktor.core.Retry
 import no.nav.helse.dusseldorf.oauth2.client.AccessTokenClient
 import no.nav.helse.dusseldorf.oauth2.client.CachedAccessTokenClient
 import no.nav.k9.los.domeneadaptere.k9.avstemming.punsj.Journalposttilstand
-import no.nav.k9.los.domeneadaptere.k9.eventtiloppgave.TransientException
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.TransientException
 import no.nav.k9.los.infrastruktur.rest.NavHeaders
 import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
 import org.slf4j.Logger

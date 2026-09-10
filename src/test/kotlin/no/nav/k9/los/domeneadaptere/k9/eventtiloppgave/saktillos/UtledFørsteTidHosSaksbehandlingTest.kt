@@ -8,10 +8,11 @@ import no.nav.k9.los.domeneadaptere.k9.eventmottak.AksjonspunktTilstandBuilder
 import no.nav.k9.los.kodeverk.BehandlingStatus
 import no.nav.k9.los.kodeverk.BehandlingType
 import no.nav.k9.los.domeneadaptere.eventlager.Fagsystem
-import no.nav.k9.los.domeneadaptere.k9.eventmottak.sak.K9SakEventDto
-import no.nav.k9.los.domeneadaptere.k9.eventmottak.EventHendelse
+import no.nav.k9.los.domeneadaptere.eventmottak.k9.sak.K9SakEventDto
+import no.nav.k9.los.domeneadaptere.eventmottak.EventHendelse
 import no.nav.k9.los.FeltType
 import no.nav.k9.los.OppgaveTestDataBuilder
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.saktillos.SakEventTilOppgaveMapper
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime

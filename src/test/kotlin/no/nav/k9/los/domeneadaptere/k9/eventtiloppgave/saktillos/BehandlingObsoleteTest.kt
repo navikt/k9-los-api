@@ -9,10 +9,11 @@ import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.kodeverk.BehandlingStatus
 import no.nav.k9.los.kodeverk.BehandlingType
 import no.nav.k9.los.domeneadaptere.eventlager.Fagsystem
-import no.nav.k9.los.domeneadaptere.k9.K9Oppgavetypenavn
-import no.nav.k9.los.domeneadaptere.k9.eventmottak.sak.K9SakEventDto
-import no.nav.k9.los.domeneadaptere.k9.eventmottak.EventHendelse
-import no.nav.k9.los.domeneadaptere.k9.eventtiloppgave.saktillos.beriker.K9SakSystemKlientLocal
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.K9Oppgavetypenavn
+import no.nav.k9.los.domeneadaptere.eventmottak.k9.sak.K9SakEventDto
+import no.nav.k9.los.domeneadaptere.eventmottak.EventHendelse
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.saktillos.SakEventTilOppgaveMapper
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.saktillos.beriker.K9SakSystemKlientLocal
 import no.nav.k9.los.oppgavemottak.OppgaveDto
 import no.nav.k9.los.oppgavemottak.OppgaveFeltverdiDto
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus

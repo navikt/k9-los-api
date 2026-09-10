@@ -8,7 +8,7 @@ import io.kotest.core.listeners.TestListener
 import io.kotest.core.test.TestCase
 import io.kotest.engine.test.TestResult
 import no.nav.k9.los.buildAndTestConfig
-import no.nav.k9.los.domeneadaptere.k9.OmrådeSetup
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.OmrådeSetup
 import no.nav.k9.los.infrastruktur.db.runMigration
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.FeltdefinisjonRepository
 import no.nav.k9.los.oppgavedefinisjon.omraade.OmrådeRepository

@@ -1,7 +1,7 @@
 package no.nav.k9.los.oppgavemottak
 
-import no.nav.k9.los.domeneadaptere.k9.K9Oppgavetypenavn
-import no.nav.k9.los.domeneadaptere.ung.akt.kodeverk.AktivitetspengerOppgavetypenavn
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.K9Oppgavetypenavn
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.kodeverk.AktivitetspengerOppgavetypenavn
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 
 interface OppgaveDtoType {

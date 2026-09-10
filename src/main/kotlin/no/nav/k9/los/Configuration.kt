@@ -6,8 +6,8 @@ import no.nav.helse.dusseldorf.ktor.auth.issuers
 import no.nav.helse.dusseldorf.ktor.auth.withoutAdditionalClaimRules
 import no.nav.helse.dusseldorf.ktor.core.getOptionalString
 import no.nav.helse.dusseldorf.ktor.core.getRequiredString
-import no.nav.k9.los.domeneadaptere.kafka.IKafkaConfig
-import no.nav.k9.los.domeneadaptere.kafka.KafkaAivenConfig
+import no.nav.k9.los.domeneadaptere.eventmottak.kafka.IKafkaConfig
+import no.nav.k9.los.domeneadaptere.eventmottak.kafka.KafkaAivenConfig
 import no.nav.k9.los.infrastruktur.db.createHikariConfig
 import org.apache.kafka.clients.consumer.OffsetResetStrategy
 import java.net.URI
@@ -41,39 +41,24 @@ data class Configuration(private val config: ApplicationConfig) {
         password = config.getOptionalString("nav.db.password", secret = true)
     )
 
-    internal fun getAksjonspunkthendelseTopic(): String {
+    internal fun getK9SakTopic(): String {
         return config.getOptionalString("nav.kafka.aksjonshendelseTopic", secret = false)
             ?: "k9saksbehandling.k9sak-aksjonspunkthendelse"
     }
 
-    internal fun getKlageOppgavemeldingerTopic(): String {
+    internal fun getK9KlageTopic(): String {
         return config.getOptionalString("nav.kafka.klageTilLosTopic", secret = false)
             ?: "k9saksbehandling.oppgavemeldinger-klage-til-los"
     }
 
-    internal fun getK9SakTopic(): String {
-        return config.getOptionalString("nav.kafka_aiven.k9sakTopic", secret = false)
-            ?: "k9saksbehandling.privat-k9-produksjonsstyring-sak-v1"
-    }
-
-    internal fun getK9PunsjTopic(): String {
-        return config.getOptionalString("nav.kafka_aiven.k9punsjTopic", secret = false)
-            ?: "k9saksbehandling.privat-k9-produksjonsstyring-punsj-v1"
-    }
-
-    internal fun getAksjonspunkthendelsePunsjTopic(): String {
+    internal fun getPunsjTopic(): String {
         return config.getOptionalString("nav.kafka.punsjAksjonshendelseTopic", secret = false)
             ?: "k9saksbehandling.punsj-aksjonspunkthendelse-v1"
     }
 
-    internal fun getAksjonspunkthendelseTilbakeTopic(): String {
+    internal fun getK9TilbakeTopic(): String {
         return config.getOptionalString("nav.kafka.tilbakekrevingaksjonshendelseTopic", secret = false)
             ?: "k9saksbehandling.tilbakekreving-hendelse-los"
-    }
-
-    internal fun getSakOgBehandlingTopic(): String {
-        return config.getOptionalString("nav.kafka.sakOgBehandlingTopic", secret = false)
-            ?: ""
     }
 
     internal fun getUngSakHendelseTopic(): String {
@@ -123,7 +108,7 @@ data class Configuration(private val config: ApplicationConfig) {
             keyStore = Pair(keyStorePath, credStorePassword),
             credStorePassword = credStorePassword,
             defaultOffsetResetStrategy = defaultOffsetResetStrategy,
-            unreadyAfterStreamStoppedIn = unreadyAfterStreamStoppedIn()
+            unreadyAfterConsumerStoppedIn = unreadyAfterStreamStoppedIn()
         )
     }
 

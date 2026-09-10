@@ -224,15 +224,8 @@
         <!-- Kafka -->
         <dependency>
             <groupId>org.apache.kafka</groupId>
-            <artifactId>kafka-streams</artifactId>
+            <artifactId>kafka-clients</artifactId>
             <version>${kafka.version}</version>
-            <exclusions>
-                <!-- Exclude RocksDB: not used in LOS, no file storage available, large binary size -->
-                <exclusion>
-                    <groupId>org.rocksdb</groupId>
-                    <artifactId>rocksdbjni</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
 
         <!-- Tilgangskontroll -->

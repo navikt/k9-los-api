@@ -9,9 +9,9 @@ import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.domeneadaptere.eventlager.EventLagret
 import no.nav.k9.los.domeneadaptere.eventlager.EventNøkkel
 import no.nav.k9.los.domeneadaptere.eventlager.EventRepository
-import no.nav.k9.los.domeneadaptere.k9.OmrådeSetup
-import no.nav.k9.los.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventDto
-import no.nav.k9.los.domeneadaptere.k9.eventmottak.punsj.PunsjId
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.OmrådeSetup
+import no.nav.k9.los.domeneadaptere.eventmottak.k9.punsj.K9PunsjEventDto
+import no.nav.k9.los.domeneadaptere.eventmottak.k9.punsj.PunsjId
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.infrastruktur.metrikker.EventlagerNokkeltallPrometheusCollector
 import no.nav.k9.los.infrastruktur.metrikker.EventlagerNokkeltallRepository

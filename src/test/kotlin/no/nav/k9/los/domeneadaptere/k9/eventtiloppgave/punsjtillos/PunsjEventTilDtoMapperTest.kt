@@ -9,6 +9,7 @@ import no.nav.k9.los.kodeverk.BehandlingType
 import no.nav.k9.los.kodeverk.FagsakYtelseType
 import no.nav.k9.los.FeltType
 import no.nav.k9.los.OppgaveTestDataBuilder
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.punsjtillos.PunsjEventTilOppgaveMapper
 import org.junit.jupiter.api.Test
 
 class PunsjEventTilDtoMapperTest : AbstractK9LosIntegrationTest() {

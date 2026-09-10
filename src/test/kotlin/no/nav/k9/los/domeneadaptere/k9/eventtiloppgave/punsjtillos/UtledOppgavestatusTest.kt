@@ -3,7 +3,8 @@ package no.nav.k9.los.domeneadaptere.k9.eventtiloppgave.punsjtillos
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.shouldBe
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus
-import no.nav.k9.los.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventDto
+import no.nav.k9.los.domeneadaptere.eventmottak.k9.punsj.K9PunsjEventDto
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.punsjtillos.PunsjEventTilOppgaveMapper
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.sak.typer.JournalpostId
 import java.time.LocalDateTime

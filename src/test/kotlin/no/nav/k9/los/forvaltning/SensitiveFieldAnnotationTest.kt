@@ -1,10 +1,10 @@
 package no.nav.k9.los.forvaltning
 
-import no.nav.k9.los.domeneadaptere.k9.eventmottak.klage.K9KlageEventDto
-import no.nav.k9.los.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventDto
-import no.nav.k9.los.domeneadaptere.k9.eventmottak.sak.K9SakEventDto
-import no.nav.k9.los.domeneadaptere.k9.eventmottak.tilbakekrav.K9TilbakeEventDto
-import no.nav.k9.los.domeneadaptere.ung.eventmottak.ungsak.UngSakEventDto
+import no.nav.k9.los.domeneadaptere.eventmottak.k9.klage.K9KlageEventDto
+import no.nav.k9.los.domeneadaptere.eventmottak.k9.punsj.K9PunsjEventDto
+import no.nav.k9.los.domeneadaptere.eventmottak.k9.sak.K9SakEventDto
+import no.nav.k9.los.domeneadaptere.eventmottak.k9.tilbakekrav.K9TilbakeEventDto
+import no.nav.k9.los.domeneadaptere.eventmottak.ung.sak.UngSakEventDto
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 

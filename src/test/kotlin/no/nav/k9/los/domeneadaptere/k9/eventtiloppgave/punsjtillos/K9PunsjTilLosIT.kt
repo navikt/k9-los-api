@@ -8,9 +8,9 @@ import no.nav.k9.los.OppgaveTestDataBuilder
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.punsj.PunsjEventDtoBuilder
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.TestSaksbehandler
 import no.nav.k9.los.domeneadaptere.eventlager.EventNøkkel
-import no.nav.k9.los.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventHandler
-import no.nav.k9.los.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventDto
-import no.nav.k9.los.domeneadaptere.k9.eventtiloppgave.EventTilOppgaveAdapter
+import no.nav.k9.los.domeneadaptere.eventmottak.k9.punsj.K9PunsjEventHandler
+import no.nav.k9.los.domeneadaptere.eventmottak.k9.punsj.K9PunsjEventDto
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.EventTilOppgaveAdapter
 import no.nav.k9.los.ko.OppgaveKoTjeneste
 import no.nav.k9.los.kodeverk.FagsakYtelseType
 import no.nav.k9.los.domeneadaptere.eventlager.Fagsystem

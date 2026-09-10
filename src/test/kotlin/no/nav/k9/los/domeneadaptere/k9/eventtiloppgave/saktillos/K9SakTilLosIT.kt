@@ -13,7 +13,7 @@ import no.nav.k9.los.OppgaveTestDataBuilder
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.K9SakEventDtoBuilder
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.TestSaksbehandler
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.builder
-import no.nav.k9.los.domeneadaptere.k9.eventmottak.sak.K9SakEventHandler
+import no.nav.k9.los.domeneadaptere.eventmottak.k9.sak.K9SakEventHandler
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.idtoken.IdTokenLocal
 import no.nav.k9.los.infrastruktur.idtoken.IdToken
@@ -31,7 +31,6 @@ import no.nav.k9.los.oppgaveuthenting.query.QueryRequest
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.OppgaveQuery
 import no.nav.k9.los.oppgaveuthenting.query.mapping.EksternFeltverdiOperator
-import no.nav.k9.los.reservasjon.OppgaveNøkkelWrapperDto
 import no.nav.k9.los.reservasjon.ReservasjonApisTjeneste
 import no.nav.k9.los.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.oppgaveuthenting.OppgaveNøkkelDto

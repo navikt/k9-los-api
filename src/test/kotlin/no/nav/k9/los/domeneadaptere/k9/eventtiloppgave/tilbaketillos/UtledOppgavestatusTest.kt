@@ -8,8 +8,9 @@ import no.nav.k9.klage.kodeverk.behandling.BehandlingStegType
 import no.nav.k9.klage.kodeverk.behandling.BehandlingType
 import no.nav.k9.klage.kodeverk.behandling.FagsakYtelseType
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus
-import no.nav.k9.los.domeneadaptere.k9.eventmottak.EventHendelse
-import no.nav.k9.los.domeneadaptere.k9.eventmottak.tilbakekrav.K9TilbakeEventDto
+import no.nav.k9.los.domeneadaptere.eventmottak.EventHendelse
+import no.nav.k9.los.domeneadaptere.eventmottak.k9.tilbakekrav.K9TilbakeEventDto
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.tilbaketillos.TilbakeEventTilOppgaveMapper
 import no.nav.k9.los.kodeverk.BehandlingStatus
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import java.time.LocalDateTime

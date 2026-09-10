@@ -10,17 +10,20 @@ import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import no.nav.k9.kodeverk.behandling.BehandlingStegType
 import no.nav.k9.kodeverk.behandling.FagsakYtelseType
-import no.nav.k9.los.domeneadaptere.k9.K9Oppgavetypenavn
-import no.nav.k9.los.domeneadaptere.k9.eventmottak.EventHendelse
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.K9Oppgavetypenavn
+import no.nav.k9.los.domeneadaptere.eventmottak.EventHendelse
 import no.nav.k9.los.domeneadaptere.eventlager.EventNøkkel
 import no.nav.k9.los.domeneadaptere.eventlager.EventRepository
 import no.nav.k9.los.domeneadaptere.eventlager.HistorikkvaskBestilling
-import no.nav.k9.los.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventDto
-import no.nav.k9.los.domeneadaptere.k9.eventmottak.sak.K9SakEventDto
+import no.nav.k9.los.domeneadaptere.eventmottak.k9.punsj.K9PunsjEventDto
+import no.nav.k9.los.domeneadaptere.eventmottak.k9.sak.K9SakEventDto
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.kodeverk.BehandlingStatus
 import no.nav.k9.los.kodeverk.BehandlingType
 import no.nav.k9.los.domeneadaptere.eventlager.Fagsystem
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.EventTilOppgaveAdapter
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.HistorikkvaskTjeneste
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.OppgaveOppdatertHandler
 import no.nav.k9.los.oppgavemottak.OppgaveV3Tjeneste
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.oppgaveuthenting.query.OppgaveQueryService
@@ -54,13 +57,15 @@ class EventTilOppgaveAdapterSpec : KoinTest, FreeSpec() {
         eventRepository = spyk(EventRepository(
             dataSource = get(),
         ))
-        oppgaveOppdatertHandler = spyk(OppgaveOppdatertHandler(
-            oppgaveRepository = get(),
-            reservasjonV3Tjeneste = get(),
-            eventTilOppgaveMapper = get(),
-            pepCacheService = get(),
-            køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
-        ))
+        oppgaveOppdatertHandler = spyk(
+            OppgaveOppdatertHandler(
+                oppgaveRepository = get(),
+                reservasjonV3Tjeneste = get(),
+                eventTilOppgaveMapper = get(),
+                pepCacheService = get(),
+                køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
+            )
+        )
 
         oppgaveAdapter = EventTilOppgaveAdapter(
             eventRepository = eventRepository,
