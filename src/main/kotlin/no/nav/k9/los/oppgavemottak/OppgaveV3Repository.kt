@@ -29,7 +29,7 @@ class OppgaveV3Repository(
             tx,
             oppgave.eksternId,
             oppgave.oppgavetype.eksternId,
-            oppgave.oppgavetype.område.tilOmråderEnum()
+            oppgave.oppgavetype.område.tilOmrådeEnum()
         )
 
         eksisterendeId?.let {
@@ -74,7 +74,7 @@ class OppgaveV3Repository(
                     eksternId = row.string("ekstern_id"),
                     eksternVersjon = row.string("ekstern_versjon"),
                     oppgavetype = oppgavetypeRepository.hentOppgavetype(
-                        område = område.tilOmråderEnum(),
+                        område = område.tilOmrådeEnum(),
                         row.long("oppgavetype_id"),
                         tx
                     ),
@@ -86,7 +86,7 @@ class OppgaveV3Repository(
                     felter = hentFeltverdier(
                         OppgaveV3Id(row.long("id")),
                         oppgavetypeRepository.hentOppgavetype(
-                            område = område.tilOmråderEnum(),
+                            område = område.tilOmrådeEnum(),
                             row.long("oppgavetype_id"),
                             tx
                         ),
@@ -191,7 +191,7 @@ class OppgaveV3Repository(
                     oppgavetype = oppgavetype,
                     status = Oppgavestatus.valueOf(row.string("status")),
                     endretTidspunkt = row.localDateTime("endret_tidspunkt"),
-                    kildeområde = oppgavetype.område.tilOmråderEnum(),
+                    kildeområde = oppgavetype.område.tilOmrådeEnum(),
                     reservasjonsnøkkel = row.stringOrNull("reservasjonsnokkel") ?: "mangler_historikkvask",
                     aktiv = row.boolean("aktiv"),
                     felter = hentFeltverdier(OppgaveV3Id(row.long("id")), oppgavetype, tx)

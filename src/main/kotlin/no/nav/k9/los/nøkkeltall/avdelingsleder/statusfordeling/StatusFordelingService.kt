@@ -79,7 +79,7 @@ class StatusFordelingService(val queryService: OppgaveQueryService) {
      * Kjører én GROUP BY-query på oppgavestatus og returnerer antall per status.
      * Erstatter 3-4 separate queryForAntall-kall per statuskort.
      */
-    private fun antallPerStatus(vararg filtere: Oppgavefilter): Map<String, Long> {
+    private fun antallPerStatus(kode6: Boolean, vararg filtere: Oppgavefilter): Map<String, Long> {
         val query = OppgaveQuery(
             filtere = listOf(åpenVenterUavklart) + filtere.toList(),
             select = listOf(
@@ -87,7 +87,7 @@ class StatusFordelingService(val queryService: OppgaveQueryService) {
                 AggregertSelectFelt(Aggregeringsfunksjon.ANTALL),
             ),
         )
-        val resultat = queryService.query(QueryRequest(query))
+        val resultat = queryService.query(QueryRequest(query, område = Områder.K9, harTilgangTilKode6 = kode6))
 
         return resultat.associate { rad ->
             val status = rad.feltverdier.first().verdi?.toString() ?: ""
@@ -102,10 +102,11 @@ class StatusFordelingService(val queryService: OppgaveQueryService) {
      */
     private fun byggStatuskort(
         gruppe: StatusGruppe,
+        kode6: Boolean,
         personbeskyttelse: Oppgavefilter,
         vararg gruppefiltre: Oppgavefilter
     ): StatuskortDto {
-        val statusAntall = antallPerStatus(personbeskyttelse, *gruppefiltre)
+        val statusAntall = antallPerStatus(kode6, personbeskyttelse, *gruppefiltre)
 
         val åpne = statusAntall[Oppgavestatus.AAPEN.kode] ?: 0L
         val ventende = statusAntall[Oppgavestatus.VENTER.kode] ?: 0L
@@ -135,8 +136,8 @@ class StatusFordelingService(val queryService: OppgaveQueryService) {
      * KLAGE har ekstra dimensjon: venter-Kabal vs venter-annet.
      * Kjører en ekstra GROUP BY på aktivÅrsak for venter-oppgavene.
      */
-    private fun byggKlageStatuskort(personbeskyttelse: Oppgavefilter): StatuskortDto {
-        val statusAntall = antallPerStatus(personbeskyttelse, klage)
+    private fun byggKlageStatuskort(kode6: Boolean, personbeskyttelse: Oppgavefilter): StatuskortDto {
+        val statusAntall = antallPerStatus(kode6, personbeskyttelse, klage)
 
         val åpne = statusAntall[Oppgavestatus.AAPEN.kode] ?: 0L
         val uavklarte = statusAntall[Oppgavestatus.UAVKLART.kode] ?: 0L
@@ -151,7 +152,7 @@ class StatusFordelingService(val queryService: OppgaveQueryService) {
             ),
             select = listOf(AggregertSelectFelt(Aggregeringsfunksjon.ANTALL)),
         )
-        val venterKabal = queryService.queryForAntall(QueryRequest(venterKabalQuery))
+        val venterKabal = queryService.queryForAntall(QueryRequest(venterKabalQuery, område = Områder.K9, harTilgangTilKode6 = kode6))
         val venterAnnet = (statusAntall[Oppgavestatus.VENTER.kode] ?: 0L) - venterKabal
 
         fun kildeQuery(vararg ekstraFiltre: Oppgavefilter) =
@@ -179,12 +180,12 @@ class StatusFordelingService(val queryService: OppgaveQueryService) {
         val personbeskyttelse = if (kode6) kunKode6 else ikkeKode6
         val tall = StatusGruppe.entries.map { gruppe ->
             when (gruppe) {
-                StatusGruppe.BEHANDLINGER -> byggStatuskort(gruppe, personbeskyttelse, ikkePunsj)
-                StatusGruppe.FØRSTEGANG -> byggStatuskort(gruppe, personbeskyttelse, førstegang)
-                StatusGruppe.REVURDERING -> byggStatuskort(gruppe, personbeskyttelse, revurdering)
-                StatusGruppe.FEILUTBETALING -> byggStatuskort(gruppe, personbeskyttelse, feilutbetaling)
-                StatusGruppe.KLAGE -> byggKlageStatuskort(personbeskyttelse)
-                StatusGruppe.PUNSJ -> byggStatuskort(gruppe, personbeskyttelse, punsj)
+                StatusGruppe.BEHANDLINGER -> byggStatuskort(gruppe, kode6, personbeskyttelse, ikkePunsj)
+                StatusGruppe.FØRSTEGANG -> byggStatuskort(gruppe, kode6, personbeskyttelse, førstegang)
+                StatusGruppe.REVURDERING -> byggStatuskort(gruppe, kode6, personbeskyttelse, revurdering)
+                StatusGruppe.FEILUTBETALING -> byggStatuskort(gruppe, kode6, personbeskyttelse, feilutbetaling)
+                StatusGruppe.KLAGE -> byggKlageStatuskort(kode6, personbeskyttelse)
+                StatusGruppe.PUNSJ -> byggStatuskort(gruppe, kode6, personbeskyttelse, punsj)
             }
         }
 

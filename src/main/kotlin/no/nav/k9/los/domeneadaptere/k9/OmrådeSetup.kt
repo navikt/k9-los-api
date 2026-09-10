@@ -13,15 +13,16 @@ import no.nav.k9.los.Configuration
 import no.nav.k9.los.domeneadaptere.k9.eventtiloppgave.klagetillos.KlageEventTilOppgaveMapper
 import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.kodeverk.*
-import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.*
-import no.nav.k9.los.oppgavedefinisjon.omraade.OmrådeRepository
-import no.nav.k9.los.oppgavedefinisjon.oppgavetype.OppgavetypeTjeneste
+import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.FeltdefinisjonerDto
+import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.KodeverkDto
+import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.KodeverkVerdiDto
+import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.Synlighet
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgavedefinisjon.oppgavetype.OppgavetyperDto
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon as KlageAksjonspunktDefinisjon
 import no.nav.k9.kodeverk.api.Kodeverdi as KodeverdiK9Sak
-import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 
 class OmrådeSetup(
     private val områdeRepository: no.nav.k9.los.oppgavedefinisjon.omraade.OmrådeRepository,

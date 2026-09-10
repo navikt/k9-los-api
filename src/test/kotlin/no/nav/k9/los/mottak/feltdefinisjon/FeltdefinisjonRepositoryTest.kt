@@ -122,7 +122,7 @@ class FeltdefinisjonRepositoryTest: AbstractK9LosIntegrationTest() {
             assertThat(hentetForOmråde.kodeverk.size).isEqualTo(1)
             assertThat(hentetForOmråde.kodeverk[0].eksternId).isEqualTo("testkodeverk")
 
-            val hentetForReferanse = fdRepository.hentKodeverk(Kodeverkreferanse(område.tilOmråderEnum(), kodeverk.eksternId), tx)
+            val hentetForReferanse = fdRepository.hentKodeverk(Kodeverkreferanse(område.tilOmrådeEnum(), kodeverk.eksternId), tx)
 
             assertThat(hentetForReferanse.eksternId).isEqualTo("testkodeverk")
         }

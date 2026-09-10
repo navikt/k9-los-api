@@ -6,16 +6,18 @@ import kotliquery.TransactionalSession
 import no.nav.k9.los.feilhandtering.FinnerIkkeDataException
 import no.nav.k9.los.infrastruktur.abac.Action
 import no.nav.k9.los.infrastruktur.abac.IPepClient
+import no.nav.k9.los.infrastruktur.brukerkontekst.BrukerkontekstMedOmråde
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.infrastruktur.utils.leggTilDagerHoppOverHelg
 import no.nav.k9.los.ko.KøpåvirkendeHendelse
 import no.nav.k9.los.ko.ReservasjonAnnullert
 import no.nav.k9.los.ko.ReservasjonEndret
 import no.nav.k9.los.ko.ReservasjonTatt
-import no.nav.k9.los.saksbehandleradmin.Saksbehandler
-import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.Oppgave
 import no.nav.k9.los.oppgaveuthenting.enkeltoppslag.ReservasjonsnøkkelOppgaveOppslag
+import no.nav.k9.los.saksbehandleradmin.Saksbehandler
+import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
@@ -33,7 +35,55 @@ class ReservasjonV3Tjeneste(
         private val log: Logger = LoggerFactory.getLogger("ReservasjonV3Tjeneste")
     }
 
-    fun forsøkReservasjonOgReturnerAktiv(
+    suspend fun kontrollerReservasjonstilgang(
+        reservasjonsnøkkel: String,
+        utfører: Saksbehandler,
+        kontekst: BrukerkontekstMedOmråde,
+        mottaker: Saksbehandler? = null,
+        nyReservasjon: Boolean = false,
+        oppheving: Boolean = false,
+    ) {
+        if (!kontekst.harBasisTilgang || utfører.navident != kontekst.navIdent ||
+            utfører.skjermet != kontekst.harTilgangTilKode6 || kontekst.område !in utfører.områder
+        ) throw ManglerTilgangException("Mangler tilgang til reservasjonen")
+
+        val reservasjon = finnAktivReservasjon(reservasjonsnøkkel)
+        if (reservasjon == null && !nyReservasjon && !oppheving) {
+            throw FinnerIkkeDataException("Fant ingen aktiv reservasjon for angitt nøkkel")
+        }
+        if (reservasjon != null && reservasjon.område != kontekst.område) {
+            throw ManglerTilgangException("Reservasjonen tilhører et annet område")
+        }
+        if (!nyReservasjon && reservasjon != null && reservasjon.reservertAv != utfører.id && !kontekst.erOppgavestyrer) {
+            throw ManglerTilgangException("Kan bare endre egen reservasjon uten oppgavestyringstilgang")
+        }
+        // Oppgavestyrer administrerer på vegne av andre og trenger ikke selv kunne reservere.
+        val action = if (!nyReservasjon && (kontekst.erOppgavestyrer || oppheving)) Action.read else Action.reserver
+        if (action == Action.reserver && !kontekst.harTilgangTilReserveringAvOppgaver) {
+            throw ManglerTilgangException("Mangler tilgang til reservering")
+        }
+        val oppgaver = reservasjonsnøkkelOppgaveOppslag.hentÅpneOppgaverForReservasjonsnøkkel(reservasjonsnøkkel)
+        if (((reservasjon == null || nyReservasjon || mottaker != null) && oppgaver.isEmpty()) ||
+            oppgaver.any { it.oppgavetype.område.eksternId != kontekst.område.eksternId }
+        ) throw ManglerTilgangException("Reservasjonsnøkkelen tilhører ikke valgt område")
+
+        if (!oppgaver.all { pepClient.harTilgangTilOppgaveV3(it, kontekst, action) }) {
+            throw ManglerTilgangException("Mangler tilgang til oppgavene i reservasjonen")
+        }
+        if (reservasjon != null) {
+            val eier = saksbehandlerRepository.finnSaksbehandlerMedId(reservasjon.reservertAv)
+                ?: throw ManglerTilgangException("Fant ikke eier av reservasjonen")
+            if (eier.skjermet != kontekst.harTilgangTilKode6) {
+                throw ManglerTilgangException("Reservasjonen tilhører en annen skjerming")
+            }
+        }
+        if (mottaker != null &&
+            (kontekst.område !in mottaker.områder || mottaker.skjermet != kontekst.harTilgangTilKode6 ||
+                !sjekkTilganger(oppgaver, mottaker.id))
+        ) throw ManglerTilgangException("Mottaker mangler tilgang til reservasjonen")
+    }
+
+    suspend fun forsøkReservasjonOgReturnerAktiv(
         reservasjonsnøkkel: String,
         reserverForId: Long,
         gyldigFra: LocalDateTime,
@@ -92,7 +142,7 @@ class ReservasjonV3Tjeneste(
         }
     }
 
-    fun taReservasjon(
+    suspend fun taReservasjon(
         reservasjonsnøkkel: String,
         reserverForId: Long,
         utføresAvId: Long,
@@ -100,12 +150,12 @@ class ReservasjonV3Tjeneste(
         gyldigFra: LocalDateTime,
         gyldigTil: LocalDateTime
     ): ReservasjonV3 {
-        return transactionalManager.transaction { tx ->
+        return transactionalManager.transactionSuspend { tx ->
             taReservasjon(reservasjonsnøkkel, reserverForId, utføresAvId, gyldigFra, gyldigTil, kommentar, tx)
         }
     }
 
-    fun taReservasjon(
+    suspend fun taReservasjon(
         reservasjonsnøkkel: String,
         reserverForId: Long,
         utføresAvId: Long,
@@ -129,7 +179,8 @@ class ReservasjonV3Tjeneste(
             gyldigFra = gyldigFra,
             gyldigTil = gyldigTil,
             kommentar = kommentar,
-            endretAv = null
+            endretAv = null,
+            område = utledOmråde(oppgaverForReservasjonsnøkkel, reservasjonsnøkkel)
         )
         val reservasjon = reservasjonV3Repository.lagreReservasjon(reservasjonTilLagring, tx)
         log.info("taReservasjon: Ny reservasjon $reservasjon, utført av $utføresAvId, for saksbehandler $reserverForId")
@@ -152,14 +203,14 @@ class ReservasjonV3Tjeneste(
         return reservasjonV3Repository.hentAktivReservasjonForReservasjonsnøkkel(reservasjonsnøkkel, tx)
     }
 
-    fun tellReservasjonerForSaksbehandlere(saksbehandlerIder: Set<Long>, tx: TransactionalSession): Map<Long, Int> {
-        return reservasjonV3Repository.tellAktiveReservasjonerForSaksbehandlere(saksbehandlerIder, tx)
+    fun tellReservasjonerForSaksbehandlere(saksbehandlerIder: Set<Long>, område: Områder, tx: TransactionalSession): Map<Long, Int> {
+        return reservasjonV3Repository.tellAktiveReservasjonerForSaksbehandlere(saksbehandlerIder, område, tx)
     }
 
-    fun hentReservasjonerForSaksbehandler(saksbehandlerId: Long): List<ReservasjonV3MedOppgaver> {
+    fun hentReservasjonerForSaksbehandler(saksbehandlerId: Long, område: Områder): List<ReservasjonV3MedOppgaver> {
         return transactionalManager.transaction { tx ->
             val reservasjoner =
-                reservasjonV3Repository.hentAktiveReservasjonerForSaksbehandler(saksbehandlerId, tx)
+                reservasjonV3Repository.hentAktiveReservasjonerForSaksbehandler(saksbehandlerId, område, tx)
 
             reservasjoner.map { reservasjon ->
                 finnOppgaverFor(reservasjon, tx)
@@ -285,28 +336,52 @@ class ReservasjonV3Tjeneste(
         }
     }
 
-    fun hentAlleAktiveReservasjoner(): List<ReservasjonV3MedOppgaver> {
+    fun hentAlleAktiveReservasjoner(område: Områder): List<ReservasjonV3MedOppgaver> {
         return transactionalManager.transaction { tx ->
-            val aktiveReservasjoner = reservasjonV3Repository.hentAlleAktiveReservasjoner(tx)
+            val aktiveReservasjoner = reservasjonV3Repository.hentAlleAktiveReservasjoner(område, tx)
             aktiveReservasjoner.map { reservasjon ->
                 finnOppgaverFor(reservasjon, tx)
             }
         }
     }
 
-    private fun sjekkTilganger(
+    /**
+     * Reservasjonen arver området fra oppgavene den gjelder. Krever at alle oppgaver tilhører samme område
+     */
+    private fun utledOmråde(
+        oppgaver: List<Oppgave>,
+        reservasjonsnøkkel: String
+    ): Områder {
+        val områder = oppgaver
+            .map { Områder.fraEksternId(it.oppgavetype.område.eksternId) }
+            .distinct()
+
+        return when {
+            områder.size == 1 -> områder.single()
+            områder.isEmpty() -> throw IllegalStateException("Oppgave for resevasjonsnøkkel $reservasjonsnøkkel har ikke definert område")
+            else -> throw IllegalStateException("Reservasjonsnøkkel $reservasjonsnøkkel dekker oppgaver i flere områder: $områder")
+        }
+    }
+
+    private suspend fun sjekkTilganger(
         oppgaver: List<Oppgave>,
         brukerIdSomSkalHaReservasjon: Long
     ): Boolean {
         val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedId(brukerIdSomSkalHaReservasjon)!!
         return oppgaver.all { oppgave ->
+            if (oppgave.oppgavetype.område.tilOmrådeEnum() !in saksbehandler.områder) return@all false
             if (beslutterErSaksbehandler(
                     oppgave,
                     saksbehandler
                 )
             ) throw ManglerTilgangException("Saksbehandler kan ikke være beslutter på egen behandling")
 
-            pepClient.harTilgangTilOppgaveV3(oppgave, saksbehandler, Action.reserver)
+            pepClient.harTilgangTilOppgaveV3(
+                oppgave,
+                oppgave.oppgavetype.område.tilOmrådeEnum(),
+                saksbehandler,
+                Action.reserver,
+            )
         }
     }
 

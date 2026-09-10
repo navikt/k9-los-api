@@ -12,7 +12,7 @@ class Kodeverkreferanse(
     )
 
     constructor(kodeverk: Kodeverk): this (
-        område = kodeverk.område.tilOmråderEnum(),
+        område = kodeverk.område.tilOmrådeEnum(),
         eksternId = kodeverk.eksternId
     )
 

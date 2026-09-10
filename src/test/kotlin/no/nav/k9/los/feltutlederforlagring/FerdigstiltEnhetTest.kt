@@ -2,18 +2,18 @@ package no.nav.k9.los.feltutlederforlagring
 
 import io.mockk.every
 import io.mockk.mockk
-import no.nav.k9.los.saksbehandleradmin.Saksbehandler
-import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
+import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.Feltdefinisjon
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.Synlighet
 import no.nav.k9.los.oppgavedefinisjon.omraade.Område
-import no.nav.k9.los.oppgavemottak.OppgaveFeltverdi
-import no.nav.k9.los.oppgavemottak.OppgaveV3
-import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
-import no.nav.k9.los.oppgavemottak.feltutlederforlagring.FerdigstiltEnhet
 import no.nav.k9.los.oppgavedefinisjon.oppgavetype.Oppgavefelt
 import no.nav.k9.los.oppgavedefinisjon.oppgavetype.Oppgavetype
+import no.nav.k9.los.oppgavemottak.OppgaveFeltverdi
+import no.nav.k9.los.oppgavemottak.OppgaveV3
+import no.nav.k9.los.oppgavemottak.feltutlederforlagring.FerdigstiltEnhet
+import no.nav.k9.los.saksbehandleradmin.Saksbehandler
+import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
@@ -51,7 +51,9 @@ internal class FerdigstiltEnhetTest {
         every {
             saksbehandlerRepository.finnSaksbehandlerMedIdentEkskluderKode6(saksbehandlerId)
         } returns Saksbehandler(
-            id = 0, navident = saksbehandlerId, navn = "Navn Navnesen", epost = "", enhet = forventetEnhet, skjermet = false
+            id = 0, navident = saksbehandlerId, navn = "Navn Navnesen", epost = "", enhet = forventetEnhet,
+            områder = listOf(Områder.K9),
+            skjermet = false,
         )
 
         val oppgave = lagOppgave(
@@ -81,7 +83,15 @@ internal class FerdigstiltEnhetTest {
 
         every {
             saksbehandlerRepository.finnSaksbehandlerMedIdentEkskluderKode6(saksbehandlerId)
-        } returns Saksbehandler(id = 0, navident = saksbehandlerId, navn = "Navn Navnesen", epost = "", enhet = null, skjermet = false)
+        } returns Saksbehandler(
+            id = 0,
+            navident = saksbehandlerId,
+            navn = "Navn Navnesen",
+            epost = "",
+            enhet = null,
+            områder = listOf(Områder.K9),
+            skjermet = false
+        )
 
         val oppgave = lagOppgave(
             status = Oppgavestatus.LUKKET,

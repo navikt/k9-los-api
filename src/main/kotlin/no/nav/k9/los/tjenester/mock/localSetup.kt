@@ -1,9 +1,6 @@
 package no.nav.k9.los.tjenester.mock
 
 import kotlinx.coroutines.runBlocking
-import kotliquery.queryOf
-import kotliquery.sessionOf
-import kotliquery.using
 import no.nav.k9.klage.kontrakt.behandling.oppgavetillos.Aksjonspunkttilstand
 import no.nav.k9.kodeverk.behandling.BehandlingResultatType
 import no.nav.k9.kodeverk.behandling.BehandlingStegType
@@ -28,6 +25,8 @@ import no.nav.k9.los.kodeverk.BehandlingType
 import no.nav.k9.los.kodeverk.FagsakYtelseType
 import no.nav.k9.los.kodeverk.Fagsystem
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
+import no.nav.k9.los.saksbehandleradmin.Saksbehandler
+import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
 import no.nav.k9.sak.kontrakt.aksjonspunkt.AksjonspunktTilstandDto
 import no.nav.k9.sak.typer.AktørId
 import no.nav.k9.sak.typer.JournalpostId
@@ -39,6 +38,52 @@ import java.time.LocalDateTime
 import java.util.*
 import javax.sql.DataSource
 import kotlin.random.Random
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
+
+data class LokalSaksbehandler(
+    val navident: String,
+    val navn: String,
+    val epost: String,
+    val enhet: String,
+    val områder: List<Områder>,
+)
+
+val saksbehandlere = listOf(
+    LokalSaksbehandler(
+        navident = "Z123456",
+        navn = "Saksbehandler Sara",
+        epost = "saksbehandler@nav.no",
+        enhet = "2830 NAV DRIFT",
+        områder = listOf(Områder.K9,
+//            Områder.AKTIVITETSPENGER
+        ),
+    ),
+    LokalSaksbehandler(
+        navident = "Z167457",
+        navn = "Lars Pokèmonsen",
+        epost = "lars.monsen@nav.no",
+        enhet = "2830 NAV DRIFT",
+        områder = listOf(Områder.K9,
+//            Områder.AKTIVITETSPENGER
+        ),
+    ),
+//    LokalSaksbehandler(
+//        navident = "A167457",
+//        navn = "Arild Aktivitetspenger",
+//        epost = "arild.aktivitetspenger@nav.no",
+//        enhet = "2830 NAV DRIFT",
+//        områder = listOf(
+//            Områder.AKTIVITETSPENGER
+//        ),
+//    ),
+    LokalSaksbehandler(
+        navident = "Z321457",
+        navn = "Lord Edgar Hansen",
+        epost = "the.lord@nav.no",
+        enhet = "2830 NAV DRIFT",
+        områder = listOf(Områder.K9),
+    )
+)
 
 object localSetup : KoinComponent {
     private val punsjEventHandler: K9PunsjEventHandler by inject()
@@ -47,44 +92,28 @@ object localSetup : KoinComponent {
     private val klageEventHandler: K9KlageEventHandler by inject()
     private val profile: KoinProfile by inject()
     private val dataSource: DataSource by inject()
-
-    fun addSaksbehandler(saksbehandlerfelter: Map<String, String>) {
-        return using(sessionOf(dataSource)) {
-            it.transaction { tx ->
-                tx.run(
-                    queryOf(
-                        """
-                        insert into saksbehandler (navident, navn, epost, enhet, skjermet)
-                        values (:navident,:navn, :epost, '2830 NAV DRIFT', false)
-                        on conflict do nothing
-                     """,
-                        saksbehandlerfelter
-                    ).asExecute
-                )
-            }
-        }
-    }
+    private val saksbehandlerRepository: SaksbehandlerRepository by inject()
 
     fun initSaksbehandlere() {
         if (profile == KoinProfile.LOCAL) {
             runBlocking {
-                listOf(
-                    mapOf(
-                        "navident" to "Z123456",
-                        "navn" to "Saksbehandler Sara",
-                        "epost" to "saksbehandler.sara@nav.no",
-                    ),
-                    mapOf(
-                        "navident" to "Z167457",
-                        "navn" to "Saksbehandler Lars",
-                        "epost" to "saksbehandler.lars@nav.no",
-                    ),
-                    mapOf(
-                        "navident" to "Z321457",
-                        "navn" to "Saksbehandler Edgar",
-                        "epost" to "saksbehandler.edgar@nav.no",
+                saksbehandlere.forEach { lokal ->
+                    val id = saksbehandlerRepository.opprettSaksbehandler(lokal.epost, lokal.områder.first())
+                    lokal.områder.drop(1).forEach { område ->
+                        saksbehandlerRepository.leggTilOmråde(id, område)
+                    }
+                    saksbehandlerRepository.vedlikeholdSaksbehandler(
+                        Saksbehandler(
+                            id = id,
+                            navident = lokal.navident,
+                            navn = lokal.navn,
+                            epost = lokal.epost,
+                            enhet = lokal.enhet,
+                            områder = lokal.områder,
+                            skjermet = false,
+                        ),
                     )
-                ).forEach { addSaksbehandler(it) }
+                }
             }
         }
     }

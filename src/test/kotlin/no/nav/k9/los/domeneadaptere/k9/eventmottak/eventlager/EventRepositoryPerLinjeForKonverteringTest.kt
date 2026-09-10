@@ -341,7 +341,7 @@ class EventRepositoryPerLinjeForKonverteringTest() : AbstractK9LosIntegrationTes
             val sakNøkkel = eventRepository.lagre(Fagsystem.K9SAK, sakEksternId, LocalDateTime.now().toString(), "{}", tx)
             eventRepository.lagre(Fagsystem.K9KLAGE, klageEksternId, LocalDateTime.now().plusMinutes(1).toString(), "{}", tx)
 
-            eventRepository.fjernAlleDirty(sakNøkkel.id!!, tx)
+            eventRepository.fjernAlleDirty(requireNotNull(sakNøkkel.id), tx)
 
             eventRepository.bestillHistorikkvask(Fagsystem.PUNSJ, punsjEksternId, tx)
             eventRepository.bestillHistorikkvask(Fagsystem.K9KLAGE, klageEksternId, tx)

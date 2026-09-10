@@ -9,6 +9,7 @@ import no.nav.k9.los.domeneadaptere.k9.avstemming.saksbehandling.SakAvstemmer
 import no.nav.k9.los.domeneadaptere.k9.avstemming.saksbehandling.systemklient.SakAvstemmingsklient
 import no.nav.k9.los.kodeverk.Fagsystem
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.query.OppgaveQueryService
 import no.nav.k9.los.oppgaveuthenting.query.QueryRequest
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.FeltverdiOppgavefilter
@@ -47,7 +48,7 @@ class AvstemmingsTjeneste(
                 var åpneOppgaver: List<Oppgave>
                 var åpneBehandlinger: List<Behandlingstilstand>
                 coroutineScope {
-                    val åpneOppgaverDeferred = async { oppgaveQueryService.queryForOppgave(QueryRequest(query)) }
+                    val åpneOppgaverDeferred = async { oppgaveQueryService.queryForOppgave(QueryRequest(query, område = Områder.fraFagsystem(Fagsystem.K9SAK))) }
                     val åpneBehandlingerDeferred = async { k9SakAvstemmingsklient.hentÅpneBehandlinger() }
                     åpneOppgaver = åpneOppgaverDeferred.await()
                     åpneBehandlinger = åpneBehandlingerDeferred.await()
@@ -75,7 +76,7 @@ class AvstemmingsTjeneste(
                         )
                     )
                 )
-                val åpneOppgaver = oppgaveQueryService.queryForOppgave(QueryRequest(query))
+                val åpneOppgaver = oppgaveQueryService.queryForOppgave(QueryRequest(query, område = Områder.fraFagsystem(Fagsystem.K9KLAGE)))
                 SakAvstemmer.regnUtDiff(Fagsystem.K9KLAGE, åpneBehandlinger, åpneOppgaver)
             }
             Fagsystem.K9TILBAKE -> throw UnsupportedOperationException()
@@ -100,7 +101,7 @@ class AvstemmingsTjeneste(
                         )
                     )
                 )
-                val åpnePunsjOppgaver = oppgaveQueryService.queryForOppgave(QueryRequest(query))
+                val åpnePunsjOppgaver = oppgaveQueryService.queryForOppgave(QueryRequest(query, område = Områder.fraFagsystem(Fagsystem.PUNSJ)))
 
                 PunsjAvstemmer.regnUtDiff(uferdigeJournalposter, åpnePunsjOppgaver)
             }

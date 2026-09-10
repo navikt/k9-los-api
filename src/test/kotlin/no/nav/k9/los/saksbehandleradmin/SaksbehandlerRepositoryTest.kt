@@ -1,43 +1,83 @@
 package no.nav.k9.los.saksbehandleradmin
 
-import io.mockk.coEvery
-import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
+import io.mockk.coEvery
+import io.mockk.every
+import io.mockk.mockk
+import no.nav.k9.los.infrastruktur.azuregraph.IAzureGraphService
+import no.nav.k9.los.infrastruktur.brukerkontekst.TestKontekstFactory
+import no.nav.k9.los.infrastruktur.idtoken.IIdToken
+import no.nav.k9.los.innloggetbruker.InnloggetBrukerTjeneste
 import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.OppgaveTestDataBuilder
-import no.nav.k9.los.infrastruktur.azuregraph.IAzureGraphService
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
-import no.nav.k9.los.innloggetbruker.InnloggetBrukerTjeneste
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.reservasjon.ReservasjonV3Tjeneste
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import org.koin.test.get
 import org.postgresql.util.PSQLException
-import java.time.Clock
+import org.koin.test.get
 import java.time.LocalDateTime
+import java.time.Clock
 import java.time.ZoneOffset
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
+import no.nav.k9.los.oppgavedefinisjon.omraade.OmrådeRepository
 
 class SaksbehandlerRepositoryTest : AbstractK9LosIntegrationTest() {
+    
+
+    @Test
+    fun `leggTilOmråde endrer ikke eksisterende felter`() {
+        val saksbehandlerRepository = get<SaksbehandlerRepository>()
+        val epost = "z999999@nav.no"
+        val oppdatertTidspunkt = LocalDateTime.parse("2026-08-28T10:00:00")
+
+        runBlocking {
+            // Saksbehandler får område via admin, og feltene vedlikeholdes ved innlogging
+            val id = saksbehandlerRepository.opprettSaksbehandler(epost, Områder.K9)
+            saksbehandlerRepository.vedlikeholdSaksbehandler(
+                Saksbehandler(
+                    id = id,
+                    navident = "Z999999",
+                    navn = "Zed Saksbehandler",
+                    epost = epost,
+                    enhet = "9999",
+                    områder = listOf(Områder.K9),
+                    skjermet = false,
+                    sistOppdatert = oppdatertTidspunkt,
+                ),
+            )
+
+            saksbehandlerRepository.leggTilOmråde(id, Områder.K9)
+        }
+
+        val lagret = runBlocking {
+            saksbehandlerRepository.finnSaksbehandlerMedEpost(epost, skjermet = false)
+        }!!
+
+        assertThat(lagret.navident, equalTo("Z999999"))
+        assertThat(lagret.navn, equalTo("Zed Saksbehandler"))
+        assertThat(lagret.enhet, equalTo("9999"))
+        assertThat(lagret.områder, equalTo(listOf(Områder.K9)))
+        assertThat(lagret.sistOppdatert, equalTo(oppdatertTidspunkt))
+    }
+
     @Test
     fun `vedlikeholder saksbehandler og tidspunkt`() = runBlocking {
-        val testSaksbehandlerRepository = get<TestSaksbehandlerRepository>()
         val repository = get<SaksbehandlerRepository>()
-        val opprinnelig = OpprettSaksbehandler( "Z123456", "Gammelt navn", "saksbehandler@nav.no", "1234")
-        val id = testSaksbehandlerRepository.opprettSaksbehandler(opprinnelig).id
+        val id = repository.opprettSaksbehandler("saksbehandler@nav.no", Områder.K9)
         val tidspunkt = LocalDateTime.parse("2026-08-28T10:00:00")
 
         repository.vedlikeholdSaksbehandler(
-            Saksbehandler(id, "Z654321", "Nytt navn", "Ny.Epost@nav.no", "3450", false, tidspunkt)
+            Saksbehandler(id, "Z654321", "Nytt navn", "Ny.Epost@nav.no", "3450", listOf(Områder.K9), false, tidspunkt)
         )
 
         val oppdatert = repository.finnSaksbehandlerMedId(id)!!
-        assertThat(oppdatert.id, equalTo(id))
-        assertThat(oppdatert.epost, equalTo("ny.epost@nav.no"))
         assertThat(oppdatert.navident, equalTo("Z654321"))
         assertThat(oppdatert.navn, equalTo("Nytt navn"))
+        assertThat(oppdatert.epost, equalTo("ny.epost@nav.no"))
         assertThat(oppdatert.enhet, equalTo("3450"))
         assertThat(oppdatert.sistOppdatert, equalTo(tidspunkt))
     }
@@ -80,7 +120,7 @@ class SaksbehandlerRepositoryTest : AbstractK9LosIntegrationTest() {
 
         val feil = assertThrows<PSQLException> {
             repository.vedlikeholdSaksbehandler(
-                Saksbehandler(opprinnelig.id, "Z654321", "Nytt navn", annen.epost, "3450", skjermet = false, LocalDateTime.parse("2026-08-28T10:00:00"))
+                Saksbehandler(opprinnelig.id, "Z654321", "Nytt navn", annen.epost, "3450", opprinnelig.områder, false, LocalDateTime.parse("2026-08-28T10:00:00"))
             )
         }
 
@@ -100,16 +140,22 @@ class SaksbehandlerRepositoryTest : AbstractK9LosIntegrationTest() {
         val opprinnelig = get<TestSaksbehandlerRepository>().opprettSaksbehandler(
             OpprettSaksbehandler("Z123456", "Gammelt navn", "x@nav.no", "1234")
         )
-        val duplikatId = repository.opprettSaksbehandler("y@nav.no")
+        val duplikatId = repository.opprettSaksbehandler("y@nav.no", Områder.K9)
         val duplikat = repository.finnSaksbehandlerMedId(duplikatId)!!
-        val tidspunkt = LocalDateTime.parse("2026-08-28T10:00:00")
+        val tidspunkt = opprinnelig.sistOppdatert!!.plusDays(2)
+        val token = mockk<IIdToken> {
+            every { getNavIdent() } returns "Z123456"
+            every { getName() } returns "Nytt navn"
+            every { getPreferredUsername() } returns "y@nav.no"
+        }
+        val bruker = TestKontekstFactory.brukerkontekst(Områder.K9, idToken = token)
         val graph = mockk<IAzureGraphService>()
-        coEvery { graph.hentEnhetForInnloggetBruker() } returns "3450"
+        coEvery { graph.hentEnhet(bruker.navIdent, token) } returns "3450"
         val tjeneste = InnloggetBrukerTjeneste(
             repository, graph, Clock.fixed(tidspunkt.toInstant(ZoneOffset.UTC), ZoneOffset.UTC)
         )
 
-        tjeneste.vedlikeholdHvisUtdatert(opprinnelig, "Z123456", "Nytt navn", "y@nav.no", false)
+        tjeneste.hentInnloggetBruker(bruker)
 
         listOf(opprinnelig, duplikat).forEach { før ->
             val etter = repository.finnSaksbehandlerMedId(før.id)!!
@@ -127,9 +173,7 @@ class SaksbehandlerRepositoryTest : AbstractK9LosIntegrationTest() {
                 assertThat(statement.executeUpdate(), equalTo(1))
             }
         }
-        tjeneste.vedlikeholdHvisUtdatert(
-            repository.finnSaksbehandlerMedId(opprinnelig.id)!!, "Z123456", "Nytt navn", "y@nav.no", false
-        )
+        tjeneste.hentInnloggetBruker(bruker)
 
         val oppdatert = repository.finnSaksbehandlerMedId(opprinnelig.id)!!
         assertThat(oppdatert.id, equalTo(opprinnelig.id))
@@ -141,40 +185,59 @@ class SaksbehandlerRepositoryTest : AbstractK9LosIntegrationTest() {
     }
 
     @Test
+    fun `vedlikehold oppdaterer global skjerming uten aa endre andre omraadekoblinger`() {
+        val repository = get<SaksbehandlerRepository>()
+        get<OmrådeRepository>().lagre(Områder.AKTIVITETSPENGER.eksternId)
+        val id = repository.opprettSaksbehandler("flere@nav.no", Områder.K9)
+        repository.leggTilOmråde(id, Områder.AKTIVITETSPENGER)
+        val tidspunkt = LocalDateTime.parse("2026-08-28T10:00:00")
+
+        listOf(true, false).forEach { kode6 ->
+            repository.vedlikeholdSaksbehandler(
+                Saksbehandler(id, "Z123456", "Test", "flere@nav.no", "3450", listOf(Områder.K9), kode6, tidspunkt)
+            )
+
+            val lagret = repository.finnSaksbehandlerMedId(id)!!
+            assertThat(lagret.skjermet, equalTo(kode6))
+            assertThat(lagret.områder.toSet(), equalTo(setOf(Områder.K9, Områder.AKTIVITETSPENGER)))
+            assertThat(lagret.sistOppdatert, equalTo(tidspunkt))
+            Områder.entries.forEach { område ->
+                assertThat(repository.hentAlleSaksbehandlere(område, kode6).any { it.id == id }, equalTo(true))
+                assertThat(repository.hentAlleSaksbehandlere(område, !kode6).any { it.id == id }, equalTo(false))
+            }
+        }
+    }
+
+    @Test
+    fun `ukjent id returnerer null`() {
+        assertThat(get<SaksbehandlerRepository>().finnSaksbehandlerMedId(Long.MAX_VALUE), equalTo(null))
+    }
+
+    @Test
     fun `slette saksbehandler`() {
         val saksbehandlerRepository = get<SaksbehandlerRepository>()
         val testSaksbehandlerRepository = get<TestSaksbehandlerRepository>()
         val ident = "Z123456"
         val ident2 = "Z234567"
 
-        runBlocking {
-            testSaksbehandlerRepository.opprettSaksbehandler(
-                OpprettSaksbehandler(
-                    ident,
-                    ident,
-                    ident + "@nav.no",
-                    enhet = "1234"
-                )
-            )
-        }
+        testSaksbehandlerRepository.opprettSaksbehandler(
+            OpprettSaksbehandler(ident, ident, ident + "@nav.no", "1234"),
+            Områder.K9,
+            skjermet = false,
+        )
 
-        runBlocking {
-            testSaksbehandlerRepository.opprettSaksbehandler(
-                OpprettSaksbehandler(
-                    ident2,
-                    ident2,
-                    ident2 + "@nav.no",
-                    enhet = "1234"
-                )
-            )
-        }
+        testSaksbehandlerRepository.opprettSaksbehandler(
+            OpprettSaksbehandler(ident2, ident2, ident2 + "@nav.no", "1234"),
+            Områder.K9,
+            skjermet = false,
+        )
 
         val saksbehandler = runBlocking {
-            saksbehandlerRepository.finnSaksbehandlerMedIdent(ident)
+            saksbehandlerRepository.finnSaksbehandlerMedIdent(ident, skjermet = false)
         }!!
 
         val saksbehandler2 = runBlocking {
-            saksbehandlerRepository.finnSaksbehandlerMedIdent(ident)
+            saksbehandlerRepository.finnSaksbehandlerMedIdent(ident2, skjermet = false)
         }!!
 
         assertThat(saksbehandler.navident, equalTo(ident))
@@ -185,7 +248,9 @@ class SaksbehandlerRepositoryTest : AbstractK9LosIntegrationTest() {
 
         val reservasjonV3Tjeneste = get<ReservasjonV3Tjeneste>()
 
-        reservasjonV3Tjeneste.taReservasjon("test", saksbehandler.id, saksbehandler.id, "test", LocalDateTime.now(), LocalDateTime.now().plusDays(1))
+        runBlocking {
+            reservasjonV3Tjeneste.taReservasjon("test", saksbehandler.id, saksbehandler.id, "test", LocalDateTime.now(), LocalDateTime.now().plusDays(1))
+        }
 
         reservasjonV3Tjeneste.forlengReservasjon("test", LocalDateTime.now().plusDays(2), saksbehandler.id, "test")
 

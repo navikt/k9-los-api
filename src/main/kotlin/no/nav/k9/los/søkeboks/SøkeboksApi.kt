@@ -5,15 +5,13 @@ import io.ktor.http.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import no.nav.k9.los.infrastruktur.abac.IPepClient
-import no.nav.k9.los.infrastruktur.rest.RequestContextService
+import no.nav.k9.los.infrastruktur.brukerkontekst.medBrukerkontekst
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import org.koin.ktor.ext.inject
 
 
 fun Route.SøkeboksApi() {
-    val requestContextService by inject<RequestContextService>()
     val søkeboksTjeneste by inject<SøkeboksTjeneste>()
-    val pepClient by inject<IPepClient>()
 
     post(
         {
@@ -25,10 +23,12 @@ fun Route.SøkeboksApi() {
             }
         }
     ) {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.harBasisTilgang()) {
+        medBrukerkontekst { bruker ->
+            if (bruker.område != Områder.K9) {
+                call.respond(HttpStatusCode.NotImplemented)
+            } else if (bruker.harBasisTilgang) {
                 val (søkeord) = call.receive<SøkRequest>()
-                call.respond(søkeboksTjeneste.finnOppgaver(søkeord))
+                call.respond(søkeboksTjeneste.finnOppgaver(søkeord, bruker.område, bruker))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }

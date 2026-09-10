@@ -2,6 +2,7 @@ package no.nav.k9.los.oppgaveuthenting.enkeltoppslag
 
 import kotliquery.Row
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import java.time.LocalDateTime
 
 internal data class OppgaveRad(
@@ -12,6 +13,7 @@ internal data class OppgaveRad(
     val oppgavestatus: Oppgavestatus,
     val endretTidspunkt: LocalDateTime,
     val reservasjonsnokkel: String,
+    val omradeEksternId: Områder,
 ) {
     companion object {
         internal fun Row.tilOppgaveRad() = OppgaveRad(
@@ -22,6 +24,7 @@ internal data class OppgaveRad(
             oppgavestatus = Oppgavestatus.fraKode(this.string("oppgavestatus")),
             endretTidspunkt = this.localDateTime("endret_tidspunkt"),
             reservasjonsnokkel = this.string("reservasjonsnokkel"),
+            omradeEksternId = Områder.fraEksternId(this.string("omrade_ekstern_id")),
         )
     }
 }

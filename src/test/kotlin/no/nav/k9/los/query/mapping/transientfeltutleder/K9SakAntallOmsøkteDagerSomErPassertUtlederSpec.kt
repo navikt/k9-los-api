@@ -137,7 +137,7 @@ class K9SakAntallOmsøkteDagerSomErPassertUtlederSpec : KoinTest, FreeSpec() {
                     ),
                 )
 
-                val resultat = oppgaveQueryService.query(QueryRequest(query), now)
+                val resultat = oppgaveQueryService.query(QueryRequest(område = Områder.K9, oppgaveQuery = query), now)
                 resultat.size shouldBe 1
                 (resultat[0].feltverdier.first { it.kode == "antallOmsøkteDagerSomErPassert" }.verdi as String).toLong() shouldBe 10L
             }
@@ -165,7 +165,7 @@ class K9SakAntallOmsøkteDagerSomErPassertUtlederSpec : KoinTest, FreeSpec() {
                     ),
                 )
 
-                val resultat = oppgaveQueryService.query(QueryRequest(query), now)
+                val resultat = oppgaveQueryService.query(QueryRequest(område = Områder.K9, oppgaveQuery = query), now)
                 resultat.size shouldBe 1
                 (resultat[0].feltverdier.first { it.kode == "antallOmsøkteDagerSomErPassert" }.verdi as String).toLong() shouldBe 5L
             }
@@ -188,7 +188,7 @@ class K9SakAntallOmsøkteDagerSomErPassertUtlederSpec : KoinTest, FreeSpec() {
                     ),
                 )
 
-                val resultat = oppgaveQueryService.query(QueryRequest(query), now)
+                val resultat = oppgaveQueryService.query(QueryRequest(område = Områder.K9, oppgaveQuery = query), now)
                 resultat.size shouldBe 1
                 (resultat[0].feltverdier.first { it.kode == "antallOmsøkteDagerSomErPassert" }.verdi as String).toLong() shouldBe 0L
             }
@@ -216,7 +216,7 @@ class K9SakAntallOmsøkteDagerSomErPassertUtlederSpec : KoinTest, FreeSpec() {
                     ),
                 )
 
-                val resultat = oppgaveQueryService.query(QueryRequest(query), now)
+                val resultat = oppgaveQueryService.query(QueryRequest(område = Områder.K9, oppgaveQuery = query), now)
                 resultat.size shouldBe 1
                 (resultat[0].feltverdier.first { it.kode == "antallOmsøkteDagerSomErPassert" }.verdi as String).toLong() shouldBe 15L
             }

@@ -1,144 +1,83 @@
 package no.nav.k9.los.infrastruktur.abac
 
-import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.infrastruktur.azuregraph.IAzureGraphService
-import no.nav.k9.los.infrastruktur.rest.idToken
+import no.nav.k9.los.infrastruktur.brukerkontekst.BrukerkontekstMedOmråde
+import no.nav.k9.los.infrastruktur.idtoken.IIdToken
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.Oppgave
 import no.nav.k9.los.saksbehandleradmin.Saksbehandler
 import no.nav.sif.abac.kontrakt.abac.Diskresjonskode
 import no.nav.sif.abac.kontrakt.abac.dto.SaksnummerDto
 import no.nav.sif.abac.kontrakt.person.AktørId
-import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import kotlin.coroutines.coroutineContext
 
 class PepClient(
     private val azureGraphService: IAzureGraphService,
-    private val sifAbacPdpKlient: ISifAbacPdpKlient
+    private val sifAbacPdpKlienter: SifAbacPdpKlienter,
 ) : IPepClient {
-    private val log: Logger = LoggerFactory.getLogger(PepClient::class.java)
+    private val log = LoggerFactory.getLogger(javaClass)
 
-    override suspend fun erOppgaveStyrer(): Boolean {
-        return sifAbacPdpKlient.hentTilganger(coroutineContext.idToken()).oppgavestyring
-    }
+    override suspend fun diskresjonskoderForSak(fagsakNummer: String, område: Områder): Set<Diskresjonskode> =
+        sifAbacPdpKlienter.forOmråde(område).diskresjonskoderSak(SaksnummerDto(fagsakNummer))
 
-    override suspend fun harBasisTilgang(): Boolean {
-        return sifAbacPdpKlient.hentTilganger(coroutineContext.idToken()).basis
-    }
+    override suspend fun diskresjonskoderForPerson(aktørId: String, område: Områder): Set<Diskresjonskode> =
+        sifAbacPdpKlienter.forOmråde(område).diskresjonskoderPerson(AktørId(aktørId))
 
-    override suspend fun kanLeggeUtDriftsmelding(): Boolean {
-        return sifAbacPdpKlient.hentTilganger(coroutineContext.idToken()).drift
-    }
-
-    override suspend fun harTilgangTilReserveringAvOppgaver(): Boolean {
-        return sifAbacPdpKlient.hentTilganger(coroutineContext.idToken()).reservering
-    }
-
-    override suspend fun harTilgangTilKode6(): Boolean {
-        return sifAbacPdpKlient.hentTilganger(coroutineContext.idToken()).kode6
-    }
-
-    override suspend fun erSakKode6(fagsakNummer: String): Boolean {
-        val diskresjonskoder = sifAbacPdpKlient.diskresjonskoderSak(SaksnummerDto(fagsakNummer))
-        return diskresjonskoder.contains(Diskresjonskode.KODE6)
-    }
-
-    override suspend fun erAktørKode6(aktørid: String): Boolean {
-        val diskresjonskoder = sifAbacPdpKlient.diskresjonskoderPerson(AktørId(aktørid))
-        return diskresjonskoder.contains(Diskresjonskode.KODE6)
-    }
-
-    override suspend fun diskresjonskoderForSak(saksnummer: String): Set<Diskresjonskode> {
-        return sifAbacPdpKlient.diskresjonskoderSak(SaksnummerDto(saksnummer))
-    }
-
-    override suspend fun diskresjonskoderForPerson(aktørId: String): Set<Diskresjonskode> {
-        return sifAbacPdpKlient.diskresjonskoderPerson(AktørId(aktørId))
-    }
-
-    override suspend fun erSakKode7EllerEgenAnsatt(fagsakNummer: String): Boolean {
-        val diskresjonskoder = sifAbacPdpKlient.diskresjonskoderSak(SaksnummerDto(fagsakNummer))
-        return diskresjonskoder.contains(Diskresjonskode.KODE7) || diskresjonskoder.contains(Diskresjonskode.SKJERMET)
-    }
-
-    override suspend fun erAktørKode7EllerEgenAnsatt(aktørid: String): Boolean {
-        val diskresjonskoder = sifAbacPdpKlient.diskresjonskoderPerson(AktørId(aktørid))
-        return diskresjonskoder.contains(Diskresjonskode.KODE7) || diskresjonskoder.contains(Diskresjonskode.SKJERMET)
+    override suspend fun harTilgangTilOppgaveV3(
+        oppgave: Oppgave,
+        brukerkontekst: BrukerkontekstMedOmråde,
+        action: Action,
+    ): Boolean {
+        brukerkontekst.krevOmråde(oppgave.oppgavetype.område.tilOmrådeEnum())
+        return harTilgang(oppgave, brukerkontekst.område, action, brukerkontekst.navIdent, brukerkontekst.idToken)
     }
 
     override suspend fun harTilgangTilOppgaveV3(
         oppgave: Oppgave,
-        action: Action
-    ): Boolean {
-        return harTilgang(
-            oppgavetype = oppgave.oppgavetype.eksternId,
-            identTilInnloggetBruker = coroutineContext.idToken().getNavIdent(),
-            action = action,
-            saksnummer = oppgave.hentVerdi("saksnummer"),
-            aktørIdSøker = oppgave.hentVerdi("aktorId"),
-            aktørIdPleietrengende = oppgave.hentVerdi("pleietrengendeAktorId")
-        )
-    }
-
-    override fun harTilgangTilOppgaveV3(
-        oppgave: Oppgave,
+        område: Områder,
         saksbehandler: Saksbehandler,
-        action: Action
+        action: Action,
     ): Boolean {
-        return runBlocking {
-            harTilgang(
-                oppgavetype = oppgave.oppgavetype.eksternId,
-                identTilInnloggetBruker = saksbehandler.navident!!,
-                action = action,
-                saksnummer = oppgave.hentVerdi("saksnummer"),
-                aktørIdSøker = oppgave.hentVerdi("aktorId"),
-                aktørIdPleietrengende = oppgave.hentVerdi("pleietrengendeAktorId"),
-            )
-        }
+        require(område == oppgave.oppgavetype.område.tilOmrådeEnum()) { "Oppgaven tilhører et annet område" }
+        return harTilgang(oppgave, område, action, requireNotNull(saksbehandler.navident))
     }
 
     private suspend fun harTilgang(
-        oppgavetype: String,
-        identTilInnloggetBruker: String,
+        oppgave: Oppgave,
+        område: Områder,
         action: Action,
-        saksnummer: String?,
-        aktørIdSøker: String?,
-        aktørIdPleietrengende: String?
+        ident: String,
+        idToken: IIdToken? = null,
     ): Boolean {
-        return when (oppgavetype) {
-            "k9sak", "k9klage", "k9tilbake" -> {
-                //TODO når abac-k9 er ryddet bort: vurder å bruk sifAbacPdpKlient.harTilgangTilSak(action, saksnummer) de steder hvor vi sjekker innlogget bruker
-                val saksbehandlersGrupper = azureGraphService.hentGrupperForSaksbehandler(identTilInnloggetBruker)
-                val tilgang = sifAbacPdpKlient.harTilgangTilSak(
-                    action = action,
-                    saksnummerDto = SaksnummerDto(saksnummer!!),
-                    saksbehandlersIdent = identTilInnloggetBruker,
-                    saksbehandlersGrupper = saksbehandlersGrupper
-                )
-
-                tilgang
+        val klient = sifAbacPdpKlienter.forOmråde(område)
+        val oppgavetype = oppgave.oppgavetype.eksternId
+        if (område == Områder.K9 && oppgavetype !in setOf("k9sak", "k9klage", "k9tilbake", "k9punsj")) {
+            throw NotImplementedError("Ukjent oppgavetype for tilgangskontroll i K9")
+        }
+        val saksnummer = oppgave.hentVerdi("saksnummer")
+        if (oppgavetype != "k9punsj" && !saksnummer.isNullOrBlank()) {
+            return if (idToken != null) {
+                klient.harTilgangTilSak(action, SaksnummerDto(saksnummer), idToken)
+            } else {
+                klient.harTilgangTilSak(action, SaksnummerDto(saksnummer), ident, azureGraphService.hentGrupper(ident))
             }
+        }
+        if (område == Områder.K9 && oppgavetype != "k9punsj") return false
 
-            "k9punsj" -> {
-                val berørteAktørId = setOfNotNull(aktørIdSøker, aktørIdPleietrengende)
-                val aktørIder = berørteAktørId.map { AktørId(it) }
-                val saksbehandlersGrupper = azureGraphService.hentGrupperForSaksbehandler(identTilInnloggetBruker)
-                val tilgang = if (aktørIder.isNotEmpty()) sifAbacPdpKlient.harTilgangTilPersoner(
-                    action = action,
-                    aktørIder = aktørIder,
-                    saksbehandlersIdent = identTilInnloggetBruker,
-                    saksbehandlersGrupper = saksbehandlersGrupper
-                ) else {
-                    log.warn("Ingen aktørIder funnet for punsj-oppgave. Gir som fallback tilgang til oppgaven, for å unngå at den havner utenfor alle køer.")
-                    true
-                }
-
-                tilgang
+        val aktørIder = setOfNotNull(oppgave.hentVerdi("aktorId"), oppgave.hentVerdi("pleietrengendeAktorId"))
+            .map { AktørId(it) }
+        if (aktørIder.isEmpty()) {
+            // Beholder masters særregel kun for K9-punsj, aldri som aktivitetspenger-fallback.
+            if (område == Områder.K9 && oppgavetype == "k9punsj") {
+                log.warn("Ingen aktørIder funnet for punsj-oppgave. Gir tilgang for å unngå at den havner utenfor alle køer.")
+                return true
             }
-
-            else -> throw NotImplementedError("Støtter kun tilgangsoppslag på k9klage, k9sak, k9tilbake og k9punsj")
+            return false
+        }
+        return if (idToken != null) {
+            klient.harTilgangTilPersoner(action, aktørIder, idToken)
+        } else {
+            klient.harTilgangTilPersoner(action, aktørIder, ident, azureGraphService.hentGrupper(ident))
         }
     }
-
 }
-

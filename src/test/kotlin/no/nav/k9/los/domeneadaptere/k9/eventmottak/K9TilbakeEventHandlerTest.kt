@@ -78,7 +78,7 @@ class K9TilbakeEventHandlerTest : AbstractK9LosIntegrationTest() {
         k9TilbakeEventHandler.prosesser(event)
 
         val antall = oppgaveQueryService.queryForAntall(
-            QueryRequest(
+            QueryRequest(område = Områder.K9, oppgaveQuery = 
                 OppgaveQuery(
                     listOf(
                         FeltverdiOppgavefilter(Områder.K9, "behandlingUuid", EksternFeltverdiOperator.EQUALS, listOf("29cbdc33-0e59-4559-96a8-c2154bf17e5a")),

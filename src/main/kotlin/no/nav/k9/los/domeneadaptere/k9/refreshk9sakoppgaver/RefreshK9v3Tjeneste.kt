@@ -10,6 +10,7 @@ import no.nav.k9.los.ko.*
 import no.nav.k9.los.ko.db.OppgaveKoRepository
 import no.nav.k9.los.ko.dto.OppgaveKo
 import no.nav.k9.los.kodeverk.Fagsystem
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.query.Avgrensning
 import no.nav.k9.los.oppgaveuthenting.query.OppgaveQueryService
 import no.nav.k9.los.oppgaveuthenting.query.QueryRequest
@@ -93,8 +94,9 @@ class RefreshK9v3Tjeneste(
     @WithSpan
     fun behandlingerTilOppfriskning(tx: TransactionalSession, antallPrKø: Int): Set<UUID> {
         return DetaljerMetrikker.time("RefreshK9V3", "refreshForKøer", "alle") {
-            val alleKøer = oppgaveKoRepository.hentListe(skjermet = false, medSaksbehandlere = false) +
-                    oppgaveKoRepository.hentListe(skjermet = true, medSaksbehandlere = false)
+            // Oppfriskning gjelder k9sak-behandlinger, og er derfor avgrenset til K9-området.
+            val alleKøer = oppgaveKoRepository.hentListe(Områder.K9, skjermet = false, medSaksbehandlere = false) +
+                    oppgaveKoRepository.hentListe(Områder.K9, skjermet = true, medSaksbehandlere = false)
             val behandlinger = behandlingerTilOppfriskning(tx, alleKøer, antallPrKø)
             log.info("Hentet ${behandlinger.size} oppgaver fra ${alleKøer.size} køer")
             behandlinger
@@ -123,7 +125,8 @@ class RefreshK9v3Tjeneste(
                             QueryRequest(
                                 kø.oppgaveQuery,
                                 fjernReserverte = true,
-                                Avgrensning.maxAntall(antall = antallPrKø.toLong())
+                                Avgrensning.maxAntall(antall = antallPrKø.toLong()),
+                                område = kø.område
                             )
                         )
                         førsteOppgaver.addAll(førsteOppgaverIKøen)
@@ -165,7 +168,7 @@ class RefreshK9v3Tjeneste(
                 )
             )
         )
-        return oppgaveQueryService.queryForOppgaveEksternId(QueryRequest(query)).toSet()
+        return oppgaveQueryService.queryForOppgaveEksternId(QueryRequest(query, område = Områder.K9)).toSet()
     }
 
     companion object {

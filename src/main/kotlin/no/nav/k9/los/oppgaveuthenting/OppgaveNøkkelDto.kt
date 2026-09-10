@@ -11,7 +11,7 @@ data class OppgaveNøkkelDto(
     constructor(oppgave: Oppgave): this(
         oppgaveEksternId = oppgave.eksternId,
         oppgaveTypeEksternId = oppgave.oppgavetype.eksternId,
-        områdeEksternId = oppgave.oppgavetype.område.tilOmråderEnum()
+        områdeEksternId = oppgave.oppgavetype.område.tilOmrådeEnum()
     )
 
     constructor(oppgaveDto: OppgaveDto): this(

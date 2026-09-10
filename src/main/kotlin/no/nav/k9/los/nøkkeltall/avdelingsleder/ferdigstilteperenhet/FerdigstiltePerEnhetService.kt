@@ -224,6 +224,7 @@ class FerdigstiltePerEnhetService(
                     )
                 }
             ),
+            område = Områder.K9,
         )
         return queryService.queryForAntall(request).toInt()
     }

@@ -42,7 +42,9 @@ class OppgaveOppdatertHandler(
                         oppgave.hentVerdi("aktorId"),
                         oppgave.hentVerdi("pleietrengendeAktorId"),
                         oppgave.hentVerdi("relatertPartAktorid")
-                    )
+                    ),
+                    område = oppgave.oppgavetype.område.tilOmrådeEnum(),
+                    oppgavetype = oppgave.oppgavetype.eksternId,
                 )
             )
         }

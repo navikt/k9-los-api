@@ -1,6 +1,7 @@
 package no.nav.k9.los.uttrekk
 
 import no.nav.k9.los.lagretsok.LagretSøk
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.query.Avgrensning
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.OppgaveQuery
 import java.time.LocalDateTime
@@ -30,7 +31,9 @@ class Uttrekk private constructor(
     feilmelding: String?,
     startetTidspunkt: LocalDateTime?,
     fullførtTidspunkt: LocalDateTime?,
-    antall: Int?
+    antall: Int?,
+    val område: Områder,
+    val harTilgangTilKode6: Boolean?,
 ) {
     var status: UttrekkStatus = status
         private set
@@ -72,7 +75,9 @@ class Uttrekk private constructor(
     }
 
     fun markerSomFeilet(feilmelding: String?) {
-        require(status == UttrekkStatus.KJØRER) { "Kan kun feile uttrekk som er i status KJØRER" }
+        require(status == UttrekkStatus.KJØRER || status == UttrekkStatus.OPPRETTET) {
+            "Kan kun feile ventende eller kjørende uttrekk"
+        }
 
         status = UttrekkStatus.FEILET
         this.feilmelding = feilmelding
@@ -92,6 +97,7 @@ class Uttrekk private constructor(
         fun opprettUttrekk(
             lagretSøk: LagretSøk,
             lagetAv: Long,
+            harTilgangTilKode6: Boolean,
             tittel: String = "",
             limit: Int? = null,
             offset: Int? = null
@@ -109,7 +115,9 @@ class Uttrekk private constructor(
                 feilmelding = null,
                 startetTidspunkt = null,
                 fullførtTidspunkt = null,
-                antall = null
+                antall = null,
+                område = lagretSøk.område,
+                harTilgangTilKode6 = harTilgangTilKode6,
             )
         }
 
@@ -126,11 +134,14 @@ class Uttrekk private constructor(
             feilmelding: String?,
             startetTidspunkt: LocalDateTime?,
             fullførtTidspunkt: LocalDateTime?,
-            antall: Int?
+            antall: Int?,
+            // Produksjonsuttrekk uten lagret tilgangsmetadata er K9, men beskyttelsesnivået er ukjent.
+            område: Områder = Områder.K9,
+            harTilgangTilKode6: Boolean? = null,
         ): Uttrekk {
             return Uttrekk(
                 id, opprettetTidspunkt, status, tittel, query, lagetAv, lagretSøkId, limit, offset, feilmelding,
-                startetTidspunkt, fullførtTidspunkt, antall
+                startetTidspunkt, fullførtTidspunkt, antall, område, harTilgangTilKode6
             )
         }
     }

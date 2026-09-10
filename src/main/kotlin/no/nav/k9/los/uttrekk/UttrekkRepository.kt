@@ -1,5 +1,6 @@
 package no.nav.k9.los.uttrekk
 
+import com.fasterxml.jackson.databind.node.ObjectNode
 import kotliquery.Row
 import kotliquery.queryOf
 import kotliquery.sessionOf
@@ -7,6 +8,7 @@ import kotliquery.using
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.OppgaveQuery
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import javax.sql.DataSource
 
 class UttrekkRepository(val dataSource: DataSource) {
@@ -57,7 +59,7 @@ class UttrekkRepository(val dataSource: DataSource) {
                         "opprettetTidspunkt" to uttrekk.opprettetTidspunkt,
                         "status" to uttrekk.status.name,
                         "tittel" to uttrekk.tittel,
-                        "query" to LosObjectMapper.instance.writeValueAsString(uttrekk.query),
+                        "query" to uttrekk.lagretQueryJson(),
                         "lagetAv" to uttrekk.lagetAv,
                         "lagretSokId" to uttrekk.lagretSøkId,
                         "limit" to uttrekk.limit,
@@ -117,16 +119,18 @@ class UttrekkRepository(val dataSource: DataSource) {
         }
     }
 
-    fun slettForLagretSøk(lagretSøkId: Long): Int {
+    fun slettForLagretSøk(lagretSøkId: Long, saksbehandlerId: Long): Int {
         return transactionalManager.transaction {
             it.run(
                 queryOf(
                     """
                 DELETE FROM uttrekk
                 WHERE lagret_sok_id = :lagretSokId
+                AND laget_av = :lagetAv
                 AND status != :statusKjorer
             """.trimIndent(), mapOf(
                         "lagretSokId" to lagretSøkId,
+                        "lagetAv" to saksbehandlerId,
                         "statusKjorer" to UttrekkStatus.KJØRER.name
                     )
                 ).asUpdate
@@ -173,12 +177,19 @@ class UttrekkRepository(val dataSource: DataSource) {
 }
 
 private fun Row.toUttrekk(): Uttrekk {
+    val queryJson = LosObjectMapper.instance.readTree(string("query"))
+    val tilgang = queryJson.get("_uttrekkTilgang")
+    if (tilgang != null) {
+        require(tilgang.isObject && tilgang.path("område").isTextual && tilgang.path("harTilgangTilKode6").isBoolean) {
+            "Ugyldig lagret tilgangsmetadata for uttrekk"
+        }
+    }
     return Uttrekk.fraEksisterende(
         id = long("id"),
         opprettetTidspunkt = localDateTime("opprettet_tidspunkt"),
         status = UttrekkStatus.valueOf(string("status")),
         tittel = string("tittel"),
-        query = LosObjectMapper.instance.readValue(string("query"), OppgaveQuery::class.java),
+        query = LosObjectMapper.instance.treeToValue(queryJson, OppgaveQuery::class.java),
         lagetAv = long("laget_av"),
         lagretSøkId = longOrNull("lagret_sok_id"),
         limit = intOrNull("avgrensning_limit"),
@@ -186,6 +197,21 @@ private fun Row.toUttrekk(): Uttrekk {
         feilmelding = stringOrNull("feilmelding"),
         startetTidspunkt = localDateTimeOrNull("startet_tidspunkt"),
         fullførtTidspunkt = localDateTimeOrNull("fullfort_tidspunkt"),
-        antall = intOrNull("antall")
+        antall = intOrNull("antall"),
+        område = tilgang?.let { Områder.fraEksternId(it.path("område").textValue()) } ?: Områder.K9,
+        harTilgangTilKode6 = tilgang?.path("harTilgangTilKode6")?.booleanValue(),
     )
+}
+
+internal fun Uttrekk.lagretQueryJson(): String {
+    val json = LosObjectMapper.instance.valueToTree<ObjectNode>(query)
+    // Kun serverfastsatte modellfelter lagres, aldri metadata fra brukerens OppgaveQuery.
+    if (harTilgangTilKode6 != null) {
+        json.putObject("_uttrekkTilgang")
+            .put("område", område.eksternId)
+            .put("harTilgangTilKode6", harTilgangTilKode6)
+    } else {
+        require(område == Områder.K9) { "Legacy uttrekk uten tilgangsmetadata må tilhøre K9" }
+    }
+    return LosObjectMapper.instance.writeValueAsString(json)
 }

@@ -9,25 +9,20 @@ import no.nav.helse.dusseldorf.ktor.core.Retry
 import no.nav.helse.dusseldorf.ktor.metrics.Operation
 import no.nav.helse.dusseldorf.oauth2.client.AccessTokenClient
 import no.nav.helse.dusseldorf.oauth2.client.CachedAccessTokenClient
-import no.nav.k9.los.infrastruktur.azuregraph.IAzureGraphService
+import no.nav.k9.los.infrastruktur.brukerkontekst.BrukerkontekstMedOmråde
+import no.nav.k9.los.infrastruktur.idtoken.IIdToken
 import no.nav.k9.los.infrastruktur.rest.NavHeaders
-import no.nav.k9.los.infrastruktur.rest.idToken
-import no.nav.k9.los.infrastruktur.utils.Cache
-import no.nav.k9.los.infrastruktur.utils.CacheObject
 import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.net.URI
 import java.time.Duration
-import java.time.LocalDateTime
 import java.util.*
-import kotlin.coroutines.coroutineContext
 
 class PdlService(
     baseUrl: URI,
     accessTokenClient: AccessTokenClient,
     scope: String,
-    val azureGraphService : IAzureGraphService,
     private val httpClient: HttpClient
 ) : IPdlService {
     private val log: Logger = LoggerFactory.getLogger(PdlService::class.java)
@@ -39,13 +34,10 @@ class PdlService(
     private val graphqlQueryHentIdent = getStringFromResource("/pdl/hentIdent.graphql")
 
     private val cachedAccessTokenClient = CachedAccessTokenClient(accessTokenClient)
-    private val pdlCacheVarighet = Duration.ofHours(7)
-    private data class AktørIdTilPersonCacheKey(val saksbehandlerIdent: String, val aktørId: String)
-    private val aktørIdTilPersonCache = Cache<AktørIdTilPersonCacheKey, PersonPdlResponse>(10_000)
-    private data class FrnTilAktørIdCacheKey(val saksbehandlerIdent: String, val fnr: String)
-    private val fnrTilAktørIdCache = Cache<FrnTilAktørIdCacheKey, PdlResponse>(10_000)
 
-    override suspend fun person(aktorId: String): PersonPdlResponse {
+    override suspend fun person(aktorId: String, brukerkontekst: BrukerkontekstMedOmråde): PersonPdlResponse {
+        // PDL må autorisere hvert oppslag med dagens token, også etter tidligere vellykkede oppslag.
+        if (!brukerkontekst.harBasisTilgang) return PersonPdlResponse(true, null)
         if (aktorId.isEmpty()) {
             log.info("Forsøker å hente person med tom aktorId")
             return PersonPdlResponse(false, null)
@@ -56,12 +48,6 @@ class PdlService(
             mapOf("ident" to aktorId)
         )
 
-        val saksbehandlerIdent = coroutineContext.idToken().getNavIdent()
-        val cacheKey = AktørIdTilPersonCacheKey(saksbehandlerIdent, aktorId)
-        val cachedObject = aktørIdTilPersonCache.get(cacheKey)
-        if (cachedObject != null) {
-            return cachedObject.value
-        }
         val callId = UUID.randomUUID().toString()
         val json = Retry.retry(
             operation = "hente-person",
@@ -76,7 +62,7 @@ class PdlService(
             ) {
                 httpClient.post(personUrl) {
                     setBody(LosObjectMapper.instance.writeValueAsString(queryRequest))
-                    header(HttpHeaders.Authorization, authorizationHeader())
+                    header(HttpHeaders.Authorization, authorizationHeader(brukerkontekst.idToken))
                     header(HttpHeaders.Accept, "application/json")
                     header(HttpHeaders.ContentType, "application/json")
                     header(NavHeaders.Tema, "OMS")
@@ -89,17 +75,13 @@ class PdlService(
             if (response.status.isSuccess()) {
                 response.bodyAsText()
             } else {
-                log.warn("Error response = '${response.bodyAsText()}' fra '${response.request.url}'")
-                log.warn("HTTP ${response.status.value} ${response.status.description} aktorId callId: ${callId} ${coroutineContext.idToken().getUsername()}")
+                log.warn("Feil fra PDL: HTTP {}", response.status.value)
                 null
             }
         }
         try {
             val readValue = LosObjectMapper.instance.readValue<PersonPdl>(json!!)
             val resultat = PersonPdlResponse(false, readValue)
-            val now = LocalDateTime.now()
-            aktørIdTilPersonCache.removeExpiredObjects(now)
-            aktørIdTilPersonCache.set(cacheKey, CacheObject(resultat, now.plus(pdlCacheVarighet)))
             return resultat
         } catch (e: Exception) {
             try {
@@ -107,20 +89,19 @@ class PdlService(
 
                 if (value.errors.any { it.extensions?.code == "unauthorized" }) {
                     val resultat = PersonPdlResponse(true, null)
-                    //TODO vurder å cache her også
-                    //aktørIdTilPersonCache.set(cacheKey, CacheObject(resultat, LocalDateTime.now().plus(pdlCacheVarighet)))
                     return resultat
                 } else {
-                    log.warn("Fikk ukjent error fra pdl (noe annet enn 'unauthorized'): ${value.errors.joinToString(",")}", e)
+                    log.warn("Fikk ukjent feil fra PDL (noe annet enn 'unauthorized')")
                 }
             } catch (e: Exception) {
-                log.warn("Ukjent feil ved tolkning av error fra pdl", e)
+                log.warn("Ukjent feil ved tolkning av svar fra PDL")
             }
             return PersonPdlResponse(false, null)
         }
     }
 
-    override suspend fun identifikator(fnummer: String): PdlResponse {
+    override suspend fun identifikator(fnummer: String, brukerkontekst: BrukerkontekstMedOmråde): PdlResponse {
+        if (!brukerkontekst.harBasisTilgang) return PdlResponse(true, null)
         val queryRequest = QueryRequest(
             graphqlQueryHentIdent,
             mapOf(
@@ -129,13 +110,6 @@ class PdlService(
                 "grupper" to listOf("AKTORID")
             )
         )
-
-        val saksbehandlerIdent = coroutineContext.idToken().getNavIdent()
-        val cacheKey = FrnTilAktørIdCacheKey(saksbehandlerIdent, fnummer)
-        val cachedObject = fnrTilAktørIdCache.get(cacheKey)
-        if (cachedObject != null) {
-            return cachedObject.value
-        }
 
         val callId = UUID.randomUUID().toString()
         val json = Retry.retry(
@@ -151,7 +125,7 @@ class PdlService(
             ) {
                 httpClient.post(personUrl) {
                     setBody(LosObjectMapper.instance.writeValueAsString(queryRequest))
-                    header(HttpHeaders.Authorization, authorizationHeader())
+                    header(HttpHeaders.Authorization, authorizationHeader(brukerkontekst.idToken))
                     header(HttpHeaders.Accept, "application/json")
                     header(HttpHeaders.ContentType, "application/json")
                     header(NavHeaders.Tema, "OMS")
@@ -164,30 +138,24 @@ class PdlService(
             if (response.status.isSuccess()) {
                 response.bodyAsText()
             } else {
-                log.warn("Error response = '${response.bodyAsText()}' fra '${response.request.url}'")
-                log.warn("HTTP ${response.status.value} ${response.status.description}")
+                log.warn("Feil fra PDL: HTTP {}", response.status.value)
                 null
             }
         }
         try {
             val resultat = PdlResponse(false, LosObjectMapper.instance.readValue<AktøridPdl>(json!!))
-            val now = LocalDateTime.now()
-            fnrTilAktørIdCache.removeExpiredObjects(now)
-            fnrTilAktørIdCache.set(cacheKey, CacheObject(resultat, now.plus(pdlCacheVarighet)))
             return resultat
         } catch (e: Exception) {
             try {
                 val value = LosObjectMapper.instance.readValue<Error>(json!!)
-                log.warn("Fikk pdl-feil ${value.errors.joinToString(",")}", e)
+                log.warn("Fikk feil fra PDL")
 
                 if (value.errors.any { it.extensions?.code == "unauthorized" }) {
                     val resultat = PdlResponse(true, null)
-                    //TODO vurder å cache her også
-                    //fnrTilAktørIdCache.set(cacheKey, CacheObject(resultat, LocalDateTime.now().plus(pdlCacheVarighet)))
                     return resultat
                 }
             } catch (e: Exception) {
-                log.warn("", e)
+                log.warn("Ukjent feil ved tolkning av svar fra PDL")
             }
             return PdlResponse(false, null)
         }
@@ -203,15 +171,14 @@ class PdlService(
         )
     }
 
-    private suspend fun authorizationHeader() = cachedAccessTokenClient.getOnBehalfOfAccessToken(
+    private fun authorizationHeader(idToken: IIdToken) = cachedAccessTokenClient.getOnBehalfOfAccessToken(
         scopes = scopes,
-        onBehalfOf = coroutineContext.idToken().value
+        onBehalfOf = idToken.value
     ).asAuthoriationHeader()
 
     private fun getStringFromResource(path: String) =
         PdlService::class.java.getResourceAsStream(path).bufferedReader().use { it.readText() }
 
 }
-
 
 

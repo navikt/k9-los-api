@@ -1,4 +1,4 @@
-package no.nav.k9.los.oppgaveuthenting.query
+package no.nav.k9.los.query
 
 import assertk.assertThat
 import assertk.assertions.*
@@ -18,12 +18,16 @@ import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.kodeverk.PersonBeskyttelseType
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
+import no.nav.k9.los.oppgaveuthenting.OppgaveRepository
+import no.nav.k9.los.oppgaveuthenting.query.Avgrensning
+import no.nav.k9.los.oppgaveuthenting.query.OppgaveQueryService
+import no.nav.k9.los.oppgaveuthenting.query.QueryRequest
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.*
 import no.nav.k9.los.oppgaveuthenting.query.mapping.CombineOperator
 import no.nav.k9.los.oppgaveuthenting.query.mapping.EksternFeltverdiOperator
 import no.nav.k9.los.reservasjon.ReservasjonV3Tjeneste
-import no.nav.k9.los.saksbehandleradmin.TestSaksbehandlerRepository
-import no.nav.k9.los.oppgaveuthenting.OppgaveRepository
+import no.nav.k9.los.saksbehandleradmin.Saksbehandler
+import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.koin.test.get
@@ -33,7 +37,6 @@ import java.io.StringWriter
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
-import no.nav.k9.los.saksbehandleradmin.OpprettSaksbehandler
 
 class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
 
@@ -72,7 +75,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
         val json = sw.toString()
         om.readValue(json, OppgaveQuery::class.java)
 
-        val result = queryForOppgave(QueryRequest(oppgaveQuery))
+        val result = queryForOppgave(queryRequest(oppgaveQuery))
         assertThat(result).isEmpty()
     }
 
@@ -88,7 +91,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
             )
         )
 
-        val result = queryForOppgave(QueryRequest(oppgaveQuery))
+        val result = queryForOppgave(queryRequest(oppgaveQuery))
         assertThat(result).isNotEmpty()
     }
 
@@ -100,7 +103,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
 
         assertThat(
             queryForOppgave(
-                QueryRequest(
+                queryRequest(
                     OppgaveQuery(
                         listOf(
                             byggFilter(
@@ -116,10 +119,14 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
 
         assertThat(
             queryForOppgave(
-                QueryRequest(
+                queryRequest(
                     OppgaveQuery(
                         listOf(
-                            byggFilter(FeltType.MOTTATT_DATO, EksternFeltverdiOperator.LESS_THAN, "2023-05-15T00:00:00.000"),
+                            byggFilter(
+                                FeltType.MOTTATT_DATO,
+                                EksternFeltverdiOperator.LESS_THAN,
+                                "2023-05-15T00:00:00.000"
+                            ),
                         )
                     )
                 )
@@ -128,7 +135,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
 
         assertThat(
             queryForOppgave(
-                QueryRequest(
+                queryRequest(
                     OppgaveQuery(
                         listOf(
                             byggFilter(
@@ -144,10 +151,14 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
 
         assertThat(
             queryForOppgave(
-                QueryRequest(
+                queryRequest(
                     OppgaveQuery(
                         listOf(
-                            byggFilter(FeltType.MOTTATT_DATO, EksternFeltverdiOperator.LESS_THAN, "2023-05-16T00:00:00.000"),
+                            byggFilter(
+                                FeltType.MOTTATT_DATO,
+                                EksternFeltverdiOperator.LESS_THAN,
+                                "2023-05-16T00:00:00.000"
+                            ),
                         )
                     )
                 )
@@ -164,7 +175,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
 
         assertThat(
             queryForOppgave(
-                QueryRequest(
+                queryRequest(
                     OppgaveQuery(
                         listOf(
                             byggFilter(
@@ -180,10 +191,14 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
 
         assertThat(
             queryForOppgave(
-                QueryRequest(
+                queryRequest(
                     OppgaveQuery(
                         listOf(
-                            byggFilter(FeltType.MOTTATT_DATO, EksternFeltverdiOperator.EQUALS, "2023-05-15T00:00:00.000"),
+                            byggFilter(
+                                FeltType.MOTTATT_DATO,
+                                EksternFeltverdiOperator.EQUALS,
+                                "2023-05-15T00:00:00.000"
+                            ),
                         )
                     )
                 )
@@ -192,7 +207,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
 
         assertThat(
             queryForOppgave(
-                QueryRequest(
+                queryRequest(
                     OppgaveQuery(
                         listOf(
                             byggFilter(
@@ -217,17 +232,21 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
 
         assertThat(
             queryForOppgave(
-                QueryRequest(
+                queryRequest(
                     OppgaveQuery(
                         listOf(
-                            byggFilter(FeltType.MOTTATT_DATO, EksternFeltverdiOperator.LESS_THAN_OR_EQUALS, "2023-05-16"),
+                            byggFilter(
+                                FeltType.MOTTATT_DATO,
+                                EksternFeltverdiOperator.LESS_THAN_OR_EQUALS,
+                                "2023-05-16"
+                            ),
                         )
                     )
                 )
             )
         ).isNotEmpty()
 
-        val request = QueryRequest(
+        val request = queryRequest(
             OppgaveQuery(
                 listOf(
                     byggFilter(FeltType.MOTTATT_DATO, EksternFeltverdiOperator.EQUALS, "2023-05-15"),
@@ -242,10 +261,14 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
 
         assertThat(
             queryForOppgave(
-                QueryRequest(
+                queryRequest(
                     OppgaveQuery(
                         listOf(
-                            byggFilter(FeltType.MOTTATT_DATO, EksternFeltverdiOperator.GREATER_THAN_OR_EQUALS, "2023-05-14"),
+                            byggFilter(
+                                FeltType.MOTTATT_DATO,
+                                EksternFeltverdiOperator.GREATER_THAN_OR_EQUALS,
+                                "2023-05-14"
+                            ),
                         )
                     )
                 )
@@ -263,7 +286,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
 
         assertThat(
             queryForOppgave(
-                QueryRequest(
+                queryRequest(
                     OppgaveQuery(
                         listOf(
                             byggFilter(FeltType.BEHANDLINGUUID, EksternFeltverdiOperator.EQUALS, behandlingUuid),
@@ -276,7 +299,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
 
         assertThat(
             queryForOppgave(
-                QueryRequest(
+                queryRequest(
                     OppgaveQuery(
                         listOf(
                             byggFilter(FeltType.BEHANDLINGUUID, EksternFeltverdiOperator.EQUALS, behandlingUuid),
@@ -289,7 +312,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
 
         assertThat(
             queryForOppgave(
-                QueryRequest(
+                queryRequest(
                     OppgaveQuery(
                         listOf(
                             byggFilter(FeltType.BEHANDLINGUUID, EksternFeltverdiOperator.EQUALS, behandlingUuid),
@@ -302,7 +325,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
 
         assertThat(
             queryForOppgave(
-                QueryRequest(
+                queryRequest(
                     OppgaveQuery(
                         listOf(
                             byggFilter(FeltType.BEHANDLINGUUID, EksternFeltverdiOperator.EQUALS, behandlingUuid),
@@ -315,7 +338,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
 
         assertThat(
             queryForOppgave(
-                QueryRequest(
+                queryRequest(
                     OppgaveQuery(
                         listOf(
                             byggFilter(FeltType.BEHANDLINGUUID, EksternFeltverdiOperator.EQUALS, behandlingUuid),
@@ -328,7 +351,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
 
         assertThat(
             queryForOppgave(
-                QueryRequest(
+                queryRequest(
                     OppgaveQuery(
                         listOf(
                             byggFilter(FeltType.BEHANDLINGUUID, EksternFeltverdiOperator.EQUALS, behandlingUuid),
@@ -351,7 +374,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
 
         assertThat(
             queryForOppgave(
-                QueryRequest(
+                queryRequest(
                     OppgaveQuery(
                         listOf(
                             byggFilter(FeltType.BEHANDLINGUUID, EksternFeltverdiOperator.EQUALS, behandlingUuid),
@@ -364,7 +387,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
 
         assertThat(
             queryForOppgave(
-                QueryRequest(
+                queryRequest(
                     OppgaveQuery(
                         listOf(
                             byggFilter(FeltType.BEHANDLINGUUID, EksternFeltverdiOperator.EQUALS, behandlingUuid),
@@ -377,7 +400,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
 
         assertThat(
             queryForOppgave(
-                QueryRequest(
+                queryRequest(
                     OppgaveQuery(
                         listOf(
                             byggFilter(FeltType.BEHANDLINGUUID, EksternFeltverdiOperator.EQUALS, behandlingUuid),
@@ -390,7 +413,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
 
         assertThat(
             queryForOppgave(
-                QueryRequest(
+                queryRequest(
                     OppgaveQuery(
                         listOf(
                             byggFilter(FeltType.BEHANDLINGUUID, EksternFeltverdiOperator.EQUALS, behandlingUuid),
@@ -403,7 +426,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
 
         assertThat(
             queryForOppgave(
-                QueryRequest(
+                queryRequest(
                     OppgaveQuery(
                         listOf(
                             byggFilter(FeltType.BEHANDLINGUUID, EksternFeltverdiOperator.EQUALS, behandlingUuid),
@@ -416,7 +439,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
 
         assertThat(
             queryForOppgave(
-                QueryRequest(
+                queryRequest(
                     OppgaveQuery(
                         listOf(
                             byggFilter(FeltType.BEHANDLINGUUID, EksternFeltverdiOperator.EQUALS, behandlingUuid),
@@ -439,7 +462,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
 
         assertThat(
             queryForOppgave(
-                QueryRequest(
+                queryRequest(
                     OppgaveQuery(
                         listOf(
                             byggFilter(FeltType.BEHANDLINGUUID, EksternFeltverdiOperator.EQUALS, behandlingUuid),
@@ -456,7 +479,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
 
         assertThat(
             queryForOppgave(
-                QueryRequest(
+                queryRequest(
                     OppgaveQuery(
                         listOf(
                             byggFilter(FeltType.BEHANDLINGUUID, EksternFeltverdiOperator.EQUALS, behandlingUuid),
@@ -474,7 +497,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
 
         assertThat(
             queryForOppgave(
-                QueryRequest(
+                queryRequest(
                     OppgaveQuery(
                         listOf(
                             byggFilter(FeltType.BEHANDLINGUUID, EksternFeltverdiOperator.EQUALS, behandlingUuid),
@@ -499,11 +522,11 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
             .lagOgLagre()
 
 
-        assertThat(queryForOppgave(QueryRequest(OppgaveQuery(listOf())))).isNotEmpty()
+        assertThat(queryForOppgave(queryRequest(OppgaveQuery(listOf())))).isNotEmpty()
 
         assertThat(
             queryForOppgave(
-                QueryRequest(
+                queryRequest(
                     OppgaveQuery(
                         listOf(
                             byggFilter(FeltType.BEHANDLINGUUID, EksternFeltverdiOperator.IN),
@@ -527,7 +550,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
             )
         )
 
-        val result = queryForOppgave(QueryRequest(oppgaveQuery))
+        val result = queryForOppgave(queryRequest(oppgaveQuery))
         assertThat(result).hasSize(1)
     }
 
@@ -544,7 +567,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
             )
         )
 
-        val result = queryForOppgave(QueryRequest(oppgaveQuery))
+        val result = queryForOppgave(queryRequest(oppgaveQuery))
         assertThat(result).hasSize(1)
     }
 
@@ -561,7 +584,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
             )
         )
 
-        val result = queryForOppgave(QueryRequest(oppgaveQuery))
+        val result = queryForOppgave(queryRequest(oppgaveQuery))
         assertThat(result).isEmpty()
     }
 
@@ -575,11 +598,11 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
             )
         )
 
-        assertThat(queryForOppgave(QueryRequest(query))).isNotEmpty()
+        assertThat(queryForOppgave(queryRequest(query))).isNotEmpty()
     }
 
-    @Test // Ikke tilgangskontroll, men kun ment for ytelsesoptimalisering
-    fun `Resultat skal inneholde alle resultat uavhengig av forespurt sikkerhetsklassifisering hvis pepcache mangler`() {
+    @Test
+    fun `ukjent klassifisering skal ikke matche et klassifiseringsfilter`() {
         val eksternId = lagOppgave()
 
         val query = OppgaveQuery(
@@ -593,7 +616,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
             )
         )
 
-        assertThat(queryForOppgave(QueryRequest(query))).isNotEmpty()
+        assertThat(queryForOppgave(queryRequest(query))).isEmpty()
     }
 
     @Test
@@ -613,7 +636,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
             )
         )
 
-        assertThat(queryForOppgave(QueryRequest(query))).isNotEmpty()
+        assertThat(queryForOppgave(queryRequest(query))).isNotEmpty()
     }
 
     @Test
@@ -633,7 +656,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
             )
         )
 
-        assertThat(queryForOppgave(QueryRequest(query))).isNotEmpty()
+        assertThat(queryForOppgave(queryRequest(query))).isNotEmpty()
     }
 
     @Test
@@ -654,16 +677,17 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
             )
         )
 
-        assertThat(queryForOppgave(QueryRequest(query))).isEmpty()
+        assertThat(queryForOppgave(queryRequest(query))).isEmpty()
     }
 
     @Test
     fun `Beslutter-kø skal inneholde oppgaver for k9sak-behandlinger med aksjonspunkt 5016`() {
-        OppgaveTestDataBuilder()
+        val oppgave = OppgaveTestDataBuilder()
             .medOppgaveFeltVerdi(FeltType.BEHANDLINGUUID, UUID.randomUUID().toString())
             .medOppgaveFeltVerdi(FeltType.LØSBART_AKSJONSPUNKT, "5016")
             .medOppgaveFeltVerdi(FeltType.LIGGER_HOS_BESLUTTER, true.toString())
             .lagOgLagre()
+        lagPepCacheFor(oppgave.eksternId)
 
         val query = OppgaveQuery(
             listOf(
@@ -675,16 +699,17 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
                 )
             )
         )
-        assertThat(queryForOppgave(QueryRequest(query))).hasSize(1)
+        assertThat(queryForOppgave(queryRequest(query))).hasSize(1)
     }
 
     @Test
     fun `Beslutter-kø skal inneholde oppgaver for k9klage-behandlinger med aksjonspunkt 5016`() {
-        OppgaveTestDataBuilder(definisjonskilde = "k9-klage-til-los", oppgaveTypeNavn = "k9klage")
+        val oppgave = OppgaveTestDataBuilder(definisjonskilde = "k9-klage-til-los", oppgaveTypeNavn = "k9klage")
             .medOppgaveFeltVerdi(FeltType.BEHANDLINGUUID, UUID.randomUUID().toString())
             .medOppgaveFeltVerdi(FeltType.LØSBART_AKSJONSPUNKT, "5016")
             .medOppgaveFeltVerdi(FeltType.LIGGER_HOS_BESLUTTER, true.toString())
             .lagOgLagre()
+        lagPepCacheFor(oppgave.eksternId)
 
         val query = OppgaveQuery(
             listOf(
@@ -696,7 +721,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
                 )
             )
         )
-        assertThat(queryForOppgave(QueryRequest(query))).hasSize(1)
+        assertThat(queryForOppgave(queryRequest(query))).hasSize(1)
     }
 
     @Test
@@ -707,6 +732,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
             .medOppgaveFeltVerdi(FeltType.LØSBART_AKSJONSPUNKT, "5005")
             .medOppgaveFeltVerdi(FeltType.LIGGER_HOS_BESLUTTER, true.toString())
             .lagOgLagre()
+        lagPepCacheFor(eksternId)
 
         val query = OppgaveQuery(
             listOf(
@@ -718,39 +744,44 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
                 )
             )
         )
-        assertThat(queryForOppgave(QueryRequest(query))).hasSize(1)
+        assertThat(queryForOppgave(queryRequest(query))).hasSize(1)
     }
 
     @Test
     fun `queryRequest som vil fjerne reserverte oppgaver skal kun få ureserverte`() {
-        val testSaksbehandlerRepository = get<TestSaksbehandlerRepository>()
+        val saksbehandlerRepository = get<SaksbehandlerRepository>()
 
-        val saksbehandler = runBlocking {
-            val ident = "test"
-            testSaksbehandlerRepository.opprettSaksbehandler(
-                OpprettSaksbehandler(
-                    ident,
-                    ident,
-                    ident + "@nav.no",
-                    enhet = "1234"
-                )
-            )
-            testSaksbehandlerRepository.hentAlleSaksbehandlere()
-        }.get(0)
+        val ident = "test"
+        val saksbehandlerId = saksbehandlerRepository.opprettSaksbehandler(ident + "@nav.no", Områder.K9)
+        saksbehandlerRepository.vedlikeholdSaksbehandler(
+            Saksbehandler(
+                saksbehandlerId,
+                ident,
+                ident,
+                ident + "@nav.no",
+                enhet = "1234",
+                områder = listOf(Områder.K9),
+                skjermet = false,
+                sistOppdatert = LocalDateTime.now(),
+            ),
+        )
+        val saksbehandler = saksbehandlerRepository.hentAlleSaksbehandlere(område = Områder.K9, skjermet = false).get(0)
 
         val builder = OppgaveTestDataBuilder()
         builder.lagOgLagre(Oppgavestatus.AAPEN)
         builder.lagre(builder.lag(reservasjonsnøkkel = "test"))
 
         val reservasjonstjeneste = get<ReservasjonV3Tjeneste>()
-        reservasjonstjeneste.taReservasjon(
-            "test",
-            saksbehandler.id,
-            saksbehandler.id,
-            "test",
-            LocalDateTime.now(),
-            LocalDateTime.now().plusDays(2)
-        )
+        runBlocking {
+            reservasjonstjeneste.taReservasjon(
+                "test",
+                saksbehandler.id,
+                saksbehandler.id,
+                "test",
+                LocalDateTime.now(),
+                LocalDateTime.now().plusDays(2)
+            )
+        }
 
         val query = OppgaveQuery(
             listOf(
@@ -764,9 +795,9 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
 
         val queryService = get<OppgaveQueryService>()
 
-        assertThat(queryService.queryForAntall(QueryRequest(query, fjernReserverte = true))).isEqualTo(1)
+        assertThat(queryService.queryForAntall(queryRequest(query, fjernReserverte = true))).isEqualTo(1)
 
-        assertThat(queryService.queryForAntall(QueryRequest(query, fjernReserverte = false))).isEqualTo(2)
+        assertThat(queryService.queryForAntall(queryRequest(query, fjernReserverte = false))).isEqualTo(2)
     }
 
     @Test
@@ -790,21 +821,21 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
 
         val queryService = get<OppgaveQueryService>()
 
-        assertThat(queryService.queryForAntall(QueryRequest(query))).isEqualTo(2)
+        assertThat(queryService.queryForAntall(queryRequest(query))).isEqualTo(2)
 
         assertThat(
             queryService.queryForOppgave(
-                QueryRequest(
+                queryRequest(
                     query,
                     avgrensning = Avgrensning.maxAntall(1)
                 )
             ).size
         ).isEqualTo(1)
 
-        assertThat(queryService.queryForAntall(QueryRequest(query))).isEqualTo(2)
+        assertThat(queryService.queryForAntall(queryRequest(query))).isEqualTo(2)
 
-        val søk1 = queryService.queryForOppgaveEksternId(QueryRequest(query, avgrensning = Avgrensning.paginert(1, 1)))
-        val søk2 = queryService.queryForOppgaveEksternId(QueryRequest(query, avgrensning = Avgrensning.paginert(1, 2)))
+        val søk1 = queryService.queryForOppgaveEksternId(queryRequest(query, avgrensning = Avgrensning.paginert(1, 1)))
+        val søk2 = queryService.queryForOppgaveEksternId(queryRequest(query, avgrensning = Avgrensning.paginert(1, 2)))
 
         assertThat(søk1.size).isEqualTo(1)
         assertThat(søk2.size).isEqualTo(1)
@@ -828,7 +859,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
             )
         )
 
-        assertThat(queryForOppgave(QueryRequest(oppgaveQuery)).size).isEqualTo(1)
+        assertThat(queryForOppgave(queryRequest(oppgaveQuery)).size).isEqualTo(1)
     }
 
     @Test
@@ -846,7 +877,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
             )
         )
 
-        assertThat(queryForOppgave(QueryRequest(oppgaveQuery)).size).isEqualTo(1)
+        assertThat(queryForOppgave(queryRequest(oppgaveQuery)).size).isEqualTo(1)
 
         val oppgaveQuery2 = OppgaveQuery(
             listOf(
@@ -854,14 +885,14 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
             )
         )
 
-        assertThat(queryForOppgave(QueryRequest(oppgaveQuery2)).size).isEqualTo(0)
+        assertThat(queryForOppgave(queryRequest(oppgaveQuery2)).size).isEqualTo(0)
 
         val oppgaveQuery4 = OppgaveQuery(
             listOf(
             )
         )
 
-        assertThat(queryForOppgave(QueryRequest(oppgaveQuery4)).size).isEqualTo(2)
+        assertThat(queryForOppgave(queryRequest(oppgaveQuery4)).size).isEqualTo(2)
 
         val oppgaveQuery5 = OppgaveQuery(
             listOf(
@@ -874,7 +905,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
             )
         )
 
-        assertThat(queryForOppgave(QueryRequest(oppgaveQuery5)).size).isEqualTo(2)
+        assertThat(queryForOppgave(queryRequest(oppgaveQuery5)).size).isEqualTo(2)
     }
 
     @Test
@@ -895,7 +926,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
             )
         )
 
-        assertThat(queryForOppgave(QueryRequest(query))).isEmpty()
+        assertThat(queryForOppgave(queryRequest(query))).isEmpty()
     }
 
     @Test
@@ -914,7 +945,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
             )
 
         val resultat = get<OppgaveQueryService>().queryForOppgaveEksternId(
-            QueryRequest(
+            queryRequest(
                 OppgaveQuery(
                     filtere = listOf(
                         byggFilter(FeltType.FERDIGSTILT_DATO, EksternFeltverdiOperator.EQUALS, "2025-01-01"),
@@ -922,7 +953,8 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
                     ),
                     select = listOf(),
                 )
-            ))
+            )
+        )
         assertThat(resultat.map { it.eksternId }).containsOnly(oppgaveLukketFørsteJanuar.eksternId)
     }
 
@@ -936,7 +968,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
         )
 
         val resultat = executeQuery(
-            QueryRequest(
+            queryRequest(
                 OppgaveQuery(
                     filtere = listOf(
                         byggFilter(FeltType.OPPGAVE_STATUS, EksternFeltverdiOperator.EQUALS, "LUKKET"),
@@ -972,7 +1004,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
         )
 
         val queryService = get<OppgaveQueryService>()
-        val resultat = queryService.query(QueryRequest(query))
+        val resultat = queryService.query(queryRequest(query))
 
         val grupper = resultat
         assertThat(grupper).hasSize(2)
@@ -1000,7 +1032,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
         )
 
         val queryService = get<OppgaveQueryService>()
-        val resultat = queryService.query(QueryRequest(query))
+        val resultat = queryService.query(queryRequest(query))
 
         val grupper = resultat
         assertThat(grupper).hasSize(2)
@@ -1031,7 +1063,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
         )
 
         val queryService = get<OppgaveQueryService>()
-        assertThat(queryService.queryForAntall(QueryRequest(query))).isEqualTo(3L)
+        assertThat(queryService.queryForAntall(queryRequest(query))).isEqualTo(3L)
     }
 
     @Test
@@ -1055,7 +1087,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
         )
 
         val queryService = get<OppgaveQueryService>()
-        val resultat = queryService.query(QueryRequest(query))
+        val resultat = queryService.query(queryRequest(query))
 
         val grupper = resultat
         assertThat(grupper.map { it.feltverdier.first().verdi }).containsExactly("BT-002", "BT-004")
@@ -1084,7 +1116,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
             ),
         )
 
-        val resultat = get<OppgaveQueryService>().query(QueryRequest(query))
+        val resultat = get<OppgaveQueryService>().query(queryRequest(query))
 
         val grupper = resultat
         assertThat(grupper.map { it.feltverdier.first().verdi }).containsExactly("BT-001", "BT-002", "BT-003")
@@ -1114,7 +1146,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
             ),
         )
 
-        val resultat = get<OppgaveQueryService>().query(QueryRequest(query))
+        val resultat = get<OppgaveQueryService>().query(queryRequest(query))
 
         val grupper = resultat
         assertThat(grupper.map { it.feltverdier.first().verdi }).containsExactly("BT-001", "BT-003", "BT-002")
@@ -1145,7 +1177,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
         )
 
         val exception = assertThrows<IllegalArgumentException> {
-            get<OppgaveQueryService>().query(QueryRequest(query))
+            get<OppgaveQueryService>().query(queryRequest(query))
         }
         assertThat(exception.message).isNotNull().contains("Fant ingen aggregert felt for sortering")
     }
@@ -1171,7 +1203,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
         )
 
         val exception = assertThrows<IllegalArgumentException> {
-            get<OppgaveQueryService>().query(QueryRequest(query))
+            get<OppgaveQueryService>().query(queryRequest(query))
         }
         assertThat(exception.message).isNotNull().contains("Aggregert sortering er tvetydig")
     }
@@ -1194,7 +1226,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
             ),
         )
 
-        val resultat = get<OppgaveQueryService>().query(QueryRequest(query))
+        val resultat = get<OppgaveQueryService>().query(queryRequest(query))
 
         val rad = resultat.single()
         assertThat(rad.aggregeringer.first { it.type == Aggregeringsfunksjon.SUM }.verdi).isEqualTo(300L)
@@ -1219,7 +1251,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
             ),
         )
 
-        val resultat = get<OppgaveQueryService>().query(QueryRequest(query))
+        val resultat = get<OppgaveQueryService>().query(queryRequest(query))
 
         val rad = resultat.single()
         assertThat(checkNotNull(rad.aggregeringer.first { it.type == Aggregeringsfunksjon.MIN }.verdi)).isInstanceOf<String>().startsWith("2023-05-14 08:15:00")
@@ -1241,10 +1273,54 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
         )
 
         val exception = assertThrows<IllegalArgumentException> {
-            get<OppgaveQueryService>().query(QueryRequest(query))
+            get<OppgaveQueryService>().query(queryRequest(query))
         }
         assertThat(exception.message).isNotNull().contains("kun for heltallsfelt")
     }
+
+    @Test
+    fun `serverfilter avviser kode6 og ukjent cache uavhengig av brukerfilter og OR`() {
+        val ordinær = lagOppgaveMedPepCache()
+        val kode6 = lagOppgaveMedPepCache(kode6 = true)
+        lagOppgave()
+        val query = OppgaveQuery(filtere = listOf(
+            CombineOppgavefilter(CombineOperator.OR, listOf(
+                byggFilter(FeltType.PERSONBESKYTTELSE, EksternFeltverdiOperator.EQUALS, PersonBeskyttelseType.KODE6.kode),
+                byggFilter(FeltType.BEHANDLINGUUID, EksternFeltverdiOperator.NOT_EQUALS, "finnes-ikke"),
+            ))
+        ))
+        val service = get<OppgaveQueryService>()
+        val request = queryRequest(query).copy(harTilgangTilKode6 = false)
+
+        assertThat(service.queryForOppgave(request).map { it.eksternId }).containsExactly(ordinær)
+        assertThat(service.queryForAntall(request)).isEqualTo(1)
+        assertThat(service.queryForOppgaveEksternId(request).map { it.eksternId }).containsExactly(ordinær)
+        assertThat(service.queryForAntall(request.copy(oppgaveQuery = OppgaveQuery()))).isEqualTo(1)
+        assertThat(service.queryForOppgave(request.copy(harTilgangTilKode6 = true)).map { it.eksternId }.toSet())
+            .isEqualTo(setOf(ordinær, kode6))
+        assertThat(service.queryForAntall(request.copy(område = Områder.AKTIVITETSPENGER))).isEqualTo(0)
+    }
+
+    @Test
+    fun `ukjent cache er ikke ugradert og gir ingen brukertreff uten filter`() {
+        lagOppgave()
+        val service = get<OppgaveQueryService>()
+        for (kode6 in listOf(false, true)) {
+            val request = queryRequest(OppgaveQuery()).copy(harTilgangTilKode6 = kode6)
+            assertThat(service.queryForAntall(request)).isEqualTo(0)
+            assertThat(service.queryForOppgave(request)).isEmpty()
+        }
+        val query = OppgaveQuery(listOf(byggFilter(
+            FeltType.PERSONBESKYTTELSE, EksternFeltverdiOperator.EQUALS, PersonBeskyttelseType.UGRADERT.kode
+        )))
+        assertThat(service.queryForAntall(queryRequest(query))).isEqualTo(0)
+    }
+
+    private fun queryRequest(
+        oppgaveQuery: OppgaveQuery,
+        fjernReserverte: Boolean = false,
+        avgrensning: Avgrensning? = null
+    ): QueryRequest = QueryRequest(oppgaveQuery, fjernReserverte, avgrensning, område = Områder.K9)
 
     private fun queryForOppgave(request: QueryRequest) = get<OppgaveQueryService>().queryForOppgave(request)
 
@@ -1293,7 +1369,8 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
                     kode6 = kode6,
                     kode7 = kode7,
                     egenAnsatt = egenAnsatt,
-                    oppdatert = LocalDateTime.now()
+                    oppdatert = LocalDateTime.now(),
+                    område = Områder.K9
                 ), tx
             )
         }

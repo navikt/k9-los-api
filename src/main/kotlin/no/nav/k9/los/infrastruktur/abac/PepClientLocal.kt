@@ -1,67 +1,31 @@
 package no.nav.k9.los.infrastruktur.abac
 
+import no.nav.k9.los.infrastruktur.brukerkontekst.BrukerkontekstMedOmråde
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.Oppgave
 import no.nav.k9.los.saksbehandleradmin.Saksbehandler
 import no.nav.sif.abac.kontrakt.abac.Diskresjonskode
 
 class PepClientLocal : IPepClient {
-    override suspend fun erOppgaveStyrer(): Boolean {
+    override suspend fun diskresjonskoderForSak(fagsakNummer: String, område: Områder): Set<Diskresjonskode> = emptySet()
+    override suspend fun diskresjonskoderForPerson(aktørId: String, område: Områder): Set<Diskresjonskode> = emptySet()
+
+    override suspend fun harTilgangTilOppgaveV3(
+        oppgave: Oppgave,
+        brukerkontekst: BrukerkontekstMedOmråde,
+        action: Action,
+    ): Boolean {
+        brukerkontekst.krevOmråde(oppgave.oppgavetype.område.tilOmrådeEnum())
         return true
-    }
-
-    override suspend fun harBasisTilgang(): Boolean {
-        return true
-    }
-
-    override suspend fun kanLeggeUtDriftsmelding(): Boolean {
-        return true
-    }
-
-    override suspend fun harTilgangTilReserveringAvOppgaver(): Boolean {
-        return true
-    }
-
-    override suspend fun harTilgangTilKode6(): Boolean {
-        return false
-    }
-
-    override suspend fun diskresjonskoderForSak(fagsakNummer: String): Set<Diskresjonskode> {
-        return setOf()
-    }
-
-    override suspend fun erSakKode6(fagsakNummer: String): Boolean {
-        return false
-    }
-
-    override suspend fun erSakKode7EllerEgenAnsatt(fagsakNummer: String): Boolean {
-        return false
-    }
-
-    override suspend fun diskresjonskoderForPerson(aktørId: String): Set<Diskresjonskode> {
-        return setOf()
-    }
-
-    override suspend fun erAktørKode6(aktørid: String): Boolean {
-        return false
-    }
-
-    override suspend fun erAktørKode7EllerEgenAnsatt(aktørid: String): Boolean {
-        return false
     }
 
     override suspend fun harTilgangTilOppgaveV3(
         oppgave: Oppgave,
-        action: Action
-    ): Boolean {
-        return true
-    }
-
-    override fun harTilgangTilOppgaveV3(
-        oppgave: Oppgave,
+        område: Områder,
         saksbehandler: Saksbehandler,
-        action: Action
+        action: Action,
     ): Boolean {
+        require(område == oppgave.oppgavetype.område.tilOmrådeEnum()) { "Oppgaven tilhører et annet område" }
         return true
     }
-
 }

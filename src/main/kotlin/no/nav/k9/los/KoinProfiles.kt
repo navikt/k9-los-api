@@ -50,15 +50,15 @@ import no.nav.k9.los.infrastruktur.abac.cache.PepCacheService
 import no.nav.k9.los.infrastruktur.azuregraph.AzureGraphService
 import no.nav.k9.los.infrastruktur.azuregraph.AzureGraphServiceLocal
 import no.nav.k9.los.infrastruktur.azuregraph.IAzureGraphService
+import no.nav.k9.los.infrastruktur.brukerkontekst.BrukerkontekstFactory
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.infrastruktur.db.hikariConfig
 import no.nav.k9.los.infrastruktur.metrikker.EventlagerNokkeltallPrometheusCollector
 import no.nav.k9.los.infrastruktur.metrikker.EventlagerNokkeltallRepository
+import no.nav.k9.los.innloggetbruker.InnloggetBrukerTjeneste
 import no.nav.k9.los.infrastruktur.pdl.IPdlService
 import no.nav.k9.los.infrastruktur.pdl.PdlService
 import no.nav.k9.los.infrastruktur.pdl.PdlServiceLocal
-import no.nav.k9.los.infrastruktur.rest.RequestContextService
-import no.nav.k9.los.innloggetbruker.InnloggetBrukerTjeneste
 import no.nav.k9.los.ko.KøpåvirkendeHendelse
 import no.nav.k9.los.ko.OppgaveKoTjeneste
 import no.nav.k9.los.ko.db.OppgaveKoRepository
@@ -77,6 +77,7 @@ import no.nav.k9.los.oppgaveuthenting.OppgaveRepository
 import no.nav.k9.los.oppgaveuthenting.enkeltoppslag.*
 import no.nav.k9.los.oppgaveuthenting.query.OppgaveQueryService
 import no.nav.k9.los.oppgaveuthenting.query.db.OppgaveQueryRepository
+import no.nav.k9.los.oppgaveuthenting.sammendrag.OppgaveSammendragDtoBuilder
 import no.nav.k9.los.reservasjon.ReservasjonApisTjeneste
 import no.nav.k9.los.reservasjon.ReservasjonV3DtoBuilder
 import no.nav.k9.los.reservasjon.ReservasjonV3Repository
@@ -85,7 +86,10 @@ import no.nav.k9.los.saksbehandleradmin.SaksbehandlerAdminTjeneste
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
 import no.nav.k9.los.sisteoppgaver.SisteOppgaverRepository
 import no.nav.k9.los.sisteoppgaver.SisteOppgaverTjeneste
+import no.nav.k9.los.søkeboks.Oppgavesøkere
 import no.nav.k9.los.søkeboks.SøkeboksTjeneste
+import no.nav.k9.los.søkeboks.aktivitetspenger.AktivitetspengerOppgavesøk
+import no.nav.k9.los.søkeboks.k9.K9Oppgavesøk
 import no.nav.k9.los.uttrekk.UttrekkCsvGenerator
 import no.nav.k9.los.uttrekk.UttrekkJobb
 import no.nav.k9.los.uttrekk.UttrekkRepository
@@ -94,8 +98,8 @@ import org.koin.core.module.Module
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
 import org.slf4j.LoggerFactory
-import java.time.Clock
 import java.util.*
+import java.time.Clock
 import javax.sql.DataSource
 
 fun selectModulesBasedOnProfile(application: Application, config: Configuration): List<Module> {
@@ -109,8 +113,9 @@ fun selectModulesBasedOnProfile(application: Application, config: Configuration)
 fun common(app: Application, config: Configuration) = module {
     single { config.koinProfile() }
     single { config }
-    single { RequestContextService(profile = get()) }
+    single { BrukerkontekstFactory(sifAbacPdpKlienter = get()) }
     single<DataSource> { app.hikariConfig(config) }
+    single { Clock.systemDefaultZone() }
 
     single(named("oppgaveKøOppdatert")) {
         Channel<UUID>(Channel.UNLIMITED)
@@ -128,13 +133,12 @@ fun common(app: Application, config: Configuration) = module {
     single { OppgaveRepository(get()) }
 
     single { TransactionalManager(dataSource = get()) }
-    single<Clock> { Clock.systemDefaultZone() }
 
     single {
         SaksbehandlerRepository(
             dataSource = get(),
-            pepClient = get(),
             transactionalManager = get(),
+            områdeRepository = get(),
         )
     }
 
@@ -252,7 +256,6 @@ fun common(app: Application, config: Configuration) = module {
 
     single {
         SaksbehandlerAdminTjeneste(
-            pepClient = get(),
             transactionalManager = get(),
             saksbehandlerRepository = get(),
             oppgaveKøV3Repository = get(),
@@ -265,9 +268,12 @@ fun common(app: Application, config: Configuration) = module {
     single {
         ReservasjonV3DtoBuilder(
             pdlService = get(),
-            saksbehandlerRepository = get()
+            saksbehandlerRepository = get(),
+            pepClient = get(),
         )
     }
+    single { Oppgavesøkere(k9 = K9Oppgavesøk(), aktivitetspenger = AktivitetspengerOppgavesøk()) }
+    single { OppgaveSammendragDtoBuilder(oppgavesøkere = get(), pdlService = get()) }
 
     single {
         DriftsmeldingTjeneste(driftsmeldingRepository = get())
@@ -281,7 +287,14 @@ fun common(app: Application, config: Configuration) = module {
 
     single { FeltdefinisjonRepository(områdeRepository = get()) }
     single { OmrådeRepository(get()) }
-    single { OppgavetypeRepository(dataSource = get(), feltdefinisjonRepository = get(), områdeRepository = get(), gyldigeFeltutledere = get()) }
+    single {
+        OppgavetypeRepository(
+            dataSource = get(),
+            feltdefinisjonRepository = get(),
+            områdeRepository = get(),
+            gyldigeFeltutledere = get()
+        )
+    }
     single {
         OppgaveV3Repository(
             dataSource = get(),
@@ -446,12 +459,14 @@ fun common(app: Application, config: Configuration) = module {
             pdlService = get(),
             køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
             feltdefinisjonTjeneste = get(),
+            oppgaveSammendragDtoBuilder = get(),
         )
     }
 
     single {
         OppgaveKoRepository(
-            datasource = get()
+            datasource = get(),
+            områdeRepository = get(),
         )
     }
 
@@ -467,6 +482,7 @@ fun common(app: Application, config: Configuration) = module {
     single {
         ReservasjonV3Repository(
             transactionalManager = get(),
+            områdeRepository = get(),
         )
     }
 
@@ -505,11 +521,12 @@ fun common(app: Application, config: Configuration) = module {
             reservasjonV3DtoBuilder = get(),
             aktivOppgaveOppslag = get(),
             pepClient = get(),
+            oppgaveSammendragDtoBuilder = get(),
         )
     }
 
     single {
-        PepCacheRepository(dataSource = get())
+        PepCacheRepository(dataSource = get(), områdeRepository = get())
     }
 
     single {
@@ -542,9 +559,11 @@ fun common(app: Application, config: Configuration) = module {
 
     single {
         SøkeboksTjeneste(
-            queryService = get(),
             pdlService = get(),
             pepClient = get(),
+            oppgaveSammendragDtoBuilder = get(),
+            queryService = get(),
+            oppgavesøkere = get(),
         )
     }
 
@@ -598,7 +617,8 @@ fun common(app: Application, config: Configuration) = module {
         LagretSøkTjeneste(
             lagretSøkRepository = get(),
             saksbehandlerRepository = get(),
-            oppgaveQueryService = get()
+            oppgaveQueryService = get(),
+            transactionalManager = get(),
         )
     }
 
@@ -629,6 +649,8 @@ fun common(app: Application, config: Configuration) = module {
 
 // Kun lokalt, og verdikjede
 fun localDevConfig() = module {
+    single<ISifAbacPdpKlient> { SifAbacPdpKlientLocal() }
+    single { SifAbacPdpKlienter(k9 = get(), aktivitetspenger = get()) }
     single<IAzureGraphService> {
         AzureGraphServiceLocal()
     }
@@ -705,7 +727,10 @@ fun naisCommonConfig() = module {
     }
 
     single<IPepClient> {
-        PepClient(azureGraphService = get(), get())
+        PepClient(
+            azureGraphService = get(),
+            sifAbacPdpKlienter = get(),
+        )
     }
 }
 
@@ -727,7 +752,6 @@ fun preprodConfig(config: Configuration) = module {
             baseUrl = config.pdlUrl(),
             accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
             scope = "api://dev-fss.pdl.pdl-api/.default",
-            azureGraphService = get<IAzureGraphService>(),
             httpClient = get()
         )
     }
@@ -751,12 +775,20 @@ fun preprodConfig(config: Configuration) = module {
         )
     }
 
-    single<ISifAbacPdpKlient> {
-        SifAbacPdpKlient(
-            configuration = get(),
-            accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
-            scope = "api://dev-fss.k9saksbehandling.sif-abac-pdp/.default",
-            httpClient = get(named("sifAbacPdpHttpClient"))
+    single {
+        SifAbacPdpKlienter(
+            k9 = SifAbacPdpKlientK9(
+                configuration = get(),
+                accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
+                scope = "api://dev-fss.k9saksbehandling.sif-abac-pdp/.default",
+                httpClient = get(named("sifAbacPdpHttpClient"))
+            ),
+            aktivitetspenger = SifAbacPdpKlientAktivitetspenger(
+                configuration = get(),
+                accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
+                scope = "api://dev-fss.k9saksbehandling.sif-abac-pdp/.default",
+                httpClient = get(named("sifAbacPdpHttpClient"))
+            ),
         )
     }
 
@@ -805,7 +837,6 @@ fun prodConfig(config: Configuration) = module {
             baseUrl = config.pdlUrl(),
             accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
             scope = "api://prod-fss.pdl.pdl-api/.default",
-            azureGraphService = get<IAzureGraphService>(),
             httpClient = get()
         )
     }
@@ -829,12 +860,20 @@ fun prodConfig(config: Configuration) = module {
         )
     }
 
-    single<ISifAbacPdpKlient> {
-        SifAbacPdpKlient(
-            configuration = get(),
-            accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
-            scope = "api://prod-fss.k9saksbehandling.sif-abac-pdp/.default",
-            httpClient = get(named("sifAbacPdpHttpClient"))
+    single {
+        SifAbacPdpKlienter(
+            k9 = SifAbacPdpKlientK9(
+                configuration = get(),
+                accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
+                scope = "api://prod-fss.k9saksbehandling.sif-abac-pdp/.default",
+                httpClient = get(named("sifAbacPdpHttpClient"))
+            ),
+            aktivitetspenger = SifAbacPdpKlientAktivitetspenger(
+                configuration = get(),
+                accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
+                scope = "api://prod-fss.k9saksbehandling.sif-abac-pdp/.default",
+                httpClient = get(named("sifAbacPdpHttpClient"))
+            ),
         )
     }
 

@@ -5,28 +5,26 @@ import kotliquery.Row
 import no.nav.k9.los.infrastruktur.db.util.InClauseHjelper
 import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.kodeverk.PersonBeskyttelseType
-import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.Datatype
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
+import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.Datatype
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.*
 import no.nav.k9.los.oppgaveuthenting.query.dto.resultat.Aggregertverdi
 import no.nav.k9.los.oppgaveuthenting.query.dto.resultat.OppgaveQueryRad
 import no.nav.k9.los.oppgaveuthenting.query.dto.resultat.Oppgavefeltverdi
 import no.nav.k9.los.oppgaveuthenting.query.mapping.*
-import no.nav.k9.los.oppgaveuthenting.query.mapping.transientfeltutleder.OrderByInput
-import no.nav.k9.los.oppgaveuthenting.query.mapping.transientfeltutleder.SelectInput
-import no.nav.k9.los.oppgaveuthenting.query.mapping.transientfeltutleder.SqlMedParams
-import no.nav.k9.los.oppgaveuthenting.query.mapping.transientfeltutleder.TransientFeltutleder
-import no.nav.k9.los.oppgaveuthenting.query.mapping.transientfeltutleder.WhereInput
+import no.nav.k9.los.oppgaveuthenting.query.mapping.transientfeltutleder.*
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
 import java.time.LocalDateTime
-import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 
 class PartisjonertOppgaveQuerySqlBuilder(
     val felter: Map<OmrådeOgKode, OppgavefeltMedMer>,
     oppgavestatusFilter: List<Oppgavestatus>,
     val now: LocalDateTime,
     ferdigstiltDatoFilter: FeltverdiOppgavefilter?,
+    private val område: Områder,
+    private val harTilgangTilKode6: Boolean? = null,
 ) : OppgaveQuerySqlBuilder {
     private val log = LoggerFactory.getLogger(PartisjonertOppgaveQuerySqlBuilder::class.java)
 
@@ -93,10 +91,10 @@ class PartisjonertOppgaveQuerySqlBuilder(
     private var selectClause = "SELECT o.id, o.oppgave_ekstern_id, o.oppgave_ekstern_versjon"
     private var fromClause = """
         FROM oppgave_v3_part o
-        LEFT JOIN oppgave_pep_cache opc ON (opc.kildeomrade = 'K9' AND o.oppgave_ekstern_id = opc.ekstern_id)
+        LEFT JOIN oppgave_pep_cache opc ON (opc.kildeomrade = :omrade AND o.oppgave_ekstern_id = opc.ekstern_id)
     """.trimIndent()
 
-    private var whereClause = "WHERE o.oppgavestatus IN ($oppgavestatusPlaceholder) ${ferdigstiltDatoBetingelse("o")}"
+    private var whereClause = "o.oppgavestatus IN ($oppgavestatusPlaceholder) ${ferdigstiltDatoBetingelse("o")}"
     private val orderByClauses = mutableListOf<String>()
     private val orderByClause get() = if (orderByClauses.isNotEmpty()) "ORDER BY " + orderByClauses.joinToString(", ") else ""
     private var groupByClause = ""
@@ -130,7 +128,13 @@ class PartisjonertOppgaveQuerySqlBuilder(
     }
 
     override fun getQuery(): String {
-        return "$selectClause $fromClause $whereClause $groupByClause $orderByClause $pagingClause"
+        // Ressursgrensene ligger utenfor hele brukerfilteret, og kan ikke utvides med OR.
+        val tilgang = when (harTilgangTilKode6) {
+            false -> "AND opc.kode6 IS FALSE"
+            true -> "AND opc.kode6 IS NOT NULL"
+            null -> ""
+        }
+        return "$selectClause $fromClause WHERE o.omrade_ekstern_id = :omrade $tilgang AND ($whereClause) $groupByClause $orderByClause $pagingClause"
     }
 
     override fun utenReservasjoner() {
@@ -213,10 +217,10 @@ class PartisjonertOppgaveQuerySqlBuilder(
 
             "personbeskyttelse" -> {
                 whereClause += " ${combineOperator.sql} " + when (feltverdier.first()) {
-                    PersonBeskyttelseType.KODE6.kode -> "opc.kode6 IS NOT FALSE"
-                    PersonBeskyttelseType.UTEN_KODE6.kode -> "opc.kode6 IS NOT TRUE"
-                    PersonBeskyttelseType.KODE7_ELLER_EGEN_ANSATT.kode -> "(opc.kode6 IS NOT TRUE AND (opc.kode7 IS NOT FALSE OR opc.egen_ansatt IS NOT FALSE))"
-                    PersonBeskyttelseType.UGRADERT.kode -> "(opc.kode6 IS NOT TRUE AND opc.kode7 IS NOT TRUE AND opc.egen_ansatt IS NOT TRUE)"
+                    PersonBeskyttelseType.KODE6.kode -> "opc.kode6 IS TRUE"
+                    PersonBeskyttelseType.UTEN_KODE6.kode -> "opc.kode6 IS FALSE"
+                    PersonBeskyttelseType.KODE7_ELLER_EGEN_ANSATT.kode -> "(opc.kode6 IS FALSE AND (opc.kode7 IS TRUE OR opc.egen_ansatt IS TRUE))"
+                    PersonBeskyttelseType.UGRADERT.kode -> "(opc.kode6 IS FALSE AND opc.kode7 IS FALSE AND opc.egen_ansatt IS FALSE)"
                     else -> throw IllegalStateException("Ukjent verdi for personbeskyttelse: ${feltverdier.first()}")
                 }
             }
@@ -355,7 +359,7 @@ class PartisjonertOppgaveQuerySqlBuilder(
 
         return OppgaveQueryRad(
             oppgaveId = PartisjonertOppgaveId(row.long("id")),
-            eksternOppgaveId = EksternOppgaveId(Områder.K9, row.string("oppgave_ekstern_id")),
+            eksternOppgaveId = EksternOppgaveId(område, row.string("oppgave_ekstern_id")),
             feltverdier = feltverdier,
         )
     }
@@ -793,6 +797,7 @@ class PartisjonertOppgaveQuerySqlBuilder(
 
     override fun getParams(): Map<String, Any?> {
         return buildMap {
+            put("omrade", område.eksternId)
             putAll(queryParams)
             putAll(orderByParams)
             putAll(oppgavestatusParams)

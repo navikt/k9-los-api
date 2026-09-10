@@ -43,7 +43,7 @@ class OppgaveQueryToSqlMapperTest {
         )
 
         val oppgavestatuser = OppgaveQueryToSqlMapper.traverserFiltereOgFinnOppgavestatus(
-            QueryRequest(oppgaveQuery),
+            QueryRequest(område = Områder.K9, oppgaveQuery = oppgaveQuery),
         )
 
         assertThat(oppgavestatuser).containsOnly(Oppgavestatus.AAPEN, Oppgavestatus.LUKKET)
@@ -67,13 +67,13 @@ class OppgaveQueryToSqlMapperTest {
             )
         )
         val sqlBuilder = OppgaveQueryToSqlMapper.toSql(
-            QueryRequest(oppgaveQuery),
+            QueryRequest(område = Områder.K9, oppgaveQuery = oppgaveQuery),
             felter,
             LocalDateTime.now()
         )
 
         assertThat(sqlBuilder.getQuery()).contains(sqlBuilder.getParams().keys)
-        assertThat(sqlBuilder.getParams()).hasSize(11) // Antallet er spesifikt for partisjonerte tabeller
+        assertThat(sqlBuilder.getParams()).hasSize(12) // Antallet er spesifikt for partisjonerte tabeller. Inkluderer :område
     }
 
     @Test
@@ -95,13 +95,13 @@ class OppgaveQueryToSqlMapperTest {
             )
         )
         val sqlBuilder = OppgaveQueryToSqlMapper.toSql(
-            QueryRequest(oppgaveQuery),
+            QueryRequest(område = Områder.K9, oppgaveQuery = oppgaveQuery),
             felter,
             LocalDateTime.now()
         )
 
         assertThat(sqlBuilder.getQuery()).contains(sqlBuilder.getParams().keys)
-        assertThat(sqlBuilder.getParams()).hasSize(12)
+        assertThat(sqlBuilder.getParams()).hasSize(13) // Inkluderer :område
     }
 
     private fun byggFilter(

@@ -1,5 +1,6 @@
 package no.nav.k9.los.uttrekk
 
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.query.OppgaveQueryService
 import no.nav.k9.los.oppgaveuthenting.query.QueryRequest
 import org.slf4j.LoggerFactory
@@ -13,9 +14,20 @@ class UttrekkJobb(
     private val log = LoggerFactory.getLogger(UttrekkJobb::class.java)
 
     fun kjørUttrekk(uttrekkId: Long) {
+        val kandidat = uttrekkTjeneste.hent(uttrekkId) ?: return
+        if (kandidat.status != UttrekkStatus.OPPRETTET) return
+        if (kandidat.område != Områder.K9 || kandidat.harTilgangTilKode6 == null) {
+            uttrekkTjeneste.feilUttrekk(uttrekkId, "Område eller beskyttelsesnivå støttes ikke. Opprett et nytt uttrekk.")
+            return
+        }
         try {
             val uttrekk = uttrekkTjeneste.startUttrekk(uttrekkId)
-            var queryRequest = QueryRequest(uttrekk.query, avgrensning = uttrekk.avgrensning)
+            val queryRequest = QueryRequest(
+                uttrekk.query,
+                avgrensning = uttrekk.avgrensning,
+                område = uttrekk.område,
+                harTilgangTilKode6 = requireNotNull(uttrekk.harTilgangTilKode6),
+            )
 
             val resultat = oppgaveQueryService.query(queryRequest)
 

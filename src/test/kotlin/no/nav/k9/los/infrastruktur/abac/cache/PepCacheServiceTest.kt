@@ -10,8 +10,8 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import no.nav.helse.dusseldorf.ktor.jackson.dusseldorfConfigured
 import no.nav.k9.los.AbstractPostgresTest
-import no.nav.k9.los.buildAndTestConfig
 import no.nav.k9.los.FeltType
+import no.nav.k9.los.buildAndTestConfig
 import no.nav.k9.los.domeneadaptere.k9.OmrådeSetup
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.EventHendelse
 import no.nav.k9.los.domeneadaptere.eventlager.EventNøkkel
@@ -24,17 +24,19 @@ import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.infrastruktur.jobbplanlegger.Jobbplanlegger
 import no.nav.k9.los.infrastruktur.jobbplanlegger.PlanlagtJobb
 import no.nav.k9.los.infrastruktur.jobbplanlegger.Tidsvindu
+import no.nav.k9.los.infrastruktur.brukerkontekst.BrukerkontekstMedOmråde
+import no.nav.k9.los.infrastruktur.brukerkontekst.TestKontekstFactory
 import no.nav.k9.los.kodeverk.BehandlingStatus
 import no.nav.k9.los.kodeverk.Fagsystem
 import no.nav.k9.los.kodeverk.PersonBeskyttelseType
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
+import no.nav.k9.los.oppgaveuthenting.OppgaveRepository
 import no.nav.k9.los.oppgaveuthenting.query.OppgaveQueryService
 import no.nav.k9.los.oppgaveuthenting.query.QueryRequest
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.EnkelSelectFelt
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.OppgaveQuery
 import no.nav.k9.los.oppgaveuthenting.query.mapping.EksternFeltverdiOperator
-import no.nav.k9.los.oppgaveuthenting.OppgaveRepository
 import no.nav.k9.sak.typer.AktørId
 import no.nav.k9.sak.typer.JournalpostId
 import no.nav.sif.abac.kontrakt.abac.Diskresjonskode
@@ -72,7 +74,9 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
 
         runBlocking {
             // Gir tilgang til kode6 for å isolere testing av cache-oppdatering
-            coEvery { pepClient.harTilgangTilOppgaveV3(any(), any()) } returns true
+            coEvery {
+                pepClient.harTilgangTilOppgaveV3(any(), any<BrukerkontekstMedOmråde>(), any())
+            } returns true
         }
 
         val områdeSetup = get<OmrådeSetup>()
@@ -80,43 +84,38 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
     }
 
     fun gjørSakKode6(saksnummer: String) {
-        runBlocking {
-            coEvery { pepClient.erSakKode6(eq(saksnummer)) } returns true
-            coEvery { pepClient.erSakKode7EllerEgenAnsatt(eq(saksnummer)) } returns false
-            coEvery { pepClient.diskresjonskoderForSak(eq(saksnummer)) } returns setOf(Diskresjonskode.KODE6)
-        }
+        val område = Områder.K9
+        coEvery { pepClient.diskresjonskoderForSak(saksnummer, område) } returns setOf(Diskresjonskode.KODE6)
     }
 
     fun gjørSakOrdinær(saksnummer: String) {
-        runBlocking {
-            coEvery { pepClient.erSakKode6(eq(saksnummer)) } returns false
-            coEvery { pepClient.erSakKode7EllerEgenAnsatt(eq(saksnummer)) } returns false
-            coEvery { pepClient.diskresjonskoderForSak(eq(saksnummer)) } returns setOf()
-        }
+        val område = Områder.K9
+        coEvery { pepClient.diskresjonskoderForSak(saksnummer, område) } returns setOf()
     }
 
     fun gjørAktørKode6(aktørId: String) {
-        runBlocking {
-            coEvery { pepClient.erAktørKode6(eq(aktørId)) } returns true
-            coEvery { pepClient.erAktørKode7EllerEgenAnsatt(eq(aktørId)) } returns false
-            coEvery { pepClient.diskresjonskoderForPerson(eq(aktørId)) } returns setOf(Diskresjonskode.KODE6)
-        }
+        val område = Områder.K9
+        coEvery {
+            pepClient.diskresjonskoderForPerson(
+                aktørId,
+                område
+            )
+        } returns setOf(Diskresjonskode.KODE6)
     }
 
     fun gjørAktørKode7(aktørId: String) {
-        runBlocking {
-            coEvery { pepClient.erAktørKode6(eq(aktørId)) } returns false
-            coEvery { pepClient.erAktørKode7EllerEgenAnsatt(eq(aktørId)) } returns true
-            coEvery { pepClient.diskresjonskoderForPerson(eq(aktørId)) } returns setOf(Diskresjonskode.KODE7)
-        }
+        val område = Områder.K9
+        coEvery {
+            pepClient.diskresjonskoderForPerson(
+                aktørId,
+                område
+            )
+        } returns setOf(Diskresjonskode.KODE7)
     }
 
     fun gjørAktørOrdinær(aktørId: String) {
-        runBlocking {
-            coEvery { pepClient.erAktørKode6(eq(aktørId)) } returns false
-            coEvery { pepClient.erAktørKode7EllerEgenAnsatt(eq(aktørId)) } returns false
-            coEvery { pepClient.diskresjonskoderForPerson(eq(aktørId)) } returns setOf()
-        }
+        val område = Områder.K9
+        coEvery { pepClient.diskresjonskoderForPerson(aktørId, område) } returns setOf()
     }
 
 
@@ -155,6 +154,62 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
         assertThat(pepCache.kode7).isFalse()
         assertThat(pepCache.egenAnsatt).isFalse()
         assertThat(pepCache.oppdatert).isGreaterThan(LocalDateTime.now().minusMinutes(1))
+    }
+
+    @Test
+    fun `aktørløs K9-punsj lagres ved innlesing med ugradert cache`() {
+        val eksternId = UUID.randomUUID().toString()
+        get<no.nav.k9.los.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventHandler>()
+            .prosesser(lagPunsjBehandlingprosessEventMedStatus(eksternId, null)
+                .copy(aksjonspunktKoderMedStatusListe = mutableMapOf("PUNSJ" to "OPPR")))
+
+        val oppgave = get<TransactionalManager>().transaction { tx ->
+            get<OppgaveRepository>().hentNyesteOppgaveForEksternId(tx, Områder.K9, eksternId)
+        }
+        assertThat(oppgave.oppgavetype.eksternId).isEqualTo("k9punsj")
+        assertThat(oppgave.hentVerdi("aktorId")).isNull()
+        val cache = get<PepCacheRepository>().hent(Områder.K9, eksternId)!!
+        assertThat(cache.kode6).isFalse()
+        assertThat(cache.kode7).isFalse()
+        assertThat(cache.egenAnsatt).isFalse()
+        coVerify(exactly = 0) { pepClient.diskresjonskoderForSak(any(), any()); pepClient.diskresjonskoderForPerson(any(), any()) }
+    }
+
+    @Test
+    fun `refresh av aktørløs K9-punsj kommer videre til neste oppgave`() {
+        val punsjId = UUID.randomUUID().toString()
+        get<no.nav.k9.los.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventHandler>()
+            .prosesser(lagPunsjBehandlingprosessEventMedStatus(punsjId, null)
+                .copy(aksjonspunktKoderMedStatusListe = mutableMapOf("PUNSJ" to "OPPR")))
+        val nesteOppgave = no.nav.k9.los.OppgaveTestDataBuilder()
+            .medOppgaveFeltVerdi(FeltType.AKTØR_ID, "1234567890123")
+            .lagOgLagre()
+        val repository = get<PepCacheRepository>()
+        val gammel = LocalDateTime.now().minusDays(2).withNano(0)
+        get<TransactionalManager>().transaction { tx ->
+            repository.slett(Områder.K9, punsjId, tx)
+            repository.lagre(PepCache(nesteOppgave.eksternId, Områder.K9, false, false, false, gammel, Områder.K9), tx)
+            val først = repository.hentOppgaverMedStatusOgPepCacheEldreEnn(
+                LocalDateTime.now().minusHours(23), 1,
+                setOf(no.nav.k9.los.oppgavedefinisjon.Oppgavestatus.AAPEN, no.nav.k9.los.oppgavedefinisjon.Oppgavestatus.VENTER), tx,
+            ).single()
+            assertThat(først.eksternId).isEqualTo(punsjId)
+            assertThat(først.oppgavetype).isEqualTo("k9punsj")
+            assertThat(først.aktører).isEmpty()
+        }
+        gjørAktørKode6("1234567890123")
+        val service = get<PepCacheService>()
+
+        service.oppdaterCacheForÅpneOgVentendeOppgaverEldreEnn()
+        val punsjCache = repository.hent(Områder.K9, punsjId)!!
+        assertThat(punsjCache.kode6).isFalse()
+        assertThat(punsjCache.oppdatert).isGreaterThan(gammel)
+        assertThat(repository.hent(Områder.K9, nesteOppgave.eksternId)!!.oppdatert).isEqualTo(gammel)
+
+        service.oppdaterCacheForÅpneOgVentendeOppgaverEldreEnn()
+        assertThat(repository.hent(Områder.K9, nesteOppgave.eksternId)!!.kode6).isTrue()
+        assertThat(repository.hent(Områder.K9, punsjId)).isEqualTo(punsjCache)
+        coVerify(exactly = 1) { pepClient.diskresjonskoderForPerson("1234567890123", Områder.K9) }
     }
 
     @Test
@@ -246,6 +301,31 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
     }
 
     @Test
+    fun `refresh finner K9-oppgave selv om samme id har fersk cache i annet område`() {
+        val eksternId = UUID.randomUUID().toString()
+        val oppgave = no.nav.k9.los.OppgaveTestDataBuilder()
+            .medOppgaveFeltVerdi(FeltType.BEHANDLINGUUID, eksternId)
+            .medOppgaveFeltVerdi(FeltType.AKTØR_ID, "1234567890123")
+            .lagOgLagre()
+        val repository = get<PepCacheRepository>()
+        get<no.nav.k9.los.oppgavedefinisjon.omraade.OmrådeRepository>().lagre(Områder.AKTIVITETSPENGER)
+        gjørAktørKode6("1234567890123")
+        get<TransactionalManager>().transaction { tx ->
+            repository.lagre(PepCache(eksternId, Områder.AKTIVITETSPENGER, false, false, false,
+                LocalDateTime.now(), Områder.AKTIVITETSPENGER), tx)
+            val input = repository.hentOppgaverMedStatusOgPepCacheEldreEnn(
+                LocalDateTime.now().minusHours(23), 10, setOf(oppgave.status), tx
+            ).single { it.eksternId == eksternId }
+            assertThat(input.område).isEqualTo(Områder.K9)
+        }
+
+        get<PepCacheService>().oppdaterCacheForÅpneOgVentendeOppgaverEldreEnn()
+
+        assertThat(repository.hent(Områder.K9, eksternId)?.kode6).isEqualTo(true)
+        assertThat(repository.hent(Områder.AKTIVITETSPENGER, eksternId)?.kode6).isEqualTo(false)
+    }
+
+    @Test
     @Disabled
     fun `PepCacheService skal oppdatere oppgave når sikkerhetsklassifisering endrer seg`() = runTest {
         val k9sakEventHandler = get<K9SakEventHandler>()
@@ -286,7 +366,9 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
                 PersonBeskyttelseType.UTEN_KODE6
             )
         ).isNotEmpty()
-        verify(exactly = 2) { runBlocking { pepClient.harTilgangTilOppgaveV3(any()) } } //oppgaven hentet ut 2 ganger fra kø, gir to kall til pep klient
+        coVerify(exactly = 2) {
+            pepClient.harTilgangTilOppgaveV3(any(), any<BrukerkontekstMedOmråde>(), any())
+        } //oppgaven hentet ut 2 ganger fra kø, gir to kall til pep klient
         assertThat(
             hentOppgaverMedSikkerhetsklassifisering(
                 oppgaveQueryService,
@@ -294,7 +376,9 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
                 PersonBeskyttelseType.KODE6
             )
         ).isEmpty()
-        verify(exactly = 2) { runBlocking { pepClient.harTilgangTilOppgaveV3(any()) } } //oppgaven var ikke i køa, så gjør ikke ekstra kall til pep-klent
+        coVerify(exactly = 2) {
+            pepClient.harTilgangTilOppgaveV3(any(), any<BrukerkontekstMedOmråde>(), any())
+        } //oppgaven var ikke i køa, så gjør ikke ekstra kall til pep-klent
 
         gjørSakKode6(saksnummer)
         ventPåAntallForsøk(10, "Pepcache") { pepRepository.hent(Områder.K9, eksternId)?.kode6 == true }
@@ -329,13 +413,8 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
         ).isNotEmpty()
 
         jobbplanlegger.stopp()
-        verify(exactly = 3) {
-            runBlocking {
-                pepClient.harTilgangTilOppgaveV3(
-                    any(),
-                    any()
-                )
-            }
+        coVerify(exactly = 3) {
+            pepClient.harTilgangTilOppgaveV3(any(), TestKontekstFactory.brukerkontekst(Områder.K9), any())
         } //oppgaven var bare i kode6-køa, så ble ett ekstra kall til pep-klent
     }
 
@@ -368,23 +447,24 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
     ): List<Any> {
         val resultat = oppgaveQueryService.query(
             QueryRequest(
-                OppgaveQuery(
-                    select = listOf(EnkelSelectFelt(område = Områder.K9, kode = "ekstern_id")),
-                    filtere = listOf(
-                        FeltverdiOppgavefilter(
-                            område = null,
-                            kode = FeltType.PERSONBESKYTTELSE.eksternId,
-                            operator = EksternFeltverdiOperator.EQUALS,
-                            verdi = listOf(sikkerhetsklassifiseringtype.kode)
-                        ),
-                        FeltverdiOppgavefilter(
-                            område = Områder.K9,
-                            kode = FeltType.BEHANDLINGUUID.eksternId,
-                            operator = EksternFeltverdiOperator.EQUALS,
-                            verdi = listOf(eksternId)
+                område = Områder.K9, oppgaveQuery =
+                    OppgaveQuery(
+                        select = listOf(EnkelSelectFelt(område = Områder.K9, kode = "ekstern_id")),
+                        filtere = listOf(
+                            FeltverdiOppgavefilter(
+                                område = null,
+                                kode = FeltType.PERSONBESKYTTELSE.eksternId,
+                                operator = EksternFeltverdiOperator.EQUALS,
+                                verdi = listOf(sikkerhetsklassifiseringtype.kode)
+                            ),
+                            FeltverdiOppgavefilter(
+                                område = Områder.K9,
+                                kode = FeltType.BEHANDLINGUUID.eksternId,
+                                operator = EksternFeltverdiOperator.EQUALS,
+                                verdi = listOf(eksternId)
+                            )
                         )
                     )
-                )
             ),
         )
 
@@ -448,7 +528,7 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
 
     private fun lagPunsjBehandlingprosessEventMedStatus(
         eksternId: String,
-        aktørId: String,
+        aktørId: String?,
         eventTid: LocalDateTime = LocalDateTime.now(),
     ): K9PunsjEventDto {
 
@@ -456,7 +536,7 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
             eksternId = UUID.fromString(eksternId),
             journalpostId = JournalpostId("1"),
             eventTid = eventTid,
-            aktørId = AktørId(aktørId),
+            aktørId = aktørId?.let { AktørId(it) },
             aksjonspunktKoderMedStatusListe = mutableMapOf(),
         )
     }

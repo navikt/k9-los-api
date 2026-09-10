@@ -2,19 +2,22 @@ package no.nav.k9.los.uttrekk
 
 import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.lagretsok.LagretSøkRepository
+import no.nav.k9.los.lagretsok.LagretSøk
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.query.dto.resultat.OppgaveQueryRad
 
 class UttrekkTjeneste(
     private val uttrekkRepository: UttrekkRepository,
     private val lagretSøkRepository: LagretSøkRepository
 ) {
-    fun opprett(opprettUttrekk: OpprettUttrekk, saksbehandlerId: Long): Long {
-        val lagretSøk = lagretSøkRepository.hent(opprettUttrekk.lagretSokId)
-            ?: throw IllegalArgumentException("Lagret søk med id ${opprettUttrekk.lagretSokId} finnes ikke")
+    fun opprett(opprettUttrekk: OpprettUttrekk, saksbehandlerId: Long, område: Områder, harTilgangTilKode6: Boolean): Long {
+        val lagretSøk = krevTilgangTilLagretSøk(opprettUttrekk.lagretSokId, saksbehandlerId, område)
+        require(område == Områder.K9) { "Uttrekk støttes foreløpig bare for K9" }
 
         val uttrekk = Uttrekk.opprettUttrekk(
             lagretSøk = lagretSøk,
             lagetAv = saksbehandlerId,
+            harTilgangTilKode6 = harTilgangTilKode6,
             tittel = opprettUttrekk.tittel,
             limit = opprettUttrekk.limit,
             offset = opprettUttrekk.offset
@@ -30,8 +33,36 @@ class UttrekkTjeneste(
         return uttrekkRepository.hentAlle()
     }
 
-    fun hentForSaksbehandler(saksbehandlerId: Long): List<Uttrekk> {
-        return uttrekkRepository.hentForSaksbehandler(saksbehandlerId)
+    fun hentForSaksbehandler(saksbehandlerId: Long, område: Områder, harTilgangTilKode6: Boolean): List<Uttrekk> {
+        return uttrekkRepository.hentForSaksbehandler(saksbehandlerId).filter {
+            it.lagetAv == saksbehandlerId && it.område == område &&
+                (it.harTilgangTilKode6 == null || it.harTilgangTilKode6 == harTilgangTilKode6)
+        }
+    }
+
+    internal fun krevTilgang(id: Long, saksbehandlerId: Long, område: Områder, harTilgangTilKode6: Boolean): Uttrekk {
+        val uttrekk = uttrekkRepository.hent(id) ?: throw SecurityException("Ingen tilgang til uttrekk")
+        if (uttrekk.lagetAv != saksbehandlerId || uttrekk.område != område ||
+            (uttrekk.harTilgangTilKode6 != null && uttrekk.harTilgangTilKode6 != harTilgangTilKode6)) {
+            throw SecurityException("Ingen tilgang til uttrekk")
+        }
+        return uttrekk
+    }
+
+    fun hentResultat(id: Long, saksbehandlerId: Long, område: Områder, harTilgangTilKode6: Boolean): String? {
+        val uttrekk = krevTilgang(id, saksbehandlerId, område, harTilgangTilKode6)
+        if (uttrekk.harTilgangTilKode6 == null) {
+            throw SecurityException("Uttrekket mangler kjent beskyttelsesnivå. Opprett et nytt uttrekk.")
+        }
+        return uttrekkRepository.hentResultat(id)
+    }
+
+    internal fun krevTilgangTilLagretSøk(id: Long, saksbehandlerId: Long, område: Områder): LagretSøk {
+        val søk = lagretSøkRepository.hent(id) ?: throw SecurityException("Ingen tilgang til lagret søk")
+        if (søk.lagetAv != saksbehandlerId || søk.område != område) {
+            throw SecurityException("Ingen tilgang til lagret søk")
+        }
+        return søk
     }
 
     fun slett(id: Long) {
@@ -46,8 +77,12 @@ class UttrekkTjeneste(
         uttrekkRepository.slett(id)
     }
 
-    fun slettForLagretSøk(lagretSøkId: Long): Int {
-        return uttrekkRepository.slettForLagretSøk(lagretSøkId)
+    fun slettForLagretSøk(lagretSøkId: Long, saksbehandlerId: Long, område: Områder, harTilgangTilKode6: Boolean): Int {
+        krevTilgangTilLagretSøk(lagretSøkId, saksbehandlerId, område)
+        val uttrekk = hentForSaksbehandler(saksbehandlerId, område, harTilgangTilKode6)
+            .filter { it.lagretSøkId == lagretSøkId && it.status != UttrekkStatus.KJØRER }
+        uttrekk.forEach { slett(requireNotNull(it.id)) }
+        return uttrekk.size
     }
 
     fun startUttrekk(id: Long): Uttrekk {

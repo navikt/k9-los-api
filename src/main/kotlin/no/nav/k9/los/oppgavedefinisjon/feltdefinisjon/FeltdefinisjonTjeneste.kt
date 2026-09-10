@@ -2,8 +2,8 @@ package no.nav.k9.los.oppgavedefinisjon.feltdefinisjon
 
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.oppgavedefinisjon.omraade.Område
-import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgavedefinisjon.omraade.OmrådeRepository
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 
 class FeltdefinisjonTjeneste(
     private val feltdefinisjonRepository: FeltdefinisjonRepository,

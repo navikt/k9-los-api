@@ -3,16 +3,11 @@ package no.nav.k9.los.infrastruktur.db
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withContext
 import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.domeneadaptere.k9.OmrådeSetup
-import no.nav.k9.los.infrastruktur.idtoken.IIdToken
-import no.nav.k9.los.infrastruktur.rest.CoroutineRequestContext
-import no.nav.k9.los.infrastruktur.rest.idToken
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.koin.test.get
-import kotlin.coroutines.coroutineContext
 import kotlin.test.assertEquals
 
 class TransactionalManagerTest : AbstractK9LosIntegrationTest() {
@@ -26,18 +21,13 @@ class TransactionalManagerTest : AbstractK9LosIntegrationTest() {
     }
 
     @Test
-    fun `skal beholde request context i transactionSuspend`() {
-        val idToken = mockk<IIdToken>()
-        every { idToken.getUsername() } returns "foobar"
-
-        val username = runBlocking {
-            withContext(CoroutineRequestContext(idToken)) {
-                transactionalManager.transactionSuspend {
-                    coroutineContext.idToken().getUsername()
-                }
+    fun `skal kunne kjøre transaksjon i suspend-kontekst`() {
+        val resultat = runBlocking {
+            transactionalManager.transactionSuspend {
+                "foobar"
             }
         }
 
-        assertEquals("foobar", username)
+        assertEquals("foobar", resultat)
     }
 }

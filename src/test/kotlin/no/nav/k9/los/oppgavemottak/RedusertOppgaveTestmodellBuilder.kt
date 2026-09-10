@@ -28,7 +28,7 @@ class RedusertOppgaveTestmodellBuilder(
 
     fun lagFeltdefinisjonDto(): FeltdefinisjonerDto {
         return FeltdefinisjonerDto(
-            område = område.tilOmråderEnum(),
+            område = område.tilOmrådeEnum(),
             feltdefinisjoner = setOf(
                 FeltdefinisjonDto(
                     id = "aksjonspunkt",
@@ -89,7 +89,7 @@ class RedusertOppgaveTestmodellBuilder(
 
     fun lagOppgavetypeDto(): OppgavetyperDto {
         return OppgavetyperDto(
-            område = område.tilOmråderEnum(),
+            område = område.tilOmrådeEnum(),
             definisjonskilde = "k9-sak-til-los",
             oppgavetyper = setOf(
                 OppgavetypeDto(
@@ -132,8 +132,8 @@ class RedusertOppgaveTestmodellBuilder(
         return OppgaveDto(
             eksternId = id,
             eksternVersjon = LocalDateTime.now().toString(),
-            område = område.tilOmråderEnum(),
-            kildeområde = område.tilOmråderEnum(),
+            område = område.tilOmrådeEnum(),
+            kildeområde = område.tilOmrådeEnum(),
             type = "k9sak",
             status = status,
             endretTidspunkt = LocalDateTime.now(),

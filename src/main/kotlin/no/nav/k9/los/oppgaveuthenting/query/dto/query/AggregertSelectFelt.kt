@@ -16,4 +16,4 @@ class AggregertSelectFelt(
     val funksjon: Aggregeringsfunksjon,
     val område: Områder? = null,
     val kode: String? = null
-)                                                                                                                                                                                                                                                                                                                     : SelectFelt()
+) : SelectFelt()

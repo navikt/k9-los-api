@@ -31,7 +31,7 @@ data class OppgaveDto(
     constructor(oppgaveV3: OppgaveV3) : this(
         eksternId = oppgaveV3.eksternId,
         eksternVersjon = oppgaveV3.eksternVersjon,
-        område = oppgaveV3.oppgavetype.område.tilOmråderEnum(),
+        område = oppgaveV3.oppgavetype.område.tilOmrådeEnum(),
         kildeområde = oppgaveV3.kildeområde,
         type = oppgaveV3.oppgavetype.eksternId,
         status = oppgaveV3.status.kode,

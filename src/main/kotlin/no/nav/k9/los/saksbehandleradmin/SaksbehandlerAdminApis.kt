@@ -4,23 +4,22 @@ import io.ktor.http.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import no.nav.k9.los.infrastruktur.abac.IPepClient
-import no.nav.k9.los.infrastruktur.rest.RequestContextService
+import no.nav.k9.los.infrastruktur.brukerkontekst.medBrukerkontekst
 import no.nav.k9.los.reservasjon.ReservasjonApisTjeneste
+import no.nav.k9.los.reservasjon.ManglerTilgangException
 import org.koin.ktor.ext.inject
 
 internal fun Route.SaksbehandlerAdminApis() {
-    val requestContextService by inject<RequestContextService>()
     val saksbehandlerAdminTjeneste by inject<SaksbehandlerAdminTjeneste>()
-    val pepClient by inject<IPepClient>()
 
     // TODO: slett når frontend har begynt å bruke nytt endepunkt i ReservasjonApis
     val reservasjonApisTjeneste by inject<ReservasjonApisTjeneste>()
 
     get("/saksbehandlere") {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.erOppgaveStyrer()) {
-                call.respond(saksbehandlerAdminTjeneste.hentSaksbehandlere())
+        medBrukerkontekst { bruker ->
+            if (bruker.erOppgavestyrer) {
+                val saksbehandlere = saksbehandlerAdminTjeneste.hentSaksbehandlere(bruker.område, bruker.harTilgangTilKode6)
+                call.respond(saksbehandlere)
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
@@ -28,10 +27,16 @@ internal fun Route.SaksbehandlerAdminApis() {
     }
 
     post("/saksbehandlere/legg-til") {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.erOppgaveStyrer()) {
-                val epost = call.receive<EpostDto>()
-                call.respond(saksbehandlerAdminTjeneste.leggTilSaksbehandlerForEpost(epost.epost))
+        medBrukerkontekst { bruker ->
+            if (bruker.erOppgavestyrer) {
+                val request = call.receive<EpostDto>()
+                call.respond(
+                    saksbehandlerAdminTjeneste.leggTilSaksbehandlerForEpost(
+                        request.epost,
+                        bruker.område,
+                        bruker.harTilgangTilKode6,
+                    )
+                )
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
@@ -39,10 +44,14 @@ internal fun Route.SaksbehandlerAdminApis() {
     }
 
     post("/saksbehandlere/slett") {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.erOppgaveStyrer()) {
-                val epost = call.receive<EpostDto>()
-                call.respond(saksbehandlerAdminTjeneste.slettSaksbehandler(epost.epost))
+        medBrukerkontekst { bruker ->
+            if (bruker.erOppgavestyrer) {
+                val request = call.receive<EpostDto>()
+                try {
+                    call.respond(saksbehandlerAdminTjeneste.slettSaksbehandler(request.epost, bruker))
+                } catch (e: ManglerTilgangException) {
+                    call.respond(HttpStatusCode.Forbidden)
+                }
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
@@ -50,10 +59,14 @@ internal fun Route.SaksbehandlerAdminApis() {
     }
 
     post("/saksbehandlere/slettForId") {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.erOppgaveStyrer()) {
+        medBrukerkontekst { bruker ->
+            if (bruker.erOppgavestyrer) {
                 val id = call.receive<Long>()
-                call.respond(saksbehandlerAdminTjeneste.slettSaksbehandlerForId(id))
+                try {
+                    call.respond(saksbehandlerAdminTjeneste.slettSaksbehandlerForId(id, bruker))
+                } catch (e: ManglerTilgangException) {
+                    call.respond(HttpStatusCode.Forbidden)
+                }
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
@@ -62,9 +75,9 @@ internal fun Route.SaksbehandlerAdminApis() {
 
     // TODO: slett når frontend har begynt å bruke nytt endepunkt i ReservasjonApis
     get("reservasjoner") {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.erOppgaveStyrer()) {
-                call.respond(reservasjonApisTjeneste.hentAlleAktiveReservasjoner())
+        medBrukerkontekst { bruker ->
+            if (bruker.erOppgavestyrer) {
+                call.respond(reservasjonApisTjeneste.hentAlleAktiveReservasjoner(bruker))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }

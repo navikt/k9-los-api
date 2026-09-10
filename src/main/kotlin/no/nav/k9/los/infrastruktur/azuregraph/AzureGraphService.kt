@@ -14,13 +14,12 @@ import no.nav.helse.dusseldorf.oauth2.client.AccessToken
 import no.nav.helse.dusseldorf.oauth2.client.AccessTokenClient
 import no.nav.helse.dusseldorf.oauth2.client.CachedAccessTokenClient
 import no.nav.k9.los.infrastruktur.idtoken.IIdToken
-import no.nav.k9.los.infrastruktur.rest.idToken
+import no.nav.k9.los.infrastruktur.brukerkontekst.BrukerkontekstMedOmråde
 import no.nav.k9.los.infrastruktur.utils.Cache
 import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.util.*
-import kotlin.coroutines.coroutineContext
 
 open class AzureGraphService(
     accessTokenClient: AccessTokenClient,
@@ -37,17 +36,18 @@ open class AzureGraphService(
         if (response.status.isSuccess()) {
             return response.bodyAsText()
         } else {
-            log.error(
-                "Error response = '${response.bodyAsText()}' fra '${response.request.url}'"
-            )
             log.error("HTTP ${response.status.value} ${response.status.description}")
             throw IllegalStateException("Feil ved henting av saksbehandlers id")
         }
     }
 
-    override suspend fun hentEnhetForInnloggetBruker(): String {
-        val token = coroutineContext.idToken()
-        val accessToken = accessToken(onBehalfOf = token)
+    override suspend fun hentEnhet(brukerkontekst: BrukerkontekstMedOmråde): String {
+        return hentEnhet(brukerkontekst.navIdent, brukerkontekst.idToken)
+    }
+
+    override suspend fun hentEnhet(navIdent: String, idToken: IIdToken): String {
+        require(navIdent == idToken.getNavIdent()) { "Token gjelder ikke valgt saksbehandler" }
+        val accessToken = accessToken(idToken)
         val json = Retry.retry(
             operation = "office-location",
             initialDelay = Duration.ofMillis(200),
@@ -70,13 +70,41 @@ open class AzureGraphService(
 
             håndterResultat(response)
         }
-        val officeLocation = LosObjectMapper.instance.readValue<OfficeLocation>(json).officeLocation
-        return officeLocation
+        return LosObjectMapper.instance.readValue<OfficeLocation>(json).officeLocation
+            ?: throw IllegalStateException("Microsoft Graph returnerte ikke enhet for innlogget saksbehandler")
     }
 
-    override suspend fun hentGrupperForSaksbehandler(saksbehandlerIdent: String): Set<UUID> {
-        val userId = hentUserIdForSaksbehandler(saksbehandlerIdent)
-        return hentGrupperForSaksbehandler(userId, saksbehandlerIdent)
+    override suspend fun hentGrupper(navIdent: String): Set<UUID> {
+        val userId = hentUserIdForSaksbehandler(navIdent)
+        return hentGrupperForSaksbehandler(userId, navIdent)
+    }
+
+    override suspend fun hentGrupper(brukerkontekst: BrukerkontekstMedOmråde): Set<UUID> {
+        val token = brukerkontekst.idToken
+        require(brukerkontekst.navIdent == token.getNavIdent()) { "Token gjelder ikke valgt saksbehandler" }
+        return saksbehandlerGrupperCache.hentSuspend(brukerkontekst.navIdent) {
+            val accessToken = accessToken(token)
+            val json = Retry.retry(
+                operation = "grupper-for-saksbehandler",
+                initialDelay = Duration.ofMillis(200),
+                factor = 2.0,
+                logger = log
+            ) {
+                val response = Operation.monitored(
+                    app = "k9-los-api",
+                    operation = "grupper-for-saksbehandler",
+                    resultResolver = { 200 == it.status.value }
+                ) {
+                    httpClient.get("https://graph.microsoft.com/v1.0/me/memberOf") {
+                        header(HttpHeaders.Accept, "application/json")
+                        header(HttpHeaders.Authorization, "Bearer ${accessToken.token}")
+                        header("ConsistencyLevel", "eventual")
+                    }
+                }
+                håndterResultat(response)
+            }
+            LosObjectMapper.instance.readValue<DirectoryOjects>(json).value.map { it.id }.toSet()
+        }
     }
 
     private suspend fun hentUserIdForSaksbehandler(saksbehandlerIdent: String): UUID {
@@ -95,7 +123,7 @@ open class AzureGraphService(
                 ) {
                     httpClient.get {
                         url("https://graph.microsoft.com/v1.0/users")
-                        parameter($$"$filter", "onPremisesSamAccountName eq '$saksbehandlerIdent'")
+                        parameter($$"$filter", "onPremisesSamAccountName eq '${saksbehandlerIdent.replace("'", "''")}'")
                         parameter($$"$count", "true")
                         parameter($$"$select", "id")
                         header(HttpHeaders.Accept, "application/json")
@@ -147,5 +175,3 @@ open class AzureGraphService(
         } ?: cachedAccessTokenClient.getClientCredentialsAccessToken(setOf("https://graph.microsoft.com/.default"))
     }
 }
-
-

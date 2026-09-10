@@ -10,6 +10,7 @@ import no.nav.k9.los.oppgaveuthenting.query.dto.query.AggregertSelectFelt
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.EnkelSelectFelt
 import no.nav.k9.los.oppgaveuthenting.query.mapping.CombineOperator
 import no.nav.k9.los.oppgaveuthenting.query.mapping.FeltverdiOperator
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
@@ -36,7 +37,8 @@ class PartisjonertOppgaveQuerySqlBuilderTest {
             felter = mockFelter,
             oppgavestatusFilter = listOf(Oppgavestatus.AAPEN),
             now = LocalDateTime.now(),
-            ferdigstiltDatoFilter = null
+            ferdigstiltDatoFilter = null,
+            område = Områder.K9
         )
 
         builder.medFeltverdi(
@@ -60,7 +62,8 @@ class PartisjonertOppgaveQuerySqlBuilderTest {
             felter = mockFelter,
             oppgavestatusFilter = listOf(Oppgavestatus.AAPEN),
             now = LocalDateTime.now(),
-            ferdigstiltDatoFilter = null
+            ferdigstiltDatoFilter = null,
+            område = Områder.K9
         )
 
         builder.medFeltverdi(
@@ -82,7 +85,8 @@ class PartisjonertOppgaveQuerySqlBuilderTest {
             felter = mockFelter,
             oppgavestatusFilter = listOf(Oppgavestatus.AAPEN),
             now = LocalDateTime.now(),
-            ferdigstiltDatoFilter = null
+            ferdigstiltDatoFilter = null,
+            område = Områder.K9
         )
 
         builder.medPaging(10, 20)
@@ -97,7 +101,8 @@ class PartisjonertOppgaveQuerySqlBuilderTest {
             felter = mockFelter,
             oppgavestatusFilter = listOf(Oppgavestatus.AAPEN),
             now = LocalDateTime.now(),
-            ferdigstiltDatoFilter = null
+            ferdigstiltDatoFilter = null,
+            område = Områder.K9
         )
 
         builder.medEnkelOrder(Områder.K9, "testfelt", true)
@@ -113,7 +118,8 @@ class PartisjonertOppgaveQuerySqlBuilderTest {
             felter = mockFelter,
             oppgavestatusFilter = listOf(Oppgavestatus.AAPEN, Oppgavestatus.VENTER),
             now = LocalDateTime.now(),
-            ferdigstiltDatoFilter = null
+            ferdigstiltDatoFilter = null,
+            område = Områder.K9
         )
 
         builder.medFeltverdi(
@@ -151,7 +157,8 @@ class PartisjonertOppgaveQuerySqlBuilderTest {
             felter = mockFelter,
             oppgavestatusFilter = listOf(Oppgavestatus.AAPEN),
             now = LocalDateTime.now(),
-            ferdigstiltDatoFilter = null
+            ferdigstiltDatoFilter = null,
+            område = Områder.K9
         )
         
         builder.medAggregering(emptyList(), listOf(AggregertSelectFelt(Aggregeringsfunksjon.ANTALL)))
@@ -174,7 +181,8 @@ class PartisjonertOppgaveQuerySqlBuilderTest {
             felter = mockFelter,
             oppgavestatusFilter = listOf(Oppgavestatus.LUKKET),
             now = LocalDateTime.now(),
-            ferdigstiltDatoFilter = null
+            ferdigstiltDatoFilter = null,
+            område = Områder.K9
         )
 
         builder.medSelectFelter(listOf(
@@ -192,7 +200,8 @@ class PartisjonertOppgaveQuerySqlBuilderTest {
             felter = mockFelter,
             oppgavestatusFilter = listOf(Oppgavestatus.LUKKET),
             now = LocalDateTime.now(),
-            ferdigstiltDatoFilter = null
+            ferdigstiltDatoFilter = null,
+            område = Områder.K9
         )
 
         builder.medEnkelOrder(null, "ferdigstiltDato", false)
@@ -201,5 +210,42 @@ class PartisjonertOppgaveQuerySqlBuilderTest {
 
         assertTrue(sql.contains("o.ferdigstilt_dato"), "SQL burde inneholde o.ferdigstilt_dato i ORDER BY")
         assertTrue(sql.contains("DESC"), "SQL burde inneholde synkende sortering")
+    }
+
+    @Test
+    fun `OR kan ikke overstyre serverstyrt område og kode6`() {
+        val builder = PartisjonertOppgaveQuerySqlBuilder(
+            mockFelter, listOf(Oppgavestatus.AAPEN), LocalDateTime.now(), null,
+            Områder.AKTIVITETSPENGER, harTilgangTilKode6 = false,
+        )
+        builder.medFeltverdi(CombineOperator.OR, null, "personbeskyttelse", FeltverdiOperator.EQUALS,
+            listOf(PersonBeskyttelseType.KODE6.kode))
+
+        assertTrue(builder.getQuery().contains("WHERE o.omrade_ekstern_id = :omrade AND opc.kode6 IS FALSE AND ("))
+        assertTrue(builder.getQuery().contains("OR opc.kode6 IS TRUE)"))
+        assertEquals("AKTIVITETSPENGER", builder.getParams()["omrade"])
+    }
+
+    @Test
+    fun `filtrerer alltid på område, og binder det som parameter`() {
+        val builder = PartisjonertOppgaveQuerySqlBuilder(
+            felter = mockFelter,
+            oppgavestatusFilter = listOf(Oppgavestatus.AAPEN),
+            now = LocalDateTime.now(),
+            ferdigstiltDatoFilter = null,
+            område = Områder.AKTIVITETSPENGER
+        )
+
+        val sql = builder.getQuery()
+
+        assertTrue(
+            sql.contains("o.omrade_ekstern_id = :omrade"),
+            "Spørringen må filtrere på område, ellers lekker oppgaver på tvers av områder"
+        )
+        assertTrue(
+            sql.contains("opc.kildeomrade = :omrade"),
+            "Pep-cache-joinen må følge samme område som oppgaven, ikke være hardkodet"
+        )
+        assertEquals("AKTIVITETSPENGER", builder.getParams()["omrade"])
     }
 }

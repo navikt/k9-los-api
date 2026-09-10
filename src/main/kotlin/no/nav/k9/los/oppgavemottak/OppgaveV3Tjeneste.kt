@@ -48,7 +48,7 @@ class OppgaveV3Tjeneste(
     ): OppgaveV3 {
         val område = områdeRepository.hentOmråde(oppgaveDto.område, tx)
         val oppgavetype = oppgavetypeRepository.hentOppgavetype(
-            område = område.tilOmråderEnum(),
+            område = område.tilOmrådeEnum(),
             eksternId = oppgaveDto.type,
             tx = tx
         )

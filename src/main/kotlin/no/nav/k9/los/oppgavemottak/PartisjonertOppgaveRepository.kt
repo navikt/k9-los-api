@@ -36,11 +36,17 @@ class PartisjonertOppgaveRepository(val oppgavetypeRepository: OppgavetypeReposi
         return tx.run(
             queryOf(
                 """
-                select id from oppgave_id_part where oppgave_ekstern_id = :oppgave_ekstern_id and oppgavetype_ekstern_id = :oppgavetype_ekstern_id
+                select ip.id
+                from oppgave_id_part ip
+                    inner join omrade o on o.id = ip.omrade_id
+                where ip.oppgave_ekstern_id = :oppgave_ekstern_id
+                  and ip.oppgavetype_ekstern_id = :oppgavetype_ekstern_id
+                  and o.ekstern_id = :omrade_ekstern_id
                 """.trimIndent(),
                 mapOf(
                     "oppgave_ekstern_id" to oppgave.eksternId,
-                    "oppgavetype_ekstern_id" to oppgave.oppgavetype.eksternId
+                    "oppgavetype_ekstern_id" to oppgave.oppgavetype.eksternId,
+                    "omrade_ekstern_id" to oppgave.oppgavetype.område.eksternId,
                 )
             ).map { row ->
                 PartisjonertOppgaveId(row.long("id"))
@@ -51,10 +57,16 @@ class PartisjonertOppgaveRepository(val oppgavetypeRepository: OppgavetypeReposi
     private fun opprettPartisjonertOppgaveId(oppgave: OppgaveV3, tx: TransactionalSession): PartisjonertOppgaveId {
         return tx.run(
             queryOf(
-                "insert into oppgave_id_part(oppgave_ekstern_id, oppgavetype_ekstern_id) values (:oppgave_ekstern_id, :oppgavetype_ekstern_id)",
+                """
+                insert into oppgave_id_part(oppgave_ekstern_id, oppgavetype_ekstern_id, omrade_id)
+                select :oppgave_ekstern_id, :oppgavetype_ekstern_id, id
+                from omrade
+                where ekstern_id = :omrade_ekstern_id
+                """.trimIndent(),
                 mapOf(
                     "oppgave_ekstern_id" to oppgave.eksternId,
-                    "oppgavetype_ekstern_id" to oppgave.oppgavetype.eksternId
+                    "oppgavetype_ekstern_id" to oppgave.oppgavetype.eksternId,
+                    "omrade_ekstern_id" to oppgave.oppgavetype.område.eksternId,
                 )
             ).asUpdateAndReturnGeneratedKey
         )?.let { PartisjonertOppgaveId(it) }
@@ -118,7 +130,7 @@ class PartisjonertOppgaveRepository(val oppgavetypeRepository: OppgavetypeReposi
                     reservasjonsnøkkel = row.string("reservasjonsnokkel"),
                     felter = hentFeltverdier(oppgaveId, oppgavetype, tx),
                     aktiv = true,
-                    kildeområde = oppgavetype.område.tilOmråderEnum(),
+                    kildeområde = oppgavetype.område.tilOmrådeEnum(),
                 )
             }.asSingle
         )
@@ -155,14 +167,15 @@ class PartisjonertOppgaveRepository(val oppgavetypeRepository: OppgavetypeReposi
         tx.run(
             queryOf(
                 """
-                    insert into oppgave_v3_part(id, oppgave_ekstern_id, oppgave_ekstern_versjon, oppgavetype_ekstern_id, reservasjonsnokkel, endret_tidspunkt, oppgavestatus, ferdigstilt_dato)
-                    VALUES (:oppgave_id, :oppgave_ekstern_id, :oppgave_ekstern_versjon, :oppgavetype_ekstern_id, :reservasjonsnokkel, :endret_tidspunkt, :oppgavestatus, :ferdigstilt_dato)
+                    insert into oppgave_v3_part(id, oppgave_ekstern_id, oppgave_ekstern_versjon, oppgavetype_ekstern_id, omrade_ekstern_id, reservasjonsnokkel, endret_tidspunkt, oppgavestatus, ferdigstilt_dato)
+                    VALUES (:oppgave_id, :oppgave_ekstern_id, :oppgave_ekstern_versjon, :oppgavetype_ekstern_id, :omrade_ekstern_id, :reservasjonsnokkel, :endret_tidspunkt, :oppgavestatus, :ferdigstilt_dato)
                 """.trimIndent(),
                 mapOf(
                     "oppgave_id" to partisjonertOppgaveId.id,
                     "oppgave_ekstern_id" to oppgave.eksternId,
                     "oppgave_ekstern_versjon" to oppgave.eksternVersjon,
                     "oppgavetype_ekstern_id" to oppgave.oppgavetype.eksternId,
+                    "omrade_ekstern_id" to oppgave.oppgavetype.område.eksternId,
                     "reservasjonsnokkel" to oppgave.reservasjonsnøkkel,
                     "endret_tidspunkt" to oppgave.endretTidspunkt,
                     "oppgavestatus" to oppgave.status.kode,
@@ -208,8 +221,8 @@ class PartisjonertOppgaveRepository(val oppgavetypeRepository: OppgavetypeReposi
 
         tx.batchPreparedNamedStatement(
             """
-                insert into oppgavefelt_verdi_part(oppgave_id, feltdefinisjon_ekstern_id, verdi, verdi_bigint, oppgavestatus, ferdigstilt_dato)
-                        VALUES (:oppgave_id, :feltdefinisjon_ekstern_id, :verdi, :verdi_bigint, :oppgavestatus, :ferdigstilt_dato)
+                insert into oppgavefelt_verdi_part(oppgave_id, feltdefinisjon_ekstern_id, verdi, verdi_bigint, oppgavestatus, ferdigstilt_dato, omrade_ekstern_id)
+                        VALUES (:oppgave_id, :feltdefinisjon_ekstern_id, :verdi, :verdi_bigint, :oppgavestatus, :ferdigstilt_dato, :omrade_ekstern_id)
             """.trimIndent(),
             oppgave.felter.map {
                 mapOf(
@@ -219,6 +232,7 @@ class PartisjonertOppgaveRepository(val oppgavetypeRepository: OppgavetypeReposi
                     "verdi_bigint" to it.verdiBigInt,
                     "oppgavestatus" to oppgave.status.kode,
                     "ferdigstilt_dato" to if (oppgave.status == Oppgavestatus.LUKKET) oppgave.endretTidspunkt.toLocalDate() else null,
+                    "omrade_ekstern_id" to oppgave.oppgavetype.område.eksternId,
                 )
             }
         )
@@ -276,7 +290,8 @@ class PartisjonertOppgaveRepository(val oppgavetypeRepository: OppgavetypeReposi
         tx: TransactionalSession
     ): Oppgave {
         val oppgavetypeEksternId = row.string("oppgavetype_ekstern_id")
-        val oppgavetype = oppgavetypeRepository.hentOppgavetype(Områder.K9, oppgavetypeEksternId, tx)
+        val område = Områder.fraEksternId(row.string("omrade_ekstern_id"))
+        val oppgavetype = oppgavetypeRepository.hentOppgavetype(område, oppgavetypeEksternId, tx)
         val oppgavefelter = hentOppgavefelter(tx, row.long("id"), oppgavetype)
         return Oppgave(
             eksternId = row.string("oppgave_ekstern_id"),
@@ -304,7 +319,7 @@ class PartisjonertOppgaveRepository(val oppgavetypeRepository: OppgavetypeReposi
             ).map { row ->
                 Oppgavefelt(
                     eksternId = row.string("ekstern_id"),
-                    område = Områder.K9,
+                    område = Områder.fraEksternId(oppgavetype.område.eksternId),
                     listetype = row.boolean("liste_type"),
                     påkrevd = row.boolean("pakrevd"),
                     verdi = row.string("verdi"),

@@ -7,12 +7,14 @@ import kotliquery.queryOf
 import kotliquery.sessionOf
 import no.nav.k9.los.infrastruktur.db.util.InClauseHjelper
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
+import no.nav.k9.los.oppgavedefinisjon.omraade.OmrådeRepository
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import java.time.LocalDateTime
 import javax.sql.DataSource
-import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 
 class PepCacheRepository(
-    val dataSource: DataSource
+    val dataSource: DataSource,
+    private val områdeRepository: OmrådeRepository
 ) {
     fun hentOppgaverMedStatusOgPepCacheEldreEnn(
         tidspunkt: LocalDateTime = LocalDateTime.now(),
@@ -22,13 +24,13 @@ class PepCacheRepository(
     ): List<PepCacheInput> {
         val statusParametre = InClauseHjelper.tilParameternavn(status, "status")
         val query = """
-                    SELECT o.oppgave_ekstern_id, 
+                    SELECT o.oppgave_ekstern_id, o.omrade_ekstern_id, o.oppgavetype_ekstern_id,
                     (select ov.verdi from oppgavefelt_verdi_part ov where ov.oppgave_id = o.id AND ov.feltdefinisjon_ekstern_id = 'saksnummer' AND ov.oppgavestatus IN ($statusParametre)) as saksnummer,
                     (select ov.verdi from oppgavefelt_verdi_part ov where ov.oppgave_id = o.id AND ov.feltdefinisjon_ekstern_id = 'aktorId' AND ov.oppgavestatus IN ($statusParametre)) as aktor_id,
                     (select ov.verdi from oppgavefelt_verdi_part ov where ov.oppgave_id = o.id AND ov.feltdefinisjon_ekstern_id = 'pleietrengendeAktorId' AND ov.oppgavestatus IN ($statusParametre)) as pleietrengende_aktor_id,
                     (select ov.verdi from oppgavefelt_verdi_part ov where ov.oppgave_id = o.id AND ov.feltdefinisjon_ekstern_id = 'relatertPartAktorid' AND ov.oppgavestatus IN ($statusParametre)) as relatert_part_aktor_id
                     FROM oppgave_v3_part o 
-                    LEFT JOIN OPPGAVE_PEP_CACHE opc ON (o.oppgave_ekstern_id = opc.ekstern_id AND opc.kildeomrade = 'K9')
+                    LEFT JOIN OPPGAVE_PEP_CACHE opc ON (o.oppgave_ekstern_id = opc.ekstern_id AND opc.kildeomrade = o.omrade_ekstern_id)
                     WHERE o.oppgavestatus IN ($statusParametre)
                     AND (opc.oppdatert is null OR opc.oppdatert < :grense)
                     ORDER BY opc.oppdatert NULLS FIRST
@@ -50,7 +52,9 @@ class PepCacheRepository(
                         row.stringOrNull("aktor_id"),
                         row.stringOrNull("pleietrengende_aktor_id"),
                         row.stringOrNull("relatert_part_aktor_id")
-                    )
+                    ),
+                    Områder.fraEksternId(row.string("omrade_ekstern_id")),
+                    oppgavetype = row.string("oppgavetype_ekstern_id"),
                 )
             }.asList
         )
@@ -85,7 +89,7 @@ class PepCacheRepository(
             queryOf("""
                     DELETE FROM OPPGAVE_PEP_CACHE WHERE kildeomrade = :kildeomrade AND ekstern_id = :ekstern_id 
                 """, mapOf(
-                    "kildeomrade" to kildeområde,
+                    "kildeomrade" to kildeområde.eksternId,
                     "ekstern_id" to eksternId
                 )
             ).asUpdate
@@ -101,7 +105,10 @@ class PepCacheRepository(
     fun hent(kildeområde: Områder, eksternId: String, tx: TransactionalSession): PepCache? {
         return tx.run(
             queryOf("""
-                    SELECT * FROM OPPGAVE_PEP_CACHE WHERE kildeomrade = :kildeomrade AND ekstern_id = :ekstern_id 
+                    SELECT pc.*, o.ekstern_id as omrade_ekstern_id
+                    FROM OPPGAVE_PEP_CACHE pc
+                    JOIN OMRADE o ON o.id = pc.omrade_id
+                    WHERE pc.kildeomrade = :kildeomrade AND pc.ekstern_id = :ekstern_id 
                 """, mapOf(
                     "kildeomrade" to kildeområde.eksternId,
                     "ekstern_id" to eksternId
@@ -118,6 +125,7 @@ class PepCacheRepository(
         kode7 = boolean("kode7"),
         egenAnsatt = boolean("egen_ansatt"),
         oppdatert = localDateTime("oppdatert"),
+        område = Områder.fraEksternId(string("omrade_ekstern_id")),
     )
 }
 
@@ -128,7 +136,8 @@ data class PepCache(
     val kode6: Boolean,
     val kode7: Boolean,
     val egenAnsatt: Boolean,
-    val oppdatert: LocalDateTime
+    val oppdatert: LocalDateTime,
+    val område: Områder
 ) {
     fun oppdater(kode6: Boolean, kode7: Boolean, egenAnsatt: Boolean): PepCache {
         return copy(

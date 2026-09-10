@@ -2,10 +2,10 @@ package no.nav.k9.los.oppgaveuthenting
 
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.Datatype
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgavedefinisjon.oppgavetype.Oppgavetype
 import no.nav.k9.los.oppgaveuthenting.query.mapping.transientfeltutleder.HentVerdiInput
 import java.time.LocalDateTime
-import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 
 data class Oppgave(
     val eksternId: String,
@@ -114,13 +114,13 @@ data class Oppgave(
                     HentVerdiInput(
                         now,
                         this,
-                        oppgavefelt.feltDefinisjon.område.tilOmråderEnum(),
+                        oppgavefelt.feltDefinisjon.område.tilOmrådeEnum(),
                         oppgavefelt.feltDefinisjon.eksternId
                     )
                 ).map { verdi ->
                     Oppgavefelt(
                         eksternId = oppgavefelt.feltDefinisjon.eksternId,
-                        område = oppgavefelt.feltDefinisjon.område.tilOmråderEnum(),
+                        område = oppgavefelt.feltDefinisjon.område.tilOmrådeEnum(),
                         listetype = oppgavefelt.feltDefinisjon.listetype,
                         påkrevd = false,
                         verdi = verdi,
@@ -139,7 +139,7 @@ data class Oppgave(
                 if (felter.find { it.eksternId == påkrevdFelt.feltDefinisjon.eksternId && !påkrevdFelt.feltDefinisjon.listetype } == null) {
                     Oppgavefelt(
                         eksternId = påkrevdFelt.feltDefinisjon.eksternId,
-                        område = Områder.K9,
+                        område = påkrevdFelt.feltDefinisjon.område.tilOmrådeEnum(),
                         listetype = false, //listetyper er aldri påkrevd
                         påkrevd = true,
                         verdi = påkrevdFelt.defaultverdi.toString(),

@@ -5,14 +5,15 @@ import io.opentelemetry.extension.kotlin.asContextElement
 import kotlinx.coroutines.*
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
+import no.nav.k9.los.infrastruktur.brukerkontekst.BrukerkontekstMedOmråde
 import no.nav.k9.los.infrastruktur.pdl.IPdlService
 import no.nav.k9.los.infrastruktur.pdl.fnr
 import no.nav.k9.los.infrastruktur.pdl.navn
-import no.nav.k9.los.infrastruktur.rest.idToken
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
+import no.nav.k9.los.reservasjon.ManglerTilgangException
 import no.nav.k9.los.oppgaveuthenting.OppgaveNøkkelDto
 import no.nav.k9.los.oppgaveuthenting.OppgaveRepository
 import org.slf4j.LoggerFactory
-import kotlin.coroutines.coroutineContext
 import kotlin.time.Duration.Companion.seconds
 
 class SisteOppgaverTjeneste(
@@ -24,19 +25,20 @@ class SisteOppgaverTjeneste(
 ) {
     private val log = LoggerFactory.getLogger(SisteOppgaverTjeneste::class.java)
 
-    suspend fun hentSisteOppgaver(): List<SisteOppgaverDto> {
+    suspend fun hentSisteOppgaver(brukerkontekst: BrukerkontekstMedOmråde): List<SisteOppgaverDto> {
         return try {
-            val saksbehandlerIdent = coroutineContext.idToken().getNavIdent()
+            val saksbehandlerIdent = brukerkontekst.navIdent
+            if (!brukerkontekst.harBasisTilgang) throw ManglerTilgangException("Mangler basistilgang")
 
             val oppgaver =
                 transactionalManager.transaction { tx ->
-                    val sisteOppgaveIds = sisteOppgaverRepository.hentSisteOppgaver(tx, saksbehandlerIdent)
+                    val sisteOppgaveIds = sisteOppgaverRepository.hentSisteOppgaver(tx, saksbehandlerIdent, brukerkontekst.område)
                     sisteOppgaveIds.map { eksternOppgaveId ->
                         oppgaveRepository.hentNyesteOppgaveForEksternId(
                             tx,
                             eksternOppgaveId.område,
                             eksternOppgaveId.eksternId
-                        )
+                        ).also { brukerkontekst.krevOmråde(it.oppgavetype.område.tilOmrådeEnum()) }
                     }
                 }
 
@@ -47,11 +49,16 @@ class SisteOppgaverTjeneste(
                     oppgaver.map { oppgave ->
                         async {
                             try {
-                                val harTilgang = pepClient.harTilgangTilOppgaveV3(oppgave)
-                                val personPdl = oppgave.hentVerdi("aktorId")?.let {
-                                    pdlService.person(it)
-                                }
+                                val harTilgang = pepClient.harTilgangTilOppgaveV3(
+                                    oppgave,
+                                    brukerkontekst,
+                                )
+                                val personPdl = if (harTilgang) oppgave.hentVerdi("aktorId")?.let {
+                                    pdlService.person(it, brukerkontekst)
+                                } else null
                                 Triple(harTilgang, personPdl, oppgave)
+                            } catch (e: CancellationException) {
+                                throw e
                             } catch (e: Exception) {
                                 log.info("Feil ved pep- og pdl-kall av oppgave ${oppgave.eksternId}", e)
                                 Triple(false, null, oppgave)
@@ -92,15 +99,22 @@ class SisteOppgaverTjeneste(
         }
     }
 
-    suspend fun lagreSisteOppgave(oppgaveNøkkelDto: OppgaveNøkkelDto) {
-        val brukerIdent = coroutineContext.idToken().getNavIdent()
+    fun lagreSisteOppgave(oppgaveNøkkelDto: OppgaveNøkkelDto, brukerkontekst: BrukerkontekstMedOmråde) {
+        val brukerIdent = brukerkontekst.navIdent
+        if (!brukerkontekst.harBasisTilgang) throw ManglerTilgangException("Mangler basistilgang")
+        brukerkontekst.krevOmråde(oppgaveNøkkelDto.områdeEksternId)
         transactionalManager.transaction { tx ->
+            val oppgave = oppgaveRepository.hentNyesteOppgaveForEksternId(
+                tx, brukerkontekst.område, oppgaveNøkkelDto.oppgaveEksternId
+            )
+            brukerkontekst.krevOmråde(oppgave.oppgavetype.område.tilOmrådeEnum())
+            require(oppgave.oppgavetype.eksternId == oppgaveNøkkelDto.oppgaveTypeEksternId) { "Feil oppgavetype" }
             sisteOppgaverRepository.lagreSisteOppgave(
                 tx,
                 brukerIdent,
                 oppgaveNøkkelDto
             )
-            sisteOppgaverRepository.ryddOppForBrukerIdent(tx, brukerIdent)
+            sisteOppgaverRepository.ryddOppForBrukerIdent(tx, brukerIdent, brukerkontekst.område)
         }
     }
 }

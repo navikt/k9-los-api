@@ -10,20 +10,20 @@ import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import no.nav.k9.kodeverk.behandling.BehandlingStegType
 import no.nav.k9.kodeverk.behandling.FagsakYtelseType
-import no.nav.k9.los.domeneadaptere.k9.K9Oppgavetypenavn
-import no.nav.k9.los.domeneadaptere.k9.eventmottak.EventHendelse
 import no.nav.k9.los.domeneadaptere.eventlager.EventNøkkel
 import no.nav.k9.los.domeneadaptere.eventlager.EventRepository
 import no.nav.k9.los.domeneadaptere.eventlager.HistorikkvaskBestilling
+import no.nav.k9.los.domeneadaptere.k9.K9Oppgavetypenavn
+import no.nav.k9.los.domeneadaptere.k9.eventmottak.EventHendelse
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventDto
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.sak.K9SakEventDto
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.kodeverk.BehandlingStatus
 import no.nav.k9.los.kodeverk.BehandlingType
 import no.nav.k9.los.kodeverk.Fagsystem
-import no.nav.k9.los.oppgavemottak.OppgaveV3Tjeneste
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
+import no.nav.k9.los.oppgavemottak.OppgaveV3Tjeneste
 import no.nav.k9.los.oppgaveuthenting.query.OppgaveQueryService
 import no.nav.k9.los.oppgaveuthenting.query.QueryRequest
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.FeltverdiOppgavefilter
@@ -52,7 +52,7 @@ class EventTilOppgaveAdapterSpec : KoinTest, FreeSpec() {
 
     override suspend fun beforeTest(testCase: TestCase) {
         eventRepository = spyk(EventRepository(
-            dataSource = get()
+            dataSource = get(),
         ))
         oppgaveOppdatertHandler = spyk(OppgaveOppdatertHandler(
             oppgaveRepository = get(),
@@ -266,7 +266,7 @@ class EventTilOppgaveAdapterSpec : KoinTest, FreeSpec() {
                     transactionalManager.transaction { tx ->
                         oppgaveV3Tjeneste.hentHøyesteInternVersjon(eksternId.toString(), K9Oppgavetypenavn.SAK.kode, Områder.K9, tx) shouldBe 0
                         oppgaveV3Tjeneste.hentAktivOppgave(eksternId.toString(), K9Oppgavetypenavn.SAK.kode, Områder.K9, tx).hentVerdi("saksnummer") shouldBe "76"
-                        oppgaveQueryService.queryForAntall(QueryRequest( //for å sjekke innhold i oppgave_v3_part
+                        oppgaveQueryService.queryForAntall(QueryRequest(område = Områder.K9, oppgaveQuery =  //for å sjekke innhold i oppgave_v3_part
                             OppgaveQuery(
                                 listOf(
                                     FeltverdiOppgavefilter(

@@ -42,8 +42,8 @@ class K9SakAntallOmsøkteDagerSomErPassertUtleder : TransientFeltutleder {
         val subquery = antallPasserteDagerSql(input.spørringstrategi.verditabell, input.now)
         val query = "(${subquery.query}) ${input.operator.sql} (:inputVerdi)"
         val inputVerdi = when (input.feltverdi) {
-            is String -> (input.feltverdi as String).toLong()
-            is Number -> (input.feltverdi as Number).toLong()
+            is String -> input.feltverdi.toLong()
+            is Number -> input.feltverdi.toLong()
             else -> input.feltverdi
         }
         return SqlMedParams(query, subquery.queryParams + mapOf("inputVerdi" to inputVerdi))

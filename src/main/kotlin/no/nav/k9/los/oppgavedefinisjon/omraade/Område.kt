@@ -19,7 +19,7 @@ class Område (
         return eksternId.hashCode()
     }
 
-    fun tilOmråderEnum(): Områder {
+    fun tilOmrådeEnum(): Områder {
         return Områder.fraEksternId(eksternId)
     }
 }
