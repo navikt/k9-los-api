@@ -60,7 +60,7 @@ class OppgaveV3Test : AbstractK9LosIntegrationTest() {
             }
 
         assertEquals(
-            "Oppgaven mangler obligatorisk felt opprettet",
+            "Oppgaven mangler obligatorisk felt utenlandstilsnitt",
             exception.message!!
         )
     }

@@ -3,7 +3,7 @@ package no.nav.k9.los.domeneadaptere.k9.eventtiloppgave
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.core.test.TestCase
 import io.kotest.matchers.shouldBe
-import io.mockk.clearAllMocks
+import io.mockk.clearMocks
 import io.mockk.spyk
 import io.mockk.verify
 import kotliquery.TransactionalSession
@@ -75,7 +75,10 @@ class EventTilOppgaveAdapterSpec : KoinTest, FreeSpec() {
 
         oppgaveQueryService = get()
 
-        clearAllMocks()
+        // Spyene nullstilles slik at opptelling av kall starter på null for hver test.
+        // Må IKKE bruke clearAllMocks() her, for den nullstiller også den delte
+        // Configuration-mocken i Koin og ødelegger stubbingen for andre tester.
+        clearMocks(eventRepository, oppgaveOppdatertHandler)
     }
 
     init {
