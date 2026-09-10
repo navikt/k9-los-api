@@ -37,16 +37,16 @@ import no.nav.helse.dusseldorf.ktor.jackson.JacksonStatusPages
 import no.nav.helse.dusseldorf.ktor.jackson.dusseldorfConfigured
 import no.nav.helse.dusseldorf.ktor.metrics.init
 import no.nav.k9.los.domeneadaptere.eventlager.EventlagerApi
-import no.nav.k9.los.domeneadaptere.k9.OmrådeSetup
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.OmrådeSetup
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.eventlager.EventlagerApiNy
-import no.nav.k9.los.domeneadaptere.k9.eventtiloppgave.EventTilOppgaveAdapter
-import no.nav.k9.los.domeneadaptere.k9.eventtiloppgave.HistorikkvaskTjeneste
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.EventTilOppgaveAdapter
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.HistorikkvaskTjeneste
 import no.nav.k9.los.domeneadaptere.k9.refreshk9sakoppgaver.K9sakBehandlingsoppfriskingJobb
 import no.nav.k9.los.domeneadaptere.k9.refreshk9sakoppgaver.RefreshK9v3
-import no.nav.k9.los.domeneadaptere.k9.statistikk.OppgavestatistikkTjeneste
-import no.nav.k9.los.domeneadaptere.k9.statistikk.StatistikkApi
-import no.nav.k9.los.domeneadaptere.k9.statistikk.StatistikkApiNy
-import no.nav.k9.los.domeneadaptere.kafka.AsynkronProsesseringV1Service
+import no.nav.k9.los.domeneadaptere.statistikk.OppgavestatistikkTjeneste
+import no.nav.k9.los.domeneadaptere.statistikk.StatistikkApi
+import no.nav.k9.los.domeneadaptere.statistikk.StatistikkApiNy
+import no.nav.k9.los.domeneadaptere.eventmottak.kafka.KafkaConsumerLifecycleService
 import no.nav.k9.los.driftsmelding.DriftsmeldingerApis
 import no.nav.k9.los.forvaltning.forvaltningApis
 import no.nav.k9.los.forvaltning.forvaltningApisNy
@@ -151,12 +151,12 @@ fun Application.k9Los() {
     ) { start(koin.get<Channel<KøpåvirkendeHendelse>>(named("KøpåvirkendeHendelseChannel"))) }
 
 
-    val asynkronProsesseringV1Service = koin.get<AsynkronProsesseringV1Service>()
+    val kafkaConsumerLifecycleService = koin.get<KafkaConsumerLifecycleService>()
 
     monitor.subscribe(ApplicationStopping) {
-        log.info("Stopper AsynkronProsesseringV1Service.")
-        asynkronProsesseringV1Service.stop()
-        log.info("AsynkronProsesseringV1Service Stoppet.")
+        log.info("Stopper kafka-consumere.")
+        kafkaConsumerLifecycleService.stop()
+        log.info("Kafka-consumere stoppet.")
         log.info("Stopper pipeline")
         refreshOppgaveV3Jobb.cancel()
     }

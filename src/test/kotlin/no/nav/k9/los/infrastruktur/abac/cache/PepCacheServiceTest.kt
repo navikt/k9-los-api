@@ -12,13 +12,13 @@ import no.nav.helse.dusseldorf.ktor.jackson.dusseldorfConfigured
 import no.nav.k9.los.AbstractPostgresTest
 import no.nav.k9.los.FeltType
 import no.nav.k9.los.buildAndTestConfig
-import no.nav.k9.los.domeneadaptere.k9.OmrådeSetup
-import no.nav.k9.los.domeneadaptere.k9.eventmottak.EventHendelse
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.OmrådeSetup
+import no.nav.k9.los.domeneadaptere.eventmottak.EventHendelse
 import no.nav.k9.los.domeneadaptere.eventlager.EventNøkkel
-import no.nav.k9.los.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventDto
-import no.nav.k9.los.domeneadaptere.k9.eventmottak.sak.K9SakEventDto
-import no.nav.k9.los.domeneadaptere.k9.eventmottak.sak.K9SakEventHandler
-import no.nav.k9.los.domeneadaptere.k9.eventtiloppgave.EventTilOppgaveAdapter
+import no.nav.k9.los.domeneadaptere.eventmottak.k9.punsj.K9PunsjEventDto
+import no.nav.k9.los.domeneadaptere.eventmottak.k9.sak.K9SakEventDto
+import no.nav.k9.los.domeneadaptere.eventmottak.k9.sak.K9SakEventHandler
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.EventTilOppgaveAdapter
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.infrastruktur.jobbplanlegger.Jobbplanlegger
@@ -27,7 +27,8 @@ import no.nav.k9.los.infrastruktur.jobbplanlegger.Tidsvindu
 import no.nav.k9.los.infrastruktur.brukerkontekst.BrukerkontekstMedOmråde
 import no.nav.k9.los.infrastruktur.brukerkontekst.TestKontekstFactory
 import no.nav.k9.los.kodeverk.BehandlingStatus
-import no.nav.k9.los.kodeverk.Fagsystem
+import no.nav.k9.los.domeneadaptere.eventlager.Fagsystem
+import no.nav.k9.los.domeneadaptere.eventmottak.k9.punsj.K9PunsjEventHandler
 import no.nav.k9.los.kodeverk.PersonBeskyttelseType
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.OppgaveRepository
@@ -139,7 +140,7 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
     @Test
     fun `Alle ordinære eventer på K9punsjEventHandler skal oppdatere pepcache for å alltid få med aktørendringer i sak`() {
         val k9punsjEventHandler =
-            get<no.nav.k9.los.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventHandler>()
+            get<K9PunsjEventHandler>()
         val pepRepository = get<PepCacheRepository>()
         val oppgaveAdapter = get<EventTilOppgaveAdapter>()
 
@@ -147,7 +148,7 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
         val eksternId = UUID.randomUUID().toString()
         gjørAktørOrdinær(aktørId)
         k9punsjEventHandler.prosesser(lagPunsjBehandlingprosessEventMedStatus(eksternId, aktørId))
-        oppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(Fagsystem.PUNSJ, eksternId, område = Områder.K9))
+        oppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(Fagsystem.PUNSJ, eksternId))
 
         val pepCache = pepRepository.hent(Områder.K9, eksternId)!!
         assertThat(pepCache.kode6).isFalse()
@@ -159,7 +160,7 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
     @Test
     fun `Eventer i K9punsjEventHandler med kode6 skal oppdatere pepcache`() {
         val k9punsjEventHandler =
-            get<no.nav.k9.los.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventHandler>()
+            get<K9PunsjEventHandler>()
         val pepRepository = get<PepCacheRepository>()
         val oppgaveAdapter = get<EventTilOppgaveAdapter>()
 
@@ -167,7 +168,7 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
         val eksternId = UUID.randomUUID().toString()
         gjørAktørKode6(aktørId)
         k9punsjEventHandler.prosesser(lagPunsjBehandlingprosessEventMedStatus(eksternId, aktørId))
-        oppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(Fagsystem.PUNSJ, eksternId, område = Områder.K9))
+        oppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(Fagsystem.PUNSJ, eksternId))
 
         val pepCache = pepRepository.hent(Områder.K9, eksternId)!!
         assertThat(pepCache.kode6).isTrue()
@@ -179,7 +180,7 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
     @Test
     fun `Eventer i K9punsjEventHandler med kode7 skal oppdatere pepcache`() {
         val k9punsjEventHandler =
-            get<no.nav.k9.los.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventHandler>()
+            get<K9PunsjEventHandler>()
         val pepRepository = get<PepCacheRepository>()
         val oppgaveAdapter = get<EventTilOppgaveAdapter>()
 
@@ -187,7 +188,7 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
         val eksternId = UUID.randomUUID().toString()
         gjørAktørKode7(aktørId)
         k9punsjEventHandler.prosesser(lagPunsjBehandlingprosessEventMedStatus(eksternId, aktørId))
-        oppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(Fagsystem.PUNSJ, eksternId, område = Områder.K9))
+        oppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(Fagsystem.PUNSJ, eksternId))
 
         val pepCache = pepRepository.hent(Områder.K9, eksternId)!!
         assertThat(pepCache.kode6).isFalse()
@@ -205,7 +206,7 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
         val eksternId = UUID.randomUUID().toString()
         gjørSakKode6(saksnummer)
         k9sakEventHandler.prosesser(lagBehandlingprosessEventMedStatus(eksternId, saksnummer))
-        oppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(Fagsystem.K9SAK, eksternId, område = Områder.K9))
+        oppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(Fagsystem.K9SAK, eksternId))
 
         val pepCache = pepRepository.hent(Områder.K9, eksternId)!!
         assertThat(pepCache.kode6).isTrue()

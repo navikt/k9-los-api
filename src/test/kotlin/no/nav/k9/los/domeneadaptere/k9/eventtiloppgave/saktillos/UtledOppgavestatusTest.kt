@@ -6,9 +6,10 @@ import io.kotest.matchers.shouldBe
 import no.nav.k9.kodeverk.behandling.*
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.Venteårsak
-import no.nav.k9.los.domeneadaptere.k9.eventmottak.EventHendelse
-import no.nav.k9.los.domeneadaptere.k9.eventmottak.sak.K9SakEventDto
-import no.nav.k9.los.kodeverk.Fagsystem
+import no.nav.k9.los.domeneadaptere.eventmottak.EventHendelse
+import no.nav.k9.los.domeneadaptere.eventmottak.k9.sak.K9SakEventDto
+import no.nav.k9.los.domeneadaptere.eventlager.Fagsystem
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.saktillos.SakEventTilOppgaveMapper
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.sak.kontrakt.aksjonspunkt.AksjonspunktTilstandDto
 import java.time.LocalDate

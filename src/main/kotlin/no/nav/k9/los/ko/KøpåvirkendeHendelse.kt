@@ -1,6 +1,6 @@
 package no.nav.k9.los.ko
 
-import no.nav.k9.los.kodeverk.Fagsystem
+import no.nav.k9.los.domeneadaptere.eventlager.Fagsystem
 import no.nav.k9.los.oppgaveuthenting.query.db.EksternOppgaveId
 
 interface KøpåvirkendeHendelse

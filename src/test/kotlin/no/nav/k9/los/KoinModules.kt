@@ -3,27 +3,35 @@ package no.nav.k9.los
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.channels.Channel
-import no.nav.k9.los.domeneadaptere.k9.OmrådeSetup
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.OmrådeSetup
 import no.nav.k9.los.domeneadaptere.k9.avstemming.AvstemmingsTjeneste
-import no.nav.k9.los.domeneadaptere.k9.eventmottak.FeilRekkefølgeSjekker
+import no.nav.k9.los.domeneadaptere.eventmottak.FeilRekkefølgeSjekker
 import no.nav.k9.los.domeneadaptere.eventlager.EventRepository
-import no.nav.k9.los.domeneadaptere.k9.eventmottak.klage.K9KlageEventHandler
-import no.nav.k9.los.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventHandler
-import no.nav.k9.los.domeneadaptere.k9.eventmottak.sak.K9SakEventHandler
-import no.nav.k9.los.domeneadaptere.k9.eventmottak.tilbakekrav.K9TilbakeEventHandler
-import no.nav.k9.los.domeneadaptere.k9.eventtiloppgave.*
-import no.nav.k9.los.domeneadaptere.k9.eventtiloppgave.klagetillos.KlageEventTilOppgaveMapper
-import no.nav.k9.los.domeneadaptere.k9.eventtiloppgave.klagetillos.beriker.K9KlageBerikerInterfaceKludge
-import no.nav.k9.los.domeneadaptere.k9.eventtiloppgave.klagetillos.beriker.K9KlageBerikerKlientLocal
-import no.nav.k9.los.domeneadaptere.k9.eventtiloppgave.punsjtillos.PunsjEventTilOppgaveMapper
-import no.nav.k9.los.domeneadaptere.k9.eventtiloppgave.saktillos.SakEventTilOppgaveMapper
-import no.nav.k9.los.domeneadaptere.k9.eventtiloppgave.saktillos.beriker.K9SakSystemKlientInterfaceKludge
-import no.nav.k9.los.domeneadaptere.k9.eventtiloppgave.saktillos.beriker.K9SakSystemKlientLocal
-import no.nav.k9.los.domeneadaptere.k9.eventtiloppgave.tilbaketillos.TilbakeEventTilOppgaveMapper
+import no.nav.k9.los.domeneadaptere.eventmottak.k9.klage.K9KlageEventHandler
+import no.nav.k9.los.domeneadaptere.eventmottak.k9.punsj.K9PunsjEventHandler
+import no.nav.k9.los.domeneadaptere.eventmottak.k9.sak.K9SakEventHandler
+import no.nav.k9.los.domeneadaptere.eventmottak.k9.tilbakekrav.K9TilbakeEventHandler
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.EventTilOppgaveAdapter
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.EventTilOppgaveMapper
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.HistorikkvaskTjeneste
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.OppgaveOppdatertHandler
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.VaskeeventSerieutleder
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.klagetillos.KlageEventTilOppgaveMapper
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.klagetillos.beriker.K9KlageBerikerInterfaceKludge
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.klagetillos.beriker.K9KlageBerikerKlientLocal
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.punsjtillos.PunsjEventTilOppgaveMapper
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.saktillos.SakEventTilOppgaveMapper
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.saktillos.beriker.K9SakSystemKlientInterfaceKludge
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.saktillos.beriker.K9SakSystemKlientLocal
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.tilbaketillos.TilbakeEventTilOppgaveMapper
 import no.nav.k9.los.domeneadaptere.k9.refreshk9sakoppgaver.RefreshK9v3Tjeneste
 import no.nav.k9.los.domeneadaptere.k9.refreshk9sakoppgaver.restklient.IK9SakService
 import no.nav.k9.los.domeneadaptere.k9.refreshk9sakoppgaver.restklient.K9SakServiceLocal
-import no.nav.k9.los.domeneadaptere.k9.statistikk.*
+import no.nav.k9.los.domeneadaptere.statistikk.K9KlageOppgaveTilDVHMapper
+import no.nav.k9.los.domeneadaptere.statistikk.K9SakOppgaveTilDVHMapper
+import no.nav.k9.los.domeneadaptere.statistikk.OppgavestatistikkTjeneste
+import no.nav.k9.los.domeneadaptere.statistikk.StatistikkPublisher
+import no.nav.k9.los.domeneadaptere.statistikk.StatistikkRepository
 import no.nav.k9.los.driftsmelding.DriftsmeldingRepository
 import no.nav.k9.los.oppgavemottak.feltutlederforlagring.GyldigeFeltutledere
 import no.nav.k9.los.forvaltning.ForvaltningRepository
@@ -200,7 +208,6 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     single {
         EventRepository(
             dataSource = get(),
-            områdeRepository = get(),
         )
     }
 
@@ -287,7 +294,6 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     single {
         EventRepository(
             dataSource = get(),
-            områdeRepository = get(),
         )
     }
 

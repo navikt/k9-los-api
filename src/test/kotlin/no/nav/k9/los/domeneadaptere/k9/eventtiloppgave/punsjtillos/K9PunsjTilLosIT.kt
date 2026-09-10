@@ -8,12 +8,12 @@ import no.nav.k9.los.OppgaveTestDataBuilder
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.punsj.PunsjEventDtoBuilder
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.TestSaksbehandler
 import no.nav.k9.los.domeneadaptere.eventlager.EventNøkkel
-import no.nav.k9.los.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventHandler
-import no.nav.k9.los.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventDto
-import no.nav.k9.los.domeneadaptere.k9.eventtiloppgave.EventTilOppgaveAdapter
+import no.nav.k9.los.domeneadaptere.eventmottak.k9.punsj.K9PunsjEventHandler
+import no.nav.k9.los.domeneadaptere.eventmottak.k9.punsj.K9PunsjEventDto
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.EventTilOppgaveAdapter
 import no.nav.k9.los.ko.OppgaveKoTjeneste
 import no.nav.k9.los.kodeverk.FagsakYtelseType
-import no.nav.k9.los.kodeverk.Fagsystem
+import no.nav.k9.los.domeneadaptere.eventlager.Fagsystem
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.oppgaveuthenting.OppgaveRepository
 import no.nav.k9.los.reservasjon.ReservasjonApisTjeneste
@@ -24,7 +24,6 @@ import org.junit.jupiter.api.Test
 import org.koin.test.get
 import java.time.LocalDateTime
 import java.util.*
-import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 
 
 class K9PunsjTilLosIT : AbstractK9LosIntegrationTest() {
@@ -103,7 +102,7 @@ class K9PunsjTilLosIT : AbstractK9LosIntegrationTest() {
         eventHandler.prosesser(event2)
         eventHandler.prosesser(event3)
 
-        eventTilOppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(Fagsystem.PUNSJ, punsjId.toString(), område = Områder.K9))
+        eventTilOppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(Fagsystem.PUNSJ, punsjId.toString()))
 
         val oppgave = transactionalManager.transaction { tx -> oppgaveRepository.hentNyesteOppgaveForEksternIdHvisFinnes(tx, "K9", punsjId.toString()) }
         assertThat(oppgave!!.status).isEqualTo(Oppgavestatus.LUKKET)

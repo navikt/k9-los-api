@@ -8,10 +8,12 @@ import no.nav.k9.kodeverk.behandling.FagsakYtelseType
 import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.kodeverk.BehandlingStatus
 import no.nav.k9.los.kodeverk.BehandlingType
-import no.nav.k9.los.kodeverk.Fagsystem
-import no.nav.k9.los.domeneadaptere.k9.eventmottak.sak.K9SakEventDto
-import no.nav.k9.los.domeneadaptere.k9.eventmottak.EventHendelse
-import no.nav.k9.los.domeneadaptere.k9.eventtiloppgave.saktillos.beriker.K9SakSystemKlientLocal
+import no.nav.k9.los.domeneadaptere.eventlager.Fagsystem
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.K9Oppgavetypenavn
+import no.nav.k9.los.domeneadaptere.eventmottak.k9.sak.K9SakEventDto
+import no.nav.k9.los.domeneadaptere.eventmottak.EventHendelse
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.saktillos.SakEventTilOppgaveMapper
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.saktillos.beriker.K9SakSystemKlientLocal
 import no.nav.k9.los.oppgavemottak.OppgaveDto
 import no.nav.k9.los.oppgavemottak.OppgaveFeltverdiDto
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
@@ -121,10 +123,8 @@ class BehandlingObsoleteTest : AbstractK9LosIntegrationTest() {
         return OppgaveDto(
             eksternId = "12345",
             eksternVersjon = "1",
-            område = "K9",
-            kildeområde = "K9",
-            type = "k9-sak",
-            status = Oppgavestatus.AAPEN.kode,
+            type = K9Oppgavetypenavn.SAK,
+            status = Oppgavestatus.AAPEN,
             endretTidspunkt = LocalDateTime.now(),
             reservasjonsnøkkel = "12345",
             feltverdier = listOf(OppgaveFeltverdiDto(

@@ -1,11 +1,14 @@
 package no.nav.k9.los.oppgavemottak
 
+import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
+import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.Datatype
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.FeltdefinisjonDto
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.FeltdefinisjonTjeneste
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.FeltdefinisjonerDto
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.Synlighet
 import no.nav.k9.los.oppgavedefinisjon.omraade.Område
 import no.nav.k9.los.oppgavedefinisjon.omraade.OmrådeRepository
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgavedefinisjon.oppgavetype.OppgavefeltDto
 import no.nav.k9.los.oppgavedefinisjon.oppgavetype.OppgavetypeDto
 import no.nav.k9.los.oppgavedefinisjon.oppgavetype.OppgavetypeTjeneste
@@ -45,8 +48,7 @@ class RedusertOppgaveTestmodellBuilder(
                     visningsnavn = "Test",
                     beskrivelse = null,
                     listetype = true,
-                    tolkesSom = "String",
-
+                    tolkesSom = Datatype.STRING,
                     synlighet = Synlighet.UNDER_STREKEN,
                     kodeverkreferanse = null,
                     transientFeltutleder = null,
@@ -56,8 +58,7 @@ class RedusertOppgaveTestmodellBuilder(
                     visningsnavn = "Test",
                     beskrivelse = null,
                     listetype = false,
-                    tolkesSom = "Timestamp",
-
+                    tolkesSom = Datatype.TIMESTAMP,
                     synlighet = Synlighet.UNDER_STREKEN,
                     kodeverkreferanse = null,
                     transientFeltutleder = null,
@@ -67,8 +68,7 @@ class RedusertOppgaveTestmodellBuilder(
                     visningsnavn = "Test",
                     beskrivelse = null,
                     listetype = false,
-                    tolkesSom = "String",
-
+                    tolkesSom = Datatype.STRING,
                     synlighet = Synlighet.UNDER_STREKEN,
                     kodeverkreferanse = null,
                     transientFeltutleder = null,
@@ -78,7 +78,7 @@ class RedusertOppgaveTestmodellBuilder(
                     visningsnavn = "Test",
                     beskrivelse = null,
                     listetype = false,
-                    tolkesSom = "Duration",
+                    tolkesSom = Datatype.DURATION,
                     synlighet = Synlighet.INTERNT,
                     kodeverkreferanse = null,
                     transientFeltutleder = null,
@@ -88,7 +88,7 @@ class RedusertOppgaveTestmodellBuilder(
                     visningsnavn = "Test",
                     beskrivelse = null,
                     listetype = false,
-                    tolkesSom = "boolean",
+                    tolkesSom = Datatype.BOOLEAN,
                     synlighet = Synlighet.INTERNT,
                     kodeverkreferanse = null,
                     transientFeltutleder = null,
@@ -125,7 +125,7 @@ class RedusertOppgaveTestmodellBuilder(
                             id = "akkumulertVentetidSaksbehandler",
                             visPåOppgave = false,
                             påkrevd = false,
-                            feltutleder = "no.nav.k9.los.oppgavemottak.feltutlederforlagring.AkkumulertVentetidSaksbehandler",
+                            feltutlederForLagring = "no.nav.k9.los.oppgavemottak.feltutlederforlagring.AkkumulertVentetidSaksbehandler",
                         ),
                         OppgavefeltDto(
                             id = "avventerSaksbehandler",
@@ -142,10 +142,8 @@ class RedusertOppgaveTestmodellBuilder(
         return OppgaveDto(
             eksternId = "aksjonspunkt",
             eksternVersjon = LocalDateTime.now().toString(),
-            område = område.eksternId,
-            kildeområde = "k9-sak-til-los",
-            type = "aksjonspunkt",
-            status = status,
+            type = GeneriskOppgaveDtoType("aksjonspunkt", Områder.K9),
+            status = Oppgavestatus.fraKode(status),
             endretTidspunkt = LocalDateTime.now(),
             reservasjonsnøkkel = reservasjonsnøkkel,
             feltverdier = listOf(
@@ -173,10 +171,8 @@ class RedusertOppgaveTestmodellBuilder(
         return OppgaveDto(
             eksternId = "aksjonspunkt",
             eksternVersjon = LocalDateTime.now().toString(),
-            område = område.eksternId,
-            kildeområde = "k9-sak-til-los",
-            type = "aksjonspunkt",
-            status = "ÅPEN",
+            type = GeneriskOppgaveDtoType("aksjonspunkt", Områder.K9),
+            status = Oppgavestatus.fraKode("AAPEN"),
             endretTidspunkt = LocalDateTime.now(),
             reservasjonsnøkkel = "test",
             feltverdier = listOf(

@@ -17,7 +17,7 @@ class Feltdefinisjoner(
                 visningsnavn = feltdefinisjonDto.visningsnavn,
                 beskrivelse = feltdefinisjonDto.beskrivelse,
                 listetype = feltdefinisjonDto.listetype,
-                tolkesSom = feltdefinisjonDto.tolkesSom,
+                tolkesSom = feltdefinisjonDto.tolkesSom.kode,
                 synlighet = feltdefinisjonDto.synlighet,
                 kodeverkreferanse = feltdefinisjonDto.kodeverkreferanse?.let { kodeverkreferanseDto -> Kodeverkreferanse(kodeverkreferanseDto) },
                 transientFeltutleder = feltdefinisjonDto.transientFeltutleder?.let { GyldigeTransientFeltutleder.hentFeltutleder(it) }

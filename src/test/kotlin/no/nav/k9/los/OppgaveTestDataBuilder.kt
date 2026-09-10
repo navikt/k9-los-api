@@ -1,7 +1,7 @@
 package no.nav.k9.los
 
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
-import no.nav.k9.los.domeneadaptere.k9.OmrådeSetup
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.OmrådeSetup
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.Datatype
 import no.nav.k9.los.oppgavedefinisjon.omraade.Område
 import no.nav.k9.los.oppgavedefinisjon.omraade.OmrådeRepository

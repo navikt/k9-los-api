@@ -6,17 +6,16 @@ import io.github.smiley4.ktoropenapi.put
 import io.ktor.http.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import no.nav.k9.los.domeneadaptere.k9.eventmottak.klage.K9KlageEventDto
-import no.nav.k9.los.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventDto
-import no.nav.k9.los.domeneadaptere.k9.eventmottak.sak.K9SakEventDto
-import no.nav.k9.los.domeneadaptere.k9.eventmottak.tilbakekrav.K9TilbakeEventDto
-import no.nav.k9.los.domeneadaptere.k9.eventtiloppgave.EventTilOppgaveAdapter
-import no.nav.k9.los.domeneadaptere.ungsak.eventmottak.ungsak.UngSakEventDto
+import no.nav.k9.los.domeneadaptere.eventmottak.k9.klage.K9KlageEventDto
+import no.nav.k9.los.domeneadaptere.eventmottak.k9.punsj.K9PunsjEventDto
+import no.nav.k9.los.domeneadaptere.eventmottak.k9.sak.K9SakEventDto
+import no.nav.k9.los.domeneadaptere.eventmottak.k9.tilbakekrav.K9TilbakeEventDto
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.EventTilOppgaveAdapter
+import no.nav.k9.los.domeneadaptere.eventmottak.ung.sak.UngSakEventDto
 import no.nav.k9.los.forvaltning.*
 import no.nav.k9.los.infrastruktur.brukerkontekst.medBrukerkontekst
 import no.nav.k9.los.infrastruktur.brukerkontekst.medBrukerkontekstUtenOmråde
 import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
-import no.nav.k9.los.kodeverk.Fagsystem
 import org.koin.ktor.ext.inject
 import java.util.*
 import kotlin.concurrent.thread
@@ -48,35 +47,31 @@ internal fun Route.EventlagerApi() {
 
                 val eventStrenger = try {
                     eventRepository.hentAlleEventer(fagsystem, eksternId).map { it.eventJson }
-                } catch (e: NullPointerException) {
+                } catch (_: NullPointerException) {
                     call.respond(HttpStatusCode.NotFound)
                     return@medBrukerkontekstUtenOmråde
                 }
 
                 val eventerIkkeSensitive = when (fagsystem) {
                     Fagsystem.K9SAK -> {
-                        val eventliste = eventStrenger.map { LosObjectMapper.prettyInstance.readValue<K9SakEventDto>(it) }.toList()
-                        eventliste.map { event -> K9SakEventIkkeSensitiv(event) }
+                        eventStrenger.map { LosObjectMapper.prettyInstance.readValue<K9SakEventDto>(it) }.toList()
                     }
                     Fagsystem.K9TILBAKE -> {
-                        val eventliste = eventStrenger.map { LosObjectMapper.prettyInstance.readValue<K9TilbakeEventDto>(it) }.toList()
-                        eventliste.map { event -> K9TilbakeEventIkkeSensitiv(event) }
+                        eventStrenger.map { LosObjectMapper.prettyInstance.readValue<K9TilbakeEventDto>(it) }.toList()
                     }
                     Fagsystem.K9KLAGE -> {
-                        val eventliste = eventStrenger.map { LosObjectMapper.prettyInstance.readValue<K9KlageEventDto>(it) }.toList()
-                        eventliste.map { event -> K9KlageEventIkkeSensitiv(event) }
+                        eventStrenger.map { LosObjectMapper.prettyInstance.readValue<K9KlageEventDto>(it) }.toList()
                     }
                     Fagsystem.PUNSJ -> {
-                        val eventliste = eventStrenger.map { LosObjectMapper.prettyInstance.readValue<K9PunsjEventDto>(it) }.toList()
-                        eventliste.map { event -> K9PunsjEventIkkeSensitiv(event) }
+                        eventStrenger.map { LosObjectMapper.prettyInstance.readValue<K9PunsjEventDto>(it) }.toList()
                     }
                     Fagsystem.UNGSAK -> {
-                        val eventliste = eventStrenger.map { LosObjectMapper.prettyInstance.readValue<UngSakEventDto>(it) }.toList()
-                        eventliste.map { event -> UngSakEventIkkeSensitiv(event) }
+                        eventStrenger.map { LosObjectMapper.prettyInstance.readValue<UngSakEventDto>(it) }.toList()
                     }
                     Fagsystem.UNGTILBAKE -> throw NotImplementedError("Fagsystem $fagsystem is not implemented yet")
                 }
-                call.respond(LosObjectMapper.prettyInstance.writeValueAsString(eventerIkkeSensitive))
+                val responsePayload = ForvaltningSensitiveObjectMapper.prettyInstance.writeValueAsString(eventerIkkeSensitive)
+                call.respond(responsePayload)
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }

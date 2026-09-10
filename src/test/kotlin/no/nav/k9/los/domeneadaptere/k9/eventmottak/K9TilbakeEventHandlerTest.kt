@@ -2,11 +2,14 @@ package no.nav.k9.los.domeneadaptere.k9.eventmottak
 
 import assertk.assertThat
 import assertk.assertions.isEqualTo
+import com.fasterxml.jackson.module.kotlin.readValue
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus
 import no.nav.k9.los.AbstractK9LosIntegrationTest
-import no.nav.k9.los.domeneadaptere.k9.OmrådeSetup
-import no.nav.k9.los.domeneadaptere.k9.eventmottak.tilbakekrav.K9TilbakeEventHandler
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.OmrådeSetup
+import no.nav.k9.los.domeneadaptere.eventmottak.k9.tilbakekrav.K9TilbakeEventDto
+import no.nav.k9.los.domeneadaptere.eventmottak.k9.tilbakekrav.K9TilbakeEventHandler
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
+import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.kodeverk.FagsakYtelseType
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
@@ -44,6 +47,9 @@ class K9TilbakeEventHandlerTest : AbstractK9LosIntegrationTest() {
         }
     }
 
+    private fun deserialiser(json: String): K9TilbakeEventDto =
+        LosObjectMapper.instance.readValue<K9TilbakeEventDto>(json)
+
     @Test
     fun `Skal sette oppgave til VENTER når behandlingen har aktivt autopunkt`() {
         val json = lagK9TilbakeEvent(
@@ -55,7 +61,7 @@ class K9TilbakeEventHandlerTest : AbstractK9LosIntegrationTest() {
                 "7003" to AksjonspunktStatus.OPPRETTET
             ))
 
-        val event = AksjonspunktLagetTilbake().deserialize(null, json.toByteArray())!!
+        val event = deserialiser(json)
 
         k9TilbakeEventHandler.prosesser(event)
 
@@ -73,7 +79,7 @@ class K9TilbakeEventHandlerTest : AbstractK9LosIntegrationTest() {
             )
         )
 
-        val event = AksjonspunktLagetTilbake().deserialize(null, json.toByteArray())!!
+        val event = deserialiser(json)
 
         k9TilbakeEventHandler.prosesser(event)
 
@@ -99,7 +105,7 @@ class K9TilbakeEventHandlerTest : AbstractK9LosIntegrationTest() {
             )
         )
 
-        val event = AksjonspunktLagetTilbake().deserialize(null, json.toByteArray())!!
+        val event = deserialiser(json)
 
         k9TilbakeEventHandler.prosesser(event)
 
@@ -122,7 +128,7 @@ class K9TilbakeEventHandlerTest : AbstractK9LosIntegrationTest() {
             )
         )
 
-        val event = AksjonspunktLagetTilbake().deserialize(null, json.toByteArray())!!
+        val event = deserialiser(json)
 
         k9TilbakeEventHandler.prosesser(event)
 

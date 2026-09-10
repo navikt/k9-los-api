@@ -1,6 +1,6 @@
 package no.nav.k9.los.infrastruktur.utils
 
-import no.nav.k9.los.domeneadaptere.k9.eventtiloppgave.TransientException
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.TransientException
 import org.slf4j.LoggerFactory
 import java.io.InterruptedIOException
 import java.net.SocketException

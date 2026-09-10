@@ -1,6 +1,6 @@
 package no.nav.k9.los.oppgavedefinisjon.omraade
 
-import no.nav.k9.los.kodeverk.Fagsystem
+import no.nav.k9.los.domeneadaptere.eventlager.Fagsystem
 
 /**
  * Registeret over gyldige område-eksternIder i Los.

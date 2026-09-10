@@ -30,7 +30,7 @@ class OppgaveV3Tjeneste(
                 }
             }
             is VaskOppgaveversjon -> {
-                val eksisterer = oppgaveV3Repository.hentOppgaveIdStatusOgHøyesteInternversjon(tx, innsending.dto.eksternId, innsending.dto.type, innsending.dto.område).first != null
+                val eksisterer = oppgaveV3Repository.hentOppgaveIdStatusOgHøyesteInternversjon(tx, innsending.dto.eksternId, innsending.dto.type.kode, innsending.dto.område.eksternId).first != null
                 if (eksisterer) {
                     return vaskEksisterendeOppgaveversjon(innsending.dto, innsending.eventNummer, tx, forrigeOppgaveversjon)
                 } else {
@@ -45,10 +45,10 @@ class OppgaveV3Tjeneste(
         tx: TransactionalSession,
         forrigeOppgaveversjon: OppgaveV3? = null,
     ): OppgaveV3 {
-        val område = områdeRepository.hentOmråde(oppgaveDto.område, tx)
+        val område = områdeRepository.hentOmråde(oppgaveDto.område.eksternId, tx)
         val oppgavetype = oppgavetypeRepository.hentOppgavetype(
             område = område.eksternId,
-            eksternId = oppgaveDto.type,
+            eksternId = oppgaveDto.type.kode,
             tx = tx
         )
 
@@ -133,12 +133,12 @@ class OppgaveV3Tjeneste(
         forrigeOppgaveversjon: OppgaveV3? = null,
     ) : OppgaveV3 {
         val oppgavetype = oppgavetypeRepository.hentOppgavetype(
-            område = oppgaveDto.område,
-            eksternId = oppgaveDto.type,
+            område = oppgaveDto.område.eksternId,
+            eksternId = oppgaveDto.type.kode,
             tx = tx
         )
 
-        val område = områdeRepository.hentOmråde(oppgaveDto.område, tx)
+        val område = områdeRepository.hentOmråde(oppgaveDto.område.eksternId, tx)
 
         // Hopper over hentOppgaveversjon-oppslaget hvis caller allerede har versjonen i minne.
         val forrigeOppgaveversjonResolved = forrigeOppgaveversjon ?: if (eventNr > 0) {

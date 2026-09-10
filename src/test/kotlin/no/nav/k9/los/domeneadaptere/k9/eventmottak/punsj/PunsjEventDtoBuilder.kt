@@ -1,7 +1,8 @@
 package no.nav.k9.los.domeneadaptere.k9.eventmottak.punsj
 
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus
-import no.nav.k9.los.domeneadaptere.k9.eventmottak.EventHendelse
+import no.nav.k9.los.domeneadaptere.eventmottak.EventHendelse
+import no.nav.k9.los.domeneadaptere.eventmottak.k9.punsj.K9PunsjEventDto
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.TestSaksbehandler
 import no.nav.k9.los.kodeverk.BehandlingType
 import no.nav.k9.los.kodeverk.FagsakYtelseType
@@ -69,7 +70,8 @@ data class PunsjEventDtoBuilder(
             eventTid = eventTid ?: LocalDateTime.now().plusSeconds(teller++),
             aktørId = AktørId(aktørId),
             pleietrengendeAktørId = pleietrengendeAktørId,
-            aksjonspunktKoderMedStatusListe = aksjonspunkter.entries.associate { (aksjonspunkt, status) -> aksjonspunkt to status.kode }.toMutableMap(),
+            aksjonspunktKoderMedStatusListe = aksjonspunkter.entries.associate { (aksjonspunkt, status) -> aksjonspunkt to status.kode }
+                .toMutableMap(),
             type = type?.kode,
             ytelse = ytelse?.kode,
             sendtInn = sendtInn,
