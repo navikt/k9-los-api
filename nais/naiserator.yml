@@ -139,11 +139,5 @@ spec:
     - name: "OTEL_RESOURCE_ATTRIBUTES"
       value: "service.name=k9-los-api,service.namespace=k9saksbehandling,deployment.environment={{deployment_environment}},nais.backend=elastic-apm;grafana-lgtm"
 
-      # feature toggles
-    - name: NY_OPPGAVESTYRING
-      value: "true"
-    - name: NY_OPPGAVESTYRING_REST_API
-      value: "{{ny_oppgavestyring_rest_api}}"
-
     - name: NOKKELTALL_ENHETER
       value: "{{nokkeltall_enheter}}"
