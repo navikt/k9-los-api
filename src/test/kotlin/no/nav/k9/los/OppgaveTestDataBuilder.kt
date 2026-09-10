@@ -1,25 +1,25 @@
 package no.nav.k9.los
 
-import no.nav.k9.los.domeneadaptere.k9.OmrådeSetup
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
-import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
+import no.nav.k9.los.domeneadaptere.k9.OmrådeSetup
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.Datatype
-import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.Synlighet
 import no.nav.k9.los.oppgavedefinisjon.omraade.Område
 import no.nav.k9.los.oppgavedefinisjon.omraade.OmrådeRepository
-import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
-import no.nav.k9.los.oppgavedefinisjon.oppgavetype.OppgavetypeRepository
 import no.nav.k9.los.oppgavemottak.AktivOgPartisjonertOppgaveAjourholdTjeneste
 import no.nav.k9.los.oppgavemottak.OppgaveFeltverdi
 import no.nav.k9.los.oppgavemottak.OppgaveV3
 import no.nav.k9.los.oppgavemottak.OppgaveV3Repository
+import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
+import no.nav.k9.los.oppgavedefinisjon.oppgavetype.OppgavetypeRepository
 import no.nav.k9.los.oppgaveuthenting.query.db.OmrådeOgKode
 import no.nav.k9.los.oppgaveuthenting.query.db.OppgavefeltMedMer
+import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.Synlighet
 import no.nav.k9.los.oppgaveuthenting.query.dto.felter.Oppgavefelt
 import org.koin.test.KoinTest
 import org.koin.test.get
 import java.time.LocalDateTime
 import java.util.*
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 
 class OppgaveTestDataBuilder(
     val definisjonskilde: String = "k9-sak-til-los",

@@ -38,9 +38,9 @@ import no.nav.k9.los.infrastruktur.azuregraph.AzureGraphServiceLocal
 import no.nav.k9.los.infrastruktur.azuregraph.IAzureGraphService
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.infrastruktur.metrikker.EventlagerNokkeltallRepository
-import no.nav.k9.los.innloggetbruker.InnloggetBrukerTjeneste
 import no.nav.k9.los.infrastruktur.pdl.IPdlService
 import no.nav.k9.los.infrastruktur.pdl.PdlServiceLocal
+import no.nav.k9.los.innloggetbruker.InnloggetBrukerTjeneste
 import no.nav.k9.los.ko.KøpåvirkendeHendelse
 import no.nav.k9.los.ko.OppgaveKoTjeneste
 import no.nav.k9.los.ko.db.OppgaveKoRepository
@@ -86,8 +86,8 @@ import no.nav.k9.los.uttrekk.UttrekkTjeneste
 import org.koin.core.module.Module
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
-import java.util.*
 import java.time.Clock
+import java.util.*
 import javax.sql.DataSource
 
 fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClientLocal()): Module = module {

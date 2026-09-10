@@ -2,10 +2,10 @@ package no.nav.k9.los.oppgaveuthenting
 
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.Datatype
-import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgavedefinisjon.oppgavetype.Oppgavetype
 import no.nav.k9.los.oppgaveuthenting.query.mapping.transientfeltutleder.HentVerdiInput
 import java.time.LocalDateTime
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 
 data class Oppgave(
     val eksternId: String,

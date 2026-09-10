@@ -98,8 +98,8 @@ import org.koin.core.module.Module
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
 import org.slf4j.LoggerFactory
-import java.util.*
 import java.time.Clock
+import java.util.*
 import javax.sql.DataSource
 
 fun selectModulesBasedOnProfile(application: Application, config: Configuration): List<Module> {

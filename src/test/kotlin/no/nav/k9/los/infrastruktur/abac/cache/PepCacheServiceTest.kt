@@ -10,8 +10,8 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import no.nav.helse.dusseldorf.ktor.jackson.dusseldorfConfigured
 import no.nav.k9.los.AbstractPostgresTest
-import no.nav.k9.los.FeltType
 import no.nav.k9.los.buildAndTestConfig
+import no.nav.k9.los.FeltType
 import no.nav.k9.los.domeneadaptere.k9.OmrådeSetup
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.EventHendelse
 import no.nav.k9.los.domeneadaptere.eventlager.EventNøkkel

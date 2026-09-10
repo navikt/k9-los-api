@@ -3,8 +3,8 @@ package no.nav.k9.los.sisteoppgaver
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
-import no.nav.k9.los.oppgaveuthenting.OppgaveNøkkelDto
 import no.nav.k9.los.oppgaveuthenting.query.db.EksternOppgaveId
+import no.nav.k9.los.oppgaveuthenting.OppgaveNøkkelDto
 import javax.sql.DataSource
 
 class SisteOppgaverRepository(

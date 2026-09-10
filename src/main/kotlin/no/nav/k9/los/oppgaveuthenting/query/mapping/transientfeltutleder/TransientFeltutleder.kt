@@ -1,10 +1,10 @@
 package no.nav.k9.los.oppgaveuthenting.query.mapping.transientfeltutleder
 
-import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
-import no.nav.k9.los.oppgaveuthenting.Oppgave
 import no.nav.k9.los.oppgaveuthenting.query.db.Spørringstrategi
 import no.nav.k9.los.oppgaveuthenting.query.mapping.FeltverdiOperator
+import no.nav.k9.los.oppgaveuthenting.Oppgave
 import java.time.LocalDateTime
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 
 interface TransientFeltutleder {
 
