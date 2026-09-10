@@ -97,16 +97,6 @@ data class Configuration(private val config: ApplicationConfig) {
             ?: ""
     }
 
-    internal fun nyOppgavestyringAktivert(): Boolean {
-        return config.getOptionalString("nav.features.nyOppgavestyring", secret = false).toBoolean()
-    }
-
-
-    internal fun nyOppgavestyringRestAktivert(): Boolean {
-        return config.getOptionalString("nav.features.nyOppgavestyringRestApi", secret = false).toBoolean()
-    }
-
-
     internal fun getProfileAwareKafkaAivenConfig(): IKafkaConfig {
         val defaultOffsetResetStrategy =
             if (koinProfile == KoinProfile.LOCAL) OffsetResetStrategy.EARLIEST else OffsetResetStrategy.NONE
