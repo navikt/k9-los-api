@@ -8,7 +8,6 @@ import no.nav.sif.abac.kontrakt.person.AktørId
 import java.util.*
 
 interface ISifAbacPdpKlient {
-    /** Tilganger for brukeren i det validerte tokenet, aldri fra lokal gruppeautorisasjon. */
     suspend fun hentTilganger(idToken: IIdToken): Tilganger
 
     suspend fun diskresjonskoderPerson(aktørId: AktørId): Set<Diskresjonskode>

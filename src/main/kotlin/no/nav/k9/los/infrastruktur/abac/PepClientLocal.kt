@@ -1,6 +1,5 @@
 package no.nav.k9.los.infrastruktur.abac
 
-import no.nav.k9.los.infrastruktur.brukerkontekst.BrukerkontekstMedOmråde
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.Oppgave
 import no.nav.k9.los.saksbehandleradmin.Saksbehandler
@@ -9,15 +8,6 @@ import no.nav.sif.abac.kontrakt.abac.Diskresjonskode
 class PepClientLocal : IPepClient {
     override suspend fun diskresjonskoderForSak(fagsakNummer: String, område: Områder): Set<Diskresjonskode> = emptySet()
     override suspend fun diskresjonskoderForPerson(aktørId: String, område: Områder): Set<Diskresjonskode> = emptySet()
-
-    override suspend fun harTilgangTilOppgaveV3(
-        oppgave: Oppgave,
-        brukerkontekst: BrukerkontekstMedOmråde,
-        action: Action,
-    ): Boolean {
-        brukerkontekst.krevOmråde(oppgave.oppgavetype.område.tilOmråderEnum())
-        return true
-    }
 
     override suspend fun harTilgangTilOppgaveV3(
         oppgave: Oppgave,
@@ -37,4 +27,5 @@ class PepClientLocal : IPepClient {
     override suspend fun harTilgangTilReserveringAvOppgaver(): Boolean = true
     override suspend fun harTilgangTilOppgaveV3(oppgave: Oppgave, action: Action): Boolean = true
     override suspend fun harTilgangTilOppgaveV3(oppgave: Oppgave, saksbehandler: Saksbehandler, action: Action): Boolean = true
+    override suspend fun basisTilgangIOmråder(): Set<Områder> = Områder.entries.toSet()
 }
