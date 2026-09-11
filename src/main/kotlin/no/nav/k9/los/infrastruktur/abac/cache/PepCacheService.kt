@@ -58,8 +58,7 @@ class PepCacheService(
             kode6 = false,
             kode7 = false,
             egenAnsatt = false,
-            oppdatert = LocalDateTime.now(),
-            område = område
+            oppdatert = LocalDateTime.now()
         )
 
         return if (oppgaveIdOgAktører.saksnummer != null) {

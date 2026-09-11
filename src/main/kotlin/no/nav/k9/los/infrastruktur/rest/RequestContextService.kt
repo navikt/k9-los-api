@@ -46,6 +46,6 @@ internal class RequestContextService(
             true -> IdTokenLocal()
             false -> call.idToken()
         },
-        område = call.attributes[områdeAttributeKey]
+        område = call.attributes.getOrNull(områdeAttributeKey)
     )
 }

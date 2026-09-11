@@ -105,9 +105,8 @@ class PepCacheRepository(
     fun hent(kildeområde: Områder, eksternId: String, tx: TransactionalSession): PepCache? {
         return tx.run(
             queryOf("""
-                    SELECT pc.*, o.ekstern_id as omrade_ekstern_id
+                    SELECT pc.*
                     FROM OPPGAVE_PEP_CACHE pc
-                    JOIN OMRADE o ON o.id = pc.omrade_id
                     WHERE pc.kildeomrade = :kildeomrade AND pc.ekstern_id = :ekstern_id 
                 """, mapOf(
                     "kildeomrade" to kildeområde.eksternId,
@@ -119,13 +118,12 @@ class PepCacheRepository(
 
 
     private fun Row.tilPepCache() = PepCache(
-        kildeområde = Områder.fraEksternId(string("kildeomrade")),
         eksternId = string("ekstern_id"),
+        kildeområde = Områder.fraEksternId(string("kildeomrade")),
         kode6 = boolean("kode6"),
         kode7 = boolean("kode7"),
         egenAnsatt = boolean("egen_ansatt"),
         oppdatert = localDateTime("oppdatert"),
-        område = Områder.fraEksternId(string("omrade_ekstern_id")),
     )
 }
 
@@ -136,8 +134,7 @@ data class PepCache(
     val kode6: Boolean,
     val kode7: Boolean,
     val egenAnsatt: Boolean,
-    val oppdatert: LocalDateTime,
-    val område: Områder
+    val oppdatert: LocalDateTime
 ) {
     fun oppdater(kode6: Boolean, kode7: Boolean, egenAnsatt: Boolean): PepCache {
         return copy(

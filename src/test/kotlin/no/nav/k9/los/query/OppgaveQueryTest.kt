@@ -1294,8 +1294,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
                     kode6 = kode6,
                     kode7 = kode7,
                     egenAnsatt = egenAnsatt,
-                    oppdatert = LocalDateTime.now(),
-                    område = Områder.K9
+                    oppdatert = LocalDateTime.now()
                 ), tx
             )
         }
