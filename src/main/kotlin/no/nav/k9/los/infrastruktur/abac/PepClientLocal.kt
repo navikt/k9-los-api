@@ -33,7 +33,7 @@ class PepClientLocal : IPepClient {
     override suspend fun kanLeggeUtDriftsmelding(): Boolean = true
     override suspend fun harBasisTilgang(): Boolean = true
     override suspend fun erOppgaveStyrer(): Boolean = true
-    override suspend fun harTilgangTilKode6(): Boolean = true
+    override suspend fun harTilgangTilKode6(): Boolean = false
     override suspend fun harTilgangTilReserveringAvOppgaver(): Boolean = true
     override suspend fun harTilgangTilOppgaveV3(oppgave: Oppgave, action: Action): Boolean = true
     override suspend fun harTilgangTilOppgaveV3(oppgave: Oppgave, saksbehandler: Saksbehandler, action: Action): Boolean = true

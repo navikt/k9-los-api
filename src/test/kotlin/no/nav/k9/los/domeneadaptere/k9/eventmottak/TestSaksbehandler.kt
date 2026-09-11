@@ -51,7 +51,6 @@ class TestSaksbehandler: KoinTest {
 
     fun init() {
         runBlocking {
-            coEvery { pepClient.harTilgangTilKode6() } returns true
             repo.opprettSaksbehandler(SARA.tilOpprettSaksbehandler())
             repo.opprettSaksbehandler(BIRGER_BESLUTTER.tilOpprettSaksbehandler())
             leggTilSkjermet()
@@ -59,7 +58,9 @@ class TestSaksbehandler: KoinTest {
     }
 
     private suspend fun leggTilSkjermet() {
+        coEvery { pepClient.harTilgangTilKode6() } returns true
         repo.opprettSaksbehandler(KJERSTI_SKJERMET.tilOpprettSaksbehandler())
+        coEvery { pepClient.harTilgangTilKode6() } returns false
     }
 
     private fun Saksbehandler.tilOpprettSaksbehandler() = OpprettSaksbehandler(
