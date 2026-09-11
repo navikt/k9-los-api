@@ -9,5 +9,11 @@ enum class Områder(val eksternId: String, val urlSegment: String) {
                 ?: throw IllegalArgumentException(
                     "Ukjent område: $eksternId. Gyldige områder: ${entries.map { it.eksternId }}"
                 )
+
+        fun fraUrlSegment(urlSegment: String): Områder =
+            entries.find { it.urlSegment == urlSegment }
+                ?: throw IllegalArgumentException(
+                    "Ukjent url segment for område: $urlSegment. Gyldige områder: ${entries.map { it.urlSegment }}"
+                )
     }
 }
