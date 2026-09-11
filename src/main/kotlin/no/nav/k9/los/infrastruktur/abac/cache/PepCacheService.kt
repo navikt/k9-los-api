@@ -46,15 +46,9 @@ class PepCacheService(
     }
 
     private suspend fun lagPepCacheFra(oppgaveIdOgAktører: PepCacheInput): PepCache {
-        // K9-punsj kan motta journalposter før noen person er identifisert.
-        val erK9Punsj = oppgaveIdOgAktører.område == Områder.K9 && oppgaveIdOgAktører.oppgavetype == "k9punsj"
-        require(oppgaveIdOgAktører.saksnummer != null || oppgaveIdOgAktører.aktører.isNotEmpty() || erK9Punsj) {
-            "Kan ikke klassifisere oppgave uten sak eller personer"
-        }
-        val område = oppgaveIdOgAktører.område
         val pep = PepCache(
             eksternId = oppgaveIdOgAktører.eksternId,
-            kildeområde = område,
+            kildeområde = oppgaveIdOgAktører.område,
             kode6 = false,
             kode7 = false,
             egenAnsatt = false,
@@ -62,9 +56,9 @@ class PepCacheService(
         )
 
         return if (oppgaveIdOgAktører.saksnummer != null) {
-            pep.oppdater(oppgaveIdOgAktører.saksnummer, område)
+            pep.oppdater(oppgaveIdOgAktører.saksnummer, oppgaveIdOgAktører.område)
         } else {
-            pep.oppdater(oppgaveIdOgAktører.aktører, område)
+            pep.oppdater(oppgaveIdOgAktører.aktører, oppgaveIdOgAktører.område)
         }
     }
 
@@ -110,5 +104,4 @@ data class PepCacheInput(
     val saksnummer: String?,
     val aktører: List<String>,
     val område: Områder,
-    val oppgavetype: String,
 )

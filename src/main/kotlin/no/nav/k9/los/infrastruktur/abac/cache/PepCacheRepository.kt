@@ -7,14 +7,12 @@ import kotliquery.queryOf
 import kotliquery.sessionOf
 import no.nav.k9.los.infrastruktur.db.util.InClauseHjelper
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
-import no.nav.k9.los.oppgavedefinisjon.omraade.OmrådeRepository
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import java.time.LocalDateTime
 import javax.sql.DataSource
 
 class PepCacheRepository(
-    val dataSource: DataSource,
-    private val områdeRepository: OmrådeRepository
+    val dataSource: DataSource
 ) {
     fun hentOppgaverMedStatusOgPepCacheEldreEnn(
         tidspunkt: LocalDateTime = LocalDateTime.now(),
@@ -24,7 +22,7 @@ class PepCacheRepository(
     ): List<PepCacheInput> {
         val statusParametre = InClauseHjelper.tilParameternavn(status, "status")
         val query = """
-                    SELECT o.oppgave_ekstern_id, o.omrade_ekstern_id, o.oppgavetype_ekstern_id,
+                    SELECT o.oppgave_ekstern_id, o.omrade_ekstern_id,
                     (select ov.verdi from oppgavefelt_verdi_part ov where ov.oppgave_id = o.id AND ov.feltdefinisjon_ekstern_id = 'saksnummer' AND ov.oppgavestatus IN ($statusParametre)) as saksnummer,
                     (select ov.verdi from oppgavefelt_verdi_part ov where ov.oppgave_id = o.id AND ov.feltdefinisjon_ekstern_id = 'aktorId' AND ov.oppgavestatus IN ($statusParametre)) as aktor_id,
                     (select ov.verdi from oppgavefelt_verdi_part ov where ov.oppgave_id = o.id AND ov.feltdefinisjon_ekstern_id = 'pleietrengendeAktorId' AND ov.oppgavestatus IN ($statusParametre)) as pleietrengende_aktor_id,
@@ -54,7 +52,6 @@ class PepCacheRepository(
                         row.stringOrNull("relatert_part_aktor_id")
                     ),
                     Områder.fraEksternId(row.string("omrade_ekstern_id")),
-                    oppgavetype = row.string("oppgavetype_ekstern_id"),
                 )
             }.asList
         )
@@ -105,13 +102,11 @@ class PepCacheRepository(
     fun hent(kildeområde: Områder, eksternId: String, tx: TransactionalSession): PepCache? {
         return tx.run(
             queryOf("""
-                    SELECT pc.*
-                    FROM OPPGAVE_PEP_CACHE pc
-                    WHERE pc.kildeomrade = :kildeomrade AND pc.ekstern_id = :ekstern_id 
+                    SELECT * FROM OPPGAVE_PEP_CACHE WHERE kildeomrade = :kildeomrade AND ekstern_id = :ekstern_id 
                 """, mapOf(
-                    "kildeomrade" to kildeområde.eksternId,
-                    "ekstern_id" to eksternId
-                )
+                "kildeomrade" to kildeområde.eksternId,
+                "ekstern_id" to eksternId
+            )
             ).map { it.tilPepCache() }.asSingle
         )
     }

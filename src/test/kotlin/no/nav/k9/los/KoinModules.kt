@@ -108,7 +108,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
         K9SakServiceLocal() as IK9SakService
     }
 
-    single { PepCacheRepository(dataSource, get()) }
+    single { PepCacheRepository(dataSource) }
     single {
         PepCacheService(
             pepClient = get(),
@@ -443,7 +443,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     }
 
     single {
-        PepCacheRepository(dataSource = get(), get())
+        PepCacheRepository(dataSource = get())
     }
 
     single<AktivOppgaveOppslag> {

@@ -516,7 +516,7 @@ fun common(app: Application, config: Configuration) = module {
     }
 
     single {
-        PepCacheRepository(dataSource = get(), get())
+        PepCacheRepository(dataSource = get())
     }
 
     single {
