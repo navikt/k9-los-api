@@ -8,6 +8,4 @@ abstract class OmrådeRuter<T : Any>(
         Områder.K9 -> k9
         Områder.AKTIVITETSPENGER -> aktivitetspenger
     }
-
-    fun forOmråde(område: Område): T = forOmråde(Områder.fraEksternId(område.eksternId))
 }
