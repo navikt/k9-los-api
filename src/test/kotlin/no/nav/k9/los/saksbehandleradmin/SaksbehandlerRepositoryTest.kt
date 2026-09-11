@@ -176,7 +176,7 @@ class SaksbehandlerRepositoryTest : AbstractK9LosIntegrationTest() {
 
         val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedIdent(ident)!!
 
-        val saksbehandler2 = saksbehandlerRepository.finnSaksbehandlerMedIdent(ident)!!
+        val saksbehandler2 = saksbehandlerRepository.finnSaksbehandlerMedIdent(ident2)!!
 
         assertThat(saksbehandler.navident, equalTo(ident))
 
@@ -207,7 +207,7 @@ class SaksbehandlerRepositoryTest : AbstractK9LosIntegrationTest() {
 
         val transactionalManager = get<TransactionalManager>()
         transactionalManager.transaction { tx ->
-            saksbehandlerRepository.slettSaksbehandler(tx, ident + "@nav.no", false)
+            saksbehandlerRepository.slettSaksbehandler(tx, saksbehandler.epost, saksbehandler.skjermet)
         }
     }
 }
