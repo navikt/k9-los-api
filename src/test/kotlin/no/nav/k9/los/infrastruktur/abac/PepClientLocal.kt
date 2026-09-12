@@ -32,8 +32,8 @@ class PepClientLocal : IPepClient {
 
     override suspend fun harTilgangTilOppgaveV3(oppgave: Oppgave, saksbehandler: Saksbehandler, action: Action): Boolean = true
     override suspend fun harTilgangTilOppgaveV3(
-        oppgave: Oppgave,
         område: Områder,
+        oppgave: Oppgave,
         saksbehandler: Saksbehandler,
         action: Action,
     ): Boolean {

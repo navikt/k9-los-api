@@ -85,7 +85,7 @@ class SifAbacPdpKlientK9(
         val abc = if (response.status.isSuccess()) {
             response.bodyAsText()
         } else {
-            throw IllegalStateException("Feil ved henting av diskresjonskoder for person fra sif-abac-pdp: HTTP ${response.status.value} ${response.status.description}")
+            throw SifAbacPdpHttpException(response.status.value, "diskresjonskoder-person")
         }
 
         return LosObjectMapper.instance.readValue<List<Diskresjonskode>>(abc)
@@ -120,7 +120,7 @@ class SifAbacPdpKlientK9(
         val abc = if (response.status.isSuccess()) {
             response.bodyAsText()
         } else {
-            throw IllegalStateException("Feil ved henting av diskresjonskoder for sak fra sif-abac-pdp: HTTP ${response.status.value} ${response.status.description}")
+            throw SifAbacPdpHttpException(response.status.value, "diskresjonskoder-sak")
         }
 
         return LosObjectMapper.instance.readValue<List<Diskresjonskode>>(abc)
@@ -204,7 +204,7 @@ class SifAbacPdpKlientK9(
         val abc = if (response.status.isSuccess()) {
             response.bodyAsText()
         } else {
-            throw IllegalStateException("Feil ved sjekk av tilgang til sak vha grupper mot sif-abac-pdp: HTTP ${response.status.value} ${response.status.description}")
+            throw SifAbacPdpHttpException(response.status.value, "tilgangskontroll-sak")
         }
 
         return LosObjectMapper.instance.readValue<Tilgangsbeslutning>(abc).harTilgang()
@@ -247,7 +247,7 @@ class SifAbacPdpKlientK9(
         val abc = if (response.status.isSuccess()) {
             response.bodyAsText()
         } else {
-            throw IllegalStateException("Feil ved sjekk av tilgang til personer vha grupper mot sif-abac-pdp: HTTP ${response.status.value} ${response.status.description}")
+            throw SifAbacPdpHttpException(response.status.value, "tilgangskontroll-personer")
         }
 
         return LosObjectMapper.instance.readValue<Tilgangsbeslutning>(abc).harTilgang()
@@ -276,7 +276,7 @@ class SifAbacPdpKlientK9(
             }
         }
         if (!response.status.isSuccess()) {
-            throw IllegalStateException("Feil ved $operation mot sif-abac-pdp: HTTP ${response.status.value} ${response.status.description}")
+            throw SifAbacPdpHttpException(response.status.value, operation)
         }
         return LosObjectMapper.instance.readValue<Tilgangsbeslutning>(response.bodyAsText()).harTilgang()
     }

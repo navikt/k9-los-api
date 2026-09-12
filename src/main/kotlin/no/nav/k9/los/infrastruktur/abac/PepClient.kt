@@ -1,5 +1,8 @@
 package no.nav.k9.los.infrastruktur.abac
 
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import no.nav.k9.los.infrastruktur.abac.tilganger.Tilganger
 import no.nav.k9.los.infrastruktur.azuregraph.IAzureGraphService
 import no.nav.k9.los.infrastruktur.idtoken.IIdToken
@@ -12,6 +15,7 @@ import no.nav.sif.abac.kontrakt.abac.Diskresjonskode
 import no.nav.sif.abac.kontrakt.abac.dto.SaksnummerDto
 import no.nav.sif.abac.kontrakt.person.AktørId
 import org.slf4j.LoggerFactory
+import kotlin.coroutines.cancellation.CancellationException
 import kotlin.coroutines.coroutineContext
 
 class PepClient(
@@ -36,8 +40,23 @@ class PepClient(
     override suspend fun harTilgangTilKode6(): Boolean = tilganger(coroutineContext.område()).kode6
     override suspend fun harTilgangTilReserveringAvOppgaver(): Boolean =
         tilganger(coroutineContext.område()).reservering
-    override suspend fun basisTilgangIOmråder(): Set<Områder> {
-        return Områder.entries.filter { tilganger(it).basis }.toSet()
+
+    override suspend fun basisTilgangIOmråder(): Set<Områder> = coroutineScope {
+        suspend fun harBasisTilgang(område: Områder): Boolean =
+            try {
+                tilganger(område).basis
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                false
+            }
+
+        Områder.entries
+            .map { område -> async { område to harBasisTilgang(område) } }
+            .awaitAll()
+            .filter { (_, basisTilgang) -> basisTilgang }
+            .map { (område, _) -> område }
+            .toSet()
     }
 
     // Tilgang til oppgave, for innlogget bruker
@@ -47,16 +66,19 @@ class PepClient(
         return harTilgangTilOppgaveV3(område, idToken, oppgave, action)
     }
 
-    override suspend fun harTilgangTilOppgaveV3(område: Områder, idToken: IIdToken, oppgave: Oppgave, action: Action): Boolean {
+    override suspend fun harTilgangTilOppgaveV3(
+        område: Områder,
+        idToken: IIdToken,
+        oppgave: Oppgave,
+        action: Action
+    ): Boolean {
         require(område == oppgave.oppgavetype.område.tilOmråderEnum()) { "Oppgaven tilhører et annet område" }
 
         when (område) {
             Områder.K9 -> {
                 val oppgavetype = oppgave.oppgavetype.eksternId
                 val saksnummer = oppgave.hentVerdi("saksnummer")
-                if (!saksnummer.isNullOrBlank()) {
-                    return sifAbacPdpKlient.harTilgangTilSak(område, action, SaksnummerDto(saksnummer), idToken)
-                } else if (oppgavetype == "k9punsj") {
+                if (oppgavetype == "k9punsj") {
                     val aktørIder =
                         setOfNotNull(oppgave.hentVerdi("aktorId"), oppgave.hentVerdi("pleietrengendeAktorId"))
                             .map { AktørId(it) }
@@ -65,6 +87,8 @@ class PepClient(
                         return true
                     }
                     return sifAbacPdpKlient.harTilgangTilPersoner(område, action, aktørIder, idToken)
+                } else if (!saksnummer.isNullOrBlank()) {
+                    return sifAbacPdpKlient.harTilgangTilSak(område, action, SaksnummerDto(saksnummer), idToken)
                 } else {
                     return false
                 }
@@ -88,12 +112,12 @@ class PepClient(
         saksbehandler: Saksbehandler,
         action: Action
     ): Boolean {
-        return harTilgangTilOppgaveV3(oppgave, coroutineContext.område(), saksbehandler, action)
+        return harTilgangTilOppgaveV3(coroutineContext.område(), oppgave, saksbehandler, action)
     }
 
     override suspend fun harTilgangTilOppgaveV3(
-        oppgave: Oppgave,
         område: Områder,
+        oppgave: Oppgave,
         saksbehandler: Saksbehandler,
         action: Action,
     ): Boolean {
@@ -134,7 +158,7 @@ class PepClient(
 
             Områder.AKTIVITETSPENGER -> {
                 log.warn("Forsøker å gjøre tilgangssjekk for andre saksbehandlere, men aktivitetspenger er ikke støttet")
-                throw NotImplementedError("Kan ikke tilgangssjekke for andre saksbehandlere på aktivitetspenger")
+                throw UnsupportedOperationException("Kan ikke tilgangssjekke for andre saksbehandlere på aktivitetspenger")
             }
         }
     }

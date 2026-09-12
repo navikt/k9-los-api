@@ -27,6 +27,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.util.UUID
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 internal class SifAbacPdpKlientHentTilgangerTest {
 
@@ -81,7 +82,7 @@ internal class SifAbacPdpKlientHentTilgangerTest {
     fun `avbryter hengende kall og cacher ikke timeout`() = runBlocking<Unit> {
         WireMock.stubFor(
             WireMock.get(WireMock.urlPathEqualTo("$stiPrefiks/api/k9/nav-ansatt/v2"))
-                .willReturn(WireMock.aResponse().withStatus(200).withFixedDelay(1_000))
+                .willReturn(WireMock.aResponse().withStatus(200).withFixedDelay(1_001))
         )
         val klient = klient()
 
@@ -140,7 +141,7 @@ internal class SifAbacPdpKlientHentTilgangerTest {
             },
             httpClient = HttpClient(Java),
         ),
-        hentTilgangerTimeout = 1000.milliseconds
+        hentTilgangerTimeout = 1.seconds
     )
 
     private fun stubGyldigeTilganger() {
