@@ -104,7 +104,7 @@ class AvstemmingsTjeneste(
 
                 PunsjAvstemmer.regnUtDiff(uferdigeJournalposter, åpnePunsjOppgaver)
             }
-            Fagsystem.UNGSAK, Fagsystem.UNGTILBAKE -> throw NotImplementedError("Fagsystem $fagsystem is not implemented yet")
+            Fagsystem.UNGSAK, Fagsystem.UNGTILBAKE -> throw UnsupportedOperationException("Fagsystem $fagsystem is not implemented yet")
         }
     }
 }

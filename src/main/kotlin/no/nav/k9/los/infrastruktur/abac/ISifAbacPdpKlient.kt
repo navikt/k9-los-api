@@ -2,7 +2,6 @@ package no.nav.k9.los.infrastruktur.abac
 
 import no.nav.k9.los.infrastruktur.abac.tilganger.Tilganger
 import no.nav.k9.los.infrastruktur.idtoken.IIdToken
-import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.sif.abac.kontrakt.abac.Diskresjonskode
 import no.nav.sif.abac.kontrakt.abac.dto.SaksnummerDto
 import no.nav.sif.abac.kontrakt.person.AktørId
@@ -24,16 +23,12 @@ interface ISifAbacPdpKlient {
         aktørIder: List<AktørId>,
         saksbehandlersIdent: String,
         saksbehandlersGrupper: Set<UUID>
-    ): Boolean {
-        throw NotImplementedError()
-    }
+    ): Boolean
 
     suspend fun harTilgangTilSak(
         action: Action,
         saksnummerDto: SaksnummerDto,
         saksbehandlersIdent: String,
         saksbehandlersGrupper: Set<UUID>
-    ): Boolean  {
-        throw NotImplementedError()
-    }
+    ): Boolean
 }

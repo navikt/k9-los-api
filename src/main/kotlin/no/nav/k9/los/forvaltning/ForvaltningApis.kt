@@ -146,7 +146,7 @@ fun Route.forvaltningApis() {
                     Fagsystem.PUNSJ -> "journalpostId"
 
                     Fagsystem.UNGSAK,
-                    Fagsystem.UNGTILBAKE -> throw NotImplementedError(
+                    Fagsystem.UNGTILBAKE -> throw UnsupportedOperationException(
                         "Fagsystem $fagsystem er ikke støttet i dette endepunktet"
                     )
                 }

@@ -155,11 +155,12 @@ class PartisjonertOppgaveRepository(val oppgavetypeRepository: OppgavetypeReposi
         tx.run(
             queryOf(
                 """
-                    insert into oppgave_v3_part(id, oppgave_ekstern_id, oppgave_ekstern_versjon, oppgavetype_ekstern_id, reservasjonsnokkel, endret_tidspunkt, oppgavestatus, ferdigstilt_dato)
-                    VALUES (:oppgave_id, :oppgave_ekstern_id, :oppgave_ekstern_versjon, :oppgavetype_ekstern_id, :reservasjonsnokkel, :endret_tidspunkt, :oppgavestatus, :ferdigstilt_dato)
+                    insert into oppgave_v3_part(id, omrade_ekstern_id, oppgave_ekstern_id, oppgave_ekstern_versjon, oppgavetype_ekstern_id, reservasjonsnokkel, endret_tidspunkt, oppgavestatus, ferdigstilt_dato)
+                    VALUES (:oppgave_id, :omrade_ekstern_id, :oppgave_ekstern_id, :oppgave_ekstern_versjon, :oppgavetype_ekstern_id, :reservasjonsnokkel, :endret_tidspunkt, :oppgavestatus, :ferdigstilt_dato)
                 """.trimIndent(),
                 mapOf(
                     "oppgave_id" to partisjonertOppgaveId.id,
+                    "omrade_ekstern_id" to oppgave.oppgavetype.område.eksternId,
                     "oppgave_ekstern_id" to oppgave.eksternId,
                     "oppgave_ekstern_versjon" to oppgave.eksternVersjon,
                     "oppgavetype_ekstern_id" to oppgave.oppgavetype.eksternId,
@@ -208,12 +209,13 @@ class PartisjonertOppgaveRepository(val oppgavetypeRepository: OppgavetypeReposi
 
         tx.batchPreparedNamedStatement(
             """
-                insert into oppgavefelt_verdi_part(oppgave_id, feltdefinisjon_ekstern_id, verdi, verdi_bigint, oppgavestatus, ferdigstilt_dato)
-                        VALUES (:oppgave_id, :feltdefinisjon_ekstern_id, :verdi, :verdi_bigint, :oppgavestatus, :ferdigstilt_dato)
+                insert into oppgavefelt_verdi_part(oppgave_id, omrade_ekstern_id, feltdefinisjon_ekstern_id, verdi, verdi_bigint, oppgavestatus, ferdigstilt_dato)
+                        VALUES (:oppgave_id, :omrade_ekstern_id, :feltdefinisjon_ekstern_id, :verdi, :verdi_bigint, :oppgavestatus, :ferdigstilt_dato)
             """.trimIndent(),
             oppgave.felter.map {
                 mapOf(
                     "oppgave_id" to oppgaveId.id,
+                    "omrade_ekstern_id" to oppgave.oppgavetype.område.eksternId,
                     "feltdefinisjon_ekstern_id" to it.oppgavefelt.feltDefinisjon.eksternId,
                     "verdi" to it.verdi,
                     "verdi_bigint" to it.verdiBigInt,

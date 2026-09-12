@@ -81,7 +81,7 @@ internal fun Route.EventlagerApi() {
                         val eventliste = eventStrenger.map { LosObjectMapper.prettyInstance.readValue<UngSakEventDto>(it) }.toList()
                         eventliste.map { event -> UngSakEventIkkeSensitiv(event) }
                     }
-                    Fagsystem.UNGTILBAKE -> throw NotImplementedError("Fagsystem $fagsystem is not implemented yet")
+                    Fagsystem.UNGTILBAKE -> throw UnsupportedOperationException("Fagsystem $fagsystem is not implemented yet")
                 }
                 call.respond(LosObjectMapper.prettyInstance.writeValueAsString(eventerIkkeSensitive))
             } else {

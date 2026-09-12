@@ -34,7 +34,7 @@ sealed class EventLagret(
             Fagsystem.PUNSJ -> K9Punsj(nøkkelId, eksternId, eksternVersjon, eventJson, opprettet, dirty)
             Fagsystem.K9TILBAKE -> K9Tilbake(nøkkelId, eksternId, eksternVersjon, eventJson, opprettet, dirty)
             Fagsystem.UNGSAK -> UngSak(nøkkelId, eksternId, eksternVersjon, eventJson, opprettet, dirty)
-            Fagsystem.UNGTILBAKE -> throw NotImplementedError("Fagsystem $fagsystem is not implemented yet")
+            Fagsystem.UNGTILBAKE -> throw UnsupportedOperationException("Fagsystem $fagsystem is not implemented yet")
         }
     }
 

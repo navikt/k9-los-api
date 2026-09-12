@@ -108,4 +108,22 @@ class SifAbacPdpKlientAktivitetspenger(
         if (!response.status.isSuccess()) throw SifAbacPdpHttpException(response.status.value, operation)
         return response.bodyAsText()
     }
+
+    override suspend fun harTilgangTilSak(
+        action: Action,
+        saksnummerDto: SaksnummerDto,
+        saksbehandlersIdent: String,
+        saksbehandlersGrupper: Set<UUID>
+    ): Boolean {
+        throw UnsupportedOperationException("Ikke støttet for aktivitetspenger i sif-abac-pdp")
+    }
+
+    override suspend fun harTilgangTilPersoner(
+        action: Action,
+        aktørIder: List<AktørId>,
+        saksbehandlersIdent: String,
+        saksbehandlersGrupper: Set<UUID>
+    ): Boolean {
+        throw UnsupportedOperationException("Ikke støttet for aktivitetspenger i sif-abac-pdp")
+    }
 }
