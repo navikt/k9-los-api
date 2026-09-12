@@ -6,6 +6,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.OppgaveTestDataBuilder
+import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.azuregraph.IAzureGraphService
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.innloggetbruker.InnloggetBrukerTjeneste
@@ -113,9 +114,10 @@ class SaksbehandlerRepositoryTest : AbstractK9LosIntegrationTest() {
         val duplikat = repository.finnSaksbehandlerMedId(duplikatId)!!
         val tidspunkt = LocalDateTime.parse("2026-08-28T10:00:00")
         val graph = mockk<IAzureGraphService>()
+        val pepClient = mockk<IPepClient>()
         coEvery { graph.hentEnhetForInnloggetBruker() } returns "3450"
         val tjeneste = InnloggetBrukerTjeneste(
-            repository, graph, Clock.fixed(tidspunkt.toInstant(ZoneOffset.UTC), ZoneOffset.UTC)
+            repository, graph, pepClient, Clock.fixed(tidspunkt.toInstant(ZoneOffset.UTC), ZoneOffset.UTC),
         )
 
         tjeneste.vedlikeholdHvisUtdatert(opprinnelig, "Z123456", "Nytt navn", "y@nav.no", false)

@@ -28,8 +28,7 @@ import no.nav.k9.los.domeneadaptere.k9.refreshk9sakoppgaver.restklient.K9SakServ
 import no.nav.k9.los.domeneadaptere.k9.statistikk.*
 import no.nav.k9.los.driftsmelding.DriftsmeldingRepository
 import no.nav.k9.los.forvaltning.ForvaltningRepository
-import no.nav.k9.los.infrastruktur.abac.IPepClient
-import no.nav.k9.los.infrastruktur.abac.PepClientLocal
+import no.nav.k9.los.infrastruktur.abac.*
 import no.nav.k9.los.infrastruktur.abac.cache.PepCacheRepository
 import no.nav.k9.los.infrastruktur.abac.cache.PepCacheService
 import no.nav.k9.los.infrastruktur.azuregraph.AzureGraphServiceLocal
@@ -118,7 +117,6 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     }
 
     single { dataSource }
-    single { pepClient }
     single<Clock> { Clock.systemDefaultZone() }
 
     single { DriftsmeldingRepository(get()) }
@@ -138,7 +136,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
         )
     }
 
-    single { InnloggetBrukerTjeneste(get(), get(), get()) }
+    single { InnloggetBrukerTjeneste(get(), get(), get(), get()) }
 
     single {
         GyldigeFeltutledere(
@@ -157,6 +155,9 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
         AzureGraphServiceLocal(
         ) as IAzureGraphService
     }
+    // Repository- og tjenestetester representerer ikke en autentisert request.
+    // Tester som dekker PepClient oppretter klienten med PDP-adapterne de trenger.
+    single { pepClient }
 
     single { TransactionalManager(dataSource = get()) }
 
@@ -575,5 +576,20 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
 
     single {
         FeilRekkefølgeSjekker()
+    }
+
+    single<ISifAbacPdpKlient>(named("sifAbacPdpKlientK9")) {
+        SifAbacPdpKlientLocal()
+    }
+
+    single<ISifAbacPdpKlient>(named("sifAbacPdpKlientAktivitetspenger")) {
+        SifAbacPdpKlientLocal()
+    }
+
+    single {
+        SifAbacPdpKlient(
+            sifAbacPdpKlientK9 = get<ISifAbacPdpKlient>(named("sifAbacPdpKlientK9")),
+            sifAbacPdpKlientAktivitetspenger = get<ISifAbacPdpKlient>(named("sifAbacPdpKlientAktivitetspenger")),
+        )
     }
 }

@@ -8,6 +8,8 @@ import io.ktor.client.*
 import io.ktor.client.engine.java.*
 import io.ktor.http.*
 import io.ktor.server.config.*
+import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
@@ -19,10 +21,11 @@ import no.nav.k9.los.Configuration
 import no.nav.k9.los.TestConfiguration
 import no.nav.k9.los.infrastruktur.abac.tilganger.Tilganger
 import no.nav.k9.los.infrastruktur.idtoken.IIdToken
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import kotlin.time.Duration
+import java.util.UUID
 import kotlin.time.Duration.Companion.milliseconds
 
 internal class SifAbacPdpKlientHentTilgangerTest {
@@ -52,7 +55,7 @@ internal class SifAbacPdpKlientHentTilgangerTest {
                 )
         )
 
-        klient().hentTilganger(idToken) shouldBe Tilganger(
+        klient().hentTilganger(Områder.K9, idToken) shouldBe Tilganger(
             basis = true,
             kode6 = true,
             oppgavestyring = false,
@@ -68,7 +71,7 @@ internal class SifAbacPdpKlientHentTilgangerTest {
                 .willReturn(WireMock.aResponse().withStatus(503).withBody("sensitivt innhold"))
         )
 
-        val feil = shouldThrow<SifAbacPdpHttpException> { klient().hentTilganger(idToken) }
+        val feil = shouldThrow<SifAbacPdpHttpException> { klient().hentTilganger(Områder.K9, idToken) }
 
         feil.status shouldBe 503
         feil.message shouldBe "Feil ved 'hent-tilganger' mot sif-abac-pdp: HTTP 503"
@@ -80,13 +83,35 @@ internal class SifAbacPdpKlientHentTilgangerTest {
             WireMock.get(WireMock.urlPathEqualTo("$stiPrefiks/api/k9/nav-ansatt/v2"))
                 .willReturn(WireMock.aResponse().withStatus(200).withFixedDelay(1_000))
         )
-        val klient = klient(hentTilgangerTimeout = 100.milliseconds)
+        val klient = klient()
 
-        shouldThrow<SifAbacPdpUtilgjengeligException> { klient.hentTilganger(idToken) }
+        shouldThrow<SifAbacPdpUtilgjengeligException> { klient.hentTilganger(Områder.K9, idToken) }
 
         WireMock.reset()
         stubGyldigeTilganger()
-        klient.hentTilganger(idToken).basis shouldBe true
+        klient.hentTilganger(Områder.K9, idToken).basis shouldBe true
+    }
+
+    @Test
+    fun `ruter eksplisitt område uten request context`() = runBlocking<Unit> {
+        val k9 = mockk<ISifAbacPdpKlient>()
+        val aktivitetspenger = mockk<ISifAbacPdpKlient>()
+        val aktørId = mockk<no.nav.sif.abac.kontrakt.person.AktørId>()
+        val saksnummer = mockk<no.nav.sif.abac.kontrakt.abac.dto.SaksnummerDto>()
+        val grupper = setOf(UUID.randomUUID())
+        val klient = SifAbacPdpKlient(k9, aktivitetspenger)
+
+        coEvery { aktivitetspenger.diskresjonskoderPerson(aktørId) } returns emptySet()
+        coEvery { aktivitetspenger.harTilgangTilSak(Action.read, saksnummer, idToken) } returns true
+        coEvery { k9.harTilgangTilSak(Action.reserver, saksnummer, "Z123456", grupper) } returns true
+
+        klient.diskresjonskoderPerson(Områder.AKTIVITETSPENGER, aktørId) shouldBe emptySet()
+        klient.harTilgangTilSak(Områder.AKTIVITETSPENGER, Action.read, saksnummer, idToken) shouldBe true
+        klient.harTilgangTilSak(Områder.K9, Action.reserver, saksnummer, "Z123456", grupper) shouldBe true
+
+        coVerify(exactly = 1) { aktivitetspenger.diskresjonskoderPerson(aktørId) }
+        coVerify(exactly = 1) { aktivitetspenger.harTilgangTilSak(Action.read, saksnummer, idToken) }
+        coVerify(exactly = 1) { k9.harTilgangTilSak(Action.reserver, saksnummer, "Z123456", grupper) }
     }
 
     private val idToken = mockk<IIdToken> {
@@ -98,15 +123,24 @@ internal class SifAbacPdpKlientHentTilgangerTest {
         }
     }
 
-    private fun klient(hentTilgangerTimeout: Duration = Duration.INFINITE) = SifAbacPdpKlientK9(
-        configuration = configuration,
-        accessTokenClient = mockk<AccessTokenClient> {
-            every { getOnBehalfOfAccessToken(any(), "validert-innkommende-token") } returns
-                    AccessTokenResponse("obo-token", 3600, "Bearer")
-        },
-        scope = "api://dev-fss.k9saksbehandling.sif-abac-pdp/.default",
-        httpClient = HttpClient(Java),
-        hentTilgangerTimeout = hentTilgangerTimeout,
+    private fun klient() = SifAbacPdpKlient(
+        SifAbacPdpKlientK9(
+            configuration = configuration,
+            accessTokenClient = mockk<AccessTokenClient> {
+                every { getOnBehalfOfAccessToken(any(), "validert-innkommende-token") } returns
+                        AccessTokenResponse("obo-token", 3600, "Bearer")
+            },
+            httpClient = HttpClient(Java),
+        ),
+        SifAbacPdpKlientAktivitetspenger(
+            configuration = configuration,
+            accessTokenClient = mockk<AccessTokenClient> {
+                every { getOnBehalfOfAccessToken(any(), "validert-innkommende-token") } returns
+                        AccessTokenResponse("obo-token", 3600, "Bearer")
+            },
+            httpClient = HttpClient(Java),
+        ),
+        hentTilgangerTimeout = 1000.milliseconds
     )
 
     private fun stubGyldigeTilganger() {

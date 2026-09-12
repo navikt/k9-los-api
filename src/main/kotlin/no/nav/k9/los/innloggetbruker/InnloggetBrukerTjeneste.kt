@@ -1,7 +1,10 @@
 package no.nav.k9.los.innloggetbruker
 
 import kotlinx.coroutines.CancellationException
+import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.azuregraph.IAzureGraphService
+import no.nav.k9.los.infrastruktur.idtoken.IIdToken
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
 import org.postgresql.util.PSQLException
@@ -12,9 +15,36 @@ import java.time.LocalDateTime
 class InnloggetBrukerTjeneste(
     private val saksbehandlerRepository: SaksbehandlerRepository,
     private val azureGraphService: IAzureGraphService,
-    private val clock: Clock
+    private val pepClient: IPepClient,
+    private val clock: Clock,
 ) {
     private val log = LoggerFactory.getLogger(InnloggetBrukerTjeneste::class.java)
+
+    suspend fun hentInnloggetBruker(token: IIdToken, kode6: Boolean, område: Områder): InnloggetBrukerDtoNy {
+        val saksbehandler = finnOgVedlikehold(token, kode6)
+        return InnloggetBrukerDtoNy(
+            token.getUsername(),
+            token.getName(),
+            token.getNavIdent(),
+            pepClient.tilganger(område),
+            id = saksbehandler?.id,
+            finnesISaksbehandlerTabell = saksbehandler != null
+        )
+    }
+
+    private suspend fun finnSaksbehandler(navIdent: String, epost: String): Saksbehandler? =
+        saksbehandlerRepository.finnSaksbehandlerMedIdent(navIdent)
+            ?: saksbehandlerRepository.finnSaksbehandlerMedEpost(epost)
+
+    suspend fun finnOgVedlikehold(token: IIdToken, kode6: Boolean): Saksbehandler? {
+        val saksbehandler = finnSaksbehandler(token.getNavIdent(), token.getUsername())
+        if (saksbehandler == null) {
+            log.info("Innlogget saksbehandler finnes ikke i saksbehandlertabellen og kan derfor ikke vedlikeholdes")
+        } else {
+            vedlikeholdHvisUtdatert(saksbehandler, token.getNavIdent(), token.getName(), token.getUsername(), kode6)
+        }
+        return saksbehandler
+    }
 
     suspend fun vedlikeholdHvisUtdatert(
         saksbehandler: Saksbehandler,

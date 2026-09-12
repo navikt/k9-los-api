@@ -1,5 +1,6 @@
 package no.nav.k9.los.infrastruktur.abac
 
+import no.nav.k9.los.infrastruktur.abac.tilganger.Tilganger
 import no.nav.k9.los.infrastruktur.idtoken.IIdToken
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.Oppgave
@@ -12,6 +13,7 @@ interface IPepClient {
     suspend fun diskresjonskoderForPerson(aktørId: String, område: Områder): Set<Diskresjonskode>
 
     // Tilgangsflagg
+    suspend fun tilganger(område: Områder): Tilganger
     suspend fun kanLeggeUtDriftsmelding(): Boolean
     suspend fun harBasisTilgang(): Boolean
     suspend fun erOppgaveStyrer(): Boolean

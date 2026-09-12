@@ -16,28 +16,18 @@ import kotlin.coroutines.coroutineContext
 
 class PepClient(
     private val azureGraphService: IAzureGraphService,
-    private val sifAbacPdpKlientK9: SifAbacPdpKlientK9,
-    private val sifAbacPdpKlientAktivitetspenger: SifAbacPdpKlientAktivitetspenger,
+    private val sifAbacPdpKlient: SifAbacPdpKlient,
 ) : IPepClient {
     private val log = LoggerFactory.getLogger(javaClass)
 
     override suspend fun diskresjonskoderForSak(fagsakNummer: String, område: Områder): Set<Diskresjonskode> =
-        when (område) {
-            Områder.K9 -> sifAbacPdpKlientK9.diskresjonskoderSak(SaksnummerDto(fagsakNummer))
-            Områder.AKTIVITETSPENGER -> sifAbacPdpKlientAktivitetspenger.diskresjonskoderSak(SaksnummerDto(fagsakNummer))
-        }
+        sifAbacPdpKlient.diskresjonskoderSak(område, SaksnummerDto(fagsakNummer))
 
     override suspend fun diskresjonskoderForPerson(aktørId: String, område: Områder): Set<Diskresjonskode> =
-        when (område) {
-            Områder.K9 -> sifAbacPdpKlientK9.diskresjonskoderPerson(AktørId(aktørId))
-            Områder.AKTIVITETSPENGER -> sifAbacPdpKlientAktivitetspenger.diskresjonskoderPerson(AktørId(aktørId))
-        }
+        sifAbacPdpKlient.diskresjonskoderPerson(område, AktørId(aktørId))
 
-    private suspend fun tilganger(område: Områder): Tilganger {
-        return when (område) {
-            Områder.K9 -> sifAbacPdpKlientK9.hentTilganger(coroutineContext.idToken())
-            Områder.AKTIVITETSPENGER -> sifAbacPdpKlientAktivitetspenger.hentTilganger(coroutineContext.idToken())
-        }
+    override suspend fun tilganger(område: Områder): Tilganger {
+        return sifAbacPdpKlient.hentTilganger(område, coroutineContext.idToken())
     }
 
     override suspend fun kanLeggeUtDriftsmelding(): Boolean = tilganger(coroutineContext.område()).drift
@@ -65,7 +55,7 @@ class PepClient(
                 val oppgavetype = oppgave.oppgavetype.eksternId
                 val saksnummer = oppgave.hentVerdi("saksnummer")
                 if (!saksnummer.isNullOrBlank()) {
-                    return sifAbacPdpKlientK9.harTilgangTilSak(action, SaksnummerDto(saksnummer), idToken)
+                    return sifAbacPdpKlient.harTilgangTilSak(område, action, SaksnummerDto(saksnummer), idToken)
                 } else if (oppgavetype == "k9punsj") {
                     val aktørIder =
                         setOfNotNull(oppgave.hentVerdi("aktorId"), oppgave.hentVerdi("pleietrengendeAktorId"))
@@ -74,7 +64,7 @@ class PepClient(
                         log.warn("Ingen aktørIder funnet for punsj-oppgave. Gir tilgang for å unngå at den havner utenfor alle køer.")
                         return true
                     }
-                    return sifAbacPdpKlientK9.harTilgangTilPersoner(action, aktørIder, idToken)
+                    return sifAbacPdpKlient.harTilgangTilPersoner(område, action, aktørIder, idToken)
                 } else {
                     return false
                 }
@@ -82,7 +72,8 @@ class PepClient(
 
             Områder.AKTIVITETSPENGER -> {
                 val saksnummer = oppgave.hentVerdi("saksnummer")
-                return !saksnummer.isNullOrBlank() && sifAbacPdpKlientK9.harTilgangTilSak(
+                return !saksnummer.isNullOrBlank() && sifAbacPdpKlient.harTilgangTilSak(
+                    område,
                     action,
                     SaksnummerDto(saksnummer),
                     idToken
@@ -114,7 +105,8 @@ class PepClient(
                 val oppgavetype = oppgave.oppgavetype.eksternId
                 val saksnummer = oppgave.hentVerdi("saksnummer")
                 if (!saksnummer.isNullOrBlank()) {
-                    return sifAbacPdpKlientK9.harTilgangTilSak(
+                    return sifAbacPdpKlient.harTilgangTilSak(
+                        område,
                         action,
                         SaksnummerDto(saksnummer),
                         saksbehandler.navident,
@@ -128,7 +120,8 @@ class PepClient(
                         log.warn("Ingen aktørIder funnet for punsj-oppgave. Gir tilgang for å unngå at den havner utenfor alle køer.")
                         return true
                     }
-                    return sifAbacPdpKlientK9.harTilgangTilPersoner(
+                    return sifAbacPdpKlient.harTilgangTilPersoner(
+                        område,
                         action,
                         aktørIder,
                         ident,

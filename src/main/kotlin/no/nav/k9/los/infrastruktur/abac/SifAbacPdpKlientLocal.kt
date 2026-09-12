@@ -7,7 +7,6 @@ import no.nav.sif.abac.kontrakt.abac.dto.SaksnummerDto
 import no.nav.sif.abac.kontrakt.person.AktørId
 import java.util.UUID
 
-// Kun for lokal- og testprofil, aldri som reserve ved PDP-feil.
 class SifAbacPdpKlientLocal : ISifAbacPdpKlient {
     override suspend fun hentTilganger(idToken: IIdToken): Tilganger = Tilganger(
         basis = true,
@@ -28,11 +27,11 @@ class SifAbacPdpKlientLocal : ISifAbacPdpKlient {
         action: Action, aktørIder: List<AktørId>, idToken: IIdToken,
     ): Boolean = true
 
-    suspend fun harTilgangTilSak(
+    override suspend fun harTilgangTilSak(
         action: Action, saksnummerDto: SaksnummerDto, saksbehandlersIdent: String, saksbehandlersGrupper: Set<UUID>,
     ): Boolean = true
 
-    suspend fun harTilgangTilPersoner(
+    override suspend fun harTilgangTilPersoner(
         action: Action, aktørIder: List<AktørId>, saksbehandlersIdent: String, saksbehandlersGrupper: Set<UUID>,
     ): Boolean = true
 }

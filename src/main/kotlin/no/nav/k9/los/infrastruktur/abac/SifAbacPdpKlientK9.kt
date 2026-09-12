@@ -5,7 +5,6 @@ import io.ktor.client.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
-import kotlinx.coroutines.withTimeoutOrNull
 import no.nav.helse.dusseldorf.ktor.core.Retry
 import no.nav.helse.dusseldorf.oauth2.client.AccessTokenClient
 import no.nav.helse.dusseldorf.oauth2.client.CachedAccessTokenClient
@@ -14,7 +13,6 @@ import no.nav.k9.los.infrastruktur.abac.tilganger.InnloggetAnsattK9V2Dto
 import no.nav.k9.los.infrastruktur.abac.tilganger.Tilganger
 import no.nav.k9.los.infrastruktur.idtoken.IIdToken
 import no.nav.k9.los.infrastruktur.rest.NavHeaders
-import no.nav.k9.los.infrastruktur.utils.Cache
 import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
 import no.nav.sif.abac.kontrakt.abac.AksjonspunktType
 import no.nav.sif.abac.kontrakt.abac.BeskyttetRessursActionAttributt
@@ -27,56 +25,39 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.util.*
-import kotlin.time.Duration.Companion.seconds
-import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
-
-data class TilgangerCacheKey(
-    val område: Områder,
-    val navIdent: String,
-    val tokenId: String,
-) {
-    constructor(område: Områder, idToken: IIdToken) : this(område, idToken.getNavIdent(), idToken.getTokenId())
-}
 
 class SifAbacPdpKlientK9(
     configuration: Configuration,
     accessTokenClient: AccessTokenClient,
-    scope: String,
     private val httpClient: HttpClient,
-    private val hentTilgangerTimeout: kotlin.time.Duration = 5.seconds,
 ) : ISifAbacPdpKlient {
-    val log: Logger = LoggerFactory.getLogger("SifAbacPdpKlient")
+    val log: Logger = LoggerFactory.getLogger(javaClass)
     private val cachedAccessTokenClient = CachedAccessTokenClient(accessTokenClient)
     private val url = configuration.sifAbacPdpUrl()
-    private val scopes = setOf(scope)
-    private val tilgangerCache = Cache<TilgangerCacheKey, Tilganger>(300)
+    private val scopes = setOf(configuration.sifAbacPdpScope())
 
     override suspend fun hentTilganger(idToken: IIdToken): Tilganger {
-        return tilgangerCache.hentSuspend(TilgangerCacheKey(Områder.K9, idToken), Duration.ofMinutes(60)) {
-            withTimeoutOrNull(hentTilgangerTimeout) {
-                val antallForsøk = 3
-                val oboToken = cachedAccessTokenClient.getOnBehalfOfAccessToken(scopes, idToken.value)
-                val response = Retry.retry(
-                    tries = antallForsøk,
-                    operation = "hent-tilganger",
-                    initialDelay = Duration.ofMillis(200),
-                    factor = 2.0,
-                    logger = log
-                ) {
-                    httpClient.get("${url}/api/k9/nav-ansatt/v2") {
-                        header(HttpHeaders.Authorization, oboToken.asAuthoriationHeader())
-                        header(HttpHeaders.Accept, "application/json")
-                        header(NavHeaders.CallId, UUID.randomUUID().toString())
-                    }
-                }
-
-                if (!response.status.isSuccess()) {
-                    throw SifAbacPdpHttpException(response.status.value, "hent-tilganger")
-                }
-
-                LosObjectMapper.instance.readValue<InnloggetAnsattK9V2Dto>(response.bodyAsText()).tilTilganger()
-            } ?: throw SifAbacPdpUtilgjengeligException()
+        val antallForsøk = 3
+        val oboToken = cachedAccessTokenClient.getOnBehalfOfAccessToken(scopes, idToken.value)
+        val response = Retry.retry(
+            tries = antallForsøk,
+            operation = "hent-tilganger",
+            initialDelay = Duration.ofMillis(200),
+            factor = 2.0,
+            logger = log
+        ) {
+            httpClient.get("${url}/api/k9/nav-ansatt/v2") {
+                header(HttpHeaders.Authorization, oboToken.asAuthoriationHeader())
+                header(HttpHeaders.Accept, "application/json")
+                header(NavHeaders.CallId, UUID.randomUUID().toString())
+            }
         }
+
+        if (!response.status.isSuccess()) {
+            throw SifAbacPdpHttpException(response.status.value, "hent-tilganger")
+        }
+
+        return LosObjectMapper.instance.readValue<InnloggetAnsattK9V2Dto>(response.bodyAsText()).tilTilganger()
     }
 
     override suspend fun diskresjonskoderPerson(aktørId: AktørId): Set<Diskresjonskode> {
@@ -181,7 +162,7 @@ class SifAbacPdpKlientK9(
         )
     }
 
-    suspend fun harTilgangTilSak(
+    override suspend fun harTilgangTilSak(
         action: Action,
         saksnummerDto: SaksnummerDto,
         saksbehandlersIdent: String,
@@ -229,7 +210,7 @@ class SifAbacPdpKlientK9(
         return LosObjectMapper.instance.readValue<Tilgangsbeslutning>(abc).harTilgang()
     }
 
-    suspend fun harTilgangTilPersoner(
+    override suspend fun harTilgangTilPersoner(
         action: Action,
         aktørIder: List<AktørId>,
         saksbehandlersIdent: String,
