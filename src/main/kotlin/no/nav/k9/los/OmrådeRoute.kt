@@ -5,6 +5,7 @@ import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.util.*
+import io.ktor.http.parametersOf
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 
 val områdeAttributeKey = AttributeKey<Områder>("los-omrade")
@@ -26,20 +27,9 @@ private fun Route.medOmrådePlugin(områdeProvider: suspend (ApplicationCall) ->
  * ruten kan lese det via [ApplicationCall.område] uten å måtte tråkle parameteret gjennom alle route-funksjonene.
  */
 fun Route.områdeApi(build: Route.() -> Unit): Route =
-    route("{omrade}/") {
+    createChild(OmrådeRouteSelector).apply {
         medOmrådePlugin { call ->
-            val urlSegment = call.parameters["omrade"]
-            val område = try {
-                urlSegment?.let(Områder::fraUrlSegment)
-            } catch (_: IllegalArgumentException) {
-                null
-            }
-            if (område == null) {
-                call.respond(HttpStatusCode.NotFound)
-                null
-            } else {
-                område
-            }
+            Områder.fraUrlSegment(checkNotNull(call.parameters["omrade"]))
         }
         build()
     }
@@ -49,3 +39,18 @@ fun Route.områdeApi(område: Områder, build: Route.() -> Unit): Route =
         medOmrådePlugin { område }
         build()
     }
+
+private object OmrådeRouteSelector : RouteSelector() {
+    override suspend fun evaluate(context: RoutingResolveContext, segmentIndex: Int): RouteSelectorEvaluation {
+        val urlSegment = context.segments.getOrNull(segmentIndex) ?: return RouteSelectorEvaluation.FailedPath
+        return if (Områder.entries.any { it.urlSegment == urlSegment }) {
+            RouteSelectorEvaluation.Success(
+                RouteSelectorEvaluation.qualityConstant,
+                parametersOf("omrade", urlSegment),
+                segmentIncrement = 1,
+            )
+        } else {
+            RouteSelectorEvaluation.FailedPath
+        }
+    }
+}
