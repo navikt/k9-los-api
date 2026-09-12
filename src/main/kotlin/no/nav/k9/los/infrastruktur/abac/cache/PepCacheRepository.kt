@@ -104,17 +104,17 @@ class PepCacheRepository(
             queryOf("""
                     SELECT * FROM OPPGAVE_PEP_CACHE WHERE kildeomrade = :kildeomrade AND ekstern_id = :ekstern_id 
                 """, mapOf(
-                "kildeomrade" to kildeområde.eksternId,
-                "ekstern_id" to eksternId
-            )
+                    "kildeomrade" to kildeområde.eksternId,
+                    "ekstern_id" to eksternId
+                )
             ).map { it.tilPepCache() }.asSingle
         )
     }
 
 
     private fun Row.tilPepCache() = PepCache(
-        eksternId = string("ekstern_id"),
         kildeområde = Områder.fraEksternId(string("kildeomrade")),
+        eksternId = string("ekstern_id"),
         kode6 = boolean("kode6"),
         kode7 = boolean("kode7"),
         egenAnsatt = boolean("egen_ansatt"),

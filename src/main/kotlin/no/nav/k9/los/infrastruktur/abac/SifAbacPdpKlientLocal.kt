@@ -28,11 +28,11 @@ class SifAbacPdpKlientLocal : ISifAbacPdpKlient {
         action: Action, aktørIder: List<AktørId>, idToken: IIdToken,
     ): Boolean = true
 
-    override suspend fun harTilgangTilSak(
+    suspend fun harTilgangTilSak(
         action: Action, saksnummerDto: SaksnummerDto, saksbehandlersIdent: String, saksbehandlersGrupper: Set<UUID>,
     ): Boolean = true
 
-    override suspend fun harTilgangTilPersoner(
+    suspend fun harTilgangTilPersoner(
         action: Action, aktørIder: List<AktørId>, saksbehandlersIdent: String, saksbehandlersGrupper: Set<UUID>,
     ): Boolean = true
 }

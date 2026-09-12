@@ -78,14 +78,6 @@ class SifAbacPdpKlientAktivitetspenger(
             )
         ).harTilgang()
 
-    override suspend fun harTilgangTilSak(
-        action: Action, saksnummerDto: SaksnummerDto, saksbehandlersIdent: String, saksbehandlersGrupper: Set<UUID>,
-    ): Boolean = throw UnsupportedOperationException("PDP støtter ikke tilgangskontroll for annen saksbehandler i aktivitetspenger")
-
-    override suspend fun harTilgangTilPersoner(
-        action: Action, aktørIder: List<AktørId>, saksbehandlersIdent: String, saksbehandlersGrupper: Set<UUID>,
-    ): Boolean = throw UnsupportedOperationException("PDP støtter ikke tilgangskontroll for annen saksbehandler i aktivitetspenger")
-
     private fun operasjon(action: Action) = OperasjonDto(
         ResourceType.FAGSAK,
         when (action) {

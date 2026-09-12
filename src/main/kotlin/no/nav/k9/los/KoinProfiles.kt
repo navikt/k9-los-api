@@ -632,6 +632,13 @@ fun common(app: Application, config: Configuration) = module {
     single<UttrekkCsvGenerator> {
         UttrekkCsvGenerator()
     }
+
+    single {
+        SifAbacPdpKlienter(
+            get(),
+            get()
+        )
+    }
 }
 
 // Kun lokalt, og verdikjede
@@ -712,7 +719,7 @@ fun naisCommonConfig() = module {
     }
 
     single<IPepClient> {
-        PepClient(azureGraphService = get(), get())
+        PepClient(azureGraphService = get(), get(), get())
     }
 }
 
@@ -758,20 +765,19 @@ fun preprodConfig(config: Configuration) = module {
         )
     }
 
+    single { SifAbacPdpKlientK9(
+        configuration = get(),
+        accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
+        scope = "api://dev-fss.k9saksbehandling.sif-abac-pdp/.default",
+        httpClient = get(named("sifAbacPdpHttpClient"))
+    ) }
+
     single {
-        SifAbacPdpKlienter(
-            SifAbacPdpKlientK9(
-                configuration = get(),
-                accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
-                scope = "api://dev-fss.k9saksbehandling.sif-abac-pdp/.default",
-                httpClient = get(named("sifAbacPdpHttpClient"))
-            ),
-            SifAbacPdpKlientAktivitetspenger(
-                configuration = get(),
-                accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
-                scope = "api://dev-fss.k9saksbehandling.sif-abac-pdp/.default",
-                httpClient = get(named("sifAbacPdpHttpClient"))
-            )
+        SifAbacPdpKlientAktivitetspenger(
+            configuration = get(),
+            accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
+            scope = "api://dev-fss.k9saksbehandling.sif-abac-pdp/.default",
+            httpClient = get(named("sifAbacPdpHttpClient"))
         )
     }
 
@@ -844,20 +850,19 @@ fun prodConfig(config: Configuration) = module {
         )
     }
 
+    single { SifAbacPdpKlientK9(
+        configuration = get(),
+        accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
+        scope = "api://prod-fss.k9saksbehandling.sif-abac-pdp/.default",
+        httpClient = get(named("sifAbacPdpHttpClient"))
+    ) }
+
     single {
-        SifAbacPdpKlienter(
-            SifAbacPdpKlientK9(
-                configuration = get(),
-                accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
-                scope = "api://prod-fss.k9saksbehandling.sif-abac-pdp/.default",
-                httpClient = get(named("sifAbacPdpHttpClient"))
-            ),
-            SifAbacPdpKlientAktivitetspenger(
-                configuration = get(),
-                accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
-                scope = "api://prod-fss.k9saksbehandling.sif-abac-pdp/.default",
-                httpClient = get(named("sifAbacPdpHttpClient"))
-            )
+        SifAbacPdpKlientAktivitetspenger(
+            configuration = get(),
+            accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
+            scope = "api://prod-fss.k9saksbehandling.sif-abac-pdp/.default",
+            httpClient = get(named("sifAbacPdpHttpClient"))
         )
     }
 

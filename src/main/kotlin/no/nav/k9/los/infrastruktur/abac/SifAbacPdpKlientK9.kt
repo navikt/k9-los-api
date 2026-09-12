@@ -181,7 +181,7 @@ class SifAbacPdpKlientK9(
         )
     }
 
-    override suspend fun harTilgangTilSak(
+    suspend fun harTilgangTilSak(
         action: Action,
         saksnummerDto: SaksnummerDto,
         saksbehandlersIdent: String,
@@ -229,7 +229,7 @@ class SifAbacPdpKlientK9(
         return LosObjectMapper.instance.readValue<Tilgangsbeslutning>(abc).harTilgang()
     }
 
-    override suspend fun harTilgangTilPersoner(
+    suspend fun harTilgangTilPersoner(
         action: Action,
         aktørIder: List<AktørId>,
         saksbehandlersIdent: String,

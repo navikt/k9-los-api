@@ -5,7 +5,6 @@ import no.nav.k9.los.infrastruktur.idtoken.IIdToken
 import no.nav.sif.abac.kontrakt.abac.Diskresjonskode
 import no.nav.sif.abac.kontrakt.abac.dto.SaksnummerDto
 import no.nav.sif.abac.kontrakt.person.AktørId
-import java.util.*
 
 interface ISifAbacPdpKlient {
     suspend fun hentTilganger(idToken: IIdToken): Tilganger
@@ -15,7 +14,4 @@ interface ISifAbacPdpKlient {
 
     suspend fun harTilgangTilSak(action: Action, saksnummerDto: SaksnummerDto, idToken: IIdToken): Boolean
     suspend fun harTilgangTilPersoner(action: Action, aktørIder: List<AktørId>, idToken: IIdToken): Boolean
-
-    suspend fun harTilgangTilSak(action: Action, saksnummerDto: SaksnummerDto, saksbehandlersIdent : String, saksbehandlersGrupper : Set<UUID>): Boolean
-    suspend fun harTilgangTilPersoner(action: Action, aktørIder: List<AktørId>, saksbehandlersIdent : String, saksbehandlersGrupper : Set<UUID>): Boolean
 }
