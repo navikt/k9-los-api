@@ -215,7 +215,6 @@ fun Route.OppgaveKoApis() {
                 val oppgaveMuligReservert = oppgaveKoTjeneste.taReservasjonFraKø(
                     innloggetBrukerId = innloggetBruker.id,
                     oppgaveKoId = oppgavekøId.toLong(),
-                    kotlin.coroutines.coroutineContext
                 )
                 call.respond(
                     when (oppgaveMuligReservert) {
