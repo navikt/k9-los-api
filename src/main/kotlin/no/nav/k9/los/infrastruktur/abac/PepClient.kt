@@ -47,7 +47,8 @@ class PepClient(
                 tilganger(område).basis
             } catch (e: CancellationException) {
                 throw e
-            } catch (_: Exception) {
+            } catch (e: Exception) {
+                log.warn("Tilgangskall til $område feilet, gir dermed ikke basistilgang til området.", e)
                 false
             }
 
