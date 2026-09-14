@@ -61,20 +61,5 @@ internal fun Route.InnloggetBrukerApi() {
                 innloggetBrukerDto
             )
         }
-//        } else {
-//            call.respond(
-//                InnloggetBrukerDto(
-//                    "saksbehandler@nav.no",
-//                    "Saksbehandler Sara",
-//                    "Z123456",
-//                    id = 1,
-//                    kanSaksbehandle = true,
-//                    kanOppgavestyre = true,
-//                    kanReservere = true,
-//                    kanDrifte = true,
-//                    finnesISaksbehandlerTabell = true
-//                )
-//            )
-//        }
     }
 }
