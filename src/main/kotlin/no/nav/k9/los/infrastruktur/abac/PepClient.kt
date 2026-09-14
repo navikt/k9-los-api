@@ -73,7 +73,7 @@ class PepClient(
         oppgave: Oppgave,
         action: Action
     ): Boolean {
-        require(område == oppgave.oppgavetype.område.tilOmråderEnum()) { "Oppgaven tilhører et annet område" }
+        require(område == oppgave.område) { "Oppgaven tilhører et annet område" }
 
         when (område) {
             Områder.K9 -> {
@@ -122,7 +122,7 @@ class PepClient(
         saksbehandler: Saksbehandler,
         action: Action,
     ): Boolean {
-        require(område == oppgave.oppgavetype.område.tilOmråderEnum()) { "Oppgaven tilhører et annet område" }
+        require(område == oppgave.område) { "Oppgaven tilhører et annet område" }
         val ident = checkNotNull(saksbehandler.navident) { "Saksbehandler må ha navident" }
 
         when (område) {

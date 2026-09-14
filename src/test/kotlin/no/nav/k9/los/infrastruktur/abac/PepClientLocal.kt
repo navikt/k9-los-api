@@ -37,7 +37,7 @@ class PepClientLocal : IPepClient {
         saksbehandler: Saksbehandler,
         action: Action,
     ): Boolean {
-        require(område == oppgave.oppgavetype.område.tilOmråderEnum()) { "Oppgaven tilhører et annet område" }
+        require(område == oppgave.område) { "Oppgaven tilhører et annet område" }
         return true
     }
 }

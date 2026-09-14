@@ -125,8 +125,7 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
 
         val pepCache = pepRepository.hent(Områder.K9, eksternId)!!
         assertThat(pepCache.kode6).isFalse()
-        assertThat(pepCache.kode7).isFalse()
-        assertThat(pepCache.egenAnsatt).isFalse()
+        assertThat(pepCache.kode7EllerEgenAnsatt).isFalse()
         assertThat(pepCache.oppdatert).isGreaterThan(LocalDateTime.now().minusMinutes(1))
     }
 
@@ -145,8 +144,7 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
 
         val pepCache = pepRepository.hent(Områder.K9, eksternId)!!
         assertThat(pepCache.kode6).isFalse()
-        assertThat(pepCache.kode7).isFalse()
-        assertThat(pepCache.egenAnsatt).isFalse()
+        assertThat(pepCache.kode7EllerEgenAnsatt).isFalse()
         assertThat(pepCache.oppdatert).isGreaterThan(LocalDateTime.now().minusMinutes(1))
     }
 
@@ -165,8 +163,7 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
 
         val pepCache = pepRepository.hent(Områder.K9, eksternId)!!
         assertThat(pepCache.kode6).isTrue()
-        assertThat(pepCache.kode7).isFalse()
-        assertThat(pepCache.egenAnsatt).isFalse()
+        assertThat(pepCache.kode7EllerEgenAnsatt).isFalse()
         assertThat(pepCache.oppdatert).isGreaterThan(LocalDateTime.now().minusMinutes(1))
     }
 
@@ -185,7 +182,7 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
 
         val pepCache = pepRepository.hent(Områder.K9, eksternId)!!
         assertThat(pepCache.kode6).isFalse()
-        assertThat(pepCache.kode7).isTrue()
+        assertThat(pepCache.kode7EllerEgenAnsatt).isTrue()
         assertThat(pepCache.oppdatert).isGreaterThan(LocalDateTime.now().minusMinutes(1))
     }
 
@@ -203,8 +200,7 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
 
         val pepCache = pepRepository.hent(Områder.K9, eksternId)!!
         assertThat(pepCache.kode6).isTrue()
-        assertThat(pepCache.kode7).isFalse()
-        assertThat(pepCache.egenAnsatt).isFalse()
+        assertThat(pepCache.kode7EllerEgenAnsatt).isFalse()
         assertThat(pepCache.oppdatert).isGreaterThan(LocalDateTime.now().minusMinutes(1))
     }
 
@@ -349,7 +345,7 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
                     ).felter.joinToString(", ") { it.eksternId + "-" + it.verdi })
                 logger.info(
                     "Pep: " + pepCache.hent(Områder.K9, eksternId, tx)
-                        ?.run { "kode6-$kode6, kode7-$kode7, egenansatt-$egenAnsatt, oppdater-$oppdatert" })
+                        ?.run { "kode6-$kode6, kode7EllerEgenAnsatt-$kode7EllerEgenAnsatt, oppdater-$oppdatert" })
             }
         }
     }

@@ -48,10 +48,9 @@ class PepCacheService(
     private suspend fun lagPepCacheFra(oppgaveIdOgAktører: PepCacheInput): PepCache {
         val pep = PepCache(
             eksternId = oppgaveIdOgAktører.eksternId,
-            kildeområde = oppgaveIdOgAktører.område,
+            område = oppgaveIdOgAktører.område,
             kode6 = false,
-            kode7 = false,
-            egenAnsatt = false,
+            kode7EllerEgenAnsatt = false,
             oppdatert = LocalDateTime.now()
         )
 
@@ -65,13 +64,11 @@ class PepCacheService(
     private suspend fun PepCache.oppdater(saksnummer: String, område: Områder): PepCache {
         val diskresjonskoder = pepClient.diskresjonskoderForSak(saksnummer, område)
 
-        //TODO ikke sette kode7 og egenansatt til samme verdi, det er misvisende ifht modellen som finnes. Det fungerer funksjonelt p.t fordi kode7 og egen ansatt (skjermet) håndteres samlet i køene
         val kode7ellerEgenAnsatt =
             diskresjonskoder.contains(Diskresjonskode.KODE7) || diskresjonskoder.contains(Diskresjonskode.SKJERMET)
         return oppdater(
             kode6 = diskresjonskoder.contains(Diskresjonskode.KODE6),
-            kode7 = kode7ellerEgenAnsatt,
-            egenAnsatt = kode7ellerEgenAnsatt,
+            kode7EllerEgenAnsatt = kode7ellerEgenAnsatt,
         )
     }
 
@@ -87,13 +84,11 @@ class PepCacheService(
                 .awaitAll()
                 .flatten()
 
-            //TODO ikke sette kode7 og egenansatt til samme verdi, det er misvisende ifht modellen som finnes. Det fungerer funksjonelt p.t fordi kode7 og egen ansatt (skjermet) håndteres samlet i køene
             val kode7ellerEgenAnsatt =
                 diskresjonskoder.contains(Diskresjonskode.KODE7) || diskresjonskoder.contains(Diskresjonskode.SKJERMET)
             oppdater(
                 kode6 = diskresjonskoder.contains(Diskresjonskode.KODE6),
-                kode7 = kode7ellerEgenAnsatt,
-                egenAnsatt = kode7ellerEgenAnsatt,
+                kode7EllerEgenAnsatt = kode7ellerEgenAnsatt,
             )
         }
     }

@@ -25,7 +25,7 @@ interface IPepClient {
     // Tilgang til oppgave, for innlogget bruker
     @Deprecated("Avhengig av coroutineContext")
     suspend fun harTilgangTilOppgaveV3(oppgave: Oppgave, action: Action = Action.read): Boolean
-    suspend fun harTilgangTilOppgaveV3(område: Områder, idToken: IIdToken, oppgave: Oppgave, action: Action): Boolean
+    suspend fun harTilgangTilOppgaveV3(område: Områder, idToken: IIdToken, oppgave: Oppgave, action: Action = Action.read): Boolean
 
     // Tilgang til oppgave, for en annen saksbehandler
     @Deprecated("Avhengig av coroutineContext")

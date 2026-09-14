@@ -16,6 +16,8 @@ data class Oppgave(
     val endretTidspunkt: LocalDateTime,
     val felter: List<Oppgavefelt>,
 ) {
+    val område get() = oppgavetype.område.tilOmråderEnum()
+
     fun getOppgaveBehandlingsurl(): String? {
         var oppgavebehandlingsUrlTemplate: String = oppgavetype.oppgavebehandlingsUrlTemplate ?: return null
         val matcher = "\\{(.+?)\\}".toRegex()
