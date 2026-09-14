@@ -29,7 +29,7 @@ class OppgaveV3Repository(
             tx,
             oppgave.eksternId,
             oppgave.oppgavetype.eksternId,
-            oppgave.oppgavetype.område.tilOmråderEnum()
+            oppgave.område
         )
 
         eksisterendeId?.let {

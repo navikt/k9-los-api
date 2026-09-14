@@ -22,6 +22,7 @@ import no.nav.k9.los.ko.dto.NesteOppgaverFraKoDto
 import no.nav.k9.los.ko.dto.OppgaveKo
 import no.nav.k9.los.kodeverk.BehandlingType
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.FeltdefinisjonTjeneste
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.query.Avgrensning
 import no.nav.k9.los.oppgaveuthenting.query.OppgaveQueryService
 import no.nav.k9.los.oppgaveuthenting.query.QueryRequest
@@ -35,7 +36,6 @@ import no.nav.k9.los.oppgaveuthenting.Oppgave
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.LocalDateTime
-import kotlin.coroutines.CoroutineContext
 
 class OppgaveKoTjeneste(
     private val transactionalManager: TransactionalManager,
@@ -198,11 +198,12 @@ class OppgaveKoTjeneste(
 
     @WithSpan
     suspend fun taReservasjonFraKø(
+        område: Områder,
         innloggetBrukerId: Long,
         oppgaveKoId: Long,
     ): OppgaveMuligReservert {
         return DetaljerMetrikker.timeSuspended("taReservasjonFraKø", "hele", "$oppgaveKoId") {
-            doTaReservasjonFraKø(innloggetBrukerId, oppgaveKoId)
+            doTaReservasjonFraKø(område, innloggetBrukerId, oppgaveKoId)
                 .also {
                     when (it) {
                         is OppgaveMuligReservert.Reservert ->
@@ -223,6 +224,7 @@ class OppgaveKoTjeneste(
     }
 
     private suspend fun doTaReservasjonFraKø(
+        område: Områder,
         innloggetBrukerId: Long,
         oppgaveKoId: Long,
     ): OppgaveMuligReservert {
@@ -249,7 +251,7 @@ class OppgaveKoTjeneste(
             log.info("Spurte etter $antallKandidaterEtterspurt kandidater fra køen med id $oppgaveKoId, fikk ${kandidatOppgaver.size}")
             val muligReservert = DetaljerMetrikker.timeSuspended("taReservasjonFraKø", "finnReservasjonFraKø", "$oppgaveKoId") {
                 transactionalManager.transactionSuspend { tx ->
-                    finnReservasjonFraKø(kandidatOppgaver, tx, innloggetBrukerId)
+                    finnReservasjonFraKø(område, kandidatOppgaver, tx, innloggetBrukerId)
                 }
             }
             if (muligReservert is OppgaveMuligReservert.Reservert) {
@@ -266,6 +268,7 @@ class OppgaveKoTjeneste(
 
     @WithSpan
     private suspend fun finnReservasjonFraKø(
+        område: Områder,
         kandidatoppgaver: List<Oppgave>,
         tx: TransactionalSession,
         innloggetBrukerId: Long,
@@ -273,6 +276,7 @@ class OppgaveKoTjeneste(
         for (kandidatoppgave in kandidatoppgaver) {
             try {
                 val reservasjon = reservasjonV3Tjeneste.taReservasjon(
+                    område = område,
                     reserverForId = innloggetBrukerId,
                     utføresAvId = innloggetBrukerId,
                     reservasjonsnøkkel = kandidatoppgave.reservasjonsnøkkel,

@@ -103,12 +103,13 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         val reservasjonTjeneste = get<ReservasjonApisTjeneste>()
         val reservasjoner = runBlocking {
             reservasjonTjeneste.reserverOppgave(
+                Områder.K9,
                 TestSaksbehandler.SARA,
                 OppgaveIdMedOverstyringDto(
                     oppgaveNøkkel = TestOppgaveNøkkel.forK9sak(eksternId)
                 )
             )
-            reservasjonTjeneste.hentReserverteOppgaverForSaksbehandler(TestSaksbehandler.SARA)
+            reservasjonTjeneste.hentReserverteOppgaverForSaksbehandler(Områder.K9, TestSaksbehandler.SARA)
         }
 
         assertThat(reservasjoner.isNotEmpty())
@@ -155,6 +156,7 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
 
         val resultat = runBlocking(CoroutineRequestContext(mockk<IIdToken>(relaxed = true), Områder.K9)) {
             oppgaveKøTjeneste.taReservasjonFraKø(
+                Områder.K9,
                 TestSaksbehandler.SARA.id,
                 kø.id
             )
@@ -391,7 +393,7 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         k9SakEventHandler.prosesser(avsluttet)
         k9SakEventHandler.prosesser(avsluttes)     // Feil rekkefølge under iverksettelse av behandling i k9-sak
 
-        runBlocking { get<ReservasjonApisTjeneste>().hentReserverteOppgaverForSaksbehandler(TestSaksbehandler.BIRGER_BESLUTTER) }
+        runBlocking { get<ReservasjonApisTjeneste>().hentReserverteOppgaverForSaksbehandler(Områder.K9,TestSaksbehandler.BIRGER_BESLUTTER) }
         assertIngenReservasjon(TestSaksbehandler.BIRGER_BESLUTTER)
         assertIngenReservasjon(TestSaksbehandler.SARA)
 
@@ -435,6 +437,7 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
     private fun taReservasjonFra(kø: OppgaveKo, saksbehandler: Saksbehandler): OppgaveMuligReservert {
         return runBlocking(CoroutineRequestContext(mockk<IIdToken>(relaxed = true), Områder.K9)) {
             oppgaveKøTjeneste.taReservasjonFraKø(
+                Områder.K9,
                 saksbehandler.id,
                 kø.id,
             )
@@ -445,7 +448,7 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         val reservasjonApisTjeneste = get<ReservasjonApisTjeneste>()
         runBlocking {
             assertThat(
-                reservasjonApisTjeneste.hentReserverteOppgaverForSaksbehandler(saksbehandler)
+                reservasjonApisTjeneste.hentReserverteOppgaverForSaksbehandler(Områder.K9, saksbehandler)
             ).isEmpty()
         }
     }
@@ -460,7 +463,7 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
 
     private fun assertReservasjon(saksbehandler: Saksbehandler, antallReservasjoner: Int, antallOppgaver: Int) {
         val reservasjonApisTjeneste = get<ReservasjonApisTjeneste>()
-        val reservasjon = runBlocking { reservasjonApisTjeneste.hentReserverteOppgaverForSaksbehandler(saksbehandler) }
+        val reservasjon = runBlocking { reservasjonApisTjeneste.hentReserverteOppgaverForSaksbehandler(Områder.K9, saksbehandler) }
         assertThat(reservasjon).hasSize(antallReservasjoner)
         reservasjon.firstOrNull()?.let {
             assertThat(it.reserverteV3Oppgaver.filter { it.oppgavestatus == Oppgavestatus.AAPEN }).hasSize(

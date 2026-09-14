@@ -17,6 +17,7 @@ import no.nav.k9.los.domeneadaptere.k9.statistikk.StatistikkRepository
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.infrastruktur.rest.RequestContextService
+import no.nav.k9.los.infrastruktur.rest.område
 import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.ko.OppgaveKoTjeneste
 import no.nav.k9.los.kodeverk.Fagsystem
@@ -256,6 +257,7 @@ fun Route.forvaltningApis() {
                 val oppgaveEksternId = call.parameters["oppgaveEksternId"]!!
 
                 val oppgaveTidsserie = temporalOppslagTjeneste.hentTidsserie(
+                    område = coroutineContext.område(),
                     oppgavetypeEksternId = oppgavetypeEksternId,
                     oppgaveEksternId = oppgaveEksternId,
                 )

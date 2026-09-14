@@ -16,13 +16,14 @@ class ReservasjonsnøkkelOppgaveOppslagPartisjonert(
     private val transactionalManager: TransactionalManager,
 ) : ReservasjonsnøkkelOppgaveOppslag {
 
-    override fun hentÅpneOppgaverForReservasjonsnøkkel(reservasjonsnøkkel: String): List<Oppgave> {
+    override fun hentÅpneOppgaverForReservasjonsnøkkel(område: Områder, reservasjonsnøkkel: String): List<Oppgave> {
         return transactionalManager.transaction { tx ->
-            hentÅpneOppgaverForReservasjonsnøkkel(reservasjonsnøkkel, tx)
+            hentÅpneOppgaverForReservasjonsnøkkel(område, reservasjonsnøkkel, tx)
         }
     }
 
     override fun hentÅpneOppgaverForReservasjonsnøkkel(
+        område: Områder,
         reservasjonsnøkkel: String,
         tx: TransactionalSession
     ): List<Oppgave> {
@@ -35,12 +36,16 @@ class ReservasjonsnøkkelOppgaveOppslagPartisjonert(
                     FROM oppgave_v3_part
                     WHERE reservasjonsnokkel = :reservasjonsnokkel
                       AND oppgavestatus IN ('AAPEN', 'VENTER', 'UAVKLART')
+                      AND omrade_ekstern_id = :omrade
                     """.trimIndent(),
-                mapOf("reservasjonsnokkel" to reservasjonsnøkkel)
+                mapOf(
+                    "reservasjonsnokkel" to reservasjonsnøkkel,
+                    "omrade" to område.eksternId,
+                )
             ).map { it.tilOppgaveRad() }.asList
         )
         return rader.map { rad ->
-            val oppgavetypeObj = oppgavetypeRepository.hentOppgavetype(Områder.K9, rad.oppgavetypeEksternId, tx)
+            val oppgavetypeObj = oppgavetypeRepository.hentOppgavetype(område, rad.oppgavetypeEksternId, tx)
             val oppgavefelter = hentOppgavefelter(tx, rad.id, oppgavetypeObj)
             Oppgave(
                 eksternId = rad.oppgaveEksternId,

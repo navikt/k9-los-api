@@ -8,6 +8,7 @@ import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.rest.RequestContextService
 import no.nav.k9.los.infrastruktur.rest.idToken
+import no.nav.k9.los.infrastruktur.rest.område
 import no.nav.k9.los.ko.dto.*
 import no.nav.k9.los.infrastruktur.utils.OpentelemetrySpanUtil
 import org.koin.ktor.ext.inject
@@ -109,7 +110,7 @@ fun Route.OppgaveKoApis() {
         requestContextService.withRequestContext(call) {
             if (pepClient.harBasisTilgang()) {
                 val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedIdent(
-                    kotlin.coroutines.coroutineContext.idToken().getNavIdent()
+                    coroutineContext.idToken().getNavIdent()
                 )!!
                 call.respond(
                     oppgaveKoTjeneste.hentKøerForSaksbehandler(
@@ -210,9 +211,10 @@ fun Route.OppgaveKoApis() {
             if (pepClient.harTilgangTilReserveringAvOppgaver()) {
                 val oppgavekøId = call.parameters["id"]!!
                 val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedIdent(
-                    kotlin.coroutines.coroutineContext.idToken().getNavIdent()
+                    coroutineContext.idToken().getNavIdent()
                 )!!
                 val oppgaveMuligReservert = oppgaveKoTjeneste.taReservasjonFraKø(
+                    område = coroutineContext.område(),
                     innloggetBrukerId = innloggetBruker.id,
                     oppgaveKoId = oppgavekøId.toLong(),
                 )

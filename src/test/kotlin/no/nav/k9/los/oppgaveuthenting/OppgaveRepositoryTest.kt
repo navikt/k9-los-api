@@ -5,6 +5,7 @@ import assertk.assertions.isEqualTo
 import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.FeltType
 import no.nav.k9.los.OppgaveTestDataBuilder
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.enkeltoppslag.AktivOppgaveOppslag
 import no.nav.k9.los.oppgaveuthenting.enkeltoppslag.TemporalOppgaveOppslag
 import org.junit.jupiter.api.Test
@@ -30,6 +31,7 @@ class OppgaveRepositoryTest : AbstractK9LosIntegrationTest() {
 
         val oppgaveTidsserie =
             temporalOppgaveOppslag.hentTidsserie(
+                område = Områder.K9,
                 oppgavetypeEksternId = "k9sak",
                 oppgaveEksternId = behandlingUuid
             )

@@ -7,12 +7,12 @@ import no.nav.k9.los.feilhandtering.FinnerIkkeDataException
 import no.nav.k9.los.infrastruktur.abac.Action
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
-import no.nav.k9.los.infrastruktur.rest.CoroutineRequestContext
 import no.nav.k9.los.infrastruktur.utils.leggTilDagerHoppOverHelg
 import no.nav.k9.los.ko.KøpåvirkendeHendelse
 import no.nav.k9.los.ko.ReservasjonAnnullert
 import no.nav.k9.los.ko.ReservasjonEndret
 import no.nav.k9.los.ko.ReservasjonTatt
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
 import no.nav.k9.los.oppgaveuthenting.Oppgave
@@ -35,6 +35,7 @@ class ReservasjonV3Tjeneste(
     }
 
     suspend fun forsøkReservasjonOgReturnerAktiv(
+        område: Områder,
         reservasjonsnøkkel: String,
         reserverForId: Long,
         gyldigFra: LocalDateTime,
@@ -50,6 +51,7 @@ class ReservasjonV3Tjeneste(
                 throw ReservasjonUtløptException("Gyldig til er ikke etter nå, gyldigfra=${gyldigFra}, gyldigTil=${gyldigTil}")
             }
             val reservasjon = taReservasjon(
+                område = område,
                 reservasjonsnøkkel = reservasjonsnøkkel,
                 reserverForId = reserverForId,
                 utføresAvId = utføresAvId,
@@ -92,6 +94,7 @@ class ReservasjonV3Tjeneste(
     }
 
     suspend fun taReservasjon(
+        område: Områder,
         reservasjonsnøkkel: String,
         reserverForId: Long,
         utføresAvId: Long,
@@ -100,11 +103,12 @@ class ReservasjonV3Tjeneste(
         gyldigTil: LocalDateTime
     ): ReservasjonV3 {
         return transactionalManager.transactionSuspend { tx ->
-            taReservasjon(reservasjonsnøkkel, reserverForId, utføresAvId, gyldigFra, gyldigTil, kommentar, tx)
+            taReservasjon(område, reservasjonsnøkkel, reserverForId, utføresAvId, gyldigFra, gyldigTil, kommentar, tx)
         }
     }
 
     suspend fun taReservasjon(
+        område: Områder,
         reservasjonsnøkkel: String,
         reserverForId: Long,
         utføresAvId: Long,
@@ -115,8 +119,8 @@ class ReservasjonV3Tjeneste(
     ): ReservasjonV3 {
         //sjekke tilgang på alle oppgaver tilknyttet nøkkel
         val oppgaverForReservasjonsnøkkel =
-            reservasjonsnøkkelOppgaveOppslag.hentÅpneOppgaverForReservasjonsnøkkel(reservasjonsnøkkel, tx)
-        if (!sjekkTilganger(oppgaverForReservasjonsnøkkel, reserverForId)) {
+            reservasjonsnøkkelOppgaveOppslag.hentÅpneOppgaverForReservasjonsnøkkel(område, reservasjonsnøkkel, tx)
+        if (!sjekkTilganger(område, oppgaverForReservasjonsnøkkel, reserverForId)) {
             val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedId(reserverForId)!!
             throw ManglerTilgangException("Saksbehandler ${saksbehandler.navn} mangler tilgang til å reservere nøkkel $reservasjonsnøkkel")
         }
@@ -132,48 +136,34 @@ class ReservasjonV3Tjeneste(
         )
         val reservasjon = reservasjonV3Repository.lagreReservasjon(reservasjonTilLagring, tx)
         log.info("taReservasjon: Ny reservasjon $reservasjon, utført av $utføresAvId, for saksbehandler $reserverForId")
-        runBlocking {
-            køpåvirkendeHendelseChannel.send(ReservasjonTatt(reservasjonsnøkkel = reservasjonsnøkkel))
-        }
+        køpåvirkendeHendelseChannel.send(ReservasjonTatt(reservasjonsnøkkel = reservasjonsnøkkel))
         return reservasjon
-    }
-
-    fun hentAktivReservasjonForReservasjonsnøkkel(reservasjonsnøkkel: String): ReservasjonV3? {
-        return transactionalManager.transaction { tx ->
-            hentAktivReservasjonForReservasjonsnøkkel(reservasjonsnøkkel, tx)
-        }
-    }
-
-    fun hentAktivReservasjonForReservasjonsnøkkel(
-        reservasjonsnøkkel: String,
-        tx: TransactionalSession
-    ): ReservasjonV3? {
-        return reservasjonV3Repository.hentAktivReservasjonForReservasjonsnøkkel(reservasjonsnøkkel, tx)
     }
 
     fun tellReservasjonerForSaksbehandlere(saksbehandlerIder: Set<Long>, tx: TransactionalSession): Map<Long, Int> {
         return reservasjonV3Repository.tellAktiveReservasjonerForSaksbehandlere(saksbehandlerIder, tx)
     }
 
-    fun hentReservasjonerForSaksbehandler(saksbehandlerId: Long): List<ReservasjonV3MedOppgaver> {
+    fun hentReservasjonerForSaksbehandler(område: Områder, saksbehandlerId: Long): List<ReservasjonV3MedOppgaver> {
         return transactionalManager.transaction { tx ->
             val reservasjoner =
                 reservasjonV3Repository.hentAktiveReservasjonerForSaksbehandler(saksbehandlerId, tx)
 
             reservasjoner.map { reservasjon ->
-                finnOppgaverFor(reservasjon, tx)
+                finnOppgaverFor(område, reservasjon, tx)
             }
 
         }
     }
 
     fun finnOppgaverFor(
+        område: Områder,
         reservasjon: ReservasjonV3,
         tx: TransactionalSession
     ): ReservasjonV3MedOppgaver {
         return ReservasjonV3MedOppgaver(
             reservasjon,
-            reservasjonsnøkkelOppgaveOppslag.hentÅpneOppgaverForReservasjonsnøkkel(reservasjon.reservasjonsnøkkel, tx)
+            reservasjonsnøkkelOppgaveOppslag.hentÅpneOppgaverForReservasjonsnøkkel(område, reservasjon.reservasjonsnøkkel, tx)
         )
     }
 
@@ -219,6 +209,7 @@ class ReservasjonV3Tjeneste(
     }
 
     fun forlengReservasjon(
+        område: Områder,
         reservasjonsnøkkel: String,
         nyTildato: LocalDateTime?,
         utførtAvBrukerId: Long,
@@ -234,11 +225,12 @@ class ReservasjonV3Tjeneste(
                 tx = tx
             )
 
-            finnOppgaverFor(nyReservasjon, tx)
+            finnOppgaverFor(område, nyReservasjon, tx)
         }
     }
 
     fun overførReservasjon(
+        område: Områder,
         reservasjonsnøkkel: String,
         reserverTil: LocalDateTime,
         tilSaksbehandlerId: Long,
@@ -255,11 +247,12 @@ class ReservasjonV3Tjeneste(
                 kommentar = kommentar,
                 tx = tx
             )
-            finnOppgaverFor(nyReservasjon, tx)
+            finnOppgaverFor(område, nyReservasjon, tx)
         }
     }
 
     fun endreReservasjon(
+        område: Områder,
         reservasjonsnøkkel: String,
         endretAvBrukerId: Long,
         nyTildato: LocalDateTime?,
@@ -280,20 +273,21 @@ class ReservasjonV3Tjeneste(
             runBlocking {
                 køpåvirkendeHendelseChannel.send(ReservasjonEndret(reservasjonsnøkkel = reservasjonsnøkkel))
             }
-            finnOppgaverFor(nyReservasjon, tx)
+            finnOppgaverFor(område, nyReservasjon, tx)
         }
     }
 
-    fun hentAlleAktiveReservasjoner(): List<ReservasjonV3MedOppgaver> {
+    fun hentAlleAktiveReservasjoner(område: Områder): List<ReservasjonV3MedOppgaver> {
         return transactionalManager.transaction { tx ->
             val aktiveReservasjoner = reservasjonV3Repository.hentAlleAktiveReservasjoner(tx)
             aktiveReservasjoner.map { reservasjon ->
-                finnOppgaverFor(reservasjon, tx)
+                finnOppgaverFor(område, reservasjon, tx)
             }
         }
     }
 
     private suspend fun sjekkTilganger(
+        område: Områder,
         oppgaver: List<Oppgave>,
         brukerIdSomSkalHaReservasjon: Long
     ): Boolean {
@@ -305,7 +299,7 @@ class ReservasjonV3Tjeneste(
                 )
             ) throw ManglerTilgangException("Saksbehandler kan ikke være beslutter på egen behandling")
 
-            pepClient.harTilgangTilOppgaveV3(oppgave, saksbehandler, Action.reserver)
+            pepClient.harTilgangTilOppgaveV3(område, oppgave, saksbehandler, Action.reserver)
         }
     }
 

@@ -4,6 +4,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.query.equalsWithPrecision
 import no.nav.k9.los.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.saksbehandleradmin.TestSaksbehandlerRepository
@@ -54,6 +55,7 @@ class ReservasjonV3TjenesteTest : AbstractK9LosIntegrationTest() {
 
         val reservasjon = transactionalManager.transactionSuspend { tx ->
             reservasjonV3Tjeneste.forsøkReservasjonOgReturnerAktiv(
+                område = Områder.K9,
                 reservasjonsnøkkel = "test1",
                 reserverForId = saksbehandler1.id,
                 kommentar = "",
@@ -71,7 +73,7 @@ class ReservasjonV3TjenesteTest : AbstractK9LosIntegrationTest() {
         assertEquals("test1", reservasjon.reservasjonsnøkkel)
 
         val reservasjonerV3MedOppgaver =
-            reservasjonV3Tjeneste.hentReservasjonerForSaksbehandler(saksbehandler1.id)
+            reservasjonV3Tjeneste.hentReservasjonerForSaksbehandler(Områder.K9,saksbehandler1.id)
 
         assertEquals(1, reservasjonerV3MedOppgaver.size)
         assertEquals(saksbehandler1.id, reservasjonerV3MedOppgaver[0].reservasjonV3.reservertAv)
@@ -85,6 +87,7 @@ class ReservasjonV3TjenesteTest : AbstractK9LosIntegrationTest() {
 
         transactionalManager.transactionSuspend { tx ->
             reservasjonV3Tjeneste.forsøkReservasjonOgReturnerAktiv(
+                område = Områder.K9,
                 reservasjonsnøkkel = "test1",
                 reserverForId = saksbehandler1.id,
                 kommentar = "",
@@ -102,7 +105,7 @@ class ReservasjonV3TjenesteTest : AbstractK9LosIntegrationTest() {
         )
 
         val aktiveReservasjoner =
-            reservasjonV3Tjeneste.hentReservasjonerForSaksbehandler(saksbehandler1.id)
+            reservasjonV3Tjeneste.hentReservasjonerForSaksbehandler(Områder.K9,saksbehandler1.id)
 
         assertEquals(0, aktiveReservasjoner.size)
     }
@@ -142,6 +145,7 @@ class ReservasjonV3TjenesteTest : AbstractK9LosIntegrationTest() {
         val overførTildato = LocalDateTime.now().plusDays(2)
 
         reservasjonV3Tjeneste.overførReservasjon(
+            Områder.K9,
             "test1",
             overførTildato,
             saksbehandler2.id,
@@ -187,6 +191,7 @@ class ReservasjonV3TjenesteTest : AbstractK9LosIntegrationTest() {
 
         assertThrows<IllegalArgumentException> {
             reservasjonV3Tjeneste.overførReservasjon(
+                Områder.K9,
                 reservasjon.reservasjonsnøkkel,
                 overførTildato,
                 5L,
