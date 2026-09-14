@@ -2,6 +2,7 @@ package no.nav.k9.los.sisteoppgaver
 
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
+import no.nav.k9.los.ManglerFlerområde
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.query.db.EksternOppgaveId
 import no.nav.k9.los.oppgaveuthenting.OppgaveNøkkelDto
@@ -11,8 +12,9 @@ class SisteOppgaverRepository(
     private val dataSource: DataSource,
 ) {
     fun hentSisteOppgaver(
-        tx: TransactionalSession,
+        @ManglerFlerområde område: Områder,
         brukerIdent: String,
+        tx: TransactionalSession,
     ): List<EksternOppgaveId> {
         return tx.run(
             queryOf(
@@ -31,9 +33,10 @@ class SisteOppgaverRepository(
     }
 
     fun lagreSisteOppgave(
-        tx: TransactionalSession,
+        @ManglerFlerområde område: Områder,
         brukerIdent: String,
         oppgaveNøkkel: OppgaveNøkkelDto,
+        tx: TransactionalSession,
     ) {
         tx.run(
             queryOf(
@@ -53,8 +56,9 @@ class SisteOppgaverRepository(
     }
 
     fun ryddOppForBrukerIdent(
-        tx: TransactionalSession,
+        @ManglerFlerområde område: Områder,
         brukerIdent: String,
+        tx: TransactionalSession,
     ) {
         tx.run(
             queryOf(

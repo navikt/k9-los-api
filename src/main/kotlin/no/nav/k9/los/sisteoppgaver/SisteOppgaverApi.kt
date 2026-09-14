@@ -8,6 +8,8 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.rest.RequestContextService
+import no.nav.k9.los.infrastruktur.rest.idToken
+import no.nav.k9.los.infrastruktur.rest.område
 import no.nav.k9.los.oppgaveuthenting.OppgaveNøkkelDto
 import org.koin.ktor.ext.inject
 
@@ -25,7 +27,10 @@ fun Route.SisteOppgaverApi() {
     }) {
         requestContextService.withRequestContext(call) {
             if (pepClient.harBasisTilgang()) {
-                call.respond(sisteOppgaverTjeneste.hentSisteOppgaver())
+                call.respond(sisteOppgaverTjeneste.hentSisteOppgaver(
+                    område = coroutineContext.område(),
+                    idToken = coroutineContext.idToken()
+                ))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
@@ -40,7 +45,11 @@ fun Route.SisteOppgaverApi() {
         requestContextService.withRequestContext(call) {
             if (pepClient.harBasisTilgang()) {
                 val oppgaveNøkkel = call.receive<OppgaveNøkkelDto>()
-                sisteOppgaverTjeneste.lagreSisteOppgave(oppgaveNøkkel)
+                sisteOppgaverTjeneste.lagreSisteOppgave(
+                    coroutineContext.område(),
+                    idToken = coroutineContext.idToken(),
+                    oppgaveNøkkel
+                )
                 call.respond(HttpStatusCode.OK)
             } else {
                 call.respond(HttpStatusCode.Forbidden)

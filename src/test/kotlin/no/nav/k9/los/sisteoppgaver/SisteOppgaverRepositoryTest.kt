@@ -26,6 +26,7 @@ class SisteOppgaverRepositoryTest : AbstractK9LosIntegrationTest() {
     private lateinit var testSaksbehandlerRepository: TestSaksbehandlerRepository
     private lateinit var transactionalManager: TransactionalManager
     private lateinit var saksbehandler: Saksbehandler
+    private val område = Områder.K9
 
     @BeforeEach
     fun setup() {
@@ -55,31 +56,33 @@ class SisteOppgaverRepositoryTest : AbstractK9LosIntegrationTest() {
 
         transactionalManager.transaction { tx ->
             sisteOppgaverRepository.lagreSisteOppgave(
-                tx,
+                Områder.K9,
                 saksbehandler.epost,
                 OppgaveNøkkelDto(
                     områdeEksternId = Områder.K9,
                     oppgaveEksternId = behandlingUuid1,
                     oppgaveTypeEksternId = "k9sak"
-                )
+                ),
+                tx
             )
         }
 
         transactionalManager.transaction { tx ->
             sisteOppgaverRepository.lagreSisteOppgave(
-                tx,
+                Områder.K9,
                 saksbehandler.epost,
                 OppgaveNøkkelDto(
                     områdeEksternId = Områder.K9,
                     oppgaveEksternId = behandlingUuid2,
                     oppgaveTypeEksternId = "k9sak"
-                )
+                ),
+                tx
             )
         }
 
         // Hent siste oppgaver, og sjekk resultatet
         val sisteOppgaver = transactionalManager.transaction { tx ->
-            sisteOppgaverRepository.hentSisteOppgaver(tx, saksbehandler.epost)
+            sisteOppgaverRepository.hentSisteOppgaver(område, saksbehandler.epost, tx)
         }
         assertThat(sisteOppgaver).hasSize(2)
         assertThat(sisteOppgaver[0].eksternId).isEqualTo(behandlingUuid2)
@@ -94,56 +97,60 @@ class SisteOppgaverRepositoryTest : AbstractK9LosIntegrationTest() {
 
         transactionalManager.transaction { tx ->
             sisteOppgaverRepository.lagreSisteOppgave(
-                tx,
+                Områder.K9,
                 saksbehandler.epost,
                 OppgaveNøkkelDto(
                     områdeEksternId = Områder.K9,
                     oppgaveEksternId = behandlingUuid1,
                     oppgaveTypeEksternId = "k9sak"
-                )
+                ),
+                tx
             )
         }
 
         transactionalManager.transaction { tx ->
             sisteOppgaverRepository.lagreSisteOppgave(
-                tx,
+                Områder.K9,
                 saksbehandler.epost,
                 OppgaveNøkkelDto(
                     områdeEksternId = Områder.K9,
                     oppgaveEksternId = behandlingUuid2,
                     oppgaveTypeEksternId = "k9sak"
-                )
+                ),
+                tx
             )
         }
 
         transactionalManager.transaction { tx ->
             sisteOppgaverRepository.lagreSisteOppgave(
-                tx,
+                Områder.K9,
                 saksbehandler.epost,
                 OppgaveNøkkelDto(
                     områdeEksternId = Områder.K9,
                     oppgaveEksternId = behandlingUuid3,
                     oppgaveTypeEksternId = "k9sak"
-                )
+                ),
+                tx
             )
         }
 
         // Lagre den første oppgaven på nytt - den skal da flyttes til toppen
         transactionalManager.transaction { tx ->
             sisteOppgaverRepository.lagreSisteOppgave(
-                tx,
+                Områder.K9,
                 saksbehandler.epost,
                 OppgaveNøkkelDto(
                     områdeEksternId = Områder.K9,
                     oppgaveEksternId = behandlingUuid1,
                     oppgaveTypeEksternId = "k9sak"
-                )
+                ),
+                tx
             )
         }
 
         // Hent siste oppgaver, og sjekk resultatet
         val sisteOppgaver = transactionalManager.transaction { tx ->
-            sisteOppgaverRepository.hentSisteOppgaver(tx, saksbehandler.epost)
+            sisteOppgaverRepository.hentSisteOppgaver(område, saksbehandler.epost, tx)
         }
         assertThat(sisteOppgaver).hasSize(3)
         assertThat(sisteOppgaver[0].eksternId).isEqualTo(behandlingUuid1) // Oppgave1 skal nå være øverst
@@ -158,24 +165,25 @@ class SisteOppgaverRepositoryTest : AbstractK9LosIntegrationTest() {
         behandlingUuids.forEach { uuid ->
             transactionalManager.transaction { tx ->
                 sisteOppgaverRepository.lagreSisteOppgave(
-                    tx,
+                    Områder.K9,
                     saksbehandler.epost,
                     OppgaveNøkkelDto(
                         områdeEksternId = Områder.K9,
                         oppgaveEksternId = uuid,
                         oppgaveTypeEksternId = "k9sak"
-                    )
+                    ),
+                    tx
                 )
             }
 
             transactionalManager.transaction { tx ->
-                sisteOppgaverRepository.ryddOppForBrukerIdent(tx, saksbehandler.epost)
+                sisteOppgaverRepository.ryddOppForBrukerIdent(Områder.K9, saksbehandler.epost, tx)
             }
         }
 
         // Hent siste oppgaver. Sjekk at vi har 10 oppgaver og at den eldste er fjernet
         val sisteOppgaver = transactionalManager.transaction { tx ->
-            sisteOppgaverRepository.hentSisteOppgaver(tx, saksbehandler.epost)
+            sisteOppgaverRepository.hentSisteOppgaver(område, saksbehandler.epost, tx)
         }
         assertThat(sisteOppgaver).hasSize(10)
         val eldsteBehandlingUuid = behandlingUuids.first()
