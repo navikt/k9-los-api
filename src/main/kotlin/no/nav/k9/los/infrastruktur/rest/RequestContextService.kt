@@ -9,8 +9,6 @@ import no.nav.k9.los.KoinProfile
 import no.nav.k9.los.infrastruktur.idtoken.IIdToken
 import no.nav.k9.los.infrastruktur.idtoken.IdTokenLocal
 import no.nav.k9.los.infrastruktur.idtoken.idToken
-import no.nav.k9.los.infrastruktur.rest.område
-import no.nav.k9.los.områdeAttributeKey
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import kotlin.coroutines.AbstractCoroutineContextElement
 import kotlin.coroutines.CoroutineContext

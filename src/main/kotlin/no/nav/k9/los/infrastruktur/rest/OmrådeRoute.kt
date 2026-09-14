@@ -1,8 +1,6 @@
-package no.nav.k9.los
+package no.nav.k9.los.infrastruktur.rest
 
-import io.ktor.http.*
 import io.ktor.server.application.*
-import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.util.*
 import io.ktor.http.parametersOf
