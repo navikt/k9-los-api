@@ -632,6 +632,7 @@ class PartisjonertOppgaveQuerySqlBuilder(
                             (SELECT json_agg(ov.verdi ORDER BY ov.verdi)
                              FROM oppgavefelt_verdi_part ov
                              WHERE ov.oppgave_id = o.id
+                               AND ov.omrade_ekstern_id = :omrade
                                AND ov.oppgavestatus IN ($oppgavestatusPlaceholder) ${ferdigstiltDatoBetingelse("ov")}
                                AND ov.feltdefinisjon_ekstern_id = :selectFeltkode$index
                             ) AS $alias
@@ -641,6 +642,7 @@ class PartisjonertOppgaveQuerySqlBuilder(
                             (SELECT $verdifelt
                              FROM oppgavefelt_verdi_part ov
                              WHERE ov.oppgave_id = o.id
+                               AND ov.omrade_ekstern_id = :omrade
                                AND ov.oppgavestatus IN ($oppgavestatusPlaceholder) ${ferdigstiltDatoBetingelse("ov")}
                                AND ov.feltdefinisjon_ekstern_id = :selectFeltkode$index
                              LIMIT 1) AS $alias
