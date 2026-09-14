@@ -153,6 +153,7 @@ fun Route.forvaltningApis() {
                 }
 
                 val query = QueryRequest(
+                    område = Områder.K9,
                     oppgaveQuery = OppgaveQuery(
                         filtere = listOf(
                             FeltverdiOppgavefilter(
@@ -181,9 +182,7 @@ fun Route.forvaltningApis() {
                                 økende = true
                             )
                         )
-                    ),
-                    fjernReserverte = false,
-                    avgrensning = null
+                    )
                 )
 
                 val eksternIds = oppgaveQueryService.query(query).map { rad ->
@@ -361,6 +360,7 @@ fun Route.forvaltningApis() {
                 if (pepClient.kanLeggeUtDriftsmelding()) {
                     val antall = oppgaveKoTjeneste.hentOppgavekøer(skjermet = false).map {
                         oppgaveKoTjeneste.hentAntallOppgaverForKø(
+                            område = coroutineContext.område(),
                             oppgaveKoId = it.id,
                             filtrerReserverte = false,
                             skjermet = false
@@ -389,6 +389,7 @@ fun Route.forvaltningApis() {
                     val køId = call.parameters["ko"]!!.toLong()
                     val medReserverte = call.request.queryParameters["reserverte"]?.toBoolean() ?: false
                     val antall = oppgaveKoTjeneste.hentAntallOppgaverForKø(
+                        område = coroutineContext.område(),
                         oppgaveKoId = køId,
                         filtrerReserverte = medReserverte,
                         skjermet = false
@@ -520,7 +521,7 @@ fun Route.forvaltningApis() {
                         verdi = listOf(K9Oppgavetypenavn.fraFagsystem(fagsystem).kode)
                     )
                 )
-                val eksternIder = oppgaveQueryService.queryForOppgaveEksternId(QueryRequest(oppgaveQuery))
+                val eksternIder = oppgaveQueryService.queryForOppgaveEksternId(QueryRequest(Områder.K9, oppgaveQuery))
                     .map { it.eksternId }
                     .distinct()
 
@@ -574,7 +575,7 @@ fun Route.forvaltningApis() {
                         verdi = listOf(fagsystem.oppgavetypeKode)
                     )
                 )
-                val eksternIder = oppgaveQueryService.queryForOppgaveEksternId(QueryRequest(oppgaveQuery))
+                val eksternIder = oppgaveQueryService.queryForOppgaveEksternId(QueryRequest(Områder.K9, oppgaveQuery))
                     .map { it.eksternId }
                     .distinct()
 

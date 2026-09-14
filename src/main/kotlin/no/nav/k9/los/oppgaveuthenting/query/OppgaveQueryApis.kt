@@ -6,6 +6,7 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.rest.RequestContextService
+import no.nav.k9.los.infrastruktur.rest.område
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.OppgaveQuery
 import org.koin.java.KoinJavaComponent
 import org.koin.ktor.ext.inject
@@ -19,7 +20,11 @@ fun Route.OppgaveQueryApis() {
         requestContextService.withRequestContext(call) {
             if (pepClient.harBasisTilgang()) {
                 val oppgaveQuery = call.receive<OppgaveQuery>()
-                call.respond(oppgaveQueryService.queryForAntall(QueryRequest(oppgaveQuery, false)))
+                call.respond(oppgaveQueryService.queryForAntall(QueryRequest(
+                    område = coroutineContext.område(),
+                    oppgaveQuery = oppgaveQuery,
+                    fjernReserverte = false
+                )))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
@@ -30,7 +35,10 @@ fun Route.OppgaveQueryApis() {
         requestContextService.withRequestContext(call) {
             if (pepClient.harBasisTilgang()) {
                 val oppgaveQuery = call.receive<OppgaveQuery>()
-                call.respond(oppgaveQueryService.validate(QueryRequest(oppgaveQuery)))
+                call.respond(oppgaveQueryService.validate(QueryRequest(
+                    område = coroutineContext.område(),
+                    oppgaveQuery = oppgaveQuery
+                )))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }

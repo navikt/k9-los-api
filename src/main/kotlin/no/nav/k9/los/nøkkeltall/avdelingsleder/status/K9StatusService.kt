@@ -8,7 +8,7 @@ import no.nav.k9.los.oppgaveuthenting.query.QueryRequest
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.*
 import no.nav.k9.los.oppgaveuthenting.query.mapping.EksternFeltverdiOperator
 
-class StatusService(
+class K9StatusService(
     private val queryService: OppgaveQueryService,
 ) {
     private val punsjtyper = setOf(
@@ -42,7 +42,7 @@ class StatusService(
                 AggregertSelectFelt(Aggregeringsfunksjon.ANTALL),
             ),
         )
-        val resultat = queryService.query(QueryRequest(oppgaveQuery))
+        val resultat = queryService.query(QueryRequest(Områder.K9, oppgaveQuery))
 
         val alleGrupper = resultat.mapNotNull { rad ->
             val behandlingTypeKode = rad.feltverdier.firstOrNull()?.verdi?.toString() ?: return@mapNotNull null

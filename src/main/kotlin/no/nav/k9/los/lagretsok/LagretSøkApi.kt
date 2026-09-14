@@ -12,6 +12,7 @@ import io.ktor.server.routing.get
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.rest.RequestContextService
 import no.nav.k9.los.infrastruktur.rest.idToken
+import no.nav.k9.los.infrastruktur.rest.område
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.OppgaveQuery
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
 import org.koin.ktor.ext.inject
@@ -36,7 +37,10 @@ fun Route.LagretSøkApi() {
                 if (innloggetSaksbehandler == null) {
                     call.respond(HttpStatusCode.Forbidden, "Innlogget bruker er ikke i saksbehandler-tabellen.")
                 } else {
-                    val lagredeSøk = lagretSøkRepository.hentAlle(innloggetSaksbehandler)
+                    val lagredeSøk = lagretSøkRepository.hentAlle(
+                        område = coroutineContext.område(),
+                        saksbehandler = innloggetSaksbehandler
+                    )
                     call.respond(lagredeSøk)
                 }
             } else {
@@ -64,7 +68,7 @@ fun Route.LagretSøkApi() {
                 if (innloggetSaksbehandler == null) {
                     call.respond(HttpStatusCode.Forbidden, "Innlogget bruker er ikke i saksbehandler-tabellen.")
                 } else {
-                    val lagretSøk = lagretSøkRepository.hent(id)
+                    val lagretSøk = lagretSøkRepository.hent(coroutineContext.område(), id)
                     if (lagretSøk != null) {
                         if (lagretSøk.lagetAv != innloggetSaksbehandler.id) {
                             call.respond(HttpStatusCode.Forbidden)
@@ -133,7 +137,11 @@ fun Route.LagretSøkApi() {
                     call.respond(HttpStatusCode.Forbidden, "Innlogget bruker er ikke i saksbehandler-tabellen.")
                 } else {
                     val endreLagretSøk = call.receive<EndreLagretSøkRequest>()
-                    val lagretSøk = lagretSøkTjeneste.endre(coroutineContext.idToken().getNavIdent(), endreLagretSøk)
+                    val lagretSøk = lagretSøkTjeneste.endre(
+                        område = coroutineContext.område(),
+                        navIdent = coroutineContext.idToken().getNavIdent(),
+                        endreLagretSøk = endreLagretSøk
+                    )
                     call.respond(HttpStatusCode.OK, lagretSøk)
                 }
             } else {
@@ -160,7 +168,12 @@ fun Route.LagretSøkApi() {
                 } else {
                     val (tittel) = call.receive<KopierLagretSøkRequest>()
                     val lagretSøkId = call.parameters["id"]!!.toLong()
-                    val nyttLagretSøk = lagretSøkTjeneste.kopier(coroutineContext.idToken().getNavIdent(), lagretSøkId, tittel)
+                    val nyttLagretSøk = lagretSøkTjeneste.kopier(
+                        område = coroutineContext.område(),
+                        navIdent = coroutineContext.idToken().getNavIdent(),
+                        lagretSøkId = lagretSøkId,
+                        tittel = tittel
+                    )
                     call.respond(HttpStatusCode.OK, nyttLagretSøk)
                 }
             } else {
@@ -188,7 +201,11 @@ fun Route.LagretSøkApi() {
                     call.respond(HttpStatusCode.Forbidden, "Innlogget bruker er ikke i saksbehandler-tabellen.")
                 } else {
                     val lagretSøkId = call.parameters["id"]!!.toLong()
-                    lagretSøkTjeneste.slett(coroutineContext.idToken().getNavIdent(), lagretSøkId)
+                    lagretSøkTjeneste.slett(
+                        område = coroutineContext.område(),
+                        navIdent = coroutineContext.idToken().getNavIdent(),
+                        lagretSøkId = lagretSøkId
+                    )
                     call.respond(HttpStatusCode.OK)
                 }
             } else {
@@ -207,13 +224,13 @@ fun Route.LagretSøkApi() {
                 if (innloggetSaksbehandler == null) {
                     call.respond(HttpStatusCode.Forbidden, "Innlogget bruker er ikke i saksbehandler-tabellen.")
                 } else {
-                    val lagretSøk = lagretSøkRepository.hent(lagretSøkId.toLong())
+                    val lagretSøk = lagretSøkRepository.hent(coroutineContext.område(),lagretSøkId.toLong())
                     if (lagretSøk == null) {
                         call.respond(HttpStatusCode.NotFound)
                     } else if (lagretSøk.lagetAv != innloggetSaksbehandler.id) {
                         call.respond(HttpStatusCode.Forbidden)
                     } else {
-                        call.respond(lagretSøkTjeneste.hentAntall(lagretSøkId.toLong()))
+                        call.respond(lagretSøkTjeneste.hentAntall(coroutineContext.område(), lagretSøkId.toLong()))
                     }
                 }
             } else {

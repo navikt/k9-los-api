@@ -6,7 +6,6 @@ import io.ktor.client.engine.java.*
 import io.ktor.client.network.sockets.*
 import io.ktor.client.plugins.*
 import io.ktor.server.application.*
-import io.ktor.server.engine.handleFailure
 import kotlinx.coroutines.channels.Channel
 import no.nav.helse.dusseldorf.ktor.health.HealthService
 import no.nav.k9.los.KoinProfile.*
@@ -65,7 +64,7 @@ import no.nav.k9.los.ko.OppgaveKoTjeneste
 import no.nav.k9.los.ko.db.OppgaveKoRepository
 import no.nav.k9.los.lagretsok.LagretSøkRepository
 import no.nav.k9.los.lagretsok.LagretSøkTjeneste
-import no.nav.k9.los.nøkkeltall.saksbehandler.nyeogferdigstilte.NyeOgFerdigstilteService
+import no.nav.k9.los.nøkkeltall.saksbehandler.nyeogferdigstilte.K9NyeOgFerdigstilteService
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.FeltdefinisjonRepository
 import no.nav.k9.los.oppgavedefinisjon.omraade.OmrådeRepository
 import no.nav.k9.los.oppgavedefinisjon.oppgavetype.OppgavetypeRepository
@@ -86,7 +85,7 @@ import no.nav.k9.los.saksbehandleradmin.SaksbehandlerAdminTjeneste
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
 import no.nav.k9.los.sisteoppgaver.SisteOppgaverRepository
 import no.nav.k9.los.sisteoppgaver.SisteOppgaverTjeneste
-import no.nav.k9.los.søkeboks.SøkeboksTjeneste
+import no.nav.k9.los.søkeboks.K9SøkeboksTjeneste
 import no.nav.k9.los.uttrekk.UttrekkCsvGenerator
 import no.nav.k9.los.uttrekk.UttrekkJobb
 import no.nav.k9.los.uttrekk.UttrekkRepository
@@ -551,7 +550,7 @@ fun common(app: Application, config: Configuration) = module {
     }
 
     single {
-        SøkeboksTjeneste(
+        K9SøkeboksTjeneste(
             queryService = get(),
             pdlService = get(),
             pepClient = get(),
@@ -569,31 +568,31 @@ fun common(app: Application, config: Configuration) = module {
     }
 
     single {
-        no.nav.k9.los.nøkkeltall.avdelingsleder.status.StatusService(
+        no.nav.k9.los.nøkkeltall.avdelingsleder.status.K9StatusService(
             queryService = get(),
         )
     }
 
     single {
-        no.nav.k9.los.nøkkeltall.avdelingsleder.dagenstall.DagensTallService(
+        no.nav.k9.los.nøkkeltall.avdelingsleder.dagenstall.K9DagensTallService(
             queryService = get(),
         )
     }
 
     single {
-        no.nav.k9.los.nøkkeltall.avdelingsleder.ferdigstilteperenhet.FerdigstiltePerEnhetService(
+        no.nav.k9.los.nøkkeltall.avdelingsleder.ferdigstilteperenhet.K9FerdigstiltePerEnhetService(
             queryService = get()
         )
     }
 
     single {
-        NyeOgFerdigstilteService(
+        K9NyeOgFerdigstilteService(
             queryService = get()
         )
     }
 
     single {
-        no.nav.k9.los.nøkkeltall.avdelingsleder.statusfordeling.StatusFordelingService(
+        no.nav.k9.los.nøkkeltall.avdelingsleder.statusfordeling.K9StatusFordelingService(
             queryService = get()
         )
     }

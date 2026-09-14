@@ -150,8 +150,10 @@ fun Route.OppgaveKoApis() {
                 val oppgavekøId = call.parameters["id"]!!
                 call.respond(
                     oppgaveKoTjeneste.hentOppgaverFraKø(
-                        oppgavekøId.toLong(),
-                        10,
+                        område = coroutineContext.område(),
+                        idToken = coroutineContext.idToken(),
+                        oppgaveKoId = oppgavekøId.toLong(),
+                        ønsketAntallOppgaver = 10,
                         fjernReserverte = true
                     )
                 )
@@ -180,7 +182,11 @@ fun Route.OppgaveKoApis() {
             if (pepClient.harBasisTilgang()) {
                 val oppgavekøId = call.parameters["id"]!!
                 val skjermet = pepClient.harTilgangTilKode6()
-                call.respond(oppgaveKoTjeneste.hentAntallMedOgUtenReserverteForKø(oppgavekøId.toLong(), skjermet))
+                call.respond(oppgaveKoTjeneste.hentAntallMedOgUtenReserverteForKø(
+                    område = coroutineContext.område(),
+                    oppgaveKoId = oppgavekøId.toLong(),
+                    skjermet = skjermet
+                ))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
@@ -194,6 +200,7 @@ fun Route.OppgaveKoApis() {
                 val skjermet = pepClient.harTilgangTilKode6()
                 val antallUtenReserverte = OpentelemetrySpanUtil.span("OppgaveKoTjeneste.hentAntallOppgaverForKø") {
                         oppgaveKoTjeneste.hentAntallOppgaverForKø(
+                            område = coroutineContext.område(),
                             oppgaveKoId = oppgavekøId.toLong(),
                             filtrerReserverte = true,
                             skjermet = skjermet

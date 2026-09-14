@@ -4,8 +4,10 @@ import kotliquery.Row
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
+import no.nav.k9.los.ManglerFlerområde
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.OppgaveQuery
 import no.nav.k9.los.saksbehandleradmin.Saksbehandler
 import javax.sql.DataSource
@@ -13,7 +15,7 @@ import javax.sql.DataSource
 class LagretSøkRepository(val dataSource: DataSource) {
     private val transactionalManager = TransactionalManager(dataSource)
 
-    fun hent(id: Long): LagretSøk? {
+    fun hent(@ManglerFlerområde("må inn som where-betingelse") område: Områder, id: Long): LagretSøk? {
         return transactionalManager.transaction {
             it.run(
                 queryOf(
@@ -89,7 +91,7 @@ class LagretSøkRepository(val dataSource: DataSource) {
         }
     }
 
-    fun hentAlle(saksbehandler: Saksbehandler): List<LagretSøk> {
+    fun hentAlle(@ManglerFlerområde("må inn som where-betingelse") område: Områder, saksbehandler: Saksbehandler): List<LagretSøk> {
         return using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(

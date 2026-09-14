@@ -11,6 +11,7 @@ import io.ktor.server.routing.*
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.rest.RequestContextService
 import no.nav.k9.los.infrastruktur.rest.idToken
+import no.nav.k9.los.infrastruktur.rest.område
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
 import org.koin.ktor.ext.inject
 
@@ -92,7 +93,11 @@ fun Route.UttrekkApi() {
                 } else {
                     try {
                         val request = call.receive<OpprettUttrekk>()
-                        val uttrekkId = uttrekkTjeneste.opprett(request, innloggetSaksbehandler.id)
+                        val uttrekkId = uttrekkTjeneste.opprett(
+                            område = coroutineContext.område(),
+                            opprettUttrekk = request,
+                            saksbehandlerId = innloggetSaksbehandler.id
+                        )
                         call.respond(HttpStatusCode.Created, uttrekkId)
                     } catch (e: IllegalArgumentException) {
                         call.respond(HttpStatusCode.BadRequest, e.message ?: "Ugyldig forespørsel")

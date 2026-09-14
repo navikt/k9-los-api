@@ -65,12 +65,13 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         k9SakEventHandler.prosesser(opprettetUtenÅpneAksjonspunkter)
 
         val oppgaveQueryService = get<OppgaveQueryService>()
-        val antallIDb = oppgaveQueryService.queryForAntall(QueryRequest(querySomKunInneholder(eksternId)))
+        val antallIDb = oppgaveQueryService.queryForAntall( querySomKunInneholder(eksternId))
         assertThat(antallIDb).isEqualTo(1)
 
         val skjermet = runBlocking { pepClient.harTilgangTilKode6() }
         val filtrerReserverte = true
         val antallIKø = oppgaveKøTjeneste.hentAntallOppgaverForKø(
+            område = Områder.K9,
             oppgaveKoId = kø.id,
             filtrerReserverte = filtrerReserverte,
             skjermet = skjermet
@@ -88,12 +89,13 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         k9SakEventHandler.prosesser(opprettetUtenÅpneAksjonspunkter)
 
         val oppgaveQueryService = get<OppgaveQueryService>()
-        val antallIDb = oppgaveQueryService.queryForAntall(QueryRequest(querySomKunInneholder(eksternId)))
+        val antallIDb = oppgaveQueryService.queryForAntall(querySomKunInneholder(eksternId))
         assertThat(antallIDb).isEqualTo(1)
 
         val skjermet = runBlocking { pepClient.harTilgangTilKode6() }
         val filtrerReserverte = true
         val antallIKø = oppgaveKøTjeneste.hentAntallOppgaverForKø(
+            område = Områder.K9,
             oppgaveKoId = kø.id,
             filtrerReserverte = filtrerReserverte,
             skjermet = skjermet
@@ -142,12 +144,13 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         k9SakEventHandler.prosesser(opprettetUtenÅpneAksjonspunkter)
 
         val oppgaveQueryService = get<OppgaveQueryService>()
-        val antallIDb = oppgaveQueryService.queryForAntall(QueryRequest(querySomKunInneholder(eksternId)))
+        val antallIDb = oppgaveQueryService.queryForAntall(querySomKunInneholder(eksternId))
         assertThat(antallIDb).isEqualTo(1)
 
         val skjermet = runBlocking { pepClient.harTilgangTilKode6() }
         val filtrerReserverte = true
         val antallIKø = oppgaveKøTjeneste.hentAntallOppgaverForKø(
+            område = Områder.K9,
             oppgaveKoId = kø.id,
             filtrerReserverte = filtrerReserverte,
             skjermet = skjermet
@@ -172,12 +175,13 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         k9SakEventHandler.prosesser(K9SakEventDtoBuilder(eksternId).vurderSykdom().build())
 
         val oppgaveQueryService = get<OppgaveQueryService>()
-        val antallIDb = oppgaveQueryService.queryForAntall(QueryRequest(querySomKunInneholder(eksternId)))
+        val antallIDb = oppgaveQueryService.queryForAntall(querySomKunInneholder(eksternId))
         assertThat(antallIDb).isEqualTo(1)
 
         val skjermet = runBlocking { pepClient.harTilgangTilKode6() }
         val filtrerReserverte = true
         val antallIKø = oppgaveKøTjeneste.hentAntallOppgaverForKø(
+            område = Områder.K9,
             oppgaveKoId = kø.id,
             filtrerReserverte = filtrerReserverte,
             skjermet = skjermet
@@ -190,7 +194,8 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         val skjermet1 = runBlocking { pepClient.harTilgangTilKode6() }
         val filtrerReserverte1 = true
         val antallIKøEtterRes = oppgaveKøTjeneste.hentAntallOppgaverForKø(
-            kø.id,
+            område = Områder.K9,
+            oppgaveKoId = kø.id,
             filtrerReserverte = filtrerReserverte1,
             skjermet = skjermet1
         )
@@ -209,12 +214,13 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         )
 
         val oppgaveQueryService = get<OppgaveQueryService>()
-        val antallIDb = oppgaveQueryService.queryForAntall(QueryRequest(querySomKunInneholder(eksternId)))
+        val antallIDb = oppgaveQueryService.queryForAntall(querySomKunInneholder(eksternId))
         assertThat(antallIDb).isEqualTo(1)
 
         val skjermet = runBlocking<Boolean> { pepClient.harTilgangTilKode6() }
         val filtrerReserverte = true
         val antallIKø = oppgaveKøTjeneste.hentAntallOppgaverForKø(
+            område = Områder.K9,
             oppgaveKoId = kø.id,
             filtrerReserverte = filtrerReserverte,
             skjermet = skjermet
@@ -427,6 +433,7 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         val skjermet = runBlocking { pepClient.harTilgangTilKode6() }
         val filtrerReserverte = true
         val antallIKøEtterRes = oppgaveKøTjeneste.hentAntallOppgaverForKø(
+            område = Områder.K9,
             oppgaveKoId = kø.id,
             filtrerReserverte = filtrerReserverte,
             skjermet = skjermet
@@ -472,18 +479,18 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         }
     }
 
-    private fun opprettKøFor(saksbehandler: Saksbehandler, oppgaveQuery: OppgaveQuery): OppgaveKo {
+    private fun opprettKøFor(saksbehandler: Saksbehandler, queryRequest: QueryRequest): OppgaveKo {
         val oppgaveKoRepository = get<OppgaveKoRepository>()
         val pepClient = get<IPepClient>()
         val skjermet = runBlocking { pepClient.harTilgangTilKode6() }
         val nyKø = oppgaveKoRepository.leggTil("Test", skjermet = skjermet).copy(
             saksbehandlere = listOf(saksbehandler.epost),
-            oppgaveQuery = oppgaveQuery
+            oppgaveQuery = queryRequest.oppgaveQuery
         )
         return oppgaveKoRepository.endre(nyKø, skjermet)
     }
 
-    private fun querySomKunInneholder(eksternId: UUID, vararg status: Oppgavestatus = emptyArray()): OppgaveQuery {
+    private fun querySomKunInneholder(eksternId: UUID, vararg status: Oppgavestatus = emptyArray()): QueryRequest {
         val filtre = mutableListOf(
             byggFilter(FeltType.BEHANDLINGUUID, EksternFeltverdiOperator.EQUALS, eksternId.toString())
         )
@@ -496,13 +503,13 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
                 )
             )
         }
-        return OppgaveQuery(filtre)
+        return QueryRequest(Områder.K9, OppgaveQuery(filtre))
     }
 
     private fun querySomKunInneholder(
         eksternId: List<UUID>,
         vararg status: Oppgavestatus = emptyArray()
-    ): OppgaveQuery {
+    ): QueryRequest {
         val filtre = mutableListOf(
             byggFilter(
                 FeltType.BEHANDLINGUUID,
@@ -519,7 +526,7 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
                 )
             )
         }
-        return OppgaveQuery(filtre)
+        return QueryRequest(Områder.K9, OppgaveQuery(filtre))
     }
 }
 

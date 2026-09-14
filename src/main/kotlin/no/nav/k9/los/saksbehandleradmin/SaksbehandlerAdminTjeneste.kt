@@ -4,6 +4,7 @@ import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.ko.db.OppgaveKoRepository
 import no.nav.k9.los.lagretsok.LagretSøkTjeneste
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.reservasjon.ReservasjonV3Tjeneste
 import no.nav.k9.los.uttrekk.UttrekkTjeneste
 
@@ -23,14 +24,14 @@ class SaksbehandlerAdminTjeneste(
         saksbehandlerRepository.opprettSaksbehandler(epost)
     }
 
-    suspend fun slettSaksbehandlerForId(id: Long) {
+    suspend fun slettSaksbehandlerForId(område: Områder, id: Long) {
         val skjermet = pepClient.harTilgangTilKode6()
 
         val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedId(id)
 
-        val lagredeSøk = lagretSøkTjeneste.hentAlle(saksbehandler!!.navident!!)
+        val lagredeSøk = lagretSøkTjeneste.hentAlle(område, saksbehandler!!.navident!!)
         lagredeSøk.forEach {
-            lagretSøkTjeneste.slett(saksbehandler.navident!!, it.id!!)
+            lagretSøkTjeneste.slett(område, saksbehandler.navident, it.id!!)
         }
 
         transactionalManager.transaction { tx ->
@@ -45,15 +46,16 @@ class SaksbehandlerAdminTjeneste(
     }
 
     suspend fun slettSaksbehandler(
+        område: Områder,
         epost: String,
     ) {
         val skjermet = pepClient.harTilgangTilKode6()
 
         val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedEpost(epost) ?: throw IllegalStateException("Kunne ikke finne saksbehandler med epost")
         if (saksbehandler.navident != null) {
-            val lagredeSøk = lagretSøkTjeneste.hentAlle(saksbehandler.navident!!)
+            val lagredeSøk = lagretSøkTjeneste.hentAlle(område,saksbehandler.navident)
             lagredeSøk.forEach {
-                lagretSøkTjeneste.slett(saksbehandler.navident!!, it.id!!)
+                lagretSøkTjeneste.slett(område, saksbehandler.navident, it.id!!)
             }
             val uttrekkeneTilSakbehandler = uttrekkTjeneste.hentForSaksbehandler(saksbehandler.id)
             uttrekkeneTilSakbehandler.forEach {

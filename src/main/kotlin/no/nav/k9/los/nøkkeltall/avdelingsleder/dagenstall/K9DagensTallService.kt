@@ -21,11 +21,11 @@ import java.time.LocalDateTime
 import kotlin.time.measureTime
 
 
-class DagensTallService(
+class K9DagensTallService(
     private val queryService: OppgaveQueryService
 ) {
     private val cache = Cache<LocalDate, DagensTallResponse>(null)
-    private val log: Logger = LoggerFactory.getLogger(DagensTallService::class.java)
+    private val log: Logger = LoggerFactory.getLogger(K9DagensTallService::class.java)
 
     companion object {
         val omsorgspenger = FeltverdiOppgavefilter(Områder.K9, "ytelsestype", EksternFeltverdiOperator.IN, listOf(FagsakYtelseType.OMSORGSPENGER.kode))
@@ -85,7 +85,7 @@ class DagensTallService(
             add(AggregertSelectFelt(Aggregeringsfunksjon.ANTALL))
         }
         val query = OppgaveQuery(filtere = filtere, select = selectFelter)
-        val resultat = queryService.query(QueryRequest(query))
+        val resultat = queryService.query(QueryRequest(Områder.K9,query))
 
         return resultat.map { rad ->
             TelleRad(

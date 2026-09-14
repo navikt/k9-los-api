@@ -5,18 +5,18 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.rest.RequestContextService
-import no.nav.k9.los.nøkkeltall.avdelingsleder.dagenstall.DagensTallService
+import no.nav.k9.los.nøkkeltall.avdelingsleder.dagenstall.K9DagensTallService
 import no.nav.k9.los.nøkkeltall.avdelingsleder.ferdigstilteperenhet.FerdigstiltePerEnhetGruppe
-import no.nav.k9.los.nøkkeltall.avdelingsleder.ferdigstilteperenhet.FerdigstiltePerEnhetService
-import no.nav.k9.los.nøkkeltall.avdelingsleder.statusfordeling.StatusFordelingService
-import no.nav.k9.los.nøkkeltall.avdelingsleder.status.StatusService
+import no.nav.k9.los.nøkkeltall.avdelingsleder.ferdigstilteperenhet.K9FerdigstiltePerEnhetService
+import no.nav.k9.los.nøkkeltall.avdelingsleder.statusfordeling.K9StatusFordelingService
+import no.nav.k9.los.nøkkeltall.avdelingsleder.status.K9StatusService
 import org.koin.ktor.ext.inject
 
 fun Route.NøkkeltallV3Apis() {
-    val statusFordelingService by inject<StatusFordelingService>()
-    val statusService by inject<StatusService>()
-    val dagensTallService by inject<DagensTallService>()
-    val perEnhetService by inject<FerdigstiltePerEnhetService>()
+    val statusFordelingService by inject<K9StatusFordelingService>()
+    val statusService by inject<K9StatusService>()
+    val dagensTallService by inject<K9DagensTallService>()
+    val perEnhetService by inject<K9FerdigstiltePerEnhetService>()
     val requestContextService by inject<RequestContextService>()
     val pepClient by inject<IPepClient>()
 

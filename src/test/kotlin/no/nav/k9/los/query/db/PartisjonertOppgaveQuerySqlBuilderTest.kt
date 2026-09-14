@@ -33,6 +33,7 @@ class PartisjonertOppgaveQuerySqlBuilderTest {
     @Test
     fun `bygger korrekt sql for enkel spørring`() {
         val builder = PartisjonertOppgaveQuerySqlBuilder(
+            område = Områder.K9,
             felter = mockFelter,
             oppgavestatusFilter = listOf(Oppgavestatus.AAPEN),
             now = LocalDateTime.now(),
@@ -57,6 +58,7 @@ class PartisjonertOppgaveQuerySqlBuilderTest {
     @Test
     fun `bygger korrekt sql for personbeskyttelse`() {
         val builder = PartisjonertOppgaveQuerySqlBuilder(
+            område = Områder.K9,
             felter = mockFelter,
             oppgavestatusFilter = listOf(Oppgavestatus.AAPEN),
             now = LocalDateTime.now(),
@@ -79,6 +81,7 @@ class PartisjonertOppgaveQuerySqlBuilderTest {
     @Test
     fun `setter paging riktig`() {
         val builder = PartisjonertOppgaveQuerySqlBuilder(
+            område = Områder.K9,
             felter = mockFelter,
             oppgavestatusFilter = listOf(Oppgavestatus.AAPEN),
             now = LocalDateTime.now(),
@@ -94,6 +97,7 @@ class PartisjonertOppgaveQuerySqlBuilderTest {
     @Test
     fun `håndterer sortering riktig`() {
         val builder = PartisjonertOppgaveQuerySqlBuilder(
+            område = Områder.K9,
             felter = mockFelter,
             oppgavestatusFilter = listOf(Oppgavestatus.AAPEN),
             now = LocalDateTime.now(),
@@ -110,6 +114,7 @@ class PartisjonertOppgaveQuerySqlBuilderTest {
     @Test
     fun `bygger korrekt for kompleks spørring`() {
         val builder = PartisjonertOppgaveQuerySqlBuilder(
+            område = Områder.K9,
             felter = mockFelter,
             oppgavestatusFilter = listOf(Oppgavestatus.AAPEN, Oppgavestatus.VENTER),
             now = LocalDateTime.now(),
@@ -148,6 +153,7 @@ class PartisjonertOppgaveQuerySqlBuilderTest {
     @Test
     fun `genererer sql for telling`() {
         val builder = PartisjonertOppgaveQuerySqlBuilder(
+            område = Områder.K9,
             felter = mockFelter,
             oppgavestatusFilter = listOf(Oppgavestatus.AAPEN),
             now = LocalDateTime.now(),
@@ -171,6 +177,7 @@ class PartisjonertOppgaveQuerySqlBuilderTest {
     @Test
     fun `medSelectFelter inkluderer ferdigstiltDato`() {
         val builder = PartisjonertOppgaveQuerySqlBuilder(
+            område = Områder.K9,
             felter = mockFelter,
             oppgavestatusFilter = listOf(Oppgavestatus.LUKKET),
             now = LocalDateTime.now(),
@@ -189,6 +196,7 @@ class PartisjonertOppgaveQuerySqlBuilderTest {
     @Test
     fun `medEnkelOrder håndterer ferdigstiltDato`() {
         val builder = PartisjonertOppgaveQuerySqlBuilder(
+            område = Områder.K9,
             felter = mockFelter,
             oppgavestatusFilter = listOf(Oppgavestatus.LUKKET),
             now = LocalDateTime.now(),

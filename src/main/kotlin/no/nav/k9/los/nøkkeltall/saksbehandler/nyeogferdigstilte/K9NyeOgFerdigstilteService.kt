@@ -21,12 +21,12 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import kotlin.time.measureTime
 
-class NyeOgFerdigstilteService(
+class K9NyeOgFerdigstilteService(
     private val queryService: OppgaveQueryService
 ) {
     private var oppdatertTidspunkt: LocalDateTime? = null
     private val cache = Cache<NyeOgFerdigstilteGruppe, List<NyeOgFerdigstilteSerie>>(null)
-    private val log: Logger = LoggerFactory.getLogger(NyeOgFerdigstilteService::class.java)
+    private val log: Logger = LoggerFactory.getLogger(K9NyeOgFerdigstilteService::class.java)
 
     fun hentCachetVerdi(gruppe: NyeOgFerdigstilteGruppe): NyeOgFerdigstilteResponse {
         cache.removeExpiredObjects(LocalDateTime.now())
@@ -79,6 +79,7 @@ class NyeOgFerdigstilteService(
         dato: LocalDate, gruppe: NyeOgFerdigstilteGruppe
     ): Int {
         val request = QueryRequest(
+            område = Områder.K9,
             oppgaveQuery = OppgaveQuery(
                 filtere = buildList {
                     leggTilKriterier(gruppe)
@@ -94,6 +95,7 @@ class NyeOgFerdigstilteService(
 
     private fun hentFerdigstilteFraDatabase(dato: LocalDate, gruppe: NyeOgFerdigstilteGruppe): Int {
         val request = QueryRequest(
+            område = Områder.K9,
             oppgaveQuery = OppgaveQuery(
                 filtere = buildList {
                     leggTilKriterier(gruppe)

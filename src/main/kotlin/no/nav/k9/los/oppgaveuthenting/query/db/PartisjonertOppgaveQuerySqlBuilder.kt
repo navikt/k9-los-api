@@ -23,6 +23,7 @@ import java.time.LocalDateTime
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 
 class PartisjonertOppgaveQuerySqlBuilder(
+    val område: Områder,
     val felter: Map<OmrådeOgKode, OppgavefeltMedMer>,
     oppgavestatusFilter: List<Oppgavestatus>,
     val now: LocalDateTime,
@@ -96,7 +97,7 @@ class PartisjonertOppgaveQuerySqlBuilder(
         LEFT JOIN oppgave_pep_cache opc ON (opc.omrade = o.omrade_ekstern_id AND o.oppgave_ekstern_id = opc.ekstern_id)
     """.trimIndent()
 
-    private var whereClause = "WHERE o.oppgavestatus IN ($oppgavestatusPlaceholder) ${ferdigstiltDatoBetingelse("o")}"
+    private var whereClause = "WHERE o.omrade_ekstern_id = :omrade AND o.oppgavestatus IN ($oppgavestatusPlaceholder) ${ferdigstiltDatoBetingelse("o")}"
     private val orderByClauses = mutableListOf<String>()
     private val orderByClause get() = if (orderByClauses.isNotEmpty()) "ORDER BY " + orderByClauses.joinToString(", ") else ""
     private var groupByClause = ""
@@ -794,6 +795,7 @@ class PartisjonertOppgaveQuerySqlBuilder(
 
     override fun getParams(): Map<String, Any?> {
         return buildMap {
+            put("omrade", område.eksternId)
             putAll(queryParams)
             putAll(orderByParams)
             putAll(oppgavestatusParams)
