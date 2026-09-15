@@ -404,7 +404,8 @@ class PartisjonertOppgaveQuerySqlBuilder(
              ${combineOperator.sql} ${negationPrefix}EXISTS (
                 SELECT 1
                 FROM oppgavefelt_verdi_part ov
-                WHERE ov.oppgavestatus IN ($oppgavestatusPlaceholder) ${ferdigstiltDatoBetingelse("ov")}
+                WHERE ov.omrade_ekstern_id = :omrade
+                  AND ov.oppgavestatus IN ($oppgavestatusPlaceholder) ${ferdigstiltDatoBetingelse("ov")}
                   AND ov.oppgave_id = o.id
                   AND ov.feltdefinisjon_ekstern_id = :feltkode$index
                   AND $verdifelt ${operator.negasjonAv?.sql ?: operator.sql} $feltverdiPlaceholder
@@ -567,6 +568,7 @@ class PartisjonertOppgaveQuerySqlBuilder(
             (SELECT $verdifelt
              FROM oppgavefelt_verdi_part ov
              WHERE ov.oppgave_id = o.id
+               AND ov.omrade_ekstern_id = :omrade
                AND ov.oppgavestatus IN ($oppgavestatusPlaceholder) ${ferdigstiltDatoBetingelse("ov")}
                AND ov.feltdefinisjon_ekstern_id = :aggFeltkode$index
              LIMIT 1)
