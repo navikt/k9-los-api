@@ -6,6 +6,7 @@ import no.nav.k9.los.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventDto
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.sak.K9SakEventDto
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.tilbakekrav.K9TilbakeEventDto
 import no.nav.k9.los.domeneadaptere.ungsak.eventmottak.ungsak.UngSakEventDto
+import no.nav.k9.los.infrastruktur.utils.IkkeImplementertException
 import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.kodeverk.Fagsystem
 import java.time.LocalDateTime
@@ -34,7 +35,7 @@ sealed class EventLagret(
             Fagsystem.PUNSJ -> K9Punsj(nøkkelId, eksternId, eksternVersjon, eventJson, opprettet, dirty)
             Fagsystem.K9TILBAKE -> K9Tilbake(nøkkelId, eksternId, eksternVersjon, eventJson, opprettet, dirty)
             Fagsystem.UNGSAK -> UngSak(nøkkelId, eksternId, eksternVersjon, eventJson, opprettet, dirty)
-            Fagsystem.UNGTILBAKE -> throw UnsupportedOperationException("Fagsystem $fagsystem is not implemented yet")
+            Fagsystem.UNGTILBAKE -> throw IkkeImplementertException("Fagsystem $fagsystem is not implemented yet")
         }
     }
 

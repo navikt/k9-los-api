@@ -19,6 +19,7 @@ import no.nav.k9.los.forvaltning.K9TilbakeEventIkkeSensitiv
 import no.nav.k9.los.forvaltning.UngSakEventIkkeSensitiv
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.rest.RequestContextService
+import no.nav.k9.los.infrastruktur.utils.IkkeImplementertException
 import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.kodeverk.Fagsystem
 import org.koin.ktor.ext.inject
@@ -81,7 +82,7 @@ internal fun Route.EventlagerApi() {
                         val eventliste = eventStrenger.map { LosObjectMapper.prettyInstance.readValue<UngSakEventDto>(it) }.toList()
                         eventliste.map { event -> UngSakEventIkkeSensitiv(event) }
                     }
-                    Fagsystem.UNGTILBAKE -> throw UnsupportedOperationException("Fagsystem $fagsystem is not implemented yet")
+                    Fagsystem.UNGTILBAKE -> throw IkkeImplementertException("Fagsystem $fagsystem is not implemented yet")
                 }
                 call.respond(LosObjectMapper.prettyInstance.writeValueAsString(eventerIkkeSensitive))
             } else {

@@ -8,10 +8,10 @@ import no.nav.k9.los.infrastruktur.utils.leggTilDagerHoppOverHelg
 import no.nav.k9.los.kodeverk.BehandlingType
 import no.nav.k9.los.kodeverk.FagsakYtelseType
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
+import no.nav.k9.los.oppgaveuthenting.OppgaveNøkkelDto
+import no.nav.k9.los.oppgaveuthenting.enkeltoppslag.AktivOppgaveOppslag
 import no.nav.k9.los.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
-import no.nav.k9.los.oppgaveuthenting.enkeltoppslag.AktivOppgaveOppslag
-import no.nav.k9.los.oppgaveuthenting.OppgaveNøkkelDto
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.LocalDate

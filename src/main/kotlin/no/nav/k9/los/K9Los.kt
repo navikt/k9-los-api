@@ -57,6 +57,8 @@ import no.nav.k9.los.infrastruktur.jobbplanlegger.Jobbplanlegger
 import no.nav.k9.los.infrastruktur.jobbplanlegger.PlanlagtJobb
 import no.nav.k9.los.infrastruktur.jobbplanlegger.Tidsvindu
 import no.nav.k9.los.infrastruktur.metrikker.EventlagerNokkeltallPrometheusCollector
+import no.nav.k9.los.infrastruktur.rest.områdeApi
+import no.nav.k9.los.infrastruktur.utils.IkkeImplementertException
 import no.nav.k9.los.innloggetbruker.InnloggetBrukerApi
 import no.nav.k9.los.innloggetbruker.InnloggetBrukerApiNy
 import no.nav.k9.los.innloggetbruker.InnloggetBrukersOmråderApi
@@ -126,8 +128,8 @@ fun Application.k9Los() {
         exception<SifAbacPdpUtilgjengeligException> { call, _ ->
             call.respond(HttpStatusCode.ServiceUnavailable, "Tidsavbrudd mot sif-abac-pdp")
         }
-        exception<UnsupportedOperationException> { call, _ ->
-            call.respond(HttpStatusCode.NotImplemented, "Operasjonen er ikke implementert")
+        exception<IkkeImplementertException> { call, e ->
+            call.respond(HttpStatusCode.NotImplemented, e.message)
         }
     }
 

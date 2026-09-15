@@ -8,6 +8,7 @@ import no.nav.k9.los.infrastruktur.azuregraph.IAzureGraphService
 import no.nav.k9.los.infrastruktur.idtoken.IIdToken
 import no.nav.k9.los.infrastruktur.rest.idToken
 import no.nav.k9.los.infrastruktur.rest.område
+import no.nav.k9.los.infrastruktur.utils.IkkeImplementertException
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.Oppgave
 import no.nav.k9.los.saksbehandleradmin.Saksbehandler
@@ -159,7 +160,7 @@ class PepClient(
 
             Områder.AKTIVITETSPENGER -> {
                 log.warn("Forsøker å gjøre tilgangssjekk for andre saksbehandlere, men aktivitetspenger er ikke støttet")
-                throw UnsupportedOperationException("Kan ikke tilgangssjekke for andre saksbehandlere på aktivitetspenger")
+                throw IkkeImplementertException("Kan ikke tilgangssjekke for andre saksbehandlere på aktivitetspenger")
             }
         }
     }

@@ -6,6 +6,7 @@ import io.ktor.client.engine.java.*
 import io.ktor.client.network.sockets.*
 import io.ktor.client.plugins.*
 import io.ktor.server.application.*
+import io.ktor.server.engine.handleFailure
 import kotlinx.coroutines.channels.Channel
 import no.nav.helse.dusseldorf.ktor.health.HealthService
 import no.nav.k9.los.KoinProfile.*

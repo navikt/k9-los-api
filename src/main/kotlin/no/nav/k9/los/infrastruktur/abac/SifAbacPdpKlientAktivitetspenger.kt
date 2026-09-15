@@ -13,6 +13,7 @@ import no.nav.k9.los.infrastruktur.abac.tilganger.InnloggetAnsattUngV2Dto
 import no.nav.k9.los.infrastruktur.abac.tilganger.Tilganger
 import no.nav.k9.los.infrastruktur.idtoken.IIdToken
 import no.nav.k9.los.infrastruktur.rest.NavHeaders
+import no.nav.k9.los.infrastruktur.utils.IkkeImplementertException
 import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
 import no.nav.sif.abac.kontrakt.abac.BeskyttetRessursActionAttributt
 import no.nav.sif.abac.kontrakt.abac.Diskresjonskode
@@ -115,7 +116,7 @@ class SifAbacPdpKlientAktivitetspenger(
         saksbehandlersIdent: String,
         saksbehandlersGrupper: Set<UUID>
     ): Boolean {
-        throw UnsupportedOperationException("Ikke støttet for aktivitetspenger i sif-abac-pdp")
+        throw IkkeImplementertException("Ikke støttet for aktivitetspenger i sif-abac-pdp")
     }
 
     override suspend fun harTilgangTilPersoner(
@@ -124,6 +125,6 @@ class SifAbacPdpKlientAktivitetspenger(
         saksbehandlersIdent: String,
         saksbehandlersGrupper: Set<UUID>
     ): Boolean {
-        throw UnsupportedOperationException("Ikke støttet for aktivitetspenger i sif-abac-pdp")
+        throw IkkeImplementertException("Ikke støttet for aktivitetspenger i sif-abac-pdp")
     }
 }
