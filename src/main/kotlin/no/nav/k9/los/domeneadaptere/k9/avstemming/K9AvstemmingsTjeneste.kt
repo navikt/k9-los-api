@@ -18,13 +18,13 @@ import no.nav.k9.los.oppgaveuthenting.query.dto.query.OppgaveQuery
 import no.nav.k9.los.oppgaveuthenting.query.mapping.EksternFeltverdiOperator
 import no.nav.k9.los.oppgaveuthenting.Oppgave
 
-class AvstemmingsTjeneste(
+class K9AvstemmingsTjeneste(
     private val oppgaveQueryService: OppgaveQueryService,
     private val k9SakAvstemmingsklient: SakAvstemmingsklient,
     private val k9KlageAvstemmingsklient: SakAvstemmingsklient,
     private val k9PunsjAvstemmingsklient: PunsjAvstemmingsklient,
 ) {
-    private val log = org.slf4j.LoggerFactory.getLogger(AvstemmingsTjeneste::class.java)
+    private val log = org.slf4j.LoggerFactory.getLogger(K9AvstemmingsTjeneste::class.java)
 
     suspend fun avstem(fagsystem: Fagsystem) : Avstemmingsrapport {
         log.info("Starter avstemming for fagsystem: $fagsystem")

@@ -7,7 +7,7 @@ import io.mockk.mockk
 import kotlinx.coroutines.channels.Channel
 import no.nav.k9.los.domeneadaptere.eventlager.EventRepository
 import no.nav.k9.los.domeneadaptere.k9.OmrådeSetup
-import no.nav.k9.los.domeneadaptere.k9.avstemming.AvstemmingsTjeneste
+import no.nav.k9.los.domeneadaptere.k9.avstemming.K9AvstemmingsTjeneste
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.FeilRekkefølgeSjekker
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.klage.K9KlageEventHandler
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventHandler
@@ -470,8 +470,8 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
         )
     }
 
-    single<AvstemmingsTjeneste> {
-        AvstemmingsTjeneste(
+    single<K9AvstemmingsTjeneste> {
+        K9AvstemmingsTjeneste(
             oppgaveQueryService = get(),
             k9SakAvstemmingsklient = get(),
             k9KlageAvstemmingsklient = get(),

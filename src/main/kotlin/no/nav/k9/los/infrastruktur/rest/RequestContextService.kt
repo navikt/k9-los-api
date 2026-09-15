@@ -9,7 +9,6 @@ import no.nav.k9.los.KoinProfile
 import no.nav.k9.los.infrastruktur.idtoken.IIdToken
 import no.nav.k9.los.infrastruktur.idtoken.IdTokenLocal
 import no.nav.k9.los.infrastruktur.idtoken.idToken
-import no.nav.k9.los.områdeAttributeKey
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import kotlin.coroutines.AbstractCoroutineContextElement
 import kotlin.coroutines.CoroutineContext
@@ -17,7 +16,7 @@ import kotlin.coroutines.coroutineContext
 
 // For bruk i suspending functions
 // https://blog.tpersson.io/2018/04/22/emulating-request-scoped-objects-with-kotlin-coroutines/
-public class CoroutineRequestContext(
+class CoroutineRequestContext(
     val idToken: IIdToken,
     val område: Områder?,
 ) : AbstractCoroutineContextElement(Key) {

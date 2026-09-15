@@ -11,7 +11,7 @@ import io.ktor.server.routing.*
 import kotliquery.queryOf
 import no.nav.k9.kodeverk.behandling.FagsakYtelseType
 import no.nav.k9.los.domeneadaptere.k9.K9Oppgavetypenavn
-import no.nav.k9.los.domeneadaptere.k9.avstemming.AvstemmingsTjeneste
+import no.nav.k9.los.domeneadaptere.k9.avstemming.K9AvstemmingsTjeneste
 import no.nav.k9.los.domeneadaptere.eventlager.EventRepository
 import no.nav.k9.los.domeneadaptere.k9.statistikk.StatistikkRepository
 import no.nav.k9.los.infrastruktur.abac.IPepClient
@@ -48,7 +48,7 @@ fun Route.forvaltningApis() {
     val reservasjonV3Repository by inject<ReservasjonV3Repository>()
     val objectMapper = LosObjectMapper.prettyInstance
     val transactionalManager by inject<TransactionalManager>()
-    val avstemmingsTjeneste by inject<AvstemmingsTjeneste>()
+    val avstemmingsTjeneste by inject<K9AvstemmingsTjeneste>()
     val eventRepository by inject<EventRepository>()
     val statistikkRepository by inject<StatistikkRepository>()
     val temporalOppslagTjeneste by inject<TemporalOppgaveOppslag>()

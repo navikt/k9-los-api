@@ -6,13 +6,12 @@ import io.ktor.client.engine.java.*
 import io.ktor.client.network.sockets.*
 import io.ktor.client.plugins.*
 import io.ktor.server.application.*
-import io.ktor.server.engine.handleFailure
 import kotlinx.coroutines.channels.Channel
 import no.nav.helse.dusseldorf.ktor.health.HealthService
 import no.nav.k9.los.KoinProfile.*
 import no.nav.k9.los.domeneadaptere.eventlager.EventRepository
 import no.nav.k9.los.domeneadaptere.k9.OmrådeSetup
-import no.nav.k9.los.domeneadaptere.k9.avstemming.AvstemmingsTjeneste
+import no.nav.k9.los.domeneadaptere.k9.avstemming.K9AvstemmingsTjeneste
 import no.nav.k9.los.domeneadaptere.k9.avstemming.punsj.systemklient.LocalPunsjAvstemmingsklient
 import no.nav.k9.los.domeneadaptere.k9.avstemming.punsj.systemklient.RestPunsjAvstemmingsklient
 import no.nav.k9.los.domeneadaptere.k9.avstemming.saksbehandling.systemklient.LocalSakAvstemmingsklient
@@ -665,8 +664,8 @@ fun localDevConfig() = module {
         K9KlageBerikerKlientLocal()
     }
 
-    single<AvstemmingsTjeneste> {
-        AvstemmingsTjeneste(
+    single<K9AvstemmingsTjeneste> {
+        K9AvstemmingsTjeneste(
             oppgaveQueryService = get(),
             k9SakAvstemmingsklient = LocalSakAvstemmingsklient(),
             k9KlageAvstemmingsklient = LocalSakAvstemmingsklient(),
@@ -783,8 +782,8 @@ fun preprodConfig(config: Configuration) = module {
         )
     }
 
-    single<AvstemmingsTjeneste> {
-        AvstemmingsTjeneste(
+    single<K9AvstemmingsTjeneste> {
+        K9AvstemmingsTjeneste(
             oppgaveQueryService = get(),
             k9SakAvstemmingsklient = RestSakAvstemmingsklient(
                 url = config.k9Url(),
@@ -852,8 +851,8 @@ fun prodConfig(config: Configuration) = module {
         )
     }
 
-    single<AvstemmingsTjeneste> {
-        AvstemmingsTjeneste(
+    single<K9AvstemmingsTjeneste> {
+        K9AvstemmingsTjeneste(
             oppgaveQueryService = get(),
             k9SakAvstemmingsklient = RestSakAvstemmingsklient(
                 url = config.k9Url(),
