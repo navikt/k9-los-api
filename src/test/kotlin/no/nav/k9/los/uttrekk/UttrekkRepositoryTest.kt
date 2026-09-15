@@ -10,6 +10,7 @@ import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.lagretsok.LagretSøk
 import no.nav.k9.los.lagretsok.LagretSøkRepository
 import no.nav.k9.los.lagretsok.NyttLagretSøkRequest
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.OppgaveQuery
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
 import no.nav.k9.los.saksbehandleradmin.TestSaksbehandlerRepository
@@ -48,8 +49,9 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
             )
             saksbehandlerId = saksbehandler.id
             val lagretSøk = LagretSøk.nyttSøk(
-                NyttLagretSøkRequest(tittel = "Test søk", query = LagretSøk.defaultQuery(false)),
-                saksbehandler
+                Områder.K9,
+                saksbehandler,
+                NyttLagretSøkRequest(tittel = "Test søk", query = LagretSøk.defaultQuery(Områder.K9, false))
             )
             lagretSøkRepository.opprett(lagretSøk)
             testQuery = lagretSøk.query
@@ -66,18 +68,18 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
 
         val id = uttrekkRepository.opprett(uttrekk)
 
-        val hentetUttrekk = uttrekkRepository.hent(id)
+        val hentetUttrekk = uttrekkRepository.hent(Områder.K9, "test", id)
         assertThat(hentetUttrekk).isNotNull()
         assertThat(hentetUttrekk!!.id).isEqualTo(id)
         assertThat(hentetUttrekk.lagetAv).isEqualTo(saksbehandlerId)
         assertThat(hentetUttrekk.status).isEqualTo(UttrekkStatus.OPPRETTET)
-        assertThat(uttrekkRepository.hentResultat(id)).isNull()
+        assertThat(uttrekkRepository.hentResultat(Områder.K9, "test", id)).isNull()
         assertThat(hentetUttrekk.antall).isNull()
     }
 
     @Test
     fun `skal returnere null når uttrekk ikke finnes`() {
-        val hentetUttrekk = uttrekkRepository.hent(999L)
+        val hentetUttrekk = uttrekkRepository.hent(Områder.K9, "test", 999L)
         assertThat(hentetUttrekk).isNull()
     }
 
@@ -89,20 +91,20 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
         )
 
         val id = uttrekkRepository.opprett(uttrekk)
-        val hentetUttrekk = uttrekkRepository.hent(id)!!
+        val hentetUttrekk = uttrekkRepository.hent(Områder.K9, "test", id)!!
 
         hentetUttrekk.markerSomKjører()
         uttrekkRepository.oppdater(hentetUttrekk)
 
-        val oppdatertUttrekk = uttrekkRepository.hent(id)!!
+        val oppdatertUttrekk = uttrekkRepository.hent(Områder.K9, "test", id)!!
         assertThat(oppdatertUttrekk.status).isEqualTo(UttrekkStatus.KJØRER)
 
         hentetUttrekk.markerSomFullført(0)
         uttrekkRepository.oppdater(hentetUttrekk, "[]")
 
-        val fullførtUttrekk = uttrekkRepository.hent(id)!!
+        val fullførtUttrekk = uttrekkRepository.hent(Områder.K9, "test", id)!!
         assertThat(fullførtUttrekk.status).isEqualTo(UttrekkStatus.FULLFØRT)
-        assertThat(uttrekkRepository.hentResultat(id)).isEqualTo("[]")
+        assertThat(uttrekkRepository.hentResultat(Områder.K9, "test", id)).isEqualTo("[]")
         assertThat(fullførtUttrekk.fullførtTidspunkt).isNotNull()
         assertThat(fullførtUttrekk.antall).isEqualTo(0)
     }
@@ -111,6 +113,7 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
     fun `skal kaste exception ved oppdatering av ikke-eksisterende uttrekk`() {
         val uttrekk = Uttrekk.fraEksisterende(
             id = 999L,
+            område = Områder.K9,
             opprettetTidspunkt = LocalDateTime.now(),
             status = UttrekkStatus.KJØRER,
             tittel = "Test uttrekk",
@@ -140,11 +143,11 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
         )
 
         val id = uttrekkRepository.opprett(uttrekk)
-        assertThat(uttrekkRepository.hent(id)).isNotNull()
+        assertThat(uttrekkRepository.hent(Områder.K9, "test", id)).isNotNull()
 
-        uttrekkRepository.slett(id)
+        uttrekkRepository.slett(uttrekkRepository.hentForJobb(id)!!)
 
-        val uttrekkEtterSletting = uttrekkRepository.hent(id)
+        val uttrekkEtterSletting = uttrekkRepository.hent(Områder.K9, "test", id)
         assertThat(uttrekkEtterSletting).isNull()
     }
 
@@ -162,7 +165,7 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
         uttrekkRepository.opprett(uttrekk1)
         uttrekkRepository.opprett(uttrekk2)
 
-        val alleUttrekk = uttrekkRepository.hentAlle()
+        val alleUttrekk = uttrekkRepository.hentAlleForJobb()
         assertThat(alleUttrekk.size >= 2).isEqualTo(true)
     }
 
@@ -197,7 +200,7 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
         uttrekkRepository.opprett(uttrekk2)
         uttrekkRepository.opprett(uttrekk3)
 
-        val uttrekkForSaksbehandler = uttrekkRepository.hentForSaksbehandler(saksbehandlerId)
+        val uttrekkForSaksbehandler = uttrekkRepository.hentForSaksbehandler(Områder.K9, saksbehandlerId)
         assertThat(uttrekkForSaksbehandler).hasSize(2)
         assertThat(uttrekkForSaksbehandler.all { it.lagetAv == saksbehandlerId }).isEqualTo(true)
     }
@@ -210,7 +213,7 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
         )
 
         val id = uttrekkRepository.opprett(uttrekk)
-        val hentetUttrekk = uttrekkRepository.hent(id)
+        val hentetUttrekk = uttrekkRepository.hent(Områder.K9, "test", id)
 
         assertThat(hentetUttrekk).isNotNull()
     }
@@ -223,7 +226,7 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
         )
 
         val id = uttrekkRepository.opprett(uttrekk)
-        val hentetUttrekk = uttrekkRepository.hent(id)!!
+        val hentetUttrekk = uttrekkRepository.hent(Områder.K9, "test", id)!!
 
         hentetUttrekk.markerSomKjører()
         uttrekkRepository.oppdater(hentetUttrekk)
@@ -231,10 +234,10 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
         hentetUttrekk.markerSomFeilet("Database connection timeout")
         uttrekkRepository.oppdater(hentetUttrekk)
 
-        val feiletUttrekk = uttrekkRepository.hent(id)!!
+        val feiletUttrekk = uttrekkRepository.hent(Områder.K9, "test", id)!!
         assertThat(feiletUttrekk.status).isEqualTo(UttrekkStatus.FEILET)
         assertThat(feiletUttrekk.feilmelding).isEqualTo("Database connection timeout")
-        assertThat(uttrekkRepository.hentResultat(id)).isNull()
+        assertThat(uttrekkRepository.hentResultat(Områder.K9, "test", id)).isNull()
         assertThat(feiletUttrekk.fullførtTidspunkt).isNotNull()
     }
 }

@@ -69,4 +69,8 @@ alter table driftsmeldinger
 execute format('alter table oppgave_id_part add column omrade_id bigint not null default %s', k9_id);
 alter table oppgave_id_part add constraint fk_oppgave_id_part_omrade foreign key (omrade_id) references omrade (id) not valid;
 
+-- Legg til omrade_id på uttrekk
+execute format('alter table uttrekk add column omrade_id bigint not null default %s', k9_id);
+alter table uttrekk add constraint fk_uttrekk_omrade foreign key (omrade_id) references omrade (id);
+
 end $$;

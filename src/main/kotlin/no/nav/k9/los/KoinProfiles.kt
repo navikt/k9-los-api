@@ -620,7 +620,8 @@ fun common(app: Application, config: Configuration) = module {
     single<UttrekkTjeneste> {
         UttrekkTjeneste(
             uttrekkRepository = get(),
-            lagretSøkRepository = get()
+            lagretSøkRepository = get(),
+            saksbehandlerRepository = get()
         )
     }
 

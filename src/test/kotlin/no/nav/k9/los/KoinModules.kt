@@ -559,7 +559,8 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     single<UttrekkTjeneste> {
         UttrekkTjeneste(
             uttrekkRepository = get(),
-            lagretSøkRepository = get()
+            lagretSøkRepository = get(),
+            saksbehandlerRepository = get()
         )
     }
 

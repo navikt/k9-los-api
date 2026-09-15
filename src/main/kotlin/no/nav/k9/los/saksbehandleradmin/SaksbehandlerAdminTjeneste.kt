@@ -57,9 +57,9 @@ class SaksbehandlerAdminTjeneste(
             lagredeSøk.forEach {
                 lagretSøkTjeneste.slett(område, saksbehandler.navident, it.id!!)
             }
-            val uttrekkeneTilSakbehandler = uttrekkTjeneste.hentForSaksbehandler(saksbehandler.id)
+            val uttrekkeneTilSakbehandler = uttrekkTjeneste.hentForSaksbehandler(område, saksbehandler.id)
             uttrekkeneTilSakbehandler.forEach {
-                uttrekkTjeneste.slett(it.id!!)
+                uttrekkTjeneste.slettUtenTilgangssjekk(it.id!!)
             }
         }
 

@@ -1,7 +1,5 @@
 package no.nav.k9.los.uttrekk
 
-import no.nav.k9.los.ManglerFlerområde
-import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.query.OppgaveQueryService
 import no.nav.k9.los.oppgaveuthenting.query.QueryRequest
 import org.slf4j.LoggerFactory
@@ -17,18 +15,14 @@ class UttrekkJobb(
     fun kjørUttrekk(uttrekkId: Long) {
         try {
             val uttrekk = uttrekkTjeneste.startUttrekk(uttrekkId)
-            var queryRequest = QueryRequest(
-                område = @ManglerFlerområde Områder.K9,
-                oppgaveQuery = uttrekk.query,
-                avgrensning = uttrekk.avgrensning
+            val resultat = oppgaveQueryService.query(
+                QueryRequest(
+                    område = uttrekk.område,
+                    oppgaveQuery = uttrekk.query,
+                    avgrensning = uttrekk.avgrensning
+                )
             )
-
-            val resultat = oppgaveQueryService.query(queryRequest)
-
-            uttrekkTjeneste.fullførUttrekk(
-                uttrekkId,
-                resultat
-            )
+            uttrekkTjeneste.fullførUttrekk(uttrekkId, resultat)
         } catch (e: Exception) {
             log.warn("Kjøring av uttrekk med id {} feilet", uttrekkId, e)
             uttrekkTjeneste.feilUttrekk(uttrekkId, e.message)
@@ -36,7 +30,7 @@ class UttrekkJobb(
     }
 
     fun kjørAlleUttrekkSomIkkeHarKjørt() {
-        val uttrekkListe = uttrekkTjeneste.hentAlle()
+        val uttrekkListe = uttrekkTjeneste.hentAlleForJobb()
             .filter { it.status == UttrekkStatus.OPPRETTET }
         if (uttrekkListe.isEmpty()) {
             antallKjøringerUtenTreff++
@@ -55,7 +49,7 @@ class UttrekkJobb(
     }
 
     fun ryddOppUttrekk() {
-        val uttrekkListe = uttrekkTjeneste.hentAlle()
+        val uttrekkListe = uttrekkTjeneste.hentAlleForJobb()
             .filter { it.skalRyddesOpp() }
         if (uttrekkListe.isEmpty()) {
             log.info("Ingen uttrekk funnet som trenger opprydding")

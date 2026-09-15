@@ -1,6 +1,7 @@
 package no.nav.k9.los.uttrekk
 
 import no.nav.k9.los.lagretsok.LagretSøk
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.query.Avgrensning
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.OppgaveQuery
 import java.time.LocalDateTime
@@ -19,6 +20,7 @@ enum class TypeKjøring {
 
 class Uttrekk private constructor(
     val id: Long?,
+    val område: Områder,
     val opprettetTidspunkt: LocalDateTime,
     status: UttrekkStatus,
     tittel: String,
@@ -98,6 +100,7 @@ class Uttrekk private constructor(
         ): Uttrekk {
             return Uttrekk(
                 id = null,
+                område = lagretSøk.område,
                 opprettetTidspunkt = LocalDateTime.now(),
                 status = UttrekkStatus.OPPRETTET,
                 tittel = tittel,
@@ -115,6 +118,7 @@ class Uttrekk private constructor(
 
         fun fraEksisterende(
             id: Long,
+            område: Områder,
             opprettetTidspunkt: LocalDateTime,
             status: UttrekkStatus,
             tittel: String,
@@ -129,7 +133,7 @@ class Uttrekk private constructor(
             antall: Int?
         ): Uttrekk {
             return Uttrekk(
-                id, opprettetTidspunkt, status, tittel, query, lagetAv, lagretSøkId, limit, offset, feilmelding,
+                id, område, opprettetTidspunkt, status, tittel, query, lagetAv, lagretSøkId, limit, offset, feilmelding,
                 startetTidspunkt, fullførtTidspunkt, antall
             )
         }
