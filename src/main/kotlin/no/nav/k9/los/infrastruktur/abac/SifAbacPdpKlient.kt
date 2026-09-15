@@ -5,7 +5,7 @@ import no.nav.k9.los.infrastruktur.abac.tilganger.Tilganger
 import no.nav.k9.los.infrastruktur.idtoken.IIdToken
 import no.nav.k9.los.infrastruktur.rest.område
 import no.nav.k9.los.infrastruktur.utils.Cache
-import no.nav.k9.los.oppgavedefinisjon.omraade.OmrådeRuter
+import no.nav.k9.los.oppgavedefinisjon.omraade.OmrådeDispatcher
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.sif.abac.kontrakt.abac.Diskresjonskode
 import no.nav.sif.abac.kontrakt.abac.dto.SaksnummerDto
@@ -32,7 +32,7 @@ class SifAbacPdpKlient(
 ) : ISifAbacPdpKlient {
     val log: Logger = LoggerFactory.getLogger("SifAbacPdpKlient")
     private val tilgangerCache = Cache<TilgangerCacheKey, Tilganger>(300)
-    private val klientRuter = OmrådeRuter(sifAbacPdpKlientK9, sifAbacPdpKlientAktivitetspenger)
+    private val områdeDispatcher = OmrådeDispatcher(sifAbacPdpKlientK9, sifAbacPdpKlientAktivitetspenger)
 
     override suspend fun hentTilganger(idToken: IIdToken): Tilganger {
         return hentTilganger(coroutineContext.område(), idToken)
@@ -41,7 +41,7 @@ class SifAbacPdpKlient(
     suspend fun hentTilganger(område: Områder, idToken: IIdToken): Tilganger {
         return tilgangerCache.hentSuspend(TilgangerCacheKey(område, idToken), Duration.ofMinutes(60)) {
             withTimeoutOrNull(hentTilgangerTimeout) {
-                klientRuter.forOmråde(område).hentTilganger(idToken)
+                områdeDispatcher.forOmråde(område).hentTilganger(idToken)
             } ?: throw SifAbacPdpUtilgjengeligException()
         }
     }
@@ -51,14 +51,14 @@ class SifAbacPdpKlient(
     }
 
     suspend fun diskresjonskoderPerson(område: Områder, aktørId: AktørId): Set<Diskresjonskode> =
-        klientRuter.forOmråde(område).diskresjonskoderPerson(aktørId)
+        områdeDispatcher.forOmråde(område).diskresjonskoderPerson(aktørId)
 
     override suspend fun diskresjonskoderSak(saksnummerDto: SaksnummerDto): Set<Diskresjonskode> {
         return diskresjonskoderSak(coroutineContext.område(), saksnummerDto)
     }
 
     suspend fun diskresjonskoderSak(område: Områder, saksnummerDto: SaksnummerDto): Set<Diskresjonskode> =
-        klientRuter.forOmråde(område).diskresjonskoderSak(saksnummerDto)
+        områdeDispatcher.forOmråde(område).diskresjonskoderSak(saksnummerDto)
 
     override suspend fun harTilgangTilSak(
         action: Action,
@@ -73,7 +73,7 @@ class SifAbacPdpKlient(
         action: Action,
         saksnummerDto: SaksnummerDto,
         idToken: IIdToken,
-    ): Boolean = klientRuter.forOmråde(område).harTilgangTilSak(action, saksnummerDto, idToken)
+    ): Boolean = områdeDispatcher.forOmråde(område).harTilgangTilSak(action, saksnummerDto, idToken)
 
     override suspend fun harTilgangTilPersoner(
         action: Action,
@@ -88,7 +88,7 @@ class SifAbacPdpKlient(
         action: Action,
         aktørIder: List<AktørId>,
         idToken: IIdToken,
-    ): Boolean = klientRuter.forOmråde(område).harTilgangTilPersoner(action, aktørIder, idToken)
+    ): Boolean = områdeDispatcher.forOmråde(område).harTilgangTilPersoner(action, aktørIder, idToken)
 
     override suspend fun harTilgangTilSak(
         action: Action,
@@ -109,7 +109,7 @@ class SifAbacPdpKlient(
         saksnummerDto: SaksnummerDto,
         saksbehandlersIdent: String,
         saksbehandlersGrupper: Set<UUID>,
-    ): Boolean = klientRuter.forOmråde(område).harTilgangTilSak(
+    ): Boolean = områdeDispatcher.forOmråde(område).harTilgangTilSak(
         action,
         saksnummerDto,
         saksbehandlersIdent,
@@ -135,7 +135,7 @@ class SifAbacPdpKlient(
         aktørIder: List<AktørId>,
         saksbehandlersIdent: String,
         saksbehandlersGrupper: Set<UUID>,
-    ): Boolean = klientRuter.forOmråde(område).harTilgangTilPersoner(
+    ): Boolean = områdeDispatcher.forOmråde(område).harTilgangTilPersoner(
         action,
         aktørIder,
         saksbehandlersIdent,

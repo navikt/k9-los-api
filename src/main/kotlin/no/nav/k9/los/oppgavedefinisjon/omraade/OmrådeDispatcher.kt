@@ -1,6 +1,6 @@
 package no.nav.k9.los.oppgavedefinisjon.omraade
 
-class OmrådeRuter<T : Any>(
+class OmrådeDispatcher<T : Any>(
     private val k9: T,
     private val aktivitetspenger: T,
 ) {
