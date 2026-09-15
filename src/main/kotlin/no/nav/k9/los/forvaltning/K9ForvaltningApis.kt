@@ -39,7 +39,7 @@ import org.koin.ktor.ext.inject
 import org.slf4j.LoggerFactory
 
 
-fun Route.forvaltningApis() {
+fun Route.K9ForvaltningApis() {
     val log = LoggerFactory.getLogger("ForvaltningApis")
     val oppgaveOppslagTjeneste by inject<AktivOppgaveOppslag>()
     val oppgaveTypeRepository by inject<OppgavetypeRepository>()

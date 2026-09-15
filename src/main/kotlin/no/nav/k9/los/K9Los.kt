@@ -48,7 +48,7 @@ import no.nav.k9.los.domeneadaptere.k9.statistikk.OppgavestatistikkTjeneste
 import no.nav.k9.los.domeneadaptere.k9.statistikk.StatistikkApi
 import no.nav.k9.los.domeneadaptere.kafka.AsynkronProsesseringV1Service
 import no.nav.k9.los.driftsmelding.DriftsmeldingerApis
-import no.nav.k9.los.forvaltning.forvaltningApis
+import no.nav.k9.los.forvaltning.K9ForvaltningApis
 import no.nav.k9.los.infrastruktur.abac.SifAbacPdpUtilgjengeligException
 import no.nav.k9.los.infrastruktur.abac.cache.PepCacheService
 import no.nav.k9.los.infrastruktur.db.DB_AWARE_PARALLELISM
@@ -231,7 +231,7 @@ private fun Route.legacyApi() {
             route("openapi.json") { openApi() }
             swaggerUI("openapi.json")
             route("/forvaltning") {
-                forvaltningApis()
+                K9ForvaltningApis()
                 route("eventlager") { EventlagerApi() }
                 route("statistikk") { StatistikkApi() }
             }
@@ -271,7 +271,7 @@ private fun Route.apiUnderConstruction() {
         route("driftsmeldinger", { tags("Driftsmelding") }) { DriftsmeldingerApis() }
 
         route("/forvaltning", { tags("Forvaltning") }) {
-//            route("eventlager") { EventlagerApiNy() }
+            route("eventlager") { EventlagerApi() }
 //            forvaltningApisNy()
 //            route("statistikk") { StatistikkApiNy() }
         }
