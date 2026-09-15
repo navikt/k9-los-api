@@ -227,7 +227,7 @@ fun Route.K9ForvaltningApis() {
                 val oppgaveEksternId = call.parameters["oppgaveEksternId"]!!
 
                 val oppgave =
-                    oppgaveOppslagTjeneste.hentAktivOppgave(oppgaveEksternId, oppgavetype)
+                    oppgaveOppslagTjeneste.hentAktivOppgave(coroutineContext.område(), oppgaveEksternId, oppgavetype)
                 call.respond(objectMapper.writeValueAsString(OppgaveIkkeSensitiv(oppgave)))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
@@ -309,7 +309,7 @@ fun Route.K9ForvaltningApis() {
                     return@withRequestContext
                 }
 
-                val oppgave = oppgaveOppslagTjeneste.hentAktivOppgave(oppgaveEksternId, oppgavetypeEksternId)
+                val oppgave = oppgaveOppslagTjeneste.hentAktivOppgave(coroutineContext.område(), oppgaveEksternId, oppgavetypeEksternId)
                 val reservasjonsnøkkel = utledReservasjonsnøkkel(oppgave, false)
                 val reservasjonsnøkkel_beslutter = utledReservasjonsnøkkel(oppgave, true)
                 val reservasjonerOrdinær = transactionalManager.transaction { tx ->

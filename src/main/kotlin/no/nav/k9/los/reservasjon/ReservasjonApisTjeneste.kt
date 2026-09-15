@@ -45,6 +45,7 @@ class ReservasjonApisTjeneste(
 
         val reservasjonV3 = transactionalManager.transactionSuspend { tx ->
             val oppgave = aktivOppgaveOppslag.hentAktivOppgave(
+                område = område,
                 oppgaveNøkkel.oppgaveEksternId,
                 oppgaveNøkkel.oppgaveTypeEksternId,
                 tx
@@ -96,6 +97,7 @@ class ReservasjonApisTjeneste(
             tilBrukerIdent?.let { saksbehandlerRepository.finnSaksbehandlerMedIdent(it) }
 
         val reservasjonsnøkkel = endringDto.reservasjonsnøkkel ?: aktivOppgaveOppslag.hentAktivOppgave(
+            område,
             endringDto.oppgaveNøkkel!!.oppgaveEksternId,
             endringDto.oppgaveNøkkel.oppgaveTypeEksternId
         ).reservasjonsnøkkel
@@ -126,6 +128,7 @@ class ReservasjonApisTjeneste(
     ): ReservasjonV3Dto {
         val reservasjonsnøkkel =
             forlengReservasjonDto.reservasjonsnøkkel ?: aktivOppgaveOppslag.hentAktivOppgave(
+                område,
                 forlengReservasjonDto.oppgaveNøkkel!!.oppgaveEksternId,
                 forlengReservasjonDto.oppgaveNøkkel.oppgaveTypeEksternId
             ).reservasjonsnøkkel
@@ -156,6 +159,7 @@ class ReservasjonApisTjeneste(
         )!!
 
         val reservasjonsnøkkel = params.reservasjonsnøkkel ?: aktivOppgaveOppslag.hentAktivOppgave(
+            område,
             params.oppgaveNøkkel!!.oppgaveEksternId,
             params.oppgaveNøkkel.oppgaveTypeEksternId
         ).reservasjonsnøkkel
@@ -174,10 +178,12 @@ class ReservasjonApisTjeneste(
     }
 
     private fun annullerReservasjon(
+        område: Områder,
         innloggetBruker: Saksbehandler,
         annullerReservasjon: AnnullerReservasjonDto,
     ) {
         val reservasjonsnøkkel = annullerReservasjon.reservasjonsnøkkel ?: aktivOppgaveOppslag.hentAktivOppgave(
+            område,
             annullerReservasjon.oppgaveNøkkel!!.oppgaveEksternId,
             annullerReservasjon.oppgaveNøkkel.oppgaveTypeEksternId
         ).reservasjonsnøkkel
@@ -191,11 +197,13 @@ class ReservasjonApisTjeneste(
     }
 
     fun annullerReservasjoner(
+        område: Områder,
         params: List<AnnullerReservasjonDto>,
         innloggetBruker: Saksbehandler
     ) {
         params.forEach {
             annullerReservasjon(
+                område,
                 innloggetBruker,
                 it,
             )
@@ -218,6 +226,7 @@ class ReservasjonApisTjeneste(
 
     suspend fun hentAktivReservasjon(område: Områder, idToken: IIdToken, oppgaveNøkkel: OppgaveNøkkelDto): ReservasjonV3Dto? {
         val oppgave = aktivOppgaveOppslag.hentAktivOppgave(
+                område,
                 oppgaveNøkkel.oppgaveEksternId,
                 oppgaveNøkkel.oppgaveTypeEksternId,
             )

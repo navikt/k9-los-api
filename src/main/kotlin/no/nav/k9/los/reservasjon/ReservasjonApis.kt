@@ -89,7 +89,7 @@ internal fun Route.ReservasjonApis() {
                             params.map { it.oppgaveNøkkel }.joinToString(", ")
                         } (Gjort av ${innloggetBruker.navident})"
                     )
-                    reservasjonApisTjeneste.annullerReservasjoner(params, innloggetBruker)
+                    reservasjonApisTjeneste.annullerReservasjoner(coroutineContext.område(), params, innloggetBruker)
                     call.respond(HttpStatusCode.OK) //TODO: Hva er evt meningsfullt å returnere her?
                 } catch (e: FinnerIkkeDataException) {
                     call.respond(HttpStatusCode.NotFound, "Fant ingen aktiv reservasjon for angitte reservasjonsnøkler")
