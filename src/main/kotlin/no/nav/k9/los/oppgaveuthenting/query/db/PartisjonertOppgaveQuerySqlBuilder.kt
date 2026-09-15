@@ -90,10 +90,10 @@ class PartisjonertOppgaveQuerySqlBuilder(
         }
     }
 
-    private var selectClause = "SELECT o.id, o.oppgave_ekstern_id, o.oppgave_ekstern_versjon"
+    private var selectClause = "SELECT o.id, o.oppgave_ekstern_id, o.oppgave_ekstern_versjon, o.omrade_ekstern_id"
     private var fromClause = """
         FROM oppgave_v3_part o
-        LEFT JOIN oppgave_pep_cache opc ON (opc.kildeomrade = 'K9' AND o.oppgave_ekstern_id = opc.ekstern_id)
+        LEFT JOIN oppgave_pep_cache opc ON (opc.omrade = o.omrade_ekstern_id AND o.oppgave_ekstern_id = opc.ekstern_id)
     """.trimIndent()
 
     private var whereClause = "WHERE o.oppgavestatus IN ($oppgavestatusPlaceholder) ${ferdigstiltDatoBetingelse("o")}"
@@ -215,8 +215,8 @@ class PartisjonertOppgaveQuerySqlBuilder(
                 whereClause += " ${combineOperator.sql} " + when (feltverdier.first()) {
                     PersonBeskyttelseType.KODE6.kode -> "opc.kode6 IS NOT FALSE"
                     PersonBeskyttelseType.UTEN_KODE6.kode -> "opc.kode6 IS NOT TRUE"
-                    PersonBeskyttelseType.KODE7_ELLER_EGEN_ANSATT.kode -> "(opc.kode6 IS NOT TRUE AND (opc.kode7 IS NOT FALSE OR opc.egen_ansatt IS NOT FALSE))"
-                    PersonBeskyttelseType.UGRADERT.kode -> "(opc.kode6 IS NOT TRUE AND opc.kode7 IS NOT TRUE AND opc.egen_ansatt IS NOT TRUE)"
+                    PersonBeskyttelseType.KODE7_ELLER_EGEN_ANSATT.kode -> "(opc.kode6 IS NOT TRUE AND opc.kode7_eller_egen_ansatt IS NOT FALSE)"
+                    PersonBeskyttelseType.UGRADERT.kode -> "(opc.kode6 IS NOT TRUE AND opc.kode7_eller_egen_ansatt IS NOT TRUE)"
                     else -> throw IllegalStateException("Ukjent verdi for personbeskyttelse: ${feltverdier.first()}")
                 }
             }
@@ -355,7 +355,7 @@ class PartisjonertOppgaveQuerySqlBuilder(
 
         return OppgaveQueryRad(
             oppgaveId = PartisjonertOppgaveId(row.long("id")),
-            eksternOppgaveId = EksternOppgaveId(Områder.K9, row.string("oppgave_ekstern_id")),
+            eksternOppgaveId = EksternOppgaveId(Områder.fraEksternId(row.string("omrade_ekstern_id")), row.string("oppgave_ekstern_id")),
             feltverdier = feltverdier,
         )
     }
@@ -604,6 +604,7 @@ class PartisjonertOppgaveQuerySqlBuilder(
         val selectDeler = mutableListOf<String>()
         selectDeler.add("o.id")
         selectDeler.add("o.oppgave_ekstern_id")
+        selectDeler.add("o.omrade_ekstern_id")
 
         selectFelter.forEachIndexed { index, felt ->
             val alias = "felt_$index"

@@ -156,6 +156,6 @@ class SisteOppgaverTjenesteTest : AbstractK9LosIntegrationTest() {
     private suspend fun <T> withSaksbehandlerRequestContext(block: suspend () -> T): T {
         val idToken = mockk<IIdToken>()
         every { idToken.getNavIdent() } returns "test"
-        return withContext(CoroutineRequestContext(idToken)) { block() }
+        return withContext(CoroutineRequestContext(idToken, Områder.K9)) { block() }
     }
 }

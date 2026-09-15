@@ -7,6 +7,7 @@ import no.nav.k9.los.domeneadaptere.k9.avstemming.punsj.systemklient.PunsjAvstem
 import no.nav.k9.los.domeneadaptere.k9.avstemming.saksbehandling.Behandlingstilstand
 import no.nav.k9.los.domeneadaptere.k9.avstemming.saksbehandling.SakAvstemmer
 import no.nav.k9.los.domeneadaptere.k9.avstemming.saksbehandling.systemklient.SakAvstemmingsklient
+import no.nav.k9.los.infrastruktur.utils.IkkeImplementertException
 import no.nav.k9.los.kodeverk.Fagsystem
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.oppgaveuthenting.query.OppgaveQueryService
@@ -78,7 +79,7 @@ class AvstemmingsTjeneste(
                 val åpneOppgaver = oppgaveQueryService.queryForOppgave(QueryRequest(query))
                 SakAvstemmer.regnUtDiff(Fagsystem.K9KLAGE, åpneBehandlinger, åpneOppgaver)
             }
-            Fagsystem.K9TILBAKE -> throw UnsupportedOperationException()
+            Fagsystem.K9TILBAKE -> throw IkkeImplementertException()
             Fagsystem.PUNSJ -> {
                 log.info("Henter åpne behandlinger fra K9Punsj")
                 val uferdigeJournalposter = k9PunsjAvstemmingsklient.hentUferdigeJournalposter()
@@ -104,7 +105,7 @@ class AvstemmingsTjeneste(
 
                 PunsjAvstemmer.regnUtDiff(uferdigeJournalposter, åpnePunsjOppgaver)
             }
-            Fagsystem.UNGSAK, Fagsystem.UNGTILBAKE -> throw NotImplementedError("Fagsystem $fagsystem is not implemented yet")
+            Fagsystem.UNGSAK, Fagsystem.UNGTILBAKE -> throw IkkeImplementertException("Fagsystem $fagsystem is not implemented yet")
         }
     }
 }

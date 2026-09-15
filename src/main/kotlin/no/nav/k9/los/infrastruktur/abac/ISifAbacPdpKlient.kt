@@ -8,21 +8,27 @@ import no.nav.sif.abac.kontrakt.person.AktørId
 import java.util.UUID
 
 interface ISifAbacPdpKlient {
-    /**
-     * Tar id-token som parameter i stedet for å hente det fra coroutine-konteksten, fordi kallet
-     * også gjøres utenfor request-scope (se PdpTilgangsskygge).
-     */
     suspend fun hentTilganger(idToken: IIdToken): Tilganger
 
     suspend fun diskresjonskoderPerson(aktørId: AktørId): Set<Diskresjonskode>
     suspend fun diskresjonskoderSak(saksnummerDto: SaksnummerDto): Set<Diskresjonskode>
 
-    suspend fun harTilgangTilSak(action: Action, saksnummerDto: SaksnummerDto): Boolean
-    suspend fun harTilgangTilPersoner(action: Action, aktørIder: List<AktørId>): Boolean
+    // For innlogget
+    suspend fun harTilgangTilSak(action: Action, saksnummerDto: SaksnummerDto, idToken: IIdToken): Boolean
+    suspend fun harTilgangTilPersoner(action: Action, aktørIder: List<AktørId>, idToken: IIdToken): Boolean
 
-    suspend fun harTilgangTilSak(action: Action, saksnummerDto: SaksnummerDto, saksbehandlersIdent : String, saksbehandlersGrupper : Set<UUID>): Boolean
-    suspend fun harTilgangTilPersoner(action: Action, aktørIder: List<AktørId>, saksbehandlersIdent : String, saksbehandlersGrupper : Set<UUID>): Boolean
+    // For annen saksbehandler
+    suspend fun harTilgangTilPersoner(
+        action: Action,
+        aktørIder: List<AktørId>,
+        saksbehandlersIdent: String,
+        saksbehandlersGrupper: Set<UUID>
+    ): Boolean
 
-
-
+    suspend fun harTilgangTilSak(
+        action: Action,
+        saksnummerDto: SaksnummerDto,
+        saksbehandlersIdent: String,
+        saksbehandlersGrupper: Set<UUID>
+    ): Boolean
 }

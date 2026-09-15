@@ -1,42 +1,43 @@
 package no.nav.k9.los.infrastruktur.abac
 
+import no.nav.k9.los.infrastruktur.abac.tilganger.Tilganger
+import no.nav.k9.los.infrastruktur.idtoken.IIdToken
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
+import no.nav.k9.los.oppgaveuthenting.Oppgave
 import no.nav.k9.los.saksbehandleradmin.Saksbehandler
 import no.nav.sif.abac.kontrakt.abac.Diskresjonskode
 
 interface IPepClient {
+    // For pep-cache
+    suspend fun diskresjonskoderForSak(fagsakNummer: String, område: Områder): Set<Diskresjonskode>
+    suspend fun diskresjonskoderForPerson(aktørId: String, område: Områder): Set<Diskresjonskode>
 
-    suspend fun erOppgaveStyrer(): Boolean
-
-    suspend fun harTilgangTilKode6(): Boolean
-
-    suspend fun harBasisTilgang(): Boolean
-
+    // Tilgangsflagg
+    suspend fun tilganger(område: Områder): Tilganger
     suspend fun kanLeggeUtDriftsmelding(): Boolean
-
+    suspend fun harBasisTilgang(): Boolean
+    suspend fun erOppgaveStyrer(): Boolean
+    suspend fun harTilgangTilKode6(): Boolean
     suspend fun harTilgangTilReserveringAvOppgaver(): Boolean
+    suspend fun harBasisTilgangIEttEllerFlereOmråder(): Boolean = basisTilgangIOmråder().isNotEmpty()
+    suspend fun basisTilgangIOmråder(): Set<Områder>
 
-    suspend fun erSakKode6(
-        fagsakNummer: String
-    ): Boolean
+    // Tilgang til oppgave, for innlogget bruker
+    @Deprecated("Avhengig av coroutineContext")
+    suspend fun harTilgangTilOppgaveV3(oppgave: Oppgave, action: Action = Action.read): Boolean
+    suspend fun harTilgangTilOppgaveV3(område: Områder, idToken: IIdToken, oppgave: Oppgave, action: Action = Action.read): Boolean
 
-    suspend fun erSakKode7EllerEgenAnsatt(
-        fagsakNummer: String
-    ): Boolean
-
-    suspend fun diskresjonskoderForSak(fagsakNummer: String): Set<Diskresjonskode>
-    suspend fun diskresjonskoderForPerson(aktørId: String): Set<Diskresjonskode>
-
-    suspend fun erAktørKode6(aktørid: String): Boolean
-    suspend fun erAktørKode7EllerEgenAnsatt(aktørid: String): Boolean
-
+    // Tilgang til oppgave, for en annen saksbehandler
+    @Deprecated("Avhengig av coroutineContext")
     suspend fun harTilgangTilOppgaveV3(
-        oppgave: no.nav.k9.los.oppgaveuthenting.Oppgave,
-        action: Action = Action.read
-    ) : Boolean
-
-    fun harTilgangTilOppgaveV3(
-        oppgave: no.nav.k9.los.oppgaveuthenting.Oppgave,
+        oppgave: Oppgave,
         saksbehandler: Saksbehandler,
-        action: Action
-    ) : Boolean
+        action: Action,
+    ): Boolean
+    suspend fun harTilgangTilOppgaveV3(
+        område: Områder,
+        oppgave: Oppgave,
+        saksbehandler: Saksbehandler,
+        action: Action,
+    ): Boolean
 }

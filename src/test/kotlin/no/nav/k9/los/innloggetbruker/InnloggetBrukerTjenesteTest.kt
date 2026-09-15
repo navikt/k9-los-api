@@ -2,6 +2,7 @@ package no.nav.k9.los.innloggetbruker
 
 import io.mockk.*
 import kotlinx.coroutines.runBlocking
+import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.azuregraph.IAzureGraphService
 import no.nav.k9.los.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
@@ -19,7 +20,8 @@ class InnloggetBrukerTjenesteTest {
     private val clock = Clock.fixed(nå.toInstant(ZoneOffset.UTC), ZoneOffset.UTC)
     private val repository = mockk<SaksbehandlerRepository>(relaxed = true)
     private val azureGraphService = mockk<IAzureGraphService>()
-    private val tjeneste = InnloggetBrukerTjeneste(repository, azureGraphService, clock)
+    private val pepClient = mockk<IPepClient>()
+    private val tjeneste = InnloggetBrukerTjeneste(repository, azureGraphService, pepClient, clock)
 
     @Test
     fun `vedlikeholder saksbehandler når tidspunkt mangler`() = runBlocking {

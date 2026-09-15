@@ -1,0 +1,293 @@
+package no.nav.k9.los.infrastruktur.abac
+
+import com.fasterxml.jackson.module.kotlin.readValue
+import io.ktor.client.*
+import io.ktor.client.request.*
+import io.ktor.client.statement.*
+import io.ktor.http.*
+import no.nav.helse.dusseldorf.ktor.core.Retry
+import no.nav.helse.dusseldorf.oauth2.client.AccessTokenClient
+import no.nav.helse.dusseldorf.oauth2.client.CachedAccessTokenClient
+import no.nav.k9.los.Configuration
+import no.nav.k9.los.infrastruktur.abac.tilganger.InnloggetAnsattK9V2Dto
+import no.nav.k9.los.infrastruktur.abac.tilganger.Tilganger
+import no.nav.k9.los.infrastruktur.idtoken.IIdToken
+import no.nav.k9.los.infrastruktur.rest.NavHeaders
+import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
+import no.nav.sif.abac.kontrakt.abac.AksjonspunktType
+import no.nav.sif.abac.kontrakt.abac.BeskyttetRessursActionAttributt
+import no.nav.sif.abac.kontrakt.abac.Diskresjonskode
+import no.nav.sif.abac.kontrakt.abac.ResourceType
+import no.nav.sif.abac.kontrakt.abac.dto.*
+import no.nav.sif.abac.kontrakt.abac.resultat.Tilgangsbeslutning
+import no.nav.sif.abac.kontrakt.person.AktørId
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+import java.time.Duration
+import java.util.*
+
+class SifAbacPdpKlientK9(
+    configuration: Configuration,
+    accessTokenClient: AccessTokenClient,
+    private val httpClient: HttpClient,
+) : ISifAbacPdpKlient {
+    val log: Logger = LoggerFactory.getLogger(javaClass)
+    private val cachedAccessTokenClient = CachedAccessTokenClient(accessTokenClient)
+    private val url = configuration.sifAbacPdpUrl()
+    private val scopes = setOf(configuration.sifAbacPdpScope())
+
+    override suspend fun hentTilganger(idToken: IIdToken): Tilganger {
+        val antallForsøk = 3
+        val oboToken = cachedAccessTokenClient.getOnBehalfOfAccessToken(scopes, idToken.value)
+        val response = Retry.retry(
+            tries = antallForsøk,
+            operation = "hent-tilganger",
+            initialDelay = Duration.ofMillis(200),
+            factor = 2.0,
+            logger = log
+        ) {
+            httpClient.get("${url}/api/k9/nav-ansatt/v2") {
+                header(HttpHeaders.Authorization, oboToken.asAuthoriationHeader())
+                header(HttpHeaders.Accept, "application/json")
+                header(NavHeaders.CallId, UUID.randomUUID().toString())
+            }
+        }
+
+        if (!response.status.isSuccess()) {
+            throw SifAbacPdpHttpException(response.status.value, "hent-tilganger")
+        }
+
+        return LosObjectMapper.instance.readValue<InnloggetAnsattK9V2Dto>(response.bodyAsText()).tilTilganger()
+    }
+
+    override suspend fun diskresjonskoderPerson(aktørId: AktørId): Set<Diskresjonskode> {
+        val antallForsøk = 3
+        val systemToken = cachedAccessTokenClient.getClientCredentialsAccessToken(scopes)
+        val response = Retry.retry(
+            tries = antallForsøk,
+            operation = "diskresjonskoder-person",
+            initialDelay = Duration.ofMillis(200),
+            factor = 2.0,
+            logger = log
+        ) {
+            httpClient.post("${url}/api/diskresjonskoder/person") {
+                setBody(LosObjectMapper.instance.writeValueAsString(aktørId))
+                header(
+                    //OBS! Dette kalles bare med system token, og skal ikke brukes ved saksbehandler token
+                    HttpHeaders.Authorization, systemToken.asAuthoriationHeader()
+                )
+                header(HttpHeaders.Accept, "application/json")
+                header(HttpHeaders.ContentType, "application/json")
+                header(NavHeaders.CallId, UUID.randomUUID().toString())
+            }
+        }
+
+        val abc = if (response.status.isSuccess()) {
+            response.bodyAsText()
+        } else {
+            throw SifAbacPdpHttpException(response.status.value, "diskresjonskoder-person")
+        }
+
+        return LosObjectMapper.instance.readValue<List<Diskresjonskode>>(abc)
+            .toSet()
+    }
+
+    override suspend fun diskresjonskoderSak(saksnummerDto: SaksnummerDto): Set<Diskresjonskode> {
+        val antallForsøk = 3
+        val systemToken = cachedAccessTokenClient.getClientCredentialsAccessToken(scopes)
+
+        val completeUrl = "${url}/api/diskresjonskoder/k9/sak"
+        val body = LosObjectMapper.instance.writeValueAsString(saksnummerDto)
+        val response = Retry.retry(
+            tries = antallForsøk,
+            operation = "diskresjonskoder-sak",
+            initialDelay = Duration.ofMillis(200),
+            factor = 2.0,
+            logger = log
+        ) {
+            httpClient.post(completeUrl) {
+                setBody(body)
+                header(
+                    //OBS! Dette kalles bare med system token, og skal ikke brukes ved saksbehandler token
+                    HttpHeaders.Authorization, systemToken.asAuthoriationHeader()
+                )
+                header(HttpHeaders.Accept, "application/json")
+                header(HttpHeaders.ContentType, "application/json")
+                header(NavHeaders.CallId, UUID.randomUUID().toString())
+            }
+        }
+
+        val abc = if (response.status.isSuccess()) {
+            response.bodyAsText()
+        } else {
+            throw SifAbacPdpHttpException(response.status.value, "diskresjonskoder-sak")
+        }
+
+        return LosObjectMapper.instance.readValue<List<Diskresjonskode>>(abc)
+            .toSet()
+    }
+
+    override suspend fun harTilgangTilSak(
+        action: Action,
+        saksnummerDto: SaksnummerDto,
+        idToken: IIdToken,
+    ): Boolean {
+        val request = SaksnummerOperasjonDto(
+            saksnummerDto,
+            OperasjonDto(ResourceType.FAGSAK, map(action), emptySet<AksjonspunktType>()),
+        )
+        return harTilgangMedOboToken(
+            operation = "tilgangskontroll-sak",
+            endpoint = "/api/tilgangskontroll/v2/k9/sak",
+            body = LosObjectMapper.instance.writeValueAsString(request),
+            idToken = idToken,
+        )
+    }
+
+    override suspend fun harTilgangTilPersoner(
+        action: Action,
+        aktørIder: List<AktørId>,
+        idToken: IIdToken,
+    ): Boolean {
+        val request = PersonerOperasjonDto(
+            aktørIder,
+            emptyList(),
+            OperasjonDto(ResourceType.FAGSAK, map(action), emptySet<AksjonspunktType>()),
+        )
+        return harTilgangMedOboToken(
+            operation = "tilgangskontroll-personer",
+            endpoint = "/api/tilgangskontroll/v2/k9/personer",
+            body = LosObjectMapper.instance.writeValueAsString(request),
+            idToken = idToken,
+        )
+    }
+
+    override suspend fun harTilgangTilSak(
+        action: Action,
+        saksnummerDto: SaksnummerDto,
+        saksbehandlersIdent: String,
+        saksbehandlersGrupper: Set<UUID>
+    ): Boolean {
+        if (!saksbehandlersIdent.matches(Regex("^[A-ZÆØÅ][0-9]{6}$"))) {
+            throw IllegalArgumentException("Saksbehandlers ident passer ikke med validering")
+        }
+        if (saksnummerDto.saksnummer.trim().isEmpty()) {
+            throw IllegalArgumentException("Mangler saksnummer, passer ikke med validering")
+        }
+        val request = SaksnummerOperasjonGrupperDto(
+            saksbehandlersIdent,
+            saksbehandlersGrupper.toList(),
+            saksnummerDto,
+            OperasjonDto(ResourceType.FAGSAK, map(action), emptySet<AksjonspunktType>())
+        )
+        val antallForsøk = 3
+        val systemToken = cachedAccessTokenClient.getClientCredentialsAccessToken(scopes)
+        val body = LosObjectMapper.instance.writeValueAsString(request)
+        val response = Retry.retry(
+            tries = antallForsøk,
+            operation = "tilgangskontroll-sak-grupper",
+            initialDelay = Duration.ofMillis(200),
+            factor = 2.0,
+            logger = log
+        ) {
+            httpClient.post("${url}/api/tilgangskontroll/v2/k9/sak-grupper") {
+                setBody(body)
+                header(
+                    HttpHeaders.Authorization, systemToken.asAuthoriationHeader()
+                )
+                header(HttpHeaders.Accept, "application/json")
+                header(HttpHeaders.ContentType, "application/json")
+                header(NavHeaders.CallId, UUID.randomUUID().toString())
+            }
+        }
+
+        val abc = if (response.status.isSuccess()) {
+            response.bodyAsText()
+        } else {
+            throw SifAbacPdpHttpException(response.status.value, "tilgangskontroll-sak")
+        }
+
+        return LosObjectMapper.instance.readValue<Tilgangsbeslutning>(abc).harTilgang()
+    }
+
+    override suspend fun harTilgangTilPersoner(
+        action: Action,
+        aktørIder: List<AktørId>,
+        saksbehandlersIdent: String,
+        saksbehandlersGrupper: Set<UUID>
+    ): Boolean {
+        val request = PersonerOperasjonGrupperDto(
+            saksbehandlersIdent,
+            saksbehandlersGrupper.toList(),
+            aktørIder,
+            emptyList(),
+            OperasjonDto(ResourceType.FAGSAK, map(action), emptySet<AksjonspunktType>())
+        )
+        val antallForsøk = 3
+        val systemToken = cachedAccessTokenClient.getClientCredentialsAccessToken(scopes)
+        val body = LosObjectMapper.instance.writeValueAsString(request)
+        val response = Retry.retry(
+            tries = antallForsøk,
+            operation = "tilgangskontroll-personer-grupper",
+            initialDelay = Duration.ofMillis(200),
+            factor = 2.0,
+            logger = log
+        ) {
+            httpClient.post("${url}/api/tilgangskontroll/v2/k9/personer-grupper") {
+                setBody(body)
+                header(
+                    HttpHeaders.Authorization, systemToken.asAuthoriationHeader()
+                )
+                header(HttpHeaders.Accept, "application/json")
+                header(HttpHeaders.ContentType, "application/json")
+                header(NavHeaders.CallId, UUID.randomUUID().toString())
+            }
+        }
+
+        val abc = if (response.status.isSuccess()) {
+            response.bodyAsText()
+        } else {
+            throw SifAbacPdpHttpException(response.status.value, "tilgangskontroll-personer")
+        }
+
+        return LosObjectMapper.instance.readValue<Tilgangsbeslutning>(abc).harTilgang()
+    }
+
+    private suspend fun harTilgangMedOboToken(
+        operation: String,
+        endpoint: String,
+        body: String,
+        idToken: IIdToken,
+    ): Boolean {
+        val oboToken = cachedAccessTokenClient.getOnBehalfOfAccessToken(scopes, idToken.value)
+        val response = Retry.retry(
+            tries = 3,
+            operation = operation,
+            initialDelay = Duration.ofMillis(200),
+            factor = 2.0,
+            logger = log,
+        ) {
+            httpClient.post("$url$endpoint") {
+                setBody(body)
+                header(HttpHeaders.Authorization, oboToken.asAuthoriationHeader())
+                header(HttpHeaders.Accept, "application/json")
+                header(HttpHeaders.ContentType, "application/json")
+                header(NavHeaders.CallId, UUID.randomUUID().toString())
+            }
+        }
+        if (!response.status.isSuccess()) {
+            throw SifAbacPdpHttpException(response.status.value, operation)
+        }
+        return LosObjectMapper.instance.readValue<Tilgangsbeslutning>(response.bodyAsText()).harTilgang()
+    }
+
+    private fun map(action: Action): BeskyttetRessursActionAttributt {
+        return when (action) {
+            Action.read -> BeskyttetRessursActionAttributt.READ
+            Action.update -> BeskyttetRessursActionAttributt.UPDATE
+            Action.create -> BeskyttetRessursActionAttributt.CREATE
+            Action.reserver -> BeskyttetRessursActionAttributt.RESERVER
+        }
+    }
+
+}

@@ -38,15 +38,15 @@ import no.nav.helse.dusseldorf.ktor.health.HealthRoute
 import no.nav.helse.dusseldorf.ktor.jackson.JacksonStatusPages
 import no.nav.helse.dusseldorf.ktor.jackson.dusseldorfConfigured
 import no.nav.helse.dusseldorf.ktor.metrics.init
-import no.nav.k9.los.domeneadaptere.k9.OmrådeSetup
 import no.nav.k9.los.domeneadaptere.eventlager.EventlagerApi
-import no.nav.k9.los.domeneadaptere.kafka.AsynkronProsesseringV1Service
+import no.nav.k9.los.domeneadaptere.k9.OmrådeSetup
 import no.nav.k9.los.domeneadaptere.k9.eventtiloppgave.EventTilOppgaveAdapter
 import no.nav.k9.los.domeneadaptere.k9.eventtiloppgave.HistorikkvaskTjeneste
 import no.nav.k9.los.domeneadaptere.k9.refreshk9sakoppgaver.K9sakBehandlingsoppfriskingJobb
 import no.nav.k9.los.domeneadaptere.k9.refreshk9sakoppgaver.RefreshK9v3
 import no.nav.k9.los.domeneadaptere.k9.statistikk.OppgavestatistikkTjeneste
 import no.nav.k9.los.domeneadaptere.k9.statistikk.StatistikkApi
+import no.nav.k9.los.domeneadaptere.kafka.AsynkronProsesseringV1Service
 import no.nav.k9.los.driftsmelding.DriftsmeldingerApis
 import no.nav.k9.los.forvaltning.forvaltningApis
 import no.nav.k9.los.infrastruktur.abac.SifAbacPdpUtilgjengeligException
@@ -57,13 +57,18 @@ import no.nav.k9.los.infrastruktur.jobbplanlegger.Jobbplanlegger
 import no.nav.k9.los.infrastruktur.jobbplanlegger.PlanlagtJobb
 import no.nav.k9.los.infrastruktur.jobbplanlegger.Tidsvindu
 import no.nav.k9.los.infrastruktur.metrikker.EventlagerNokkeltallPrometheusCollector
+import no.nav.k9.los.infrastruktur.rest.områdeApi
+import no.nav.k9.los.infrastruktur.utils.IkkeImplementertException
 import no.nav.k9.los.innloggetbruker.InnloggetBrukerApi
+import no.nav.k9.los.innloggetbruker.InnloggetBrukerApiNy
+import no.nav.k9.los.innloggetbruker.InnloggetBrukersOmråderApi
 import no.nav.k9.los.ko.KøpåvirkendeHendelse
 import no.nav.k9.los.ko.OppgaveKoApis
 import no.nav.k9.los.lagretsok.LagretSøkApi
 import no.nav.k9.los.nøkkeltall.NøkkeltallV3Apis
 import no.nav.k9.los.nøkkeltall.saksbehandler.nyeogferdigstilte.NyeOgFerdigstilteApi
 import no.nav.k9.los.nøkkeltall.saksbehandler.nyeogferdigstilte.NyeOgFerdigstilteService
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.query.OppgaveQueryApis
 import no.nav.k9.los.reservasjon.ReservasjonApis
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerAdminApis
@@ -122,6 +127,9 @@ fun Application.k9Los() {
         AuthStatusPages()
         exception<SifAbacPdpUtilgjengeligException> { call, _ ->
             call.respond(HttpStatusCode.ServiceUnavailable, "Tidsavbrudd mot sif-abac-pdp")
+        }
+        exception<IkkeImplementertException> { call, e ->
+            call.respond(HttpStatusCode.NotImplemented, e.message)
         }
     }
 
@@ -213,41 +221,77 @@ fun Application.k9Los() {
 }
 
 private fun Route.api() {
+    legacyApi()
+    apiUnderConstruction()
+}
+
+private fun Route.legacyApi() {
     route("k9/los/api") {
-        route("openapi.json") {
-            openApi()
-        }
-        swaggerUI("openapi.json")
-        route("/forvaltning") {
-            forvaltningApis()
-            route("eventlager") { EventlagerApi() }
-            route("statistikk") { StatistikkApi() }
+        områdeApi(Områder.K9) {
+            route("openapi.json") { openApi() }
+            swaggerUI("openapi.json")
+            route("/forvaltning") {
+                forvaltningApis()
+                route("eventlager") { EventlagerApi() }
+                route("statistikk") { StatistikkApi() }
+            }
         }
     }
     route("api", { hidden = true }) {
-        route("driftsmeldinger") {
-            DriftsmeldingerApis()
-        }
-        route("saksbehandler") {
-            route("oppgaver") {
-                ReservasjonApis()
+        områdeApi(Områder.K9) {
+            route("driftsmeldinger") { DriftsmeldingerApis() }
+            route("saksbehandler") {
+                route("oppgaver") { ReservasjonApis() }
+            }
+            route("avdelingsleder") { SaksbehandlerAdminApis() }
+
+            InnloggetBrukerApi()
+
+            route("ny-oppgavestyring") {
+                route("ko") { OppgaveKoApis() }
+                route("oppgave") { OppgaveQueryApis() }
+                route("sok") { SøkeboksApi() }
+                route("nokkeltall") { NøkkeltallV3Apis() }
+                route("siste-oppgaver") { SisteOppgaverApi() }
+                route("nye-og-ferdigstilte") { NyeOgFerdigstilteApi() }
+                route("lagret-sok") { LagretSøkApi() }
+                route("uttrekk") { UttrekkApi() }
             }
         }
-        route("avdelingsleder") {
-            SaksbehandlerAdminApis()
+    }
+}
+
+private fun Route.apiUnderConstruction() {
+    route("openapi.json") { openApi() }
+    swaggerUI("openapi.json")
+
+    route("innlogget-bruker/områder") { InnloggetBrukersOmråderApi() }
+    områdeApi {
+        route("innlogget-bruker") { InnloggetBrukerApiNy() }
+        route("driftsmeldinger", { tags("Driftsmelding") }) { DriftsmeldingerApis() }
+
+        route("/forvaltning", { tags("Forvaltning") }) {
+//            route("eventlager") { EventlagerApiNy() }
+//            forvaltningApisNy()
+//            route("statistikk") { StatistikkApiNy() }
         }
 
-        InnloggetBrukerApi()
+        route("saksbehandler", { tags("Saksbehandler") }) {
+//            route("sok") { SøkeboksApiNy() }
+//            route("oppgaveko") { OppgaveKoSaksbehandlerApisNy() }
+//            route("reservasjoner") { ReservasjonApisNy() }
+//            route("siste-oppgaver") { SisteOppgaverApiNy() }
+//            route("nye-og-ferdigstilte") { NyeOgFerdigstilteApiNy() }
+        }
 
-        route("ny-oppgavestyring") {
-            route("ko") { OppgaveKoApis() }
-            route("oppgave") { OppgaveQueryApis() }
-            route("sok") { SøkeboksApi() }
-            route("nokkeltall") { NøkkeltallV3Apis() }
-            route("siste-oppgaver") { SisteOppgaverApi() }
-            route("nye-og-ferdigstilte") { NyeOgFerdigstilteApi() }
-            route("lagret-sok") { LagretSøkApi() }
-            route("uttrekk") { UttrekkApi() }
+        route("avdelingsleder", { tags("Avdelingsleder") }) {
+//            route("saksbehandler-admin") { SaksbehandlerAdminApisNy() }
+//            route("reservasjon-admin") { ReservasjonAdminApisNy() }
+//            route("oppgaveko") { OppgaveKoAvdelingslederApisNy() }
+//            route("nokkeltall") { NøkkeltallV3ApisNy() }
+//            route("lagret-sok") { LagretSøkApiNy() }
+//            route("uttrekk") { UttrekkApiNy() }
+//            route("query") { OppgaveQueryApisNy() }
         }
     }
 }

@@ -9,6 +9,7 @@ import no.nav.k9.los.domeneadaptere.eventlager.EventLagret
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.tilbakekrav.AksjonspunktDefinisjonK9Tilbake
 import no.nav.k9.los.infrastruktur.abac.cache.PepCacheInput
 import no.nav.k9.los.infrastruktur.abac.cache.PepCacheService
+import no.nav.k9.los.infrastruktur.utils.IkkeImplementertException
 import no.nav.k9.los.ko.KøpåvirkendeHendelse
 import no.nav.k9.los.ko.OppgaveHendelseMottatt
 import no.nav.k9.los.kodeverk.AksjonspunktStatus
@@ -41,8 +42,9 @@ class OppgaveOppdatertHandler(
                     listOfNotNull(
                         oppgave.hentVerdi("aktorId"),
                         oppgave.hentVerdi("pleietrengendeAktorId"),
-                        oppgave.hentVerdi("relatertPartAktorid")
-                    )
+                        oppgave.hentVerdi("relatertPartAktorid"),
+                    ),
+                    oppgave.oppgavetype.område.tilOmråderEnum(),
                 )
             )
         }
@@ -67,7 +69,7 @@ class OppgaveOppdatertHandler(
             is EventLagret.K9Tilbake -> håndterTilbakeOppdatert(eventLagret, oppgave, tx)
             is EventLagret.K9Klage  -> håndterKlageOppdatert(eventLagret, oppgave, tx)
             is EventLagret.K9Punsj  -> håndterPunsjOppdatert(oppgave, tx)
-            is EventLagret.UngSak   -> throw UnsupportedOperationException(
+            is EventLagret.UngSak   -> throw IkkeImplementertException(
                 "UngSak-eventer skal ikke behandles av K9-pipeline"
             )
         }

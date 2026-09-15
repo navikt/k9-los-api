@@ -5,7 +5,7 @@ import assertk.assertions.*
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import no.nav.helse.dusseldorf.ktor.jackson.dusseldorfConfigured
 import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.FeltType
@@ -18,12 +18,13 @@ import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.kodeverk.PersonBeskyttelseType
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
+import no.nav.k9.los.oppgaveuthenting.OppgaveRepository
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.*
 import no.nav.k9.los.oppgaveuthenting.query.mapping.CombineOperator
 import no.nav.k9.los.oppgaveuthenting.query.mapping.EksternFeltverdiOperator
 import no.nav.k9.los.reservasjon.ReservasjonV3Tjeneste
+import no.nav.k9.los.saksbehandleradmin.OpprettSaksbehandler
 import no.nav.k9.los.saksbehandleradmin.TestSaksbehandlerRepository
-import no.nav.k9.los.oppgaveuthenting.OppgaveRepository
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.koin.test.get
@@ -33,7 +34,6 @@ import java.io.StringWriter
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
-import no.nav.k9.los.saksbehandleradmin.OpprettSaksbehandler
 
 class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
 
@@ -567,7 +567,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
 
     @Test // Query er ikke ment som tilgangskontroll, men en kjapp måte å utføre filtrering før tilgangssjekk gjøres på resultatet
     fun `Resultat skal inneholde alle sikkerhetsklassifiseringer når ikke beskyttelse eller egen ansatt er spesifisert i filtre`() {
-        val eksternId = lagOppgaveMedPepCache(kode6 = true, kode7 = true, egenAnsatt = true)
+        val eksternId = lagOppgaveMedPepCache(kode6 = true, kode7EllerEgenAnsatt = true)
 
         val query = OppgaveQuery(
             listOf(
@@ -639,7 +639,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
     @Test
     fun `Resultat skal ikke inneholde kode6- eller kode7oppgaver når filtre er satt til ordinære oppgaver`() {
         val eksternId6 = lagOppgaveMedPepCache(kode6 = true)
-        val eksternId7 = lagOppgaveMedPepCache(kode7 = true)
+        val eksternId7 = lagOppgaveMedPepCache(kode7EllerEgenAnsatt = true)
 
         loggAlleOppgaverMedFelterOgCache()
 
@@ -722,10 +722,10 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
     }
 
     @Test
-    fun `queryRequest som vil fjerne reserverte oppgaver skal kun få ureserverte`() {
+    fun `queryRequest som vil fjerne reserverte oppgaver skal kun få ureserverte`() = runTest {
         val testSaksbehandlerRepository = get<TestSaksbehandlerRepository>()
 
-        val saksbehandler = runBlocking {
+        val saksbehandler = run {
             val ident = "test"
             testSaksbehandlerRepository.opprettSaksbehandler(
                 OpprettSaksbehandler(
@@ -879,7 +879,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
 
     @Test
     fun `Resultat skal ikke inneholde kode7 eller ordinære oppgaver når filtre er satt til kode6 oppgaver`() {
-        val eksternId7 = lagOppgaveMedPepCache(kode7 = true)
+        val eksternId7 = lagOppgaveMedPepCache(kode7EllerEgenAnsatt = true)
         val eksternIdOrdinær = lagOppgaveMedPepCache()
 
         loggAlleOppgaverMedFelterOgCache()
@@ -1256,11 +1256,10 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
 
     private fun lagOppgaveMedPepCache(
         kode6: Boolean = false,
-        kode7: Boolean = false,
-        egenAnsatt: Boolean = false
+        kode7EllerEgenAnsatt: Boolean = false,
     ): String {
         val eksternId = UUID.randomUUID().toString()
-        lagPepCacheFor(eksternId, kode6, kode7, egenAnsatt)
+        lagPepCacheFor(eksternId, kode6, kode7EllerEgenAnsatt)
 
         OppgaveTestDataBuilder()
             .medOppgaveFeltVerdi(FeltType.BEHANDLINGUUID, eksternId)
@@ -1280,8 +1279,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
     private fun lagPepCacheFor(
         eksternId: String,
         kode6: Boolean = false,
-        kode7: Boolean = false,
-        egenAnsatt: Boolean = false
+        kode7EllerEgenAnsatt: Boolean = false,
     ) {
         val pepCache = get<PepCacheRepository>()
         val transactionalManager = get<TransactionalManager>()
@@ -1289,10 +1287,9 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
             pepCache.lagre(
                 PepCache(
                     eksternId = eksternId,
-                    kildeområde = Områder.K9,
+                    område = Områder.K9,
                     kode6 = kode6,
-                    kode7 = kode7,
-                    egenAnsatt = egenAnsatt,
+                    kode7EllerEgenAnsatt = kode7EllerEgenAnsatt,
                     oppdatert = LocalDateTime.now()
                 ), tx
             )
@@ -1383,7 +1380,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
                     ).felter.joinToString(", ") { it.eksternId + "-" + it.verdi })
                 logger.info(
                     "Pep: " + pepCache.hent(Områder.K9, eksternId, tx)
-                        ?.run { "kode6-$kode6, kode7-$kode7, egenansatt-$egenAnsatt, oppdater-$oppdatert" })
+                        ?.run { "kode6-$kode6, kode7EllerEgenAnsatt-$kode7EllerEgenAnsatt, oppdater-$oppdatert" })
             }
         }
     }

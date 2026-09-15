@@ -34,6 +34,13 @@ data class Configuration(private val config: ApplicationConfig) {
         config.getRequiredString("nav.register_urls.k9_punsj_frontend_url", secret = false)
 
     internal fun sifAbacPdpUrl() = config.getRequiredString("nav.register_urls.sif_abac_pdp_url", secret = false)
+    internal fun sifAbacPdpScope(): String {
+        return "api://${when (koinProfile) {
+            KoinProfile.LOCAL -> "local"
+            KoinProfile.PREPROD -> "dev"
+            KoinProfile.PROD -> "prod"
+        }}-fss.k9saksbehandling.sif-abac-pdp/.default"
+    }
 
     internal fun hikariConfig() = createHikariConfig(
         jdbcUrl = config.getRequiredString("nav.db.url", secret = false),

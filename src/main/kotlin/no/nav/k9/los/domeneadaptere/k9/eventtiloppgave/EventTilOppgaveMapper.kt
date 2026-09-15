@@ -6,6 +6,7 @@ import no.nav.k9.los.domeneadaptere.k9.eventtiloppgave.klagetillos.KlageEventTil
 import no.nav.k9.los.domeneadaptere.k9.eventtiloppgave.punsjtillos.PunsjEventTilOppgaveMapper
 import no.nav.k9.los.domeneadaptere.k9.eventtiloppgave.saktillos.SakEventTilOppgaveMapper
 import no.nav.k9.los.domeneadaptere.k9.eventtiloppgave.tilbaketillos.TilbakeEventTilOppgaveMapper
+import no.nav.k9.los.infrastruktur.utils.IkkeImplementertException
 import no.nav.k9.los.oppgavemottak.NyOppgaveVersjonInnsending
 import no.nav.k9.los.oppgavemottak.OppgaveV3
 
@@ -21,7 +22,7 @@ class EventTilOppgaveMapper(
             is EventLagret.K9Tilbake -> tilbakeEventTilOppgaveMapper.lagOppgaveDto(eventLagret, forrigeOppgaveversjon, eventnummer)
             is EventLagret.K9Klage -> klageEventTilOppgaveMapper.lagOppgaveDto(eventLagret, forrigeOppgaveversjon, eventnummer)
             is EventLagret.K9Punsj -> punsjEventTilOppgaveMapper.lagOppgaveDto(eventLagret, forrigeOppgaveversjon)
-            is EventLagret.UngSak -> throw UnsupportedOperationException("UngSak-eventer skal ikke behandles av K9-pipeline")
+            is EventLagret.UngSak -> throw IkkeImplementertException("UngSak-eventer skal ikke behandles av K9-pipeline")
         }
     }
 
@@ -30,7 +31,7 @@ class EventTilOppgaveMapper(
         is EventLagret.K9Tilbake -> K9Oppgavetypenavn.TILBAKE.kode
         is EventLagret.K9Klage   -> K9Oppgavetypenavn.KLAGE.kode
         is EventLagret.K9Punsj   -> K9Oppgavetypenavn.PUNSJ.kode
-        is EventLagret.UngSak    -> throw UnsupportedOperationException(
+        is EventLagret.UngSak    -> throw IkkeImplementertException(
             "UngSak-eventer skal ikke behandles av K9-pipeline"
         )
     }
@@ -41,7 +42,7 @@ class EventTilOppgaveMapper(
             is EventLagret.K9Klage -> KlageEventTilOppgaveMapper.utledReservasjonsnøkkel(eventLagret, erTilBeslutter)
             is EventLagret.K9Punsj -> PunsjEventTilOppgaveMapper.utledReservasjonsnøkkel(eventLagret)
             is EventLagret.K9Tilbake -> TilbakeEventTilOppgaveMapper.utledReservasjonsnøkkel(eventLagret, erTilBeslutter)
-            is EventLagret.UngSak -> throw UnsupportedOperationException("UngSak-eventer skal ikke behandles av K9-pipeline")
+            is EventLagret.UngSak -> throw IkkeImplementertException("UngSak-eventer skal ikke behandles av K9-pipeline")
         }
     }
 }

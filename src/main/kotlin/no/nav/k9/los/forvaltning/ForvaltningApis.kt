@@ -17,6 +17,7 @@ import no.nav.k9.los.domeneadaptere.k9.statistikk.StatistikkRepository
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.infrastruktur.rest.RequestContextService
+import no.nav.k9.los.infrastruktur.utils.IkkeImplementertException
 import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.ko.OppgaveKoTjeneste
 import no.nav.k9.los.kodeverk.Fagsystem
@@ -146,7 +147,7 @@ fun Route.forvaltningApis() {
                     Fagsystem.PUNSJ -> "journalpostId"
 
                     Fagsystem.UNGSAK,
-                    Fagsystem.UNGTILBAKE -> throw NotImplementedError(
+                    Fagsystem.UNGTILBAKE -> throw IkkeImplementertException(
                         "Fagsystem $fagsystem er ikke støttet i dette endepunktet"
                     )
                 }

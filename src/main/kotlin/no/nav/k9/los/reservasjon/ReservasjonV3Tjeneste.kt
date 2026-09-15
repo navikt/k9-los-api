@@ -7,6 +7,7 @@ import no.nav.k9.los.feilhandtering.FinnerIkkeDataException
 import no.nav.k9.los.infrastruktur.abac.Action
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
+import no.nav.k9.los.infrastruktur.rest.CoroutineRequestContext
 import no.nav.k9.los.infrastruktur.utils.leggTilDagerHoppOverHelg
 import no.nav.k9.los.ko.KøpåvirkendeHendelse
 import no.nav.k9.los.ko.ReservasjonAnnullert
@@ -33,7 +34,7 @@ class ReservasjonV3Tjeneste(
         private val log: Logger = LoggerFactory.getLogger("ReservasjonV3Tjeneste")
     }
 
-    fun forsøkReservasjonOgReturnerAktiv(
+    suspend fun forsøkReservasjonOgReturnerAktiv(
         reservasjonsnøkkel: String,
         reserverForId: Long,
         gyldigFra: LocalDateTime,
@@ -58,9 +59,7 @@ class ReservasjonV3Tjeneste(
                 tx = tx,
             )
             log.info("taReservasjon: Ny reservasjon $reservasjon, utført av $utføresAvId, for saksbehandler $reserverForId")
-            runBlocking {
-                køpåvirkendeHendelseChannel.send(ReservasjonTatt(reservasjonsnøkkel = reservasjonsnøkkel))
-            }
+            køpåvirkendeHendelseChannel.send(ReservasjonTatt(reservasjonsnøkkel = reservasjonsnøkkel))
             reservasjon
         } catch (e: AlleredeReservertException) {
             val aktivReservasjon = reservasjonV3Repository.hentAktivReservasjonForReservasjonsnøkkel(
@@ -92,7 +91,7 @@ class ReservasjonV3Tjeneste(
         }
     }
 
-    fun taReservasjon(
+    suspend fun taReservasjon(
         reservasjonsnøkkel: String,
         reserverForId: Long,
         utføresAvId: Long,
@@ -100,12 +99,12 @@ class ReservasjonV3Tjeneste(
         gyldigFra: LocalDateTime,
         gyldigTil: LocalDateTime
     ): ReservasjonV3 {
-        return transactionalManager.transaction { tx ->
+        return transactionalManager.transactionSuspend { tx ->
             taReservasjon(reservasjonsnøkkel, reserverForId, utføresAvId, gyldigFra, gyldigTil, kommentar, tx)
         }
     }
 
-    fun taReservasjon(
+    suspend fun taReservasjon(
         reservasjonsnøkkel: String,
         reserverForId: Long,
         utføresAvId: Long,
@@ -294,7 +293,7 @@ class ReservasjonV3Tjeneste(
         }
     }
 
-    private fun sjekkTilganger(
+    private suspend fun sjekkTilganger(
         oppgaver: List<Oppgave>,
         brukerIdSomSkalHaReservasjon: Long
     ): Boolean {
