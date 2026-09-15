@@ -12,7 +12,7 @@ import no.nav.k9.los.nøkkeltall.avdelingsleder.statusfordeling.K9StatusFordelin
 import no.nav.k9.los.nøkkeltall.avdelingsleder.status.K9StatusService
 import org.koin.ktor.ext.inject
 
-fun Route.NøkkeltallV3Apis() {
+fun Route.K9NøkkeltallApis() {
     val statusFordelingService by inject<K9StatusFordelingService>()
     val statusService by inject<K9StatusService>()
     val dagensTallService by inject<K9DagensTallService>()

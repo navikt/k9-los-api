@@ -48,7 +48,7 @@ fun Route.SisteOppgaverApi() {
                 sisteOppgaverTjeneste.lagreSisteOppgave(
                     coroutineContext.område(),
                     idToken = coroutineContext.idToken(),
-                    oppgaveNøkkel
+                    oppgaveNøkkelDto = oppgaveNøkkel
                 )
                 call.respond(HttpStatusCode.OK)
             } else {

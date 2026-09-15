@@ -65,8 +65,8 @@ import no.nav.k9.los.innloggetbruker.InnloggetBrukersOmråderApi
 import no.nav.k9.los.ko.KøpåvirkendeHendelse
 import no.nav.k9.los.ko.OppgaveKoApis
 import no.nav.k9.los.lagretsok.LagretSøkApi
-import no.nav.k9.los.nøkkeltall.NøkkeltallV3Apis
-import no.nav.k9.los.nøkkeltall.saksbehandler.nyeogferdigstilte.NyeOgFerdigstilteApi
+import no.nav.k9.los.nøkkeltall.K9NøkkeltallApis
+import no.nav.k9.los.nøkkeltall.saksbehandler.nyeogferdigstilte.K9NyeOgFerdigstilteApi
 import no.nav.k9.los.nøkkeltall.saksbehandler.nyeogferdigstilte.K9NyeOgFerdigstilteService
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.query.OppgaveQueryApis
@@ -251,9 +251,9 @@ private fun Route.legacyApi() {
                 route("ko") { OppgaveKoApis() }
                 route("oppgave") { OppgaveQueryApis() }
                 route("sok") { K9SøkeboksApi() }
-                route("nokkeltall") { NøkkeltallV3Apis() }
+                route("nokkeltall") { K9NøkkeltallApis() }
                 route("siste-oppgaver") { SisteOppgaverApi() }
-                route("nye-og-ferdigstilte") { NyeOgFerdigstilteApi() }
+                route("nye-og-ferdigstilte") { K9NyeOgFerdigstilteApi() }
                 route("lagret-sok") { LagretSøkApi() }
                 route("uttrekk") { UttrekkApi() }
             }
@@ -271,7 +271,7 @@ private fun Route.apiUnderConstruction() {
         route("driftsmeldinger", { tags("Driftsmelding") }) { DriftsmeldingerApis() }
 
         route("/forvaltning", { tags("Forvaltning") }) {
-            route("eventlager") { EventlagerApi() }
+//            route("eventlager") { EventlagerApi() }
 //            forvaltningApisNy()
 //            route("statistikk") { StatistikkApiNy() }
         }
