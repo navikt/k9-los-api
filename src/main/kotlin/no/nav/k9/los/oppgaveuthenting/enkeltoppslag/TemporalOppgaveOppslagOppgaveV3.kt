@@ -61,15 +61,17 @@ class TemporalOppgaveOppslagOppgaveV3(
     }
 
     override fun hentTidsserie(
+        område: Områder,
         oppgavetypeEksternId: String,
         oppgaveEksternId: String,
     ): List<Oppgave> {
         return transactionalManager.transaction { tx ->
-            hentTidsserie(oppgavetypeEksternId, oppgaveEksternId, tx)
+            hentTidsserie(område, oppgavetypeEksternId, oppgaveEksternId, tx)
         }
     }
 
     override fun hentTidsserie(
+        område: Områder,
         oppgavetypeEksternId: String,
         eksternId: String,
         tx: TransactionalSession
@@ -88,7 +90,7 @@ class TemporalOppgaveOppslagOppgaveV3(
                     order by o.versjon asc
                 """.trimIndent(),
                 mapOf(
-                    "omrade" to "K9",
+                    "omrade" to område.eksternId,
                     "oppgavetype" to oppgavetypeEksternId,
                     "oppgaveEksternId" to eksternId,
                 )
@@ -97,12 +99,13 @@ class TemporalOppgaveOppslagOppgaveV3(
     }
 
     override fun hentOppgaveForTidspunkt(
-        oppgavetypeEksternId: String, eksternId: String, tidspunkt: LocalDateTime
+        område: Områder, oppgavetypeEksternId: String, eksternId: String, tidspunkt: LocalDateTime
     ): Oppgave? {
         TODO("Not yet implemented")
     }
 
     override fun hentOppgaveForTidspunkt(
+        område: Områder,
         oppgavetypeEksternId: String,
         eksternId: String,
         tidspunkt: LocalDateTime,

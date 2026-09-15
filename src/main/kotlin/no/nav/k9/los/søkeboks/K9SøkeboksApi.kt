@@ -10,9 +10,9 @@ import no.nav.k9.los.infrastruktur.rest.RequestContextService
 import org.koin.ktor.ext.inject
 
 
-fun Route.SøkeboksApi() {
+fun Route.K9SøkeboksApi() {
     val requestContextService by inject<RequestContextService>()
-    val søkeboksTjeneste by inject<SøkeboksTjeneste>()
+    val søkeboksTjeneste by inject<K9SøkeboksTjeneste>()
     val pepClient by inject<IPepClient>()
 
     post(

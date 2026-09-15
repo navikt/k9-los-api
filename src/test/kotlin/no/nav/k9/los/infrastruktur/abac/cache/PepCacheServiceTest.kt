@@ -357,6 +357,7 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
     ): List<Any> {
         val resultat = oppgaveQueryService.query(
             QueryRequest(
+                Områder.K9,
                 OppgaveQuery(
                     select = listOf(EnkelSelectFelt(område = Områder.K9, kode = "ekstern_id")),
                     filtere = listOf(

@@ -51,7 +51,6 @@ fun Application.migrate(configuration: Configuration) {
 
 fun runMigration(dataSource: DataSource, initSql: String? = null): Int {
     return Flyway.configure()
-        .outOfOrder(true)
         .locations("migreringer/")
         .dataSource(dataSource)
         .initSql(initSql)

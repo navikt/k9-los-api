@@ -2,14 +2,15 @@ package no.nav.k9.los.uttrekk
 
 import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.lagretsok.LagretSøkRepository
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.query.dto.resultat.OppgaveQueryRad
 
 class UttrekkTjeneste(
     private val uttrekkRepository: UttrekkRepository,
     private val lagretSøkRepository: LagretSøkRepository
 ) {
-    fun opprett(opprettUttrekk: OpprettUttrekk, saksbehandlerId: Long): Long {
-        val lagretSøk = lagretSøkRepository.hent(opprettUttrekk.lagretSokId)
+    fun opprett(område: Områder, opprettUttrekk: OpprettUttrekk, saksbehandlerId: Long): Long {
+        val lagretSøk = lagretSøkRepository.hent(område, opprettUttrekk.lagretSokId)
             ?: throw IllegalArgumentException("Lagret søk med id ${opprettUttrekk.lagretSokId} finnes ikke")
 
         val uttrekk = Uttrekk.opprettUttrekk(

@@ -11,13 +11,14 @@ import io.ktor.server.routing.*
 import kotliquery.queryOf
 import no.nav.k9.kodeverk.behandling.FagsakYtelseType
 import no.nav.k9.los.domeneadaptere.k9.K9Oppgavetypenavn
-import no.nav.k9.los.domeneadaptere.k9.avstemming.AvstemmingsTjeneste
+import no.nav.k9.los.domeneadaptere.k9.avstemming.K9AvstemmingsTjeneste
 import no.nav.k9.los.domeneadaptere.eventlager.EventRepository
 import no.nav.k9.los.domeneadaptere.k9.statistikk.StatistikkRepository
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.infrastruktur.rest.RequestContextService
 import no.nav.k9.los.infrastruktur.utils.IkkeImplementertException
+import no.nav.k9.los.infrastruktur.rest.område
 import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.ko.OppgaveKoTjeneste
 import no.nav.k9.los.kodeverk.Fagsystem
@@ -38,7 +39,7 @@ import org.koin.ktor.ext.inject
 import org.slf4j.LoggerFactory
 
 
-fun Route.forvaltningApis() {
+fun Route.K9ForvaltningApis() {
     val log = LoggerFactory.getLogger("ForvaltningApis")
     val oppgaveOppslagTjeneste by inject<AktivOppgaveOppslag>()
     val oppgaveTypeRepository by inject<OppgavetypeRepository>()
@@ -47,7 +48,7 @@ fun Route.forvaltningApis() {
     val reservasjonV3Repository by inject<ReservasjonV3Repository>()
     val objectMapper = LosObjectMapper.prettyInstance
     val transactionalManager by inject<TransactionalManager>()
-    val avstemmingsTjeneste by inject<AvstemmingsTjeneste>()
+    val avstemmingsTjeneste by inject<K9AvstemmingsTjeneste>()
     val eventRepository by inject<EventRepository>()
     val statistikkRepository by inject<StatistikkRepository>()
     val temporalOppslagTjeneste by inject<TemporalOppgaveOppslag>()
@@ -153,6 +154,7 @@ fun Route.forvaltningApis() {
                 }
 
                 val query = QueryRequest(
+                    område = Områder.K9,
                     oppgaveQuery = OppgaveQuery(
                         filtere = listOf(
                             FeltverdiOppgavefilter(
@@ -181,9 +183,7 @@ fun Route.forvaltningApis() {
                                 økende = true
                             )
                         )
-                    ),
-                    fjernReserverte = false,
-                    avgrensning = null
+                    )
                 )
 
                 val eksternIds = oppgaveQueryService.query(query).map { rad ->
@@ -227,7 +227,7 @@ fun Route.forvaltningApis() {
                 val oppgaveEksternId = call.parameters["oppgaveEksternId"]!!
 
                 val oppgave =
-                    oppgaveOppslagTjeneste.hentAktivOppgave(oppgaveEksternId, oppgavetype)
+                    oppgaveOppslagTjeneste.hentAktivOppgave(coroutineContext.område(), oppgaveEksternId, oppgavetype)
                 call.respond(objectMapper.writeValueAsString(OppgaveIkkeSensitiv(oppgave)))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
@@ -257,6 +257,7 @@ fun Route.forvaltningApis() {
                 val oppgaveEksternId = call.parameters["oppgaveEksternId"]!!
 
                 val oppgaveTidsserie = temporalOppslagTjeneste.hentTidsserie(
+                    område = coroutineContext.område(),
                     oppgavetypeEksternId = oppgavetypeEksternId,
                     oppgaveEksternId = oppgaveEksternId,
                 )
@@ -308,7 +309,7 @@ fun Route.forvaltningApis() {
                     return@withRequestContext
                 }
 
-                val oppgave = oppgaveOppslagTjeneste.hentAktivOppgave(oppgaveEksternId, oppgavetypeEksternId)
+                val oppgave = oppgaveOppslagTjeneste.hentAktivOppgave(coroutineContext.område(), oppgaveEksternId, oppgavetypeEksternId)
                 val reservasjonsnøkkel = utledReservasjonsnøkkel(oppgave, false)
                 val reservasjonsnøkkel_beslutter = utledReservasjonsnøkkel(oppgave, true)
                 val reservasjonerOrdinær = transactionalManager.transaction { tx ->
@@ -360,6 +361,7 @@ fun Route.forvaltningApis() {
                 if (pepClient.kanLeggeUtDriftsmelding()) {
                     val antall = oppgaveKoTjeneste.hentOppgavekøer(skjermet = false).map {
                         oppgaveKoTjeneste.hentAntallOppgaverForKø(
+                            område = coroutineContext.område(),
                             oppgaveKoId = it.id,
                             filtrerReserverte = false,
                             skjermet = false
@@ -388,6 +390,7 @@ fun Route.forvaltningApis() {
                     val køId = call.parameters["ko"]!!.toLong()
                     val medReserverte = call.request.queryParameters["reserverte"]?.toBoolean() ?: false
                     val antall = oppgaveKoTjeneste.hentAntallOppgaverForKø(
+                        område = coroutineContext.område(),
                         oppgaveKoId = køId,
                         filtrerReserverte = medReserverte,
                         skjermet = false
@@ -519,7 +522,7 @@ fun Route.forvaltningApis() {
                         verdi = listOf(K9Oppgavetypenavn.fraFagsystem(fagsystem).kode)
                     )
                 )
-                val eksternIder = oppgaveQueryService.queryForOppgaveEksternId(QueryRequest(oppgaveQuery))
+                val eksternIder = oppgaveQueryService.queryForOppgaveEksternId(QueryRequest(Områder.K9, oppgaveQuery))
                     .map { it.eksternId }
                     .distinct()
 
@@ -573,7 +576,7 @@ fun Route.forvaltningApis() {
                         verdi = listOf(fagsystem.oppgavetypeKode)
                     )
                 )
-                val eksternIder = oppgaveQueryService.queryForOppgaveEksternId(QueryRequest(oppgaveQuery))
+                val eksternIder = oppgaveQueryService.queryForOppgaveEksternId(QueryRequest(Områder.K9, oppgaveQuery))
                     .map { it.eksternId }
                     .distinct()
 

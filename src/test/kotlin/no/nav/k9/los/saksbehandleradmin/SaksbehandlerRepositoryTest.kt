@@ -11,6 +11,7 @@ import no.nav.k9.los.infrastruktur.azuregraph.IAzureGraphService
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.innloggetbruker.InnloggetBrukerTjeneste
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.reservasjon.ReservasjonV3Tjeneste
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.MatcherAssert.assertThat
@@ -189,6 +190,7 @@ class SaksbehandlerRepositoryTest : AbstractK9LosIntegrationTest() {
         val reservasjonV3Tjeneste = get<ReservasjonV3Tjeneste>()
 
         reservasjonV3Tjeneste.taReservasjon(
+            Områder.K9,
             "test",
             saksbehandler.id,
             saksbehandler.id,
@@ -197,9 +199,10 @@ class SaksbehandlerRepositoryTest : AbstractK9LosIntegrationTest() {
             LocalDateTime.now().plusDays(1)
         )
 
-        reservasjonV3Tjeneste.forlengReservasjon("test", LocalDateTime.now().plusDays(2), saksbehandler.id, "test")
+        reservasjonV3Tjeneste.forlengReservasjon(Områder.K9,"test", LocalDateTime.now().plusDays(2), saksbehandler.id, "test")
 
         reservasjonV3Tjeneste.overførReservasjon(
+            Områder.K9,
             "test",
             LocalDateTime.now().plusDays(1),
             saksbehandler2.id,

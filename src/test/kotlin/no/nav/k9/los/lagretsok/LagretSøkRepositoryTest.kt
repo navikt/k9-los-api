@@ -7,6 +7,7 @@ import assertk.assertions.isNotNull
 import assertk.assertions.isNull
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.AbstractK9LosIntegrationTest
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.OppgaveQuery
 import no.nav.k9.los.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
@@ -52,7 +53,7 @@ class LagretSøkRepositoryTest : AbstractK9LosIntegrationTest() {
         val lagretSøk = LagretSøk.nyttSøk(opprettLagretSøk, saksbehandler)
         val id = lagretSøkRepository.opprett(lagretSøk)
 
-        val hentetSøk = lagretSøkRepository.hent(id)
+        val hentetSøk = lagretSøkRepository.hent(Områder.K9, id)
         assertThat(hentetSøk).isNotNull()
         assertThat(hentetSøk!!.id).isEqualTo(id)
         assertThat(hentetSøk.tittel).isEqualTo("Test søk")
@@ -63,7 +64,7 @@ class LagretSøkRepositoryTest : AbstractK9LosIntegrationTest() {
 
     @Test
     fun `skal returnere null når søk ikke finnes`() {
-        val hentetSøk = lagretSøkRepository.hent(999L)
+        val hentetSøk = lagretSøkRepository.hent(Områder.K9, 999L)
         assertThat(hentetSøk).isNull()
     }
 
@@ -77,7 +78,7 @@ class LagretSøkRepositoryTest : AbstractK9LosIntegrationTest() {
         val lagretSøk = LagretSøk.nyttSøk(opprettLagretSøk, saksbehandler)
         val id = lagretSøkRepository.opprett(lagretSøk)
 
-        val hentetSøk = lagretSøkRepository.hent(id)!!
+        val hentetSøk = lagretSøkRepository.hent(Områder.K9, id)!!
         val endreLagretSøk = EndreLagretSøkRequest(
             id = id,
             tittel = "Endret tittel",
@@ -89,7 +90,7 @@ class LagretSøkRepositoryTest : AbstractK9LosIntegrationTest() {
         hentetSøk.endre(endreLagretSøk, saksbehandler)
         lagretSøkRepository.endre(hentetSøk)
 
-        val endretSøk = lagretSøkRepository.hent(id)!!
+        val endretSøk = lagretSøkRepository.hent(Områder.K9, id)!!
         assertThat(endretSøk.tittel).isEqualTo("Endret tittel")
         assertThat(endretSøk.beskrivelse).isEqualTo("Endret beskrivelse")
         assertThat(endretSøk.versjon).isEqualTo(2)
@@ -105,10 +106,10 @@ class LagretSøkRepositoryTest : AbstractK9LosIntegrationTest() {
         val lagretSøk = LagretSøk.nyttSøk(opprettLagretSøk, saksbehandler)
         val id = lagretSøkRepository.opprett(lagretSøk)
 
-        val hentetSøk = lagretSøkRepository.hent(id)!!
+        val hentetSøk = lagretSøkRepository.hent(Områder.K9, id)!!
         lagretSøkRepository.slett(hentetSøk)
 
-        val søkEtterSletting = lagretSøkRepository.hent(id)
+        val søkEtterSletting = lagretSøkRepository.hent(Områder.K9, id)
         assertThat(søkEtterSletting).isNull()
     }
 
@@ -126,7 +127,7 @@ class LagretSøkRepositoryTest : AbstractK9LosIntegrationTest() {
         lagretSøkRepository.opprett(søk1)
         lagretSøkRepository.opprett(søk2)
 
-        val alleSøk = lagretSøkRepository.hentAlle(saksbehandler)
+        val alleSøk = lagretSøkRepository.hentAlle(Områder.K9, saksbehandler)
         assertThat(alleSøk).hasSize(2)
         assertThat(alleSøk.map { it.tittel }).isEqualTo(listOf("Søk 2", "Søk 1"))
     }
@@ -158,12 +159,12 @@ class LagretSøkRepositoryTest : AbstractK9LosIntegrationTest() {
             lagretSøkRepository.opprett(søkForAnnenSaksbehandler)
 
             // Hent søk for første saksbehandler - skal kun få ett resultat
-            val søkForFørste = lagretSøkRepository.hentAlle(saksbehandler)
+            val søkForFørste = lagretSøkRepository.hentAlle(Områder.K9, saksbehandler)
             assertThat(søkForFørste).hasSize(1)
             assertThat(søkForFørste[0].tittel).isEqualTo("Søk for første")
 
             // Hent søk for annen saksbehandler - skal kun få ett resultat
-            val søkForAnnen = lagretSøkRepository.hentAlle(annenSaksbehandler)
+            val søkForAnnen = lagretSøkRepository.hentAlle(Områder.K9, annenSaksbehandler)
             assertThat(søkForAnnen).hasSize(1)
             assertThat(søkForAnnen[0].tittel).isEqualTo("Søk for annen")
         }
@@ -180,8 +181,8 @@ class LagretSøkRepositoryTest : AbstractK9LosIntegrationTest() {
         val id = lagretSøkRepository.opprett(lagretSøk)
 
         // Simuler samtidig endring - hent to instanser av samme søk
-        val førsteSøk = lagretSøkRepository.hent(id)!!
-        val andreSøk = lagretSøkRepository.hent(id)!!
+        val førsteSøk = lagretSøkRepository.hent(Områder.K9, id)!!
+        val andreSøk = lagretSøkRepository.hent(Områder.K9, id)!!
 
         førsteSøk.endre(
             EndreLagretSøkRequest(

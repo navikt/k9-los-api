@@ -17,7 +17,7 @@ import no.nav.k9.los.oppgaveuthenting.Oppgave
 import no.nav.k9.los.oppgaveuthenting.OppgaveNøkkelDto
 import java.time.LocalDateTime
 
-class SøkeboksTjeneste(
+class K9SøkeboksTjeneste(
     private val queryService: OppgaveQueryService,
     private val pdlService: IPdlService,
     private val pepClient: IPepClient,
@@ -51,7 +51,7 @@ class SøkeboksTjeneste(
                 )
             ), order = listOf(EnkelOrderFelt(Områder.K9, "mottattDato", false))
         )
-        return queryService.queryForOppgave(QueryRequest(oppgaveQuery = query))
+        return queryService.queryForOppgave(QueryRequest(Områder.K9, oppgaveQuery = query))
     }
 
     private suspend fun finnOppgaverForSøkersFnr(fnr: String): List<Oppgave> {
@@ -67,7 +67,7 @@ class SøkeboksTjeneste(
                 )
             ), order = listOf(EnkelOrderFelt(Områder.K9, "mottattDato", false))
         )
-        return queryService.queryForOppgave(QueryRequest(oppgaveQuery = query))
+        return queryService.queryForOppgave(QueryRequest(Områder.K9, oppgaveQuery = query))
     }
 
     private fun finnOppgaverForAktørId(aktørIder: List<String>): List<Oppgave> {
@@ -81,7 +81,7 @@ class SøkeboksTjeneste(
                 )
             ), order = listOf(EnkelOrderFelt(Områder.K9, "mottattDato", false))
         )
-        return queryService.queryForOppgave(QueryRequest(oppgaveQuery = query))
+        return queryService.queryForOppgave(QueryRequest(Områder.K9, oppgaveQuery = query))
     }
 
     private fun finnOppgaverForSaksnummer(saksnummer: String): List<Oppgave> {
@@ -95,7 +95,7 @@ class SøkeboksTjeneste(
                 )
             ), order = listOf(EnkelOrderFelt(Områder.K9, "mottattDato", false))
         )
-        return queryService.queryForOppgave(QueryRequest(oppgaveQuery = query))
+        return queryService.queryForOppgave(QueryRequest(Områder.K9, oppgaveQuery = query))
     }
 
     private suspend fun transformerTilSøkeresultat(

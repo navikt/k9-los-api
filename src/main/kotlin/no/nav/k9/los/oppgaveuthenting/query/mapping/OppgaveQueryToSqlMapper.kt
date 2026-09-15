@@ -15,7 +15,7 @@ object OppgaveQueryToSqlMapper {
         val oppgavestatusFilter = traverserFiltereOgFinnOppgavestatus(request)
         val ferdigstiltDatofilter = traverserFiltereOgFinnFerdigstiltDatofilter(request)
 
-        return PartisjonertOppgaveQuerySqlBuilder(felter, oppgavestatusFilter, now, ferdigstiltDatofilter)
+        return PartisjonertOppgaveQuerySqlBuilder(request.område, felter, oppgavestatusFilter, now, ferdigstiltDatofilter)
     }
 
     fun toSql(

@@ -46,6 +46,8 @@ class OppgaveV3(
         felter = oppgavefelter
     )
 
+    val område: Områder get() = oppgavetype.område.tilOmråderEnum()
+
     companion object {
         private fun lagFelter(oppgaveDto: OppgaveDto, oppgavetype: Oppgavetype): List<OppgaveFeltverdi> {
             val oppgavefelter = mutableListOf<OppgaveFeltverdi>()

@@ -14,12 +14,11 @@ import no.nav.k9.los.ko.KøpåvirkendeHendelse
 import no.nav.k9.los.ko.OppgaveHendelseMottatt
 import no.nav.k9.los.kodeverk.AksjonspunktStatus
 import no.nav.k9.los.kodeverk.BehandlingStatus
-import no.nav.k9.los.oppgavemottak.OppgaveV3
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
-import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
+import no.nav.k9.los.oppgavemottak.OppgaveV3
+import no.nav.k9.los.oppgaveuthenting.OppgaveRepository
 import no.nav.k9.los.oppgaveuthenting.query.db.EksternOppgaveId
 import no.nav.k9.los.reservasjon.ReservasjonV3Tjeneste
-import no.nav.k9.los.oppgaveuthenting.OppgaveRepository
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -44,7 +43,7 @@ class OppgaveOppdatertHandler(
                         oppgave.hentVerdi("pleietrengendeAktorId"),
                         oppgave.hentVerdi("relatertPartAktorid"),
                     ),
-                    oppgave.oppgavetype.område.tilOmråderEnum(),
+                    oppgave.område,
                 )
             )
         }
@@ -59,7 +58,7 @@ class OppgaveOppdatertHandler(
             køpåvirkendeHendelseChannel.send(
                 OppgaveHendelseMottatt(
                     eventLagret.fagsystem,
-                    EksternOppgaveId(Områder.K9, oppgave.eksternId)
+                    EksternOppgaveId(oppgave.område, oppgave.eksternId)
                 )
             )
         }

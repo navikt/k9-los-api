@@ -24,10 +24,10 @@ import kotlin.time.Duration.Companion.minutes
 import kotlin.time.measureTime
 import kotlin.time.toJavaDuration
 
-class StatusFordelingService(val queryService: OppgaveQueryService) {
+class K9StatusFordelingService(val queryService: OppgaveQueryService) {
     private val cache: Cache<Boolean, StatusFordelingResponse> = Cache(2)
     private val cacheLevetid = 5.minutes.toJavaDuration()
-    private val log: Logger = LoggerFactory.getLogger(StatusFordelingService::class.java)
+    private val log: Logger = LoggerFactory.getLogger(K9StatusFordelingService::class.java)
 
     fun hentVerdi(kode6: Boolean): StatusFordelingResponse {
         return cache.hent(kode6, cacheLevetid) { StatusFordelingResponse(LocalDateTime.now(), hentFraDatabase(kode6)) }
@@ -87,7 +87,7 @@ class StatusFordelingService(val queryService: OppgaveQueryService) {
                 AggregertSelectFelt(Aggregeringsfunksjon.ANTALL),
             ),
         )
-        val resultat = queryService.query(QueryRequest(query))
+        val resultat = queryService.query(QueryRequest(Områder.K9,query))
 
         return resultat.associate { rad ->
             val status = rad.feltverdier.first().verdi?.toString() ?: ""
@@ -151,7 +151,7 @@ class StatusFordelingService(val queryService: OppgaveQueryService) {
             ),
             select = listOf(AggregertSelectFelt(Aggregeringsfunksjon.ANTALL)),
         )
-        val venterKabal = queryService.queryForAntall(QueryRequest(venterKabalQuery))
+        val venterKabal = queryService.queryForAntall(QueryRequest(Områder.K9,venterKabalQuery))
         val venterAnnet = (statusAntall[Oppgavestatus.VENTER.kode] ?: 0L) - venterKabal
 
         fun kildeQuery(vararg ekstraFiltre: Oppgavefilter) =

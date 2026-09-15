@@ -48,7 +48,7 @@ import no.nav.k9.los.domeneadaptere.k9.statistikk.OppgavestatistikkTjeneste
 import no.nav.k9.los.domeneadaptere.k9.statistikk.StatistikkApi
 import no.nav.k9.los.domeneadaptere.kafka.AsynkronProsesseringV1Service
 import no.nav.k9.los.driftsmelding.DriftsmeldingerApis
-import no.nav.k9.los.forvaltning.forvaltningApis
+import no.nav.k9.los.forvaltning.K9ForvaltningApis
 import no.nav.k9.los.infrastruktur.abac.SifAbacPdpUtilgjengeligException
 import no.nav.k9.los.infrastruktur.abac.cache.PepCacheService
 import no.nav.k9.los.infrastruktur.db.DB_AWARE_PARALLELISM
@@ -65,15 +65,15 @@ import no.nav.k9.los.innloggetbruker.InnloggetBrukersOmråderApi
 import no.nav.k9.los.ko.KøpåvirkendeHendelse
 import no.nav.k9.los.ko.OppgaveKoApis
 import no.nav.k9.los.lagretsok.LagretSøkApi
-import no.nav.k9.los.nøkkeltall.NøkkeltallV3Apis
-import no.nav.k9.los.nøkkeltall.saksbehandler.nyeogferdigstilte.NyeOgFerdigstilteApi
-import no.nav.k9.los.nøkkeltall.saksbehandler.nyeogferdigstilte.NyeOgFerdigstilteService
+import no.nav.k9.los.nøkkeltall.K9NøkkeltallApis
+import no.nav.k9.los.nøkkeltall.saksbehandler.nyeogferdigstilte.K9NyeOgFerdigstilteApi
+import no.nav.k9.los.nøkkeltall.saksbehandler.nyeogferdigstilte.K9NyeOgFerdigstilteService
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.query.OppgaveQueryApis
 import no.nav.k9.los.reservasjon.ReservasjonApis
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerAdminApis
 import no.nav.k9.los.sisteoppgaver.SisteOppgaverApi
-import no.nav.k9.los.søkeboks.SøkeboksApi
+import no.nav.k9.los.søkeboks.K9SøkeboksApi
 import no.nav.k9.los.tjenester.mock.localSetup
 import no.nav.k9.los.uttrekk.UttrekkApi
 import no.nav.k9.los.uttrekk.UttrekkJobb
@@ -231,7 +231,7 @@ private fun Route.legacyApi() {
             route("openapi.json") { openApi() }
             swaggerUI("openapi.json")
             route("/forvaltning") {
-                forvaltningApis()
+                K9ForvaltningApis()
                 route("eventlager") { EventlagerApi() }
                 route("statistikk") { StatistikkApi() }
             }
@@ -250,10 +250,10 @@ private fun Route.legacyApi() {
             route("ny-oppgavestyring") {
                 route("ko") { OppgaveKoApis() }
                 route("oppgave") { OppgaveQueryApis() }
-                route("sok") { SøkeboksApi() }
-                route("nokkeltall") { NøkkeltallV3Apis() }
+                route("sok") { K9SøkeboksApi() }
+                route("nokkeltall") { K9NøkkeltallApis() }
                 route("siste-oppgaver") { SisteOppgaverApi() }
-                route("nye-og-ferdigstilte") { NyeOgFerdigstilteApi() }
+                route("nye-og-ferdigstilte") { K9NyeOgFerdigstilteApi() }
                 route("lagret-sok") { LagretSøkApi() }
                 route("uttrekk") { UttrekkApi() }
             }
@@ -271,7 +271,7 @@ private fun Route.apiUnderConstruction() {
         route("driftsmeldinger", { tags("Driftsmelding") }) { DriftsmeldingerApis() }
 
         route("/forvaltning", { tags("Forvaltning") }) {
-//            route("eventlager") { EventlagerApiNy() }
+//            route("eventlager") { EventlagerApi() }
 //            forvaltningApisNy()
 //            route("statistikk") { StatistikkApiNy() }
         }
@@ -303,10 +303,10 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
     val oppgavestatistikkTjeneste = koin.get<OppgavestatistikkTjeneste>()
 
     val pepCacheService = koin.get<PepCacheService>()
-    val statusFordelingService = koin.get<no.nav.k9.los.nøkkeltall.avdelingsleder.statusfordeling.StatusFordelingService>()
-    val dagensTallService = koin.get<no.nav.k9.los.nøkkeltall.avdelingsleder.dagenstall.DagensTallService>()
-    val perEnhetService = koin.get<no.nav.k9.los.nøkkeltall.avdelingsleder.ferdigstilteperenhet.FerdigstiltePerEnhetService>()
-    val nyeOgFerdigstilteService = koin.get<NyeOgFerdigstilteService>()
+    val statusFordelingService = koin.get<no.nav.k9.los.nøkkeltall.avdelingsleder.statusfordeling.K9StatusFordelingService>()
+    val dagensTallService = koin.get<no.nav.k9.los.nøkkeltall.avdelingsleder.dagenstall.K9DagensTallService>()
+    val perEnhetService = koin.get<no.nav.k9.los.nøkkeltall.avdelingsleder.ferdigstilteperenhet.K9FerdigstiltePerEnhetService>()
+    val nyeOgFerdigstilteService = koin.get<K9NyeOgFerdigstilteService>()
     val uttrekkJobb = koin.get<UttrekkJobb>()
 
     val k9sakBehandlingsoppfriskingJobb = K9sakBehandlingsoppfriskingJobb(

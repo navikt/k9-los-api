@@ -21,15 +21,14 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import kotlin.time.measureTime
 
-class FerdigstiltePerEnhetService(
+class K9FerdigstiltePerEnhetService(
     private val queryService: OppgaveQueryService
-
 ) {
     private val enheter = BehandlendeEnhet.entries.minusElement(BehandlendeEnhet.UKJENT)
     private val parametre = enheter.map { enhet -> FerdigstiltParameter.Enhet(enhet) } + FerdigstiltParameter.Helautomatisk + FerdigstiltParameter.Andre
     private var oppdatertTidspunkt: LocalDateTime? = null
     private val cache = Cache<LocalDate, List<FerdigstiltePerEnhetTall>>(null)
-    private val log: Logger = LoggerFactory.getLogger(FerdigstiltePerEnhetService::class.java)
+    private val log: Logger = LoggerFactory.getLogger(K9FerdigstiltePerEnhetService::class.java)
 
     private val grupper = listOf(
         FerdigstiltePerEnhetGruppe.PLEIEPENGER_SYKT_BARN,
@@ -147,6 +146,7 @@ class FerdigstiltePerEnhetService(
         parameter: FerdigstiltParameter,
     ): Int {
         val request = QueryRequest(
+            område = Områder.K9,
             oppgaveQuery = OppgaveQuery(
                 filtere = buildList {
                     when (parameter) {

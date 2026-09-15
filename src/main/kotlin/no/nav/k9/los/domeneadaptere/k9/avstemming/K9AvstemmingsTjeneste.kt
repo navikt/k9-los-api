@@ -10,6 +10,7 @@ import no.nav.k9.los.domeneadaptere.k9.avstemming.saksbehandling.systemklient.Sa
 import no.nav.k9.los.infrastruktur.utils.IkkeImplementertException
 import no.nav.k9.los.kodeverk.Fagsystem
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.query.OppgaveQueryService
 import no.nav.k9.los.oppgaveuthenting.query.QueryRequest
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.FeltverdiOppgavefilter
@@ -17,13 +18,13 @@ import no.nav.k9.los.oppgaveuthenting.query.dto.query.OppgaveQuery
 import no.nav.k9.los.oppgaveuthenting.query.mapping.EksternFeltverdiOperator
 import no.nav.k9.los.oppgaveuthenting.Oppgave
 
-class AvstemmingsTjeneste(
+class K9AvstemmingsTjeneste(
     private val oppgaveQueryService: OppgaveQueryService,
     private val k9SakAvstemmingsklient: SakAvstemmingsklient,
     private val k9KlageAvstemmingsklient: SakAvstemmingsklient,
     private val k9PunsjAvstemmingsklient: PunsjAvstemmingsklient,
 ) {
-    private val log = org.slf4j.LoggerFactory.getLogger(AvstemmingsTjeneste::class.java)
+    private val log = org.slf4j.LoggerFactory.getLogger(K9AvstemmingsTjeneste::class.java)
 
     suspend fun avstem(fagsystem: Fagsystem) : Avstemmingsrapport {
         log.info("Starter avstemming for fagsystem: $fagsystem")
@@ -48,7 +49,10 @@ class AvstemmingsTjeneste(
                 var åpneOppgaver: List<Oppgave>
                 var åpneBehandlinger: List<Behandlingstilstand>
                 coroutineScope {
-                    val åpneOppgaverDeferred = async { oppgaveQueryService.queryForOppgave(QueryRequest(query)) }
+                    val åpneOppgaverDeferred = async { oppgaveQueryService.queryForOppgave(QueryRequest(
+                        Områder.K9,
+                        query
+                    )) }
                     val åpneBehandlingerDeferred = async { k9SakAvstemmingsklient.hentÅpneBehandlinger() }
                     åpneOppgaver = åpneOppgaverDeferred.await()
                     åpneBehandlinger = åpneBehandlingerDeferred.await()
@@ -76,7 +80,7 @@ class AvstemmingsTjeneste(
                         )
                     )
                 )
-                val åpneOppgaver = oppgaveQueryService.queryForOppgave(QueryRequest(query))
+                val åpneOppgaver = oppgaveQueryService.queryForOppgave(QueryRequest(Områder.K9, query))
                 SakAvstemmer.regnUtDiff(Fagsystem.K9KLAGE, åpneBehandlinger, åpneOppgaver)
             }
             Fagsystem.K9TILBAKE -> throw IkkeImplementertException()
@@ -101,7 +105,7 @@ class AvstemmingsTjeneste(
                         )
                     )
                 )
-                val åpnePunsjOppgaver = oppgaveQueryService.queryForOppgave(QueryRequest(query))
+                val åpnePunsjOppgaver = oppgaveQueryService.queryForOppgave(QueryRequest(Områder.K9, query))
 
                 PunsjAvstemmer.regnUtDiff(uferdigeJournalposter, åpnePunsjOppgaver)
             }

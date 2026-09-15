@@ -5,14 +5,14 @@ import io.opentelemetry.extension.kotlin.asContextElement
 import kotlinx.coroutines.*
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
+import no.nav.k9.los.infrastruktur.idtoken.IIdToken
 import no.nav.k9.los.infrastruktur.pdl.IPdlService
 import no.nav.k9.los.infrastruktur.pdl.fnr
 import no.nav.k9.los.infrastruktur.pdl.navn
-import no.nav.k9.los.infrastruktur.rest.idToken
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.OppgaveNøkkelDto
 import no.nav.k9.los.oppgaveuthenting.OppgaveRepository
 import org.slf4j.LoggerFactory
-import kotlin.coroutines.coroutineContext
 import kotlin.time.Duration.Companion.seconds
 
 class SisteOppgaverTjeneste(
@@ -24,13 +24,11 @@ class SisteOppgaverTjeneste(
 ) {
     private val log = LoggerFactory.getLogger(SisteOppgaverTjeneste::class.java)
 
-    suspend fun hentSisteOppgaver(): List<SisteOppgaverDto> {
+    suspend fun hentSisteOppgaver(område: Områder, idToken: IIdToken): List<SisteOppgaverDto> {
         return try {
-            val saksbehandlerIdent = coroutineContext.idToken().getNavIdent()
-
             val oppgaver =
                 transactionalManager.transaction { tx ->
-                    val sisteOppgaveIds = sisteOppgaverRepository.hentSisteOppgaver(tx, saksbehandlerIdent)
+                    val sisteOppgaveIds = sisteOppgaverRepository.hentSisteOppgaver(område, idToken.getNavIdent(), tx)
                     sisteOppgaveIds.map { eksternOppgaveId ->
                         oppgaveRepository.hentNyesteOppgaveForEksternId(
                             tx,
@@ -47,7 +45,7 @@ class SisteOppgaverTjeneste(
                     oppgaver.map { oppgave ->
                         async {
                             try {
-                                val harTilgang = pepClient.harTilgangTilOppgaveV3(oppgave)
+                                val harTilgang = pepClient.harTilgangTilOppgaveV3(område, idToken, oppgave)
                                 val personPdl = oppgave.hentVerdi("aktorId")?.let {
                                     pdlService.person(it)
                                 }
@@ -92,15 +90,18 @@ class SisteOppgaverTjeneste(
         }
     }
 
-    suspend fun lagreSisteOppgave(oppgaveNøkkelDto: OppgaveNøkkelDto) {
-        val brukerIdent = coroutineContext.idToken().getNavIdent()
+    fun lagreSisteOppgave(
+        område: Områder, idToken: IIdToken, oppgaveNøkkelDto: OppgaveNøkkelDto
+    ) {
+        val brukerIdent = idToken.getNavIdent()
         transactionalManager.transaction { tx ->
             sisteOppgaverRepository.lagreSisteOppgave(
-                tx,
+                område,
                 brukerIdent,
-                oppgaveNøkkelDto
+                oppgaveNøkkelDto,
+                tx
             )
-            sisteOppgaverRepository.ryddOppForBrukerIdent(tx, brukerIdent)
+            sisteOppgaverRepository.ryddOppForBrukerIdent(område, brukerIdent, tx)
         }
     }
 }

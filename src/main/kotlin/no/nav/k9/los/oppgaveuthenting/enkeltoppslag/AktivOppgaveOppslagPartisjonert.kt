@@ -16,22 +16,22 @@ class AktivOppgaveOppslagPartisjonert(
     private val transactionalManager: TransactionalManager,
 ) : AktivOppgaveOppslag {
 
-    override fun hentAktivOppgave(eksternId: String, oppgavetypeEksternId: String): Oppgave {
-        return transactionalManager.transaction { tx -> hentAktivOppgave(eksternId, oppgavetypeEksternId, tx) }
+    override fun hentAktivOppgave(område: Områder, eksternId: String, oppgavetypeEksternId: String): Oppgave {
+        return transactionalManager.transaction { tx -> hentAktivOppgave(område, eksternId, oppgavetypeEksternId, tx) }
     }
 
-    override fun hentAktivOppgave(eksternId: String, oppgavetypeEksternId: String, tx: TransactionalSession): Oppgave {
-        return hentAktivOppgaveHvisFinnes(eksternId, oppgavetypeEksternId, tx)
-            ?: throw IllegalStateException("Fant ikke aktiv oppgave med eksternId=$eksternId og oppgavetype=$oppgavetypeEksternId")
+    override fun hentAktivOppgave(område: Områder, eksternId: String, oppgavetypeEksternId: String, tx: TransactionalSession): Oppgave {
+        return hentAktivOppgaveHvisFinnes(område, eksternId, oppgavetypeEksternId, tx)
+            ?: throw IllegalStateException("Fant ikke aktiv oppgave for område=${område.name} med eksternId=$eksternId og oppgavetype=$oppgavetypeEksternId")
     }
 
-    override fun hentAktivOppgaveHvisFinnes(eksternId: String, oppgavetypeEksternId: String): Oppgave? {
+    override fun hentAktivOppgaveHvisFinnes(område: Områder, eksternId: String, oppgavetypeEksternId: String): Oppgave? {
         return transactionalManager.transaction { tx ->
-            hentAktivOppgaveHvisFinnes(eksternId, oppgavetypeEksternId, tx)
+            hentAktivOppgaveHvisFinnes(område, eksternId, oppgavetypeEksternId, tx)
         }
     }
 
-    override fun hentAktivOppgaveHvisFinnes(eksternId: String, oppgavetypeEksternId: String, tx: TransactionalSession): Oppgave? {
+    override fun hentAktivOppgaveHvisFinnes(område: Områder, eksternId: String, oppgavetypeEksternId: String, tx: TransactionalSession): Oppgave? {
         val now = LocalDateTime.now()
 
         val rad = tx.run(
@@ -42,12 +42,17 @@ class AktivOppgaveOppslagPartisjonert(
                     INNER JOIN oppgave_v3_part o ON o.id = ip.id
                     WHERE ip.oppgave_ekstern_id = :eksternId
                       AND ip.oppgavetype_ekstern_id = :oppgavetype
+                      AND o.omrade_ekstern_id = :omrade
                     """.trimIndent(),
-                mapOf("eksternId" to eksternId, "oppgavetype" to oppgavetypeEksternId)
+                mapOf(
+                    "eksternId" to eksternId,
+                    "oppgavetype" to oppgavetypeEksternId,
+                    "omrade" to område.eksternId
+                )
             ).map { it.tilOppgaveRad() }.asSingle
         ) ?: return null
 
-        val oppgavetypeObj = oppgavetypeRepository.hentOppgavetype(Områder.K9, rad.oppgavetypeEksternId, tx)
+        val oppgavetypeObj = oppgavetypeRepository.hentOppgavetype(område, rad.oppgavetypeEksternId, tx)
         val oppgavefelter = hentOppgavefelter(tx, rad.id, oppgavetypeObj)
         return Oppgave(
             eksternId = rad.oppgaveEksternId,

@@ -6,6 +6,7 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.rest.RequestContextService
+import no.nav.k9.los.infrastruktur.rest.område
 import no.nav.k9.los.reservasjon.ReservasjonApisTjeneste
 import org.koin.ktor.ext.inject
 
@@ -42,7 +43,10 @@ internal fun Route.SaksbehandlerAdminApis() {
         requestContextService.withRequestContext(call) {
             if (pepClient.erOppgaveStyrer()) {
                 val epost = call.receive<EpostDto>()
-                call.respond(saksbehandlerAdminTjeneste.slettSaksbehandler(epost.epost))
+                call.respond(saksbehandlerAdminTjeneste.slettSaksbehandler(
+                    område = coroutineContext.område(),
+                    epost = epost.epost
+                ))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
@@ -53,7 +57,7 @@ internal fun Route.SaksbehandlerAdminApis() {
         requestContextService.withRequestContext(call) {
             if (pepClient.erOppgaveStyrer()) {
                 val id = call.receive<Long>()
-                call.respond(saksbehandlerAdminTjeneste.slettSaksbehandlerForId(id))
+                call.respond(saksbehandlerAdminTjeneste.slettSaksbehandlerForId(coroutineContext.område(), id))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
@@ -64,7 +68,7 @@ internal fun Route.SaksbehandlerAdminApis() {
     get("reservasjoner") {
         requestContextService.withRequestContext(call) {
             if (pepClient.erOppgaveStyrer()) {
-                call.respond(reservasjonApisTjeneste.hentAlleAktiveReservasjoner())
+                call.respond(reservasjonApisTjeneste.hentAlleAktiveReservasjoner(coroutineContext.område()))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }

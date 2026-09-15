@@ -12,6 +12,7 @@ import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.infrastruktur.abac.Action
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
+import no.nav.k9.los.infrastruktur.idtoken.IdTokenLocal
 import no.nav.k9.los.infrastruktur.pdl.IPdlService
 import no.nav.k9.los.ko.db.OppgaveKoRepository
 import no.nav.k9.los.ko.dto.OppgaveKo
@@ -40,6 +41,7 @@ class OppgaveKoTjenesteTest {
         val oppgaveKoRepository = mockk<OppgaveKoRepository>()
         val oppgaveQueryService = mockk<OppgaveQueryService>()
         val pepClient = mockk<IPepClient>()
+        val idToken = IdTokenLocal()
 
         val tjeneste = OppgaveKoTjeneste(
             transactionalManager = mockk<TransactionalManager>(relaxed = true),
@@ -74,16 +76,19 @@ class OppgaveKoTjenesteTest {
         every {
             oppgaveQueryService.queryForOppgave(
                 QueryRequest(
+                    område = Områder.K9,
                     oppgaveQuery = kø.oppgaveQuery,
                     fjernReserverte = false,
                     avgrensning = Avgrensning.maxAntall(2),
                 )
             )
         } returns listOf(utenTilgang, førsteMedTilgang)
-        coEvery { pepClient.harTilgangTilOppgaveV3(utenTilgang, Action.read) } returns false
-        coEvery { pepClient.harTilgangTilOppgaveV3(førsteMedTilgang, Action.read) } returns true
+        coEvery { pepClient.harTilgangTilOppgaveV3(Områder.K9, idToken, utenTilgang, Action.read) } returns false
+        coEvery { pepClient.harTilgangTilOppgaveV3(Områder.K9, idToken, førsteMedTilgang, Action.read) } returns true
 
         val resultat = tjeneste.hentOppgaverFraKø(
+            område = Områder.K9,
+            idToken = idToken,
             oppgaveKoId = 1L,
             ønsketAntallOppgaver = 2L,
         )
@@ -93,6 +98,7 @@ class OppgaveKoTjenesteTest {
         coVerify(exactly = 1) {
             oppgaveQueryService.queryForOppgave(
                 QueryRequest(
+                    område = Områder.K9,
                     oppgaveQuery = kø.oppgaveQuery,
                     fjernReserverte = false,
                     avgrensning = Avgrensning.maxAntall(2),

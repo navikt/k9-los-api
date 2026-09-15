@@ -7,7 +7,7 @@ import io.mockk.mockk
 import kotlinx.coroutines.channels.Channel
 import no.nav.k9.los.domeneadaptere.eventlager.EventRepository
 import no.nav.k9.los.domeneadaptere.k9.OmrådeSetup
-import no.nav.k9.los.domeneadaptere.k9.avstemming.AvstemmingsTjeneste
+import no.nav.k9.los.domeneadaptere.k9.avstemming.K9AvstemmingsTjeneste
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.FeilRekkefølgeSjekker
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.klage.K9KlageEventHandler
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventHandler
@@ -43,11 +43,11 @@ import no.nav.k9.los.ko.OppgaveKoTjeneste
 import no.nav.k9.los.ko.db.OppgaveKoRepository
 import no.nav.k9.los.lagretsok.LagretSøkRepository
 import no.nav.k9.los.lagretsok.LagretSøkTjeneste
-import no.nav.k9.los.nøkkeltall.avdelingsleder.dagenstall.DagensTallService
-import no.nav.k9.los.nøkkeltall.avdelingsleder.ferdigstilteperenhet.FerdigstiltePerEnhetService
-import no.nav.k9.los.nøkkeltall.avdelingsleder.status.StatusService
-import no.nav.k9.los.nøkkeltall.avdelingsleder.statusfordeling.StatusFordelingService
-import no.nav.k9.los.nøkkeltall.saksbehandler.nyeogferdigstilte.NyeOgFerdigstilteService
+import no.nav.k9.los.nøkkeltall.avdelingsleder.dagenstall.K9DagensTallService
+import no.nav.k9.los.nøkkeltall.avdelingsleder.ferdigstilteperenhet.K9FerdigstiltePerEnhetService
+import no.nav.k9.los.nøkkeltall.avdelingsleder.status.K9StatusService
+import no.nav.k9.los.nøkkeltall.avdelingsleder.statusfordeling.K9StatusFordelingService
+import no.nav.k9.los.nøkkeltall.saksbehandler.nyeogferdigstilte.K9NyeOgFerdigstilteService
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.FeltdefinisjonRepository
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.FeltdefinisjonTjeneste
 import no.nav.k9.los.oppgavedefinisjon.omraade.OmrådeRepository
@@ -71,7 +71,7 @@ import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
 import no.nav.k9.los.saksbehandleradmin.TestSaksbehandlerRepository
 import no.nav.k9.los.sisteoppgaver.SisteOppgaverRepository
 import no.nav.k9.los.sisteoppgaver.SisteOppgaverTjeneste
-import no.nav.k9.los.søkeboks.SøkeboksTjeneste
+import no.nav.k9.los.søkeboks.K9SøkeboksTjeneste
 import no.nav.k9.los.uttrekk.UttrekkCsvGenerator
 import no.nav.k9.los.uttrekk.UttrekkJobb
 import no.nav.k9.los.uttrekk.UttrekkRepository
@@ -470,8 +470,8 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
         )
     }
 
-    single<AvstemmingsTjeneste> {
-        AvstemmingsTjeneste(
+    single<K9AvstemmingsTjeneste> {
+        K9AvstemmingsTjeneste(
             oppgaveQueryService = get(),
             k9SakAvstemmingsklient = get(),
             k9KlageAvstemmingsklient = get(),
@@ -489,7 +489,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     }
 
     single {
-        SøkeboksTjeneste(
+        K9SøkeboksTjeneste(
             queryService = get(),
             pdlService = get(),
             pepClient = get(),
@@ -511,31 +511,31 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     }
 
     single {
-        StatusService(
+        K9StatusService(
             queryService = get(),
         )
     }
 
     single {
-        DagensTallService(
+        K9DagensTallService(
             queryService = get(),
         )
     }
 
     single {
-        FerdigstiltePerEnhetService(
+        K9FerdigstiltePerEnhetService(
             queryService = get()
         )
     }
 
     single {
-        NyeOgFerdigstilteService(
+        K9NyeOgFerdigstilteService(
             queryService = get()
         )
     }
 
     single {
-        StatusFordelingService(
+        K9StatusFordelingService(
             queryService = get()
         )
     }

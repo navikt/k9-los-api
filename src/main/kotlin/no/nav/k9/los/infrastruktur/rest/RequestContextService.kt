@@ -16,7 +16,7 @@ import kotlin.coroutines.coroutineContext
 
 // For bruk i suspending functions
 // https://blog.tpersson.io/2018/04/22/emulating-request-scoped-objects-with-kotlin-coroutines/
-public class CoroutineRequestContext(
+class CoroutineRequestContext(
     val idToken: IIdToken,
     val område: Områder?,
 ) : AbstractCoroutineContextElement(Key) {

@@ -6,12 +6,12 @@ import assertk.assertions.isEqualTo
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.FeltType
 import no.nav.k9.los.OppgaveTestDataBuilder
-import no.nav.k9.los.infrastruktur.abac.Action
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.infrastruktur.idtoken.IIdToken
@@ -29,8 +29,9 @@ import no.nav.k9.los.saksbehandleradmin.TestSaksbehandlerRepository
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.koin.test.get
-import java.util.*
 import kotlinx.coroutines.withContext
+import no.nav.k9.los.infrastruktur.rest.idToken
+import no.nav.k9.los.infrastruktur.rest.område
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 
 class SisteOppgaverTjenesteTest : AbstractK9LosIntegrationTest() {
@@ -89,10 +90,12 @@ class SisteOppgaverTjenesteTest : AbstractK9LosIntegrationTest() {
             coEvery { pdlService.person(aktorId1) } returns PersonPdlResponse(false, mockPerson)
 
             coEvery {
-                pepClient.harTilgangTilOppgaveV3(any(), eq(Action.read))
+                pepClient.harTilgangTilOppgaveV3(any<Områder>(), any<IIdToken>(), any())
             } returns true
 
             sisteOppgaverTjeneste.lagreSisteOppgave(
+                currentCoroutineContext().område(),
+                currentCoroutineContext().idToken(),
                 OppgaveNøkkelDto(
                     områdeEksternId = Områder.K9,
                     oppgaveEksternId = oppgave1.eksternId,
@@ -100,7 +103,7 @@ class SisteOppgaverTjenesteTest : AbstractK9LosIntegrationTest() {
                 )
             )
 
-            val sisteOppgaver = sisteOppgaverTjeneste.hentSisteOppgaver()
+            val sisteOppgaver = sisteOppgaverTjeneste.hentSisteOppgaver(currentCoroutineContext().område(), currentCoroutineContext().idToken())
             assertThat(sisteOppgaver).hasSize(1)
             assertThat(sisteOppgaver[0].oppgaveEksternId).isEqualTo(oppgave1.eksternId)
         }
@@ -125,13 +128,15 @@ class SisteOppgaverTjenesteTest : AbstractK9LosIntegrationTest() {
             coEvery { pdlService.person(aktorId2) } returns PersonPdlResponse(true, mockPerson)
 
             coEvery {
-                pepClient.harTilgangTilOppgaveV3(any(), eq(Action.read))
+                pepClient.harTilgangTilOppgaveV3(any<Områder>(), any<IIdToken>(), any())
             } answers {
-                val oppgave = firstArg<Oppgave>()
+                val oppgave = thirdArg<Oppgave>()
                 oppgave.eksternId == oppgave1.eksternId
             }
 
             sisteOppgaverTjeneste.lagreSisteOppgave(
+                currentCoroutineContext().område(),
+                currentCoroutineContext().idToken(),
                 OppgaveNøkkelDto(
                     områdeEksternId = Områder.K9,
                     oppgaveEksternId = oppgave1.eksternId,
@@ -140,6 +145,8 @@ class SisteOppgaverTjenesteTest : AbstractK9LosIntegrationTest() {
             )
 
             sisteOppgaverTjeneste.lagreSisteOppgave(
+                currentCoroutineContext().område(),
+                currentCoroutineContext().idToken(),
                 OppgaveNøkkelDto(
                     områdeEksternId = Områder.K9,
                     oppgaveEksternId = oppgave2.eksternId,
@@ -147,7 +154,7 @@ class SisteOppgaverTjenesteTest : AbstractK9LosIntegrationTest() {
                 )
             )
 
-            val sisteOppgaver = sisteOppgaverTjeneste.hentSisteOppgaver()
+            val sisteOppgaver = sisteOppgaverTjeneste.hentSisteOppgaver(currentCoroutineContext().område(), currentCoroutineContext().idToken())
             assertThat(sisteOppgaver).hasSize(1)
             assertThat(sisteOppgaver[0].oppgaveEksternId).isEqualTo(oppgave1.eksternId)
         }

@@ -8,6 +8,7 @@ import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.rest.RequestContextService
 import no.nav.k9.los.infrastruktur.rest.idToken
+import no.nav.k9.los.infrastruktur.rest.område
 import no.nav.k9.los.ko.dto.*
 import no.nav.k9.los.infrastruktur.utils.OpentelemetrySpanUtil
 import org.koin.ktor.ext.inject
@@ -109,7 +110,7 @@ fun Route.OppgaveKoApis() {
         requestContextService.withRequestContext(call) {
             if (pepClient.harBasisTilgang()) {
                 val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedIdent(
-                    kotlin.coroutines.coroutineContext.idToken().getNavIdent()
+                    coroutineContext.idToken().getNavIdent()
                 )!!
                 call.respond(
                     oppgaveKoTjeneste.hentKøerForSaksbehandler(
@@ -149,8 +150,10 @@ fun Route.OppgaveKoApis() {
                 val oppgavekøId = call.parameters["id"]!!
                 call.respond(
                     oppgaveKoTjeneste.hentOppgaverFraKø(
-                        oppgavekøId.toLong(),
-                        10,
+                        område = coroutineContext.område(),
+                        idToken = coroutineContext.idToken(),
+                        oppgaveKoId = oppgavekøId.toLong(),
+                        ønsketAntallOppgaver = 10,
                         fjernReserverte = true
                     )
                 )
@@ -179,7 +182,11 @@ fun Route.OppgaveKoApis() {
             if (pepClient.harBasisTilgang()) {
                 val oppgavekøId = call.parameters["id"]!!
                 val skjermet = pepClient.harTilgangTilKode6()
-                call.respond(oppgaveKoTjeneste.hentAntallMedOgUtenReserverteForKø(oppgavekøId.toLong(), skjermet))
+                call.respond(oppgaveKoTjeneste.hentAntallMedOgUtenReserverteForKø(
+                    område = coroutineContext.område(),
+                    oppgaveKoId = oppgavekøId.toLong(),
+                    skjermet = skjermet
+                ))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
@@ -193,6 +200,7 @@ fun Route.OppgaveKoApis() {
                 val skjermet = pepClient.harTilgangTilKode6()
                 val antallUtenReserverte = OpentelemetrySpanUtil.span("OppgaveKoTjeneste.hentAntallOppgaverForKø") {
                         oppgaveKoTjeneste.hentAntallOppgaverForKø(
+                            område = coroutineContext.område(),
                             oppgaveKoId = oppgavekøId.toLong(),
                             filtrerReserverte = true,
                             skjermet = skjermet
@@ -210,9 +218,10 @@ fun Route.OppgaveKoApis() {
             if (pepClient.harTilgangTilReserveringAvOppgaver()) {
                 val oppgavekøId = call.parameters["id"]!!
                 val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedIdent(
-                    kotlin.coroutines.coroutineContext.idToken().getNavIdent()
+                    coroutineContext.idToken().getNavIdent()
                 )!!
                 val oppgaveMuligReservert = oppgaveKoTjeneste.taReservasjonFraKø(
+                    område = coroutineContext.område(),
                     innloggetBrukerId = innloggetBruker.id,
                     oppgaveKoId = oppgavekøId.toLong(),
                 )
