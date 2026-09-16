@@ -3,7 +3,6 @@ package no.nav.k9.los.driftsmelding
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
-import no.nav.k9.los.ManglerFlerområde
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import java.time.LocalDateTime
 import java.util.*
@@ -12,7 +11,7 @@ import javax.sql.DataSource
 class DriftsmeldingRepository(
     private val dataSource: DataSource
 ) {
-    fun lagreDriftsmelding(@ManglerFlerområde område: Områder, driftsmelding: DriftsmeldingDto) {
+    fun lagreDriftsmelding(område: Områder, driftsmelding: DriftsmeldingDto) {
         using(sessionOf(dataSource)) {
             it.transaction { tx ->
                 tx.run(
