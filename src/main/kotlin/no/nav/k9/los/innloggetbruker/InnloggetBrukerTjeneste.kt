@@ -76,6 +76,7 @@ class InnloggetBrukerTjeneste(
                     navn = navn,
                     epost = epost,
                     enhet = enhet,
+                    områder = saksbehandler.områder,
                     skjermet = skjermet,
                     sistOppdatert = nå,
                 )

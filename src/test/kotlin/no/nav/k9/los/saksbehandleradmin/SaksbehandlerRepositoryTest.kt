@@ -33,7 +33,7 @@ class SaksbehandlerRepositoryTest : AbstractK9LosIntegrationTest() {
         val tidspunkt = LocalDateTime.parse("2026-08-28T10:00:00")
 
         repository.vedlikeholdSaksbehandler(
-            Saksbehandler(id, "Z654321", "Nytt navn", "Ny.Epost@nav.no", "3450", false, tidspunkt)
+            Saksbehandler(id, "Z654321", "Nytt navn", "Ny.Epost@nav.no", "3450", listOf(Områder.K9),false, tidspunkt)
         )
 
         val oppdatert = repository.finnSaksbehandlerMedId(id)!!
@@ -84,13 +84,14 @@ class SaksbehandlerRepositoryTest : AbstractK9LosIntegrationTest() {
         val feil = assertThrows<PSQLException> {
             repository.vedlikeholdSaksbehandler(
                 Saksbehandler(
-                    opprinnelig.id,
-                    "Z654321",
-                    "Nytt navn",
-                    annen.epost,
-                    "3450",
+                    id = opprinnelig.id,
+                    navident = "Z654321",
+                    navn = "Nytt navn",
+                    epost = annen.epost,
+                    enhet = "3450",
+                    områder = listOf(Områder.K9),
                     skjermet = false,
-                    LocalDateTime.parse("2026-08-28T10:00:00")
+                    sistOppdatert = LocalDateTime.parse("2026-08-28T10:00:00")
                 )
             )
         }
@@ -111,7 +112,7 @@ class SaksbehandlerRepositoryTest : AbstractK9LosIntegrationTest() {
         val opprinnelig = get<TestSaksbehandlerRepository>().opprettSaksbehandler(
             OpprettSaksbehandler("Z123456", "Gammelt navn", "x@nav.no", "1234")
         )
-        val duplikatId = repository.opprettSaksbehandler("y@nav.no")
+        val duplikatId = repository.opprettSaksbehandler(Områder.K9, false, "y@nav.no")
         val duplikat = repository.finnSaksbehandlerMedId(duplikatId)!!
         val tidspunkt = LocalDateTime.parse("2026-08-28T10:00:00")
         val graph = mockk<IAzureGraphService>()

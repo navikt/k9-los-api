@@ -21,7 +21,10 @@ internal fun Route.SaksbehandlerAdminApis() {
     get("/saksbehandlere") {
         requestContextService.withRequestContext(call) {
             if (pepClient.erOppgaveStyrer()) {
-                call.respond(saksbehandlerAdminTjeneste.hentSaksbehandlere())
+                call.respond(saksbehandlerAdminTjeneste.hentSaksbehandlere(
+                    område = coroutineContext.område(),
+                    kode6 = pepClient.harTilgangTilKode6()
+                ))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
@@ -32,7 +35,11 @@ internal fun Route.SaksbehandlerAdminApis() {
         requestContextService.withRequestContext(call) {
             if (pepClient.erOppgaveStyrer()) {
                 val epost = call.receive<EpostDto>()
-                call.respond(saksbehandlerAdminTjeneste.leggTilSaksbehandlerForEpost(epost.epost))
+                call.respond(saksbehandlerAdminTjeneste.leggTilSaksbehandlerForEpost(
+                    område = coroutineContext.område(),
+                    kode6 = pepClient.harTilgangTilKode6(),
+                    epost = epost.epost
+                ))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }

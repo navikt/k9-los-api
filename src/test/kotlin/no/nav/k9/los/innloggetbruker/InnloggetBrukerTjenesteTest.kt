@@ -4,6 +4,7 @@ import io.mockk.*
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.azuregraph.IAzureGraphService
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
 import org.junit.jupiter.api.Test
@@ -139,6 +140,7 @@ class InnloggetBrukerTjenesteTest {
         navn = "Saksbehandler Sara",
         epost = "saksbehandler@nav.no",
         enhet = "3450",
+        områder = listOf(Områder.K9),
         skjermet = false,
         sistOppdatert = sistOppdatert
     )

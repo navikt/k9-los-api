@@ -17,11 +17,11 @@ class SaksbehandlerAdminTjeneste(
     private val uttrekkTjeneste: UttrekkTjeneste,
     private val reservasjonV3Tjeneste: ReservasjonV3Tjeneste
 ) {
-    suspend fun leggTilSaksbehandlerForEpost(epost: String) {
+    fun leggTilSaksbehandlerForEpost(område: Områder, kode6: Boolean, epost: String) {
         if (saksbehandlerRepository.finnSaksbehandlerMedEpost(epost) != null) {
             throw IllegalStateException("Saksbehandler finnes fra før")
         }
-        saksbehandlerRepository.opprettSaksbehandler(epost)
+        saksbehandlerRepository.opprettSaksbehandler(område, kode6, epost)
     }
 
     suspend fun slettSaksbehandlerForId(område: Områder, id: Long) {
@@ -78,9 +78,13 @@ class SaksbehandlerAdminTjeneste(
         }
     }
 
-    suspend fun hentSaksbehandlere(): List<SaksbehandlerDto> {
+    suspend fun hentSaksbehandlere(område: Områder, kode6: Boolean): List<SaksbehandlerDto> {
         return transactionalManager.transactionSuspend { tx ->
-            val saksbehandlere = saksbehandlerRepository.hentAlleSaksbehandlere(tx)
+            val saksbehandlere = saksbehandlerRepository.hentAlleSaksbehandlere(
+                område = område,
+                skjermet = kode6,
+                tx
+            )
             val saksbehandlerIder = saksbehandlere.map { it.id }.toSet()
             val antallReservasjoner = reservasjonV3Tjeneste.tellReservasjonerForSaksbehandlere(saksbehandlerIder, tx)
 

@@ -19,6 +19,7 @@ class LagretSøkTest {
         navn = "Test Testersen",
         epost = "test@nav.no",
         enhet = null,
+        områder = listOf(Områder.K9),
         skjermet = false,
     )
 
@@ -28,6 +29,7 @@ class LagretSøkTest {
         navn = "Annen Testersen",
         epost = "annen@nav.no",
         enhet = null,
+        områder = listOf(Områder.K9),
         skjermet = false,
     )
 
