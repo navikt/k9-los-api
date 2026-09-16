@@ -73,4 +73,8 @@ alter table oppgave_id_part add constraint fk_oppgave_id_part_omrade foreign key
 execute format('alter table uttrekk add column omrade_id bigint not null default %s', k9_id);
 alter table uttrekk add constraint fk_uttrekk_omrade foreign key (omrade_id) references omrade (id);
 
+-- Legg til omrade_id på siste_oppgaver
+execute format('alter table siste_oppgaver add column omrade_id bigint not null default %s', k9_id);
+alter table uttrekk add constraint fk_siste_oppgaver_omrade foreign key (omrade_id) references omrade (id);
+
 end $$;

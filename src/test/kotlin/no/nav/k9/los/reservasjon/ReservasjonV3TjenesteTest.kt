@@ -32,6 +32,7 @@ class ReservasjonV3TjenesteTest : AbstractK9LosIntegrationTest() {
                     navn = null,
                     epost = "saksbehandler@nav.no",
                     enhet = null,
+                    områder = listOf(Områder.K9)
                 )
             )
         }
@@ -43,6 +44,7 @@ class ReservasjonV3TjenesteTest : AbstractK9LosIntegrationTest() {
                     navn = null,
                     epost = "test1@test.no",
                     enhet = null,
+                    områder = listOf(Områder.K9)
                 )
             )
         }
@@ -125,6 +127,7 @@ class ReservasjonV3TjenesteTest : AbstractK9LosIntegrationTest() {
                     navn = null,
                     epost = "test2@test.no",
                     enhet = null,
+                    områder = listOf(Områder.K9)
                 )
             )
         }

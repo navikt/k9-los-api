@@ -757,10 +757,11 @@ byggFilter(FeltType.MOTTATT_DATO, EksternFeltverdiOperator.EQUALS, "2023-05-15")
             val ident = "test"
             testSaksbehandlerRepository.opprettSaksbehandler(
                 OpprettSaksbehandler(
-                    ident,
-                    ident,
-                    ident + "@nav.no",
-                    enhet = "1234"
+                    områder = listOf(Områder.K9),
+                    navident = ident,
+                    navn = ident,
+                    epost = ident + "@nav.no",
+                    enhet = "1234",
                 )
             )
             testSaksbehandlerRepository.hentAlleSaksbehandlere()

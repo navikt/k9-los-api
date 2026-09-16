@@ -36,16 +36,19 @@ class TestSaksbehandlerRepository(
                         )
                     ).map { row -> row.long("id") }.asSingle
                 )
-                tx.run(
-                    queryOf(
-                        """
-                        insert into saksbehandler_omrade (saksbehandler_id, omrade_id)
-                        select :saksbehandlerId, id from omrade
-                        on conflict do nothing
-                        """,
-                        mapOf("saksbehandlerId" to saksbehandlerId)
-                    ).asUpdate
-                )
+                opprettSaksbehandler.områder.forEach { område ->
+                    tx.run(
+                        queryOf(
+                            """
+                            insert into saksbehandler_omrade (saksbehandler_id, omrade_id)
+                            select :saksbehandlerId, id from omrade
+                            where omrade.ekstern_id = :omrade
+                            on conflict do nothing
+                            """,
+                            mapOf("saksbehandlerId" to saksbehandlerId, "omrade" to område.eksternId)
+                        ).asUpdate
+                    )
+                }
                 saksbehandlerId!!
             }
             saksbehandlerRepository.finnSaksbehandlerMedId(saksbehandlerId)!!

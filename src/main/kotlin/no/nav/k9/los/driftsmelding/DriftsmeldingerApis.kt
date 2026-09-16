@@ -8,6 +8,7 @@ import io.ktor.server.routing.*
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.rest.RequestContextService
 import no.nav.k9.los.driftsmelding.IdDto
+import no.nav.k9.los.infrastruktur.rest.område
 import org.koin.ktor.ext.inject
 import java.util.*
 
@@ -19,7 +20,7 @@ fun Route.DriftsmeldingerApis() {
     get {
         requestContextService.withRequestContext(call) {
             if (pepClient.harBasisTilgang()) {
-                call.respond(driftsmeldingTjeneste.hentDriftsmeldinger())
+                call.respond(driftsmeldingTjeneste.hentDriftsmeldinger(coroutineContext.område()))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
@@ -30,7 +31,10 @@ fun Route.DriftsmeldingerApis() {
         requestContextService.withRequestContext(call) {
             if (pepClient.kanLeggeUtDriftsmelding()) {
                 val melding = call.receive<Driftsmelding>()
-                call.respond(driftsmeldingTjeneste.leggTilDriftsmelding(melding.driftsmelding))
+                call.respond(driftsmeldingTjeneste.leggTilDriftsmelding(
+                    område = coroutineContext.område(),
+                    melding = melding.driftsmelding
+                ))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
@@ -41,7 +45,10 @@ fun Route.DriftsmeldingerApis() {
         requestContextService.withRequestContext(call) {
             if (pepClient.kanLeggeUtDriftsmelding()) {
                 val param = call.receive<IdDto>()
-                call.respond(driftsmeldingTjeneste.slettDriftsmelding(UUID.fromString(param.id)))
+                call.respond(driftsmeldingTjeneste.slettDriftsmelding(
+                    område = coroutineContext.område(),
+                    id = UUID.fromString(param.id)
+                ))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
@@ -52,7 +59,10 @@ fun Route.DriftsmeldingerApis() {
         requestContextService.withRequestContext(call) {
             if (pepClient.kanLeggeUtDriftsmelding()) {
                 val param = call.receive<DriftsmeldingSwitch>()
-                call.respond(driftsmeldingTjeneste.toggleDriftsmelding(param))
+                call.respond(driftsmeldingTjeneste.toggleDriftsmelding(
+                    område = coroutineContext.område(),
+                    driftsmelding = param
+                ))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }

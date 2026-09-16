@@ -45,6 +45,7 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
                     navn = "Test Testersen",
                     epost = "test@nav.no",
                     enhet = null,
+                    områder = listOf(Områder.K9),
                 )
             )
             saksbehandlerId = saksbehandler.id
@@ -172,16 +173,15 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
     @Test
     fun `skal hente uttrekk for saksbehandler`() {
         // Opprett en annen saksbehandler for å teste filtreringen
-        val annenSaksbehandlerId = runBlocking {
-            testSaksbehandlerRepository.opprettSaksbehandler(
-                OpprettSaksbehandler(
-                    navident = "test2",
-                    navn = "Test Testersen 2",
-                    epost = "test2@nav.no",
-                    enhet = null,
-                )
-            ).id
-        }
+        val annenSaksbehandlerId = testSaksbehandlerRepository.opprettSaksbehandler(
+            OpprettSaksbehandler(
+                navident = "test2",
+                navn = "Test Testersen 2",
+                epost = "test2@nav.no",
+                enhet = null,
+                områder = listOf(Områder.K9),
+            )
+        ).id
 
         val uttrekk1 = Uttrekk.opprettUttrekk(
             lagretSøk = testLagretSøk,

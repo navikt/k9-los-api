@@ -1,5 +1,6 @@
 package no.nav.k9.los.driftsmelding
 
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import java.time.LocalDateTime
 import java.util.*
 
@@ -7,15 +8,15 @@ class DriftsmeldingTjeneste(
     private val driftsmeldingRepository: DriftsmeldingRepository
 ) {
 
-    fun hentDriftsmeldinger(): List<DriftsmeldingDto> {
-        return driftsmeldingRepository.hentAlle().sortedByDescending { it.aktivert }
+    fun hentDriftsmeldinger(område: Områder): List<DriftsmeldingDto> {
+        return driftsmeldingRepository.hentAlle(område).sortedByDescending { it.aktivert }
     }
 
-    fun slettDriftsmelding(id: UUID) {
-        return driftsmeldingRepository.slett(id)
+    fun slettDriftsmelding(område: Områder, id: UUID) {
+        return driftsmeldingRepository.slett(område, id)
     }
 
-    fun leggTilDriftsmelding(melding: String): DriftsmeldingDto {
+    fun leggTilDriftsmelding(område: Områder, melding: String): DriftsmeldingDto {
         val driftsmelding = DriftsmeldingDto(
                 UUID.randomUUID(),
                 melding,
@@ -23,12 +24,12 @@ class DriftsmeldingTjeneste(
                 false,
                 null
         )
-        driftsmeldingRepository.lagreDriftsmelding(driftsmelding)
+        driftsmeldingRepository.lagreDriftsmelding(område, driftsmelding)
 
         return driftsmelding
     }
 
-    fun toggleDriftsmelding(driftsmelding: DriftsmeldingSwitch) {
-        driftsmeldingRepository.setDriftsmelding(driftsmelding, if (driftsmelding.aktiv) LocalDateTime.now() else null)
+    fun toggleDriftsmelding(område: Områder, driftsmelding: DriftsmeldingSwitch) {
+        driftsmeldingRepository.setDriftsmelding(område, driftsmelding, if (driftsmelding.aktiv) LocalDateTime.now() else null)
     }
 }

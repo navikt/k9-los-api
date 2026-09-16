@@ -71,6 +71,7 @@ class TestSaksbehandler: KoinTest {
         navident = navident!!,
         navn = navn!!,
         epost = epost,
-        enhet = enhet
+        enhet = enhet,
+        områder = områder
     )
 }

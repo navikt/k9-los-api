@@ -43,6 +43,7 @@ class UttrekkJobbTest : AbstractK9LosIntegrationTest() {
                     navn = "Test Testersen",
                     epost = "test@nav.no",
                     enhet = null,
+                    områder = listOf(Områder.K9),
                 )
             )
             saksbehandlerId = saksbehandler.id

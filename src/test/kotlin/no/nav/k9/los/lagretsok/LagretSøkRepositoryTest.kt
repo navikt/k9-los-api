@@ -38,6 +38,7 @@ class LagretSøkRepositoryTest : AbstractK9LosIntegrationTest() {
                     navn = "Test Testersen",
                     epost = "test@nav.no",
                     enhet = null,
+                    områder = listOf(Områder.K9)
                 )
             )
         }
@@ -136,6 +137,7 @@ class LagretSøkRepositoryTest : AbstractK9LosIntegrationTest() {
                     navn = "Annen Testersen",
                     epost = "annen@nav.no",
                     enhet = null,
+                    områder = listOf(Områder.K9)
                 )
             )
 

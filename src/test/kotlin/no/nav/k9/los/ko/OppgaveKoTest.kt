@@ -13,6 +13,7 @@ import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.ko.db.OppgaveKoRepository
 import no.nav.k9.los.oppgavedefinisjon.omraade.OmrådeRepository
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.saksbehandleradmin.OpprettSaksbehandler
 import no.nav.k9.los.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.saksbehandleradmin.TestSaksbehandlerRepository
@@ -111,6 +112,7 @@ class OppgaveKoTest : AbstractK9LosIntegrationTest() {
                     navn = "Navn for $saksbehandlerepost",
                     epost = saksbehandlerepost,
                     enhet = null,
+                    områder = listOf(Områder.K9)
                 )
             )
         }
