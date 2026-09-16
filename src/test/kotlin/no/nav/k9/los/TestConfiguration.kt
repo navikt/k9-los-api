@@ -52,7 +52,7 @@ object TestConfiguration {
         map["nav.db.url"] = "jdbc:postgresql://localhost:5432/k9los_unit"
         map["nav.db.username"] = "k9los_unit"
         map["nav.db.password"] = "k9los_unit"
-        map["nav.db.migrering_etter_oppstart"] = "false"
+        map["nav.db.migrering_etter_oppstart"] = "true"
         map["nav.kafka.åpenStatistikkBehandlingTopic"] = "aapen-k9statistikk-behandling-v2"
         map["nav.kafka.åpenStatistikkSakTopic"] = "aapen-k9statistikk-sak-v2"
         map["nav.nokkeltall.enheter"] = "NAV DRIFT"
