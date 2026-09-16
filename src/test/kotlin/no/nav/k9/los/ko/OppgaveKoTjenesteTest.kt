@@ -66,13 +66,14 @@ class OppgaveKoTjenesteTest {
             saksbehandlere = emptyList(),
             endretTidspunkt = null,
             skjermet = false,
+            område = Områder.K9
         )
 
         val utenTilgang = oppgave("uten-tilgang", "SAK-1")
         val førsteMedTilgang = oppgave("med-tilgang-1", "SAK-2")
 
         coEvery { pepClient.harTilgangTilKode6() } returns false
-        every { oppgaveKoRepository.hent(1L, false) } returns kø
+        every { oppgaveKoRepository.hent(Områder.K9, false, 1L) } returns kø
         every {
             oppgaveQueryService.queryForOppgave(
                 QueryRequest(

@@ -22,7 +22,7 @@ fun Route.OppgaveKoApis() {
     get("/") {
         requestContextService.withRequestContext(call) {
             if (pepClient.erOppgaveStyrer()) {
-                val oppgavekøer = oppgaveKoTjeneste.hentOppgavekøer(skjermet = pepClient.harTilgangTilKode6())
+                val oppgavekøer = oppgaveKoTjeneste.hentOppgavekøer(område = coroutineContext.område(), skjermet = pepClient.harTilgangTilKode6())
                     .map { oppgaveko ->
                         OppgaveKoListeelement(
                             id = oppgaveko.id,
@@ -45,11 +45,12 @@ fun Route.OppgaveKoApis() {
                 val kopierOppgaveKoDto = call.receive<KopierOppgaveKoDto>()
                 call.respond(
                     oppgaveKoTjeneste.kopier(
+                        coroutineContext.område(),
+                        pepClient.harTilgangTilKode6(),
                         kopierOppgaveKoDto.kopierFraOppgaveId,
                         kopierOppgaveKoDto.tittel,
                         kopierOppgaveKoDto.taMedQuery,
-                        kopierOppgaveKoDto.taMedSaksbehandlere,
-                        pepClient.harTilgangTilKode6()
+                        kopierOppgaveKoDto.taMedSaksbehandlere
                     )
                 )
             } else {
@@ -77,7 +78,11 @@ fun Route.OppgaveKoApis() {
             if (pepClient.erOppgaveStyrer()) {
                 val opprettOppgaveKoDto = call.receive<OpprettOppgaveKoDto>()
                 val harSkjermetTilgang = pepClient.harTilgangTilKode6()
-                call.respond(oppgaveKoTjeneste.leggTil(opprettOppgaveKoDto.tittel, skjermet = harSkjermetTilgang))
+                call.respond(oppgaveKoTjeneste.leggTil(
+                    område = coroutineContext.område(),
+                    skjermet = harSkjermetTilgang,
+                    tittel = opprettOppgaveKoDto.tittel
+                ))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
@@ -88,7 +93,7 @@ fun Route.OppgaveKoApis() {
         requestContextService.withRequestContext(call) {
             if (pepClient.erOppgaveStyrer()) {
                 val oppgavekøId = call.parameters["id"]!!
-                call.respond(oppgaveKoTjeneste.hent(oppgavekøId.toLong(), pepClient.harTilgangTilKode6()))
+                call.respond(oppgaveKoTjeneste.hent(coroutineContext.område(), pepClient.harTilgangTilKode6(), oppgavekøId.toLong()))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
@@ -99,7 +104,7 @@ fun Route.OppgaveKoApis() {
         requestContextService.withRequestContext(call) {
             if (pepClient.erOppgaveStyrer()) {
                 val oppgavekøId = call.parameters["id"]!!
-                call.respond(oppgaveKoTjeneste.slett(oppgavekøId.toLong()))
+                call.respond(oppgaveKoTjeneste.slett(coroutineContext.område(), pepClient.harTilgangTilKode6(),oppgavekøId.toLong()))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
@@ -114,8 +119,9 @@ fun Route.OppgaveKoApis() {
                 )!!
                 call.respond(
                     oppgaveKoTjeneste.hentKøerForSaksbehandler(
+                        coroutineContext.område(),
+                        pepClient.harTilgangTilKode6(),
                         saksbehandler.id,
-                        pepClient.harTilgangTilKode6()
                     )
                 )
             } else {
@@ -129,8 +135,9 @@ fun Route.OppgaveKoApis() {
             if (pepClient.erOppgaveStyrer()) {
                 call.respond(
                     oppgaveKoTjeneste.hentKøerForSaksbehandler(
+                        coroutineContext.område(),
+                        pepClient.harTilgangTilKode6(),
                         call.parameters["id"]?.toLong()!!,
-                        pepClient.harTilgangTilKode6()
                     ).map {
                         OppgaveKoIdOgTittel(
                             id = it.id,
@@ -169,7 +176,11 @@ fun Route.OppgaveKoApis() {
             if (pepClient.harBasisTilgang()) {
                 val oppgavekøId = call.parameters["id"]!!
                 call.respond(
-                    oppgaveKoTjeneste.hentSaksbehandlereForKo(oppgavekøId.toLong())
+                    oppgaveKoTjeneste.hentSaksbehandlereForKo(
+                        coroutineContext.område(),
+                        pepClient.harTilgangTilKode6(),
+                        oppgavekøId.toLong()
+                    )
                 )
             } else {
                 call.respond(HttpStatusCode.Forbidden)
@@ -247,7 +258,11 @@ fun Route.OppgaveKoApis() {
         requestContextService.withRequestContext(call) {
             if (pepClient.erOppgaveStyrer()) {
                 val oppgaveKo = call.receive<OppgaveKo>()
-                call.respond(oppgaveKoTjeneste.endre(oppgaveKo, pepClient.harTilgangTilKode6()))
+                call.respond(oppgaveKoTjeneste.endre(
+                    område = coroutineContext.område(),
+                    skjermet = pepClient.harTilgangTilKode6(),
+                    oppgaveKo = oppgaveKo
+                ))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }

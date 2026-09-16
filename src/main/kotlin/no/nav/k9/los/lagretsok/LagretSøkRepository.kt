@@ -22,10 +22,11 @@ class LagretSøkRepository(val dataSource: DataSource) {
                     SELECT o.ekstern_id AS omrade_ekstern_id, l.*
                     FROM lagret_sok l
                     INNER JOIN omrade o ON o.id = l.omrade_id
-                    INNER JOIN saksbehandler s ON s.id = l.laget_av
+                    INNER JOIN saksbehandler s ON l.laget_av = s.id
                     WHERE l.id = :id
                       AND o.ekstern_id = :omrade
                       AND s.navident = :navident
+                      AND EXISTS (select 1 from saksbehandler_omrade so where so.omrade_id = o.id and so.saksbehandler_id = s.id) 
                     """.trimIndent(),
                     mapOf("id" to id, "omrade" to område.eksternId, "navident" to navIdent)
                 ).map { it.toLagretSøk() }.asSingle

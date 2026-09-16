@@ -483,11 +483,15 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         val oppgaveKoRepository = get<OppgaveKoRepository>()
         val pepClient = get<IPepClient>()
         val skjermet = runBlocking { pepClient.harTilgangTilKode6() }
-        val nyKø = oppgaveKoRepository.leggTil("Test", skjermet = skjermet).copy(
+        val nyKø = oppgaveKoRepository.leggTil(
+            område = Områder.K9,
+            skjermet = skjermet,
+            tittel = "Test",
+        ).copy(
             saksbehandlere = listOf(saksbehandler.epost),
             oppgaveQuery = queryRequest.oppgaveQuery
         )
-        return oppgaveKoRepository.endre(nyKø, skjermet)
+        return oppgaveKoRepository.endre(Områder.K9, skjermet, nyKø)
     }
 
     private fun querySomKunInneholder(eksternId: UUID, vararg status: Oppgavestatus = emptyArray()): QueryRequest {

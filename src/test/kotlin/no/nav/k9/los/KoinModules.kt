@@ -428,7 +428,8 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
 
     single {
         OppgaveKoRepository(
-            datasource = get()
+            datasource = get(),
+            områdeRepository = get()
         )
     }
 

@@ -15,9 +15,8 @@ class LagretSøkTjeneste(
         return lagretSøkRepository.hent(område, navIdent, lagretSøkId)
     }
 
-    suspend fun hentAlle(område: Områder, navIdent: String): List<LagretSøk> {
-        val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedIdent(navIdent)
-            ?: return emptyList()
+    fun hentAlle(område: Områder, navIdent: String): List<LagretSøk> {
+        val saksbehandler = saksbehandlerForOmråde(område, navIdent)
         return lagretSøkRepository.hentAlle(område, saksbehandler)
     }
 
@@ -26,35 +25,42 @@ class LagretSøkTjeneste(
         return oppgaveQueryService.queryForAntall(QueryRequest(område, lagretSøk.query))
     }
 
-    suspend fun nytt(område: Områder, navIdent: String, nyttLagretSøk: NyttLagretSøkRequest): Long {
-        val saksbehandler = saksbehandler(navIdent)
+    fun nytt(område: Områder, navIdent: String, nyttLagretSøk: NyttLagretSøkRequest): Long {
+        val saksbehandler = saksbehandlerForOmråde(område, navIdent)
         return lagretSøkRepository.opprett(LagretSøk.nyttSøk(område, saksbehandler, nyttLagretSøk))
     }
 
-    suspend fun endre(område: Områder, navIdent: String, endreLagretSøk: EndreLagretSøkRequest): LagretSøk {
-        val saksbehandler = saksbehandler(navIdent)
+    fun endre(område: Områder, navIdent: String, endreLagretSøk: EndreLagretSøkRequest): LagretSøk {
+        val saksbehandler = saksbehandlerForOmråde(område, navIdent)
         val lagretSøk = hentEllerKast(område, navIdent, endreLagretSøk.id)
         lagretSøk.endre(endreLagretSøk, saksbehandler)
         lagretSøkRepository.endre(lagretSøk)
         return lagretSøk
     }
 
-    suspend fun kopier(område: Områder, navIdent: String, lagretSøkId: Long, tittel: String): Long {
-        val saksbehandler = saksbehandler(navIdent)
+    fun kopier(område: Områder, navIdent: String, lagretSøkId: Long, tittel: String): Long {
+        val saksbehandler = saksbehandlerForOmråde(område, navIdent)
         val lagretSøk = hentEllerKast(område, navIdent, lagretSøkId)
         return lagretSøkRepository.opprett(lagretSøk.kopier(tittel, saksbehandler))
     }
 
-    suspend fun slett(område: Områder, navIdent: String, lagretSøkId: Long) {
-        val saksbehandler = saksbehandler(navIdent)
+    fun slett(område: Områder, navIdent: String, lagretSøkId: Long) {
+        val saksbehandler = saksbehandlerForOmråde(område, navIdent)
         val lagretSøk = hentEllerKast(område, navIdent, lagretSøkId)
         lagretSøk.sjekkOmKanSlette(saksbehandler)
         lagretSøkRepository.slett(lagretSøk)
     }
 
-    private suspend fun saksbehandler(navIdent: String): Saksbehandler =
-        saksbehandlerRepository.finnSaksbehandlerMedIdent(navIdent)
-            ?: throw IllegalStateException("Innlogget bruker er ikke i saksbehandler-tabellen")
+    private fun saksbehandlerForOmråde(område: Områder, navIdent: String): Saksbehandler {
+        val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedIdent(navIdent)
+        checkNotNull(saksbehandler) {
+            "Innlogget bruker er ikke i saksbehandler-tabellen"
+        }
+        check(saksbehandler.områder.contains(område)) {
+            "Saksbehandler kan ikke opprette nytt lagret for området"
+        }
+        return saksbehandler
+    }
 
     private fun hentEllerKast(område: Områder, navIdent: String, lagretSøkId: Long): LagretSøk =
         lagretSøkRepository.hent(område, navIdent, lagretSøkId)

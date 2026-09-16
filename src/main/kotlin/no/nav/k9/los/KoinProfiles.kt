@@ -460,7 +460,8 @@ fun common(app: Application, config: Configuration) = module {
 
     single {
         OppgaveKoRepository(
-            datasource = get()
+            datasource = get(),
+            områdeRepository = get()
         )
     }
 

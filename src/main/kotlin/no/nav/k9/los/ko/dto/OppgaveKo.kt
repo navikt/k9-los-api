@@ -1,5 +1,6 @@
 package no.nav.k9.los.ko.dto
 
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.OppgaveQuery
 import java.time.LocalDateTime
 
@@ -13,5 +14,6 @@ data class OppgaveKo(
     val saksbehandlerIds: List<Long>,
     val saksbehandlere: List<String>,
     val endretTidspunkt: LocalDateTime?,
-    val skjermet: Boolean
+    val skjermet: Boolean,
+    val område: Områder
 )

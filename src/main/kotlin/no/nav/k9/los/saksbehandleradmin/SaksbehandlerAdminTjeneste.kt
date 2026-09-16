@@ -17,7 +17,7 @@ class SaksbehandlerAdminTjeneste(
     private val uttrekkTjeneste: UttrekkTjeneste,
     private val reservasjonV3Tjeneste: ReservasjonV3Tjeneste
 ) {
-    fun leggTilSaksbehandlerForEpost(område: Områder, epost: String, kode6: Boolean) {
+    fun leggTilSaksbehandlerForEpost(område: Områder, kode6: Boolean, epost: String) {
         val eksisterende = saksbehandlerRepository.finnSaksbehandlerMedEpost(epost)
         if (eksisterende == null) {
             saksbehandlerRepository.opprettSaksbehandler(område, kode6, epost)
@@ -29,7 +29,7 @@ class SaksbehandlerAdminTjeneste(
         }
     }
 
-    suspend fun slettSaksbehandlerForId(område: Områder, kode6: Boolean, id: Long) {
+    fun slettSaksbehandlerForId(område: Områder, kode6: Boolean, id: Long) {
         val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedId(id)
 
         val lagredeSøk = lagretSøkTjeneste.hentAlle(område, saksbehandler!!.navident!!)
@@ -39,8 +39,19 @@ class SaksbehandlerAdminTjeneste(
 
         transactionalManager.transaction { tx ->
             // V3-modellen: Sletter køer saksbehandler er med i
-            oppgaveKøV3Repository.hentKoerMedOppgittSaksbehandler(tx, saksbehandler.id, kode6, true).forEach { kø ->
-                oppgaveKøV3Repository.endre(tx, kø.copy(saksbehandlerIds = kø.saksbehandlerIds - saksbehandler.id), kode6)
+            oppgaveKøV3Repository.hentKoerMedOppgittSaksbehandler(
+                område = område,
+                skjermet = kode6,
+                saksbehandlerId = saksbehandler.id,
+                medSaksbehandlere = true,
+                tx = tx
+            ).forEach { kø ->
+                oppgaveKøV3Repository.endre(
+                    område,
+                    kode6,
+                    kø.copy(saksbehandlerIds = kø.saksbehandlerIds - saksbehandler.id),
+                    tx
+                )
             }
 
             // Sletter fra saksbehandler-tabellen
@@ -68,8 +79,8 @@ class SaksbehandlerAdminTjeneste(
 
         transactionalManager.transaction { tx ->
             // V3-modellen: Sletter køer saksbehandler er med i
-            oppgaveKøV3Repository.hentKoerMedOppgittSaksbehandler(tx, saksbehandler.id, skjermet, true).forEach { kø ->
-                oppgaveKøV3Repository.endre(tx, kø.copy(saksbehandlere = kø.saksbehandlere - epost), skjermet)
+            oppgaveKøV3Repository.hentKoerMedOppgittSaksbehandler(område, skjermet,saksbehandler.id, true, tx).forEach { kø ->
+                oppgaveKøV3Repository.endre(område, skjermet, kø.copy(saksbehandlere = kø.saksbehandlere - epost), tx)
             }
 
             // Sletter fra saksbehandler-tabellen

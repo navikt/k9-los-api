@@ -23,30 +23,30 @@ class OppgaveKoTest : AbstractK9LosIntegrationTest() {
 
     @Test
     fun `sjekker at oppgavekø kan opprettes og slettes`() {
-        val oppgaveKoRepository = OppgaveKoRepository(dataSource)
+        val oppgaveKoRepository = OppgaveKoRepository(dataSource, OmrådeRepository(dataSource))
 
-        val oppgaveKo = oppgaveKoRepository.leggTil("Testkø", skjermet = false)
+        val oppgaveKo = oppgaveKoRepository.leggTil(Områder.K9, skjermet = false, "Testkø")
         assertThat(oppgaveKo.tittel).isEqualTo("Testkø")
 
-        val oppgaveKoFraDb = oppgaveKoRepository.hent(oppgaveKo.id, false)
+        val oppgaveKoFraDb = oppgaveKoRepository.hent(Områder.K9, false, oppgaveKo.id)
         assertThat(oppgaveKoFraDb).isNotNull()
 
-        oppgaveKoRepository.slett(oppgaveKo.id)
+        oppgaveKoRepository.slett(Områder.K9, false, oppgaveKo.id)
         assertFailure {
-            oppgaveKoRepository.hent(oppgaveKo.id, false)
+            oppgaveKoRepository.hent(Områder.K9, false,oppgaveKo.id)
         }
     }
 
     @Test
     fun `sjekker at oppgavekø kan endres`() {
-        val oppgaveKoRepository = OppgaveKoRepository(dataSource)
+        val oppgaveKoRepository = OppgaveKoRepository(dataSource, OmrådeRepository(dataSource))
 
         val tittel = "Testkø"
-        val oppgaveKo = oppgaveKoRepository.leggTil(tittel, skjermet = false)
+        val oppgaveKo = oppgaveKoRepository.leggTil(Områder.K9, skjermet = false, tittel = tittel)
         assertThat(oppgaveKo.tittel).isEqualTo(tittel)
 
         val beskrivelse = "En god beskrivelse"
-        val oppgaveKoFraDb = oppgaveKoRepository.endre(oppgaveKo.copy(beskrivelse = beskrivelse), false)
+        val oppgaveKoFraDb = oppgaveKoRepository.endre(Områder.K9, false, oppgaveKo.copy(beskrivelse = beskrivelse))
         assertThat(oppgaveKoFraDb).isNotNull()
         assertThat(oppgaveKoFraDb.tittel).isEqualTo(tittel)
         assertThat(oppgaveKoFraDb.beskrivelse).isEqualTo(beskrivelse)
@@ -54,41 +54,41 @@ class OppgaveKoTest : AbstractK9LosIntegrationTest() {
 
     @Test
     fun `sjekker at oppgavekø kan få saksbehandler tilknyttet og fjernet`() {
-        val oppgaveKoRepository = OppgaveKoRepository(dataSource)
+        val oppgaveKoRepository = OppgaveKoRepository(dataSource, OmrådeRepository(dataSource))
 
         val tittel = "Testkø"
-        val oppgaveKo = oppgaveKoRepository.leggTil(tittel, skjermet = false)
+        val oppgaveKo = oppgaveKoRepository.leggTil(Områder.K9, skjermet = false, tittel = tittel)
         assertThat(oppgaveKo.tittel).isEqualTo(tittel)
 
         val saksbehandlerepost = "a@b"
         val saksbehandler = mockLeggTilSaksbehandler(saksbehandlerepost)
 
 
-        val oppgaveKoFraDb = oppgaveKoRepository.endre(oppgaveKo.copy(saksbehandlere = listOf(saksbehandlerepost), saksbehandlerIds = listOf(saksbehandler.id)), false)
+        val oppgaveKoFraDb = oppgaveKoRepository.endre(Områder.K9, false, oppgaveKo.copy(saksbehandlere = listOf(saksbehandlerepost), saksbehandlerIds = listOf(saksbehandler.id)))
         assertThat(oppgaveKoFraDb.saksbehandlere).contains(saksbehandlerepost)
         assertThat(oppgaveKoFraDb.saksbehandlere).hasSize(1)
 
         val saksbehandlerepost2 = "b@c"
         val saksbehandler2 = mockLeggTilSaksbehandler(saksbehandlerepost2)
-        val oppgaveKoFraDb2 = oppgaveKoRepository.endre(oppgaveKoFraDb.copy(saksbehandlere = listOf(saksbehandlerepost2), saksbehandlerIds = listOf(saksbehandler2.id)), false)
+        val oppgaveKoFraDb2 = oppgaveKoRepository.endre(Områder.K9, false, oppgaveKoFraDb.copy(saksbehandlere = listOf(saksbehandlerepost2), saksbehandlerIds = listOf(saksbehandler2.id)))
         assertThat(oppgaveKoFraDb2.saksbehandlere).contains(saksbehandlerepost2)
         assertThat(oppgaveKoFraDb2.saksbehandlere).hasSize(1)
 
-        oppgaveKoRepository.slett(oppgaveKoFraDb2.id)
+        oppgaveKoRepository.slett(Områder.K9, false, oppgaveKoFraDb2.id)
     }
 
     @Test
     fun `oppgavekø skal kunne kopieres`() {
-        val oppgaveKoRepository = OppgaveKoRepository(dataSource)
+        val oppgaveKoRepository = OppgaveKoRepository(dataSource, OmrådeRepository(dataSource))
 
         val tittel = "Testkø"
         val saksbehandlerepost = "a@b"
-        val oppgaveKo = oppgaveKoRepository.leggTil(tittel, skjermet = false)
+        val oppgaveKo = oppgaveKoRepository.leggTil(Områder.K9, skjermet = false, tittel = tittel)
         val saksbehandler = mockLeggTilSaksbehandler(saksbehandlerepost)
-        val gammelOppgaveko = oppgaveKoRepository.endre(oppgaveKo.copy(saksbehandlere = listOf(saksbehandlerepost), saksbehandlerIds = listOf(saksbehandler.id)), false)
+        val gammelOppgaveko = oppgaveKoRepository.endre(Områder.K9, false, oppgaveKo.copy(saksbehandlere = listOf(saksbehandlerepost), saksbehandlerIds = listOf(saksbehandler.id)))
 
         val nyTittel = "Ny tittel"
-        val nyOppgaveKo = oppgaveKoRepository.kopier(gammelOppgaveko.id, nyTittel,
+        val nyOppgaveKo = oppgaveKoRepository.kopier(område = Områder.K9, kopierFraOppgaveId = gammelOppgaveko.id, tittel = nyTittel,
             taMedQuery = true,
             taMedSaksbehandlere = true,
             skjermet = false
