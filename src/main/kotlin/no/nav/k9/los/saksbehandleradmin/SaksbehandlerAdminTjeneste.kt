@@ -83,7 +83,7 @@ class SaksbehandlerAdminTjeneste(
             val saksbehandlere = saksbehandlerRepository.hentAlleSaksbehandlere(
                 område = område,
                 skjermet = kode6,
-                tx
+tx = tx
             )
             val saksbehandlerIder = saksbehandlere.map { it.id }.toSet()
             val antallReservasjoner = reservasjonV3Tjeneste.tellReservasjonerForSaksbehandlere(saksbehandlerIder, tx)
