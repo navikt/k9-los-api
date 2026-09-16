@@ -466,7 +466,7 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
                 navn = "DagensTallOppdaterer",
                 prioritet = lavPrioritet,
                 tidsvindu = Tidsvindu.alleDager(),
-                minutter = listOf(0, 10, 20, 30, 40, 50),
+                minutter = listOf(0),
             ) {
                 dagensTallService.oppdaterCache(this)
             }
@@ -477,7 +477,7 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
                 navn = "PerEnhetOppdaterer",
                 prioritet = lavPrioritet,
                 tidsvindu = Tidsvindu.alleDager(),
-                minutter = listOf(0, 10, 20, 30, 40, 50),
+                minutter = listOf(0),
             ) {
                 perEnhetService.oppdaterCache(this)
             }
@@ -488,7 +488,7 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
                 navn = "NyeOgFerdigstilteOppdaterer",
                 prioritet = lavPrioritet,
                 tidsvindu = Tidsvindu.alleDager(),
-                minutter = listOf(0, 10, 20, 30, 40, 50),
+                minutter = listOf(0),
             ) {
                 nyeOgFerdigstilteService.oppdaterCache(this)
             }
