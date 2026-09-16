@@ -1,6 +1,5 @@
 package no.nav.k9.los.oppgavemottak
 
-import io.kotest.core.spec.IsolationMode
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
@@ -17,7 +16,9 @@ class OppgaveInnsendingSpec: KoinTest, FreeSpec(){
     val transactionalManager = get<TransactionalManager>()
 
     init {
-        oppgavemodellBuilder.byggOppgavemodell()
+        // DbCleanupListener kjører slettTestområder etter hver test, og river dermed området denne
+        // specen bygger på. Modellen må derfor gjenopprettes foran hver test, ikke bare én gang.
+        beforeTest { oppgavemodellBuilder.byggOppgavemodell() }
 
         "En oppgaveDto pakket inn i NyOppgaveversjon" - {
             val oppgaveDto = oppgavemodellBuilder.lagOppgaveDto()

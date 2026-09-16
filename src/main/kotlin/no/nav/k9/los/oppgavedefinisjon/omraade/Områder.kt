@@ -15,7 +15,7 @@ import no.nav.k9.los.domeneadaptere.eventlager.Fagsystem
  *
  * [urlSegment] er området sitt prefiks i API-URLene (f.eks. `k9/los/api`).
  */
-enum class Områder(val eksternId: String, val urlSegment: String) {
+enum class Områder(override val eksternId: String, val urlSegment: String) : Områdeidentifikator {
     K9("K9", "k9"),
     AKTIVITETSPENGER("AKTIVITETSPENGER", "aktivitetspenger");
 
