@@ -2,8 +2,8 @@ package no.nav.k9.los.oppgavedefinisjon.omraade
 
 class Område (
     val id: Long? = null,
-    override val eksternId: String
-) : Områdeidentifikator {
+    val eksternId: String
+) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false

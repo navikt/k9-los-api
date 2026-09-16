@@ -1,7 +1,7 @@
 package no.nav.k9.los.oppgavemottak
 
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
-import no.nav.k9.los.oppgavedefinisjon.omraade.Områdeidentifikator
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.reservasjon.OppgaveStatusDto
 import java.time.LocalDateTime
 
@@ -27,8 +27,8 @@ data class OppgaveDto(
     val reservasjonsnøkkel: String,
     val feltverdier: List<OppgaveFeltverdiDto>
 ) {
-    val område: Områdeidentifikator get() = type.område
-    val kildeområde: Områdeidentifikator get() = område
+    val område: Områder get() = type.område
+    val kildeområde: Områder get() = område
 
 
     constructor(oppgaveV3: OppgaveV3) : this(

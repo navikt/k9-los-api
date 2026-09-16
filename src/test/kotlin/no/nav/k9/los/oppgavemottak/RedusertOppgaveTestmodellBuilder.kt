@@ -4,6 +4,7 @@ import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.*
 import no.nav.k9.los.oppgavedefinisjon.omraade.Område
 import no.nav.k9.los.oppgavedefinisjon.omraade.OmrådeRepository
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgavedefinisjon.oppgavetype.OppgavefeltDto
 import no.nav.k9.los.oppgavedefinisjon.oppgavetype.OppgavetypeDto
 import no.nav.k9.los.oppgavedefinisjon.oppgavetype.OppgavetypeTjeneste
@@ -167,10 +168,11 @@ class RedusertOppgaveTestmodellBuilder(
     }
 
     fun lagOppgaveDtoMedManglendeVerdiIObligFelt(): OppgaveDto {
+        val områdeKode = Områder.fraEksternId(område.eksternId)
         return OppgaveDto(
             eksternId = oppgavetypeId,
             eksternVersjon = LocalDateTime.now().toString(),
-            type = GeneriskOppgaveDtoType(oppgavetypeId, område),
+            type = GeneriskOppgaveDtoType(oppgavetypeId, områdeKode),
             status = Oppgavestatus.fraKode("AAPEN"),
             endretTidspunkt = LocalDateTime.now(),
             reservasjonsnøkkel = "test",
