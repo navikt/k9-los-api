@@ -17,16 +17,19 @@ class SaksbehandlerAdminTjeneste(
     private val uttrekkTjeneste: UttrekkTjeneste,
     private val reservasjonV3Tjeneste: ReservasjonV3Tjeneste
 ) {
-    fun leggTilSaksbehandlerForEpost(område: Områder, kode6: Boolean, epost: String) {
-        if (saksbehandlerRepository.finnSaksbehandlerMedEpost(epost) != null) {
-            throw IllegalStateException("Saksbehandler finnes fra før")
+    fun leggTilSaksbehandlerForEpost(område: Områder, epost: String, kode6: Boolean) {
+        val eksisterende = saksbehandlerRepository.finnSaksbehandlerMedEpost(epost)
+        if (eksisterende == null) {
+            saksbehandlerRepository.opprettSaksbehandler(område, kode6, epost)
+        } else {
+            check(eksisterende.skjermet == kode6) {
+                "Saksbehandleren er registrert med en annen skjermingskategori"
+            }
+            saksbehandlerRepository.leggTilOmråde(eksisterende.id, område)
         }
-        saksbehandlerRepository.opprettSaksbehandler(område, kode6, epost)
     }
 
-    suspend fun slettSaksbehandlerForId(område: Områder, id: Long) {
-        val skjermet = pepClient.harTilgangTilKode6()
-
+    suspend fun slettSaksbehandlerForId(område: Områder, kode6: Boolean, id: Long) {
         val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedId(id)
 
         val lagredeSøk = lagretSøkTjeneste.hentAlle(område, saksbehandler!!.navident!!)
@@ -36,12 +39,12 @@ class SaksbehandlerAdminTjeneste(
 
         transactionalManager.transaction { tx ->
             // V3-modellen: Sletter køer saksbehandler er med i
-            oppgaveKøV3Repository.hentKoerMedOppgittSaksbehandler(tx, saksbehandler.id, skjermet, true).forEach { kø ->
-                oppgaveKøV3Repository.endre(tx, kø.copy(saksbehandlerIds = kø.saksbehandlerIds - saksbehandler.id), skjermet)
+            oppgaveKøV3Repository.hentKoerMedOppgittSaksbehandler(tx, saksbehandler.id, kode6, true).forEach { kø ->
+                oppgaveKøV3Repository.endre(tx, kø.copy(saksbehandlerIds = kø.saksbehandlerIds - saksbehandler.id), kode6)
             }
 
             // Sletter fra saksbehandler-tabellen
-            saksbehandlerRepository.slettSaksbehandlerForId(tx, id, skjermet)
+            saksbehandlerRepository.slettSaksbehandlerForId(tx, id, kode6)
         }
     }
 

@@ -64,7 +64,11 @@ internal fun Route.SaksbehandlerAdminApis() {
         requestContextService.withRequestContext(call) {
             if (pepClient.erOppgaveStyrer()) {
                 val id = call.receive<Long>()
-                call.respond(saksbehandlerAdminTjeneste.slettSaksbehandlerForId(coroutineContext.område(), id))
+                call.respond(saksbehandlerAdminTjeneste.slettSaksbehandlerForId(
+                    område = coroutineContext.område(),
+                    kode6 = pepClient.harTilgangTilKode6(),
+                    id = id
+                ))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
