@@ -1,11 +1,7 @@
 package no.nav.k9.los.oppgavemottak
 
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
-import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.Datatype
-import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.FeltdefinisjonDto
-import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.FeltdefinisjonTjeneste
-import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.FeltdefinisjonerDto
-import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.Synlighet
+import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.*
 import no.nav.k9.los.oppgavedefinisjon.omraade.Område
 import no.nav.k9.los.oppgavedefinisjon.omraade.OmrådeRepository
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
@@ -17,8 +13,20 @@ import org.koin.test.KoinTest
 import org.koin.test.get
 import java.time.LocalDateTime
 
+/**
+ * Bygger en redusert oppgavemodell for test.
+ *
+ * Isolasjonsenheten er **området**. Både feltdefinisjoner og oppgavetyper er scopet til område, og
+ * [FeltdefinisjonTjeneste.oppdater]/[OppgavetypeTjeneste.oppdater] har erstatt-semantikk — de sletter
+ * det som ikke ligger i den innkommende dtoen. Får hver test sitt eget område, er det uproblematisk,
+ * og opprydningen i `slettTestområder` fjerner området etterpå.
+ *
+ * Derfor er default-området avledet av [oppgavetypeId], slik at to testklasser ikke tråkker på
+ * hverandre. Tester som eksplisitt trenger et kjent område (f.eks. K9) kan sende inn [område].
+ */
 class RedusertOppgaveTestmodellBuilder(
-    val område: Område = Område(eksternId = "OppgaveV3Test")
+    private val oppgavetypeId: String = "redusertTestOppgavetype",
+    val område: Område = Område(eksternId = "unittest-$oppgavetypeId"),
 ): KoinTest {
 
     private var områdeRepository: OmrådeRepository = get()
@@ -28,13 +36,6 @@ class RedusertOppgaveTestmodellBuilder(
 
     fun byggOppgavemodell() {
         områdeRepository.lagre(eksternId = område.eksternId)
-        oppgavetypeTjeneste.oppdater(
-            OppgavetyperDto(
-                område.eksternId,
-                definisjonskilde = "unittest",
-                oppgavetyper = emptySet()
-            )
-        )
         feltdefinisjonTjeneste.oppdater(lagFeltdefinisjonDto())
         oppgavetypeTjeneste.oppdater(lagOppgavetypeDto())
     }
@@ -100,10 +101,9 @@ class RedusertOppgaveTestmodellBuilder(
     fun lagOppgavetypeDto(): OppgavetyperDto {
         return OppgavetyperDto(
             område = område.eksternId,
-            definisjonskilde = "k9-sak-til-los",
             oppgavetyper = setOf(
                 OppgavetypeDto(
-                    id = "aksjonspunkt",
+                    id = oppgavetypeId,
                     oppgavebehandlingsUrlTemplate = "\${baseUrl}/fagsak/\${K9.saksnummer}/behandling/\${K9.behandlingUuid}?fakta=default&punkt=default",
                     oppgavefelter = setOf(
                         OppgavefeltDto(
@@ -140,9 +140,9 @@ class RedusertOppgaveTestmodellBuilder(
 
     fun lagOppgaveDto(id: String = "test", reservasjonsnøkkel: String = "test", status: String = "AAPEN"): OppgaveDto {
         return OppgaveDto(
-            eksternId = "aksjonspunkt",
+            eksternId = oppgavetypeId,
             eksternVersjon = LocalDateTime.now().toString(),
-            type = GeneriskOppgaveDtoType("aksjonspunkt", Områder.K9),
+            type = GeneriskOppgaveDtoType(oppgavetypeId, område),
             status = Oppgavestatus.fraKode(status),
             endretTidspunkt = LocalDateTime.now(),
             reservasjonsnøkkel = reservasjonsnøkkel,
@@ -168,10 +168,11 @@ class RedusertOppgaveTestmodellBuilder(
     }
 
     fun lagOppgaveDtoMedManglendeVerdiIObligFelt(): OppgaveDto {
+        val områdeKode = Områder.fraEksternId(område.eksternId)
         return OppgaveDto(
-            eksternId = "aksjonspunkt",
+            eksternId = oppgavetypeId,
             eksternVersjon = LocalDateTime.now().toString(),
-            type = GeneriskOppgaveDtoType("aksjonspunkt", Områder.K9),
+            type = GeneriskOppgaveDtoType(oppgavetypeId, områdeKode),
             status = Oppgavestatus.fraKode("AAPEN"),
             endretTidspunkt = LocalDateTime.now(),
             reservasjonsnøkkel = "test",

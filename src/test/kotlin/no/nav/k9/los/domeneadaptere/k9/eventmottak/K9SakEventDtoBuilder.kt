@@ -9,7 +9,7 @@ import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.Venteårsak
 import no.nav.k9.kodeverk.uttak.SøknadÅrsak
 import no.nav.k9.los.kodeverk.BehandlingStatus
-import no.nav.k9.los.kodeverk.FagsakYtelseType
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.kodeverk.K9FagsakYtelseType
 import no.nav.k9.los.domeneadaptere.eventlager.Fagsystem
 import no.nav.k9.los.domeneadaptere.eventmottak.EventHendelse
 import no.nav.k9.los.saksbehandleradmin.Saksbehandler
@@ -32,7 +32,7 @@ class K9SakEventDtoBuilder(
     var behandlingSteg: BehandlingStegType = BehandlingStegType.KONTROLLER_FAKTA,
     var behandlendeEnhet: String? = null,
     var resultatType: BehandlingResultatType = BehandlingResultatType.IKKE_FASTSATT,
-    var ytelseType: FagsakYtelseType = FagsakYtelseType.PLEIEPENGER_SYKT_BARN,
+    var ytelseType: K9FagsakYtelseType = K9FagsakYtelseType.PLEIEPENGER_SYKT_BARN,
     var behandlingTypeKode: BehandlingType = BehandlingType.FØRSTEGANGSSØKNAD,
     var opprettetBehandling: LocalDateTime = LocalDateTime.now(),
     var aksjonspunkter: MutableList<AksjonspunktTilstandBuilder> = mutableListOf(),

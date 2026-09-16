@@ -175,7 +175,7 @@ class EventTilOppgaveAdapter(
         tx: TransactionalSession,
     ): OppgaveV3? {
         return oppgaveV3Tjeneste.hentOppgaveversjon(
-            "K9",
+            "K9", //TODO: fiks område
             eventTilOppgaveMapper.oppgavetypeKode(eventLagret),
             eventnøkkel.eksternId,
             internVersjon,

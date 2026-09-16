@@ -8,7 +8,7 @@ import io.kotest.matchers.equals.shouldNotBeEqual
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import kotliquery.queryOf
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.K9Oppgavetypenavn
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.kodeverk.K9Oppgavetypenavn
 import no.nav.k9.los.domeneadaptere.eventlager.EventNøkkel
 import no.nav.k9.los.domeneadaptere.eventlager.EventRepository
 import no.nav.k9.los.domeneadaptere.eventlager.HistorikkvaskBestilling
@@ -55,7 +55,7 @@ class HistorikkvaskTjenesteSpec: FreeSpec(), KoinTest {
                         oppgaveTjeneste.hentAktivOppgave(eksternId.toString(), K9Oppgavetypenavn.PUNSJ.kode, "K9", tx)
                     }
                     oppgaveUvasket.hentVerdi("ytelsestype") shouldBe "ytelse"
-                    oppgaveUvasket.felter shouldHaveSize 12
+                    oppgaveUvasket.felter shouldHaveSize 11
 
                     historikkvaskTjeneste.vaskBestilling(HistorikkvaskBestilling(null, eksternId.toString(), Fagsystem.PUNSJ))
 
@@ -63,7 +63,7 @@ class HistorikkvaskTjenesteSpec: FreeSpec(), KoinTest {
                         oppgaveTjeneste.hentAktivOppgave(eksternId.toString(), K9Oppgavetypenavn.PUNSJ.kode, "K9", tx)
                     }
                     oppgaveVasket.hentVerdi("ytelsestype") shouldBe "ytelsekorrigert"
-                    oppgaveVasket.felter shouldHaveSize 12
+                    oppgaveVasket.felter shouldHaveSize 11
                 }
             }
         }

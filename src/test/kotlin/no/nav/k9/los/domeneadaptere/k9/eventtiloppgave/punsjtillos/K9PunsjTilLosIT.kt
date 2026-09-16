@@ -12,7 +12,7 @@ import no.nav.k9.los.domeneadaptere.eventmottak.k9.punsj.K9PunsjEventHandler
 import no.nav.k9.los.domeneadaptere.eventmottak.k9.punsj.K9PunsjEventDto
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.EventTilOppgaveAdapter
 import no.nav.k9.los.ko.OppgaveKoTjeneste
-import no.nav.k9.los.kodeverk.FagsakYtelseType
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.kodeverk.K9FagsakYtelseType
 import no.nav.k9.los.domeneadaptere.eventlager.Fagsystem
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.oppgaveuthenting.OppgaveRepository
@@ -51,7 +51,7 @@ class K9PunsjTilLosIT : AbstractK9LosIntegrationTest() {
 
     @Test
     fun `Punsjadapter skal håndtere eventer fra punsj som enda ikke er klassifisert til noen ytelse`() {
-        val punsjEventDtoBuilder = PunsjEventDtoBuilder(ytelse = FagsakYtelseType.UKJENT)
+        val punsjEventDtoBuilder = PunsjEventDtoBuilder(ytelse = K9FagsakYtelseType.UKJENT)
         eventHandler.prosesser(punsjEventDtoBuilder.papirsøknad().build())
 
         // Sjekke at de dukker opp i oppgavequery

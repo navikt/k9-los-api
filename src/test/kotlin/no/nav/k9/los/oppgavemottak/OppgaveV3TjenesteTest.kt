@@ -7,8 +7,8 @@ import assertk.assertions.isTrue
 import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.OppgaveTestDataBuilder
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.K9Oppgavetypenavn
-import no.nav.k9.los.kodeverk.FagsakYtelseType
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.kodeverk.K9Oppgavetypenavn
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.kodeverk.K9FagsakYtelseType
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -91,7 +91,7 @@ class OppgaveV3TjenesteTest : AbstractK9LosIntegrationTest() {
             type = K9Oppgavetypenavn.SAK,
             status = oppgavestatus,
             endretTidspunkt = LocalDateTime.now(),
-            reservasjonsnøkkel = "K9_b_${FagsakYtelseType.FRISINN}_273857",
+            reservasjonsnøkkel = "K9_b_${K9FagsakYtelseType.FRISINN}_273857",
             feltverdier = listOfNotNull(
                 aksjonspunkt?.let {
                     OppgaveFeltverdiDto(

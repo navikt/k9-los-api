@@ -1,5 +1,6 @@
 package no.nav.k9.los.oppgavemottak
 
+import io.kotest.core.spec.IsolationMode
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
@@ -9,17 +10,14 @@ import org.koin.test.KoinTest
 import org.koin.test.get
 
 class OppgaveInnsendingSpec: KoinTest, FreeSpec(){
-    val oppgavemodellBuilder = RedusertOppgaveTestmodellBuilder()
+    val oppgavemodellBuilder = RedusertOppgaveTestmodellBuilder(
+        oppgavetypeId = "OppgaveInnsendingSpec"
+    )
     val oppgaveV3Tjeneste = get<OppgaveV3Tjeneste>()
     val transactionalManager = get<TransactionalManager>()
 
     init {
-        // Oppgavemodellen ligger i strukturelle tabeller, men testområdet ryddes bort etter hver test
-        // (se DbCleanupListener) for at det ikke skal lekke inn i andre tester. Derfor bygges den på nytt
-        // foran hver test i stedet for én gang per container.
-        beforeTest {
-            oppgavemodellBuilder.byggOppgavemodell()
-        }
+        oppgavemodellBuilder.byggOppgavemodell()
 
         "En oppgaveDto pakket inn i NyOppgaveversjon" - {
             val oppgaveDto = oppgavemodellBuilder.lagOppgaveDto()

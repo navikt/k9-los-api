@@ -1,7 +1,7 @@
 package no.nav.k9.los.domeneadaptere.eventtiloppgave.akt
 
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.kodeverk.AktFagsystem
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.kodeverk.BehandlendeEnhet
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.kodeverk.AktBehandlendeEnhet
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.oppgavedefinisjon.AktivitetspengerFeltdefinisjoner
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.oppgavedefinisjon.AktivitetspengerOppgaver
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.FeltdefinisjonTjeneste
@@ -153,10 +153,10 @@ class Områdesetup(
     private fun kodeverkBehandlendeEnhet(): KodeverkDto {
         return KodeverkDto(
             område = område,
-            eksternId = BehandlendeEnhet::class.java.simpleName,
+            eksternId = AktBehandlendeEnhet::class.java.simpleName,
             beskrivelse = null,
             uttømmende = false,
-            verdier = BehandlendeEnhet.entries
+            verdier = AktBehandlendeEnhet.entries
                 .map { enhet ->
                     KodeverkVerdiDto(
                         verdi = enhet.kode,

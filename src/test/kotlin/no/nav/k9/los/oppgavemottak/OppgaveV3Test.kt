@@ -25,15 +25,10 @@ class OppgaveV3Test : AbstractK9LosIntegrationTest() {
         oppgaveV3Tjeneste = get()
         transactionalManager = get()
         gyldigeFeltutledere = get()
-        oppgavemodellBuilder = RedusertOppgaveTestmodellBuilder(område = Område(eksternId = Områder.K9.eksternId))
+        oppgavemodellBuilder = RedusertOppgaveTestmodellBuilder(
+            oppgavetypeId = "aksjonspunkt_oppgavev3"
+        )
         oppgavemodellBuilder.byggOppgavemodell()
-    }
-
-    @Test
-    fun `område er alltid utledet fra oppgavetype`() {
-        val oppgaveDto = oppgavemodellBuilder.lagOppgaveDto()
-        assertEquals(Områder.K9, oppgaveDto.område)
-        assertEquals(Områder.K9, oppgaveDto.kildeområde)
     }
 
     @Test
@@ -86,7 +81,6 @@ class OppgaveV3Test : AbstractK9LosIntegrationTest() {
                 oppgaveDto = oppgaveDto,
                 oppgavetype = Oppgavetype(
                     dto = oppgaveTypeDto.oppgavetyper.first(),
-                    definisjonskilde = "k9-sak-til-los",
                     område = område,
                     oppgavebehandlingsUrlTemplate = "\${baseUrl}/fagsak/\${K9.saksnummer}/behandling/\${K9.behandlingUuid}?fakta=default&punkt=default",
                     feltdefinisjoner = Feltdefinisjoner(

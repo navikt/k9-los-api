@@ -1,7 +1,9 @@
-package no.nav.k9.los.kodeverk
+package no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.kodeverk
 
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonFormat
+import no.nav.k9.los.kodeverk.Kodeverdi
+import no.nav.k9.los.kodeverk.TempAvledeKode
 
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)
 enum class K9Fagsystem(override val kode: String, override val kodeverk: String, override val navn: String): Kodeverdi {

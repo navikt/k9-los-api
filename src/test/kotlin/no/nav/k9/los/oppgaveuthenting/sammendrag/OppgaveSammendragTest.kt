@@ -14,7 +14,7 @@ import no.nav.k9.los.infrastruktur.pdl.PersonPdl
 import no.nav.k9.los.infrastruktur.pdl.PersonPdlResponse
 import no.nav.k9.los.kodeverk.BehandlingStatus
 import no.nav.k9.los.kodeverk.BehandlingType
-import no.nav.k9.los.kodeverk.FagsakYtelseType
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.kodeverk.K9FagsakYtelseType
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.oppgavedefinisjon.omraade.Område
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
@@ -91,7 +91,7 @@ class OppgaveSammendragTest {
             endretTidspunkt = LocalDateTime.parse("2026-08-12T10:00:00"),
             felter = mapOf(
                 "aktorId" to "aktor-1",
-                "ytelsestype" to FagsakYtelseType.PLEIEPENGER_SYKT_BARN.kode,
+                "ytelsestype" to K9FagsakYtelseType.PLEIEPENGER_SYKT_BARN.kode,
                 "behandlingTypekode" to BehandlingType.FORSTEGANGSSOKNAD.kode,
                 "behandlingsstatus" to BehandlingStatus.UTREDES.kode,
                 "saksnummer" to "SAK-1",

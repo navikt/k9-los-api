@@ -9,7 +9,6 @@ object AktivitetspengerOppgaver {
     fun lagOppgaveDefinisjon(): OppgavetyperDto {
         return OppgavetyperDto(
             område = Områder.AKTIVITETSPENGER.eksternId,
-            definisjonskilde = "ung-sak-til-los",
             oppgavetyper = setOf(
                 lagAktivitetspengerOrdinær("AktivitetspengerOrdinærDel1"),
                 lagAktivitetspengerOrdinær("AktivitetspengerOrdinærDel2")

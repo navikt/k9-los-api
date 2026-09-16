@@ -3,7 +3,7 @@ package no.nav.k9.los.domeneadaptere.k9.avstemming.saksbehandling
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.shouldBe
 import no.nav.k9.los.kodeverk.BehandlingStatus
-import no.nav.k9.los.kodeverk.FagsakYtelseType
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.kodeverk.K9FagsakYtelseType
 import no.nav.k9.los.domeneadaptere.eventlager.Fagsystem
 import no.nav.k9.los.oppgavedefinisjon.omraade.Område
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
@@ -102,7 +102,7 @@ object Testdata {
         behandlingUuid: String = UUID.randomUUID().toString(),
         saksnummer: String = System.nanoTime().toString() + "",
         behandlingStatus: BehandlingStatus = BehandlingStatus.UTREDES,
-        ytelseType: FagsakYtelseType = FagsakYtelseType.PLEIEPENGER_SYKT_BARN,
+        ytelseType: K9FagsakYtelseType = K9FagsakYtelseType.PLEIEPENGER_SYKT_BARN,
         venteFrist: LocalDateTime? = LocalDateTime.now().plusDays(2),
         harManueltAP: Boolean = true,
         ): Behandlingstilstand {
@@ -127,7 +127,6 @@ object Testdata {
             oppgavetype = Oppgavetype(
                 eksternId = "123",
                 område = Område(eksternId = "test"),
-                definisjonskilde = "junit",
                 oppgavebehandlingsUrlTemplate = "\${baseUrl}/fagsak/\${K9.saksnummer}/behandling/\${K9.behandlingUuid}?fakta=default&punkt=default",
                 oppgavefelter = setOf()
             ),

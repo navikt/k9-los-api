@@ -22,7 +22,7 @@ import no.nav.k9.los.domeneadaptere.eventmottak.k9.tilbakekrav.K9TilbakeEventDto
 import no.nav.k9.los.domeneadaptere.eventmottak.k9.tilbakekrav.K9TilbakeEventHandler
 import no.nav.k9.los.kodeverk.BehandlingStatus
 import no.nav.k9.los.kodeverk.BehandlingType
-import no.nav.k9.los.kodeverk.FagsakYtelseType
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.kodeverk.K9FagsakYtelseType
 import no.nav.k9.los.domeneadaptere.eventlager.Fagsystem
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.saksbehandleradmin.Saksbehandler
@@ -112,10 +112,10 @@ object localSetup : KoinComponent {
                 val behandlingId = Random.nextLong(0, 2000)
                 val saksnummer = behandlingId.toString(36).uppercase().replace("O", "o").replace("I", "i")
                 val ytelseTypeKode = listOf(
-                    FagsakYtelseType.PLEIEPENGER_SYKT_BARN,
-                    FagsakYtelseType.PPN,
-                    FagsakYtelseType.OLP,
-                    FagsakYtelseType.OMSORGSPENGER_AO,
+                    K9FagsakYtelseType.PLEIEPENGER_SYKT_BARN,
+                    K9FagsakYtelseType.PPN,
+                    K9FagsakYtelseType.OLP,
+                    K9FagsakYtelseType.OMSORGSPENGER_AO,
                 ).shuffled().first().kode
                 val opprettetBehandling = LocalDateTime.now().minusDays(Random.nextLong(10, 20))
                 val aktørId = "2392173967319"
@@ -271,7 +271,7 @@ object localSetup : KoinComponent {
                     eventHendelse = EventHendelse.AKSJONSPUNKT_OPPRETTET,
                     eventTid = LocalDateTime.now().minusSeconds((antall - i).toLong()),
                     aksjonspunktKoderMedStatusListe = mutableMapOf(AksjonspunktDefinisjonK9Tilbake.VURDER_TILBAKEKREVING.kode to AksjonspunktStatus.OPPRETTET.kode),
-                    ytelseTypeKode = FagsakYtelseType.PLEIEPENGER_SYKT_BARN.kode,
+                    ytelseTypeKode = K9FagsakYtelseType.PLEIEPENGER_SYKT_BARN.kode,
                     ansvarligBeslutterIdent = null,
                     førsteFeilutbetaling = LocalDate.now().minusDays(Random.nextLong(100)).toString(),
                     feilutbetaltBeløp = Random.nextLong(1000, 20000),
@@ -297,7 +297,7 @@ object localSetup : KoinComponent {
                         pleietrengendeAktørId = null,
                         type = BehandlingType.entries.filter { it.kodeverk == "PUNSJ_INNSENDING_TYPE" }.shuffled()
                             .first().kode,
-                        ytelse = FagsakYtelseType.entries.filter { it != FagsakYtelseType.UNGDOMSYTELSE && it != FagsakYtelseType.OMSORGSDAGER }
+                        ytelse = K9FagsakYtelseType.entries.filter { it != K9FagsakYtelseType.UNGDOMSYTELSE && it != K9FagsakYtelseType.OMSORGSDAGER }
                             .shuffled().first().kode,
                         sendtInn = null,
                         ferdigstiltAv = null,

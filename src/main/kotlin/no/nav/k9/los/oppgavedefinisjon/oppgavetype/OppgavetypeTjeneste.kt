@@ -35,7 +35,7 @@ class OppgavetypeTjeneste(
                 gyldigeFeltutledere
             )
 
-            val eksisterendeOppgavetyper = oppgavetypeRepository.hent(område, innkommendeOppgavetyperDto.definisjonskilde, tx)
+            val eksisterendeOppgavetyper = oppgavetypeRepository.hent(område, tx)
             val (sletteListe, leggtilListe, oppdaterListe) = eksisterendeOppgavetyper.finnForskjell(innkommendeOppgavetyper)
             log.info("antall sletteliste oppgavetypedto: ${sletteListe.oppgavetyper.size}")
             log.info("antall leggtilListe oppgavetypedto: ${leggtilListe.oppgavetyper.size}")

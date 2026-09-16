@@ -11,6 +11,9 @@ import no.nav.k9.kodeverk.behandling.aksjonspunkt.Venteårsak
 import no.nav.k9.kodeverk.produksjonsstyring.UtvidetSøknadÅrsak
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.klagetillos.KlageEventTilOppgaveMapper
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.kodeverk.K9BehandlendeEnhet
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.kodeverk.K9FagsakYtelseType
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.kodeverk.K9Fagsystem
 import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.kodeverk.*
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.FeltdefinisjonTjeneste
@@ -20,6 +23,7 @@ import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.KodeverkVerdiDto
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.Synlighet
 import no.nav.k9.los.oppgavedefinisjon.omraade.OmrådeRepository
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
+import no.nav.k9.los.oppgavedefinisjon.oppgavetype.OppgavetypeDto
 import no.nav.k9.los.oppgavedefinisjon.oppgavetype.OppgavetypeTjeneste
 import no.nav.k9.los.oppgavedefinisjon.oppgavetype.OppgavetyperDto
 import org.slf4j.Logger
@@ -40,11 +44,54 @@ class OmrådeSetup(
         opprettOmråde()
         oppdaterKodeverk()
         oppdaterFeltdefinisjoner()
+        ajourholdOppgavetyper()
+    }
 
-        ajourholdOppgavetype("/adapterdefinisjoner/k9-oppgavetyper-k9sak.json", config.k9FrontendUrl())
-        ajourholdOppgavetype("/adapterdefinisjoner/k9-oppgavetyper-k9klage.json", config.k9FrontendUrl())
-        ajourholdOppgavetype("/adapterdefinisjoner/k9-oppgavetyper-k9tilbake.json", config.k9FrontendUrl())
-        ajourholdOppgavetype("/adapterdefinisjoner/k9-oppgavetyper-k9punsj.json", config.k9PunsjFrontendUrl())
+    /**
+     * Ajourholder alle oppgavetypene for området i ett kall.
+     *
+     * [OppgavetypeTjeneste.oppdater] har erstatt-semantikk per område: oppgavetyper som ikke ligger i
+     * den innkommende dtoen blir slettet. Definisjonene er delt over flere filer av praktiske hensyn,
+     * men de må derfor slås sammen til ett komplett sett før de sendes inn — ellers ville hver fil
+     * slettet oppgavetypene til de foregående.
+     */
+    @WithSpan
+    private fun ajourholdOppgavetyper() {
+        val oppgavetyper = listOf(
+            "/adapterdefinisjoner/k9-oppgavetyper-k9sak.json" to config.k9FrontendUrl(),
+            "/adapterdefinisjoner/k9-oppgavetyper-k9klage.json" to config.k9FrontendUrl(),
+            "/adapterdefinisjoner/k9-oppgavetyper-k9tilbake.json" to config.k9FrontendUrl(),
+            "/adapterdefinisjoner/k9-oppgavetyper-k9punsj.json" to config.k9PunsjFrontendUrl(),
+        ).flatMap { (oppgavedefinisjon, frontendUrl) ->
+            lesOppgavetyper(oppgavedefinisjon, frontendUrl)
+        }.toSet()
+
+        oppgavetypeTjeneste.oppdater(
+            OppgavetyperDto(
+                område = område,
+                oppgavetyper = oppgavetyper
+            )
+        )
+        log.info("ajourholdt ${oppgavetyper.size} oppgavetyper for område $område")
+    }
+
+    private fun lesOppgavetyper(oppgavedefinisjon: String, frontendUrl: String): Set<OppgavetypeDto> {
+        val oppgavetyperDto = LosObjectMapper.instance.readValue(
+            OmrådeSetup::class.java.getResource(oppgavedefinisjon)!!
+                .readText(),
+            OppgavetyperDto::class.java
+        )
+        require(oppgavetyperDto.område == område) {
+            "Oppgavedefinisjonen $oppgavedefinisjon hører til område ${oppgavetyperDto.område}, forventet $område"
+        }
+        return oppgavetyperDto.oppgavetyper.map { oppgavetypeDto ->
+            oppgavetypeDto.copy(
+                oppgavebehandlingsUrlTemplate = oppgavetypeDto.oppgavebehandlingsUrlTemplate.replace(
+                    "{baseUrl}",
+                    frontendUrl
+                )
+            )
+        }.toSet()
     }
 
     private fun opprettOmråde() {
@@ -61,28 +108,6 @@ class OmrådeSetup(
         )
         log.info("Oppretter/oppdaterer feltdefinisjoner for område $område")
         feltdefinisjonTjeneste.oppdater(feltdefinisjonerDto)
-    }
-
-    @WithSpan
-    private fun ajourholdOppgavetype(oppgavedefinisjon: String, frontendUrl: String) {
-        val oppgavetyperDto = LosObjectMapper.instance.readValue(
-            OmrådeSetup::class.java.getResource(oppgavedefinisjon)!!
-                .readText(),
-            OppgavetyperDto::class.java
-        )
-        oppgavetypeTjeneste.oppdater(
-            oppgavetyperDto.copy(
-                oppgavetyper = oppgavetyperDto.oppgavetyper.map { oppgavetypeDto ->
-                    oppgavetypeDto.copy(
-                        oppgavebehandlingsUrlTemplate = oppgavetypeDto.oppgavebehandlingsUrlTemplate.replace(
-                            "{baseUrl}",
-                            frontendUrl
-                        )
-                    )
-                }.toSet()
-            )
-        )
-        log.info("opprettet oppgavetype: $oppgavedefinisjon")
     }
 
     private fun oppdaterKodeverk() {
@@ -105,7 +130,7 @@ class OmrådeSetup(
             eksternId = "behandlendeEnhet",
             beskrivelse = null,
             uttømmende = false,
-            verdier = BehandlendeEnhet.entries.lagDto(beskrivelse = null)
+            verdier = K9BehandlendeEnhet.entries.lagDto(beskrivelse = null)
         )
         feltdefinisjonTjeneste.oppdater(kodeverkDto)
     }
@@ -364,7 +389,7 @@ class OmrådeSetup(
     }
 
     private fun kodeverkYtelsetype() {
-        val verdier = FagsakYtelseType.entries.lagDto(null) { KodeverkSynlighetRegler.ytelseType(it) }
+        val verdier = K9FagsakYtelseType.entries.lagDto(null) { KodeverkSynlighetRegler.ytelseType(it) }
         val kodeverkDto = KodeverkDto(
             område = område,
             eksternId = "Ytelsetype",
@@ -741,13 +766,13 @@ object KodeverkSynlighetRegler {
     }
 
 
-    fun ytelseType(ytelseType: FagsakYtelseType): Pair<Synlighet, Int?> {
+    fun ytelseType(ytelseType: K9FagsakYtelseType): Pair<Synlighet, Int?> {
         return when (ytelseType) {
-            FagsakYtelseType.FRISINN,
-            FagsakYtelseType.UNGDOMSYTELSE,
-            FagsakYtelseType.OMSORGSDAGER -> Synlighet.SKJULT to null
+            K9FagsakYtelseType.FRISINN,
+            K9FagsakYtelseType.UNGDOMSYTELSE,
+            K9FagsakYtelseType.OMSORGSDAGER -> Synlighet.SKJULT to null
 
-            FagsakYtelseType.UKJENT -> Synlighet.OVER_STREKEN to -1
+            K9FagsakYtelseType.UKJENT -> Synlighet.OVER_STREKEN to -1
 
             else -> Synlighet.OVER_STREKEN to null
         }

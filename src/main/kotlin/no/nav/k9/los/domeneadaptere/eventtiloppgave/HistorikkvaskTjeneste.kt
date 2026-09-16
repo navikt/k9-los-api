@@ -1,7 +1,7 @@
 package no.nav.k9.los.domeneadaptere.eventtiloppgave
 
 import kotlinx.coroutines.*
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.K9Oppgavetypenavn
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.kodeverk.K9Oppgavetypenavn
 import no.nav.k9.los.domeneadaptere.eventlager.EventNøkkel
 import no.nav.k9.los.domeneadaptere.eventlager.EventRepository
 import no.nav.k9.los.domeneadaptere.eventlager.HistorikkvaskBestilling
@@ -90,7 +90,7 @@ class HistorikkvaskTjeneste(
         val oppgavenøkkel = OppgaveNøkkelDto(
             historikkvaskBestilling.eksternId,
             K9Oppgavetypenavn.fraFagsystem(historikkvaskBestilling.fagsystem).kode,
-            "K9"
+            "K9" //TODO: FIks område
         )
 
         var eventNrForBehandling = 0

@@ -8,7 +8,6 @@ class Oppgavetype(
     val id: Long? = null,
     val eksternId: String,
     val område: Område,
-    val definisjonskilde: String,
     val oppgavebehandlingsUrlTemplate: String?,
     val oppgavefelter: Set<Oppgavefelt>,
 ) {
@@ -32,7 +31,6 @@ class Oppgavetype(
 
     constructor(
         dto: OppgavetypeDto,
-        definisjonskilde: String,
         område: Område,
         oppgavebehandlingsUrlTemplate: String,
         feltdefinisjoner: Feltdefinisjoner,
@@ -40,7 +38,6 @@ class Oppgavetype(
     ) : this(
         eksternId = dto.id,
         område = område,
-        definisjonskilde = definisjonskilde,
         oppgavebehandlingsUrlTemplate = oppgavebehandlingsUrlTemplate,
         oppgavefelter = dto.oppgavefelter.map { innkommendeFeltdefinisjon ->
             Oppgavefelt(

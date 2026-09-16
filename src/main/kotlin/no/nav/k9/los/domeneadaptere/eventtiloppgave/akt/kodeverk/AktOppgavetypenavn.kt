@@ -5,16 +5,18 @@ import com.fasterxml.jackson.annotation.JsonValue
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgavemottak.OppgaveDtoType
 
-enum class AktivitetspengerOppgavetypenavn(@JsonValue override val kode: String) : OppgaveDtoType {
+enum class AktOppgavetypenavn(@JsonValue override val kode: String) : OppgaveDtoType {
     AKTIVITETSPENGERORDINÆRDEL1("aktivitetspenger-ordinær-del1"),
-    AKTIVITETSPENGERORDINÆRDEL2("aktivitetspenger-ordinær-del2");
+    AKTIVITETSPENGERORDINÆRDEL2("aktivitetspenger-ordinær-del2"),
+    AKTIVITETSPENGERKLAGEDEL1("aktivitetspenger-klage-del1"),
+    AKTIVITETSPENGERKLAGEDEL2("aktivitetspenger-klage-del2");
 
     override val område: Områder = Områder.AKTIVITETSPENGER
 
     companion object {
         @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
         @JvmStatic
-        fun fraKode(kode: String): AktivitetspengerOppgavetypenavn {
+        fun fraKode(kode: String): AktOppgavetypenavn {
             return entries.find { it.kode == kode }
                 ?: throw IllegalStateException("Kjenner ikke igjen koden=$kode")
         }

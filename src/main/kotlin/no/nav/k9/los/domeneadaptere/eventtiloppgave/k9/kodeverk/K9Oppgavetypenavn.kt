@@ -1,4 +1,4 @@
-package no.nav.k9.los.domeneadaptere.eventtiloppgave.k9
+package no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.kodeverk
 
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonValue
