@@ -19,7 +19,6 @@ class UttrekkRepository(val dataSource: DataSource) {
         u.antall, o.ekstern_id as omrade_ekstern_id
     """.trimIndent()
 
-    /** Uttrekk som innlogget saksbehandler eier innenfor området. Brukes fra API. */
     fun hent(område: Områder, navIdent: String, id: Long): Uttrekk? {
         return transactionalManager.transaction { tx ->
             tx.run(
@@ -32,6 +31,7 @@ class UttrekkRepository(val dataSource: DataSource) {
                     WHERE u.id = :id
                       AND o.ekstern_id = :omrade
                       AND s.navident = :navident
+                      AND EXISTS (select 1 from saksbehandler_omrade so where so.omrade_id = o.id and so.saksbehandler_id = s.id)
                     """.trimIndent(),
                     mapOf("id" to id, "omrade" to område.eksternId, "navident" to navIdent)
                 ).map { it.toUttrekk() }.asSingle

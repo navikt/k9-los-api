@@ -234,7 +234,10 @@ internal fun Route.ReservasjonApis() {
     get("/alle-reservasjoner") {
         requestContextService.withRequestContext(call) {
             if (pepClient.erOppgaveStyrer()) {
-                call.respond(reservasjonApisTjeneste.hentAlleAktiveReservasjoner(coroutineContext.område()))
+                call.respond(reservasjonApisTjeneste.hentAlleAktiveReservasjoner(
+                    område = coroutineContext.område(),
+                    kode6 = pepClient.harTilgangTilKode6()
+                ))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }

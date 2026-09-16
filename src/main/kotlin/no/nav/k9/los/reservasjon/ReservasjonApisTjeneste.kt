@@ -245,15 +245,13 @@ class ReservasjonApisTjeneste(
         )
     }
 
-    suspend fun hentAlleAktiveReservasjoner(område: Områder): List<ReservasjonDto> {
-        val innloggetBrukerHarKode6Tilgang = pepClient.harTilgangTilKode6()
-
+    fun hentAlleAktiveReservasjoner(område: Områder, kode6: Boolean): List<ReservasjonDto> {
         return reservasjonV3Tjeneste.hentAlleAktiveReservasjoner(område).flatMap { reservasjonMedOppgaver ->
             val saksbehandler =
                 saksbehandlerRepository.finnSaksbehandlerMedId(reservasjonMedOppgaver.reservasjonV3.reservertAv)!!
             val saksbehandlerHarKode6Tilgang = saksbehandler.skjermet
 
-            if (innloggetBrukerHarKode6Tilgang != saksbehandlerHarKode6Tilgang) {
+            if (kode6 != saksbehandlerHarKode6Tilgang) {
                 emptyList()
             } else {
                 reservasjonMedOppgaver.oppgaverV3.map { oppgave ->

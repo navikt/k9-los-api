@@ -254,7 +254,6 @@ fun common(app: Application, config: Configuration) = module {
 
     single {
         SaksbehandlerAdminTjeneste(
-            pepClient = get(),
             transactionalManager = get(),
             saksbehandlerRepository = get(),
             oppgaveKøV3Repository = get(),

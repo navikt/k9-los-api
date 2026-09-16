@@ -28,6 +28,7 @@ import no.nav.k9.los.kodeverk.BehandlingType
 import no.nav.k9.los.kodeverk.FagsakYtelseType
 import no.nav.k9.los.kodeverk.Fagsystem
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.sak.kontrakt.aksjonspunkt.AksjonspunktTilstandDto
 import no.nav.k9.sak.typer.AktørId
 import no.nav.k9.sak.typer.JournalpostId
@@ -51,14 +52,30 @@ object localSetup : KoinComponent {
     fun addSaksbehandler(saksbehandlerfelter: Map<String, String>) {
         return using(sessionOf(dataSource)) {
             it.transaction { tx ->
-                tx.run(
+                val saksbehandlerId = tx.run(
                     queryOf(
                         """
                         insert into saksbehandler (navident, navn, epost, enhet, skjermet)
-                        values (:navident,:navn, :epost, '2830 NAV DRIFT', false)
-                        on conflict do nothing
+                        values (:navident, :navn, :epost, '3450', false)
+                        on conflict (epost) do update
+                            set navident = :navident,
+                                navn = :navn,
+                                epost = :epost,
+                                enhet = :epost,
+                                skjermet = :skjermet
+                        returning id
                      """,
                         saksbehandlerfelter
+                    ).map { row -> row.long("id") }.asSingle
+                )
+                tx.run(
+                    queryOf(
+                        """
+                        insert into saksbehandler_omrade(saksbehandler_id, omrade_id)
+                        values (:saksbehandler_id, (select id from omrade where ekstern_id = :omrade))
+                        on conflict do nothing
+                     """,
+                        mapOf("saksbehandler_id" to saksbehandlerId, "omrade" to Områder.K9.eksternId)
                     ).asExecute
                 )
             }

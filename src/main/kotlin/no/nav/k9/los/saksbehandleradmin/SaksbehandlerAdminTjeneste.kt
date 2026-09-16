@@ -1,6 +1,5 @@
 package no.nav.k9.los.saksbehandleradmin
 
-import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.ko.db.OppgaveKoRepository
 import no.nav.k9.los.lagretsok.LagretSøkTjeneste
@@ -9,7 +8,6 @@ import no.nav.k9.los.reservasjon.ReservasjonV3Tjeneste
 import no.nav.k9.los.uttrekk.UttrekkTjeneste
 
 class SaksbehandlerAdminTjeneste(
-    private val pepClient: IPepClient,
     private val transactionalManager: TransactionalManager,
     private val saksbehandlerRepository: SaksbehandlerRepository,
     private val oppgaveKøV3Repository: OppgaveKoRepository,
@@ -59,15 +57,14 @@ class SaksbehandlerAdminTjeneste(
         }
     }
 
-    suspend fun slettSaksbehandler(
+    fun slettSaksbehandler(
         område: Områder,
+        kode6: Boolean,
         epost: String,
     ) {
-        val skjermet = pepClient.harTilgangTilKode6()
-
         val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedEpost(epost) ?: throw IllegalStateException("Kunne ikke finne saksbehandler med epost")
         if (saksbehandler.navident != null) {
-            val lagredeSøk = lagretSøkTjeneste.hentAlle(område,saksbehandler.navident)
+            val lagredeSøk = lagretSøkTjeneste.hentAlle(område, saksbehandler.navident)
             lagredeSøk.forEach {
                 lagretSøkTjeneste.slett(område, saksbehandler.navident, it.id!!)
             }
@@ -79,15 +76,15 @@ class SaksbehandlerAdminTjeneste(
 
         transactionalManager.transaction { tx ->
             // V3-modellen: Sletter køer saksbehandler er med i
-            oppgaveKøV3Repository.hentKoerMedOppgittSaksbehandler(område, skjermet,saksbehandler.id, true, tx).forEach { kø ->
-                oppgaveKøV3Repository.endre(område, skjermet, kø.copy(saksbehandlere = kø.saksbehandlere - epost), tx)
+            oppgaveKøV3Repository.hentKoerMedOppgittSaksbehandler(område, kode6,saksbehandler.id, true, tx).forEach { kø ->
+                oppgaveKøV3Repository.endre(område, kode6, kø.copy(saksbehandlere = kø.saksbehandlere - epost), tx)
             }
 
             // Sletter fra saksbehandler-tabellen
             saksbehandlerRepository.slettSaksbehandler(
                 tx,
                 epost,
-                skjermet
+                kode6
             )
         }
     }
@@ -97,7 +94,7 @@ class SaksbehandlerAdminTjeneste(
             val saksbehandlere = saksbehandlerRepository.hentAlleSaksbehandlere(
                 område = område,
                 skjermet = kode6,
-tx = tx
+                tx = tx
             )
             val saksbehandlerIder = saksbehandlere.map { it.id }.toSet()
             val antallReservasjoner = reservasjonV3Tjeneste.tellReservasjonerForSaksbehandlere(saksbehandlerIder, tx)

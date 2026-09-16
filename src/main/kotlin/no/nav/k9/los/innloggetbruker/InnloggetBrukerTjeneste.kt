@@ -32,7 +32,7 @@ class InnloggetBrukerTjeneste(
         )
     }
 
-    private suspend fun finnSaksbehandler(navIdent: String, epost: String): Saksbehandler? =
+    private fun finnSaksbehandler(navIdent: String, epost: String): Saksbehandler? =
         saksbehandlerRepository.finnSaksbehandlerMedIdent(navIdent)
             ?: saksbehandlerRepository.finnSaksbehandlerMedEpost(epost)
 

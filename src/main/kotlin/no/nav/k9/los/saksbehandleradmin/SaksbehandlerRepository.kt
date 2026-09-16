@@ -427,27 +427,24 @@ class SaksbehandlerRepository(
     }
 
     fun hentAlleSaksbehandlere(område: Områder, skjermet: Boolean, tx: TransactionalSession): List<Saksbehandler> {
-        val identer = using(sessionOf(dataSource)) {
-            tx.run(
-                queryOf(
-                    """
+        return tx.run(
+            queryOf(
+                """
                     $SAKSBEHANDLER_SELECT
                     where s.skjermet = :skjermet
                       and exists (select 1 from saksbehandler_omrade so2
                                   join omrade o2 on o2.id = so2.omrade_id
                                   where so2.saksbehandler_id = s.id and o2.ekstern_id = :omradeEksternId)
                     """.trimIndent(),
-                    mapOf(
-                        "skjermet" to skjermet,
-                        "omradeEksternId" to område.eksternId
-                    )
+                mapOf(
+                    "skjermet" to skjermet,
+                    "omradeEksternId" to område.eksternId
                 )
-                    .map { row ->
-                        mapSaksbehandler(row)
-                    }.asList
             )
-        }
-        return identer
+                .map { row ->
+                    mapSaksbehandler(row)
+                }.asList
+        )
     }
 
     fun sokSaksbehandler(søkestreng: String, område: Områder, skjermet: Boolean): Saksbehandler {
