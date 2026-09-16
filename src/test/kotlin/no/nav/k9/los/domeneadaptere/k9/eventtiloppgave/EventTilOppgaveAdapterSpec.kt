@@ -3,7 +3,7 @@ package no.nav.k9.los.domeneadaptere.k9.eventtiloppgave
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.core.test.TestCase
 import io.kotest.matchers.shouldBe
-import io.mockk.clearAllMocks
+import io.mockk.clearMocks
 import io.mockk.spyk
 import io.mockk.verify
 import kotliquery.TransactionalSession
@@ -80,7 +80,9 @@ class EventTilOppgaveAdapterSpec : KoinTest, FreeSpec() {
 
         oppgaveQueryService = get()
 
-        clearAllMocks()
+        // Nullstiller kun spionene denne specen selv lager. clearAllMocks() ville også tømt mockene
+        // som ligger i Koin-modulen for hele testkjøringen (bl.a. Configuration).
+        clearMocks(eventRepository, oppgaveOppdatertHandler)
     }
 
     init {

@@ -2,42 +2,76 @@ package no.nav.k9.los.oppgavemottak
 
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.*
-import no.nav.k9.los.oppgavedefinisjon.omraade.Område
 import no.nav.k9.los.oppgavedefinisjon.omraade.OmrådeRepository
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgavedefinisjon.oppgavetype.OppgavefeltDto
 import no.nav.k9.los.oppgavedefinisjon.oppgavetype.OppgavetypeDto
+import no.nav.k9.los.oppgavedefinisjon.oppgavetype.OppgavetypeRepository
 import no.nav.k9.los.oppgavedefinisjon.oppgavetype.OppgavetypeTjeneste
 import no.nav.k9.los.oppgavedefinisjon.oppgavetype.OppgavetyperDto
 import org.koin.test.KoinTest
 import org.koin.test.get
 import java.time.LocalDateTime
+import javax.sql.DataSource
 
 /**
  * Bygger en redusert oppgavemodell for test.
  *
  * Isolasjonsenheten er **området**. Både feltdefinisjoner og oppgavetyper er scopet til område, og
  * [FeltdefinisjonTjeneste.oppdater]/[OppgavetypeTjeneste.oppdater] har erstatt-semantikk — de sletter
- * det som ikke ligger i den innkommende dtoen. Får hver test sitt eget område, er det uproblematisk,
- * og opprydningen i `slettTestområder` fjerner området etterpå.
+ * det som ikke ligger i den innkommende dtoen. Ligger det allerede en modell på området (K9 settes
+ * opp én gang av `OmrådeSetup`), feiler den slettingen på fremmednøkkelen fra `oppgavefelt`.
  *
- * Derfor er default-området avledet av [oppgavetypeId], slik at to testklasser ikke tråkker på
- * hverandre. Tester som eksplisitt trenger et kjent område (f.eks. K9) kan sende inn [område].
+ * [byggOppgavemodell] river derfor ned oppgavemodellen for området før den bygges opp igjen, slik at
+ * testen alltid starter fra et kjent utgangspunkt uavhengig av hva som lå der fra før. Tester som
+ * kjører mot et område med produksjonsoppsett (K9) må gjenopprette det etterpå — se
+ * `OppgaveInnsendingSpec`.
  */
 class RedusertOppgaveTestmodellBuilder(
     private val oppgavetypeId: String = "redusertTestOppgavetype",
-    val område: Område = Område(eksternId = "unittest-$oppgavetypeId"),
+    val område: Områder = Områder.K9,
 ): KoinTest {
 
     private var områdeRepository: OmrådeRepository = get()
     private var feltdefinisjonTjeneste: FeltdefinisjonTjeneste = get()
     private var oppgavetypeTjeneste: OppgavetypeTjeneste = get()
+    private var feltdefinisjonRepository: FeltdefinisjonRepository = get()
+    private var oppgavetypeRepository: OppgavetypeRepository = get()
+    private var dataSource: DataSource = get()
 
 
     fun byggOppgavemodell() {
         områdeRepository.lagre(eksternId = område.eksternId)
+        slettOppgavemodell()
         feltdefinisjonTjeneste.oppdater(lagFeltdefinisjonDto())
         oppgavetypeTjeneste.oppdater(lagOppgavetypeDto())
+    }
+
+    /**
+     * Fjerner oppgavetyper og feltdefinisjoner for området, slik at en ny modell kan bygges uten at
+     * erstatt-semantikken må slette felter som fortsatt er i bruk. Kalles av [byggOppgavemodell], og
+     * av tester som skal gjenopprette produksjonsmodellen for området etterpå.
+     *
+     * Sletter direkte mot databasen i fremmednøkkelrekkefølge. Oppgavedata (oppgave_v3 m.fl.) peker på
+     * oppgavetype, og må være tømt av testopprydningen før dette kalles.
+     */
+    fun slettOppgavemodell() {
+        val områdeId = "(select id from omrade where ekstern_id = '${område.eksternId}')"
+        val slettinger = listOf(
+            "delete from oppgavefelt where oppgavetype_id in (select id from oppgavetype where omrade_id in $områdeId)",
+            "delete from oppgavetype where omrade_id in $områdeId",
+            "delete from feltdefinisjon where omrade_id in $områdeId",
+        )
+
+        dataSource.connection.use { connection ->
+            connection.createStatement().use { statement ->
+                slettinger.forEach { statement.execute(it) }
+            }
+        }
+
+        // Repositoryene cacher modellen per område, og Koin lever hele testkjøringen ut i kotest.
+        oppgavetypeRepository.invaliderCache()
+        feltdefinisjonRepository.invaliderFeltdefinisjonerCache()
     }
 
     fun lagFeltdefinisjonDto(): FeltdefinisjonerDto {

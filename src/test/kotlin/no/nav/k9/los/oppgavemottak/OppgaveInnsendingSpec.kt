@@ -5,6 +5,7 @@ import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.OmrådeSetup
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import org.koin.test.KoinTest
 import org.koin.test.get
@@ -16,8 +17,25 @@ class OppgaveInnsendingSpec: KoinTest, FreeSpec(){
     val oppgaveV3Tjeneste = get<OppgaveV3Tjeneste>()
     val transactionalManager = get<TransactionalManager>()
 
+    /**
+     * Ny spec-instans per test, slik at den reduserte oppgavemodellen bygges på nytt for hver test.
+     * Testene deler database, og opprydningen mellom testene tømmer bare oppgavedata — modellen må
+     * derfor etableres på nytt av hver test, ikke én gang for hele specen.
+     */
+    override fun isolationMode() = IsolationMode.InstancePerLeaf
+
     init {
         oppgavemodellBuilder.byggOppgavemodell()
+
+        /**
+         * Den reduserte modellen erstatter K9-modellen som ProjectConfig setter opp én gang for hele
+         * kjøringen. Den rives ned og gjenopprettes her, slik at etterfølgende specer ser den ekte
+         * modellen.
+         */
+        afterSpec {
+            oppgavemodellBuilder.slettOppgavemodell()
+            get<OmrådeSetup>().setup()
+        }
 
         "En oppgaveDto pakket inn i NyOppgaveversjon" - {
             val oppgaveDto = oppgavemodellBuilder.lagOppgaveDto()

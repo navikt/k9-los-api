@@ -3,8 +3,7 @@ package no.nav.k9.los.oppgavemottak
 import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.oppgavemottak.feltutlederforlagring.GyldigeFeltutledere
-import no.nav.k9.los.oppgavedefinisjon.omraade.Område
-import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
+import no.nav.k9.los.oppgavedefinisjon.omraade.OmrådeRepository
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.Feltdefinisjoner
 import no.nav.k9.los.oppgavedefinisjon.oppgavetype.*
 import org.junit.jupiter.api.BeforeEach
@@ -19,12 +18,14 @@ class OppgaveV3Test : AbstractK9LosIntegrationTest() {
     private lateinit var transactionalManager: TransactionalManager
     private lateinit var oppgavemodellBuilder: RedusertOppgaveTestmodellBuilder
     private lateinit var gyldigeFeltutledere: GyldigeFeltutledere
+    private lateinit var områdeRepository: OmrådeRepository
 
     @BeforeEach
     fun setup() {
         oppgaveV3Tjeneste = get()
         transactionalManager = get()
         gyldigeFeltutledere = get()
+        områdeRepository = get()
         oppgavemodellBuilder = RedusertOppgaveTestmodellBuilder(
             oppgavetypeId = "aksjonspunkt_oppgavev3"
         )
@@ -71,7 +72,7 @@ class OppgaveV3Test : AbstractK9LosIntegrationTest() {
 
     @Test
     fun `test at vi ikke logger aktørid`() {
-        val område = oppgavemodellBuilder.område
+        val område = områdeRepository.hentOmråde(oppgavemodellBuilder.område.eksternId)
         val oppgaveDto = oppgavemodellBuilder.lagOppgaveDtoMedManglendeVerdiIObligFelt()
         val oppgaveTypeDto = oppgavemodellBuilder.lagOppgavetypeDto()
         val feltdefinisjonDto = oppgavemodellBuilder.lagFeltdefinisjonDto()
