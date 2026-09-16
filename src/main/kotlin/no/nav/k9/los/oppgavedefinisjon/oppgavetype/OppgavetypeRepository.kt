@@ -25,14 +25,6 @@ class OppgavetypeRepository(
     private val log = LoggerFactory.getLogger(OppgavetypeRepository::class.java)
     private val oppgavetypeCache = Cache<String, Oppgavetyper>(cacheSizeLimit = null)
 
-    fun hent(område: Område, definisjonskilde: String, tx: TransactionalSession): Oppgavetyper {
-        val oppgavetyper = hent(område, tx)
-        return Oppgavetyper(
-            område = område,
-            oppgavetyper = oppgavetyper.oppgavetyper.filter { oppgavetype -> oppgavetype.definisjonskilde == definisjonskilde }
-                .toSet()
-        )
-    }
 
     fun hentOppgavetype(område: String, eksternId: String): Oppgavetype {
         return using(sessionOf(dataSource)) {
@@ -96,7 +88,6 @@ class OppgavetypeRepository(
                                 )
                             }.asList
                         ).toSet(),
-                        definisjonskilde = oppgavetypeRow.string("definisjonskilde")
                     )
                 }.asList
             )
@@ -134,7 +125,7 @@ class OppgavetypeRepository(
                     """
                     delete from oppgavetype
                     where id = :oppgavetypeId
-                        and omrade_id =2d""",
+                        and omrade_id = :omradeId""",
                     mapOf(
                         "oppgavetypeId" to oppgavetype.id,
                         "omradeId" to oppgavetyper.område.id
@@ -150,16 +141,14 @@ class OppgavetypeRepository(
             val oppgavetypeId = tx.run(
                 queryOf(
                     """
-                    insert into oppgavetype(ekstern_id, omrade_id, definisjonskilde, oppgavebehandlingsUrlTemplate)
+                    insert into oppgavetype(ekstern_id, omrade_id, oppgavebehandlingsUrlTemplate)
                     values(
                         :eksterntNavn,
                         :omradeId,
-                        :definisjonskilde,
                         :oppgavebehandlingsUrlTemplate)""",
                     mapOf(
                         "eksterntNavn" to oppgavetype.eksternId,
                         "omradeId" to oppgavetype.område.id,
-                        "definisjonskilde" to oppgavetype.definisjonskilde,
                         "oppgavebehandlingsUrlTemplate" to oppgavetype.oppgavebehandlingsUrlTemplate,
                     )
                 ).asUpdateAndReturnGeneratedKey

@@ -1,7 +1,7 @@
 package no.nav.k9.los
 
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
-import no.nav.k9.los.domeneadaptere.k9.OmrådeSetup
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.OmrådeSetup
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.Datatype
 import no.nav.k9.los.oppgavedefinisjon.omraade.Område
 import no.nav.k9.los.oppgavedefinisjon.omraade.OmrådeRepository
@@ -22,7 +22,6 @@ import java.time.LocalDateTime
 import java.util.*
 
 class OppgaveTestDataBuilder(
-    val definisjonskilde: String = "k9-sak-til-los",
     val oppgaveTypeNavn: String = "k9sak"
 ) : KoinTest {
     private var område: Område
@@ -43,7 +42,7 @@ class OppgaveTestDataBuilder(
     val oppgaveFeltverdier = mutableMapOf<FeltType, OppgaveFeltverdi>()
 
     val oppgavetype = transactionManager.transaction { tx ->
-        val oppgavetype = oppgavetypeRepo.hent(område, definisjonskilde, tx)
+        val oppgavetype = oppgavetypeRepo.hent(område, tx)
         oppgavetype.oppgavetyper
             .firstOrNull { it.eksternId == oppgaveTypeNavn }
             ?: throw IllegalStateException("Fant ikke oppgavetype for $oppgaveTypeNavn i db")

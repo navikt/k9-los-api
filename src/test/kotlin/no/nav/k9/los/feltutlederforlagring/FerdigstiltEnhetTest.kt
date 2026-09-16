@@ -119,7 +119,6 @@ internal class FerdigstiltEnhetTest {
         return Oppgavetype(
             eksternId = "123",
             område = Område(eksternId = "test"),
-            definisjonskilde = "junit",
             oppgavebehandlingsUrlTemplate = "\${baseUrl}/fagsak/\${K9.saksnummer}",
             oppgavefelter = setOf(
                 lagOppgavefelt("ferdigstiltEnhet"),

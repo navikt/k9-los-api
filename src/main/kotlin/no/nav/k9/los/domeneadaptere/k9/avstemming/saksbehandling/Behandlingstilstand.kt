@@ -2,7 +2,7 @@ package no.nav.k9.los.domeneadaptere.k9.avstemming.saksbehandling
 
 import com.fasterxml.jackson.annotation.JsonAlias
 import no.nav.k9.los.kodeverk.BehandlingStatus
-import no.nav.k9.los.kodeverk.FagsakYtelseType
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.kodeverk.K9FagsakYtelseType
 import java.time.LocalDateTime
 
 data class Behandlingstilstand(
@@ -10,7 +10,7 @@ data class Behandlingstilstand(
     @JsonAlias("behandlingUuid")
     val eksternId: String,
     val behandlingStatus: BehandlingStatus,
-    val ytelseType: FagsakYtelseType,
+    val ytelseType: K9FagsakYtelseType,
     val ventefrist: LocalDateTime?,
     val harManueltAksjonspunkt: Boolean
 ) {

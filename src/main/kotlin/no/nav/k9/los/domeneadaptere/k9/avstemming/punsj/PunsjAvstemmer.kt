@@ -2,8 +2,8 @@ package no.nav.k9.los.domeneadaptere.k9.avstemming.punsj
 
 import no.nav.k9.los.domeneadaptere.k9.avstemming.Avstemmingsrapport
 import no.nav.k9.los.domeneadaptere.k9.avstemming.Oppgavetilstand
-import no.nav.k9.los.kodeverk.FagsakYtelseType
-import no.nav.k9.los.kodeverk.Fagsystem
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.kodeverk.K9FagsakYtelseType
+import no.nav.k9.los.domeneadaptere.eventlager.Fagsystem
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.oppgaveuthenting.Oppgave
 
@@ -69,8 +69,8 @@ enum class FuzzySammenligningsresultat {
                 return ULIK
             }
             journalposttilstand.ytelseType?.let {
-                val ytelseType = FagsakYtelseType.fraKode(oppgave.hentVerdi("ytelsestype")!!)
-                if (FagsakYtelseType.fraKode(journalposttilstand.ytelseType) != ytelseType) {
+                val ytelseType = K9FagsakYtelseType.fraKode(oppgave.hentVerdi("ytelsestype")!!)
+                if (K9FagsakYtelseType.fraKode(journalposttilstand.ytelseType) != ytelseType) {
                     return ULIK
                 }
             }

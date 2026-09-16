@@ -17,7 +17,6 @@ class UtledOppgavebehandlingsUrlTest : AbstractK9LosIntegrationTest(){
         val oppgavetype = Oppgavetype(
             eksternId = "test123",
             område = Område(eksternId = "K9"),
-            definisjonskilde = "K9",
             oppgavebehandlingsUrlTemplate = "http://localhost:9000/fagsak/{K9.saksnummer}/behandling/{K9.behandlingUuid}?fakta=default&punkt=default",
             oppgavefelter = emptySet(),
         )
@@ -57,7 +56,6 @@ class UtledOppgavebehandlingsUrlTest : AbstractK9LosIntegrationTest(){
         val oppgavetype = Oppgavetype(
             eksternId = "test123",
             område = Område(eksternId = "K9"),
-            definisjonskilde = "K9",
             oppgavebehandlingsUrlTemplate = "http://localhost:9000/fagsak/{saksnummer}/behandling/{behandlingUuid}?fakta=default&punkt=default",
             oppgavefelter = emptySet(),
         )
@@ -97,7 +95,6 @@ class UtledOppgavebehandlingsUrlTest : AbstractK9LosIntegrationTest(){
         val oppgavetype = Oppgavetype(
             eksternId = "test123",
             område = Område(eksternId = "K9"),
-            definisjonskilde = "K9",
             oppgavebehandlingsUrlTemplate = "http://localhost:9000/fagsak/{saksnummer}/behandling/{behandlingUuid}?fakta=default&punkt=default",
             oppgavefelter = emptySet(),
         )

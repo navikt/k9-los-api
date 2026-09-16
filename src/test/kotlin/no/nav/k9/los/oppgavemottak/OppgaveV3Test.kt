@@ -3,6 +3,7 @@ package no.nav.k9.los.oppgavemottak
 import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.oppgavemottak.feltutlederforlagring.GyldigeFeltutledere
+import no.nav.k9.los.oppgavedefinisjon.omraade.OmrådeRepository
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.Feltdefinisjoner
 import no.nav.k9.los.oppgavedefinisjon.oppgavetype.*
 import org.junit.jupiter.api.BeforeEach
@@ -17,25 +18,18 @@ class OppgaveV3Test : AbstractK9LosIntegrationTest() {
     private lateinit var transactionalManager: TransactionalManager
     private lateinit var oppgavemodellBuilder: RedusertOppgaveTestmodellBuilder
     private lateinit var gyldigeFeltutledere: GyldigeFeltutledere
+    private lateinit var områdeRepository: OmrådeRepository
 
     @BeforeEach
     fun setup() {
         oppgaveV3Tjeneste = get()
         transactionalManager = get()
         gyldigeFeltutledere = get()
-        oppgavemodellBuilder = RedusertOppgaveTestmodellBuilder()
+        områdeRepository = get()
+        oppgavemodellBuilder = RedusertOppgaveTestmodellBuilder(
+            oppgavetypeId = "aksjonspunkt_oppgavev3"
+        )
         oppgavemodellBuilder.byggOppgavemodell()
-    }
-
-    @Test
-    fun `test at oppgave ikke blir opprettet om området ikke finnes`() {
-        val innkommendeOppgaveMedUkjentOmråde = oppgavemodellBuilder.lagOppgaveDto().copy(område = "ukjent-område")
-        val exception = assertThrows<IllegalArgumentException> {
-            transactionalManager.transaction { tx ->
-                oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(NyOppgaveversjon(innkommendeOppgaveMedUkjentOmråde), tx)
-            }
-        }
-        assertEquals("Området finnes ikke: ukjent-område", exception.message!!)
     }
 
     @Test
@@ -78,7 +72,7 @@ class OppgaveV3Test : AbstractK9LosIntegrationTest() {
 
     @Test
     fun `test at vi ikke logger aktørid`() {
-        val område = oppgavemodellBuilder.område
+        val område = områdeRepository.hentOmråde(oppgavemodellBuilder.område.eksternId)
         val oppgaveDto = oppgavemodellBuilder.lagOppgaveDtoMedManglendeVerdiIObligFelt()
         val oppgaveTypeDto = oppgavemodellBuilder.lagOppgavetypeDto()
         val feltdefinisjonDto = oppgavemodellBuilder.lagFeltdefinisjonDto()
@@ -88,7 +82,6 @@ class OppgaveV3Test : AbstractK9LosIntegrationTest() {
                 oppgaveDto = oppgaveDto,
                 oppgavetype = Oppgavetype(
                     dto = oppgaveTypeDto.oppgavetyper.first(),
-                    definisjonskilde = "k9-sak-til-los",
                     område = område,
                     oppgavebehandlingsUrlTemplate = "\${baseUrl}/fagsak/\${K9.saksnummer}/behandling/\${K9.behandlingUuid}?fakta=default&punkt=default",
                     feltdefinisjoner = Feltdefinisjoner(

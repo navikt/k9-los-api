@@ -110,7 +110,6 @@ internal class AkkumulertVentetidTest {
         return Oppgavetype(
             eksternId = "123",
             område = Område(eksternId = "test"),
-            definisjonskilde = "junit",
             oppgavebehandlingsUrlTemplate = "\${baseUrl}/fagsak/\${K9.saksnummer}/behandling/\${K9.behandlingUuid}?fakta=default&punkt=default",
             oppgavefelter = setOf(
                 lagOppgavefelt("avventerSaksbehandler"),

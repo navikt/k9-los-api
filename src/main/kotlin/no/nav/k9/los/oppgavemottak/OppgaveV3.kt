@@ -24,9 +24,9 @@ class OppgaveV3(
         eksternId = oppgaveDto.eksternId,
         eksternVersjon = oppgaveDto.eksternVersjon,
         oppgavetype = oppgavetype,
-        status = Oppgavestatus.valueOf(oppgaveDto.status),
+        status = oppgaveDto.status,
         endretTidspunkt = oppgaveDto.endretTidspunkt,
-        kildeområde = oppgaveDto.kildeområde,
+        kildeområde = oppgaveDto.kildeområde.eksternId,
         reservasjonsnøkkel = oppgaveDto.reservasjonsnøkkel,
         aktiv = true,
         felter = lagFelter(oppgaveDto, oppgavetype)

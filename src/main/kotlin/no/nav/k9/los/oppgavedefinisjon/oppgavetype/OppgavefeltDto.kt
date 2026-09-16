@@ -5,5 +5,5 @@ data class OppgavefeltDto (
     val visPåOppgave: Boolean,
     val påkrevd: Boolean,
     val defaultverdi: String? = null,
-    val feltutleder: String? = null
+    val feltutlederForLagring: String? = null
 )

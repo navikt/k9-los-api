@@ -13,7 +13,8 @@ import no.nav.k9.klage.kodeverk.behandling.oppgavetillos.EventHendelse
 import no.nav.k9.klage.kontrakt.behandling.oppgavetillos.Aksjonspunkttilstand
 import no.nav.k9.klage.typer.AktørId
 import no.nav.k9.klage.typer.Periode
-import no.nav.k9.los.domeneadaptere.k9.eventmottak.klage.K9KlageEventDto
+import no.nav.k9.los.domeneadaptere.eventmottak.k9.klage.K9KlageEventDto
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.klagetillos.KlageEventTilOppgaveMapper
 import no.nav.k9.los.oppgavemottak.OppgaveFeltverdiDto
 import org.junit.jupiter.api.Test
 import java.time.LocalDate

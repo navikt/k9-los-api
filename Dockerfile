@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1.7.0-labs
-FROM ghcr.io/navikt/sif-baseimages/java-25:2026.07.27.1137Z
+FROM ghcr.io/navikt/sif-baseimages/java-25:2026.09.01.1219Z
 
 LABEL org.opencontainers.image.source=https://github.com/navikt/k9-los-api
 

@@ -5,7 +5,7 @@ class Kodeverkreferanse(
     val eksternId: String
 ) {
     constructor(kodeverkReferanseDto: KodeverkReferanseDto): this(
-        område = kodeverkReferanseDto.område,
+        område = kodeverkReferanseDto.område.eksternId,
         eksternId = kodeverkReferanseDto.eksternId
     )
 
