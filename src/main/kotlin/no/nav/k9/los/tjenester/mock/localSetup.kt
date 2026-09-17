@@ -49,7 +49,7 @@ object localSetup : KoinComponent {
     private val profile: KoinProfile by inject()
     private val dataSource: DataSource by inject()
 
-    fun addSaksbehandler(saksbehandlerfelter: Map<String, String>) {
+    fun addSaksbehandler(saksbehandlerfelter: Map<String, Any>) {
         return using(sessionOf(dataSource)) {
             it.transaction { tx ->
                 val saksbehandlerId = tx.run(
@@ -91,18 +91,21 @@ object localSetup : KoinComponent {
                         "navn" to "Saksbehandler Sara",
                         "epost" to "saksbehandler.sara@nav.no",
                         "enhet" to "3450",
+                        "skjermet" to false,
                     ),
                     mapOf(
                         "navident" to "Z167457",
                         "navn" to "Saksbehandler Lars",
                         "epost" to "saksbehandler.lars@nav.no",
                         "enhet" to "3450",
+                        "skjermet" to false,
                     ),
                     mapOf(
                         "navident" to "Z321457",
                         "navn" to "Saksbehandler Edgar",
                         "epost" to "saksbehandler.edgar@nav.no",
                         "enhet" to "3450",
+                        "skjermet" to false,
                     )
                 ).forEach { addSaksbehandler(it) }
             }

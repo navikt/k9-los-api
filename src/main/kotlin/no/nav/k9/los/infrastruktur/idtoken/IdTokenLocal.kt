@@ -8,5 +8,5 @@ data class IdTokenLocal(
     override fun getTokenId(): String = "token-id"
     override fun getNavIdent(): String = "Z123456"
     override fun getName(): String = "Saksbehandler Sara"
-    override fun getUsername(): String = "sara.saksbehandler@nav.no"
+    override fun getUsername(): String = "saksbehandler.sara@nav.no"
 }
