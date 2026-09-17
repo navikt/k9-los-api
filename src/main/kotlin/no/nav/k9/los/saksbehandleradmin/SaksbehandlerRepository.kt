@@ -4,10 +4,8 @@ import kotliquery.*
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.oppgavedefinisjon.omraade.OmrådeRepository
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
-import no.nav.k9.los.uttrekk.UttrekkStatus
 import org.apache.commons.text.similarity.LevenshteinDistance
 import java.util.*
-import java.util.Locale.getDefault
 import javax.sql.DataSource
 
 class SaksbehandlerRepository(
@@ -26,7 +24,7 @@ class SaksbehandlerRepository(
                         returning id
                      """,
                         mapOf(
-                            "epost" to epost.lowercase(getDefault()),
+                            "epost" to epost.lowercase(Locale.getDefault()),
                             "skjermet" to skjermet,
                         )
                     ).map { row -> row.long("id") }.asSingle
@@ -58,7 +56,7 @@ class SaksbehandlerRepository(
                         "id" to saksbehandler.id,
                         "navident" to saksbehandler.navident,
                         "navn" to saksbehandler.navn,
-                        "epost" to saksbehandler.epost.lowercase(getDefault()),
+                        "epost" to saksbehandler.epost.lowercase(Locale.getDefault()),
                         "enhet" to saksbehandler.enhet,
                         "skjermet" to saksbehandler.skjermet,
                         "sistoppdatert" to saksbehandler.sistOppdatert
@@ -158,91 +156,6 @@ class SaksbehandlerRepository(
             )
         }
         return saksbehandler
-    }
-
-    fun hentForSletting(tx: TransactionalSession, id: Long): Saksbehandler? {
-        val finnes = tx.run(queryOf(
-            "select id from saksbehandler where id = :id for update", mapOf("id" to id)
-        ).map { it.long("id") }.asSingle) ?: return null
-        // FK-låsene hindrer nye områdekoblinger mens vi avgjør om dette er siste område.
-        tx.run(queryOf(
-            "select omrade_id from saksbehandler_omrade where saksbehandler_id = :id for update",
-            mapOf("id" to finnes)
-        ).map { it.long("omrade_id") }.asList)
-        return tx.run(queryOf(
-            "$SAKSBEHANDLER_SELECT where s.id = :id", mapOf("id" to finnes)
-        ).map { mapSaksbehandler(it) }.asSingle)
-    }
-
-    fun slettFraOmråde(tx: TransactionalSession, saksbehandler: Saksbehandler, område: Områder) {
-        require(område in saksbehandler.områder)
-        val sisteOmråde = saksbehandler.områder.size == 1
-        val parametre = mapOf(
-            "id" to saksbehandler.id,
-            "omradeId" to områdeRepository.hentOmråde(område, tx).id,
-            "sisteOmrade" to sisteOmråde,
-            "k9" to (område == Områder.K9),
-            "kjorer" to UttrekkStatus.KJØRER.name,
-        )
-        tx.run(queryOf(
-            "select id from lagret_sok where laget_av = :id and omrade_id = :omradeId for update", parametre
-        ).map { it.long("id") }.asList)
-
-        // Uttrekk må slettes før kildesøk, ellers mister vi områdets proveniens (ON DELETE SET NULL).
-        // Uttrekk uten kildesøk er legacy K9-data og ryddes bare når siste K9-kobling slettes.
-        val uttrekkSomSkalSlettes = """
-            select u.id from uttrekk u
-            left join lagret_sok ls on ls.id = u.lagret_sok_id
-            where u.laget_av = :id and :k9
-              and (ls.omrade_id = :omradeId or (:sisteOmrade and u.lagret_sok_id is null))
-        """.trimIndent()
-        val statuser = tx.run(queryOf(
-            "select status from uttrekk where id in ($uttrekkSomSkalSlettes) for update", parametre
-        ).map { it.string("status") }.asList)
-        check(UttrekkStatus.KJØRER.name !in statuser) { "Kan ikke slette saksbehandler med kjørende uttrekk" }
-        val andreUttrekkBerøres = tx.run(queryOf(
-            """
-            select exists (
-                select 1 from uttrekk u join lagret_sok ls on ls.id = u.lagret_sok_id
-                where ls.laget_av = :id and ls.omrade_id = :omradeId
-                  and u.id not in ($uttrekkSomSkalSlettes)
-            ) as finnes
-            """.trimIndent(), parametre
-        ).map { it.boolean("finnes") }.asSingle)!!
-        check(!andreUttrekkBerøres) { "Kan ikke slette søk med uttrekk som ikke tilhører valgt område og saksbehandler" }
-        tx.run(queryOf("delete from uttrekk where id in ($uttrekkSomSkalSlettes) and status <> :kjorer", parametre).asUpdate)
-        tx.run(queryOf(
-            "delete from lagret_sok where laget_av = :id and omrade_id = :omradeId", parametre
-        ).asUpdate)
-
-        // Bevar andre områders endringshistorikk, også når samme bruker har utført endringen.
-        tx.run(queryOf(
-            "select id from reservasjon_v3 where reservertav = :id and omrade_id = :omradeId for update", parametre
-        ).map { it.long("id") }.asList)
-        tx.run(queryOf(
-            """
-            delete from reservasjon_v3_endring re
-            where exists (
-                select 1 from reservasjon_v3 r
-                where r.id in (re.annullert_reservasjon_id, re.ny_reservasjon_id)
-                  and r.omrade_id = :omradeId and (r.reservertav = :id or re.endretav = :id)
-            ) and not exists (
-                select 1 from reservasjon_v3 r
-                where r.id in (re.annullert_reservasjon_id, re.ny_reservasjon_id) and r.omrade_id <> :omradeId
-            )
-            """.trimIndent(), parametre
-        ).asUpdate)
-        tx.run(queryOf(
-            "delete from reservasjon_v3 where reservertav = :id and omrade_id = :omradeId", parametre
-        ).asUpdate)
-        if (sisteOmråde) {
-            // Eventuelle gjenværende FK-er til andre områders data skal stoppe og rulle tilbake hele slettingen.
-            tx.run(queryOf("delete from saksbehandler where id = :id", parametre).asUpdate)
-        } else {
-            tx.run(queryOf(
-                "delete from saksbehandler_omrade where saksbehandler_id = :id and omrade_id = :omradeId", parametre
-            ).asUpdate)
-        }
     }
 
     //Kopi av den andre slettefunksjonen uten gjenbruk, siden den andre skal slettes etterhvert
@@ -444,7 +357,7 @@ class SaksbehandlerRepository(
         val alleSaksbehandlere = hentAlleSaksbehandlere(område, skjermet)
 
         fun levenshtein(lhs: CharSequence, rhs: CharSequence): Double {
-            return LevenshteinDistance().apply(lhs, rhs).toDouble()
+            return LevenshteinDistance.getDefaultInstance().apply(lhs, rhs).toDouble()
         }
 
         var d = Double.MAX_VALUE
@@ -453,7 +366,7 @@ class SaksbehandlerRepository(
             if (saksbehandler.navident == null) {
                 continue
             }
-            if (saksbehandler.navn != null && saksbehandler.navn!!.lowercase(Locale.getDefault())
+            if (saksbehandler.navn != null && saksbehandler.navn.lowercase(Locale.getDefault())
                     .contains(søkestreng, true)
             ) {
                 i = index
@@ -462,7 +375,7 @@ class SaksbehandlerRepository(
 
             var distance = levenshtein(
                 søkestreng.lowercase(Locale.getDefault()),
-                saksbehandler.navident!!.lowercase(Locale.getDefault())
+                saksbehandler.navident.lowercase(Locale.getDefault())
             )
             if (distance < d) {
                 d = distance
