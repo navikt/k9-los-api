@@ -76,5 +76,7 @@ alter table uttrekk add constraint fk_uttrekk_omrade foreign key (omrade_id) ref
 -- Legg til omrade_id på siste_oppgaver
 execute format('alter table siste_oppgaver add column omrade_id bigint not null default %s', k9_id);
 alter table siste_oppgaver add constraint fk_siste_oppgaver_omrade foreign key (omrade_id) references omrade (id);
+alter table siste_oppgaver drop constraint siste_oppgaver_pkey;
+alter table siste_oppgaver add constraint siste_oppgaver_pkey primary key (bruker_ident, omrade_id, oppgave_ekstern_id, oppgavetype_id);
 
 end $$;

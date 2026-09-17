@@ -45,8 +45,14 @@ class SisteOppgaverRepository(
             queryOf(
                 """
                     INSERT INTO siste_oppgaver (oppgave_ekstern_id, oppgavetype_id, bruker_ident, tidspunkt, omrade_id)
-                    VALUES (:oppgaveEksternId, (select ot.id from oppgavetype ot where ot.ekstern_id = :oppgavetype), :bruker_ident, localtimestamp, (select o.id from omrade o where o.ekstern_id = :omrade_ekstern_id))
-                    ON CONFLICT (oppgave_ekstern_id, oppgavetype_id, bruker_ident)
+                    VALUES (:oppgaveEksternId, (
+                        select ot.id
+                        from oppgavetype ot
+                        join omrade o on o.id = ot.omrade_id
+                        where ot.ekstern_id = :oppgavetype
+                          and o.ekstern_id = :omrade_ekstern_id
+                    ), :bruker_ident, localtimestamp, (select o.id from omrade o where o.ekstern_id = :omrade_ekstern_id))
+                    ON CONFLICT (bruker_ident, omrade_id, oppgave_ekstern_id, oppgavetype_id)
                     DO UPDATE SET tidspunkt = localtimestamp
                 """.trimIndent(),
                 mapOf(

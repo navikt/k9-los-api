@@ -160,6 +160,34 @@ class SisteOppgaverRepositoryTest : AbstractK9LosIntegrationTest() {
     }
 
     @Test
+    fun `skal oppdatere samme K9-oppgave uten å lage duplikat`() {
+        val behandlingUuid = UUID.randomUUID().toString()
+        val oppgaveNøkkel = OppgaveNøkkelDto(
+            områdeEksternId = Områder.K9,
+            oppgaveEksternId = behandlingUuid,
+            oppgaveTypeEksternId = "k9sak"
+        )
+
+        repeat(2) {
+            transactionalManager.transaction { tx ->
+                sisteOppgaverRepository.lagreSisteOppgave(
+                    Områder.K9,
+                    saksbehandler.epost,
+                    oppgaveNøkkel,
+                    tx
+                )
+            }
+        }
+
+        val sisteOppgaver = transactionalManager.transaction { tx ->
+            sisteOppgaverRepository.hentSisteOppgaver(Områder.K9, saksbehandler.epost, tx)
+        }
+
+        assertThat(sisteOppgaver).hasSize(1)
+        assertThat(sisteOppgaver.single().eksternId).isEqualTo(behandlingUuid)
+    }
+
+    @Test
     fun `skal rydde opp og beholde kun de 10 nyeste oppgavene`() {
         // Opprett 11 oppgaver, og lagre de som siste besøkte
         val behandlingUuids = (1..11).map { UUID.randomUUID().toString() }
