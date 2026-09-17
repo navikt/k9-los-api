@@ -56,12 +56,12 @@ object localSetup : KoinComponent {
                     queryOf(
                         """
                         insert into saksbehandler (navident, navn, epost, enhet, skjermet)
-                        values (:navident, :navn, :epost, '3450', false)
+                        values (:navident, :navn, :epost, :enhet, false)
                         on conflict (epost) do update
                             set navident = :navident,
                                 navn = :navn,
                                 epost = :epost,
-                                enhet = :epost,
+                                enhet = :enhet,
                                 skjermet = :skjermet
                         returning id
                      """,
@@ -90,16 +90,19 @@ object localSetup : KoinComponent {
                         "navident" to "Z123456",
                         "navn" to "Saksbehandler Sara",
                         "epost" to "saksbehandler.sara@nav.no",
+                        "enhet" to "3450",
                     ),
                     mapOf(
                         "navident" to "Z167457",
                         "navn" to "Saksbehandler Lars",
                         "epost" to "saksbehandler.lars@nav.no",
+                        "enhet" to "3450",
                     ),
                     mapOf(
                         "navident" to "Z321457",
                         "navn" to "Saksbehandler Edgar",
                         "epost" to "saksbehandler.edgar@nav.no",
+                        "enhet" to "3450",
                     )
                 ).forEach { addSaksbehandler(it) }
             }
