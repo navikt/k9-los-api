@@ -64,13 +64,17 @@ import no.nav.k9.los.innloggetbruker.InnloggetBrukerApiNy
 import no.nav.k9.los.innloggetbruker.InnloggetBrukersOmråderApi
 import no.nav.k9.los.ko.KøpåvirkendeHendelse
 import no.nav.k9.los.ko.OppgaveKoApis
+import no.nav.k9.los.ko.OppgaveKoAvdelingslederApisNy
+import no.nav.k9.los.ko.OppgaveKoSaksbehandlerApisNy
 import no.nav.k9.los.lagretsok.LagretSøkApi
 import no.nav.k9.los.nøkkeltall.K9NøkkeltallApis
 import no.nav.k9.los.nøkkeltall.saksbehandler.nyeogferdigstilte.K9NyeOgFerdigstilteApi
 import no.nav.k9.los.nøkkeltall.saksbehandler.nyeogferdigstilte.K9NyeOgFerdigstilteService
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.query.OppgaveQueryApis
+import no.nav.k9.los.reservasjon.ReservasjonAdminApi
 import no.nav.k9.los.reservasjon.ReservasjonApis
+import no.nav.k9.los.reservasjon.ReservasjonApisNy
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerAdminApis
 import no.nav.k9.los.sisteoppgaver.SisteOppgaverApi
 import no.nav.k9.los.søkeboks.K9SøkeboksApi
@@ -279,20 +283,20 @@ private fun Route.apiUnderConstruction() {
 
         route("saksbehandler", { tags("Saksbehandler") }) {
             route("sok") { SøkeboksApiNy() }
-//            route("oppgaveko") { OppgaveKoSaksbehandlerApisNy() }
-//            route("reservasjoner") { ReservasjonApisNy() }
-//            route("siste-oppgaver") { SisteOppgaverApiNy() }
+            route("oppgaveko") { OppgaveKoSaksbehandlerApisNy() }
+            route("reservasjoner") { ReservasjonApisNy() }
+            route("siste-oppgaver") { SisteOppgaverApi() }
 //            route("nye-og-ferdigstilte") { NyeOgFerdigstilteApiNy() }
         }
 
         route("avdelingsleder", { tags("Avdelingsleder") }) {
-//            route("saksbehandler-admin") { SaksbehandlerAdminApisNy() }
-//            route("reservasjon-admin") { ReservasjonAdminApisNy() }
-//            route("oppgaveko") { OppgaveKoAvdelingslederApisNy() }
+            route("saksbehandler-admin") { SaksbehandlerAdminApis() }
+            route("reservasjon-admin") { ReservasjonAdminApi() }
+            route("oppgaveko") { OppgaveKoAvdelingslederApisNy() }
 //            route("nokkeltall") { NøkkeltallV3ApisNy() }
-//            route("lagret-sok") { LagretSøkApiNy() }
-//            route("uttrekk") { UttrekkApiNy() }
-//            route("query") { OppgaveQueryApisNy() }
+            route("lagret-sok") { LagretSøkApi() }
+            route("uttrekk") { UttrekkApi() }
+            route("query") { OppgaveQueryApis() }
         }
     }
 }

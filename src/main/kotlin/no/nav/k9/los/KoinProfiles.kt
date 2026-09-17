@@ -454,6 +454,7 @@ fun common(app: Application, config: Configuration) = module {
             pdlService = get(),
             køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
             feltdefinisjonTjeneste = get(),
+            oppgaveSammendragDtoBuilder = get()
         )
     }
 

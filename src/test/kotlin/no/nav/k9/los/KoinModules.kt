@@ -406,6 +406,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             pdlService = get(),
             køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
             feltdefinisjonTjeneste = get(),
+            oppgaveSammendragDtoBuilder = get()
         )
     }
 

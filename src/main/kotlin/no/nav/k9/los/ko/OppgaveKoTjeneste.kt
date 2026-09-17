@@ -7,7 +7,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.runBlocking
 import kotliquery.TransactionalSession
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
@@ -21,6 +20,7 @@ import no.nav.k9.los.infrastruktur.utils.leggTilDagerHoppOverHelg
 import no.nav.k9.los.ko.db.OppgaveKoRepository
 import no.nav.k9.los.ko.dto.NesteOppgaverFraKoDto
 import no.nav.k9.los.ko.dto.OppgaveKo
+import no.nav.k9.los.ko.dto.OppgaverFraKøDto
 import no.nav.k9.los.kodeverk.BehandlingType
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.FeltdefinisjonTjeneste
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
@@ -34,6 +34,7 @@ import no.nav.k9.los.reservasjon.ReservasjonV3Tjeneste
 import no.nav.k9.los.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
 import no.nav.k9.los.oppgaveuthenting.Oppgave
+import no.nav.k9.los.oppgaveuthenting.sammendrag.OppgaveSammendragDtoBuilder
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.LocalDateTime
@@ -48,6 +49,7 @@ class OppgaveKoTjeneste(
     private val pepClient: IPepClient,
     private val køpåvirkendeHendelseChannel: Channel<KøpåvirkendeHendelse>,
     private val feltdefinisjonTjeneste: FeltdefinisjonTjeneste,
+    private val oppgaveSammendragDtoBuilder: OppgaveSammendragDtoBuilder,
 ) {
     private val log = LoggerFactory.getLogger(OppgaveKoTjeneste::class.java)
 
@@ -80,6 +82,21 @@ class OppgaveKoTjeneste(
         val orderFelt = kø.oppgaveQuery.order.filterIsInstance<EnkelOrderFelt>().firstOrNull()
         return byggDto(tilgjengeligeOppgaver, orderFelt)
     }
+
+    @WithSpan
+    suspend fun hentOppgaverFraKøSammendrag(
+        område: Områder,
+        kode6: Boolean,
+        idToken: IIdToken,
+        oppgaveKoId: Long,
+        ønsketAntallOppgaver: Long,
+        fjernReserverte: Boolean = false,
+    ): OppgaverFraKøDto {
+        val kø = oppgaveKoRepository.hent(område, kode6, oppgaveKoId)
+        val oppgaver = hentTilgjengeligeOppgaverFraKø(område, idToken, kø, ønsketAntallOppgaver, fjernReserverte)
+        return OppgaverFraKøDto(oppgaveSammendragDtoBuilder.bygg(oppgaver))
+    }
+
 
 
     private suspend fun hentTilgjengeligeOppgaverFraKø(
@@ -158,13 +175,13 @@ class OppgaveKoTjeneste(
     @WithSpan
     fun hentKøerForSaksbehandler(
         område: Områder,
-        skjermet: Boolean,
+        kode6: Boolean,
         saksbehandlerId: Long
     ): List<OppgaveKo> {
         return transactionalManager.transaction { tx ->
             oppgaveKoRepository.hentKoerMedOppgittSaksbehandler(
                 område = område,
-                skjermet = skjermet,
+                skjermet = kode6,
                 saksbehandlerId = saksbehandlerId,
                 medSaksbehandlere = false,
                 tx = tx
@@ -175,8 +192,8 @@ class OppgaveKoTjeneste(
     @WithSpan
     suspend fun hentAntallMedOgUtenReserverteForKø(
         område: Områder,
-        oppgaveKoId: Long,
         skjermet: Boolean,
+        oppgaveKoId: Long,
     ): AntallOppgaverOgReserverte {
         return coroutineScope {
             val antallUtenReserverte = async(Dispatchers.IO + Span.current().asContextElement()) {
