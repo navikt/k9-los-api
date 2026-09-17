@@ -74,6 +74,7 @@ import no.nav.k9.los.reservasjon.ReservasjonApis
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerAdminApis
 import no.nav.k9.los.sisteoppgaver.SisteOppgaverApi
 import no.nav.k9.los.søkeboks.K9SøkeboksApi
+import no.nav.k9.los.søkeboks.SøkeboksApiNy
 import no.nav.k9.los.tjenester.mock.localSetup
 import no.nav.k9.los.uttrekk.UttrekkApi
 import no.nav.k9.los.uttrekk.UttrekkJobb
@@ -277,7 +278,7 @@ private fun Route.apiUnderConstruction() {
         }
 
         route("saksbehandler", { tags("Saksbehandler") }) {
-//            route("sok") { SøkeboksApiNy() }
+            route("sok") { SøkeboksApiNy() }
 //            route("oppgaveko") { OppgaveKoSaksbehandlerApisNy() }
 //            route("reservasjoner") { ReservasjonApisNy() }
 //            route("siste-oppgaver") { SisteOppgaverApiNy() }
