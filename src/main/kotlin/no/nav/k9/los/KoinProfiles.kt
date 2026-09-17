@@ -77,6 +77,7 @@ import no.nav.k9.los.oppgaveuthenting.OppgaveRepository
 import no.nav.k9.los.oppgaveuthenting.enkeltoppslag.*
 import no.nav.k9.los.oppgaveuthenting.query.OppgaveQueryService
 import no.nav.k9.los.oppgaveuthenting.query.db.OppgaveQueryRepository
+import no.nav.k9.los.oppgaveuthenting.sammendrag.OppgaveSammendragDtoBuilder
 import no.nav.k9.los.reservasjon.ReservasjonApisTjeneste
 import no.nav.k9.los.reservasjon.ReservasjonV3DtoBuilder
 import no.nav.k9.los.reservasjon.ReservasjonV3Repository
@@ -86,6 +87,10 @@ import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
 import no.nav.k9.los.sisteoppgaver.SisteOppgaverRepository
 import no.nav.k9.los.sisteoppgaver.SisteOppgaverTjeneste
 import no.nav.k9.los.søkeboks.K9SøkeboksTjeneste
+import no.nav.k9.los.søkeboks.Oppgavesøkere
+import no.nav.k9.los.søkeboks.SøkeboksTjeneste
+import no.nav.k9.los.søkeboks.aktivitetspenger.AktivitetspengerOppgavesøk
+import no.nav.k9.los.søkeboks.k9.K9Oppgavesøk
 import no.nav.k9.los.uttrekk.UttrekkCsvGenerator
 import no.nav.k9.los.uttrekk.UttrekkJobb
 import no.nav.k9.los.uttrekk.UttrekkRepository
@@ -555,6 +560,18 @@ fun common(app: Application, config: Configuration) = module {
             queryService = get(),
             pdlService = get(),
             pepClient = get(),
+        )
+    }
+
+    single { Oppgavesøkere(K9Oppgavesøk(), AktivitetspengerOppgavesøk()) }
+    single { OppgaveSammendragDtoBuilder(oppgavesøkere = get(), pdlService = get()) }
+    single {
+        SøkeboksTjeneste(
+            pdlService = get(),
+            pepClient = get(),
+            oppgaveSammendragDtoBuilder = get(),
+            queryService = get(),
+            oppgavesøkere = get(),
         )
     }
 
