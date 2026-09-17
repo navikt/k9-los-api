@@ -204,9 +204,9 @@ class SaksbehandlerRepositoryTest : AbstractK9LosIntegrationTest() {
             )
         )
 
-        val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedIdent(ident)!!
+        val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedIdent(ident, false)!!
 
-        val saksbehandler2 = saksbehandlerRepository.finnSaksbehandlerMedIdent(ident2)!!
+        val saksbehandler2 = saksbehandlerRepository.finnSaksbehandlerMedIdent(ident2, false)!!
 
         assertThat(saksbehandler.navident, equalTo(ident))
 

@@ -2,7 +2,6 @@ package no.nav.k9.los.innloggetbruker
 
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import no.nav.k9.los.Configuration
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.rest.RequestContextService
 import no.nav.k9.los.infrastruktur.rest.idToken
@@ -15,7 +14,6 @@ internal fun Route.InnloggetBrukerApi() {
     val requestContextService by inject<RequestContextService>()
     val saksbehandlerRepository by inject<SaksbehandlerRepository>()
     val innloggetBrukerTjeneste by inject<InnloggetBrukerTjeneste>()
-    val configuration by inject<Configuration>()
     val pepClient by inject<IPepClient>()
 
     val log = LoggerFactory.getLogger("InnloggetBrukerApi")
@@ -24,15 +22,14 @@ internal fun Route.InnloggetBrukerApi() {
         requestContextService.withRequestContext(call) {
             val token = coroutineContext.idToken()
             val saksbehandlerIdent = coroutineContext.idToken().getNavIdent()
+            val tilganger = pepClient.tilganger(coroutineContext.område())
             val saksbehandler =
-                saksbehandlerRepository.finnSaksbehandlerMedIdent(token.getNavIdent())
-                    ?: saksbehandlerRepository.finnSaksbehandlerMedEpost(token.getUsername())
+                saksbehandlerRepository.finnSaksbehandlerMedIdent(token.getNavIdent(), tilganger.kode6)
+                    ?: saksbehandlerRepository.finnSaksbehandlerMedEpost(token.getUsername(), tilganger.kode6)
             if (saksbehandler == null) {
                 log.warn("Innlogget bruker finnes ikke i saksbehandlertabell, og kan derfor ikke oppdateres")
             }
             val finnesISaksbehandlerTabell = saksbehandler != null
-
-            val tilganger = pepClient.tilganger(coroutineContext.område())
 
             val innloggetBrukerDto = InnloggetBrukerDto(
                 token.getUsername(),

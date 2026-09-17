@@ -46,7 +46,7 @@ class SisteOppgaverRepositoryTest : AbstractK9LosIntegrationTest() {
                     områder = listOf(Områder.K9),
                 )
             )
-            saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedEpost("test@nav.no")!!
+            saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedEpost("test@nav.no", false)!!
         }
     }
 

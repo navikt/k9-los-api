@@ -31,7 +31,8 @@ fun Route.LagretSøkApi() {
                 call.respond(
                     lagretSøkTjeneste.hentAlle(
                         område = coroutineContext.område(),
-                        navIdent = coroutineContext.idToken().getNavIdent()
+                        navIdent = coroutineContext.idToken().getNavIdent(),
+                        kode6 = pepClient.harTilgangTilKode6()
                     )
                 )
             } else {
@@ -116,6 +117,7 @@ fun Route.LagretSøkApi() {
                 val lagretSøkId = lagretSøkTjeneste.nytt(
                     område = coroutineContext.område(),
                     navIdent = coroutineContext.idToken().getNavIdent(),
+                    kode6 = pepClient.harTilgangTilKode6(),
                     nyttLagretSøk = call.receive<NyttLagretSøkRequest>()
                 )
                 call.respond(HttpStatusCode.Created, lagretSøkId)
@@ -138,6 +140,7 @@ fun Route.LagretSøkApi() {
                 val lagretSøk = lagretSøkTjeneste.endre(
                     område = coroutineContext.område(),
                     navIdent = coroutineContext.idToken().getNavIdent(),
+                    kode6 = pepClient.harTilgangTilKode6(),
                     endreLagretSøk = call.receive<EndreLagretSøkRequest>()
                 )
                 call.respond(HttpStatusCode.OK, lagretSøk)
@@ -161,6 +164,7 @@ fun Route.LagretSøkApi() {
                 val nyttLagretSøkId = lagretSøkTjeneste.kopier(
                     område = coroutineContext.område(),
                     navIdent = coroutineContext.idToken().getNavIdent(),
+                    kode6 = pepClient.harTilgangTilKode6(),
                     lagretSøkId = call.parameters["id"]!!.toLong(),
                     tittel = tittel
                 )
@@ -184,6 +188,7 @@ fun Route.LagretSøkApi() {
                 lagretSøkTjeneste.slett(
                     område = coroutineContext.område(),
                     navIdent = coroutineContext.idToken().getNavIdent(),
+                    kode6 = pepClient.harTilgangTilKode6(),
                     lagretSøkId = call.parameters["id"]!!.toLong()
                 )
                 call.respond(HttpStatusCode.OK)

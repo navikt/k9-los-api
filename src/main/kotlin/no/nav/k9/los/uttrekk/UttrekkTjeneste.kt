@@ -11,10 +11,8 @@ class UttrekkTjeneste(
     private val lagretSøkRepository: LagretSøkRepository,
     private val saksbehandlerRepository: SaksbehandlerRepository,
 ) {
-    // Kall fra API: alltid område + innlogget saksbehandler
-
-    suspend fun opprett(område: Områder, navIdent: String, opprettUttrekk: OpprettUttrekk): Long {
-        val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedIdent(navIdent)
+    fun opprett(område: Områder, navIdent: String, kode6: Boolean, opprettUttrekk: OpprettUttrekk): Long {
+        val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedIdent(navIdent, kode6)
             ?: throw IllegalStateException("Innlogget bruker er ikke i saksbehandler-tabellen")
         val lagretSøk = lagretSøkRepository.hent(område, navIdent, opprettUttrekk.lagretSokId)
             ?: throw IllegalArgumentException("Lagret søk med id ${opprettUttrekk.lagretSokId} finnes ikke")

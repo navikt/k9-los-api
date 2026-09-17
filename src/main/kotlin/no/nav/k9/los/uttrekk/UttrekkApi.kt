@@ -79,6 +79,7 @@ fun Route.UttrekkApi() {
                 val uttrekkId = uttrekkTjeneste.opprett(
                     område = coroutineContext.område(),
                     navIdent = coroutineContext.idToken().getNavIdent(),
+                    kode6 = pepClient.harTilgangTilKode6(),
                     opprettUttrekk = call.receive<OpprettUttrekk>()
                 )
                 call.respond(HttpStatusCode.Created, uttrekkId)

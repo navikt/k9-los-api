@@ -315,7 +315,7 @@ class OppgaveKoTjeneste(
     fun hentSaksbehandlereForKo(område: Områder, kode6: Boolean, oppgaveKoId: Long): List<Saksbehandler> {
         val oppgaveKo = oppgaveKoRepository.hent(område, kode6, oppgaveKoId)
         return oppgaveKo.saksbehandlere.mapNotNull { saksbehandlerEpost: String ->
-            saksbehandlerRepository.finnSaksbehandlerMedEpost(saksbehandlerEpost).also {
+            saksbehandlerRepository.finnSaksbehandlerMedEpost(saksbehandlerEpost, kode6).also {
                 if (it == null) {
                     log.info("Køen $oppgaveKoId inneholder saksbehandler som ikke finnes")
                 }

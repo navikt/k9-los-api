@@ -117,7 +117,7 @@ class SaksbehandlerRepository(
         return saksbehandler
     }
 
-    fun finnSaksbehandlerMedEpost(epost: String): Saksbehandler? = using(sessionOf(dataSource)) { session ->
+    fun finnSaksbehandlerMedEpostBådeKode6OgVanlig(epost: String): Saksbehandler? = using(sessionOf(dataSource)) { session ->
         session.run(
             queryOf(
                 "$SAKSBEHANDLER_SELECT where lower(s.epost) = lower(:epost)",
@@ -143,15 +143,6 @@ class SaksbehandlerRepository(
         }
 
         return saksbehandler
-    }
-
-    fun finnSaksbehandlerMedIdent(ident: String): Saksbehandler? = using(sessionOf(dataSource)) { session ->
-        session.run(
-            queryOf(
-                "$SAKSBEHANDLER_SELECT where lower(s.navident) = lower(:ident)",
-                mapOf("ident" to ident),
-            ).map { row -> mapSaksbehandler(row) }.asSingle
-        )
     }
 
     fun finnSaksbehandlerMedIdentEkskluderKode6(ident: String): Saksbehandler? {

@@ -16,7 +16,7 @@ class SaksbehandlerAdminTjeneste(
     private val reservasjonV3Tjeneste: ReservasjonV3Tjeneste
 ) {
     fun leggTilSaksbehandlerForEpost(område: Områder, kode6: Boolean, epost: String) {
-        val eksisterende = saksbehandlerRepository.finnSaksbehandlerMedEpost(epost)
+        val eksisterende = saksbehandlerRepository.finnSaksbehandlerMedEpostBådeKode6OgVanlig(epost)
         if (eksisterende == null) {
             saksbehandlerRepository.opprettSaksbehandler(område, kode6, epost)
         } else {
@@ -30,9 +30,9 @@ class SaksbehandlerAdminTjeneste(
     fun slettSaksbehandlerForId(område: Områder, kode6: Boolean, id: Long) {
         val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedId(id)
 
-        val lagredeSøk = lagretSøkTjeneste.hentAlle(område, saksbehandler!!.navident!!)
+        val lagredeSøk = lagretSøkTjeneste.hentAlle(område, saksbehandler!!.navident!!, kode6)
         lagredeSøk.forEach {
-            lagretSøkTjeneste.slett(område, saksbehandler.navident, it.id!!)
+            lagretSøkTjeneste.slett(område, saksbehandler.navident, kode6, it.id!!)
         }
 
         transactionalManager.transaction { tx ->
@@ -62,11 +62,12 @@ class SaksbehandlerAdminTjeneste(
         kode6: Boolean,
         epost: String,
     ) {
-        val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedEpost(epost) ?: throw IllegalStateException("Kunne ikke finne saksbehandler med epost")
+        val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedEpost(epost, kode6)
+            ?: throw IllegalStateException("Kunne ikke finne saksbehandler med epost")
         if (saksbehandler.navident != null) {
-            val lagredeSøk = lagretSøkTjeneste.hentAlle(område, saksbehandler.navident)
+            val lagredeSøk = lagretSøkTjeneste.hentAlle(område, saksbehandler.navident, kode6)
             lagredeSøk.forEach {
-                lagretSøkTjeneste.slett(område, saksbehandler.navident, it.id!!)
+                lagretSøkTjeneste.slett(område, saksbehandler.navident, kode6, it.id!!)
             }
             val uttrekkeneTilSakbehandler = uttrekkTjeneste.hentForSaksbehandler(område, saksbehandler.id)
             uttrekkeneTilSakbehandler.forEach {
