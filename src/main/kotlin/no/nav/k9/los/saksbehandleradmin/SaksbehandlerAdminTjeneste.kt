@@ -81,11 +81,12 @@ class SaksbehandlerAdminTjeneste(
                 oppgaveKøV3Repository.endre(område, kode6, kø.copy(saksbehandlere = kø.saksbehandlere - epost), tx)
             }
 
-            // Sletter fra saksbehandler-tabellen
+            // Sletter fra tabellene saksbehandler_omrade og saksbehandler
             saksbehandlerRepository.slettSaksbehandler(
-                tx,
+                område,
+                kode6,
                 epost,
-                kode6
+                tx,
             )
         }
     }

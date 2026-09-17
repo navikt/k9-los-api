@@ -316,7 +316,7 @@ class SaksbehandlerRepository(
         )
     }
 
-    fun slettSaksbehandler(tx: TransactionalSession, epost: String, skjermet: Boolean) {
+    fun slettSaksbehandler(område: Områder, skjermet: Boolean, epost: String, tx: TransactionalSession) {
         val saksbehandlerId = tx.run(
             queryOf(
                 """
@@ -331,6 +331,8 @@ class SaksbehandlerRepository(
         if (saksbehandlerId == null) {
             throw IllegalStateException("Fant ikke saksbehandler med epost $epost")
         }
+
+        fjernOmrådeFraSaksbehandler(tx, epost, skjermet, område)
 
         //Sletting av reservasjoner ligger her og ikke i reservasjonV3Repository, siden dette ikke er en del av "vanlig"
         //saksgang. Tanken var egentlig at reservasjoner og reservasjon_v3_endring ikke skulle slettes.

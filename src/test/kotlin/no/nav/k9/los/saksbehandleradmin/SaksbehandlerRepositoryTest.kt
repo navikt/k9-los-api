@@ -239,7 +239,7 @@ class SaksbehandlerRepositoryTest : AbstractK9LosIntegrationTest() {
 
         val transactionalManager = get<TransactionalManager>()
         transactionalManager.transaction { tx ->
-            saksbehandlerRepository.slettSaksbehandler(tx, saksbehandler.epost, saksbehandler.skjermet)
+            saksbehandlerRepository.slettSaksbehandler(Områder.K9, saksbehandler.skjermet, saksbehandler.epost, tx)
         }
     }
 }
