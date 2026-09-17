@@ -2,18 +2,21 @@ package no.nav.k9.los.saksbehandleradmin
 
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.ko.db.OppgaveKoRepository
+import no.nav.k9.los.lagretsok.LagretSøkTjeneste
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
-import no.nav.k9.los.reservasjon.ManglerTilgangException
 import no.nav.k9.los.reservasjon.ReservasjonV3Tjeneste
+import no.nav.k9.los.uttrekk.UttrekkTjeneste
 
 class SaksbehandlerAdminTjeneste(
     private val transactionalManager: TransactionalManager,
     private val saksbehandlerRepository: SaksbehandlerRepository,
     private val oppgaveKøV3Repository: OppgaveKoRepository,
+    private val lagretSøkTjeneste: LagretSøkTjeneste,
+    private val uttrekkTjeneste: UttrekkTjeneste,
     private val reservasjonV3Tjeneste: ReservasjonV3Tjeneste
 ) {
     fun leggTilSaksbehandlerForEpost(område: Områder, kode6: Boolean, epost: String) {
-        val eksisterende = saksbehandlerRepository.finnSaksbehandlerMedEpost(epost, kode6)
+        val eksisterende = saksbehandlerRepository.finnSaksbehandlerMedEpostBådeKode6OgVanlig(epost)
         if (eksisterende == null) {
             saksbehandlerRepository.opprettSaksbehandler(område, kode6, epost)
         } else {
@@ -26,8 +29,32 @@ class SaksbehandlerAdminTjeneste(
 
     fun slettSaksbehandlerForId(område: Områder, kode6: Boolean, id: Long) {
         val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedId(id)
-            ?: throw ManglerTilgangException("Saksbehandler er ikke tilgjengelig i valgt område")
-        slettFraOmråde(område, kode6, saksbehandler)
+
+        val lagredeSøk = lagretSøkTjeneste.hentAlle(område, saksbehandler!!.navident!!, kode6)
+        lagredeSøk.forEach {
+            lagretSøkTjeneste.slett(område, saksbehandler.navident, kode6, it.id!!)
+        }
+
+        transactionalManager.transaction { tx ->
+            // V3-modellen: Sletter køer saksbehandler er med i
+            oppgaveKøV3Repository.hentKoerMedOppgittSaksbehandler(
+                område = område,
+                skjermet = kode6,
+                saksbehandlerId = saksbehandler.id,
+                medSaksbehandlere = true,
+                tx = tx
+            ).forEach { kø ->
+                oppgaveKøV3Repository.endre(
+                    område,
+                    kode6,
+                    kø.copy(saksbehandlerIds = kø.saksbehandlerIds - saksbehandler.id),
+                    tx
+                )
+            }
+
+            // Sletter fra saksbehandler-tabellen
+            saksbehandlerRepository.slettSaksbehandlerForId(tx, id, kode6)
+        }
     }
 
     fun slettSaksbehandler(
@@ -36,28 +63,41 @@ class SaksbehandlerAdminTjeneste(
         epost: String,
     ) {
         val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedEpost(epost, kode6)
-            ?: throw ManglerTilgangException("Saksbehandler er ikke tilgjengelig i valgt område")
-        slettFraOmråde(område, kode6, saksbehandler)
-    }
-
-    private fun slettFraOmråde(område: Områder, kode6: Boolean, saksbehandler: Saksbehandler) {
-        if (saksbehandler.skjermet != kode6) {
-            throw ManglerTilgangException("Saksbehandler er ikke tilgjengelig i valgt område")
-        }
-        transactionalManager.transaction { tx ->
-            val låst = saksbehandlerRepository.hentForSletting(tx, saksbehandler.id)
-                ?: throw ManglerTilgangException("Saksbehandler er ikke tilgjengelig i valgt område")
-            if (låst.skjermet != kode6) {
-                throw ManglerTilgangException("Saksbehandler er ikke tilgjengelig i valgt område")
+            ?: throw IllegalStateException("Kunne ikke finne saksbehandler med epost")
+        if (saksbehandler.navident != null) {
+            val lagredeSøk = lagretSøkTjeneste.hentAlle(område, saksbehandler.navident, kode6)
+            lagredeSøk.forEach {
+                lagretSøkTjeneste.slett(område, saksbehandler.navident, kode6, it.id!!)
             }
-            oppgaveKøV3Repository.fjernSaksbehandlerFraOmråde(tx, låst.id, område)
-            saksbehandlerRepository.slettFraOmråde(tx, låst, område)
+            val uttrekkeneTilSakbehandler = uttrekkTjeneste.hentForSaksbehandler(område, saksbehandler.id)
+            uttrekkeneTilSakbehandler.forEach {
+                uttrekkTjeneste.slettUtenTilgangssjekk(it.id!!)
+            }
+        }
+
+        transactionalManager.transaction { tx ->
+            // V3-modellen: Sletter køer saksbehandler er med i
+            oppgaveKøV3Repository.hentKoerMedOppgittSaksbehandler(område, kode6,saksbehandler.id, true, tx).forEach { kø ->
+                oppgaveKøV3Repository.endre(område, kode6, kø.copy(saksbehandlere = kø.saksbehandlere - epost), tx)
+            }
+
+            // Sletter fra tabellene saksbehandler_omrade og saksbehandler
+            saksbehandlerRepository.slettSaksbehandler(
+                område,
+                kode6,
+                epost,
+                tx,
+            )
         }
     }
 
     suspend fun hentSaksbehandlere(område: Områder, kode6: Boolean): List<SaksbehandlerDto> {
         return transactionalManager.transactionSuspend { tx ->
-            val saksbehandlere = saksbehandlerRepository.hentAlleSaksbehandlere(område, kode6, tx)
+            val saksbehandlere = saksbehandlerRepository.hentAlleSaksbehandlere(
+                område = område,
+                skjermet = kode6,
+                tx = tx
+            )
             val saksbehandlerIder = saksbehandlere.map { it.id }.toSet()
             val antallReservasjoner = reservasjonV3Tjeneste.tellReservasjonerForSaksbehandlere(saksbehandlerIder, tx)
 
