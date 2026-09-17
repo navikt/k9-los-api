@@ -4,7 +4,6 @@ import kotliquery.Row
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
-import no.nav.k9.los.ManglerFlerområde
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
@@ -15,30 +14,33 @@ import javax.sql.DataSource
 class LagretSøkRepository(val dataSource: DataSource) {
     private val transactionalManager = TransactionalManager(dataSource)
 
-    fun hent(@ManglerFlerområde("må inn som where-betingelse") område: Områder, id: Long): LagretSøk? {
-        return transactionalManager.transaction {
-            it.run(
+    fun hent(område: Områder, navIdent: String, id: Long): LagretSøk? {
+        return transactionalManager.transaction { tx ->
+            tx.run(
                 queryOf(
                     """
-                SELECT *
-                FROM lagret_sok
-                WHERE id = :id
-            """.trimIndent(), mapOf("id" to id)
-                ).map {
-                    it.toLagretSøk()
-                }.asSingle
+                    SELECT o.ekstern_id AS omrade_ekstern_id, l.*
+                    FROM lagret_sok l
+                    INNER JOIN omrade o ON o.id = l.omrade_id
+                    INNER JOIN saksbehandler s ON l.laget_av = s.id
+                    WHERE l.id = :id
+                      AND o.ekstern_id = :omrade
+                      AND s.navident = :navident
+                      AND EXISTS (select 1 from saksbehandler_omrade so where so.omrade_id = o.id and so.saksbehandler_id = s.id) 
+                    """.trimIndent(),
+                    mapOf("id" to id, "omrade" to område.eksternId, "navident" to navIdent)
+                ).map { it.toLagretSøk() }.asSingle
             )
         }
     }
-
 
     fun opprett(lagretSøk: LagretSøk): Long {
         return transactionalManager.transaction { tx ->
             tx.updateAndReturnGeneratedKey(
                 queryOf(
                     """
-                    INSERT INTO lagret_sok (tittel, versjon, beskrivelse, sist_endret, query, laget_av)
-                    VALUES (:tittel, :versjon, :beskrivelse, :sist_endret, :query::jsonb, :lagetAv)
+                    INSERT INTO lagret_sok (tittel, versjon, beskrivelse, sist_endret, query, laget_av, omrade_id)
+                    VALUES (:tittel, :versjon, :beskrivelse, :sist_endret, :query::jsonb, :lagetAv, (select id from omrade where ekstern_id = :omrade))
                     """.trimIndent(),
                     mapOf(
                         "tittel" to lagretSøk.tittel,
@@ -47,6 +49,7 @@ class LagretSøkRepository(val dataSource: DataSource) {
                         "sist_endret" to lagretSøk.sistEndret,
                         "query" to LosObjectMapper.instance.writeValueAsString(lagretSøk.query),
                         "lagetAv" to lagretSøk.lagetAv,
+                        "omrade" to lagretSøk.område.eksternId
                     )
                 )
             )
@@ -79,31 +82,33 @@ class LagretSøkRepository(val dataSource: DataSource) {
     }
 
     fun slett(lagretSøk: LagretSøk) {
-        transactionalManager.transaction {
-            it.run(
+        transactionalManager.transaction { tx ->
+            tx.run(
                 queryOf(
                     """
-                DELETE FROM lagret_sok
-                WHERE id = :id
-            """.trimIndent(), mapOf("id" to lagretSøk.id)
+                    DELETE FROM lagret_sok
+                    WHERE id = :id
+                    """.trimIndent(),
+                    mapOf("id" to lagretSøk.id)
                 ).asUpdate
             )
         }
     }
 
-    fun hentAlle(@ManglerFlerområde("må inn som where-betingelse") område: Områder, saksbehandler: Saksbehandler): List<LagretSøk> {
+    fun hentAlle(område: Områder, saksbehandler: Saksbehandler): List<LagretSøk> {
         return using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(
                     """
-                SELECT *
-                FROM lagret_sok
-                WHERE laget_av = :lagetAv
-                ORDER BY id DESC
-            """.trimIndent(), mapOf("lagetAv" to saksbehandler.id)
-                ).map {
-                    it.toLagretSøk()
-                }.asList
+                    SELECT o.ekstern_id AS omrade_ekstern_id, l.*
+                    FROM lagret_sok l
+                    INNER JOIN omrade o ON o.id = l.omrade_id
+                    WHERE l.laget_av = :lagetAv
+                      AND o.ekstern_id = :omrade
+                    ORDER BY l.id DESC
+                    """.trimIndent(),
+                    mapOf("lagetAv" to saksbehandler.id, "omrade" to område.eksternId)
+                ).map { it.toLagretSøk() }.asList
             )
         }
     }
@@ -113,6 +118,7 @@ private fun Row.toLagretSøk(): LagretSøk {
     return LagretSøk.fraEksisterende(
         id = long("id"),
         lagetAv = long("laget_av"),
+        område = Områder.fraEksternId(string("omrade_ekstern_id")),
         versjon = long("versjon"),
         tittel = string("tittel"),
         beskrivelse = string("beskrivelse"),

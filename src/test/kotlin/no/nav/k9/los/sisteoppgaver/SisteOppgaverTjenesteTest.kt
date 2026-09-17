@@ -72,6 +72,7 @@ class SisteOppgaverTjenesteTest : AbstractK9LosIntegrationTest() {
                     navn = "Test Testersen",
                     epost = "test@nav.no",
                     enhet = null,
+                    områder = listOf(Områder.K9),
                 )
             )
         }

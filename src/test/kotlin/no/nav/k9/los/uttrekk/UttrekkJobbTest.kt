@@ -8,6 +8,7 @@ import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.lagretsok.LagretSøk
 import no.nav.k9.los.lagretsok.LagretSøkRepository
 import no.nav.k9.los.lagretsok.NyttLagretSøkRequest
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
 import no.nav.k9.los.saksbehandleradmin.TestSaksbehandlerRepository
 import org.junit.jupiter.api.BeforeEach
@@ -42,12 +43,14 @@ class UttrekkJobbTest : AbstractK9LosIntegrationTest() {
                     navn = "Test Testersen",
                     epost = "test@nav.no",
                     enhet = null,
+                    områder = listOf(Områder.K9),
                 )
             )
             saksbehandlerId = saksbehandler.id
             val lagretSøk = LagretSøk.nyttSøk(
-                NyttLagretSøkRequest(tittel = "Test søk", query = LagretSøk.defaultQuery(false)),
-                saksbehandler
+                Områder.K9,
+                saksbehandler,
+                NyttLagretSøkRequest(tittel = "Test søk", query = LagretSøk.defaultQuery(Områder.K9, false))
             )
             lagretSøkRepository.opprett(lagretSøk)
             testLagretSøk = lagretSøk
@@ -64,10 +67,10 @@ class UttrekkJobbTest : AbstractK9LosIntegrationTest() {
 
         uttrekkJobb.kjørUttrekk(uttrekkId)
 
-        val fullførtUttrekk = uttrekkRepository.hent(uttrekkId)!!
+        val fullførtUttrekk = uttrekkRepository.hentForJobb(uttrekkId)!!
         assertThat(fullførtUttrekk.status).isEqualTo(UttrekkStatus.FULLFØRT)
         assertThat(fullførtUttrekk.antall).isEqualTo(0)
-        assertThat(uttrekkRepository.hentResultat(uttrekkId)).isEqualTo("[]")
+        assertThat(uttrekkRepository.hentResultat(Områder.K9, "test", uttrekkId)).isEqualTo("[]")
         assertThat(fullførtUttrekk.feilmelding).isNull()
     }
 

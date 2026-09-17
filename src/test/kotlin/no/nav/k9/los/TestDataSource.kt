@@ -44,7 +44,7 @@ const val TØM_DATA_SQL = """
                 into truncate_sql
                 from pg_tables
                 where schemaname = 'public'
-                  and tablename <> 'flyway_schema_history';
+                  and tablename not in ('flyway_schema_history', 'omrade');
 
                 if truncate_sql is not null then
                     execute truncate_sql;

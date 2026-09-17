@@ -12,16 +12,13 @@ import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.rest.RequestContextService
 import no.nav.k9.los.infrastruktur.rest.idToken
 import no.nav.k9.los.infrastruktur.rest.område
-import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
 import org.koin.ktor.ext.inject
 
 fun Route.UttrekkApi() {
     val pepClient by inject<IPepClient>()
     val requestContextService by inject<RequestContextService>()
     val uttrekkTjeneste by inject<UttrekkTjeneste>()
-    val uttrekkRepository by inject<UttrekkRepository>()
     val uttrekkCsvGenerator by inject<UttrekkCsvGenerator>()
-    val saksbehandlerRepository by inject<SaksbehandlerRepository>()
 
     get({
         response {
@@ -30,15 +27,12 @@ fun Route.UttrekkApi() {
     }) {
         requestContextService.withRequestContext(call) {
             if (pepClient.harBasisTilgang()) {
-                val innloggetSaksbehandler = coroutineContext.idToken().getNavIdent().let {
-                    saksbehandlerRepository.finnSaksbehandlerMedIdent(it)
-                }
-                if (innloggetSaksbehandler == null) {
-                    call.respond(HttpStatusCode.Forbidden, "Innlogget bruker er ikke i saksbehandler-tabellen.")
-                } else {
-                    val uttrekk = uttrekkTjeneste.hentForSaksbehandler(innloggetSaksbehandler.id)
-                    call.respond(uttrekk)
-                }
+                call.respond(
+                    uttrekkTjeneste.hentAlle(
+                        område = coroutineContext.område(),
+                        navIdent = coroutineContext.idToken().getNavIdent()
+                    )
+                )
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
@@ -47,9 +41,7 @@ fun Route.UttrekkApi() {
 
     get("{id}", {
         request {
-            pathParameter<Long>("id") {
-                required = true
-            }
+            pathParameter<Long>("id") { required = true }
         }
         response {
             HttpStatusCode.OK to { body<Uttrekk>() }
@@ -58,16 +50,15 @@ fun Route.UttrekkApi() {
     }) {
         requestContextService.withRequestContext(call) {
             if (pepClient.harBasisTilgang()) {
-                val id = call.parameters["id"]?.toLongOrNull()
-                if (id == null) {
-                    call.respond(HttpStatusCode.BadRequest, "Ugyldig uttrekk-id")
-                    return@withRequestContext
-                }
-                val uttrekk = uttrekkTjeneste.hent(id)
-                if (uttrekk != null) {
-                    call.respond(uttrekk)
-                } else {
+                val uttrekk = uttrekkTjeneste.hent(
+                    område = coroutineContext.område(),
+                    navIdent = coroutineContext.idToken().getNavIdent(),
+                    id = call.parameters["id"]!!.toLong()
+                )
+                if (uttrekk == null) {
                     call.respond(HttpStatusCode.NotFound)
+                } else {
+                    call.respond(uttrekk)
                 }
             } else {
                 call.respond(HttpStatusCode.Forbidden)
@@ -85,31 +76,20 @@ fun Route.UttrekkApi() {
     }) {
         requestContextService.withRequestContext(call) {
             if (pepClient.harBasisTilgang()) {
-                val innloggetSaksbehandler = coroutineContext.idToken().getNavIdent().let {
-                    saksbehandlerRepository.finnSaksbehandlerMedIdent(it)
-                }
-                if (innloggetSaksbehandler == null) {
-                    call.respond(HttpStatusCode.Forbidden, "Innlogget bruker er ikke i saksbehandler-tabellen.")
-                } else {
-                    try {
-                        val request = call.receive<OpprettUttrekk>()
-                        val uttrekkId = uttrekkTjeneste.opprett(
-                            område = coroutineContext.område(),
-                            opprettUttrekk = request,
-                            saksbehandlerId = innloggetSaksbehandler.id
-                        )
-                        call.respond(HttpStatusCode.Created, uttrekkId)
-                    } catch (e: IllegalArgumentException) {
-                        call.respond(HttpStatusCode.BadRequest, e.message ?: "Ugyldig forespørsel")
-                    }
-                }
+                val uttrekkId = uttrekkTjeneste.opprett(
+                    område = coroutineContext.område(),
+                    navIdent = coroutineContext.idToken().getNavIdent(),
+                    kode6 = pepClient.harTilgangTilKode6(),
+                    opprettUttrekk = call.receive<OpprettUttrekk>()
+                )
+                call.respond(HttpStatusCode.Created, uttrekkId)
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
         }
     }
 
-    put("/{id}/tittel", {
+    put("{id}/tittel", {
         request {
             body<EndreTittel>()
         }
@@ -119,18 +99,14 @@ fun Route.UttrekkApi() {
     }) {
         requestContextService.withRequestContext(call) {
             if (pepClient.harBasisTilgang()) {
-                val id = call.parameters["id"]?.toLongOrNull()
-                if (id == null) {
-                    call.respond(HttpStatusCode.BadRequest, "Ugyldig uttrekk-id")
-                    return@withRequestContext
-                }
                 val (tittel) = call.receive<EndreTittel>()
-                try {
-                    uttrekkTjeneste.endreTittel(id, tittel)
-                    call.respond(HttpStatusCode.OK)
-                } catch (e: IllegalArgumentException) {
-                    call.respond(HttpStatusCode.NotFound, e.message ?: "Uttrekk finnes ikke")
-                }
+                uttrekkTjeneste.endreTittel(
+                    område = coroutineContext.område(),
+                    navIdent = coroutineContext.idToken().getNavIdent(),
+                    id = call.parameters["id"]!!.toLong(),
+                    tittel = tittel
+                )
+                call.respond(HttpStatusCode.OK)
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
@@ -139,31 +115,20 @@ fun Route.UttrekkApi() {
 
     delete("{id}/slett", {
         request {
-            pathParameter<Long>("id") {
-                required = true
-            }
+            pathParameter<Long>("id") { required = true }
         }
         response {
             HttpStatusCode.OK to { }
-            HttpStatusCode.NotFound to { }
-            HttpStatusCode.BadRequest to { }
         }
     }) {
         requestContextService.withRequestContext(call) {
             if (pepClient.harBasisTilgang()) {
-                try {
-                    val id = call.parameters["id"]?.toLongOrNull()
-                    if (id == null) {
-                        call.respond(HttpStatusCode.BadRequest, "Ugyldig uttrekk-id")
-                        return@withRequestContext
-                    }
-                    uttrekkTjeneste.slett(id)
-                    call.respond(HttpStatusCode.OK)
-                } catch (e: IllegalArgumentException) {
-                    call.respond(HttpStatusCode.NotFound, e.message ?: "Uttrekk finnes ikke")
-                } catch (e: IllegalStateException) {
-                    call.respond(HttpStatusCode.BadRequest, e.message ?: "Kan ikke slette uttrekk")
-                }
+                uttrekkTjeneste.slett(
+                    område = coroutineContext.område(),
+                    navIdent = coroutineContext.idToken().getNavIdent(),
+                    id = call.parameters["id"]!!.toLong()
+                )
+                call.respond(HttpStatusCode.OK)
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
@@ -172,9 +137,7 @@ fun Route.UttrekkApi() {
 
     delete("lagret-sok/{lagretSokId}", {
         request {
-            pathParameter<Long>("lagretSokId") {
-                required = true
-            }
+            pathParameter<Long>("lagretSokId") { required = true }
         }
         response {
             HttpStatusCode.OK to { body<Int>() }
@@ -182,12 +145,7 @@ fun Route.UttrekkApi() {
     }) {
         requestContextService.withRequestContext(call) {
             if (pepClient.harBasisTilgang()) {
-                val lagretSokId = call.parameters["lagretSokId"]?.toLongOrNull()
-                if (lagretSokId == null) {
-                    call.respond(HttpStatusCode.BadRequest, "Ugyldig lagretSokId")
-                    return@withRequestContext
-                }
-                val antallSlettet = uttrekkTjeneste.slettForLagretSøk(lagretSokId)
+                val antallSlettet = uttrekkTjeneste.slettForLagretSøk(call.parameters["lagretSokId"]!!.toLong())
                 call.respond(HttpStatusCode.OK, antallSlettet)
             } else {
                 call.respond(HttpStatusCode.Forbidden)
@@ -197,9 +155,7 @@ fun Route.UttrekkApi() {
 
     get("{id}/csv", {
         request {
-            pathParameter<Long>("id") {
-                required = true
-            }
+            pathParameter<Long>("id") { required = true }
         }
         response {
             HttpStatusCode.OK to { }
@@ -208,21 +164,14 @@ fun Route.UttrekkApi() {
     }) {
         requestContextService.withRequestContext(call) {
             if (pepClient.harBasisTilgang()) {
-                val id = call.parameters["id"]?.toLongOrNull()
-                if (id == null) {
-                    call.respond(HttpStatusCode.BadRequest, "Ugyldig uttrekk-id")
-                    return@withRequestContext
-                }
-                val uttrekk = uttrekkTjeneste.hent(id)
+                val område = coroutineContext.område()
+                val navIdent = coroutineContext.idToken().getNavIdent()
+                val id = call.parameters["id"]!!.toLong()
 
-                if (uttrekk == null) {
-                    call.respond(HttpStatusCode.NotFound, "Uttrekk finnes ikke")
-                    return@withRequestContext
-                }
-
-                val resultat = uttrekkRepository.hentResultat(id)
-                if (resultat == null) {
-                    call.respond(HttpStatusCode.NotFound, "Uttrekk har ingen resultat")
+                val uttrekk = uttrekkTjeneste.hent(område, navIdent, id)
+                val resultat = uttrekk?.let { uttrekkTjeneste.hentResultat(område, navIdent, id) }
+                if (uttrekk == null || resultat == null) {
+                    call.respond(HttpStatusCode.NotFound)
                     return@withRequestContext
                 }
 
@@ -233,9 +182,8 @@ fun Route.UttrekkApi() {
                         "uttrekk-$id.csv"
                     ).toString()
                 )
-
                 call.respondText(ContentType.parse("text/csv"), HttpStatusCode.OK) {
-                    uttrekkCsvGenerator.genererCsv(uttrekk.query.select,resultat)
+                    uttrekkCsvGenerator.genererCsv(uttrekk.query.select, resultat)
                 }
             } else {
                 call.respond(HttpStatusCode.Forbidden)
@@ -245,15 +193,9 @@ fun Route.UttrekkApi() {
 
     get("{id}/json", {
         request {
-            pathParameter<Long>("id") {
-                required = true
-            }
-            queryParameter<Int>("offset") {
-                required = false
-            }
-            queryParameter<Int>("limit") {
-                required = false
-            }
+            pathParameter<Long>("id") { required = true }
+            queryParameter<Int>("offset") { required = false }
+            queryParameter<Int>("limit") { required = false }
         }
         response {
             HttpStatusCode.OK to { body<UttrekkResultatRespons>() }
@@ -262,39 +204,26 @@ fun Route.UttrekkApi() {
     }) {
         requestContextService.withRequestContext(call) {
             if (pepClient.harBasisTilgang()) {
-                val id = call.parameters["id"]?.toLongOrNull()
-                if (id == null) {
-                    call.respond(HttpStatusCode.BadRequest, "Ugyldig uttrekk-id")
+                val område = coroutineContext.område()
+                val navIdent = coroutineContext.idToken().getNavIdent()
+                val id = call.parameters["id"]!!.toLong()
+
+                val uttrekk = uttrekkTjeneste.hent(område, navIdent, id)
+                val resultatJson = uttrekk?.let { uttrekkTjeneste.hentResultat(område, navIdent, id) }
+                if (uttrekk == null || resultatJson == null) {
+                    call.respond(HttpStatusCode.NotFound)
                     return@withRequestContext
                 }
+
                 val offset = call.request.queryParameters["offset"]?.toIntOrNull() ?: 0
                 val limit = call.request.queryParameters["limit"]?.toIntOrNull()
-
-                val uttrekk = uttrekkTjeneste.hent(id)
-
-                if (uttrekk == null) {
-                    call.respond(HttpStatusCode.NotFound, "Uttrekk finnes ikke")
-                    return@withRequestContext
-                }
-
-                val resultatJson = uttrekkRepository.hentResultat(id)
-                if (resultatJson == null) {
-                    call.respond(HttpStatusCode.NotFound, "Uttrekk har ingen resultat")
-                    return@withRequestContext
-                }
-
                 val alleRader = UttrekkResultatMapper.fraLagretJson(resultatJson)
-
-                val paginertRader = alleRader
-                    .drop(offset)
-                    .let { if (limit != null) it.take(limit) else it }
-
-                val kolonner = uttrekk.query.select
+                val paginerteRader = alleRader.drop(offset).let { if (limit != null) it.take(limit) else it }
 
                 call.respond(
                     UttrekkResultatRespons(
-                        kolonner = kolonner,
-                        rader = paginertRader,
+                        kolonner = uttrekk.query.select,
+                        rader = paginerteRader,
                         totaltAntall = alleRader.size,
                         offset = offset,
                         limit = limit

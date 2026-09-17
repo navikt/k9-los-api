@@ -10,15 +10,15 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotliquery.queryOf
 import no.nav.k9.kodeverk.behandling.FagsakYtelseType
+import no.nav.k9.los.domeneadaptere.eventlager.EventRepository
 import no.nav.k9.los.domeneadaptere.k9.K9Oppgavetypenavn
 import no.nav.k9.los.domeneadaptere.k9.avstemming.K9AvstemmingsTjeneste
-import no.nav.k9.los.domeneadaptere.eventlager.EventRepository
 import no.nav.k9.los.domeneadaptere.k9.statistikk.StatistikkRepository
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.infrastruktur.rest.RequestContextService
-import no.nav.k9.los.infrastruktur.utils.IkkeImplementertException
 import no.nav.k9.los.infrastruktur.rest.område
+import no.nav.k9.los.infrastruktur.utils.IkkeImplementertException
 import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.ko.OppgaveKoTjeneste
 import no.nav.k9.los.kodeverk.Fagsystem
@@ -309,7 +309,11 @@ fun Route.K9ForvaltningApis() {
                     return@withRequestContext
                 }
 
-                val oppgave = oppgaveOppslagTjeneste.hentAktivOppgave(coroutineContext.område(), oppgaveEksternId, oppgavetypeEksternId)
+                val oppgave = oppgaveOppslagTjeneste.hentAktivOppgave(
+                    coroutineContext.område(),
+                    oppgaveEksternId,
+                    oppgavetypeEksternId
+                )
                 val reservasjonsnøkkel = utledReservasjonsnøkkel(oppgave, false)
                 val reservasjonsnøkkel_beslutter = utledReservasjonsnøkkel(oppgave, true)
                 val reservasjonerOrdinær = transactionalManager.transaction { tx ->
@@ -359,14 +363,15 @@ fun Route.K9ForvaltningApis() {
         get("/oppgaveko/antall", { tags("Forvaltning") }) {
             requestContextService.withRequestContext(call) {
                 if (pepClient.kanLeggeUtDriftsmelding()) {
-                    val antall = oppgaveKoTjeneste.hentOppgavekøer(skjermet = false).map {
-                        oppgaveKoTjeneste.hentAntallOppgaverForKø(
-                            område = coroutineContext.område(),
-                            oppgaveKoId = it.id,
-                            filtrerReserverte = false,
-                            skjermet = false
-                        )
-                    }.size
+                    val antall =
+                        oppgaveKoTjeneste.hentOppgavekøer(område = coroutineContext.område(), skjermet = false).map {
+                            oppgaveKoTjeneste.hentAntallOppgaverForKø(
+                                område = coroutineContext.område(),
+                                oppgaveKoId = it.id,
+                                filtrerReserverte = false,
+                                skjermet = false
+                            )
+                        }.size
                     call.respond(antall)
                 } else {
                     call.respond(HttpStatusCode.Forbidden)
@@ -377,7 +382,7 @@ fun Route.K9ForvaltningApis() {
         get("/oppgaveko", { tags("Forvaltning") }) {
             requestContextService.withRequestContext(call) {
                 if (pepClient.kanLeggeUtDriftsmelding()) {
-                    call.respond(oppgaveKoTjeneste.hentOppgavekøer(skjermet = false).map { it.id })
+                    call.respond(oppgaveKoTjeneste.hentOppgavekøer(område = coroutineContext.område(), skjermet = false).map { it.id })
                 } else {
                     call.respond(HttpStatusCode.Forbidden)
                 }
@@ -419,7 +424,8 @@ fun Route.K9ForvaltningApis() {
     }) {
         requestContextService.withRequestContext(call) {
             if (pepClient.kanLeggeUtDriftsmelding()) {
-                val område = call.parameters["omrade"].let { if (it == "null" || it == null) null else Områder.fraEksternId(it) }
+                val område =
+                    call.parameters["omrade"].let { if (it == "null" || it == null) null else Områder.fraEksternId(it) }
                 val kode = call.parameters["kode"]!!
 
                 val (køer, lagredeSøk) = transactionalManager.transaction { tx ->

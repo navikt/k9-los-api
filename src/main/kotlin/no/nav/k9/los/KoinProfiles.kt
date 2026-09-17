@@ -133,8 +133,8 @@ fun common(app: Application, config: Configuration) = module {
     single {
         SaksbehandlerRepository(
             dataSource = get(),
-            pepClient = get(),
             transactionalManager = get(),
+            områdeRepository = get(),
         )
     }
 
@@ -254,7 +254,6 @@ fun common(app: Application, config: Configuration) = module {
 
     single {
         SaksbehandlerAdminTjeneste(
-            pepClient = get(),
             transactionalManager = get(),
             saksbehandlerRepository = get(),
             oppgaveKøV3Repository = get(),
@@ -460,7 +459,8 @@ fun common(app: Application, config: Configuration) = module {
 
     single {
         OppgaveKoRepository(
-            datasource = get()
+            datasource = get(),
+            områdeRepository = get()
         )
     }
 
@@ -620,7 +620,8 @@ fun common(app: Application, config: Configuration) = module {
     single<UttrekkTjeneste> {
         UttrekkTjeneste(
             uttrekkRepository = get(),
-            lagretSøkRepository = get()
+            lagretSøkRepository = get(),
+            saksbehandlerRepository = get()
         )
     }
 

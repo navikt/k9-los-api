@@ -38,6 +38,7 @@ class LagretSøkRepositoryTest : AbstractK9LosIntegrationTest() {
                     navn = "Test Testersen",
                     epost = "test@nav.no",
                     enhet = null,
+                    områder = listOf(Områder.K9)
                 )
             )
         }
@@ -47,13 +48,13 @@ class LagretSøkRepositoryTest : AbstractK9LosIntegrationTest() {
     fun `skal opprette og hente lagret søk`() {
         val opprettLagretSøk = NyttLagretSøkRequest(
             tittel = "Test søk",
-            query = LagretSøk.defaultQuery(false)
+            query = LagretSøk.defaultQuery(Områder.K9, false)
         )
 
-        val lagretSøk = LagretSøk.nyttSøk(opprettLagretSøk, saksbehandler)
+        val lagretSøk = LagretSøk.nyttSøk(Områder.K9, saksbehandler, opprettLagretSøk)
         val id = lagretSøkRepository.opprett(lagretSøk)
 
-        val hentetSøk = lagretSøkRepository.hent(Områder.K9, id)
+        val hentetSøk = lagretSøkRepository.hent(Områder.K9, saksbehandler.navident!!, id)
         assertThat(hentetSøk).isNotNull()
         assertThat(hentetSøk!!.id).isEqualTo(id)
         assertThat(hentetSøk.tittel).isEqualTo("Test søk")
@@ -64,7 +65,7 @@ class LagretSøkRepositoryTest : AbstractK9LosIntegrationTest() {
 
     @Test
     fun `skal returnere null når søk ikke finnes`() {
-        val hentetSøk = lagretSøkRepository.hent(Områder.K9, 999L)
+        val hentetSøk = lagretSøkRepository.hent(Områder.K9, saksbehandler.navident!!, 999L)
         assertThat(hentetSøk).isNull()
     }
 
@@ -72,13 +73,13 @@ class LagretSøkRepositoryTest : AbstractK9LosIntegrationTest() {
     fun `skal endre eksisterende lagret søk`() {
         val opprettLagretSøk = NyttLagretSøkRequest(
             tittel = "Opprinnelig tittel",
-            query = LagretSøk.defaultQuery(false)
+            query = LagretSøk.defaultQuery(Områder.K9, false)
         )
 
-        val lagretSøk = LagretSøk.nyttSøk(opprettLagretSøk, saksbehandler)
+        val lagretSøk = LagretSøk.nyttSøk(Områder.K9, saksbehandler, opprettLagretSøk)
         val id = lagretSøkRepository.opprett(lagretSøk)
 
-        val hentetSøk = lagretSøkRepository.hent(Områder.K9, id)!!
+        val hentetSøk = lagretSøkRepository.hent(Områder.K9, saksbehandler.navident!!, id)!!
         val endreLagretSøk = EndreLagretSøkRequest(
             id = id,
             tittel = "Endret tittel",
@@ -90,7 +91,7 @@ class LagretSøkRepositoryTest : AbstractK9LosIntegrationTest() {
         hentetSøk.endre(endreLagretSøk, saksbehandler)
         lagretSøkRepository.endre(hentetSøk)
 
-        val endretSøk = lagretSøkRepository.hent(Områder.K9, id)!!
+        val endretSøk = lagretSøkRepository.hent(Områder.K9, saksbehandler.navident!!, id)!!
         assertThat(endretSøk.tittel).isEqualTo("Endret tittel")
         assertThat(endretSøk.beskrivelse).isEqualTo("Endret beskrivelse")
         assertThat(endretSøk.versjon).isEqualTo(2)
@@ -100,29 +101,23 @@ class LagretSøkRepositoryTest : AbstractK9LosIntegrationTest() {
     fun `skal slette lagret søk`() {
         val opprettLagretSøk = NyttLagretSøkRequest(
             tittel = "Søk som skal slettes",
-            query = LagretSøk.defaultQuery(false)
+            query = LagretSøk.defaultQuery(Områder.K9, false)
         )
 
-        val lagretSøk = LagretSøk.nyttSøk(opprettLagretSøk, saksbehandler)
+        val lagretSøk = LagretSøk.nyttSøk(Områder.K9, saksbehandler, opprettLagretSøk)
         val id = lagretSøkRepository.opprett(lagretSøk)
 
-        val hentetSøk = lagretSøkRepository.hent(Områder.K9, id)!!
+        val hentetSøk = lagretSøkRepository.hent(Områder.K9, saksbehandler.navident!!, id)!!
         lagretSøkRepository.slett(hentetSøk)
 
-        val søkEtterSletting = lagretSøkRepository.hent(Områder.K9, id)
+        val søkEtterSletting = lagretSøkRepository.hent(Områder.K9, saksbehandler.navident!!, id)
         assertThat(søkEtterSletting).isNull()
     }
 
     @Test
     fun `skal hente alle lagrede søk for en saksbehandler`() {
-        val søk1 = LagretSøk.nyttSøk(
-            NyttLagretSøkRequest("Søk 1", LagretSøk.defaultQuery(false)),
-            saksbehandler,
-        )
-        val søk2 = LagretSøk.nyttSøk(
-            NyttLagretSøkRequest("Søk 2", LagretSøk.defaultQuery(false)),
-            saksbehandler,
-        )
+        val søk1 = LagretSøk.nyttSøk(Områder.K9, saksbehandler, NyttLagretSøkRequest("Søk 1", LagretSøk.defaultQuery(Områder.K9, false)))
+        val søk2 = LagretSøk.nyttSøk(Områder.K9, saksbehandler, NyttLagretSøkRequest("Søk 2", LagretSøk.defaultQuery(Områder.K9, false)))
 
         lagretSøkRepository.opprett(søk1)
         lagretSøkRepository.opprett(søk2)
@@ -142,18 +137,13 @@ class LagretSøkRepositoryTest : AbstractK9LosIntegrationTest() {
                     navn = "Annen Testersen",
                     epost = "annen@nav.no",
                     enhet = null,
+                    områder = listOf(Områder.K9)
                 )
             )
 
             // Opprett søk for begge saksbehandlere
-            val søkForFørsteSaksbehandler = LagretSøk.nyttSøk(
-                NyttLagretSøkRequest("Søk for første", LagretSøk.defaultQuery(false)),
-                saksbehandler,
-            )
-            val søkForAnnenSaksbehandler = LagretSøk.nyttSøk(
-                NyttLagretSøkRequest("Søk for annen", LagretSøk.defaultQuery(false)),
-                annenSaksbehandler,
-            )
+            val søkForFørsteSaksbehandler = LagretSøk.nyttSøk(Områder.K9, saksbehandler, NyttLagretSøkRequest("Søk for første", LagretSøk.defaultQuery(Områder.K9, false)))
+            val søkForAnnenSaksbehandler = LagretSøk.nyttSøk(Områder.K9, annenSaksbehandler, NyttLagretSøkRequest("Søk for annen", LagretSøk.defaultQuery(Områder.K9, false)))
 
             lagretSøkRepository.opprett(søkForFørsteSaksbehandler)
             lagretSøkRepository.opprett(søkForAnnenSaksbehandler)
@@ -174,15 +164,15 @@ class LagretSøkRepositoryTest : AbstractK9LosIntegrationTest() {
     fun `skal kaste exception ved optimistisk låsing ved samtidig endring`() {
         val opprettLagretSøk = NyttLagretSøkRequest(
             tittel = "Test søk",
-            query = LagretSøk.defaultQuery(false)
+            query = LagretSøk.defaultQuery(Områder.K9, false)
         )
 
-        val lagretSøk = LagretSøk.nyttSøk(opprettLagretSøk, saksbehandler)
+        val lagretSøk = LagretSøk.nyttSøk(Områder.K9, saksbehandler, opprettLagretSøk)
         val id = lagretSøkRepository.opprett(lagretSøk)
 
         // Simuler samtidig endring - hent to instanser av samme søk
-        val førsteSøk = lagretSøkRepository.hent(Områder.K9, id)!!
-        val andreSøk = lagretSøkRepository.hent(Områder.K9, id)!!
+        val førsteSøk = lagretSøkRepository.hent(Områder.K9, saksbehandler.navident!!, id)!!
+        val andreSøk = lagretSøkRepository.hent(Områder.K9, saksbehandler.navident!!, id)!!
 
         førsteSøk.endre(
             EndreLagretSøkRequest(

@@ -21,7 +21,10 @@ internal fun Route.SaksbehandlerAdminApis() {
     get("/saksbehandlere") {
         requestContextService.withRequestContext(call) {
             if (pepClient.erOppgaveStyrer()) {
-                call.respond(saksbehandlerAdminTjeneste.hentSaksbehandlere())
+                call.respond(saksbehandlerAdminTjeneste.hentSaksbehandlere(
+                    område = coroutineContext.område(),
+                    kode6 = pepClient.harTilgangTilKode6()
+                ))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
@@ -32,7 +35,11 @@ internal fun Route.SaksbehandlerAdminApis() {
         requestContextService.withRequestContext(call) {
             if (pepClient.erOppgaveStyrer()) {
                 val epost = call.receive<EpostDto>()
-                call.respond(saksbehandlerAdminTjeneste.leggTilSaksbehandlerForEpost(epost.epost))
+                call.respond(saksbehandlerAdminTjeneste.leggTilSaksbehandlerForEpost(
+                    område = coroutineContext.område(),
+                    kode6 = pepClient.harTilgangTilKode6(),
+                    epost = epost.epost
+                ))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
@@ -45,6 +52,7 @@ internal fun Route.SaksbehandlerAdminApis() {
                 val epost = call.receive<EpostDto>()
                 call.respond(saksbehandlerAdminTjeneste.slettSaksbehandler(
                     område = coroutineContext.område(),
+                    kode6 = pepClient.harTilgangTilKode6(),
                     epost = epost.epost
                 ))
             } else {
@@ -57,7 +65,11 @@ internal fun Route.SaksbehandlerAdminApis() {
         requestContextService.withRequestContext(call) {
             if (pepClient.erOppgaveStyrer()) {
                 val id = call.receive<Long>()
-                call.respond(saksbehandlerAdminTjeneste.slettSaksbehandlerForId(coroutineContext.område(), id))
+                call.respond(saksbehandlerAdminTjeneste.slettSaksbehandlerForId(
+                    område = coroutineContext.område(),
+                    kode6 = pepClient.harTilgangTilKode6(),
+                    id = id
+                ))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
@@ -68,7 +80,10 @@ internal fun Route.SaksbehandlerAdminApis() {
     get("reservasjoner") {
         requestContextService.withRequestContext(call) {
             if (pepClient.erOppgaveStyrer()) {
-                call.respond(reservasjonApisTjeneste.hentAlleAktiveReservasjoner(coroutineContext.område()))
+                call.respond(reservasjonApisTjeneste.hentAlleAktiveReservasjoner(
+                    coroutineContext.område(),
+                    kode6 = pepClient.harTilgangTilKode6()
+                ))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }

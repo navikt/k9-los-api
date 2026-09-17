@@ -75,6 +75,7 @@ object DbCleanupListener : TestListener {
 private const val KOTEST_TØM_DATA_SQL = """
              truncate 
                  driftsmeldinger,
+                 saksbehandler_omrade,
                  saksbehandler,
                  siste_oppgaver,
                  OPPGAVEKO_SAKSBEHANDLER,

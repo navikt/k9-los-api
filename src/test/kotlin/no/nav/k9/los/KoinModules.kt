@@ -124,15 +124,15 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     single {
         SaksbehandlerRepository(
             dataSource = get(),
-            pepClient = get(),
             transactionalManager = get(),
+            områdeRepository = get(),
         )
     }
 
     single {
         TestSaksbehandlerRepository(
             dataSource = get(),
-            pepClient = get(),
+            områdeRepository = get(),
         )
     }
 
@@ -209,7 +209,6 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
 
     single {
         SaksbehandlerAdminTjeneste(
-            pepClient = get(),
             transactionalManager = get(),
             saksbehandlerRepository = get(),
             oppgaveKøV3Repository = get(),
@@ -428,7 +427,8 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
 
     single {
         OppgaveKoRepository(
-            datasource = get()
+            datasource = get(),
+            områdeRepository = get()
         )
     }
 
@@ -559,7 +559,8 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     single<UttrekkTjeneste> {
         UttrekkTjeneste(
             uttrekkRepository = get(),
-            lagretSøkRepository = get()
+            lagretSøkRepository = get(),
+            saksbehandlerRepository = get()
         )
     }
 

@@ -32,12 +32,12 @@ class InnloggetBrukerTjeneste(
         )
     }
 
-    private suspend fun finnSaksbehandler(navIdent: String, epost: String): Saksbehandler? =
-        saksbehandlerRepository.finnSaksbehandlerMedIdent(navIdent)
-            ?: saksbehandlerRepository.finnSaksbehandlerMedEpost(epost)
+    private fun finnSaksbehandler(navIdent: String, epost: String, kode6: Boolean): Saksbehandler? =
+        saksbehandlerRepository.finnSaksbehandlerMedIdent(navIdent, kode6)
+            ?: saksbehandlerRepository.finnSaksbehandlerMedEpost(epost, kode6)
 
     suspend fun finnOgVedlikehold(token: IIdToken, kode6: Boolean): Saksbehandler? {
-        val saksbehandler = finnSaksbehandler(token.getNavIdent(), token.getUsername())
+        val saksbehandler = finnSaksbehandler(token.getNavIdent(), token.getUsername(), kode6)
         if (saksbehandler == null) {
             log.info("Innlogget saksbehandler finnes ikke i saksbehandlertabellen og kan derfor ikke vedlikeholdes")
         } else {
@@ -76,6 +76,7 @@ class InnloggetBrukerTjeneste(
                     navn = navn,
                     epost = epost,
                     enhet = enhet,
+                    områder = saksbehandler.områder,
                     skjermet = skjermet,
                     sistOppdatert = nå,
                 )

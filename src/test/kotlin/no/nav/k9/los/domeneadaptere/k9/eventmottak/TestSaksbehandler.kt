@@ -7,6 +7,8 @@ import no.nav.k9.los.saksbehandleradmin.OpprettSaksbehandler
 import no.nav.k9.los.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.saksbehandleradmin.TestSaksbehandlerRepository
 import no.nav.k9.los.infrastruktur.abac.IPepClient
+import no.nav.k9.los.oppgavedefinisjon.omraade.OmrådeRepository
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import org.koin.test.KoinTest
 import org.koin.test.get
 import javax.sql.DataSource
@@ -15,9 +17,8 @@ class TestSaksbehandler: KoinTest {
 
     val datasource = get<DataSource>()
     val pepClient = mockk<IPepClient>(relaxed = true)
-    val repo = TestSaksbehandlerRepository(
-        datasource, pepClient = pepClient,
-    )
+    val områdeRepository = get<OmrådeRepository>()
+    val repo = TestSaksbehandlerRepository(datasource, områdeRepository)
 
     companion object {
         val SARA = Saksbehandler(
@@ -26,6 +27,7 @@ class TestSaksbehandler: KoinTest {
             navn = "Sara Saksbehandler",
             epost = "sara.saksbehandler@nav.no",
             enhet = "2830 NAV DRIFT",
+            områder = listOf(Områder.K9),
             skjermet = false
         )
 
@@ -35,6 +37,7 @@ class TestSaksbehandler: KoinTest {
             navn = "Birger Beslutter",
             epost = "birger.beslutter@nav.no",
             enhet = "2830 NAV DRIFT",
+            områder = listOf(Områder.K9),
             skjermet = false
         )
 
@@ -44,6 +47,7 @@ class TestSaksbehandler: KoinTest {
             navn = "Kjersti Skjermet",
             epost = "kjersti.skjermet@nav.no",
             enhet = "SKJERMET",
+            områder = listOf(Områder.K9),
             skjermet = true
         )
 
@@ -57,7 +61,7 @@ class TestSaksbehandler: KoinTest {
         }
     }
 
-    private suspend fun leggTilSkjermet() {
+    private fun leggTilSkjermet() {
         coEvery { pepClient.harTilgangTilKode6() } returns true
         repo.opprettSaksbehandler(KJERSTI_SKJERMET.tilOpprettSaksbehandler())
         coEvery { pepClient.harTilgangTilKode6() } returns false
@@ -67,6 +71,7 @@ class TestSaksbehandler: KoinTest {
         navident = navident!!,
         navn = navn!!,
         epost = epost,
-        enhet = enhet
+        enhet = enhet,
+        områder = områder
     )
 }

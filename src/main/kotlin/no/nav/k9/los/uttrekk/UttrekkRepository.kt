@@ -6,41 +6,124 @@ import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.OppgaveQuery
 import javax.sql.DataSource
 
 class UttrekkRepository(val dataSource: DataSource) {
-    val transactionalManager = TransactionalManager(dataSource)
+    private val transactionalManager = TransactionalManager(dataSource)
 
-    fun hent(id: Long): Uttrekk? {
-        return transactionalManager.transaction {
-            it.run(
-                queryOf(
-                    """
-                SELECT id, opprettet_tidspunkt, status, tittel, query, type_kjoring, laget_av, lagret_sok_id,
-                       avgrensning_limit, avgrensning_offset, feilmelding, startet_tidspunkt, fullfort_tidspunkt, antall
-                FROM uttrekk
-                WHERE id = :id
-            """.trimIndent(), mapOf("id" to id)
-                ).map {
-                    it.toUttrekk()
-                }.asSingle
-            )
-        }
-    }
+    private val kolonner = """
+        u.id, u.opprettet_tidspunkt, u.status, u.tittel, u.query, u.laget_av, u.lagret_sok_id,
+        u.avgrensning_limit, u.avgrensning_offset, u.feilmelding, u.startet_tidspunkt, u.fullfort_tidspunkt,
+        u.antall, o.ekstern_id as omrade_ekstern_id
+    """.trimIndent()
 
-    fun hentResultat(id: Long): String? {
+    fun hent(område: Områder, navIdent: String, id: Long): Uttrekk? {
         return transactionalManager.transaction { tx ->
             tx.run(
                 queryOf(
                     """
-                SELECT resultat
-                FROM uttrekk
-                WHERE id = :id
-            """.trimIndent(), mapOf("id" to id)
-                ).map {
-                    it.stringOrNull("resultat")
-                }.asSingle
+                    SELECT $kolonner
+                    FROM uttrekk u
+                    INNER JOIN omrade o ON o.id = u.omrade_id
+                    INNER JOIN saksbehandler s ON s.id = u.laget_av
+                    WHERE u.id = :id
+                      AND o.ekstern_id = :omrade
+                      AND s.navident = :navident
+                      AND EXISTS (select 1 from saksbehandler_omrade so where so.omrade_id = o.id and so.saksbehandler_id = s.id)
+                    """.trimIndent(),
+                    mapOf("id" to id, "omrade" to område.eksternId, "navident" to navIdent)
+                ).map { it.toUttrekk() }.asSingle
+            )
+        }
+    }
+
+    /** Uten tilgangssjekk. Brukes kun fra jobb. */
+    fun hentForJobb(id: Long): Uttrekk? {
+        return transactionalManager.transaction { tx ->
+            tx.run(
+                queryOf(
+                    """
+                    SELECT $kolonner
+                    FROM uttrekk u
+                    INNER JOIN omrade o ON o.id = u.omrade_id
+                    WHERE u.id = :id
+                    """.trimIndent(),
+                    mapOf("id" to id)
+                ).map { it.toUttrekk() }.asSingle
+            )
+        }
+    }
+
+    fun hentAlle(område: Områder, navIdent: String): List<Uttrekk> {
+        return using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                    SELECT $kolonner
+                    FROM uttrekk u
+                    INNER JOIN omrade o ON o.id = u.omrade_id
+                    INNER JOIN saksbehandler s ON s.id = u.laget_av
+                    WHERE o.ekstern_id = :omrade
+                      AND s.navident = :navident
+                    ORDER BY u.opprettet_tidspunkt DESC
+                    """.trimIndent(),
+                    mapOf("omrade" to område.eksternId, "navident" to navIdent)
+                ).map { it.toUttrekk() }.asList
+            )
+        }
+    }
+
+    /** Uten tilgangssjekk. Brukes kun fra jobb. */
+    fun hentAlleForJobb(): List<Uttrekk> {
+        return using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                    SELECT $kolonner
+                    FROM uttrekk u
+                    INNER JOIN omrade o ON o.id = u.omrade_id
+                    ORDER BY u.opprettet_tidspunkt DESC
+                    """.trimIndent()
+                ).map { it.toUttrekk() }.asList
+            )
+        }
+    }
+
+    fun hentForSaksbehandler(område: Områder, saksbehandlerId: Long): List<Uttrekk> {
+        return using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                    SELECT $kolonner
+                    FROM uttrekk u
+                    INNER JOIN omrade o ON o.id = u.omrade_id
+                    WHERE u.laget_av = :lagetAv
+                      AND o.ekstern_id = :omrade
+                    ORDER BY u.opprettet_tidspunkt DESC
+                    """.trimIndent(),
+                    mapOf("lagetAv" to saksbehandlerId, "omrade" to område.eksternId)
+                ).map { it.toUttrekk() }.asList
+            )
+        }
+    }
+
+    fun hentResultat(område: Områder, navIdent: String, id: Long): String? {
+        return transactionalManager.transaction { tx ->
+            tx.run(
+                queryOf(
+                    """
+                    SELECT u.resultat
+                    FROM uttrekk u
+                    INNER JOIN omrade o ON o.id = u.omrade_id
+                    INNER JOIN saksbehandler s ON s.id = u.laget_av
+                    WHERE u.id = :id
+                      AND o.ekstern_id = :omrade
+                      AND s.navident = :navident
+                    """.trimIndent(),
+                    mapOf("id" to id, "omrade" to område.eksternId, "navident" to navIdent)
+                ).map { it.stringOrNull("resultat") }.asSingle
             )
         }
     }
@@ -50,8 +133,8 @@ class UttrekkRepository(val dataSource: DataSource) {
             tx.updateAndReturnGeneratedKey(
                 queryOf(
                     """
-                    INSERT INTO uttrekk (opprettet_tidspunkt, status, tittel, query, type_kjoring, laget_av, lagret_sok_id, avgrensning_limit, avgrensning_offset)
-                    VALUES (:opprettetTidspunkt, :status, :tittel, :query::jsonb, 'NY', :lagetAv, :lagretSokId, :limit, :offset)
+                    INSERT INTO uttrekk (opprettet_tidspunkt, status, tittel, query, type_kjoring, laget_av, lagret_sok_id, avgrensning_limit, avgrensning_offset, omrade_id)
+                    VALUES (:opprettetTidspunkt, :status, :tittel, :query::jsonb, 'NY', :lagetAv, :lagretSokId, :limit, :offset, (SELECT id FROM omrade WHERE ekstern_id = :omrade))
                     """.trimIndent(),
                     mapOf(
                         "opprettetTidspunkt" to uttrekk.opprettetTidspunkt,
@@ -61,7 +144,8 @@ class UttrekkRepository(val dataSource: DataSource) {
                         "lagetAv" to uttrekk.lagetAv,
                         "lagretSokId" to uttrekk.lagretSøkId,
                         "limit" to uttrekk.limit,
-                        "offset" to uttrekk.offset
+                        "offset" to uttrekk.offset,
+                        "omrade" to uttrekk.område.eksternId
                     )
                 )
             )
@@ -69,21 +153,8 @@ class UttrekkRepository(val dataSource: DataSource) {
     }
 
     fun oppdater(uttrekk: Uttrekk, resultat: String? = null) {
-        transactionalManager.transaction {
-            val sql = if (resultat != null) {
-                """
-                UPDATE uttrekk
-                SET status = :status, tittel = :tittel, resultat = :resultat::jsonb, feilmelding = :feilmelding, startet_tidspunkt = :startetTidspunkt, fullfort_tidspunkt = :fullfortTidspunkt, antall = :antall
-                WHERE id = :id
-                """.trimIndent()
-            } else {
-                """
-                UPDATE uttrekk
-                SET status = :status, tittel = :tittel, feilmelding = :feilmelding, startet_tidspunkt = :startetTidspunkt, fullfort_tidspunkt = :fullfortTidspunkt, antall = :antall
-                WHERE id = :id
-                """.trimIndent()
-            }
-
+        transactionalManager.transaction { tx ->
+            val resultatSett = if (resultat != null) ", resultat = :resultat::jsonb" else ""
             val params = mutableMapOf(
                 "id" to uttrekk.id,
                 "status" to uttrekk.status.name,
@@ -93,80 +164,48 @@ class UttrekkRepository(val dataSource: DataSource) {
                 "fullfortTidspunkt" to uttrekk.fullførtTidspunkt,
                 "antall" to uttrekk.antall
             )
-            if (resultat != null) {
-                params["resultat"] = resultat
-            }
+            resultat?.let { params["resultat"] = it }
 
-            val antallRaderOppdatert = it.run(queryOf(sql, params).asUpdate)
+            val antallRaderOppdatert = tx.run(
+                queryOf(
+                    """
+                    UPDATE uttrekk
+                    SET status = :status, tittel = :tittel, feilmelding = :feilmelding,
+                        startet_tidspunkt = :startetTidspunkt, fullfort_tidspunkt = :fullfortTidspunkt,
+                        antall = :antall$resultatSett
+                    WHERE id = :id
+                    """.trimIndent(),
+                    params
+                ).asUpdate
+            )
             if (antallRaderOppdatert != 1) {
                 throw IllegalStateException("Feilet ved update på uttrekk. Uttrekk med id ${uttrekk.id} finnes ikke.")
             }
         }
     }
 
-    fun slett(id: Long) {
-        transactionalManager.transaction {
-            it.run(
+    fun slett(uttrekk: Uttrekk) {
+        transactionalManager.transaction { tx ->
+            tx.run(
                 queryOf(
-                    """
-                DELETE FROM uttrekk
-                WHERE id = :id
-            """.trimIndent(), mapOf("id" to id)
+                    "DELETE FROM uttrekk WHERE id = :id",
+                    mapOf("id" to uttrekk.id)
                 ).asUpdate
             )
         }
     }
 
     fun slettForLagretSøk(lagretSøkId: Long): Int {
-        return transactionalManager.transaction {
-            it.run(
+        return transactionalManager.transaction { tx ->
+            tx.run(
                 queryOf(
                     """
-                DELETE FROM uttrekk
-                WHERE lagret_sok_id = :lagretSokId
-                AND status != :statusKjorer
-            """.trimIndent(), mapOf(
-                        "lagretSokId" to lagretSøkId,
-                        "statusKjorer" to UttrekkStatus.KJØRER.name
-                    )
+                    DELETE FROM uttrekk
+                    WHERE lagret_sok_id = :lagretSokId
+                      AND status != :statusKjorer
+                    """.trimIndent(),
+                    mapOf("lagretSokId" to lagretSøkId, "statusKjorer" to UttrekkStatus.KJØRER.name)
                 ).asUpdate
-            )
-        }
-    }
-
-    fun hentAlle(): List<Uttrekk> {
-        return using(sessionOf(dataSource)) { session ->
-            session.run(
-                queryOf(
-                    """
-                SELECT id, opprettet_tidspunkt, status, tittel, query, type_kjoring, laget_av, lagret_sok_id,
-                       avgrensning_limit, avgrensning_offset,
-                       feilmelding, startet_tidspunkt, fullfort_tidspunkt, antall
-                FROM uttrekk
-                ORDER BY opprettet_tidspunkt DESC
-            """.trimIndent()
-                ).map {
-                    it.toUttrekk()
-                }.asList
-            )
-        }
-    }
-
-    fun hentForSaksbehandler(saksbehandlerId: Long): List<Uttrekk> {
-        return using(sessionOf(dataSource)) { session ->
-            session.run(
-                queryOf(
-                    """
-                SELECT id, opprettet_tidspunkt, status, tittel, query, type_kjoring, laget_av, lagret_sok_id,
-                       avgrensning_limit, avgrensning_offset,
-                       feilmelding, startet_tidspunkt, fullfort_tidspunkt, antall
-                FROM uttrekk
-                WHERE laget_av = :lagetAv
-                ORDER BY opprettet_tidspunkt DESC
-            """.trimIndent(), mapOf("lagetAv" to saksbehandlerId)
-                ).map {
-                    it.toUttrekk()
-                }.asList
             )
         }
     }
@@ -175,6 +214,7 @@ class UttrekkRepository(val dataSource: DataSource) {
 private fun Row.toUttrekk(): Uttrekk {
     return Uttrekk.fraEksisterende(
         id = long("id"),
+        område = Områder.fraEksternId(string("omrade_ekstern_id")),
         opprettetTidspunkt = localDateTime("opprettet_tidspunkt"),
         status = UttrekkStatus.valueOf(string("status")),
         tittel = string("tittel"),

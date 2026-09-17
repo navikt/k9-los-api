@@ -14,15 +14,12 @@ import no.nav.k9.los.infrastruktur.rest.RequestContextService
 import no.nav.k9.los.infrastruktur.rest.idToken
 import no.nav.k9.los.infrastruktur.rest.område
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.OppgaveQuery
-import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
 import org.koin.ktor.ext.inject
 
 fun Route.LagretSøkApi() {
     val pepClient by inject<IPepClient>()
     val requestContextService by inject<RequestContextService>()
     val lagretSøkTjeneste by inject<LagretSøkTjeneste>()
-    val lagretSøkRepository by inject<LagretSøkRepository>()
-    val saksbehandlerRepository by inject<SaksbehandlerRepository>()
 
     get({
         response {
@@ -31,18 +28,13 @@ fun Route.LagretSøkApi() {
     }) {
         requestContextService.withRequestContext(call) {
             if (pepClient.harBasisTilgang()) {
-                val innloggetSaksbehandler = coroutineContext.idToken().getNavIdent().let {
-                    saksbehandlerRepository.finnSaksbehandlerMedIdent(it)
-                }
-                if (innloggetSaksbehandler == null) {
-                    call.respond(HttpStatusCode.Forbidden, "Innlogget bruker er ikke i saksbehandler-tabellen.")
-                } else {
-                    val lagredeSøk = lagretSøkRepository.hentAlle(
+                call.respond(
+                    lagretSøkTjeneste.hentAlle(
                         område = coroutineContext.område(),
-                        saksbehandler = innloggetSaksbehandler
+                        navIdent = coroutineContext.idToken().getNavIdent(),
+                        kode6 = pepClient.harTilgangTilKode6()
                     )
-                    call.respond(lagredeSøk)
-                }
+                )
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
@@ -51,34 +43,61 @@ fun Route.LagretSøkApi() {
 
     get("{id}", {
         request {
-            pathParameter<Long>("id") {
-                required = true
-            }
+            pathParameter<Long>("id") { required = true }
         }
         response {
             HttpStatusCode.OK to { body<LagretSøk>() }
+            HttpStatusCode.NotFound to { }
         }
     }) {
         requestContextService.withRequestContext(call) {
             if (pepClient.harBasisTilgang()) {
-                val id = call.parameters["id"]!!.toLong()
-                val innloggetSaksbehandler = coroutineContext.idToken().getNavIdent().let {
-                    saksbehandlerRepository.finnSaksbehandlerMedIdent(it)
-                }
-                if (innloggetSaksbehandler == null) {
-                    call.respond(HttpStatusCode.Forbidden, "Innlogget bruker er ikke i saksbehandler-tabellen.")
+                val lagretSøk = lagretSøkTjeneste.hent(
+                    område = coroutineContext.område(),
+                    navIdent = coroutineContext.idToken().getNavIdent(),
+                    lagretSøkId = call.parameters["id"]!!.toLong()
+                )
+                if (lagretSøk == null) {
+                    call.respond(HttpStatusCode.NotFound)
                 } else {
-                    val lagretSøk = lagretSøkRepository.hent(coroutineContext.område(), id)
-                    if (lagretSøk != null) {
-                        if (lagretSøk.lagetAv != innloggetSaksbehandler.id) {
-                            call.respond(HttpStatusCode.Forbidden)
-                        } else {
-                            call.respond(lagretSøk)
-                        }
-                    } else {
-                        call.respond(HttpStatusCode.NotFound)
-                    }
+                    call.respond(lagretSøk)
                 }
+            } else {
+                call.respond(HttpStatusCode.Forbidden)
+            }
+        }
+    }
+
+    get("{id}/antall") {
+        requestContextService.withRequestContext(call) {
+            if (pepClient.harBasisTilgang()) {
+                val antall = lagretSøkTjeneste.hentAntall(
+                    område = coroutineContext.område(),
+                    navIdent = coroutineContext.idToken().getNavIdent(),
+                    lagretSøkId = call.parameters["id"]!!.toLong()
+                )
+                if (antall == null) {
+                    call.respond(HttpStatusCode.NotFound)
+                } else {
+                    call.respond(antall)
+                }
+            } else {
+                call.respond(HttpStatusCode.Forbidden)
+            }
+        }
+    }
+
+    get("default-query", {
+        response {
+            HttpStatusCode.OK to { body<OppgaveQuery>() }
+        }
+    }) {
+        requestContextService.withRequestContext(call) {
+            if (pepClient.erOppgaveStyrer()) {
+                call.respond(LagretSøk.defaultQuery(
+                    område = coroutineContext.område(),
+                    kode6 = pepClient.harTilgangTilKode6()
+                ))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
@@ -95,25 +114,13 @@ fun Route.LagretSøkApi() {
     }) {
         requestContextService.withRequestContext(call) {
             if (pepClient.erOppgaveStyrer()) {
-                val navIdent = coroutineContext.idToken().getNavIdent()
-                val request = call.receive<NyttLagretSøkRequest>()
-                val lagretSøk = lagretSøkTjeneste.nytt(navIdent, request)
-                call.respond(HttpStatusCode.Created, lagretSøk)
-            } else {
-                call.respond(HttpStatusCode.Forbidden)
-            }
-        }
-    }
-
-    get("default-query", {
-        response {
-            HttpStatusCode.OK to { body<OppgaveQuery>() }
-        }
-    }) {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.erOppgaveStyrer()) {
-                val harKode6Tilgang = pepClient.harTilgangTilKode6()
-                call.respond(LagretSøk.defaultQuery(harKode6Tilgang))
+                val lagretSøkId = lagretSøkTjeneste.nytt(
+                    område = coroutineContext.område(),
+                    navIdent = coroutineContext.idToken().getNavIdent(),
+                    kode6 = pepClient.harTilgangTilKode6(),
+                    nyttLagretSøk = call.receive<NyttLagretSøkRequest>()
+                )
+                call.respond(HttpStatusCode.Created, lagretSøkId)
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
@@ -130,20 +137,13 @@ fun Route.LagretSøkApi() {
     }) {
         requestContextService.withRequestContext(call) {
             if (pepClient.harBasisTilgang()) {
-                val innloggetSaksbehandler = coroutineContext.idToken().getNavIdent().let {
-                    saksbehandlerRepository.finnSaksbehandlerMedIdent(it)
-                }
-                if (innloggetSaksbehandler == null) {
-                    call.respond(HttpStatusCode.Forbidden, "Innlogget bruker er ikke i saksbehandler-tabellen.")
-                } else {
-                    val endreLagretSøk = call.receive<EndreLagretSøkRequest>()
-                    val lagretSøk = lagretSøkTjeneste.endre(
-                        område = coroutineContext.område(),
-                        navIdent = coroutineContext.idToken().getNavIdent(),
-                        endreLagretSøk = endreLagretSøk
-                    )
-                    call.respond(HttpStatusCode.OK, lagretSøk)
-                }
+                val lagretSøk = lagretSøkTjeneste.endre(
+                    område = coroutineContext.område(),
+                    navIdent = coroutineContext.idToken().getNavIdent(),
+                    kode6 = pepClient.harTilgangTilKode6(),
+                    endreLagretSøk = call.receive<EndreLagretSøkRequest>()
+                )
+                call.respond(HttpStatusCode.OK, lagretSøk)
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
@@ -160,22 +160,15 @@ fun Route.LagretSøkApi() {
     }) {
         requestContextService.withRequestContext(call) {
             if (pepClient.harBasisTilgang()) {
-                val innloggetSaksbehandler = coroutineContext.idToken().getNavIdent().let {
-                    saksbehandlerRepository.finnSaksbehandlerMedIdent(it)
-                }
-                if (innloggetSaksbehandler == null) {
-                    call.respond(HttpStatusCode.Forbidden, "Innlogget bruker er ikke i saksbehandler-tabellen.")
-                } else {
-                    val (tittel) = call.receive<KopierLagretSøkRequest>()
-                    val lagretSøkId = call.parameters["id"]!!.toLong()
-                    val nyttLagretSøk = lagretSøkTjeneste.kopier(
-                        område = coroutineContext.område(),
-                        navIdent = coroutineContext.idToken().getNavIdent(),
-                        lagretSøkId = lagretSøkId,
-                        tittel = tittel
-                    )
-                    call.respond(HttpStatusCode.OK, nyttLagretSøk)
-                }
+                val (tittel) = call.receive<KopierLagretSøkRequest>()
+                val nyttLagretSøkId = lagretSøkTjeneste.kopier(
+                    område = coroutineContext.område(),
+                    navIdent = coroutineContext.idToken().getNavIdent(),
+                    kode6 = pepClient.harTilgangTilKode6(),
+                    lagretSøkId = call.parameters["id"]!!.toLong(),
+                    tittel = tittel
+                )
+                call.respond(HttpStatusCode.OK, nyttLagretSøkId)
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
@@ -184,9 +177,7 @@ fun Route.LagretSøkApi() {
 
     delete("{id}/slett", {
         request {
-            pathParameter<Long>("id") {
-                required = true
-            }
+            pathParameter<Long>("id") { required = true }
         }
         response {
             HttpStatusCode.OK to { body<Unit>() }
@@ -194,45 +185,13 @@ fun Route.LagretSøkApi() {
     }) {
         requestContextService.withRequestContext(call) {
             if (pepClient.harBasisTilgang()) {
-                val innloggetSaksbehandler = coroutineContext.idToken().getNavIdent().let {
-                    saksbehandlerRepository.finnSaksbehandlerMedIdent(it)
-                }
-                if (innloggetSaksbehandler == null) {
-                    call.respond(HttpStatusCode.Forbidden, "Innlogget bruker er ikke i saksbehandler-tabellen.")
-                } else {
-                    val lagretSøkId = call.parameters["id"]!!.toLong()
-                    lagretSøkTjeneste.slett(
-                        område = coroutineContext.område(),
-                        navIdent = coroutineContext.idToken().getNavIdent(),
-                        lagretSøkId = lagretSøkId
-                    )
-                    call.respond(HttpStatusCode.OK)
-                }
-            } else {
-                call.respond(HttpStatusCode.Forbidden)
-            }
-        }
-    }
-
-    get("/{id}/antall") {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.harBasisTilgang()) {
-                val lagretSøkId = call.parameters["id"]!!
-                val innloggetSaksbehandler = coroutineContext.idToken().getNavIdent().let {
-                    saksbehandlerRepository.finnSaksbehandlerMedIdent(it)
-                }
-                if (innloggetSaksbehandler == null) {
-                    call.respond(HttpStatusCode.Forbidden, "Innlogget bruker er ikke i saksbehandler-tabellen.")
-                } else {
-                    val lagretSøk = lagretSøkRepository.hent(coroutineContext.område(),lagretSøkId.toLong())
-                    if (lagretSøk == null) {
-                        call.respond(HttpStatusCode.NotFound)
-                    } else if (lagretSøk.lagetAv != innloggetSaksbehandler.id) {
-                        call.respond(HttpStatusCode.Forbidden)
-                    } else {
-                        call.respond(lagretSøkTjeneste.hentAntall(coroutineContext.område(), lagretSøkId.toLong()))
-                    }
-                }
+                lagretSøkTjeneste.slett(
+                    område = coroutineContext.område(),
+                    navIdent = coroutineContext.idToken().getNavIdent(),
+                    kode6 = pepClient.harTilgangTilKode6(),
+                    lagretSøkId = call.parameters["id"]!!.toLong()
+                )
+                call.respond(HttpStatusCode.OK)
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }

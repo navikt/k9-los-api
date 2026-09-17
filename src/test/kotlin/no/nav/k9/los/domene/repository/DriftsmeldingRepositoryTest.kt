@@ -3,6 +3,7 @@ package no.nav.k9.los.domene.repository
 import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.driftsmelding.DriftsmeldingDto
 import no.nav.k9.los.driftsmelding.DriftsmeldingRepository
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import org.junit.jupiter.api.Test
 import org.koin.test.get
 import java.time.LocalDateTime
@@ -23,15 +24,15 @@ class DriftsmeldingRepositoryTest : AbstractK9LosIntegrationTest() {
             LocalDateTime.now(),
             false,
             null)
-        driftsmeldingRepository.lagreDriftsmelding(driftsmelding)
+        driftsmeldingRepository.lagreDriftsmelding(Områder.K9, driftsmelding)
 
-        val alle = driftsmeldingRepository.hentAlle()
+        val alle = driftsmeldingRepository.hentAlle(Områder.K9)
         assertEquals(driftsmelding.id, alle[0].id)
         assertEquals(driftsmelding.melding, alle[0].melding)
         assertEquals(driftsmelding.aktiv, alle[0].aktiv)
 
-        driftsmeldingRepository.slett(driftsmelding.id)
-        val ingen = driftsmeldingRepository.hentAlle()
+        driftsmeldingRepository.slett(Områder.K9, driftsmelding.id)
+        val ingen = driftsmeldingRepository.hentAlle(Områder.K9)
         assertEquals(0, ingen.size)
     }
 

@@ -4,6 +4,8 @@ import io.mockk.*
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.azuregraph.IAzureGraphService
+import no.nav.k9.los.infrastruktur.idtoken.IIdToken
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
 import org.junit.jupiter.api.Test
@@ -22,6 +24,20 @@ class InnloggetBrukerTjenesteTest {
     private val azureGraphService = mockk<IAzureGraphService>()
     private val pepClient = mockk<IPepClient>()
     private val tjeneste = InnloggetBrukerTjeneste(repository, azureGraphService, pepClient, clock)
+
+    @Test
+    fun `finner bare saksbehandler med samme skjermingskategori som innlogget bruker`() = runBlocking {
+        val token = mockk<IIdToken>()
+        every { token.getNavIdent() } returns "Z123456"
+        every { token.getUsername() } returns "saksbehandler@nav.no"
+        every { repository.finnSaksbehandlerMedIdent("Z123456", false) } returns null
+        every { repository.finnSaksbehandlerMedEpost("saksbehandler@nav.no", false) } returns null
+
+        tjeneste.finnOgVedlikehold(token, kode6 = false)
+
+        verify(exactly = 1) { repository.finnSaksbehandlerMedIdent("Z123456", false) }
+        verify(exactly = 1) { repository.finnSaksbehandlerMedEpost("saksbehandler@nav.no", false) }
+    }
 
     @Test
     fun `vedlikeholder saksbehandler når tidspunkt mangler`() = runBlocking {
@@ -139,6 +155,7 @@ class InnloggetBrukerTjenesteTest {
         navn = "Saksbehandler Sara",
         epost = "saksbehandler@nav.no",
         enhet = "3450",
+        områder = listOf(Områder.K9),
         skjermet = false,
         sistOppdatert = sistOppdatert
     )

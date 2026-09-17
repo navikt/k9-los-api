@@ -40,7 +40,8 @@ class ReservasjonApisTjeneste(
         val oppgaveNøkkel = oppgaveIdMedOverstyringDto.oppgaveNøkkel
 
         val reserverForSaksbehandler = saksbehandlerRepository.finnSaksbehandlerMedIdent(
-            oppgaveIdMedOverstyringDto.overstyrIdent ?: innloggetBruker.navident!!
+            oppgaveIdMedOverstyringDto.overstyrIdent ?: innloggetBruker.navident!!,
+            innloggetBruker.skjermet
         )!!
 
         val reservasjonV3 = transactionalManager.transactionSuspend { tx ->
@@ -94,7 +95,7 @@ class ReservasjonApisTjeneste(
         begrunnelse: String? = null
     ): ReservasjonV3Dto {
         val tilSaksbehandler =
-            tilBrukerIdent?.let { saksbehandlerRepository.finnSaksbehandlerMedIdent(it) }
+            tilBrukerIdent?.let { saksbehandlerRepository.finnSaksbehandlerMedIdent(it, innloggetBruker.skjermet) }
 
         val reservasjonsnøkkel = endringDto.reservasjonsnøkkel ?: aktivOppgaveOppslag.hentAktivOppgave(
             område,
@@ -155,7 +156,8 @@ class ReservasjonApisTjeneste(
         innloggetBruker: Saksbehandler
     ): ReservasjonV3Dto {
         val tilSaksbehandler = saksbehandlerRepository.finnSaksbehandlerMedIdent(
-            params.brukerIdent
+            params.brukerIdent,
+            innloggetBruker.skjermet
         )!!
 
         val reservasjonsnøkkel = params.reservasjonsnøkkel ?: aktivOppgaveOppslag.hentAktivOppgave(
@@ -245,15 +247,13 @@ class ReservasjonApisTjeneste(
         )
     }
 
-    suspend fun hentAlleAktiveReservasjoner(område: Områder): List<ReservasjonDto> {
-        val innloggetBrukerHarKode6Tilgang = pepClient.harTilgangTilKode6()
-
+    fun hentAlleAktiveReservasjoner(område: Områder, kode6: Boolean): List<ReservasjonDto> {
         return reservasjonV3Tjeneste.hentAlleAktiveReservasjoner(område).flatMap { reservasjonMedOppgaver ->
             val saksbehandler =
                 saksbehandlerRepository.finnSaksbehandlerMedId(reservasjonMedOppgaver.reservasjonV3.reservertAv)!!
             val saksbehandlerHarKode6Tilgang = saksbehandler.skjermet
 
-            if (innloggetBrukerHarKode6Tilgang != saksbehandlerHarKode6Tilgang) {
+            if (kode6 != saksbehandlerHarKode6Tilgang) {
                 emptyList()
             } else {
                 reservasjonMedOppgaver.oppgaverV3.map { oppgave ->

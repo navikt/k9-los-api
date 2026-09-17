@@ -28,6 +28,7 @@ import no.nav.k9.los.kodeverk.BehandlingType
 import no.nav.k9.los.kodeverk.FagsakYtelseType
 import no.nav.k9.los.kodeverk.Fagsystem
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.sak.kontrakt.aksjonspunkt.AksjonspunktTilstandDto
 import no.nav.k9.sak.typer.AktørId
 import no.nav.k9.sak.typer.JournalpostId
@@ -48,17 +49,33 @@ object localSetup : KoinComponent {
     private val profile: KoinProfile by inject()
     private val dataSource: DataSource by inject()
 
-    fun addSaksbehandler(saksbehandlerfelter: Map<String, String>) {
+    fun addSaksbehandler(saksbehandlerfelter: Map<String, Any>) {
         return using(sessionOf(dataSource)) {
             it.transaction { tx ->
-                tx.run(
+                val saksbehandlerId = tx.run(
                     queryOf(
                         """
                         insert into saksbehandler (navident, navn, epost, enhet, skjermet)
-                        values (:navident,:navn, :epost, '2830 NAV DRIFT', false)
-                        on conflict do nothing
+                        values (:navident, :navn, :epost, :enhet, false)
+                        on conflict (epost) do update
+                            set navident = :navident,
+                                navn = :navn,
+                                epost = :epost,
+                                enhet = :enhet,
+                                skjermet = :skjermet
+                        returning id
                      """,
                         saksbehandlerfelter
+                    ).map { row -> row.long("id") }.asSingle
+                )
+                tx.run(
+                    queryOf(
+                        """
+                        insert into saksbehandler_omrade(saksbehandler_id, omrade_id)
+                        values (:saksbehandler_id, (select id from omrade where ekstern_id = :omrade))
+                        on conflict do nothing
+                     """,
+                        mapOf("saksbehandler_id" to saksbehandlerId, "omrade" to Områder.K9.eksternId)
                     ).asExecute
                 )
             }
@@ -73,16 +90,22 @@ object localSetup : KoinComponent {
                         "navident" to "Z123456",
                         "navn" to "Saksbehandler Sara",
                         "epost" to "saksbehandler.sara@nav.no",
+                        "enhet" to "3450",
+                        "skjermet" to false,
                     ),
                     mapOf(
                         "navident" to "Z167457",
                         "navn" to "Saksbehandler Lars",
                         "epost" to "saksbehandler.lars@nav.no",
+                        "enhet" to "3450",
+                        "skjermet" to false,
                     ),
                     mapOf(
                         "navident" to "Z321457",
                         "navn" to "Saksbehandler Edgar",
                         "epost" to "saksbehandler.edgar@nav.no",
+                        "enhet" to "3450",
+                        "skjermet" to false,
                     )
                 ).forEach { addSaksbehandler(it) }
             }

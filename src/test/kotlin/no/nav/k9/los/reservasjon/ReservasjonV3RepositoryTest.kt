@@ -5,6 +5,7 @@ import assertk.assertions.isEqualTo
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.saksbehandleradmin.TestSaksbehandlerRepository
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -28,6 +29,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
                     navn = null,
                     epost = "test1@test.no",
                     enhet = null,
+                    områder = listOf(Områder.K9)
                 )
             )
         }
@@ -70,6 +72,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
                     navn = null,
                     epost = "test1@test.no",
                     enhet = null,
+                    områder = listOf(Områder.K9)
                 )
             )
         }
@@ -81,6 +84,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
                     navn = null,
                     epost = "test2@test.no",
                     enhet = null,
+                    områder = listOf(Områder.K9)
                 )
             )
         }
@@ -125,6 +129,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
                     navn = null,
                     epost = "test1@test.no",
                     enhet = null,
+                    områder = listOf(Områder.K9)
                 )
             )
         }
@@ -179,6 +184,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
                     navn = null,
                     epost = "test1@test.no",
                     enhet = null,
+                    områder = listOf(Områder.K9)
                 )
             )
         }
@@ -190,6 +196,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
                     navn = null,
                     epost = "test2@test.no",
                     enhet = null,
+                    områder = listOf(Områder.K9)
                 )
             )
         }
@@ -239,6 +246,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
                     navn = null,
                     epost = "test1@test.no",
                     enhet = null,
+                    områder = listOf(Områder.K9)
                 )
             )
         }
@@ -250,6 +258,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
                     navn = null,
                     epost = "test2@test.no",
                     enhet = null,
+                    områder = listOf(Områder.K9)
                 )
             )
         }
@@ -279,6 +288,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
                     navn = null,
                     epost = "saksbehandler@nav.no",
                     enhet = null,
+                    områder = listOf(Områder.K9)
                 )
             )
         }
@@ -306,6 +316,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
                     navn = null,
                     epost = "test1@test.no",
                     enhet = null,
+                    områder = listOf(Områder.K9)
                 )
             )
         }
@@ -352,6 +363,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
                     navn = null,
                     epost = "test1@test.no",
                     enhet = null,
+                    områder = listOf(Områder.K9)
                 )
             )
         }
@@ -362,6 +374,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
                     navn = null,
                     epost = "test2@test.no",
                     enhet = null,
+                    områder = listOf(Områder.K9)
                 )
             )
         }
@@ -372,6 +385,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
                     navn = null,
                     epost = "test3@test.no",
                     enhet = null,
+                    områder = listOf(Områder.K9)
                 )
             )
         }

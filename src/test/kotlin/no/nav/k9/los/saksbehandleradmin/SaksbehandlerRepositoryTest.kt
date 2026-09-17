@@ -28,12 +28,18 @@ class SaksbehandlerRepositoryTest : AbstractK9LosIntegrationTest() {
     fun `vedlikeholder saksbehandler og tidspunkt`() = runBlocking {
         val testSaksbehandlerRepository = get<TestSaksbehandlerRepository>()
         val repository = get<SaksbehandlerRepository>()
-        val opprinnelig = OpprettSaksbehandler("Z123456", "Gammelt navn", "saksbehandler@nav.no", "1234")
+        val opprinnelig = OpprettSaksbehandler(
+            områder = listOf(Områder.K9),
+            navident = "Z123456",
+            navn = "Gammelt navn",
+            epost = "saksbehandler@nav.no",
+            enhet = "1234"
+        )
         val id = testSaksbehandlerRepository.opprettSaksbehandler(opprinnelig).id
         val tidspunkt = LocalDateTime.parse("2026-08-28T10:00:00")
 
         repository.vedlikeholdSaksbehandler(
-            Saksbehandler(id, "Z654321", "Nytt navn", "Ny.Epost@nav.no", "3450", false, tidspunkt)
+            Saksbehandler(id, "Z654321", "Nytt navn", "Ny.Epost@nav.no", "3450", listOf(Områder.K9),false, tidspunkt)
         )
 
         val oppdatert = repository.finnSaksbehandlerMedId(id)!!
@@ -75,22 +81,35 @@ class SaksbehandlerRepositoryTest : AbstractK9LosIntegrationTest() {
         val testRepository = get<TestSaksbehandlerRepository>()
         val repository = get<SaksbehandlerRepository>()
         val opprinnelig = testRepository.opprettSaksbehandler(
-            OpprettSaksbehandler("Z123456", "Gammelt navn", "gammel@nav.no", "1234")
+            OpprettSaksbehandler(
+                områder = listOf(Områder.K9),
+                navident = "Z123456",
+                navn = "Gammelt navn",
+                epost = "gammel@nav.no",
+                enhet = "1234"
+            )
         )
         val annen = testRepository.opprettSaksbehandler(
-            OpprettSaksbehandler("Z234567", "Annen saksbehandler", "opptatt@nav.no", "2345")
+            OpprettSaksbehandler(
+                områder = listOf(Områder.K9),
+                navident = "Z234567",
+                navn = "Annen saksbehandler",
+                epost = "opptatt@nav.no",
+                enhet = "2345"
+            )
         )
 
         val feil = assertThrows<PSQLException> {
             repository.vedlikeholdSaksbehandler(
                 Saksbehandler(
-                    opprinnelig.id,
-                    "Z654321",
-                    "Nytt navn",
-                    annen.epost,
-                    "3450",
+                    id = opprinnelig.id,
+                    navident = "Z654321",
+                    navn = "Nytt navn",
+                    epost = annen.epost,
+                    enhet = "3450",
+                    områder = listOf(Områder.K9),
                     skjermet = false,
-                    LocalDateTime.parse("2026-08-28T10:00:00")
+                    sistOppdatert = LocalDateTime.parse("2026-08-28T10:00:00")
                 )
             )
         }
@@ -109,9 +128,15 @@ class SaksbehandlerRepositoryTest : AbstractK9LosIntegrationTest() {
     fun `vedlikehold fortsetter etter opprydding av epostkonflikt`() = runBlocking {
         val repository = get<SaksbehandlerRepository>()
         val opprinnelig = get<TestSaksbehandlerRepository>().opprettSaksbehandler(
-            OpprettSaksbehandler("Z123456", "Gammelt navn", "x@nav.no", "1234")
+            OpprettSaksbehandler(
+                områder = listOf(Områder.K9),
+                navident = "Z123456",
+                navn = "Gammelt navn",
+                epost = "x@nav.no",
+                enhet = "1234"
+            )
         )
-        val duplikatId = repository.opprettSaksbehandler("y@nav.no")
+        val duplikatId = repository.opprettSaksbehandler(Områder.K9, false, "y@nav.no")
         val duplikat = repository.finnSaksbehandlerMedId(duplikatId)!!
         val tidspunkt = LocalDateTime.parse("2026-08-28T10:00:00")
         val graph = mockk<IAzureGraphService>()
@@ -161,25 +186,27 @@ class SaksbehandlerRepositoryTest : AbstractK9LosIntegrationTest() {
 
         testSaksbehandlerRepository.opprettSaksbehandler(
             OpprettSaksbehandler(
-                ident,
-                ident,
-                ident + "@nav.no",
+                områder = listOf(Områder.K9),
+                navident = ident,
+                navn = ident,
+                epost = ident + "@nav.no",
                 enhet = "1234"
             )
         )
 
         testSaksbehandlerRepository.opprettSaksbehandler(
             OpprettSaksbehandler(
-                ident2,
-                ident2,
-                ident2 + "@nav.no",
+                områder = listOf(Områder.K9),
+                navident = ident2,
+                navn = ident2,
+                epost = ident2 + "@nav.no",
                 enhet = "1234"
             )
         )
 
-        val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedIdent(ident)!!
+        val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedIdent(ident, false)!!
 
-        val saksbehandler2 = saksbehandlerRepository.finnSaksbehandlerMedIdent(ident2)!!
+        val saksbehandler2 = saksbehandlerRepository.finnSaksbehandlerMedIdent(ident2, false)!!
 
         assertThat(saksbehandler.navident, equalTo(ident))
 
@@ -212,7 +239,7 @@ class SaksbehandlerRepositoryTest : AbstractK9LosIntegrationTest() {
 
         val transactionalManager = get<TransactionalManager>()
         transactionalManager.transaction { tx ->
-            saksbehandlerRepository.slettSaksbehandler(tx, saksbehandler.epost, saksbehandler.skjermet)
+            saksbehandlerRepository.slettSaksbehandler(Områder.K9, saksbehandler.skjermet, saksbehandler.epost, tx)
         }
     }
 }

@@ -43,9 +43,10 @@ class SisteOppgaverRepositoryTest : AbstractK9LosIntegrationTest() {
                     navn = "Test Testersen",
                     epost = "test@nav.no",
                     enhet = null,
+                    områder = listOf(Områder.K9),
                 )
             )
-            saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedEpost("test@nav.no")!!
+            saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedEpost("test@nav.no", false)!!
         }
     }
 
@@ -156,6 +157,34 @@ class SisteOppgaverRepositoryTest : AbstractK9LosIntegrationTest() {
         assertThat(sisteOppgaver[0].eksternId).isEqualTo(behandlingUuid1) // Oppgave1 skal nå være øverst
         assertThat(sisteOppgaver[1].eksternId).isEqualTo(behandlingUuid3)
         assertThat(sisteOppgaver[2].eksternId).isEqualTo(behandlingUuid2)
+    }
+
+    @Test
+    fun `skal oppdatere samme K9-oppgave uten å lage duplikat`() {
+        val behandlingUuid = UUID.randomUUID().toString()
+        val oppgaveNøkkel = OppgaveNøkkelDto(
+            områdeEksternId = Områder.K9,
+            oppgaveEksternId = behandlingUuid,
+            oppgaveTypeEksternId = "k9sak"
+        )
+
+        repeat(2) {
+            transactionalManager.transaction { tx ->
+                sisteOppgaverRepository.lagreSisteOppgave(
+                    Områder.K9,
+                    saksbehandler.epost,
+                    oppgaveNøkkel,
+                    tx
+                )
+            }
+        }
+
+        val sisteOppgaver = transactionalManager.transaction { tx ->
+            sisteOppgaverRepository.hentSisteOppgaver(Områder.K9, saksbehandler.epost, tx)
+        }
+
+        assertThat(sisteOppgaver).hasSize(1)
+        assertThat(sisteOppgaver.single().eksternId).isEqualTo(behandlingUuid)
     }
 
     @Test

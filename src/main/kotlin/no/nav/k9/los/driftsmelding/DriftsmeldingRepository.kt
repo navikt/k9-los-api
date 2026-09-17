@@ -3,6 +3,7 @@ package no.nav.k9.los.driftsmelding
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import java.time.LocalDateTime
 import java.util.*
 import javax.sql.DataSource
@@ -10,24 +11,22 @@ import javax.sql.DataSource
 class DriftsmeldingRepository(
     private val dataSource: DataSource
 ) {
-    fun lagreDriftsmelding(driftsmelding: DriftsmeldingDto) {
+    fun lagreDriftsmelding(område: Områder, driftsmelding: DriftsmeldingDto) {
         using(sessionOf(dataSource)) {
             it.transaction { tx ->
-
-                //language=PostgreSQL
                 tx.run(
                     queryOf(
                         """
-                    insert into driftsmeldinger as k (id, dato, melding, aktiv)
-                    values (:id, :dato, :melding, :aktiv)                 
-                       
+                    insert into driftsmeldinger as k (id, dato, melding, aktiv, omrade_id)
+                    values (:id, :dato, :melding, :aktiv, (select id from omrade o where o.ekstern_id = :omrade_ekstern_id))
                  """,
                         mapOf(
                             "id" to driftsmelding.id,
                             "dato" to driftsmelding.dato,
                             "melding" to driftsmelding.melding,
                             "aktiv" to driftsmelding.aktiv,
-                            "aktivert" to null
+                            "aktivert" to null,
+                            "omrade_ekstern_id" to område.eksternId,
                         )
                     ).asUpdate
                 )
@@ -36,23 +35,21 @@ class DriftsmeldingRepository(
 
     }
 
-    fun setDriftsmelding(driftsmelding: DriftsmeldingSwitch, aktivert: LocalDateTime?) {
+    fun setDriftsmelding(område: Områder, driftsmelding: DriftsmeldingSwitch, aktivert: LocalDateTime?) {
         using(sessionOf(dataSource)) {
             it.transaction { tx ->
-
-                //language=PostgreSQL
                 tx.run(
                         queryOf(
                                 """
                     update driftsmeldinger
                     set aktiv = :aktiv, aktivert = :aktivert
-                    where id = :id                
-                       
+                    where id = :id AND omrade_id = (select id from omrade o where o.ekstern_id = :omrade_ekstern_id)
                  """,
                         mapOf(
-                                "id" to driftsmelding.id,
-                                "aktiv" to driftsmelding.aktiv,
-                                "aktivert" to aktivert
+                            "id" to driftsmelding.id,
+                            "aktiv" to driftsmelding.aktiv,
+                            "aktivert" to aktivert,
+                            "omrade_ekstern_id" to område.eksternId,
                         )
                 ).asUpdate
                 )
@@ -61,12 +58,12 @@ class DriftsmeldingRepository(
 
     }
 
-    fun hentAlle(): List<DriftsmeldingDto> {
+    fun hentAlle(område: Områder): List<DriftsmeldingDto> {
         return using(sessionOf(dataSource)) {
-            //language=PostgreSQL
             it.run(
                 queryOf(
-                    """select * from driftsmeldinger""".trimIndent()
+                    """select * from driftsmeldinger where omrade_id = (select id from omrade o where o.ekstern_id = :omrade_ekstern_id)""".trimIndent(),
+                    mapOf("omrade_ekstern_id" to område.eksternId),
                 )
                     .map { row ->
                         DriftsmeldingDto(
@@ -81,18 +78,17 @@ class DriftsmeldingRepository(
         }
     }
 
-    fun slett(id: UUID) {
+    fun slett(område: Områder, id: UUID) {
         using(sessionOf(dataSource)) {
             it.transaction { tx ->
-
-                //language=PostgreSQL
                 tx.run(
                     queryOf(
                         """
-                    delete from driftsmeldinger where id = :id            
+                    delete from driftsmeldinger where id = :id AND omrade_id = (select id from omrade o where o.ekstern_id = :omrade_ekstern_id)           
                  """,
                         mapOf(
-                            "id" to id.toString()
+                            "id" to id.toString(),
+                            "omrade_ekstern_id" to område.eksternId,
                         )
                     ).asUpdate
                 )
