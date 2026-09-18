@@ -1,5 +1,7 @@
 package no.nav.k9.los.reservasjon
 
+import io.github.smiley4.ktoropenapi.get
+import io.github.smiley4.ktoropenapi.post
 import io.ktor.http.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
@@ -24,7 +26,20 @@ internal fun Route.ReservasjonApisNy() {
     val pepClient by inject<IPepClient>()
     val reservasjonApisTjeneste by inject<ReservasjonApisTjeneste>()
 
-    post("/reserver") {
+    post("/reserver", {
+        operationId = "reserverOppgave"
+        summary = "Reserver oppgave"
+        request {
+            body<OppgaveIdMedOverstyringDto> { description = "Oppgaven som skal reserveres, med eventuell overstyring" }
+        }
+        response {
+            HttpStatusCode.OK to { body<OppgaveStatusDto>() }
+            HttpStatusCode.Forbidden to {
+                body<String>()
+                description = "Brukeren mangler tilgang til å reservere oppgaven"
+            }
+        }
+    }) {
         requestContextService.withRequestContext(call) {
             if (pepClient.harTilgangTilReserveringAvOppgaver()) {
                 val oppgaveIdMedOverstyringDto = call.receive<OppgaveIdMedOverstyringDto>()
@@ -52,7 +67,18 @@ internal fun Route.ReservasjonApisNy() {
         }
     }
 
-    get("/reserverte") {
+    get("/reserverte", {
+        operationId = "hentReserverteOppgaver"
+        summary = "Hent reserverte oppgaver"
+        response {
+            HttpStatusCode.OK to { body<List<ReservasjonV3Dto>>() }
+            HttpStatusCode.Forbidden to { description = "Brukeren mangler basistilgang" }
+            HttpStatusCode.InternalServerError to {
+                body<String>()
+                description = "Innlogget bruker finnes ikke i saksbehandlertabellen"
+            }
+        }
+    }) {
         requestContextService.withRequestContext(call) {
             if (pepClient.harBasisTilgang()) {
                 val innloggetBrukerNavIdent = coroutineContext.idToken().getNavIdent()
@@ -80,7 +106,21 @@ internal fun Route.ReservasjonApisNy() {
         }
     }
 
-    post("/opphev") {
+    post("/opphev", {
+        operationId = "opphevReservasjoner"
+        summary = "Opphev reservasjoner"
+        request {
+            body<List<AnnullerReservasjonDto>> { description = "Reservasjonene som skal oppheves" }
+        }
+        response {
+            HttpStatusCode.OK to { description = "Reservasjonene er opphevet" }
+            HttpStatusCode.Forbidden to { description = "Brukeren mangler basistilgang" }
+            HttpStatusCode.NotFound to {
+                body<String>()
+                description = "Ingen aktiv reservasjon ble funnet"
+            }
+        }
+    }) {
         requestContextService.withRequestContext(call) {
             if (pepClient.harBasisTilgang()) {
                 val params = call.receive<List<AnnullerReservasjonDto>>()
@@ -106,7 +146,21 @@ internal fun Route.ReservasjonApisNy() {
         }
     }
 
-    post("/forleng") {
+    post("/forleng", {
+        operationId = "forlengReservasjon"
+        summary = "Forleng reservasjon"
+        request {
+            body<ForlengReservasjonDto> { description = "Reservasjonen og ny sluttdato" }
+        }
+        response {
+            HttpStatusCode.OK to { body<ReservasjonV3Dto>() }
+            HttpStatusCode.Forbidden to { description = "Brukeren mangler basistilgang" }
+            HttpStatusCode.NotFound to {
+                body<String>()
+                description = "Ingen aktiv reservasjon ble funnet"
+            }
+        }
+    }) {
         requestContextService.withRequestContext(call) {
             if (pepClient.harBasisTilgang()) {
                 val forlengReservasjonDto = call.receive<ForlengReservasjonDto>()
@@ -130,7 +184,21 @@ internal fun Route.ReservasjonApisNy() {
         }
     }
 
-    post("/flytt") {
+    post("/flytt", {
+        operationId = "flyttReservasjon"
+        summary = "Flytt reservasjon"
+        request {
+            body<FlyttReservasjonDto> { description = "Reservasjonen og saksbehandleren den skal flyttes til" }
+        }
+        response {
+            HttpStatusCode.OK to { body<ReservasjonV3Dto>() }
+            HttpStatusCode.Forbidden to { description = "Brukeren mangler basistilgang" }
+            HttpStatusCode.NotFound to {
+                body<String>()
+                description = "Ingen aktiv reservasjon ble funnet"
+            }
+        }
+    }) {
         requestContextService.withRequestContext(call) {
             if (pepClient.harBasisTilgang()) {
                 val params = call.receive<FlyttReservasjonDto>()
@@ -156,7 +224,21 @@ internal fun Route.ReservasjonApisNy() {
         }
     }
 
-    post("/reservasjon/endre") {
+    post("/reservasjon/endre", {
+        operationId = "endreReservasjoner"
+        summary = "Endre reservasjoner"
+        request {
+            body<List<ReservasjonEndringDto>> { description = "Endringene som skal utføres på reservasjonene" }
+        }
+        response {
+            HttpStatusCode.OK to { description = "Reservasjonene er endret" }
+            HttpStatusCode.Forbidden to { description = "Brukeren mangler basistilgang" }
+            HttpStatusCode.NotFound to {
+                body<String>()
+                description = "Ingen aktiv reservasjon ble funnet"
+            }
+        }
+    }) {
         requestContextService.withRequestContext(call) {
             if (pepClient.harBasisTilgang()) {
                 val reservasjonEndringDto = call.receive<List<ReservasjonEndringDto>>()
@@ -179,7 +261,17 @@ internal fun Route.ReservasjonApisNy() {
         }
     }
 
-    post("/flytt/sok") {
+    post("/flytt/sok", {
+        operationId = "sokSaksbehandlerForReservasjon"
+        summary = "Søk etter saksbehandler"
+        request {
+            body<BrukerIdentDto> { description = "Nav-ident, navn eller e-post det skal søkes etter" }
+        }
+        response {
+            HttpStatusCode.OK to { body<no.nav.k9.los.saksbehandleradmin.Saksbehandler>() }
+            HttpStatusCode.Forbidden to { description = "Brukeren mangler basistilgang" }
+        }
+    }) {
         requestContextService.withRequestContext(call) {
             if (pepClient.harBasisTilgang()) {
                 val params = call.receive<BrukerIdentDto>()
@@ -195,7 +287,14 @@ internal fun Route.ReservasjonApisNy() {
         }
     }
 
-    get("/saksbehandlere") {
+    get("/saksbehandlere", {
+        operationId = "hentSaksbehandlereForReservasjon"
+        summary = "Hent saksbehandlere"
+        response {
+            HttpStatusCode.OK to { body<List<SaksbehandlerDto>>() }
+            HttpStatusCode.Forbidden to { description = "Brukeren mangler basistilgang" }
+        }
+    }) {
         requestContextService.withRequestContext(call) {
             if (pepClient.harBasisTilgang()) {
                 val alleSaksbehandlere = saksbehandlerRepository.hentAlleSaksbehandlere(
@@ -214,7 +313,25 @@ internal fun Route.ReservasjonApisNy() {
         }
     }
 
-    get("/aktiv-reservasjon") {
+    get("/aktiv-reservasjon", {
+        operationId = "hentAktivReservasjon"
+        summary = "Hent aktiv reservasjon"
+        request {
+            queryParameter<String>("oppgaveEksternId") {
+                description = "Oppgavens eksterne id"
+                required = true
+            }
+            queryParameter<String>("oppgaveTypeEksternId") {
+                description = "Oppgavetypens eksterne id"
+                required = true
+            }
+        }
+        response {
+            HttpStatusCode.OK to { body<ReservasjonV3Dto>() }
+            HttpStatusCode.NoContent to { description = "Oppgaven har ingen aktiv reservasjon" }
+            HttpStatusCode.Forbidden to { description = "Brukeren mangler tilgang til oppgaven" }
+        }
+    }) {
         requestContextService.withRequestContext(call) {
             if (pepClient.harBasisTilgang()) {
                 val oppgaveNøkkel = OppgaveNøkkelDto(

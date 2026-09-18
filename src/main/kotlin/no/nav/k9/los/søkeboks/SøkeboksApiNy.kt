@@ -19,13 +19,16 @@ fun Route.SøkeboksApiNy() {
 
     post(
         {
+            operationId = "søkEtterOppgaver"
+            summary = "Søk etter oppgaver"
             description =
                 "Søk etter oppgaver og tilhørende person. Dersom input er på 9 tegn antas den som journalpostId, ved 11 tegn som fødselsnummer, og ellers som fagsaknummer."
             request {
-                body<SøkRequest>()
+                body<SøkRequest> { description = "Søkeord for journalpost, person eller fagsak" }
             }
             response {
                 HttpStatusCode.OK to { body<SøkeresultatSammendrag>() }
+                HttpStatusCode.Forbidden to { description = "Brukeren mangler basistilgang" }
             }
         }
     ) {

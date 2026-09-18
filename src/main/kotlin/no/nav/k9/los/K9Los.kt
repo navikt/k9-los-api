@@ -4,6 +4,10 @@ import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.PropertyNamingStrategies
 import com.fasterxml.jackson.databind.SerializationFeature
 import io.github.smiley4.ktoropenapi.OpenApi
+import io.github.smiley4.ktoropenapi.config.AuthScheme
+import io.github.smiley4.ktoropenapi.config.AuthType
+import io.github.smiley4.ktoropenapi.config.OpenApiVersion
+import io.github.smiley4.ktoropenapi.config.OpenApiPluginConfig
 import io.github.smiley4.ktoropenapi.openApi
 import io.github.smiley4.ktoropenapi.route
 import io.github.smiley4.ktorswaggerui.swaggerUI
@@ -49,6 +53,7 @@ import no.nav.k9.los.domeneadaptere.k9.refreshk9sakoppgaver.RefreshK9v3
 import no.nav.k9.los.domeneadaptere.statistikk.OppgavestatistikkTjeneste
 import no.nav.k9.los.domeneadaptere.statistikk.StatistikkApi
 import no.nav.k9.los.driftsmelding.DriftsmeldingerApis
+import no.nav.k9.los.driftsmelding.DriftsmeldingerApisNy
 import no.nav.k9.los.forvaltning.K9ForvaltningApis
 import no.nav.k9.los.infrastruktur.abac.SifAbacPdpUtilgjengeligException
 import no.nav.k9.los.infrastruktur.abac.cache.PepCacheService
@@ -59,6 +64,7 @@ import no.nav.k9.los.infrastruktur.jobbplanlegger.PlanlagtJobb
 import no.nav.k9.los.infrastruktur.jobbplanlegger.Tidsvindu
 import no.nav.k9.los.infrastruktur.metrikker.EventlagerNokkeltallPrometheusCollector
 import no.nav.k9.los.infrastruktur.rest.områdeApi
+import no.nav.k9.los.infrastruktur.rest.OmrådeUrlSegment
 import no.nav.k9.los.infrastruktur.utils.IkkeImplementertException
 import no.nav.k9.los.innloggetbruker.InnloggetBrukerApi
 import no.nav.k9.los.innloggetbruker.InnloggetBrukerApiNy
@@ -68,21 +74,25 @@ import no.nav.k9.los.ko.OppgaveKoApis
 import no.nav.k9.los.ko.OppgaveKoAvdelingslederApisNy
 import no.nav.k9.los.ko.OppgaveKoSaksbehandlerApisNy
 import no.nav.k9.los.lagretsok.LagretSøkApi
+import no.nav.k9.los.lagretsok.LagretSøkApiNy
 import no.nav.k9.los.nøkkeltall.K9NøkkeltallApis
 import no.nav.k9.los.nøkkeltall.saksbehandler.nyeogferdigstilte.K9NyeOgFerdigstilteApi
 import no.nav.k9.los.nøkkeltall.saksbehandler.nyeogferdigstilte.K9NyeOgFerdigstilteService
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.query.OppgaveQueryApis
+import no.nav.k9.los.oppgaveuthenting.query.OppgaveQueryApisNy
 import no.nav.k9.los.reservasjon.ReservasjonAdminApi
 import no.nav.k9.los.reservasjon.ReservasjonApis
 import no.nav.k9.los.reservasjon.ReservasjonApisNy
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerAdminApis
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerAdminApisNy
 import no.nav.k9.los.sisteoppgaver.SisteOppgaverApi
+import no.nav.k9.los.sisteoppgaver.SisteOppgaverApiNy
 import no.nav.k9.los.søkeboks.K9SøkeboksApi
 import no.nav.k9.los.søkeboks.SøkeboksApiNy
 import no.nav.k9.los.tjenester.mock.localSetup
 import no.nav.k9.los.uttrekk.UttrekkApi
+import no.nav.k9.los.uttrekk.UttrekkApiNy
 import no.nav.k9.los.uttrekk.UttrekkJobb
 import org.koin.core.Koin
 import org.koin.core.qualifier.named
@@ -220,7 +230,37 @@ fun Application.k9Los() {
         fromXCorrelationIdHeader()
     }
 
-    install(OpenApi)
+    install(OpenApi, OpenApiPluginConfig::k9LosOpenApiConfig)
+}
+
+internal fun OpenApiPluginConfig.k9LosOpenApiConfig() {
+    spec("forvaltning") {
+        info {
+            title = "K9 Los forvaltnings-API"
+            version = "1.0"
+            description = "Forvaltningsendepunkter for drift og administrasjon av K9 Los."
+        }
+    }
+    spec("frontend") {
+        openApiVersion = OpenApiVersion.V3_0
+        info {
+            title = "K9 Los frontend-API"
+            version = "1.0"
+            description = "Kontrakten mellom K9 Los-backend og frontend for områdene K9 og aktivitetspenger."
+        }
+        pathFilter = { _, path -> path.take(2) == listOf("api", "wip") }
+        security {
+            securityScheme("bearerAuth") {
+                type = AuthType.HTTP
+                scheme = AuthScheme.BEARER
+                bearerFormat = "JWT"
+            }
+            defaultSecuritySchemeNames("bearerAuth")
+            defaultUnauthorizedResponse {
+                description = "Mangler gyldig access token"
+            }
+        }
+    }
 }
 
 private fun Route.api() {
@@ -229,9 +269,11 @@ private fun Route.api() {
 }
 
 private fun Route.legacyApi() {
-    route("k9/los/api") {
+    route("k9/los/api", {
+        specName = "forvaltning"
+    }) {
         områdeApi(Områder.K9) {
-            route("openapi.json") { openApi() }
+            route("openapi.json") { openApi("forvaltning") }
             swaggerUI("openapi.json")
             route("/forvaltning") {
                 K9ForvaltningApis()
@@ -265,15 +307,26 @@ private fun Route.legacyApi() {
 }
 
 private fun Route.apiUnderConstruction() {
-    route("openapi.json") { openApi() }
-    swaggerUI("openapi.json")
+    route("openapi.json") { openApi("frontend") }
+    get("/") { call.respondRedirect("/swagger") }
+    route("swagger") { swaggerUI("/openapi.json") }
 
-    route("api/wip") {
+    route("api/wip", {
+        specName = "frontend"
+        protected = true
+    }) {
         route("innlogget-bruker/områder") { InnloggetBrukersOmråderApi() }
 
-        områdeApi {
-            route("innlogget-bruker") { InnloggetBrukerApiNy() }
-            route("driftsmeldinger", { tags("Driftsmelding") }) { DriftsmeldingerApis() }
+        route({
+            request {
+                pathParameter<OmrådeUrlSegment>("omrade") {
+                    description = "Området operasjonen gjelder"
+                }
+            }
+        }) {
+            områdeApi {
+                route("innlogget-bruker") { InnloggetBrukerApiNy() }
+                route("driftsmeldinger", { tags("Driftsmelding") }) { DriftsmeldingerApisNy() }
 
             route("/forvaltning", { tags("Forvaltning") }) {
                 // Finn ut hvilke av disse som fungerer for flere områder
@@ -286,7 +339,7 @@ private fun Route.apiUnderConstruction() {
                 route("sok") { SøkeboksApiNy() }
                 route("oppgaveko") { OppgaveKoSaksbehandlerApisNy() }
                 route("reservasjoner") { ReservasjonApisNy() }
-                route("siste-oppgaver") { SisteOppgaverApi() }
+                route("siste-oppgaver") { SisteOppgaverApiNy() }
 
                 // Etter hvert: Trenger å lage en for flere områder
     //            route("nye-og-ferdigstilte") { NyeOgFerdigstilteApiNy() }
@@ -297,9 +350,10 @@ private fun Route.apiUnderConstruction() {
                 route("reservasjon-admin") { ReservasjonAdminApi() }
                 route("oppgaveko") { OppgaveKoAvdelingslederApisNy() }
     //            route("nokkeltall") { NøkkeltallV3ApisNy() }
-                route("lagret-sok") { LagretSøkApi() }
-                route("uttrekk") { UttrekkApi() }
-                route("query") { OppgaveQueryApis() }
+                route("lagret-sok") { LagretSøkApiNy() }
+                route("uttrekk") { UttrekkApiNy() }
+                route("query") { OppgaveQueryApisNy() }
+            }
             }
         }
     }

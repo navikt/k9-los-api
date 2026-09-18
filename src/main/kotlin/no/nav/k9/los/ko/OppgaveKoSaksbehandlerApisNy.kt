@@ -24,8 +24,14 @@ fun Route.OppgaveKoSaksbehandlerApisNy() {
     val pepClient by inject<IPepClient>()
 
     get("/saksbehandlerskoer", {
+        operationId = "hentSaksbehandlersOppgavekoer"
+        summary = "Hent saksbehandlers oppgavekøer"
         response {
-            HttpStatusCode.OK to { body<List<OppgaveKo>>() }
+            HttpStatusCode.OK to {
+                body<List<OppgaveKo>>()
+            }
+            HttpStatusCode.Forbidden to { description = "Innlogget bruker mangler basistilgang" }
+            HttpStatusCode.NotFound to { description = "Oppgavekøen finnes ikke for gjeldende område og skjerming" }
         }
     }) {
         requestContextService.withRequestContext(call) {
@@ -49,14 +55,20 @@ fun Route.OppgaveKoSaksbehandlerApisNy() {
     }
 
     get("/{id}/oppgaver-i-koen", {
-        description = "Hent oppgaver i en oppgavekø, uten reserverte oppgaver."
+        operationId = "hentOppgaverISaksbehandlerko"
+        summary = "Hent oppgaver i oppgavekø"
         request {
             pathParameter<Long>("id") {
-                description = "Id til oppgavekøen"
+                required = true
             }
         }
         response {
-            HttpStatusCode.OK to { body<List<OppgaveSammendragDto>>() }
+            HttpStatusCode.OK to {
+                description = "Inntil ti tilgjengelige oppgaver fra oppgavekøen"
+                body<List<OppgaveSammendragDto>>()
+            }
+            HttpStatusCode.Forbidden to { description = "Innlogget bruker mangler basistilgang" }
+            HttpStatusCode.NotFound to { description = "Oppgavekøen finnes ikke for gjeldende område og skjerming" }
         }
     }) {
         requestContextService.withRequestContext(call) {
@@ -79,14 +91,19 @@ fun Route.OppgaveKoSaksbehandlerApisNy() {
     }
 
     get("/{id}/koens-saksbehandlere", {
-        description = "Hent saksbehandlere som er medlem av en oppgavekø."
+        operationId = "hentSaksbehandlereISaksbehandlerko"
+        summary = "Hent medlemmer av oppgavekø"
         request {
             pathParameter<Long>("id") {
-                description = "Id til oppgavekøen"
+                required = true
             }
         }
         response {
-            HttpStatusCode.OK to { body<List<SaksbehandlerForKolisteDto>>() }
+            HttpStatusCode.OK to {
+                body<List<SaksbehandlerForKolisteDto>>()
+            }
+            HttpStatusCode.Forbidden to { description = "Innlogget bruker mangler basistilgang" }
+            HttpStatusCode.NotFound to { description = "Oppgavekøen finnes ikke for gjeldende område og skjerming" }
         }
     }) {
         requestContextService.withRequestContext(call) {
@@ -106,11 +123,18 @@ fun Route.OppgaveKoSaksbehandlerApisNy() {
     }
 
     get("/{id}/antall-uten-reserverte", {
-        description = "Hent antall oppgaver i en oppgavekø, uten reserverte oppgaver."
+        operationId = "hentAntallOppgaverUtenReserverteISaksbehandlerko"
+        summary = "Hent antall ledige oppgaver"
         request {
             pathParameter<Long>("id") {
-                description = "Id til oppgavekøen"
+                required = true
             }
+        }
+        response {
+            HttpStatusCode.OK to {
+                body<AntallOppgaver>()
+            }
+            HttpStatusCode.Forbidden to { description = "Innlogget bruker mangler basistilgang" }
         }
     }) {
         requestContextService.withRequestContext(call) {
@@ -133,11 +157,20 @@ fun Route.OppgaveKoSaksbehandlerApisNy() {
     }
 
     post("/{id}/fa-oppgave", {
-        description = "Reserver neste ledige oppgave fra en oppgavekø til innlogget saksbehandler."
+        operationId = "reserverNesteOppgaveFraSaksbehandlerko"
+        summary = "Reserver neste oppgave"
         request {
             pathParameter<Long>("id") {
-                description = "Id til oppgavekøen"
+                required = true
             }
+        }
+        response {
+            HttpStatusCode.OK to {
+                description = "En liste med reservasjonen, eller en tom liste dersom ingen oppgave kunne reserveres"
+                body<List<ReservasjonV3FraKøDto>>()
+            }
+            HttpStatusCode.Forbidden to { description = "Innlogget bruker mangler tilgang til å reservere oppgaver" }
+            HttpStatusCode.NotFound to { description = "Oppgavekøen finnes ikke for gjeldende område og skjerming" }
         }
     }) {
         requestContextService.withRequestContext(call) {
@@ -171,4 +204,3 @@ fun Route.OppgaveKoSaksbehandlerApisNy() {
         }
     }
 }
-

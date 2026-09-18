@@ -8,6 +8,11 @@ import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 
 val områdeAttributeKey = AttributeKey<Områder>("los-omrade")
 
+enum class OmrådeUrlSegment {
+    k9,
+    akt,
+}
+
 private fun Route.medOmrådePlugin(områdeProvider: suspend (ApplicationCall) -> Områder?): Route = apply {
     install(
         createRouteScopedPlugin("OmrådeKontekst-${hashCode()}") {
@@ -51,4 +56,6 @@ private object OmrådeRouteSelector : RouteSelector() {
             RouteSelectorEvaluation.FailedPath
         }
     }
+
+    override fun toString(): String = "{omrade}"
 }
