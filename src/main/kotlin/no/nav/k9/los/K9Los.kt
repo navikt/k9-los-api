@@ -6,8 +6,8 @@ import com.fasterxml.jackson.databind.SerializationFeature
 import io.github.smiley4.ktoropenapi.OpenApi
 import io.github.smiley4.ktoropenapi.config.AuthScheme
 import io.github.smiley4.ktoropenapi.config.AuthType
-import io.github.smiley4.ktoropenapi.config.OpenApiVersion
 import io.github.smiley4.ktoropenapi.config.OpenApiPluginConfig
+import io.github.smiley4.ktoropenapi.config.OpenApiVersion
 import io.github.smiley4.ktoropenapi.openApi
 import io.github.smiley4.ktoropenapi.route
 import io.github.smiley4.ktorswaggerui.swaggerUI
@@ -62,8 +62,8 @@ import no.nav.k9.los.infrastruktur.jobbplanlegger.Jobbplanlegger
 import no.nav.k9.los.infrastruktur.jobbplanlegger.PlanlagtJobb
 import no.nav.k9.los.infrastruktur.jobbplanlegger.Tidsvindu
 import no.nav.k9.los.infrastruktur.metrikker.EventlagerNokkeltallPrometheusCollector
-import no.nav.k9.los.infrastruktur.rest.områdeApi
 import no.nav.k9.los.infrastruktur.rest.OmrådeUrlSegment
+import no.nav.k9.los.infrastruktur.rest.områdeApi
 import no.nav.k9.los.infrastruktur.utils.IkkeImplementertException
 import no.nav.k9.los.innloggetbruker.InnloggetBrukerApi
 import no.nav.k9.los.innloggetbruker.InnloggetBrukerApiNy
@@ -240,7 +240,6 @@ internal fun OpenApiPluginConfig.k9LosOpenApiConfig() {
     spec("forvaltning") {
         info {
             title = "K9 Los forvaltnings-API"
-            version = "1.0"
             description = "Forvaltningsendepunkter for drift og administrasjon av K9 Los."
         }
     }
@@ -248,7 +247,6 @@ internal fun OpenApiPluginConfig.k9LosOpenApiConfig() {
         openApiVersion = OpenApiVersion.V3_0
         info {
             title = "K9 Los frontend-API"
-            version = "1.0"
             description = "Kontrakten mellom K9 Los-backend og frontend for områdene K9 og aktivitetspenger."
         }
         pathFilter = { _, path -> path.take(2) == listOf("api", "wip") }
@@ -316,19 +314,19 @@ private fun Route.apiUnderConstruction() {
 
     route("api/wip", {
         specName = "frontend"
-        protected = true
     }) {
-        route("innlogget-bruker/områder") { InnloggetBrukersOmråderApi() }
+        route("innlogget-bruker/områder", { tags("Innlogget bruker") }) { InnloggetBrukersOmråderApi() }
 
         route({
             request {
                 pathParameter<OmrådeUrlSegment>("omrade") {
                     description = "Området operasjonen gjelder"
+                    required = true
                 }
             }
         }) {
             områdeApi {
-                route("innlogget-bruker") { InnloggetBrukerApiNy() }
+                route("innlogget-bruker", { tags("Innlogget bruker") }) { InnloggetBrukerApiNy() }
                 route("driftsmeldinger", { tags("Driftsmelding") }) { DriftsmeldingerApisNy() }
 
             route("/forvaltning", { tags("Forvaltning") }) {

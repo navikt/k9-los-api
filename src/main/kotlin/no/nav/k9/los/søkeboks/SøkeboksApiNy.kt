@@ -20,9 +20,9 @@ fun Route.SøkeboksApiNy() {
     post(
         {
             operationId = "søkEtterOppgaver"
-            summary = "Søk etter oppgaver"
+            summary = "Søk med fritekst etter oppgaver"
             description =
-                "Søk etter oppgaver og tilhørende person. Dersom input er på 9 tegn antas den som journalpostId, ved 11 tegn som fødselsnummer, og ellers som fagsaknummer."
+                "Dersom input er på 9 tegn antas den som journalpostId, ved 11 tegn som fødselsnummer, og ellers som fagsaknummer."
             request {
                 body<SøkRequest> { description = "Søkeord for journalpost, person eller fagsak" }
             }
