@@ -279,9 +279,10 @@ private fun Route.apiUnderConstruction() {
             route("driftsmeldinger", { tags("Driftsmelding") }) { DriftsmeldingerApis() }
 
             route("/forvaltning", { tags("Forvaltning") }) {
+                // Finn ut hvilke av disse som fungerer for flere områder
     //            route("eventlager") { EventlagerApi() }
-    //            forvaltningApisNy()
-    //            route("statistikk") { StatistikkApiNy() }
+    //            forvaltningApis()
+    //            route("statistikk") { StatistikkApi() }
             }
 
             route("saksbehandler", { tags("Saksbehandler") }) {
@@ -289,6 +290,8 @@ private fun Route.apiUnderConstruction() {
                 route("oppgaveko") { OppgaveKoSaksbehandlerApisNy() }
                 route("reservasjoner") { ReservasjonApisNy() }
                 route("siste-oppgaver") { SisteOppgaverApi() }
+
+                // Etter hvert: Trenger å lage en for flere områder
     //            route("nye-og-ferdigstilte") { NyeOgFerdigstilteApiNy() }
             }
 
