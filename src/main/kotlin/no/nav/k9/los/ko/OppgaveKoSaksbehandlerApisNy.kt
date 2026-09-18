@@ -151,7 +151,7 @@ fun Route.OppgaveKoSaksbehandlerApisNy() {
         }
     }) {
         requestContextService.withRequestContext(call) {
-            if (pepClient.harBasisTilgang()) {
+            if (pepClient.harTilgangTilReserveringAvOppgaver()) {
                 val oppgavekøId = call.parameters["id"]!!
                 val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedIdent(
                     coroutineContext.idToken().getNavIdent(),

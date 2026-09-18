@@ -76,6 +76,7 @@ import no.nav.k9.los.reservasjon.ReservasjonAdminApi
 import no.nav.k9.los.reservasjon.ReservasjonApis
 import no.nav.k9.los.reservasjon.ReservasjonApisNy
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerAdminApis
+import no.nav.k9.los.saksbehandleradmin.SaksbehandlerAdminApisNy
 import no.nav.k9.los.sisteoppgaver.SisteOppgaverApi
 import no.nav.k9.los.søkeboks.K9SøkeboksApi
 import no.nav.k9.los.søkeboks.SøkeboksApiNy
@@ -270,33 +271,36 @@ private fun Route.apiUnderConstruction() {
     route("openapi.json") { openApi() }
     swaggerUI("openapi.json")
 
-    route("innlogget-bruker/områder") { InnloggetBrukersOmråderApi() }
-    områdeApi {
-        route("innlogget-bruker") { InnloggetBrukerApiNy() }
-        route("driftsmeldinger", { tags("Driftsmelding") }) { DriftsmeldingerApis() }
+    route("api/wip") {
+        route("innlogget-bruker/områder") { InnloggetBrukersOmråderApi() }
 
-        route("/forvaltning", { tags("Forvaltning") }) {
-//            route("eventlager") { EventlagerApi() }
-//            forvaltningApisNy()
-//            route("statistikk") { StatistikkApiNy() }
-        }
+        områdeApi {
+            route("innlogget-bruker") { InnloggetBrukerApiNy() }
+            route("driftsmeldinger", { tags("Driftsmelding") }) { DriftsmeldingerApis() }
 
-        route("saksbehandler", { tags("Saksbehandler") }) {
-            route("sok") { SøkeboksApiNy() }
-            route("oppgaveko") { OppgaveKoSaksbehandlerApisNy() }
-            route("reservasjoner") { ReservasjonApisNy() }
-            route("siste-oppgaver") { SisteOppgaverApi() }
-//            route("nye-og-ferdigstilte") { NyeOgFerdigstilteApiNy() }
-        }
+            route("/forvaltning", { tags("Forvaltning") }) {
+    //            route("eventlager") { EventlagerApi() }
+    //            forvaltningApisNy()
+    //            route("statistikk") { StatistikkApiNy() }
+            }
 
-        route("avdelingsleder", { tags("Avdelingsleder") }) {
-            route("saksbehandler-admin") { SaksbehandlerAdminApis() }
-            route("reservasjon-admin") { ReservasjonAdminApi() }
-            route("oppgaveko") { OppgaveKoAvdelingslederApisNy() }
-//            route("nokkeltall") { NøkkeltallV3ApisNy() }
-            route("lagret-sok") { LagretSøkApi() }
-            route("uttrekk") { UttrekkApi() }
-            route("query") { OppgaveQueryApis() }
+            route("saksbehandler", { tags("Saksbehandler") }) {
+                route("sok") { SøkeboksApiNy() }
+                route("oppgaveko") { OppgaveKoSaksbehandlerApisNy() }
+                route("reservasjoner") { ReservasjonApisNy() }
+                route("siste-oppgaver") { SisteOppgaverApi() }
+    //            route("nye-og-ferdigstilte") { NyeOgFerdigstilteApiNy() }
+            }
+
+            route("avdelingsleder", { tags("Avdelingsleder") }) {
+                route("saksbehandler-admin") { SaksbehandlerAdminApisNy() }
+                route("reservasjon-admin") { ReservasjonAdminApi() }
+                route("oppgaveko") { OppgaveKoAvdelingslederApisNy() }
+    //            route("nokkeltall") { NøkkeltallV3ApisNy() }
+                route("lagret-sok") { LagretSøkApi() }
+                route("uttrekk") { UttrekkApi() }
+                route("query") { OppgaveQueryApis() }
+            }
         }
     }
 }
