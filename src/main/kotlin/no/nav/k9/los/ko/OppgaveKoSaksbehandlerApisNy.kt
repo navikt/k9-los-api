@@ -10,7 +10,11 @@ import no.nav.k9.los.infrastruktur.rest.RequestContextService
 import no.nav.k9.los.infrastruktur.rest.idToken
 import no.nav.k9.los.infrastruktur.rest.område
 import no.nav.k9.los.infrastruktur.utils.OpentelemetrySpanUtil
+import no.nav.k9.los.ko.dto.OppgaveKo
+import no.nav.k9.los.ko.dto.ReservasjonV3FraKøDto
+import no.nav.k9.los.ko.dto.SaksbehandlerForKolisteDto
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
+import no.nav.k9.los.oppgaveuthenting.sammendrag.OppgaveSammendragDto
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
 import org.koin.ktor.ext.inject
 
@@ -26,6 +30,9 @@ fun Route.OppgaveKoSaksbehandlerApisNy() {
                 description = "Området API-kallet gjelder for"
                 example("K9") { value = Områder.K9 }
             }
+        }
+        response {
+            HttpStatusCode.OK to { body<List<OppgaveKo>>() }
         }
     }) {
         requestContextService.withRequestContext(call) {
@@ -48,16 +55,15 @@ fun Route.OppgaveKoSaksbehandlerApisNy() {
         }
     }
 
-    get("/{id}/oppgaver", {
+    get("/{id}/oppgaver-i-koen", {
         description = "Hent oppgaver i en oppgavekø, uten reserverte oppgaver."
         request {
-            pathParameter<Områder>("omrade") {
-                description = "Området API-kallet gjelder for"
-                example("K9") { value = Områder.K9 }
-            }
             pathParameter<Long>("id") {
                 description = "Id til oppgavekøen"
             }
+        }
+        response {
+            HttpStatusCode.OK to { body<List<OppgaveSammendragDto>>() }
         }
     }) {
         requestContextService.withRequestContext(call) {
@@ -79,16 +85,15 @@ fun Route.OppgaveKoSaksbehandlerApisNy() {
         }
     }
 
-    get("/{id}/saksbehandlere", {
+    get("/{id}/koens-saksbehandlere", {
         description = "Hent saksbehandlere som er medlem av en oppgavekø."
         request {
-            pathParameter<Områder>("omrade") {
-                description = "Området API-kallet gjelder for"
-                example("K9") { value = Områder.K9 }
-            }
             pathParameter<Long>("id") {
                 description = "Id til oppgavekøen"
             }
+        }
+        response {
+            HttpStatusCode.OK to { body<List<SaksbehandlerForKolisteDto>>() }
         }
     }) {
         requestContextService.withRequestContext(call) {
@@ -99,7 +104,7 @@ fun Route.OppgaveKoSaksbehandlerApisNy() {
                         område = coroutineContext.område(),
                         kode6 = pepClient.harTilgangTilKode6(),
                         oppgaveKoId = oppgavekøId.toLong()
-                    )
+                    ).map { SaksbehandlerForKolisteDto(it) }
                 )
             } else {
                 call.respond(HttpStatusCode.Forbidden)
@@ -110,10 +115,6 @@ fun Route.OppgaveKoSaksbehandlerApisNy() {
     get("/{id}/antall-uten-reserverte", {
         description = "Hent antall oppgaver i en oppgavekø, uten reserverte oppgaver."
         request {
-            pathParameter<Områder>("omrade") {
-                description = "Området API-kallet gjelder for"
-                example("K9") { value = Områder.K9 }
-            }
             pathParameter<Long>("id") {
                 description = "Id til oppgavekøen"
             }
@@ -141,10 +142,6 @@ fun Route.OppgaveKoSaksbehandlerApisNy() {
     post("/{id}/fa-oppgave", {
         description = "Reserver neste ledige oppgave fra en oppgavekø til innlogget saksbehandler."
         request {
-            pathParameter<Områder>("omrade") {
-                description = "Området API-kallet gjelder for"
-                example("K9") { value = Områder.K9 }
-            }
             pathParameter<Long>("id") {
                 description = "Id til oppgavekøen"
             }
@@ -171,6 +168,7 @@ fun Route.OppgaveKoSaksbehandlerApisNy() {
                                 innloggetBruker
                             )
                         )
+
                         OppgaveMuligReservert.IkkeReservert -> emptyList()
                     }
                 )

@@ -1,4 +1,4 @@
-package no.nav.k9.los.ko
+package no.nav.k9.los.ko.dto
 
 import no.nav.k9.los.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.reservasjon.ReservasjonV3

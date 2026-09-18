@@ -10,14 +10,7 @@ import io.ktor.server.routing.*
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.rest.RequestContextService
 import no.nav.k9.los.infrastruktur.rest.område
-import no.nav.k9.los.ko.dto.KopierOppgaveKoDto
-import no.nav.k9.los.ko.dto.OppgaveKo
-import no.nav.k9.los.ko.dto.OppgaveKoIdOgTittel
-import no.nav.k9.los.ko.dto.OppgaveKoListeDto
-import no.nav.k9.los.ko.dto.OppgaveKoListeelement
-import no.nav.k9.los.ko.dto.OpprettOppgaveKoDto
-import no.nav.k9.los.ko.dto.SaksbehandlerForKolisteDto
-import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
+import no.nav.k9.los.ko.dto.*
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
 import org.koin.ktor.ext.inject
 
@@ -27,16 +20,10 @@ fun Route.OppgaveKoAvdelingslederApisNy() {
     val saksbehandlerRepository by inject<SaksbehandlerRepository>()
     val pepClient by inject<IPepClient>()
 
-    get("/hentKoliste", {
-        description = "Hent liste over alle oppgavekøer."
-        request {
-            pathParameter<Områder>("omrade") {
-                description = "Området API-kallet gjelder for"
-                example("K9") { value = Områder.K9 }
-            }
-        }
+    get("/alle-koer", {
+        description = "Hent liste over alle oppgavekøer for område og skjerming."
         response {
-            HttpStatusCode.OK to { body<OppgaveKoListeDto>() }
+            HttpStatusCode.OK to { body<List<OppgaveKoListeelement>>() }
         }
     }) {
         requestContextService.withRequestContext(call) {
@@ -54,29 +41,34 @@ fun Route.OppgaveKoAvdelingslederApisNy() {
                         )
                     }
 
-                call.respond(OppgaveKoListeDto(oppgavekøer))
+                call.respond(oppgavekøer)
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
         }
     }
 
-    post("/endreKo", {
+    post("/endre", {
         description = "Endre en eksisterende oppgavekø."
         request {
-            pathParameter<Områder>("omrade") {
-                description = "Området API-kallet gjelder for"
-                example("K9") { value = Områder.K9 }
-            }
             body<OppgaveKo> {
                 description = "Oppgavekøen med de nye verdiene"
             }
+        }
+        response {
+            HttpStatusCode.OK to { body<OppgaveKo>() }
         }
     }) {
         requestContextService.withRequestContext(call) {
             if (pepClient.erOppgaveStyrer()) {
                 val oppgaveKo = call.receive<OppgaveKo>()
-                call.respond(oppgaveKoTjeneste.endre(coroutineContext.område(), pepClient.harTilgangTilKode6(), oppgaveKo))
+                call.respond(
+                    oppgaveKoTjeneste.endre(
+                        coroutineContext.område(),
+                        pepClient.harTilgangTilKode6(),
+                        oppgaveKo
+                    )
+                )
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
@@ -86,13 +78,12 @@ fun Route.OppgaveKoAvdelingslederApisNy() {
     post("/kopier", {
         description = "Kopier en eksisterende oppgavekø."
         request {
-            pathParameter<Områder>("omrade") {
-                description = "Området API-kallet gjelder for"
-                example("K9") { value = Områder.K9 }
-            }
             body<KopierOppgaveKoDto> {
                 description = "Hvilken kø som skal kopieres, ny tittel, og hva som skal tas med"
             }
+        }
+        response {
+            HttpStatusCode.OK to { body<OppgaveKo>() }
         }
     }) {
         requestContextService.withRequestContext(call) {
@@ -114,25 +105,19 @@ fun Route.OppgaveKoAvdelingslederApisNy() {
         }
     }
 
-    get("/saksbehandlere", {
-        description = "Hent alle saksbehandlere, for bruk ved administrasjon av oppgavekøer."
-        request {
-            pathParameter<Områder>("omrade") {
-                description = "Området API-kallet gjelder for"
-                example("K9") { value = Områder.K9 }
-            }
-        }
+    get("/alle-saksbehandlere", {
+        description = "Hent alle saksbehandlere for område og skjerming, for bruk ved administrasjon av oppgavekøer."
         response {
             HttpStatusCode.OK to { body<List<SaksbehandlerForKolisteDto>>() }
         }
     }) {
         requestContextService.withRequestContext(call) {
             if (pepClient.erOppgaveStyrer()) {
-                val alleSaksbehandlere = saksbehandlerRepository.hentAlleSaksbehandlere(coroutineContext.område(), pepClient.harTilgangTilKode6())
-                    .map { saksbehandler ->
-                        SaksbehandlerForKolisteDto(saksbehandler)
-                    }
-                call.respond(alleSaksbehandlere)
+                call.respond(
+                    saksbehandlerRepository.hentAlleSaksbehandlere(
+                        område = coroutineContext.område(),
+                        skjermet = pepClient.harTilgangTilKode6()
+                    ).map { SaksbehandlerForKolisteDto(it) })
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
@@ -142,13 +127,12 @@ fun Route.OppgaveKoAvdelingslederApisNy() {
     post("/opprett", {
         description = "Opprett en ny oppgavekø."
         request {
-            pathParameter<Områder>("omrade") {
-                description = "Området API-kallet gjelder for"
-                example("K9") { value = Områder.K9 }
-            }
             body<OpprettOppgaveKoDto> {
                 description = "Tittel på den nye oppgavekøen"
             }
+        }
+        response {
+            HttpStatusCode.OK to { body<OppgaveKo>() }
         }
     }) {
         requestContextService.withRequestContext(call) {
@@ -171,19 +155,24 @@ fun Route.OppgaveKoAvdelingslederApisNy() {
     get("/{id}", {
         description = "Hent en oppgavekø."
         request {
-            pathParameter<Områder>("omrade") {
-                description = "Området API-kallet gjelder for"
-                example("K9") { value = Områder.K9 }
-            }
             pathParameter<Long>("id") {
                 description = "Id til oppgavekøen"
             }
+        }
+        response {
+            HttpStatusCode.OK to { body<OppgaveKo>() }
         }
     }) {
         requestContextService.withRequestContext(call) {
             if (pepClient.erOppgaveStyrer()) {
                 val oppgavekøId = call.parameters["id"]!!
-                call.respond(oppgaveKoTjeneste.hent(coroutineContext.område(), pepClient.harTilgangTilKode6(),oppgavekøId.toLong()))
+                call.respond(
+                    oppgaveKoTjeneste.hent(
+                        coroutineContext.område(),
+                        pepClient.harTilgangTilKode6(),
+                        oppgavekøId.toLong()
+                    )
+                )
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
@@ -193,10 +182,6 @@ fun Route.OppgaveKoAvdelingslederApisNy() {
     delete("/{id}", {
         description = "Slett en oppgavekø."
         request {
-            pathParameter<Områder>("omrade") {
-                description = "Området API-kallet gjelder for"
-                example("K9") { value = Områder.K9 }
-            }
             pathParameter<Long>("id") {
                 description = "Id til oppgavekøen"
             }
@@ -205,7 +190,13 @@ fun Route.OppgaveKoAvdelingslederApisNy() {
         requestContextService.withRequestContext(call) {
             if (pepClient.erOppgaveStyrer()) {
                 val oppgavekøId = call.parameters["id"]!!
-                call.respond(oppgaveKoTjeneste.slett(coroutineContext.område(), pepClient.harTilgangTilKode6(), oppgavekøId.toLong()))
+                call.respond(
+                    oppgaveKoTjeneste.slett(
+                        coroutineContext.område(),
+                        pepClient.harTilgangTilKode6(),
+                        oppgavekøId.toLong()
+                    )
+                )
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
@@ -215,24 +206,25 @@ fun Route.OppgaveKoAvdelingslederApisNy() {
     get("/{id}/antall", {
         description = "Hent antall oppgaver, med og uten reserverte, for en oppgavekø."
         request {
-            pathParameter<Områder>("omrade") {
-                description = "Området API-kallet gjelder for"
-                example("K9") { value = Områder.K9 }
-            }
             pathParameter<Long>("id") {
                 description = "Id til oppgavekøen"
             }
+        }
+        response {
+            HttpStatusCode.OK to { body<AntallOppgaverOgReserverte>() }
         }
     }) {
         requestContextService.withRequestContext(call) {
             if (pepClient.erOppgaveStyrer()) {
                 val oppgavekøId = call.parameters["id"]!!
                 val kode6 = pepClient.harTilgangTilKode6()
-                call.respond(oppgaveKoTjeneste.hentAntallMedOgUtenReserverteForKø(
-                    coroutineContext.område(),
-                    kode6,
-                    oppgavekøId.toLong()
-                ))
+                call.respond(
+                    oppgaveKoTjeneste.hentAntallMedOgUtenReserverteForKø(
+                        coroutineContext.område(),
+                        kode6,
+                        oppgavekøId.toLong()
+                    )
+                )
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
@@ -242,11 +234,7 @@ fun Route.OppgaveKoAvdelingslederApisNy() {
     get("/andre-saksbehandleres-koer", {
         description = "Hent oppgavekøer en gitt saksbehandler er medlem av."
         request {
-            pathParameter<Områder>("omrade") {
-                description = "Området API-kallet gjelder for"
-                example("K9") { value = Områder.K9 }
-            }
-            queryParameter<Long>("id") {
+            queryParameter<Long>("saksbehandlerId") {
                 description = "Id til saksbehandleren"
                 required = true
             }
