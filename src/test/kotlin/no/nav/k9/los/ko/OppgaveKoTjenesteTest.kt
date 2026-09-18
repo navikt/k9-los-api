@@ -94,7 +94,7 @@ class OppgaveKoTjenesteTest {
 
         val resultat = tjeneste.hentOppgaverFraKøSammendrag(Områder.K9, false, IdTokenLocal(), 1L, 10L, true)
 
-        assertThat(resultat.oppgaver).containsExactly(sammendrag)
+        assertThat(resultat).containsExactly(sammendrag)
         coVerify(exactly = 1) { builder.bygg(listOf(oppgave), emptyMap()) }
     }
 

@@ -261,7 +261,7 @@ fun Route.OppgaveKoAvdelingslederApisNy() {
                     oppgaveKoTjeneste.hentKøerForSaksbehandler(
                         område = coroutineContext.område(),
                         kode6 = pepClient.harTilgangTilKode6(),
-                        saksbehandlerId = call.parameters["id"]?.toLong()!!,
+                        saksbehandlerId = call.queryParameters["saksbehandlerId"]?.toLong()!!,
                     ).map {
                         OppgaveKoIdOgTittel(
                             id = it.id,

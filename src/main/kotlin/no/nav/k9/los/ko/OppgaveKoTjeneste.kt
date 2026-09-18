@@ -20,7 +20,6 @@ import no.nav.k9.los.infrastruktur.utils.leggTilDagerHoppOverHelg
 import no.nav.k9.los.ko.db.OppgaveKoRepository
 import no.nav.k9.los.ko.dto.NesteOppgaverFraKoDto
 import no.nav.k9.los.ko.dto.OppgaveKo
-import no.nav.k9.los.ko.dto.OppgaverFraKøDto
 import no.nav.k9.los.kodeverk.BehandlingType
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.FeltdefinisjonTjeneste
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
@@ -34,6 +33,7 @@ import no.nav.k9.los.reservasjon.ReservasjonV3Tjeneste
 import no.nav.k9.los.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
 import no.nav.k9.los.oppgaveuthenting.Oppgave
+import no.nav.k9.los.oppgaveuthenting.sammendrag.OppgaveSammendragDto
 import no.nav.k9.los.oppgaveuthenting.sammendrag.OppgaveSammendragDtoBuilder
 import org.slf4j.LoggerFactory
 import java.time.Duration
@@ -91,13 +91,11 @@ class OppgaveKoTjeneste(
         oppgaveKoId: Long,
         ønsketAntallOppgaver: Long,
         fjernReserverte: Boolean = false,
-    ): OppgaverFraKøDto {
+    ): List<OppgaveSammendragDto> {
         val kø = oppgaveKoRepository.hent(område, kode6, oppgaveKoId)
         val oppgaver = hentTilgjengeligeOppgaverFraKø(område, idToken, kø, ønsketAntallOppgaver, fjernReserverte)
-        return OppgaverFraKøDto(oppgaveSammendragDtoBuilder.bygg(oppgaver))
+        return oppgaveSammendragDtoBuilder.bygg(oppgaver)
     }
-
-
 
     private suspend fun hentTilgjengeligeOppgaverFraKø(
         område: Områder,
