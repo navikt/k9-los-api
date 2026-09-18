@@ -54,24 +54,8 @@ class OmrådeRepository(private val dataSource: DataSource) {
         lagre(område.eksternId)
     }
 
-    fun hent(eksternId: String): Område? {
-        return using(sessionOf(dataSource)) { session ->
-            session.transaction { tx ->
-                tx.run(
-                    queryOf("select * from omrade where ekstern_id = :eksternId", mapOf("eksternId" to eksternId))
-                        .map { row ->
-                            Område(
-                                id = row.long("id"),
-                                eksternId = row.string("ekstern_id")
-                            )
-                        }.asSingle
-                )
-            }
-        }
-    }
-
     fun hent(område: Områder): Område? {
-        return hent(område.eksternId)
+        return hentOmråde(område.eksternId)
     }
 
     fun invaliderCache() {

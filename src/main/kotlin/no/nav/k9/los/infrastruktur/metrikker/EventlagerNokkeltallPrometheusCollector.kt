@@ -2,7 +2,7 @@ package no.nav.k9.los.infrastruktur.metrikker
 
 import io.prometheus.client.Collector
 import io.prometheus.client.GaugeMetricFamily
-import no.nav.k9.los.kodeverk.Fagsystem
+import no.nav.k9.los.domeneadaptere.eventlager.Fagsystem
 
 class EventlagerNokkeltallPrometheusCollector(
     private val nokkeltallRepository: EventlagerNokkeltallRepository,

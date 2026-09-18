@@ -2,12 +2,15 @@ package no.nav.k9.los.domeneadaptere.k9.eventmottak
 
 import assertk.assertThat
 import assertk.assertions.isEqualTo
+import com.fasterxml.jackson.module.kotlin.readValue
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus
 import no.nav.k9.los.AbstractK9LosIntegrationTest
-import no.nav.k9.los.domeneadaptere.k9.OmrådeSetup
-import no.nav.k9.los.domeneadaptere.k9.eventmottak.tilbakekrav.K9TilbakeEventHandler
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.OmrådeSetup
+import no.nav.k9.los.domeneadaptere.eventmottak.k9.tilbakekrav.K9TilbakeEventDto
+import no.nav.k9.los.domeneadaptere.eventmottak.k9.tilbakekrav.K9TilbakeEventHandler
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
-import no.nav.k9.los.kodeverk.FagsakYtelseType
+import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.kodeverk.K9FagsakYtelseType
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.query.OppgaveQueryService
@@ -44,10 +47,13 @@ class K9TilbakeEventHandlerTest : AbstractK9LosIntegrationTest() {
         }
     }
 
+    private fun deserialiser(json: String): K9TilbakeEventDto =
+        LosObjectMapper.instance.readValue<K9TilbakeEventDto>(json)
+
     @Test
     fun `Skal sette oppgave til VENTER når behandlingen har aktivt autopunkt`() {
         val json = lagK9TilbakeEvent(
-            FagsakYtelseType.OMSORGSPENGER,
+            K9FagsakYtelseType.OMSORGSPENGER,
             mapOf(
                 "5030" to AksjonspunktStatus.UTFØRT,
                 "7002" to AksjonspunktStatus.UTFØRT,
@@ -55,7 +61,7 @@ class K9TilbakeEventHandlerTest : AbstractK9LosIntegrationTest() {
                 "7003" to AksjonspunktStatus.OPPRETTET
             ))
 
-        val event = AksjonspunktLagetTilbake().deserialize(null, json.toByteArray())!!
+        val event = deserialiser(json)
 
         k9TilbakeEventHandler.prosesser(event)
 
@@ -66,14 +72,14 @@ class K9TilbakeEventHandlerTest : AbstractK9LosIntegrationTest() {
     @Test
     fun `Skal ikke lage oppgave for FRISINN`() {
         val json = lagK9TilbakeEvent(
-            FagsakYtelseType.FRISINN,
+            K9FagsakYtelseType.FRISINN,
             mapOf(
                 "7003" to AksjonspunktStatus.UTFØRT,
                 "5004" to AksjonspunktStatus.OPPRETTET
             )
         )
 
-        val event = AksjonspunktLagetTilbake().deserialize(null, json.toByteArray())!!
+        val event = deserialiser(json)
 
         k9TilbakeEventHandler.prosesser(event)
 
@@ -93,14 +99,14 @@ class K9TilbakeEventHandlerTest : AbstractK9LosIntegrationTest() {
     @Test
     fun `Skal lage oppgave for PSB`() {
         val json = lagK9TilbakeEvent(
-            FagsakYtelseType.PLEIEPENGER_SYKT_BARN,
+            K9FagsakYtelseType.PLEIEPENGER_SYKT_BARN,
             mapOf(
                 "7003" to AksjonspunktStatus.UTFØRT,
                 "5004" to AksjonspunktStatus.OPPRETTET
             )
         )
 
-        val event = AksjonspunktLagetTilbake().deserialize(null, json.toByteArray())!!
+        val event = deserialiser(json)
 
         k9TilbakeEventHandler.prosesser(event)
 
@@ -112,7 +118,7 @@ class K9TilbakeEventHandlerTest : AbstractK9LosIntegrationTest() {
     fun `Støtte tilbakekreving med beslutter aksjonspunkt`() {
 
         val json = lagK9TilbakeEvent(
-            FagsakYtelseType.PLEIEPENGER_SYKT_BARN,
+            K9FagsakYtelseType.PLEIEPENGER_SYKT_BARN,
             mapOf(
                 "7002" to AksjonspunktStatus.UTFØRT,
                 "7003" to AksjonspunktStatus.UTFØRT,
@@ -123,7 +129,7 @@ class K9TilbakeEventHandlerTest : AbstractK9LosIntegrationTest() {
             )
         )
 
-        val event = AksjonspunktLagetTilbake().deserialize(null, json.toByteArray())!!
+        val event = deserialiser(json)
 
         k9TilbakeEventHandler.prosesser(event)
 
@@ -131,7 +137,7 @@ class K9TilbakeEventHandlerTest : AbstractK9LosIntegrationTest() {
         assertThat(oppgaveV3!!.status).isEqualTo(Oppgavestatus.AAPEN)
     }
 
-    fun lagK9TilbakeEvent(ytelsetype: FagsakYtelseType, aksjonspunkter: Map<String, AksjonspunktStatus>): String {
+    fun lagK9TilbakeEvent(ytelsetype: K9FagsakYtelseType, aksjonspunkter: Map<String, AksjonspunktStatus>): String {
         val aksjonspunkString = aksjonspunkter
             .map { (aksjonspunkt, status) -> "\"$aksjonspunkt\": \"${status.kode}\"" }
             .joinToString(",")

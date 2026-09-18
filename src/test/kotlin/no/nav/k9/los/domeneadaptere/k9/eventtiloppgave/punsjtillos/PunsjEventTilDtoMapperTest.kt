@@ -6,9 +6,10 @@ import assertk.assertions.matchesPredicate
 import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.punsj.PunsjEventDtoBuilder
 import no.nav.k9.los.kodeverk.BehandlingType
-import no.nav.k9.los.kodeverk.FagsakYtelseType
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.kodeverk.K9FagsakYtelseType
 import no.nav.k9.los.FeltType
 import no.nav.k9.los.OppgaveTestDataBuilder
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.punsjtillos.PunsjEventTilOppgaveMapper
 import org.junit.jupiter.api.Test
 
 class PunsjEventTilDtoMapperTest : AbstractK9LosIntegrationTest() {
@@ -29,7 +30,7 @@ class PunsjEventTilDtoMapperTest : AbstractK9LosIntegrationTest() {
             .medOppgaveFeltVerdi(FeltType.YTELSE_TYPE, "UKJENT")
             .medOppgaveFeltVerdi(FeltType.BEHANDLING_TYPE, "UKJENT")
             .lag()
-        val event = PunsjEventDtoBuilder(ytelse = FagsakYtelseType.PLEIEPENGER_SYKT_BARN, type = BehandlingType.PAPIRSØKNAD).build()
+        val event = PunsjEventDtoBuilder(ytelse = K9FagsakYtelseType.PLEIEPENGER_SYKT_BARN, type = BehandlingType.PAPIRSØKNAD).build()
         val oppgaveDto = PunsjEventTilOppgaveMapper.lagOppgaveDto(event, forrigeOppgave)
         assertThat(oppgaveDto.feltverdier)
             .any { it.matchesPredicate { feltverdi -> feltverdi.nøkkel == "ytelsestype" && feltverdi.verdi == "PSB" } }

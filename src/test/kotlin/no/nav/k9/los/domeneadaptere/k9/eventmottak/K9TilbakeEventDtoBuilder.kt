@@ -3,11 +3,12 @@ package no.nav.k9.los.domeneadaptere.k9.eventmottak
 import no.nav.k9.kodeverk.behandling.BehandlingStegType
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus
 import no.nav.k9.los.kodeverk.BehandlingStatus
-import no.nav.k9.los.kodeverk.FagsakYtelseType
-import no.nav.k9.los.kodeverk.Fagsystem
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.kodeverk.K9FagsakYtelseType
+import no.nav.k9.los.domeneadaptere.eventlager.Fagsystem
+import no.nav.k9.los.domeneadaptere.eventmottak.EventHendelse
 import no.nav.k9.los.saksbehandleradmin.Saksbehandler
-import no.nav.k9.los.domeneadaptere.k9.eventmottak.tilbakekrav.K9TilbakeEventDto
-import no.nav.k9.los.domeneadaptere.k9.eventmottak.tilbakekrav.AksjonspunktDefinisjonK9Tilbake
+import no.nav.k9.los.domeneadaptere.eventmottak.k9.tilbakekrav.K9TilbakeEventDto
+import no.nav.k9.los.domeneadaptere.eventmottak.k9.tilbakekrav.AksjonspunktDefinisjonK9Tilbake
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
@@ -23,7 +24,7 @@ class K9TilbakeEventDtoBuilder(
     var behandlingStatus: BehandlingStatus = BehandlingStatus.UTREDES,
     var behandlingSteg: String? = BehandlingStegType.FATTE_VEDTAK.kode,
     var behandlendeEnhet: String? = null,
-    var ytelseTypeKode: FagsakYtelseType = FagsakYtelseType.PLEIEPENGER_SYKT_BARN,
+    var ytelseTypeKode: K9FagsakYtelseType = K9FagsakYtelseType.PLEIEPENGER_SYKT_BARN,
     var opprettetBehandling: LocalDateTime = LocalDateTime.now(),
     var aksjonspunkter: MutableMap<AksjonspunktDefinisjonK9Tilbake, AksjonspunktStatus> = mutableMapOf(),
     var ansvarligSaksbehandlerIdent: String? = null,

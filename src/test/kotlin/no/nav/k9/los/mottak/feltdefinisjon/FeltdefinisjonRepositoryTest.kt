@@ -132,8 +132,8 @@ class FeltdefinisjonRepositoryTest: AbstractK9LosIntegrationTest() {
     @Disabled("Har bare K9 i Områder-enum, når AKTIVITETSPENGER kommer kan kanskje denne reaktiveres")
     fun `kan ikke lagre feltdefinisjon på tvers av område`() {
         områdeRepository.lagre("test2")
-        val område2 = områdeRepository.hent("test2")!!
-        val område = områdeRepository.hent("test")!!
+        val område2 = områdeRepository.hentOmråde("test2")!!
+        val område = områdeRepository.hentOmråde("test")!!
         val feltdefinisjon = setOf(
             Feltdefinisjon(
                 eksternId = "test123",

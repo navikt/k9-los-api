@@ -26,7 +26,9 @@ class AnnullerReservasjonTest: AbstractK9LosIntegrationTest() {
             oppgavetypeRepository = get(),
             områdeRepository = get(),
         )
-        oppgavemodellBuilder = RedusertOppgaveTestmodellBuilder()
+        oppgavemodellBuilder = RedusertOppgaveTestmodellBuilder(
+            oppgavetypeId = "aksjonspunkt_annuller_reservasjon"
+        )
         oppgavemodellBuilder.byggOppgavemodell()
         transactionalManager = get()
 
