@@ -1,42 +1,19 @@
 package no.nav.k9.los.domeneadaptere.eventtiloppgave
 
 import no.nav.k9.los.domeneadaptere.eventlager.EventLagret
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.klagetillos.KlageEventTilOppgaveMapper
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.saktillos.SakEventTilOppgaveMapper
 
-class VaskeeventSerieutleder(
-    private val sakEventTilOppgaveMapper: SakEventTilOppgaveMapper,
-    private val klageEventTilOppgaveMapper: KlageEventTilOppgaveMapper,
-) {
+object VaskeeventSerieutleder {
+    /**
+     * Nummererer eventserien slik at vaskeeventer ikke forskyver oppgaveversjonene:
+     * en vaskeevent arver nummeret til forrige ordinære event.
+     */
     internal fun korrigerEventnummerForVaskeeventer(eventer: List<EventLagret>): List<Pair<Int, EventLagret>> {
-        return when (eventer.first()) {
-            is EventLagret.K9Sak -> {
-                var antallVask = 0
-                eventer.mapIndexed { index, lagret ->
-                    if (sakEventTilOppgaveMapper.erVaskeevent(lagret as EventLagret.K9Sak)) {
-                        antallVask++
-                    }
-                    if (index-antallVask < 0) {
-                        Pair(0, lagret)
-                    } else {
-                        Pair(index - antallVask, lagret)
-                    }
-                }.filter { it.second.dirty }
+        var antallVask = 0
+        return eventer.mapIndexed { index, lagret ->
+            if (lagret.erVaskeevent) {
+                antallVask++
             }
-            is EventLagret.K9Klage -> {
-                var antallVask = 0
-                eventer.mapIndexed { index, lagret ->
-                    if (klageEventTilOppgaveMapper.erVaskeevent(lagret as EventLagret.K9Klage)) {
-                        antallVask++
-                    }
-                    if (index-antallVask < 0) {
-                        Pair(0, lagret)
-                    } else {
-                        Pair(index - antallVask, lagret)
-                    }
-                }.filter { it.second.dirty }
-            }
-            else -> eventer.mapIndexed { index, lagret -> Pair(index, lagret) }.filter { it.second.dirty }
-        }
+            Pair((index - antallVask).coerceAtLeast(0), lagret)
+        }.filter { it.second.dirty }
     }
 }

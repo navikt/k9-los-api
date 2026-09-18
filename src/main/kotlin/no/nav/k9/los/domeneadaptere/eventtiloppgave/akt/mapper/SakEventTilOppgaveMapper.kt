@@ -14,7 +14,6 @@ import no.nav.ung.kodeverk.behandling.FagsakYtelseType
 import no.nav.ung.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
 import no.nav.ung.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus
 import no.nav.ung.kodeverk.behandling.aksjonspunkt.Venteårsak
-import no.nav.ung.kodeverk.hendelse.EventHendelse
 import no.nav.ung.sak.kontrakt.aksjonspunkt.AksjonspunktTilstandDto
 import java.time.temporal.ChronoUnit
 
@@ -42,16 +41,13 @@ object SakEventTilOppgaveMapper {
             feltverdier = lagFeltverdier(event, forrigeOppgave),
         )
 
-        return if (erVaskeevent(eventLagret)) {
+        return if (eventLagret.erVaskeevent) {
             VaskOppgaveversjon(dto = oppgaveDto, eventNummer = eventnummer)
         } else {
             NyOppgaveversjon(oppgaveDto)
         }
     }
 
-    fun erVaskeevent(eventLagret: EventLagret.UngSak): Boolean {
-        return eventLagret.eventDto.eventHendelse == EventHendelse.VASKEEVENT
-    }
 
     fun utledOppgavetype(event: UngSakEventDto): AktOppgavetypenavn {
         val åpneAksjonspunkter = getåpneAksjonspunkter(event)

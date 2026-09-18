@@ -61,7 +61,6 @@ class EventTilOppgaveAdapterSpec : KoinTest, FreeSpec() {
             OppgaveOppdatertHandler(
                 oppgaveRepository = get(),
                 reservasjonV3Tjeneste = get(),
-                eventTilOppgaveMapper = get(),
                 pepCacheService = get(),
                 køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
             )
@@ -71,9 +70,8 @@ class EventTilOppgaveAdapterSpec : KoinTest, FreeSpec() {
             eventRepository = eventRepository,
             oppgaveV3Tjeneste = get(),
             transactionalManager = get(),
-            eventTilOppgaveMapper = get(),
+            eventBeriker = get(),
             oppgaveOppdatertHandler = oppgaveOppdatertHandler,
-            vaskeeventSerieutleder = get(),
             ajourholdTjeneste = get(),
             statistikkRepository = get(),
         )

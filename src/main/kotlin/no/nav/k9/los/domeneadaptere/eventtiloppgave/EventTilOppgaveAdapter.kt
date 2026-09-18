@@ -8,7 +8,6 @@ import no.nav.k9.los.domeneadaptere.eventlager.EventNøkkel
 import no.nav.k9.los.domeneadaptere.eventlager.EventRepository
 import no.nav.k9.los.domeneadaptere.statistikk.StatistikkRepository
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
-import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgavemottak.AktivOgPartisjonertOppgaveAjourholdTjeneste
 import no.nav.k9.los.oppgavemottak.OppgaveV3
 import no.nav.k9.los.oppgavemottak.OppgaveV3Tjeneste
@@ -20,9 +19,8 @@ class EventTilOppgaveAdapter(
     private val eventRepository: EventRepository,
     private val oppgaveV3Tjeneste: OppgaveV3Tjeneste,
     private val transactionalManager: TransactionalManager,
-    private val eventTilOppgaveMapper: EventTilOppgaveMapper,
+    private val eventBeriker: EventBeriker,
     private val oppgaveOppdatertHandler: OppgaveOppdatertHandler,
-    private val vaskeeventSerieutleder: VaskeeventSerieutleder,
     private val ajourholdTjeneste: AktivOgPartisjonertOppgaveAjourholdTjeneste,
     private val statistikkRepository: StatistikkRepository,
 ) {
@@ -124,9 +122,10 @@ class EventTilOppgaveAdapter(
     fun oppdaterOppgaveForEksternIdUnderHistorikkvask(
         eventnøkkel: EventNøkkel,
         tx: TransactionalSession,
+        eventer: List<EventLagret>? = null,
     ): Long {
         log.info("Vasker oppgave for fagsystem: ${eventnøkkel.fagsystem}, eksternId: ${eventnøkkel.eksternId}")
-        val eventerMedNummerering = hentEventerOgKorriger(eventnøkkel, tx)
+        val eventerMedNummerering = hentEventerOgKorriger(eventnøkkel, tx, eventer)
         if (eventerMedNummerering.isEmpty()) return 0L
 
         var statistikkteller = 0L
@@ -152,7 +151,9 @@ class EventTilOppgaveAdapter(
         eventer: List<EventLagret>? = null,
     ): List<Pair<Int, EventLagret>> {
         val låsteEventer = eventer ?: eventRepository.hentAlleEventerMedLås(eventnøkkel, tx)
-        return vaskeeventSerieutleder.korrigerEventnummerForVaskeeventer(låsteEventer)
+        // Oppslag mot kildesystemene gjøres samlet for hele serien, slik at mappingen under er ren.
+        val berikedeEventer = eventBeriker.berik(låsteEventer)
+        return VaskeeventSerieutleder.korrigerEventnummerForVaskeeventer(berikedeEventer)
     }
 
     private fun hentStartversjon(
@@ -176,8 +177,8 @@ class EventTilOppgaveAdapter(
         tx: TransactionalSession,
     ): OppgaveV3? {
         return oppgaveV3Tjeneste.hentOppgaveversjon(
-            Områder.K9, //TODO parameteriseres!
-            eventTilOppgaveMapper.oppgavetypeKode(eventLagret),
+            eventLagret.område,
+            eventLagret.oppgavetypeKode(),
             eventnøkkel.eksternId,
             internVersjon,
             tx,
@@ -190,7 +191,7 @@ class EventTilOppgaveAdapter(
         forrigeOppgaveversjon: OppgaveV3?,
         tx: TransactionalSession,
     ): OppgaveV3? {
-        val nyOppgaveversjon = eventTilOppgaveMapper.mapOppgave(eventLagret, forrigeOppgaveversjon, eventnummer)
+        val nyOppgaveversjon = eventLagret.tilOppgaveversjon(forrigeOppgaveversjon, eventnummer)
         // Plumber forrigeOppgaveversjon ned for å spare et hentAktivOppgave-kall pr event
         return oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(nyOppgaveversjon, tx, forrigeOppgaveversjon)
     }

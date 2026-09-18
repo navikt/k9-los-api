@@ -40,8 +40,7 @@ class EventTilDtoMapperTest: AbstractK9LosIntegrationTest() {
     @Test
     fun `Melding med eventhendelse VASKEEVENT skal gjøre at oppgaveDto pakkes inn i VaskOppgaveversjon`() {
         val k9SakEvent = K9SakEventDtoBuilder().foreslåVedtak().build().copy(eventHendelse = EventHendelse.VASKEEVENT)
-        val sakEventTilOppgaveMapper: SakEventTilOppgaveMapper = get()
-        val innsending = sakEventTilOppgaveMapper.lagOppgaveDto(
+        val innsending = SakEventTilOppgaveMapper.lagOppgaveDto(
             EventLagret.K9Sak(
                 eksternId = k9SakEvent.eksternId.toString(),
                 eventJson = LosObjectMapper.instance.writeValueAsString(k9SakEvent),
@@ -57,8 +56,7 @@ class EventTilDtoMapperTest: AbstractK9LosIntegrationTest() {
     @Test
     fun `Melding med eventhendelse annet enn VASKEEVENT skal gjøre at oppgaveDto pakkes inn i NyOppgaveversjon`() {
         val k9SakEvent = K9SakEventDtoBuilder().foreslåVedtak().build()
-        val sakEventTilOppgaveMapper: SakEventTilOppgaveMapper = get()
-        val innsending = sakEventTilOppgaveMapper.lagOppgaveDto(
+        val innsending = SakEventTilOppgaveMapper.lagOppgaveDto(
             EventLagret.K9Sak(
                 eksternId = k9SakEvent.eksternId.toString(),
                 eventJson = LosObjectMapper.instance.writeValueAsString(k9SakEvent),

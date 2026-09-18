@@ -11,19 +11,14 @@ import no.nav.k9.los.domeneadaptere.eventmottak.k9.klage.K9KlageEventHandler
 import no.nav.k9.los.domeneadaptere.eventmottak.k9.punsj.K9PunsjEventHandler
 import no.nav.k9.los.domeneadaptere.eventmottak.k9.sak.K9SakEventHandler
 import no.nav.k9.los.domeneadaptere.eventmottak.k9.tilbakekrav.K9TilbakeEventHandler
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.EventBeriker
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.EventTilOppgaveAdapter
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.EventTilOppgaveMapper
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.HistorikkvaskTjeneste
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.OppgaveOppdatertHandler
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.VaskeeventSerieutleder
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.klagetillos.KlageEventTilOppgaveMapper
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.klagetillos.beriker.K9KlageBerikerInterfaceKludge
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.klagetillos.beriker.K9KlageBerikerKlientLocal
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.punsjtillos.PunsjEventTilOppgaveMapper
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.saktillos.SakEventTilOppgaveMapper
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.saktillos.beriker.K9SakSystemKlientInterfaceKludge
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.saktillos.beriker.K9SakSystemKlientLocal
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.tilbaketillos.TilbakeEventTilOppgaveMapper
 import no.nav.k9.los.domeneadaptere.k9.refreshk9sakoppgaver.RefreshK9v3Tjeneste
 import no.nav.k9.los.domeneadaptere.k9.refreshk9sakoppgaver.restklient.IK9SakService
 import no.nav.k9.los.domeneadaptere.k9.refreshk9sakoppgaver.restklient.K9SakServiceLocal
@@ -300,9 +295,8 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             eventRepository = get<EventRepository>(),
             oppgaveV3Tjeneste = get<OppgaveV3Tjeneste>(),
             transactionalManager = get<TransactionalManager>(),
-            eventTilOppgaveMapper = get<EventTilOppgaveMapper>(),
+            eventBeriker = get<EventBeriker>(),
             oppgaveOppdatertHandler = get<OppgaveOppdatertHandler>(),
-            vaskeeventSerieutleder = get<VaskeeventSerieutleder>(),
             ajourholdTjeneste = get<AktivOgPartisjonertOppgaveAjourholdTjeneste>(),
             statistikkRepository = get<StatistikkRepository>(),
         )
@@ -314,12 +308,6 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
         )
     }
 
-    single {
-        VaskeeventSerieutleder(
-            sakEventTilOppgaveMapper = get(),
-            klageEventTilOppgaveMapper = get()
-        )
-    }
 
     single {
         HistorikkvaskTjeneste(
@@ -331,39 +319,16 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     }
 
     single {
-        EventTilOppgaveMapper(
-            klageEventTilOppgaveMapper = get(),
-            punsjEventTilOppgaveMapper = get(),
-            sakEventTilOppgaveMapper = get(),
-            tilbakeEventTilOppgaveMapper = get()
+        EventBeriker(
+            k9SakBeriker = get(),
+            k9KlageBeriker = get(),
         )
-    }
-
-    single {
-        SakEventTilOppgaveMapper(
-            k9SakBerikerKlient = get(),
-        )
-    }
-
-    single {
-        KlageEventTilOppgaveMapper(
-            k9klageBeriker = get()
-        )
-    }
-
-    single {
-        TilbakeEventTilOppgaveMapper()
-    }
-
-    single {
-        PunsjEventTilOppgaveMapper()
     }
 
     single {
         OppgaveOppdatertHandler(
             oppgaveRepository = get(),
             reservasjonV3Tjeneste = get(),
-            eventTilOppgaveMapper = get(),
             pepCacheService = get(),
             køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
         )

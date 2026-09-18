@@ -10,7 +10,7 @@ import no.nav.k9.los.kodeverk.BehandlingType
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.oppgavemottak.*
 
-class PunsjEventTilOppgaveMapper {
+object PunsjEventTilOppgaveMapper {
     fun lagOppgaveDto(eventLagret: EventLagret.K9Punsj, forrigeOppgave: OppgaveV3?): NyOppgaveVersjonInnsending {
         if (eventLagret.fagsystem != Fagsystem.PUNSJ) {
             throw IllegalStateException()
@@ -30,101 +30,98 @@ class PunsjEventTilOppgaveMapper {
         )
     }
 
-    companion object {
-        fun lagOppgaveDto(event: K9PunsjEventDto, forrigeOppgave: OppgaveV3?): OppgaveDto {
-            return OppgaveDto(
-                eksternId = event.eksternId.toString(),
-                eksternVersjon = event.eventTid.toString(),
-                type = K9Oppgavetypenavn.PUNSJ,
-                status = utledOppgavestatus(event),
-                endretTidspunkt = event.eventTid,
-                reservasjonsnøkkel = utledReservasjonsnøkkel(event),
-                feltverdier = lagFeltverdier(event, forrigeOppgave)
-            )
+    fun lagOppgaveDto(event: K9PunsjEventDto, forrigeOppgave: OppgaveV3?): OppgaveDto {
+        return OppgaveDto(
+            eksternId = event.eksternId.toString(),
+            eksternVersjon = event.eventTid.toString(),
+            type = K9Oppgavetypenavn.PUNSJ,
+            status = utledOppgavestatus(event),
+            endretTidspunkt = event.eventTid,
+            reservasjonsnøkkel = utledReservasjonsnøkkel(event),
+            feltverdier = lagFeltverdier(event, forrigeOppgave)
+        )
+    }
+
+    fun utledOppgavestatus(event: K9PunsjEventDto): Oppgavestatus {
+        return if (event.sendtInn == true || event.status == Oppgavestatus.LUKKET || event.aksjonspunktKoderMedStatusListe.isEmpty()) {
+            Oppgavestatus.LUKKET
+        } else if (oppgaveSkalHaVentestatus(event)) {
+            Oppgavestatus.VENTER
+        } else {
+            Oppgavestatus.AAPEN
         }
+    }
 
-        fun utledOppgavestatus(event: K9PunsjEventDto): Oppgavestatus {
-            return if (event.sendtInn == true || event.status == Oppgavestatus.LUKKET || event.aksjonspunktKoderMedStatusListe.isEmpty()) {
-                Oppgavestatus.LUKKET
-            } else if (oppgaveSkalHaVentestatus(event)) {
-                Oppgavestatus.VENTER
-            } else {
-                Oppgavestatus.AAPEN
-            }
-        }
+    fun utledReservasjonsnøkkel(eventLagret: EventLagret.K9Punsj): String {
+        return utledReservasjonsnøkkel(eventLagret.eventDto)
+    }
 
-        fun utledReservasjonsnøkkel(eventLagret: EventLagret.K9Punsj): String {
-            return utledReservasjonsnøkkel(eventLagret.eventDto)
-        }
+    fun utledReservasjonsnøkkel(eventDto: K9PunsjEventDto): String {
+        return "K9_p_${eventDto.eksternId}"
+    }
 
-        fun utledReservasjonsnøkkel(eventDto: K9PunsjEventDto): String {
-            return "K9_p_${eventDto.eksternId}"
-        }
+    private fun oppgaveSkalHaVentestatus(event: K9PunsjEventDto): Boolean {
+        return event.aksjonspunktKoderMedStatusListe.filter { entry -> entry.value == AksjonspunktStatus.OPPRETTET.kode }
+            .containsKey("MER_INFORMASJON")
+    }
 
+    private fun lagFeltverdier(
+        event: K9PunsjEventDto,
+        forrigeOppgave: OppgaveV3?
+    ): List<OppgaveFeltverdiDto> {
+        val journalførtTidspunkt = forrigeOppgave?.hentVerdi("journalfortTidspunkt") ?: event.journalførtTidspunkt?.toString()
 
-        private fun oppgaveSkalHaVentestatus(event: K9PunsjEventDto): Boolean {
-            return event.aksjonspunktKoderMedStatusListe.filter { entry -> entry.value == AksjonspunktStatus.OPPRETTET.kode }
-                .containsKey("MER_INFORMASJON")
-        }
-
-        private fun lagFeltverdier(
-            event: K9PunsjEventDto,
-            forrigeOppgave: OppgaveV3?
-        ): List<OppgaveFeltverdiDto> {
-            val journalførtTidspunkt = forrigeOppgave?.hentVerdi("journalfortTidspunkt") ?: event.journalførtTidspunkt?.toString()
-
-            return listOfNotNull(
-                event.aktørId?.let {
-                    OppgaveFeltverdiDto(
-                        nøkkel = "aktorId",
-                        verdi = it.aktørId,
-                    )
-                },
-                event.pleietrengendeAktørId?.let {
-                    OppgaveFeltverdiDto(
-                        nøkkel = "pleietrengendeAktorId",
-                        verdi = it,
-                    )
-                },
+        return listOfNotNull(
+            event.aktørId?.let {
                 OppgaveFeltverdiDto(
-                    nøkkel = "behandlingTypekode",
-                    verdi = event.type ?: forrigeOppgave?.hentVerdi("behandlingTypekode") ?: BehandlingType.UKJENT.kode,
-                ),
-                OppgaveFeltverdiDto(
-                    nøkkel = "ytelsestype",
-                    verdi = event.ytelse ?: forrigeOppgave?.hentVerdi("ytelsestype") ?: K9FagsakYtelseType.UKJENT.kode,
-                ),
-                event.ferdigstiltAv?.let {
-                    OppgaveFeltverdiDto(
-                        nøkkel = "ansvarligSaksbehandler",
-                        verdi = it,
-                    )
-                },
-                OppgaveFeltverdiDto(
-                    nøkkel = "journalpostId",
-                    verdi = event.journalpostId.verdi.toString(),
-                ),
-                OppgaveFeltverdiDto(
-                    nøkkel = "journalfortTidspunkt",
-                    verdi = journalførtTidspunkt,
-                ),
-                OppgaveFeltverdiDto(
-                    nøkkel = "journalfort",
-                    verdi = (journalførtTidspunkt != null).toString(),
-                ),
-                OppgaveFeltverdiDto(
-                    nøkkel = "registrertDato",
-                    verdi = forrigeOppgave?.hentVerdi("registrertDato") ?: event.eventTid.toString(),
-                ),
-                OppgaveFeltverdiDto(
-                    nøkkel = "mottattDato",
-                    verdi = forrigeOppgave?.hentVerdi("mottattDato") ?: event.eventTid.toString(),
-                ),
-                OppgaveFeltverdiDto(
-                    nøkkel = "helautomatiskBehandlet",
-                    verdi = "false"
+                    nøkkel = "aktorId",
+                    verdi = it.aktørId,
                 )
+            },
+            event.pleietrengendeAktørId?.let {
+                OppgaveFeltverdiDto(
+                    nøkkel = "pleietrengendeAktorId",
+                    verdi = it,
+                )
+            },
+            OppgaveFeltverdiDto(
+                nøkkel = "behandlingTypekode",
+                verdi = event.type ?: forrigeOppgave?.hentVerdi("behandlingTypekode") ?: BehandlingType.UKJENT.kode,
+            ),
+            OppgaveFeltverdiDto(
+                nøkkel = "ytelsestype",
+                verdi = event.ytelse ?: forrigeOppgave?.hentVerdi("ytelsestype") ?: K9FagsakYtelseType.UKJENT.kode,
+            ),
+            event.ferdigstiltAv?.let {
+                OppgaveFeltverdiDto(
+                    nøkkel = "ansvarligSaksbehandler",
+                    verdi = it,
+                )
+            },
+            OppgaveFeltverdiDto(
+                nøkkel = "journalpostId",
+                verdi = event.journalpostId.verdi.toString(),
+            ),
+            OppgaveFeltverdiDto(
+                nøkkel = "journalfortTidspunkt",
+                verdi = journalførtTidspunkt,
+            ),
+            OppgaveFeltverdiDto(
+                nøkkel = "journalfort",
+                verdi = (journalførtTidspunkt != null).toString(),
+            ),
+            OppgaveFeltverdiDto(
+                nøkkel = "registrertDato",
+                verdi = forrigeOppgave?.hentVerdi("registrertDato") ?: event.eventTid.toString(),
+            ),
+            OppgaveFeltverdiDto(
+                nøkkel = "mottattDato",
+                verdi = forrigeOppgave?.hentVerdi("mottattDato") ?: event.eventTid.toString(),
+            ),
+            OppgaveFeltverdiDto(
+                nøkkel = "helautomatiskBehandlet",
+                verdi = "false"
             )
-        }
+        )
     }
 }

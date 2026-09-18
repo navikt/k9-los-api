@@ -1,16 +1,12 @@
 package no.nav.k9.los.domeneadaptere.eventtiloppgave
 
 import kotlinx.coroutines.*
-import no.nav.k9.los.ManglerFlerområde
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.kodeverk.K9Oppgavetypenavn
 import no.nav.k9.los.domeneadaptere.eventlager.EventNøkkel
 import no.nav.k9.los.domeneadaptere.eventlager.EventRepository
 import no.nav.k9.los.domeneadaptere.eventlager.HistorikkvaskBestilling
 import no.nav.k9.los.infrastruktur.db.DB_AWARE_PARALLELISM
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
-import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgavemottak.OppgaveV3Tjeneste
-import no.nav.k9.los.oppgaveuthenting.OppgaveNøkkelDto
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import kotlin.time.measureTime
@@ -89,19 +85,20 @@ class HistorikkvaskTjeneste(
             historikkvaskBestilling.eksternId,
             historikkvaskBestilling.eventlagerNøkkel
         )
-        val oppgavenøkkel = OppgaveNøkkelDto(
-            historikkvaskBestilling.eksternId,
-            K9Oppgavetypenavn.fraFagsystem(historikkvaskBestilling.fagsystem).kode,
-            @ManglerFlerområde Områder.K9
-        )
 
         var eventNrForBehandling = 0
         transactionalManager.transaction { tx ->
-            oppgaveV3Tjeneste.slettOppgave(oppgavenøkkel, tx)
+            // Dirty settes før eventene hentes, slik at samme uthenting kan gjenbrukes av adapteren.
             eventRepository.settDirty(eventNøkkel, tx)
-            eventNrForBehandling = eventTilOppgaveAdapter.oppdaterOppgaveForEksternIdUnderHistorikkvask(
-                eventNøkkel, tx
-            ).toInt()
+            val eventer = eventRepository.hentAlleEventerMedLås(eventNøkkel, tx)
+
+            if (eventer.isNotEmpty()) {
+                // Område og oppgavetype utledes fra eventet selv, ikke hardkodes til K9.
+                oppgaveV3Tjeneste.slettOppgave(eventer.first().oppgavenøkkel(), tx)
+                eventNrForBehandling = eventTilOppgaveAdapter.oppdaterOppgaveForEksternIdUnderHistorikkvask(
+                    eventNøkkel, tx, eventer
+                ).toInt()
+            }
 
             if (historikkvaskBestilling.eventlagerNøkkel != null) {
                 eventRepository.settHistorikkvaskFerdig(historikkvaskBestilling.eventlagerNøkkel, tx)

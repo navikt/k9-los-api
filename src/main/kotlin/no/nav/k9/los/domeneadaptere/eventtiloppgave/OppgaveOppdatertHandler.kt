@@ -25,7 +25,6 @@ import org.slf4j.LoggerFactory
 class OppgaveOppdatertHandler(
     private val oppgaveRepository: OppgaveRepository,
     private val reservasjonV3Tjeneste: ReservasjonV3Tjeneste,
-    private val eventTilOppgaveMapper: EventTilOppgaveMapper,
     private val pepCacheService: PepCacheService,
     private val køpåvirkendeHendelseChannel: Channel<KøpåvirkendeHendelse>,
 ) {
@@ -130,8 +129,8 @@ class OppgaveOppdatertHandler(
         oppgave: OppgaveV3,
         tx: TransactionalSession
     ) {
-        val saksbehandlerNøkkel = eventTilOppgaveMapper.utledReservasjonsnøkkel(event, erTilBeslutter = false)
-        val beslutterNøkkel = eventTilOppgaveMapper.utledReservasjonsnøkkel(event, erTilBeslutter = true)
+        val saksbehandlerNøkkel = event.utledReservasjonsnøkkel(erTilBeslutter = false)
+        val beslutterNøkkel = event.utledReservasjonsnøkkel(erTilBeslutter = true)
         val antallAnnullert =
             annullerReservasjonHvisAlleOppgaverPåVentEllerAvsluttet(listOf(saksbehandlerNøkkel, beslutterNøkkel), tx)
         if (antallAnnullert > 0) {
