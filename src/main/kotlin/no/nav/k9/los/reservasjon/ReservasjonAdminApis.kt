@@ -1,5 +1,6 @@
 package no.nav.k9.los.reservasjon
 
+import io.github.smiley4.ktoropenapi.get
 import io.ktor.http.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
@@ -23,7 +24,14 @@ internal fun Route.ReservasjonAdminApi() {
     val pepClient by inject<IPepClient>()
     val reservasjonApisTjeneste by inject<ReservasjonApisTjeneste>()
 
-    get("/alle-reservasjoner") {
+    get("/alle-reservasjoner", {
+        operationId = "hentAlleAktiveReservasjoner"
+        summary = "Hent alle aktive reservasjoner"
+        response {
+            HttpStatusCode.OK to { body<List<ReservasjonDto>>() }
+            HttpStatusCode.Forbidden to { description = "Brukeren er ikke oppgavestyrer" }
+        }
+    }) {
         requestContextService.withRequestContext(call) {
             if (pepClient.erOppgaveStyrer()) {
                 call.respond(reservasjonApisTjeneste.hentAlleAktiveReservasjoner(

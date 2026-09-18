@@ -21,9 +21,14 @@ fun Route.OppgaveKoAvdelingslederApisNy() {
     val pepClient by inject<IPepClient>()
 
     get("/alle-koer", {
-        description = "Hent liste over alle oppgavekøer for område og skjerming."
+        operationId = "hentAlleOppgavekoerForAvdelingsleder"
+        summary = "Hent alle oppgavekøer"
         response {
-            HttpStatusCode.OK to { body<List<OppgaveKoListeelement>>() }
+            HttpStatusCode.OK to {
+                body<List<OppgaveKoListeelement>>()
+            }
+            HttpStatusCode.Forbidden to { description = "Innlogget bruker er ikke oppgavestyrer" }
+            HttpStatusCode.NotFound to { description = "Oppgavekøen finnes ikke for gjeldende område og skjerming" }
         }
     }) {
         requestContextService.withRequestContext(call) {
@@ -49,14 +54,19 @@ fun Route.OppgaveKoAvdelingslederApisNy() {
     }
 
     post("/endre", {
-        description = "Endre en eksisterende oppgavekø."
+        operationId = "endreOppgavekoSomAvdelingsleder"
+        summary = "Endre oppgavekø"
         request {
             body<OppgaveKo> {
-                description = "Oppgavekøen med de nye verdiene"
+                required = true
             }
         }
         response {
-            HttpStatusCode.OK to { body<OppgaveKo>() }
+            HttpStatusCode.OK to {
+                body<OppgaveKo>()
+            }
+            HttpStatusCode.Forbidden to { description = "Innlogget bruker er ikke oppgavestyrer" }
+            HttpStatusCode.NotFound to { description = "Oppgavekøen som skal kopieres finnes ikke for gjeldende område og skjerming" }
         }
     }) {
         requestContextService.withRequestContext(call) {
@@ -76,14 +86,20 @@ fun Route.OppgaveKoAvdelingslederApisNy() {
     }
 
     post("/kopier", {
-        description = "Kopier en eksisterende oppgavekø."
+        operationId = "kopierOppgavekoSomAvdelingsleder"
+        summary = "Kopier oppgavekø"
         request {
             body<KopierOppgaveKoDto> {
                 description = "Hvilken kø som skal kopieres, ny tittel, og hva som skal tas med"
+                required = true
             }
         }
         response {
-            HttpStatusCode.OK to { body<OppgaveKo>() }
+            HttpStatusCode.OK to {
+                body<OppgaveKo>()
+            }
+            HttpStatusCode.Forbidden to { description = "Innlogget bruker er ikke oppgavestyrer" }
+            HttpStatusCode.NotFound to { description = "Oppgavekøen finnes ikke for gjeldende område og skjerming" }
         }
     }) {
         requestContextService.withRequestContext(call) {
@@ -106,9 +122,14 @@ fun Route.OppgaveKoAvdelingslederApisNy() {
     }
 
     get("/alle-saksbehandlere", {
-        description = "Hent alle saksbehandlere for område og skjerming, for bruk ved administrasjon av oppgavekøer."
+        operationId = "hentAlleSaksbehandlereForOppgavekoadministrasjon"
+        summary = "Hent alle saksbehandlere"
         response {
-            HttpStatusCode.OK to { body<List<SaksbehandlerForKolisteDto>>() }
+            HttpStatusCode.OK to {
+                body<List<SaksbehandlerForKolisteDto>>()
+            }
+            HttpStatusCode.Forbidden to { description = "Innlogget bruker er ikke oppgavestyrer" }
+            HttpStatusCode.NotFound to { description = "Oppgavekøen finnes ikke for gjeldende område og skjerming" }
         }
     }) {
         requestContextService.withRequestContext(call) {
@@ -125,14 +146,19 @@ fun Route.OppgaveKoAvdelingslederApisNy() {
     }
 
     post("/opprett", {
-        description = "Opprett en ny oppgavekø."
+        operationId = "opprettOppgavekoSomAvdelingsleder"
+        summary = "Opprett oppgavekø"
         request {
             body<OpprettOppgaveKoDto> {
-                description = "Tittel på den nye oppgavekøen"
+                required = true
             }
         }
         response {
-            HttpStatusCode.OK to { body<OppgaveKo>() }
+            HttpStatusCode.OK to {
+                body<OppgaveKo>()
+            }
+            HttpStatusCode.Forbidden to { description = "Innlogget bruker er ikke oppgavestyrer" }
+            HttpStatusCode.NotFound to { description = "Oppgavekøen finnes ikke for gjeldende område og skjerming" }
         }
     }) {
         requestContextService.withRequestContext(call) {
@@ -153,14 +179,18 @@ fun Route.OppgaveKoAvdelingslederApisNy() {
     }
 
     get("/{id}", {
-        description = "Hent en oppgavekø."
+        operationId = "hentOppgavekoSomAvdelingsleder"
+        summary = "Hent oppgavekø"
         request {
             pathParameter<Long>("id") {
-                description = "Id til oppgavekøen"
+                required = true
             }
         }
         response {
-            HttpStatusCode.OK to { body<OppgaveKo>() }
+            HttpStatusCode.OK to {
+                body<OppgaveKo>()
+            }
+            HttpStatusCode.Forbidden to { description = "Innlogget bruker er ikke oppgavestyrer" }
         }
     }) {
         requestContextService.withRequestContext(call) {
@@ -180,11 +210,18 @@ fun Route.OppgaveKoAvdelingslederApisNy() {
     }
 
     delete("/{id}", {
-        description = "Slett en oppgavekø."
+        operationId = "slettOppgavekoSomAvdelingsleder"
+        summary = "Slett oppgavekø"
         request {
             pathParameter<Long>("id") {
-                description = "Id til oppgavekøen"
+                required = true
             }
+        }
+        response {
+            HttpStatusCode.OK to {
+                body<Unit>()
+            }
+            HttpStatusCode.Forbidden to { description = "Innlogget bruker er ikke oppgavestyrer" }
         }
     }) {
         requestContextService.withRequestContext(call) {
@@ -204,14 +241,18 @@ fun Route.OppgaveKoAvdelingslederApisNy() {
     }
 
     get("/{id}/antall", {
-        description = "Hent antall oppgaver, med og uten reserverte, for en oppgavekø."
+        operationId = "hentAntallOppgaverIAvdelingslederko"
+        summary = "Hent antall oppgaver"
         request {
             pathParameter<Long>("id") {
-                description = "Id til oppgavekøen"
+                required = true
             }
         }
         response {
-            HttpStatusCode.OK to { body<AntallOppgaverOgReserverte>() }
+            HttpStatusCode.OK to {
+                body<AntallOppgaverOgReserverte>()
+            }
+            HttpStatusCode.Forbidden to { description = "Innlogget bruker er ikke oppgavestyrer" }
         }
     }) {
         requestContextService.withRequestContext(call) {
@@ -232,15 +273,18 @@ fun Route.OppgaveKoAvdelingslederApisNy() {
     }
 
     get("/andre-saksbehandleres-koer", {
-        description = "Hent oppgavekøer en gitt saksbehandler er medlem av."
+        operationId = "hentOppgavekoerForSaksbehandlerSomAvdelingsleder"
+        summary = "Hent oppgavekøer for saksbehandler"
         request {
             queryParameter<Long>("saksbehandlerId") {
-                description = "Id til saksbehandleren"
                 required = true
             }
         }
         response {
-            HttpStatusCode.OK to { body<List<OppgaveKoIdOgTittel>>() }
+            HttpStatusCode.OK to {
+                body<List<OppgaveKoIdOgTittel>>()
+            }
+            HttpStatusCode.Forbidden to { description = "Innlogget bruker er ikke oppgavestyrer" }
         }
     }) {
         requestContextService.withRequestContext(call) {
