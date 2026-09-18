@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.PropertyNamingStrategies
 import com.fasterxml.jackson.databind.SerializationFeature
 import io.github.smiley4.ktoropenapi.OpenApi
 import io.github.smiley4.ktoropenapi.config.OpenApiPluginConfig
-import io.github.smiley4.ktoropenapi.config.OpenApiVersion
 import io.github.smiley4.ktoropenapi.openApi
 import io.github.smiley4.ktoropenapi.route
 import io.github.smiley4.ktorswaggerui.swaggerUI
@@ -239,17 +238,15 @@ fun Application.k9Los() {
 internal fun OpenApiPluginConfig.k9LosOpenApiConfig() {
     spec("forvaltning") {
         info {
-            title = "K9 Los forvaltnings-API"
+            title = "Los forvaltnings-API"
             description = "Forvaltningsendepunkter for drift og administrasjon av K9 Los."
         }
     }
     spec("frontend") {
-        openApiVersion = OpenApiVersion.V3_0
         info {
-            title = "K9 Los frontend-API"
-            description = "Kontrakten mellom K9 Los-backend og frontend med flerområdestøtte."
+            title = "Los frontend/backend-API"
+            description = "Kontrakten mellom frontend og backend med flerområdestøtte."
         }
-        pathFilter = { _, path -> path.take(2) == listOf("api", "wip") }
     }
 }
 
