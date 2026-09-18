@@ -1,0 +1,1 @@
+alter table oppgavetype drop column definisjonskilde;

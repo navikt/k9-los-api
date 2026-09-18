@@ -19,7 +19,6 @@ class Oppgavetyper(
         oppgavetyper = dto.oppgavetyper.map { oppgavetypeDto ->
             Oppgavetype(
                 dto = oppgavetypeDto,
-                definisjonskilde = dto.definisjonskilde,
                 område = område,
                 oppgavebehandlingsUrlTemplate = oppgavetypeDto.oppgavebehandlingsUrlTemplate,
                 feltdefinisjoner = feltdefinisjoner,
@@ -38,10 +37,6 @@ class Oppgavetyper(
 
         innkommendeOppgavetyper.oppgavetyper.forEach { innkommende ->
             val eksisterende = oppgavetyper.find { it.eksternId == innkommende.eksternId }
-            if (eksisterende?.definisjonskilde != null && eksisterende.definisjonskilde != innkommende.definisjonskilde) {
-                //?. - hvis eksisterende ikke finnes gir det ikke mening å sammenligne, siden det er en ny oppgavetype
-                throw IllegalStateException("Kan ikke sammenligne oppgavetyper på tvers av definisjonskilder")
-            }
             if (eksisterende == null) {
                 leggTilListe.add(innkommende)
             } else {

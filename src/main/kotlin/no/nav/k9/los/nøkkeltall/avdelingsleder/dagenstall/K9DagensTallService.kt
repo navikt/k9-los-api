@@ -6,7 +6,7 @@ import kotlinx.coroutines.launch
 import no.nav.k9.los.infrastruktur.utils.Cache
 import no.nav.k9.los.infrastruktur.utils.CacheObject
 import no.nav.k9.los.kodeverk.BehandlingType
-import no.nav.k9.los.kodeverk.FagsakYtelseType
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.kodeverk.K9FagsakYtelseType
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.oppgaveuthenting.query.OppgaveQueryService
 import no.nav.k9.los.oppgaveuthenting.query.QueryRequest
@@ -28,9 +28,9 @@ class K9DagensTallService(
     private val log: Logger = LoggerFactory.getLogger(K9DagensTallService::class.java)
 
     companion object {
-        val omsorgspenger = FeltverdiOppgavefilter(Områder.K9, "ytelsestype", EksternFeltverdiOperator.IN, listOf(FagsakYtelseType.OMSORGSPENGER.kode))
-        val opplæringspenger = FeltverdiOppgavefilter(Områder.K9, "ytelsestype", EksternFeltverdiOperator.IN, listOf(FagsakYtelseType.OLP.kode))
-        val psb = FeltverdiOppgavefilter(Områder.K9, "ytelsestype", EksternFeltverdiOperator.IN, listOf(FagsakYtelseType.PLEIEPENGER_SYKT_BARN.kode))
+        val omsorgspenger = FeltverdiOppgavefilter(Områder.K9, "ytelsestype", EksternFeltverdiOperator.IN, listOf(K9FagsakYtelseType.OMSORGSPENGER.kode))
+        val opplæringspenger = FeltverdiOppgavefilter(Områder.K9, "ytelsestype", EksternFeltverdiOperator.IN, listOf(K9FagsakYtelseType.OLP.kode))
+        val psb = FeltverdiOppgavefilter(Områder.K9, "ytelsestype", EksternFeltverdiOperator.IN, listOf(K9FagsakYtelseType.PLEIEPENGER_SYKT_BARN.kode))
 
         val mottattDato = { dato: LocalDate -> FeltverdiOppgavefilter(Områder.K9, "mottattDato", EksternFeltverdiOperator.GREATER_THAN_OR_EQUALS, listOf(dato.toString())) }
         val ferdigstiltDato = { dato: LocalDate -> FeltverdiOppgavefilter(null, "ferdigstiltDato", EksternFeltverdiOperator.GREATER_THAN_OR_EQUALS, listOf(dato.toString())) }
@@ -41,11 +41,11 @@ class K9DagensTallService(
 
         private val hovedgruppeYtelser: Map<DagensTallHovedgruppe, Set<String>?> = mapOf(
             DagensTallHovedgruppe.ALLE to null,
-            DagensTallHovedgruppe.OMSORGSPENGER to setOf(FagsakYtelseType.OMSORGSPENGER.kode),
-            DagensTallHovedgruppe.OMSORGSDAGER to setOf(FagsakYtelseType.OMSORGSDAGER, FagsakYtelseType.OMSORGSPENGER_KS, FagsakYtelseType.OMSORGSPENGER_AO, FagsakYtelseType.OMSORGSPENGER_MA).map { it.kode }.toSet(),
-            DagensTallHovedgruppe.OPPLÆRINGSPENGER to setOf(FagsakYtelseType.OLP.kode),
-            DagensTallHovedgruppe.PLEIEPENGER_SYKT_BARN to setOf(FagsakYtelseType.PLEIEPENGER_SYKT_BARN.kode),
-            DagensTallHovedgruppe.PPN to setOf(FagsakYtelseType.PPN.kode),
+            DagensTallHovedgruppe.OMSORGSPENGER to setOf(K9FagsakYtelseType.OMSORGSPENGER.kode),
+            DagensTallHovedgruppe.OMSORGSDAGER to setOf(K9FagsakYtelseType.OMSORGSDAGER, K9FagsakYtelseType.OMSORGSPENGER_KS, K9FagsakYtelseType.OMSORGSPENGER_AO, K9FagsakYtelseType.OMSORGSPENGER_MA).map { it.kode }.toSet(),
+            DagensTallHovedgruppe.OPPLÆRINGSPENGER to setOf(K9FagsakYtelseType.OLP.kode),
+            DagensTallHovedgruppe.PLEIEPENGER_SYKT_BARN to setOf(K9FagsakYtelseType.PLEIEPENGER_SYKT_BARN.kode),
+            DagensTallHovedgruppe.PPN to setOf(K9FagsakYtelseType.PPN.kode),
         )
     }
 

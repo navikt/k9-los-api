@@ -1,14 +1,15 @@
 [
 {
+  "eksternId": "575a3f96-117e-4f02-9499-9dcff7f0e8c5",
+  "eventTid": "2026-08-21T12:49:41.034415026",
   "nyeKrav": true,
   "aktørId": "2679194420258",
-  "eventTid": "2026-08-21T12:49:41.034415026",
-  "eksternId": "575a3f96-117e-4f02-9499-9dcff7f0e8c5",
   "fagsystem": "UNG_SAK",
   "saksnummer": "300HNC",
   "vedtaksdato": null,
   "resultatType": "IKKE_FASTSATT",
   "eventHendelse": "BEHANDLINGSKONTROLL_EVENT",
+
   "fagsakPeriode": {
     "fom": "2026-08-20",
     "tom": "2027-08-20"
@@ -17,17 +18,18 @@
   "ytelseTypeKode": "AKT",
   "behandlendeEnhet": "0387",
   "behandlingStatus": "UTRED",
-  "søknadsårsaker": [],
-  "fraEndringsdialog": false,
-  "behandlingTypeKode": "BT-002",
-  "behandlingstidFrist": "2026-10-02",
-  "behandlingsårsaker": [],
-  "opprettetBehandling": "2026-08-21T12:49:33",
+  "søknadsårsaker": [], //TODO: ikke i bruk, fjern i ung-sak
+  "fraEndringsdialog": false, //TODO: ikke i bruk, fjern i ung-sak
   "aksjonspunktTilstander": [],
+  "behandlingTypeKode": "BT-002",
+  "behandlingsårsaker": [],
   "ansvarligBeslutterForTotrinn": null,
+  "opprettetBehandling": "2026-08-21T12:49:33",
   "eldsteDatoMedEndringFraSøker": "2026-08-21T10:49:15.477",
   "aksjonspunktKoderMedStatusListe": {},
-  "ansvarligSaksbehandlerForTotrinn": null
+  "ansvarligSaksbehandlerForTotrinn": null,
+
+  "behandlingstidFrist": "2026-10-02"
 },
 {
   "nyeKrav": true,
@@ -115,12 +117,28 @@
       "ansvarligSaksbehandler": "Z994959"
     }
   ],
+  "ansvarligSaksbehandlerForTotrinn": null,
   "ansvarligBeslutterForTotrinn": null,
+
   "eldsteDatoMedEndringFraSøker": "2026-08-21T10:49:15.477",
   "aksjonspunktKoderMedStatusListe": {
     "5140": "UTFO",
     "5142": "OPPR"
-  },
-  "ansvarligSaksbehandlerForTotrinn": null
+  }
 }
 ]
+
+e1: AP1
+e2: løst lokalkontor, ansvarlig saksbehandler: X
+e3: besluttet lokalkontor, ansvarlig beslutter: y
+e4: AP2, NAY
+e5: løst NAY, ansvarlig saksbehandler2: a
+e3: besluttet NAY, ansvarlig beslutter2: b
+
+o1: AP1
+o2: løst lokalkontor, ansvarlig saksbehandler: X
+o3: besluttet lokalkontor, ansvarlig beslutter: y
+
+o'1: AP2, NAY
+o'2: løst NAY, ansvarlig saksbehandler: a
+o'3: besluttet NAY, ansvarlig beslutter: b

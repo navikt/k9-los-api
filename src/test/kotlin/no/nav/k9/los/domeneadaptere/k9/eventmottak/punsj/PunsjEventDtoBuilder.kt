@@ -1,10 +1,11 @@
 package no.nav.k9.los.domeneadaptere.k9.eventmottak.punsj
 
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus
-import no.nav.k9.los.domeneadaptere.k9.eventmottak.EventHendelse
+import no.nav.k9.los.domeneadaptere.eventmottak.EventHendelse
+import no.nav.k9.los.domeneadaptere.eventmottak.k9.punsj.K9PunsjEventDto
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.TestSaksbehandler
 import no.nav.k9.los.kodeverk.BehandlingType
-import no.nav.k9.los.kodeverk.FagsakYtelseType
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.kodeverk.K9FagsakYtelseType
 import no.nav.k9.los.saksbehandleradmin.Saksbehandler
 import no.nav.k9.sak.typer.AktørId
 import no.nav.k9.sak.typer.JournalpostId
@@ -19,7 +20,7 @@ data class PunsjEventDtoBuilder(
     var journalpostId: String = Random().nextInt(0, 9999999).toString(),
     var eventTid: LocalDateTime? = null,
     var eventHendelse: EventHendelse = EventHendelse.AKSJONSPUNKT_OPPRETTET,
-    var ytelse: FagsakYtelseType? = FagsakYtelseType.PLEIEPENGER_SYKT_BARN,
+    var ytelse: K9FagsakYtelseType? = K9FagsakYtelseType.PLEIEPENGER_SYKT_BARN,
     var type: BehandlingType? = BehandlingType.PAPIRSØKNAD,
     var aksjonspunkter: MutableMap<String, AksjonspunktStatus> = mutableMapOf(),
     var sendtInn: Boolean = true,
@@ -69,7 +70,8 @@ data class PunsjEventDtoBuilder(
             eventTid = eventTid ?: LocalDateTime.now().plusSeconds(teller++),
             aktørId = AktørId(aktørId),
             pleietrengendeAktørId = pleietrengendeAktørId,
-            aksjonspunktKoderMedStatusListe = aksjonspunkter.entries.associate { (aksjonspunkt, status) -> aksjonspunkt to status.kode }.toMutableMap(),
+            aksjonspunktKoderMedStatusListe = aksjonspunkter.entries.associate { (aksjonspunkt, status) -> aksjonspunkt to status.kode }
+                .toMutableMap(),
             type = type?.kode,
             ytelse = ytelse?.kode,
             sendtInn = sendtInn,

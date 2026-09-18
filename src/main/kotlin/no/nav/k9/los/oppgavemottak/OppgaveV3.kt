@@ -25,7 +25,7 @@ class OppgaveV3(
         eksternId = oppgaveDto.eksternId,
         eksternVersjon = oppgaveDto.eksternVersjon,
         oppgavetype = oppgavetype,
-        status = Oppgavestatus.valueOf(oppgaveDto.status),
+        status = oppgaveDto.status,
         endretTidspunkt = oppgaveDto.endretTidspunkt,
         kildeområde = oppgaveDto.kildeområde,
         reservasjonsnøkkel = oppgaveDto.reservasjonsnøkkel,
@@ -116,12 +116,14 @@ class OppgaveV3(
     }
 
     fun valider() {
-        oppgavetype.oppgavefelter
+        val manglendeFelter = oppgavetype.oppgavefelter
             .filter { it.påkrevd && !it.feltDefinisjon.listetype }
-            .forEach { obligatoriskFelt ->
-                felter.find {
-                    it.oppgavefelt == obligatoriskFelt
-                } ?: throw IllegalArgumentException("Oppgaven mangler obligatorisk felt " + obligatoriskFelt.feltDefinisjon.eksternId)
-            }
+            .filterNot { obligatoriskFelt -> felter.any { it.oppgavefelt == obligatoriskFelt } }
+            .map { it.feltDefinisjon.eksternId }
+            .sorted()
+
+        require(manglendeFelter.isEmpty()) {
+            "Oppgaven mangler obligatoriske felt: ${manglendeFelter.joinToString(", ")}"
+        }
     }
 }
