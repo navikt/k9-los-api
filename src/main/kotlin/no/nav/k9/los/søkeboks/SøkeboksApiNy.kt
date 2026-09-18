@@ -9,7 +9,6 @@ import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.rest.RequestContextService
 import no.nav.k9.los.infrastruktur.rest.idToken
 import no.nav.k9.los.infrastruktur.rest.område
-import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import org.koin.ktor.ext.inject
 
 
@@ -23,10 +22,6 @@ fun Route.SøkeboksApiNy() {
             description =
                 "Søk etter oppgaver og tilhørende person. Dersom input er på 9 tegn antas den som journalpostId, ved 11 tegn som fødselsnummer, og ellers som fagsaknummer."
             request {
-                pathParameter<Områder>("omrade") {
-                    description = "Området API-kallet gjelder for"
-                    example("K9") { value = Områder.K9 }
-                }
                 body<SøkRequest>()
             }
             response {

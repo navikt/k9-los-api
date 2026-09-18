@@ -13,7 +13,6 @@ import no.nav.k9.los.infrastruktur.utils.OpentelemetrySpanUtil
 import no.nav.k9.los.ko.dto.OppgaveKo
 import no.nav.k9.los.ko.dto.ReservasjonV3FraKøDto
 import no.nav.k9.los.ko.dto.SaksbehandlerForKolisteDto
-import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.sammendrag.OppgaveSammendragDto
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
 import org.koin.ktor.ext.inject
@@ -25,12 +24,6 @@ fun Route.OppgaveKoSaksbehandlerApisNy() {
     val pepClient by inject<IPepClient>()
 
     get("/saksbehandlerskoer", {
-        request {
-            pathParameter<Områder>("omrade") {
-                description = "Området API-kallet gjelder for"
-                example("K9") { value = Områder.K9 }
-            }
-        }
         response {
             HttpStatusCode.OK to { body<List<OppgaveKo>>() }
         }
