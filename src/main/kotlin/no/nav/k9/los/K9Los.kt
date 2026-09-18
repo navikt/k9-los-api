@@ -211,10 +211,10 @@ fun Application.k9Los() {
             localSetup.initTilbakeoppgaver(0)
             localSetup.initKlageoppgaver(0)
             localSetup.initK9SakOppgaver(0)
-            api()
+            api(eksponerFrontendDokumentasjon = true)
         } else {
             authenticate(*issuers.allIssuers()) {
-                api()
+                api(eksponerFrontendDokumentasjon = false)
             }
         }
 
@@ -233,7 +233,9 @@ fun Application.k9Los() {
         fromXCorrelationIdHeader()
     }
 
-    install(OpenApi, OpenApiPluginConfig::k9LosOpenApiConfig)
+    install(OpenApi) {
+        k9LosOpenApiConfig()
+    }
 }
 
 internal fun OpenApiPluginConfig.k9LosOpenApiConfig() {
@@ -247,26 +249,15 @@ internal fun OpenApiPluginConfig.k9LosOpenApiConfig() {
         openApiVersion = OpenApiVersion.V3_0
         info {
             title = "K9 Los frontend-API"
-            description = "Kontrakten mellom K9 Los-backend og frontend for områdene K9 og aktivitetspenger."
+            description = "Kontrakten mellom K9 Los-backend og frontend med flerområdestøtte."
         }
         pathFilter = { _, path -> path.take(2) == listOf("api", "wip") }
-        security {
-            securityScheme("bearerAuth") {
-                type = AuthType.HTTP
-                scheme = AuthScheme.BEARER
-                bearerFormat = "JWT"
-            }
-            defaultSecuritySchemeNames("bearerAuth")
-            defaultUnauthorizedResponse {
-                description = "Mangler gyldig access token"
-            }
-        }
     }
 }
 
-private fun Route.api() {
+private fun Route.api(eksponerFrontendDokumentasjon: Boolean) {
     legacyApi()
-    apiUnderConstruction()
+    apiUnderConstruction(eksponerFrontendDokumentasjon)
 }
 
 private fun Route.legacyApi() {
@@ -307,10 +298,12 @@ private fun Route.legacyApi() {
     }
 }
 
-private fun Route.apiUnderConstruction() {
-    route("openapi.json") { openApi("frontend") }
-    get("/") { call.respondRedirect("/swagger") }
-    route("swagger") { swaggerUI("/openapi.json") }
+private fun Route.apiUnderConstruction(eksponerFrontendSwagger: Boolean) {
+    if (eksponerFrontendSwagger) {
+        route("openapi.json") { openApi("frontend") }
+        get("/") { call.respondRedirect("/swagger") }
+        route("swagger") { swaggerUI("/openapi.json") }
+    }
 
     route("api/wip", {
         specName = "frontend"

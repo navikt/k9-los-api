@@ -17,7 +17,7 @@ internal fun Route.InnloggetBrukerApiNy() {
 
     get({
         operationId = "hentInnloggetBruker"
-        summary = "Hent innlogget bruker"
+        summary = "Hent innlogget bruker med tilganger for området"
         response {
             HttpStatusCode.OK to { body<InnloggetBrukerDtoNy>() }
         }
