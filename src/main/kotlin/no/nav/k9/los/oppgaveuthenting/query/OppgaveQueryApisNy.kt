@@ -6,6 +6,7 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
+import no.nav.k9.los.ManglerFlerområde
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.rest.RequestContextService
 import no.nav.k9.los.infrastruktur.rest.område
@@ -20,7 +21,7 @@ fun Route.OppgaveQueryApisNy() {
 
     post("antall", {
         operationId = "hentAntallOppgaverForQuery"
-        summary = "Tell oppgaver"
+        summary = "Tell oppgaver for query"
         request {
             body<OppgaveQuery> { description = "Filter og utvalg for oppgavespørringen" }
         }
@@ -49,7 +50,7 @@ fun Route.OppgaveQueryApisNy() {
 
     post("validate", {
         operationId = "validerOppgaveQuery"
-        summary = "Valider oppgavespørring"
+        summary = "Valider filtere i query"
         request {
             body<OppgaveQuery> { description = "Oppgavespørringen som skal valideres" }
         }
@@ -76,7 +77,7 @@ fun Route.OppgaveQueryApisNy() {
 
     get("felter", {
         operationId = "hentOppgavefelter"
-        summary = "Hent tilgjengelige oppgavefelter"
+        summary = "Hent oppgavefelter for området"
         response {
             HttpStatusCode.OK to { body<Oppgavefelter>() }
             HttpStatusCode.Forbidden to { description = "Brukeren mangler basistilgang" }
@@ -84,7 +85,7 @@ fun Route.OppgaveQueryApisNy() {
     }) {
         requestContextService.withRequestContext(call) {
             if (pepClient.harBasisTilgang()) {
-                call.respond(oppgaveQueryService.hentAlleFelter())
+                call.respond(@ManglerFlerområde oppgaveQueryService.hentAlleFelter())
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }

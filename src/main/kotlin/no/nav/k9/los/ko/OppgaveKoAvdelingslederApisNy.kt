@@ -274,7 +274,7 @@ fun Route.OppgaveKoAvdelingslederApisNy() {
 
     get("/andre-saksbehandleres-koer", {
         operationId = "hentOppgavekoerForSaksbehandlerSomAvdelingsleder"
-        summary = "Hent oppgavekøer for saksbehandler"
+        summary = "Hent oppgavekøer for en gitt saksbehandler"
         request {
             queryParameter<Long>("saksbehandlerId") {
                 required = true
