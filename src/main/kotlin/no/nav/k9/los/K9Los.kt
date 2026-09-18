@@ -4,8 +4,6 @@ import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.PropertyNamingStrategies
 import com.fasterxml.jackson.databind.SerializationFeature
 import io.github.smiley4.ktoropenapi.OpenApi
-import io.github.smiley4.ktoropenapi.config.AuthScheme
-import io.github.smiley4.ktoropenapi.config.AuthType
 import io.github.smiley4.ktoropenapi.config.OpenApiPluginConfig
 import io.github.smiley4.ktoropenapi.config.OpenApiVersion
 import io.github.smiley4.ktoropenapi.openApi
@@ -211,10 +209,10 @@ fun Application.k9Los() {
             localSetup.initTilbakeoppgaver(0)
             localSetup.initKlageoppgaver(0)
             localSetup.initK9SakOppgaver(0)
-            api(eksponerFrontendDokumentasjon = true)
+            api(eksponerSwagger = true)
         } else {
             authenticate(*issuers.allIssuers()) {
-                api(eksponerFrontendDokumentasjon = false)
+                api(eksponerSwagger = false)
             }
         }
 
@@ -255,9 +253,21 @@ internal fun OpenApiPluginConfig.k9LosOpenApiConfig() {
     }
 }
 
-private fun Route.api(eksponerFrontendDokumentasjon: Boolean) {
+private fun Route.api(eksponerSwagger: Boolean) {
+    if (eksponerSwagger) {
+        route("openapi.json") { openApi("frontend") }
+        get("/") { call.respondRedirect("/swagger") }
+        route("swagger") {
+            swaggerUI(
+                mapOf(
+                    "Frontend" to "/openapi.json",
+                    "Forvaltning" to "/k9/los/api/openapi.json",
+                )
+            )
+        }
+    }
     legacyApi()
-    apiUnderConstruction(eksponerFrontendDokumentasjon)
+    apiUnderConstruction()
 }
 
 private fun Route.legacyApi() {
@@ -266,7 +276,6 @@ private fun Route.legacyApi() {
     }) {
         områdeApi(Områder.K9) {
             route("openapi.json") { openApi("forvaltning") }
-            swaggerUI("openapi.json")
             route("/forvaltning") {
                 K9ForvaltningApis()
                 route("eventlager") { EventlagerApi() }
@@ -298,13 +307,7 @@ private fun Route.legacyApi() {
     }
 }
 
-private fun Route.apiUnderConstruction(eksponerFrontendSwagger: Boolean) {
-    if (eksponerFrontendSwagger) {
-        route("openapi.json") { openApi("frontend") }
-        get("/") { call.respondRedirect("/swagger") }
-        route("swagger") { swaggerUI("/openapi.json") }
-    }
-
+private fun Route.apiUnderConstruction() {
     route("api/wip", {
         specName = "frontend"
     }) {

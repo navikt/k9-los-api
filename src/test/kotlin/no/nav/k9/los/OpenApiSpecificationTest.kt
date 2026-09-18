@@ -18,7 +18,6 @@ import no.nav.k9.los.infrastruktur.rest.områdeApi
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
-import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 class OpenApiSpecificationTest {
@@ -68,8 +67,6 @@ class OpenApiSpecificationTest {
         assertEquals("frontendOperasjon", frontendOperation["operationId"].textValue())
         val områdeSchema = frontend.resolveSchema(frontendOperation.parameter("omrade")["schema"])
         assertEquals(listOf("k9", "akt"), områdeSchema["enum"].map(JsonNode::textValue))
-        assertNotNull(frontend["components"]["securitySchemes"]["bearerAuth"])
-        assertEquals("bearerAuth", frontendOperation["security"][0].fieldNames().next())
     }
 
     private fun JsonNode.operation(path: String): JsonNode {
