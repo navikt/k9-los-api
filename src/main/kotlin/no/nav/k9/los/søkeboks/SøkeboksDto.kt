@@ -1,7 +1,9 @@
 package no.nav.k9.los.søkeboks
 
 import no.nav.k9.los.infrastruktur.pdl.*
+import no.nav.k9.los.kodeverk.FagsakYtelseType
 import no.nav.k9.los.oppgaveuthenting.OppgaveNøkkelDto
+import no.nav.k9.los.oppgaveuthenting.sammendrag.OppgaveSammendragDto
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -48,4 +50,18 @@ data class SøkeresultatOppgaveDto(
     val oppgavebehandlingsUrl: String?,
     val reservasjonsnøkkel: String,
     val fagsakÅr: Int?,
-)
+) {
+    constructor(sammendrag: OppgaveSammendragDto) : this(
+        navn = sammendrag.person?.navn ?: "Uten navn",
+        oppgaveNøkkel = sammendrag.oppgaveNøkkel,
+        ytelsestype = sammendrag.ytelse?.navn ?: FagsakYtelseType.UKJENT.navn,
+        saksnummer = sammendrag.saksnummer,
+        hastesak = sammendrag.hastesak,
+        journalpostId = sammendrag.journalpostId,
+        opprettetTidspunkt = sammendrag.opprettetTidspunkt,
+        status = sammendrag.behandlingsstatus?.navn ?: sammendrag.oppgavestatus.navn,
+        oppgavebehandlingsUrl = sammendrag.oppgavebehandlingsUrl,
+        reservasjonsnøkkel = sammendrag.reservasjonsnøkkel,
+        fagsakÅr = sammendrag.fagsakÅr,
+    )
+}

@@ -196,8 +196,8 @@ fun Route.OppgaveKoApis() {
                 val skjermet = pepClient.harTilgangTilKode6()
                 call.respond(oppgaveKoTjeneste.hentAntallMedOgUtenReserverteForKø(
                     område = coroutineContext.område(),
-                    oppgaveKoId = oppgavekøId.toLong(),
-                    skjermet = skjermet
+                    skjermet = skjermet,
+                    oppgaveKoId = oppgavekøId.toLong()
                 ))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
