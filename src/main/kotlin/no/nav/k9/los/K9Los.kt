@@ -64,16 +64,22 @@ import no.nav.k9.los.innloggetbruker.InnloggetBrukerApiNy
 import no.nav.k9.los.innloggetbruker.InnloggetBrukersOmråderApi
 import no.nav.k9.los.ko.KøpåvirkendeHendelse
 import no.nav.k9.los.ko.OppgaveKoApis
+import no.nav.k9.los.ko.OppgaveKoAvdelingslederApisNy
+import no.nav.k9.los.ko.OppgaveKoSaksbehandlerApisNy
 import no.nav.k9.los.lagretsok.LagretSøkApi
 import no.nav.k9.los.nøkkeltall.K9NøkkeltallApis
 import no.nav.k9.los.nøkkeltall.saksbehandler.nyeogferdigstilte.K9NyeOgFerdigstilteApi
 import no.nav.k9.los.nøkkeltall.saksbehandler.nyeogferdigstilte.K9NyeOgFerdigstilteService
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.query.OppgaveQueryApis
+import no.nav.k9.los.reservasjon.ReservasjonAdminApi
 import no.nav.k9.los.reservasjon.ReservasjonApis
+import no.nav.k9.los.reservasjon.ReservasjonApisNy
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerAdminApis
+import no.nav.k9.los.saksbehandleradmin.SaksbehandlerAdminApisNy
 import no.nav.k9.los.sisteoppgaver.SisteOppgaverApi
 import no.nav.k9.los.søkeboks.K9SøkeboksApi
+import no.nav.k9.los.søkeboks.SøkeboksApiNy
 import no.nav.k9.los.tjenester.mock.localSetup
 import no.nav.k9.los.uttrekk.UttrekkApi
 import no.nav.k9.los.uttrekk.UttrekkJobb
@@ -265,33 +271,39 @@ private fun Route.apiUnderConstruction() {
     route("openapi.json") { openApi() }
     swaggerUI("openapi.json")
 
-    route("innlogget-bruker/områder") { InnloggetBrukersOmråderApi() }
-    områdeApi {
-        route("innlogget-bruker") { InnloggetBrukerApiNy() }
-        route("driftsmeldinger", { tags("Driftsmelding") }) { DriftsmeldingerApis() }
+    route("api/wip") {
+        route("innlogget-bruker/områder") { InnloggetBrukersOmråderApi() }
 
-        route("/forvaltning", { tags("Forvaltning") }) {
-//            route("eventlager") { EventlagerApi() }
-//            forvaltningApisNy()
-//            route("statistikk") { StatistikkApiNy() }
-        }
+        områdeApi {
+            route("innlogget-bruker") { InnloggetBrukerApiNy() }
+            route("driftsmeldinger", { tags("Driftsmelding") }) { DriftsmeldingerApis() }
 
-        route("saksbehandler", { tags("Saksbehandler") }) {
-//            route("sok") { SøkeboksApiNy() }
-//            route("oppgaveko") { OppgaveKoSaksbehandlerApisNy() }
-//            route("reservasjoner") { ReservasjonApisNy() }
-//            route("siste-oppgaver") { SisteOppgaverApiNy() }
-//            route("nye-og-ferdigstilte") { NyeOgFerdigstilteApiNy() }
-        }
+            route("/forvaltning", { tags("Forvaltning") }) {
+                // Finn ut hvilke av disse som fungerer for flere områder
+    //            route("eventlager") { EventlagerApi() }
+    //            forvaltningApis()
+    //            route("statistikk") { StatistikkApi() }
+            }
 
-        route("avdelingsleder", { tags("Avdelingsleder") }) {
-//            route("saksbehandler-admin") { SaksbehandlerAdminApisNy() }
-//            route("reservasjon-admin") { ReservasjonAdminApisNy() }
-//            route("oppgaveko") { OppgaveKoAvdelingslederApisNy() }
-//            route("nokkeltall") { NøkkeltallV3ApisNy() }
-//            route("lagret-sok") { LagretSøkApiNy() }
-//            route("uttrekk") { UttrekkApiNy() }
-//            route("query") { OppgaveQueryApisNy() }
+            route("saksbehandler", { tags("Saksbehandler") }) {
+                route("sok") { SøkeboksApiNy() }
+                route("oppgaveko") { OppgaveKoSaksbehandlerApisNy() }
+                route("reservasjoner") { ReservasjonApisNy() }
+                route("siste-oppgaver") { SisteOppgaverApi() }
+
+                // Etter hvert: Trenger å lage en for flere områder
+    //            route("nye-og-ferdigstilte") { NyeOgFerdigstilteApiNy() }
+            }
+
+            route("avdelingsleder", { tags("Avdelingsleder") }) {
+                route("saksbehandler-admin") { SaksbehandlerAdminApisNy() }
+                route("reservasjon-admin") { ReservasjonAdminApi() }
+                route("oppgaveko") { OppgaveKoAvdelingslederApisNy() }
+    //            route("nokkeltall") { NøkkeltallV3ApisNy() }
+                route("lagret-sok") { LagretSøkApi() }
+                route("uttrekk") { UttrekkApi() }
+                route("query") { OppgaveQueryApis() }
+            }
         }
     }
 }
