@@ -11,7 +11,6 @@ import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.rest.RequestContextService
 import no.nav.k9.los.infrastruktur.rest.idToken
 import no.nav.k9.los.infrastruktur.rest.område
-import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
 import no.nav.k9.los.oppgaveuthenting.OppgaveNøkkelDto
 import org.koin.ktor.ext.inject
@@ -255,32 +254,6 @@ internal fun Route.ReservasjonApisNy() {
                 } catch (e: FinnerIkkeDataException) {
                     call.respond(HttpStatusCode.NotFound, "Fant ingen aktiv reservasjon for angitt reservasjonsnøkkel")
                 }
-            } else {
-                call.respond(HttpStatusCode.Forbidden)
-            }
-        }
-    }
-
-    post("/flytt/sok", {
-        operationId = "sokSaksbehandlerForReservasjon"
-        summary = "Søk etter saksbehandler"
-        request {
-            body<BrukerIdentDto> { description = "Nav-ident, navn eller e-post det skal søkes etter" }
-        }
-        response {
-            HttpStatusCode.OK to { body<no.nav.k9.los.saksbehandleradmin.Saksbehandler>() }
-            HttpStatusCode.Forbidden to { description = "Brukeren mangler basistilgang" }
-        }
-    }) {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.harBasisTilgang()) {
-                val params = call.receive<BrukerIdentDto>()
-                val sokSaksbehandlerMedIdent = saksbehandlerRepository.sokSaksbehandler(
-                    params.brukerIdent,
-                    område = coroutineContext.område(),
-                    skjermet = pepClient.harTilgangTilKode6()
-                )
-                call.respond(sokSaksbehandlerMedIdent)
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }

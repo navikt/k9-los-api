@@ -332,24 +332,24 @@ private fun Route.apiUnderConstruction() {
     //            route("statistikk") { StatistikkApi() }
             }
 
-            route("saksbehandler", { tags("Saksbehandler") }) {
-                route("sok") { SøkeboksApiNy() }
-                route("oppgaveko") { OppgaveKoSaksbehandlerApisNy() }
-                route("reservasjoner") { ReservasjonApisNy() }
-                route("siste-oppgaver") { SisteOppgaverApiNy() }
+            route("saksbehandler") {
+                route("sok", { tags("Saksbehandler / Søkeboks") }) { SøkeboksApiNy() }
+                route("oppgaveko", { tags("Saksbehandler / Oppgavekøer") }) { OppgaveKoSaksbehandlerApisNy() }
+                route("reservasjoner", { tags("Saksbehandler / Reservasjoner") }) { ReservasjonApisNy() }
+                route("siste-oppgaver", { tags("Saksbehandler / Siste oppgaver") }) { SisteOppgaverApiNy() }
 
                 // Etter hvert: Trenger å lage en for flere områder
     //            route("nye-og-ferdigstilte") { NyeOgFerdigstilteApiNy() }
             }
 
-            route("avdelingsleder", { tags("Avdelingsleder") }) {
-                route("saksbehandler-admin") { SaksbehandlerAdminApisNy() }
-                route("reservasjon-admin") { ReservasjonAdminApi() }
-                route("oppgaveko") { OppgaveKoAvdelingslederApisNy() }
-    //            route("nokkeltall") { NøkkeltallV3ApisNy() }
-                route("lagret-sok") { LagretSøkApiNy() }
-                route("uttrekk") { UttrekkApiNy() }
-                route("query") { OppgaveQueryApisNy() }
+            route("avdelingsleder") {
+                route("saksbehandler-admin", { tags("Avdelingsleder / Saksbehandler admin") }) { SaksbehandlerAdminApisNy() }
+                route("reservasjon-admin", { tags("Avdelingsleder / Reservasjoner") }) { ReservasjonAdminApi() }
+                route("oppgaveko", { tags("Avdelingsleder / Oppgavekøer") }) { OppgaveKoAvdelingslederApisNy() }
+//                route("nokkeltall") { K9NøkkeltallApis() }
+                route("lagret-sok", { tags("Avdelingsleder / Lagrede søk") }) { LagretSøkApiNy() }
+                route("uttrekk", { tags("Avdelingsleder / Uttrekk") }) { UttrekkApiNy() }
+                route("query", { tags("Avdelingsleder / Query") }) { OppgaveQueryApisNy() }
             }
             }
         }
