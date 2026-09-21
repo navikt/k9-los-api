@@ -69,6 +69,8 @@ spec:
           cluster: {{cluster_name_punsj}}
         - application: sif-abac-pdp
           namespace: k9saksbehandling
+        - application: pdl-api
+          namespace: pdl
     inbound:
       rules:
         - application: k9-los-web
@@ -95,7 +97,7 @@ spec:
       value: "{{migrering_etter_oppstart}}"
 
     - name: PDL_URL
-      value: {{pdl_url}}
+      value: http://pdl-api.pdl/graphql
 
       # Nav applikasjoner
     - name: APP_K9SAK_URL
@@ -109,7 +111,7 @@ spec:
     - name: APP_K9PUNSJ_FRONTEND_URL
       value: {{app_k9punsj_frontend_url}}
     - name: APP_SIF_ABAC_PDP_URL
-      value: {{app_sif_abac_pdp_url}}
+      value: http://sif-abac-pdp/sif/sif-abac-pdp
 
       # Kafka
     - name: KAFKA_AKSJONSPUNKTHENDELSE_TOPIC
