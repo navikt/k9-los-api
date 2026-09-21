@@ -35,7 +35,7 @@ class OpenApiSpecificationTest {
                 }) {
                     get { call.respondText("legacy") }
                 }
-                route("api/wip", {
+                route("api/fleromrade", {
                     specName = "frontend"
                     protected = true
                     request {
@@ -59,11 +59,11 @@ class OpenApiSpecificationTest {
         val frontend: JsonNode = objectMapper.readTree(client.get("/frontend-openapi.json").bodyAsText())
 
         assertTrue(legacy["paths"].has("/legacy"))
-        assertFalse(legacy["paths"].has("/api/wip/{omrade}/ressurs"))
+        assertFalse(legacy["paths"].has("/api/fleromrade/{omrade}/ressurs"))
         assertEquals("legacyOperasjon", legacy.operation("/legacy")["operationId"].textValue())
 
         assertFalse(frontend["paths"].has("/legacy"))
-        val frontendOperation = frontend.operation("/api/wip/{omrade}/ressurs")
+        val frontendOperation = frontend.operation("/api/fleromrade/{omrade}/ressurs")
         assertEquals("frontendOperasjon", frontendOperation["operationId"].textValue())
         val områdeSchema = frontend.resolveSchema(frontendOperation.parameter("omrade")["schema"])
         assertEquals(listOf("k9", "akt"), områdeSchema["enum"].map(JsonNode::textValue))
