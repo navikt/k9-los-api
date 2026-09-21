@@ -710,6 +710,9 @@ fun naisCommonConfig() = module {
 
     single(named("sifAbacPdpHttpClient")) {
         HttpClient(Java) {
+            engine {
+                protocolVersion = java.net.http.HttpClient.Version.HTTP_1_1
+            }
             install(HttpTimeout) {
                 connectTimeoutMillis = 1_000
                 socketTimeoutMillis = 2_000
