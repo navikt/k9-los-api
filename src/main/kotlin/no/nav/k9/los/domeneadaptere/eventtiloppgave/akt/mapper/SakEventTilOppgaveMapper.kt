@@ -65,13 +65,7 @@ object SakEventTilOppgaveMapper {
 
             BehandlingType.KLAGE,
             BehandlingType.ANKE ->
-                if (åpneAksjonspunkter.any { ap ->
-                        AksjonspunktDefinisjon.fraKode(ap.aksjonspunktKode()).aksjonspunktType.erLokalkontorAksjonspunkt()
-                    }) {
-                    AktOppgavetypenavn.AKTIVITETSPENGERKLAGEDEL1
-                } else {
-                    AktOppgavetypenavn.AKTIVITETSPENGERKLAGEDEL2
-                }
+                AktOppgavetypenavn.AKTIVITETSPENGERKLAGE
 
             BehandlingType.TILBAKEKREVING,
             BehandlingType.REVURDERING_TILBAKEKREVING,
@@ -112,8 +106,7 @@ object SakEventTilOppgaveMapper {
         val del = when (utledOppgavetype(event)) {
             AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1 -> "del1"
             AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2 -> "del2"
-            AktOppgavetypenavn.AKTIVITETSPENGERKLAGEDEL1,
-            AktOppgavetypenavn.AKTIVITETSPENGERKLAGEDEL2 -> throw NotImplementedError()
+            AktOppgavetypenavn.AKTIVITETSPENGERKLAGE -> throw NotImplementedError()
         }
         val behandlingtype = when (BehandlingType.fraKode(eventLagret.eventDto.behandlingTypeKode)) {
             BehandlingType.FØRSTEGANGSSØKNAD,
@@ -237,14 +230,21 @@ object SakEventTilOppgaveMapper {
             ),
             OppgaveFeltverdiDto(
                 nøkkel = AktivitetspengerFeltIder.Saksbehandling.ANSVARLIG_BESLUTTER,
-                verdi = event.ansvarligBeslutterForTotrinn
-                    ?: forrigeOppgave?.hentVerdi(AktivitetspengerFeltIder.Saksbehandling.ANSVARLIG_BESLUTTER),
+                verdi = when (utledOppgavetype(event)) {
+                    AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1 -> event.navKontorBeslutter
+
+                    AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2,
+                    AktOppgavetypenavn.AKTIVITETSPENGERKLAGE -> event.ansvarligBeslutterForTotrinn
+                },
             ),
             OppgaveFeltverdiDto(
                 nøkkel = AktivitetspengerFeltIder.Saksbehandling.ANSVARLIG_SAKSBEHANDLER,
-                verdi = event.ansvarligSaksbehandlerForTotrinn
-                    ?: event.navKontorAnsvarligSaksbehandler
-                    ?: forrigeOppgave?.hentVerdi(AktivitetspengerFeltIder.Saksbehandling.ANSVARLIG_SAKSBEHANDLER),
+                verdi = when (utledOppgavetype(event)) {
+                    AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1 -> event.navKontorAnsvarligSaksbehandler
+
+                    AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2,
+                    AktOppgavetypenavn.AKTIVITETSPENGERKLAGE -> event.ansvarligSaksbehandlerForTotrinn
+                },
             ),
             OppgaveFeltverdiDto(
                 nøkkel = AktivitetspengerFeltIder.Sak.MOTTATT_DATO,

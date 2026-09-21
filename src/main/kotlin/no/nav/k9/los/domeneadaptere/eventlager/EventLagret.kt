@@ -132,7 +132,6 @@ sealed class EventLagret(
         override val område: Områder by lazy {
             when (FagsakYtelseType.fraKode(eventDto.ytelseTypeKode)) {
                 FagsakYtelseType.AKTIVITETSPENGER -> Områder.AKTIVITETSPENGER
-                FagsakYtelseType.UNGDOMSYTELSE -> Områder.UNGDOMSPROGRAMYTELSEN
                 else -> throw IllegalArgumentException("Ukjent område for UNGSAK event med ytelseType=${eventDto.ytelseTypeKode}")
             }
         }

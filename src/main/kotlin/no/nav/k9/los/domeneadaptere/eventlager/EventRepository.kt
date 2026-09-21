@@ -185,7 +185,7 @@ class EventRepository(
                         where e.event_nokkel_id = en.id
                         and e.dirty = true
                     )
-                    and en.FAGSYSTEM in ('K9SAK','K9TILBAKE','K9KLAGE','PUNSJ')
+                    and en.FAGSYSTEM in ('K9SAK','K9TILBAKE','K9KLAGE','PUNSJ', 'UNGSAK')
                 """.trimIndent()
                 ).map { row ->
                     EventNøkkel(

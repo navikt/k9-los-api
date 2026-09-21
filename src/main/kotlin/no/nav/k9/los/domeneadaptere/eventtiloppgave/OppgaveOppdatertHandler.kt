@@ -67,8 +67,21 @@ class OppgaveOppdatertHandler(
             is EventLagret.K9Tilbake -> håndterTilbakeOppdatert(eventLagret, oppgave, tx)
             is EventLagret.K9Klage  -> håndterKlageOppdatert(eventLagret, oppgave, tx)
             is EventLagret.K9Punsj  -> håndterPunsjOppdatert(oppgave, tx)
-            is EventLagret.UngSak   -> throw IkkeImplementertException(
-                "UngSak-eventer skal ikke behandles av K9-pipeline"
+            is EventLagret.UngSak   -> håndterUngsakOppdatert(oppgave, tx)
+            else                     -> throw IkkeImplementertException("Håndtering av eventLagret=${eventLagret::class.simpleName} er ikke implementert")
+        }
+    }
+
+    private fun håndterUngsakOppdatert(
+        oppgave: OppgaveV3,
+        tx: TransactionalSession
+    ) {
+        if (oppgave.status == Oppgavestatus.LUKKET || oppgave.status == Oppgavestatus.VENTER) {
+            reservasjonV3Tjeneste.annullerReservasjonHvisFinnes(
+                oppgave.reservasjonsnøkkel,
+                "Maskinelt annullert reservasjon, siden oppgave på reservasjonen er avsluttet eller på vent",
+                null,
+                tx
             )
         }
     }

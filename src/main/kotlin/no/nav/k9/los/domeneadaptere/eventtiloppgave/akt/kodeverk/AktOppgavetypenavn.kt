@@ -8,8 +8,7 @@ import no.nav.k9.los.oppgavemottak.OppgaveDtoType
 enum class AktOppgavetypenavn(@JsonValue override val kode: String) : OppgaveDtoType {
     AKTIVITETSPENGERORDINÆRDEL1("aktivitetspenger-ordinær-del1"),
     AKTIVITETSPENGERORDINÆRDEL2("aktivitetspenger-ordinær-del2"),
-    AKTIVITETSPENGERKLAGEDEL1("aktivitetspenger-klage-del1"),
-    AKTIVITETSPENGERKLAGEDEL2("aktivitetspenger-klage-del2");
+    AKTIVITETSPENGERKLAGE("aktivitetspenger-klage");
 
     override val område: Områder = Områder.AKTIVITETSPENGER
 

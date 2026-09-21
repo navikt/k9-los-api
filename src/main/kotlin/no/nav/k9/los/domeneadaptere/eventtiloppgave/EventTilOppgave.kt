@@ -1,7 +1,6 @@
 package no.nav.k9.los.domeneadaptere.eventtiloppgave
 
 import no.nav.k9.los.domeneadaptere.eventlager.EventLagret
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.mapper.SakEventTilOppgaveMapper as AktSakEventTilOppgaveMapper
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.klagetillos.KlageEventTilOppgaveMapper
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.kodeverk.K9Oppgavetypenavn
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.punsjtillos.PunsjEventTilOppgaveMapper
@@ -12,7 +11,9 @@ import no.nav.k9.los.oppgavemottak.NyOppgaveVersjonInnsending
 import no.nav.k9.los.oppgavemottak.OppgaveV3
 import no.nav.k9.los.oppgaveuthenting.OppgaveNøkkelDto
 import no.nav.ung.kodeverk.behandling.BehandlingType
+import no.nav.ung.kodeverk.behandling.BehandlingType.fraKode
 import no.nav.ung.kodeverk.behandling.FagsakYtelseType
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.mapper.SakEventTilOppgaveMapper as AktSakEventTilOppgaveMapper
 
 /**
  * Ruting fra lagret event til riktig mapper. Mapperne er rene funksjoner – eventuelle
@@ -27,7 +28,9 @@ internal fun EventLagret.tilOppgaveversjon(
     is EventLagret.K9Klage -> KlageEventTilOppgaveMapper.lagOppgaveDto(this, forrigeOppgaveversjon, eventnummer)
     is EventLagret.K9Punsj -> PunsjEventTilOppgaveMapper.lagOppgaveDto(this, forrigeOppgaveversjon)
     is EventLagret.UngSak -> {
-        krevStøttetUngSakBehandlingstype(this)
+        if (fraKode(this.eventDto.behandlingTypeKode) in listOf(BehandlingType.ANKE, BehandlingType.KLAGE)) {
+            throw IkkeImplementertException("Ikke implementert ennå for anke/klage i UngSak")
+        }
         when (FagsakYtelseType.fraKode(eventDto.ytelseTypeKode)) {
             FagsakYtelseType.AKTIVITETSPENGER ->
                 AktSakEventTilOppgaveMapper.lagOppgaveDto(this, forrigeOppgaveversjon, eventnummer)
@@ -62,12 +65,6 @@ internal fun EventLagret.utledReservasjonsnøkkel(erTilBeslutter: Boolean): Stri
     is EventLagret.K9Punsj -> PunsjEventTilOppgaveMapper.utledReservasjonsnøkkel(this)
     is EventLagret.K9Tilbake -> TilbakeEventTilOppgaveMapper.utledReservasjonsnøkkel(this, erTilBeslutter)
     is EventLagret.UngSak -> AktSakEventTilOppgaveMapper.utledReservasjonsnokkel(this, erTilBeslutter)
-}
-
-private fun krevStøttetUngSakBehandlingstype(eventLagret: EventLagret.UngSak) {
-    if (BehandlingType.fraKode(eventLagret.eventDto.behandlingTypeKode) in listOf(BehandlingType.ANKE, BehandlingType.KLAGE)) {
-        throw IkkeImplementertException("Ikke implementert ennå for anke/klage i UngSak")
-    }
 }
 
 private const val ukjentUngSakYtelse =

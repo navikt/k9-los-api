@@ -11,6 +11,7 @@ import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.oppgavemottak.AktivOgPartisjonertOppgaveAjourholdTjeneste
 import no.nav.k9.los.oppgavemottak.OppgaveV3
 import no.nav.k9.los.oppgavemottak.OppgaveV3Tjeneste
+import no.nav.ung.kodeverk.behandling.FagsakYtelseType
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -78,6 +79,12 @@ class EventTilOppgaveAdapter(
         log.info("Oppdaterer oppgave for fagsystem: ${eventnøkkel.fagsystem}, eksternId: ${eventnøkkel.eksternId}")
         val eventerMedNummerering = hentEventerOgKorriger(eventnøkkel, tx, eventer)
         if (eventerMedNummerering.isEmpty()) return statistikktellerInn
+
+        //TODO: Guard for å holde unna UPY inntil videre. Fjernes når UPY er klar for produksjon.
+        val førsteEvent = eventerMedNummerering.first().second
+        if (førsteEvent is EventLagret.UngSak && førsteEvent.eventDto.ytelseTypeKode == FagsakYtelseType.UNGDOMSYTELSE.kode) {
+            return statistikktellerInn
+        }
 
         var statistikkteller = statistikktellerInn
         var forrigeOppgaveversjon = hentStartversjon(eventnøkkel, eventerMedNummerering, tx)
@@ -192,7 +199,6 @@ class EventTilOppgaveAdapter(
         tx: TransactionalSession,
     ): OppgaveV3? {
         val nyOppgaveversjon = eventLagret.tilOppgaveversjon(forrigeOppgaveversjon, eventnummer)
-        // Plumber forrigeOppgaveversjon ned for å spare et hentAktivOppgave-kall pr event
         return oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(nyOppgaveversjon, tx, forrigeOppgaveversjon)
     }
 
