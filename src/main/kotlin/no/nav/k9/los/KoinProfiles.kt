@@ -99,6 +99,7 @@ import org.koin.core.module.Module
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
 import org.slf4j.LoggerFactory
+import java.net.Proxy
 import java.time.Clock
 import java.util.*
 import javax.sql.DataSource
@@ -705,11 +706,20 @@ fun localDevConfig() = module {
 fun naisCommonConfig() = module {
     single {
         // Standard httpclient uten proxy. Er eksplisitt på engine for å unngå en uforutsett engine fra classpath.
-        HttpClient(Java)
+        // proxy må settes eksplisitt til DIRECT: lar vi den være null, arver java.net.http.HttpClient
+        // ProxySelector.getDefault(), som plukker opp http.proxyHost fra webproxy-oppsettet i fss.
+        HttpClient(Java) {
+            engine {
+                proxy = Proxy.NO_PROXY
+            }
+        }
     }
 
     single(named("sifAbacPdpHttpClient")) {
         HttpClient(Java) {
+            engine {
+                proxy = Proxy.NO_PROXY
+            }
             install(HttpTimeout) {
                 connectTimeoutMillis = 1_000
                 socketTimeoutMillis = 2_000
