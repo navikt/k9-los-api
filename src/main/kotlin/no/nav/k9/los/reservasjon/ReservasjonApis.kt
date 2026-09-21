@@ -208,7 +208,7 @@ internal fun Route.ReservasjonApis() {
                 val saksbehandlerDtoListe =
                     alleSaksbehandlere.filter { saksbehandler -> !saksbehandler.navn.isNullOrBlank() && !saksbehandler.navident.isNullOrBlank() }
                         .map { saksbehandler ->
-                            SaksbehandlerDto(saksbehandler.navident!!, saksbehandler.navn!!)
+                            SaksbehandlerPåReservasjonDto(saksbehandler.navident!!, saksbehandler.navn!!)
                         }
                 call.respond(saksbehandlerDtoListe)
             } else {

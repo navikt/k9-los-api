@@ -264,7 +264,7 @@ internal fun Route.ReservasjonApisNy() {
         operationId = "hentSaksbehandlereForReservasjon"
         summary = "Hent saksbehandlere"
         response {
-            HttpStatusCode.OK to { body<List<SaksbehandlerDto>>() }
+            HttpStatusCode.OK to { body<List<SaksbehandlerPåReservasjonDto>>() }
             HttpStatusCode.Forbidden to { description = "Brukeren mangler basistilgang" }
         }
     }) {
@@ -277,7 +277,7 @@ internal fun Route.ReservasjonApisNy() {
                 val saksbehandlerDtoListe =
                     alleSaksbehandlere.filter { saksbehandler -> !saksbehandler.navn.isNullOrBlank() && !saksbehandler.navident.isNullOrBlank() }
                         .map { saksbehandler ->
-                            SaksbehandlerDto(saksbehandler.navident!!, saksbehandler.navn!!)
+                            SaksbehandlerPåReservasjonDto(saksbehandler.navident!!, saksbehandler.navn!!)
                         }
                 call.respond(saksbehandlerDtoListe)
             } else {

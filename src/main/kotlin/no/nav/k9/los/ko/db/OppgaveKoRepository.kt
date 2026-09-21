@@ -7,6 +7,11 @@ import no.nav.k9.los.oppgavedefinisjon.omraade.OmrådeRepository
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.OppgaveQuery
 import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
+import no.nav.k9.los.kodeverk.PersonBeskyttelseType
+import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
+import no.nav.k9.los.oppgaveuthenting.query.dto.query.EnkelOrderFelt
+import no.nav.k9.los.oppgaveuthenting.query.dto.query.FeltverdiOppgavefilter
+import no.nav.k9.los.oppgaveuthenting.query.mapping.EksternFeltverdiOperator
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 import javax.sql.DataSource
@@ -125,8 +130,28 @@ class OppgaveKoRepository(
     }
 
     fun leggTil(tx: TransactionalSession, tittel: String, skjermet: Boolean, område: Områder): OppgaveKo {
-        require(område == Områder.K9) { "Standardkø er ikke implementert for området" }
-        val queryString = if (skjermet) kode6OppgaveString else standardOppgaveString
+        val personBeskyttelseType: PersonBeskyttelseType = if (skjermet) PersonBeskyttelseType.KODE6 else PersonBeskyttelseType.UGRADERT
+        val oppgaveQuery = when (område) {
+            Områder.K9 -> OppgaveQuery(
+                filtere = listOf(
+                    FeltverdiOppgavefilter(null, "oppgavestatus", EksternFeltverdiOperator.IN, listOf(Oppgavestatus.AAPEN.kode)),
+                    FeltverdiOppgavefilter(null, "personbeskyttelse", EksternFeltverdiOperator.IN, listOf(personBeskyttelseType.kode)),
+                    FeltverdiOppgavefilter(Områder.K9, "ytelsestype", EksternFeltverdiOperator.IN, listOf()),
+                    FeltverdiOppgavefilter(Områder.K9, "liggerHosBeslutter", EksternFeltverdiOperator.IN, listOf()),
+                ),
+                order = listOf(
+                    EnkelOrderFelt(Områder.K9, "mottattDato", true)
+                )
+            )
+            Områder.AKTIVITETSPENGER -> OppgaveQuery(
+                filtere = listOf(
+                    FeltverdiOppgavefilter(null, "oppgavestatus", EksternFeltverdiOperator.IN, listOf(Oppgavestatus.AAPEN.kode)),
+                    FeltverdiOppgavefilter(null, "personbeskyttelse", EksternFeltverdiOperator.IN, listOf(personBeskyttelseType.kode)),
+                ),
+                order = listOf(
+                )
+            )
+        }
         val oppgaveKoId = tx.updateAndReturnGeneratedKey(
             queryOf(
                 """
@@ -134,7 +159,7 @@ class OppgaveKoRepository(
                 VALUES (0, :tittel, '', :query, false, :endret_tidspunkt, :skjermet, :omradeId)""",
                 mapOf(
                     "tittel" to tittel,
-                    "query" to queryString,
+                    "query" to LosObjectMapper.instance.writeValueAsString(oppgaveQuery),
                     "endret_tidspunkt" to LocalDateTime.now(),
                     "skjermet" to skjermet,
                     "omradeId" to områdeRepository.hentOmråde(område, tx).id
