@@ -100,7 +100,7 @@ class SaksbehandlerAdminTjeneste(
             )
             if (saksbehandlere.isEmpty()) return@transactionSuspend emptyList()
             val saksbehandlerIder = saksbehandlere.map { it.id }.toSet()
-            val antallReservasjoner = reservasjonV3Tjeneste.tellReservasjonerForSaksbehandlere(saksbehandlerIder, tx)
+            val antallReservasjoner = reservasjonV3Tjeneste.tellReservasjonerForSaksbehandlere(område, saksbehandlerIder, tx)
 
             saksbehandlere.map {
                 SaksbehandlerDto(

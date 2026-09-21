@@ -71,7 +71,7 @@ class OpenApiSpecificationTest {
 
     private fun JsonNode.operation(path: String): JsonNode {
         val pathItem = this["paths"][path]
-        return pathItem.fields().asSequence().first { it.key in HTTP_METHODS }.value
+        return pathItem.properties().first { it.key in HTTP_METHODS }.value
     }
 
     private fun JsonNode.parameter(name: String): JsonNode =

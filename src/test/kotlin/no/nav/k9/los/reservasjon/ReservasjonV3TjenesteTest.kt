@@ -164,7 +164,7 @@ class ReservasjonV3TjenesteTest : AbstractK9LosIntegrationTest() {
         }
 
         transactionalManager.transaction { tx ->
-            val reservasjonerHentet = repo.hentAktiveReservasjonerForSaksbehandler(saksbehandler2.id, tx)
+            val reservasjonerHentet = repo.hentAktiveReservasjonerForSaksbehandler(Områder.K9, saksbehandler2.id, tx)
             assertEquals(saksbehandler2.id, reservasjonerHentet[0].reservertAv)
             assertTrue(overførTildato.equalsWithPrecision(reservasjonerHentet[0].gyldigTil, 10))
             assertEquals(reservasjon.reservasjonsnøkkel, reservasjonerHentet[0].reservasjonsnøkkel)

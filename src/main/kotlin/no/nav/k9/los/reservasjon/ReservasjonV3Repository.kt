@@ -4,6 +4,7 @@ import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.infrastruktur.db.util.InClauseHjelper
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import org.postgresql.util.PSQLException
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -190,6 +191,7 @@ class ReservasjonV3Repository(
     }
 
     fun tellAktiveReservasjonerForSaksbehandlere(
+        område: Områder,
         saksbehandlerId: Set<Long>,
         tx: TransactionalSession
     ): Map<Long, Int> {
@@ -199,13 +201,15 @@ class ReservasjonV3Repository(
                 """
                    select reservertAv, count(*) as antall
                    from reservasjon_v3 r
-                   where r.reservertAv in ($saksbehandlerIdParametre)
-                       and annullert_for_utlop = false
-                       and lower(r.gyldig_tidsrom) <= :now
-                       and upper(r.gyldig_tidsrom) > :now
+                   where r.omrade_id = (select id from omrade where ekstern_id = :omrade_ekstern_id)
+                     and r.reservertAv in ($saksbehandlerIdParametre)
+                     and annullert_for_utlop = false
+                     and lower(r.gyldig_tidsrom) <= :now
+                     and upper(r.gyldig_tidsrom) > :now
                    group by reservertAv
                     """.trimIndent(),
                 buildMap {
+                    put("omrade_ekstern_id", område.eksternId)
                     put("reservertAv", saksbehandlerId)
                     put("now" ,LocalDateTime.now().truncatedTo(ChronoUnit.MICROS))
                     putAll(InClauseHjelper.parameternavnTilVerdierMap(saksbehandlerId, "saksbehandlerId"))
@@ -230,6 +234,7 @@ class ReservasjonV3Repository(
     )
 
     fun hentAktiveReservasjonerForSaksbehandler(
+        område: Områder,
         saksbehandlerId: Long,
         tx: TransactionalSession
     ): List<ReservasjonV3> {
@@ -238,12 +243,14 @@ class ReservasjonV3Repository(
                 """
                    select r.id, r.reservertAv, r.reservasjonsnokkel, lower(r.gyldig_tidsrom) as fra, upper(r.gyldig_tidsrom) as til, r.annullert_for_utlop, r.kommentar as kommentar, re.endretAv
                    from reservasjon_v3 r left outer join reservasjon_v3_endring re on re.ny_reservasjon_id = r.id
-                   where r.reservertAv = :reservertAv
-                       and annullert_for_utlop = false
-                       and lower(r.gyldig_tidsrom) <= :now
-                       and upper(r.gyldig_tidsrom) > :now
+                   where r.omrade_id = (select id from omrade where ekstern_id = :omrade_ekstern_id)
+                     and r.reservertAv = :reservertAv
+                     and annullert_for_utlop = false
+                     and lower(r.gyldig_tidsrom) <= :now
+                     and upper(r.gyldig_tidsrom) > :now
                     """.trimIndent(),
                 mapOf(
+                    "omrade_ekstern_id" to område.eksternId,
                     "reservertAv" to saksbehandlerId,
                     "now" to LocalDateTime.now().truncatedTo(ChronoUnit.MICROS),
                 )
@@ -262,6 +269,7 @@ class ReservasjonV3Repository(
     }
 
     fun hentAlleAktiveReservasjoner(
+        område: Områder,
         tx: TransactionalSession
     ): List<ReservasjonV3> {
         return tx.run(
@@ -277,11 +285,13 @@ class ReservasjonV3Repository(
                        re.endretav as reservasjon_endret_av
                   from reservasjon_v3 r
                   left outer join reservasjon_v3_endring re on re.ny_reservasjon_id = r.id
-                   where annullert_for_utlop = false
-                       and lower(r.gyldig_tidsrom) <= :now
-                       and upper(r.gyldig_tidsrom) > :now
+                   where omrade_id = (select id from omrade where ekstern_id = :omrade_ekstern_id)
+                     and annullert_for_utlop = false
+                     and lower(r.gyldig_tidsrom) <= :now
+                     and upper(r.gyldig_tidsrom) > :now
                 """.trimIndent(),
                 mapOf(
+                    "omrade_ekstern_id" to område.eksternId,
                     "now" to LocalDateTime.now().truncatedTo(ChronoUnit.MICROS),
                 )
             ).map { row ->

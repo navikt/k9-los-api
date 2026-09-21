@@ -54,7 +54,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
 
         transactionalManager.transaction { tx ->
             val reservasjonerHentet =
-                reservasjonV3Repository.hentAktiveReservasjonerForSaksbehandler(saksbehandler.id, tx)
+                reservasjonV3Repository.hentAktiveReservasjonerForSaksbehandler(Områder.K9, saksbehandler.id, tx)
             assertEquals(reservasjon, reservasjonerHentet[0])
         }
     }
@@ -166,7 +166,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
 
         transactionalManager.transaction { tx ->
             val aktiveReservasjoner =
-                repo.hentAktiveReservasjonerForSaksbehandler(saksbehandler1.id, tx)
+                repo.hentAktiveReservasjonerForSaksbehandler(Områder.K9, saksbehandler1.id, tx)
             assertEquals(reservasjon2, aktiveReservasjoner[0])
         }
     }
@@ -432,6 +432,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
 
         val resultat = transactionalManager.transaction { tx ->
             reservasjonV3Repository.tellAktiveReservasjonerForSaksbehandlere(
+                Områder.K9,
                 setOf(
                     saksbehandler1.id,
                     saksbehandler2.id

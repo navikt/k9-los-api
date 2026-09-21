@@ -140,14 +140,14 @@ class ReservasjonV3Tjeneste(
         return reservasjon
     }
 
-    fun tellReservasjonerForSaksbehandlere(saksbehandlerIder: Set<Long>, tx: TransactionalSession): Map<Long, Int> {
-        return reservasjonV3Repository.tellAktiveReservasjonerForSaksbehandlere(saksbehandlerIder, tx)
+    fun tellReservasjonerForSaksbehandlere(område: Områder, saksbehandlerIder: Set<Long>, tx: TransactionalSession): Map<Long, Int> {
+        return reservasjonV3Repository.tellAktiveReservasjonerForSaksbehandlere(område, saksbehandlerIder, tx)
     }
 
     fun hentReservasjonerForSaksbehandler(område: Områder, saksbehandlerId: Long): List<ReservasjonV3MedOppgaver> {
         return transactionalManager.transaction { tx ->
             val reservasjoner =
-                reservasjonV3Repository.hentAktiveReservasjonerForSaksbehandler(saksbehandlerId, tx)
+                reservasjonV3Repository.hentAktiveReservasjonerForSaksbehandler(område, saksbehandlerId, tx)
 
             reservasjoner.map { reservasjon ->
                 finnOppgaverFor(område, reservasjon, tx)
@@ -279,7 +279,7 @@ class ReservasjonV3Tjeneste(
 
     fun hentAlleAktiveReservasjoner(område: Områder): List<ReservasjonV3MedOppgaver> {
         return transactionalManager.transaction { tx ->
-            val aktiveReservasjoner = reservasjonV3Repository.hentAlleAktiveReservasjoner(tx)
+            val aktiveReservasjoner = reservasjonV3Repository.hentAlleAktiveReservasjoner(område, tx)
             aktiveReservasjoner.map { reservasjon ->
                 finnOppgaverFor(område, reservasjon, tx)
             }
