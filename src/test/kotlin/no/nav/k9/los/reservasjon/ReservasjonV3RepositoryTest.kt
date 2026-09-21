@@ -48,7 +48,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
         }
 
         transactionalManager.transaction { tx ->
-            val reservasjonHentet = reservasjonV3Repository.hentAktivReservasjonForReservasjonsnøkkel("test1", tx)
+            val reservasjonHentet = reservasjonV3Repository.hentAktivReservasjonForReservasjonsnøkkel(Områder.K9, "test1", tx)
             assertEquals(reservasjon, reservasjonHentet)
         }
 
@@ -159,7 +159,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
 
         transactionalManager.transaction { tx ->
             val aktivReservasjon =
-                repo.hentAktivReservasjonForReservasjonsnøkkel(reservasjon1.reservasjonsnøkkel, tx)
+                repo.hentAktivReservasjonForReservasjonsnøkkel(Områder.K9, reservasjon1.reservasjonsnøkkel, tx)
             assertEquals(reservasjon2, aktivReservasjon)
         }
 
@@ -336,7 +336,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
 
         val forlengetReservasjon = transactionalManager.transaction { tx ->
             val hentetReservasjon =
-                reservasjonV3Repository.hentAktivReservasjonForReservasjonsnøkkel("test1", tx)!!
+                reservasjonV3Repository.hentAktivReservasjonForReservasjonsnøkkel(Områder.K9, "test1", tx)!!
             reservasjonV3Repository.forlengReservasjon(
                 hentetReservasjon,
                 1,

@@ -308,35 +308,22 @@ class ReservasjonV3Repository(
         )
     }
 
-    fun hentAktivReservasjonForReservasjonsnøkkel(nøkkel: String, tx: TransactionalSession): ReservasjonV3? {
+    fun hentAktivReservasjonForReservasjonsnøkkel(område: Områder, nøkkel: String, tx: TransactionalSession): ReservasjonV3? {
         val queryString = """
                    select r.id, r.reservertAv, r.reservasjonsnokkel, lower(r.gyldig_tidsrom) as fra, upper(r.gyldig_tidsrom) as til, r.annullert_for_utlop , kommentar as kommentar, re.endretAv
                    from reservasjon_v3 r
                    left outer join reservasjon_v3_endring re on re.ny_reservasjon_id = r.id
-                   where r.reservasjonsnokkel = :nokkel 
-                       and annullert_for_utlop = false
-                       and lower(r.gyldig_tidsrom) <= :now
-                       and upper(r.gyldig_tidsrom) > :now
+                   where r.omrade_id = (select id from omrade where ekstern_id = :omrade_ekstern_id)
+                     and r.reservasjonsnokkel = :nokkel 
+                     and annullert_for_utlop = false
+                     and lower(r.gyldig_tidsrom) <= :now
+                     and upper(r.gyldig_tidsrom) > :now
                 """.trimIndent()
-        /*
-                log.info("spørring hentAktivReservasjonForReserajovsnsnøkkel: ${queryString}")
-                val explain = tx.run(
-                    queryOf(
-                        "explain " + queryString,
-                        mapOf(
-                            "nokkel" to nøkkel,
-                            "now" to LocalDateTime.now().truncatedTo(ChronoUnit.MICROS),
-                        )
-                    ).map { row ->
-                        row.string(1)
-                    }.asList
-                ).joinToString("\n")
-                log.info("explain hentAktivReservasjonForReserajovsnsnøkkel: $explain")
-         */
         return tx.run(
             queryOf(
                 queryString,
                 mapOf(
+                    "omrade_ekstern_id" to område.eksternId,
                     "nokkel" to nøkkel,
                     "now" to LocalDateTime.now().truncatedTo(ChronoUnit.MICROS),
                 )

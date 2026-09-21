@@ -101,6 +101,7 @@ class ReservasjonV3TjenesteTest : AbstractK9LosIntegrationTest() {
         }
 
         reservasjonV3Tjeneste.annullerReservasjonHvisFinnes(
+            Områder.K9,
             reservasjonsnøkkel = "test1",
             "",
             annullertAvBrukerId = saksbehandlerInnlogget.id
@@ -157,7 +158,7 @@ class ReservasjonV3TjenesteTest : AbstractK9LosIntegrationTest() {
         )
 
         transactionalManager.transaction { tx ->
-            val reservasjonHentet = repo.hentAktivReservasjonForReservasjonsnøkkel("test1", tx)
+            val reservasjonHentet = repo.hentAktivReservasjonForReservasjonsnøkkel(Områder.K9, "test1", tx)
             assertEquals(saksbehandler2.id, reservasjonHentet!!.reservertAv)
             assertTrue(overførTildato.equalsWithPrecision(reservasjonHentet.gyldigTil, 10))
             assertEquals(reservasjon.reservasjonsnøkkel, reservasjonHentet.reservasjonsnøkkel)
@@ -204,7 +205,7 @@ class ReservasjonV3TjenesteTest : AbstractK9LosIntegrationTest() {
         }
 
         transactionalManager.transaction { tx ->
-            val reservasjonHentet = repo.hentAktivReservasjonForReservasjonsnøkkel("test1", tx)
+            val reservasjonHentet = repo.hentAktivReservasjonForReservasjonsnøkkel(Områder.K9, "test1", tx)
             assertEquals(saksbehandler1.id, reservasjonHentet!!.reservertAv)
             assertTrue(reservasjon.gyldigTil.equals(reservasjonHentet.gyldigTil))
             assertEquals(reservasjon.reservasjonsnøkkel, reservasjonHentet.reservasjonsnøkkel)

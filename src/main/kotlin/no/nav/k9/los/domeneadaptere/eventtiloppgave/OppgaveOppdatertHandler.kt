@@ -15,6 +15,7 @@ import no.nav.k9.los.ko.OppgaveHendelseMottatt
 import no.nav.k9.los.kodeverk.AksjonspunktStatus
 import no.nav.k9.los.kodeverk.BehandlingStatus
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgavemottak.OppgaveV3
 import no.nav.k9.los.oppgaveuthenting.OppgaveRepository
 import no.nav.k9.los.oppgaveuthenting.query.db.EksternOppgaveId
@@ -92,6 +93,7 @@ class OppgaveOppdatertHandler(
     ) {
         if (oppgave.status == Oppgavestatus.LUKKET || oppgave.status == Oppgavestatus.VENTER) {
             reservasjonV3Tjeneste.annullerReservasjonHvisFinnes(
+                oppgave.område,
                 oppgave.reservasjonsnøkkel,
                 "Maskinelt annullert reservasjon, siden oppgave på reservasjonen er avsluttet eller på vent",
                 null,
@@ -145,7 +147,7 @@ class OppgaveOppdatertHandler(
         val saksbehandlerNøkkel = event.utledReservasjonsnøkkel(erTilBeslutter = false)
         val beslutterNøkkel = event.utledReservasjonsnøkkel(erTilBeslutter = true)
         val antallAnnullert =
-            annullerReservasjonHvisAlleOppgaverPåVentEllerAvsluttet(listOf(saksbehandlerNøkkel, beslutterNøkkel), tx)
+            annullerReservasjonHvisAlleOppgaverPåVentEllerAvsluttet(oppgave.område, listOf(saksbehandlerNøkkel, beslutterNøkkel), tx)
         if (antallAnnullert > 0) {
             log.info("Annullerte $antallAnnullert reservasjoner maskinelt på oppgave ${oppgave.hentVerdi("saksnummer")} som følge av status på innkommende event")
         } else {
@@ -154,6 +156,7 @@ class OppgaveOppdatertHandler(
     }
 
     private fun annullerReservasjonHvisAlleOppgaverPåVentEllerAvsluttet(
+        område: Områder,
         reservasjonsnøkler: List<String>,
         tx: TransactionalSession
     ): Int {
@@ -170,6 +173,7 @@ class OppgaveOppdatertHandler(
         if (åpneOppgaverForReservasjonsnøkkel.isEmpty()) {
             return reservasjonsnøkler.map { reservasjonsnøkkel ->
                 reservasjonV3Tjeneste.annullerReservasjonHvisFinnes(
+                    område,
                     reservasjonsnøkkel,
                     "Maskinelt annullert reservasjon, siden alle oppgaver på reservasjonen står på vent eller er avsluttet",
                     null,

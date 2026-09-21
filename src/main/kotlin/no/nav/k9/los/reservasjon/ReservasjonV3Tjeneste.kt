@@ -65,6 +65,7 @@ class ReservasjonV3Tjeneste(
             reservasjon
         } catch (e: AlleredeReservertException) {
             val aktivReservasjon = reservasjonV3Repository.hentAktivReservasjonForReservasjonsnøkkel(
+                område,
                 reservasjonsnøkkel,
                 tx
             )!!
@@ -168,12 +169,13 @@ class ReservasjonV3Tjeneste(
     }
 
     fun annullerReservasjonHvisFinnes(
+        område: Områder,
         reservasjonsnøkkel: String,
         kommentar: String?,
         annullertAvBrukerId: Long?,
         tx: TransactionalSession
     ): Boolean {
-        val aktivReservasjon = reservasjonV3Repository.hentAktivReservasjonForReservasjonsnøkkel(reservasjonsnøkkel, tx)
+        val aktivReservasjon = reservasjonV3Repository.hentAktivReservasjonForReservasjonsnøkkel(område, reservasjonsnøkkel, tx)
         log.info(
             "Annullerer v3-reservasjon ${aktivReservasjon}, annulleringsforespørsel av type ${
                 Reservasjonsnøkkel(
@@ -199,12 +201,13 @@ class ReservasjonV3Tjeneste(
 
 
     fun annullerReservasjonHvisFinnes(
+        område: Områder,
         reservasjonsnøkkel: String,
         kommentar: String?,
         annullertAvBrukerId: Long?
     ): Boolean {
         return transactionalManager.transaction { tx ->
-            annullerReservasjonHvisFinnes(reservasjonsnøkkel, kommentar, annullertAvBrukerId, tx)
+            annullerReservasjonHvisFinnes(område, reservasjonsnøkkel, kommentar, annullertAvBrukerId, tx)
         }
     }
 
@@ -216,7 +219,7 @@ class ReservasjonV3Tjeneste(
         kommentar: String?,
     ): ReservasjonV3MedOppgaver {
         return transactionalManager.transaction { tx ->
-            val aktivReservasjon = finnAktivReservasjon(reservasjonsnøkkel, tx)
+            val aktivReservasjon = finnAktivReservasjon(område, reservasjonsnøkkel, tx)
             val nyReservasjon = reservasjonV3Repository.forlengReservasjon(
                 aktivReservasjon = aktivReservasjon,
                 endretAvBrukerId = utførtAvBrukerId,
@@ -238,7 +241,7 @@ class ReservasjonV3Tjeneste(
         kommentar: String,
     ): ReservasjonV3MedOppgaver {
         return transactionalManager.transaction { tx ->
-            val aktivReservasjon = finnAktivReservasjon(reservasjonsnøkkel, tx)
+            val aktivReservasjon = finnAktivReservasjon(område, reservasjonsnøkkel, tx)
             val nyReservasjon = reservasjonV3Repository.overførReservasjon(
                 aktivReservasjon = aktivReservasjon,
                 saksbehandlerSomSkalHaReservasjonId = tilSaksbehandlerId,
@@ -260,7 +263,7 @@ class ReservasjonV3Tjeneste(
         kommentar: String?
     ): ReservasjonV3MedOppgaver {
         return transactionalManager.transaction { tx ->
-            val aktivReservasjon = finnAktivReservasjon(reservasjonsnøkkel, tx)
+            val aktivReservasjon = finnAktivReservasjon(område, reservasjonsnøkkel, tx)
 
             val nyReservasjon = reservasjonV3Repository.endreReservasjon(
                 reservasjonSomSkalEndres = aktivReservasjon,
@@ -318,19 +321,21 @@ class ReservasjonV3Tjeneste(
     }
 
     fun finnAktivReservasjon(
+        område: Områder,
         reservasjonsnøkkel: String,
     ): ReservasjonV3? {
         return transactionalManager.transaction { tx ->
-                reservasjonV3Repository.hentAktivReservasjonForReservasjonsnøkkel(reservasjonsnøkkel, tx)
+                reservasjonV3Repository.hentAktivReservasjonForReservasjonsnøkkel(område, reservasjonsnøkkel, tx)
         }
     }
 
     private fun finnAktivReservasjon(
+        område: Områder,
         reservasjonsnøkkel: String,
         tx: TransactionalSession
     ): ReservasjonV3 {
         val aktivReservasjon =
-            reservasjonV3Repository.hentAktivReservasjonForReservasjonsnøkkel(reservasjonsnøkkel, tx)
+            reservasjonV3Repository.hentAktivReservasjonForReservasjonsnøkkel(område, reservasjonsnøkkel, tx)
                 ?: throw FinnerIkkeDataException(
                     "Fant ikke aktiv reservasjon for angitt reservasjonsnøkkel: ${
                         Reservasjonsnøkkel(

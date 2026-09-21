@@ -97,14 +97,9 @@ class ReservasjonApisTjeneste(
         val tilSaksbehandler =
             tilBrukerIdent?.let { saksbehandlerRepository.finnSaksbehandlerMedIdent(it, innloggetBruker.skjermet) }
 
-        val reservasjonsnøkkel = endringDto.reservasjonsnøkkel ?: aktivOppgaveOppslag.hentAktivOppgave(
-            område,
-            endringDto.oppgaveNøkkel!!.oppgaveEksternId,
-            endringDto.oppgaveNøkkel.oppgaveTypeEksternId
-        ).reservasjonsnøkkel
         val nyReservasjon = reservasjonV3Tjeneste.endreReservasjon(
             område = område,
-            reservasjonsnøkkel = reservasjonsnøkkel,
+            reservasjonsnøkkel = endringDto.reservasjonsnøkkel,
             endretAvBrukerId = innloggetBruker.id,
             nyTildato = reserverTil?.let {
                 LocalDateTime.of(
@@ -127,17 +122,10 @@ class ReservasjonApisTjeneste(
         forlengReservasjonDto: ForlengReservasjonDto,
         innloggetBruker: Saksbehandler
     ): ReservasjonV3Dto {
-        val reservasjonsnøkkel =
-            forlengReservasjonDto.reservasjonsnøkkel ?: aktivOppgaveOppslag.hentAktivOppgave(
-                område,
-                forlengReservasjonDto.oppgaveNøkkel!!.oppgaveEksternId,
-                forlengReservasjonDto.oppgaveNøkkel.oppgaveTypeEksternId
-            ).reservasjonsnøkkel
-
         val forlengetReservasjon =
             reservasjonV3Tjeneste.forlengReservasjon(
                 område = område,
-                reservasjonsnøkkel = reservasjonsnøkkel,
+                reservasjonsnøkkel = forlengReservasjonDto.reservasjonsnøkkel,
                 nyTildato = forlengReservasjonDto.nyTilDato,
                 utførtAvBrukerId = innloggetBruker.id,
                 kommentar = forlengReservasjonDto.kommentar
@@ -160,15 +148,9 @@ class ReservasjonApisTjeneste(
             innloggetBruker.skjermet
         )!!
 
-        val reservasjonsnøkkel = params.reservasjonsnøkkel ?: aktivOppgaveOppslag.hentAktivOppgave(
-            område,
-            params.oppgaveNøkkel!!.oppgaveEksternId,
-            params.oppgaveNøkkel.oppgaveTypeEksternId
-        ).reservasjonsnøkkel
-
         val nyReservasjon = reservasjonV3Tjeneste.overførReservasjon(
             område = område,
-            reservasjonsnøkkel = reservasjonsnøkkel,
+            reservasjonsnøkkel = params.reservasjonsnøkkel,
             reserverTil = LocalDateTime.now().leggTilDagerHoppOverHelg(1),
             tilSaksbehandlerId = tilSaksbehandler.id,
             utførtAvBrukerId = innloggetBruker.id,
@@ -184,14 +166,9 @@ class ReservasjonApisTjeneste(
         innloggetBruker: Saksbehandler,
         annullerReservasjon: AnnullerReservasjonDto,
     ) {
-        val reservasjonsnøkkel = annullerReservasjon.reservasjonsnøkkel ?: aktivOppgaveOppslag.hentAktivOppgave(
-            område,
-            annullerReservasjon.oppgaveNøkkel!!.oppgaveEksternId,
-            annullerReservasjon.oppgaveNøkkel.oppgaveTypeEksternId
-        ).reservasjonsnøkkel
-
         val annulleringUtført = reservasjonV3Tjeneste.annullerReservasjonHvisFinnes(
-            reservasjonsnøkkel = reservasjonsnøkkel,
+            område = område,
+            reservasjonsnøkkel = annullerReservasjon.reservasjonsnøkkel,
             null,
             annullertAvBrukerId = innloggetBruker.id
         )
@@ -235,7 +212,7 @@ class ReservasjonApisTjeneste(
         if (!pepClient.harTilgangTilOppgaveV3(område, idToken, oppgave, Action.read)) {
             throw ManglerTilgangException("Mangler tilgang til oppgave ${oppgave.eksternId}")
         }
-        val reservasjon = reservasjonV3Tjeneste.finnAktivReservasjon(oppgave.reservasjonsnøkkel)
+        val reservasjon = reservasjonV3Tjeneste.finnAktivReservasjon(område, oppgave.reservasjonsnøkkel)
             ?: return null
         val reservertAv = saksbehandlerRepository.finnSaksbehandlerMedId(reservasjon.reservertAv)
             ?: throw IllegalStateException("Fant ikke saksbehandler med id ${reservasjon.reservertAv} som har reservert oppgave ${oppgave.eksternId}")
