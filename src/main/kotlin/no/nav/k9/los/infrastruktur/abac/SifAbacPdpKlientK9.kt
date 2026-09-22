@@ -54,6 +54,13 @@ class SifAbacPdpKlientK9(
         }
 
         if (!response.status.isSuccess()) {
+            log.error(
+                "hent-tilganger feilet. url={} status={} server={} body={}",
+                "${url}/api/k9/nav-ansatt/v2",
+                response.status,
+                response.headers["Server"],
+                response.bodyAsText()
+            )
             throw SifAbacPdpHttpException(response.status.value, "hent-tilganger")
         }
 
