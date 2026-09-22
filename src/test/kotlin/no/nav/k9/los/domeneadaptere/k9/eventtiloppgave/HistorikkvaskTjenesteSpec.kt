@@ -56,7 +56,7 @@ class HistorikkvaskTjenesteSpec: FreeSpec(), KoinTest {
                         oppgaveTjeneste.hentAktivOppgave(eksternId.toString(), K9Oppgavetypenavn.PUNSJ.kode, Områder.K9, tx)
                     }
                     oppgaveUvasket.hentVerdi("ytelsestype") shouldBe "ytelse"
-                    oppgaveUvasket.felter shouldHaveSize 11
+                    oppgaveUvasket.felter shouldHaveSize 12
 
                     historikkvaskTjeneste.vaskBestilling(HistorikkvaskBestilling(null, eksternId.toString(), Fagsystem.PUNSJ))
 
@@ -64,7 +64,7 @@ class HistorikkvaskTjenesteSpec: FreeSpec(), KoinTest {
                         oppgaveTjeneste.hentAktivOppgave(eksternId.toString(), K9Oppgavetypenavn.PUNSJ.kode, Områder.K9, tx)
                     }
                     oppgaveVasket.hentVerdi("ytelsestype") shouldBe "ytelsekorrigert"
-                    oppgaveVasket.felter shouldHaveSize 11
+                    oppgaveVasket.felter shouldHaveSize 12
                 }
             }
         }
