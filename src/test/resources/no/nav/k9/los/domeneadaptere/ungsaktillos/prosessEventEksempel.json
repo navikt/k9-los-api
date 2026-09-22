@@ -127,18 +127,3 @@
   }
 }
 ]
-
-e1: AP1
-e2: løst lokalkontor, ansvarlig saksbehandler: X
-e3: besluttet lokalkontor, ansvarlig beslutter: y
-e4: AP2, NAY
-e5: løst NAY, ansvarlig saksbehandler2: a
-e3: besluttet NAY, ansvarlig beslutter2: b
-
-o1: AP1
-o2: løst lokalkontor, ansvarlig saksbehandler: X
-o3: besluttet lokalkontor, ansvarlig beslutter: y
-
-o'1: AP2, NAY
-o'2: løst NAY, ansvarlig saksbehandler: a
-o'3: besluttet NAY, ansvarlig beslutter: b

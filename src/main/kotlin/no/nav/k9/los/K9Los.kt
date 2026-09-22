@@ -199,6 +199,7 @@ fun Application.k9Los() {
             localSetup.initTilbakeoppgaver(0)
             localSetup.initKlageoppgaver(0)
             localSetup.initK9SakOppgaver(0)
+            localSetup.initAktivitetspengeroppgaver(0)
             api()
         } else {
             authenticate(*issuers.allIssuers()) {
@@ -360,6 +361,7 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
                 localSetup.initPunsjoppgaver(0)
                 localSetup.initTilbakeoppgaver(0)
                 localSetup.initK9SakOppgaver(0)
+                localSetup.initAktivitetspengeroppgaver(0)
             })
         }
 

@@ -174,7 +174,10 @@ class Områdesetup(
             eksternId = AksjonspunktDefinisjon::class.java.simpleName,
             beskrivelse = null,
             uttømmende = false,
-            verdier = AksjonspunktDefinisjon.entries.lagDto()
+            // UNDEFINED har hverken kode eller navn
+            verdier = AksjonspunktDefinisjon.entries
+                .filter { it != AksjonspunktDefinisjon.UNDEFINED }
+                .lagDto()
         )
     }
 

@@ -37,7 +37,7 @@ object AktivitetspengerOppgaver {
                 OppgavefeltDto(AktivitetspengerFeltIder.Sak.FAGSYSTEM, visPåOppgave = false, påkrevd = true),
                 OppgavefeltDto(AktivitetspengerFeltIder.Sak.SAKSNUMMER, visPåOppgave = true, påkrevd = true),
                 OppgavefeltDto(AktivitetspengerFeltIder.Sak.MOTTATT_DATO, visPåOppgave = true, påkrevd = false),
-                OppgavefeltDto(AktivitetspengerFeltIder.Sak.TID_SIDEN_MOTTATT_DATO, visPåOppgave = true, påkrevd = false, feltutlederForLagring = "no.nav.k9.los.oppgavemottak.feltutlederforlagring.TidSidenMottattDato"),
+                OppgavefeltDto(AktivitetspengerFeltIder.Sak.TID_SIDEN_MOTTATT_DATO, visPåOppgave = true, påkrevd = false),
                 OppgavefeltDto(AktivitetspengerFeltIder.Sak.REGISTRERT_DATO, visPåOppgave = true, påkrevd = false),
                 // Vedtak
                 OppgavefeltDto(AktivitetspengerFeltIder.Vedtak.DATO, visPåOppgave = true, påkrevd = false),

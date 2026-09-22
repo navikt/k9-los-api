@@ -11,10 +11,12 @@ import no.nav.k9.los.domeneadaptere.eventmottak.k9.klage.K9KlageEventHandler
 import no.nav.k9.los.domeneadaptere.eventmottak.k9.punsj.K9PunsjEventHandler
 import no.nav.k9.los.domeneadaptere.eventmottak.k9.sak.K9SakEventHandler
 import no.nav.k9.los.domeneadaptere.eventmottak.k9.tilbakekrav.K9TilbakeEventHandler
+import no.nav.k9.los.domeneadaptere.eventmottak.ung.sak.UngSakEventHandler
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.EventBeriker
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.EventTilOppgaveAdapter
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.HistorikkvaskTjeneste
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.OppgaveOppdatertHandler
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.Områdesetup as AktOmrådesetup
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.klagetillos.beriker.K9KlageBerikerInterfaceKludge
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.klagetillos.beriker.K9KlageBerikerKlientLocal
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.saktillos.beriker.K9SakSystemKlientInterfaceKludge
@@ -95,6 +97,8 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     every { config.koinProfile() } returns KoinProfile.LOCAL
     every { config.k9FrontendUrl() } returns "http://localhost:9000"
     every { config.k9PunsjFrontendUrl() } returns "http://localhost:8080"
+
+    single { KoinProfile.LOCAL }
 
     single(named("oppgaveKøOppdatert")) {
         Channel<UUID>(Channel.UNLIMITED)
@@ -232,6 +236,20 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             feltdefinisjonTjeneste = get(),
             oppgavetypeTjeneste = get(),
             config = get(),
+        )
+    }
+    single {
+        AktOmrådesetup(
+            områdeRepository = get(),
+            feltdefinisjonTjeneste = get(),
+            oppgavetypeTjeneste = get(),
+        )
+    }
+    single {
+        UngSakEventHandler(
+            eventRepository = get(),
+            transactionalManager = get(),
+            feilRekkefølgeSjekker = get(),
         )
     }
     single {
