@@ -16,7 +16,7 @@ enum class BehandlingStatus(override val kode: String, override val navn: String
     LUKKET("LUKKET", "Lukket"),
     SENDT_INN("SENDT_INN", "Sendt inn");
 
-    override val kodeverk = "BEHANDLING_TYPE"
+    override val kodeverk = "BEHANDLING_STATUS"
 
     companion object {
         @JsonCreator(mode = JsonCreator.Mode.DELEGATING)

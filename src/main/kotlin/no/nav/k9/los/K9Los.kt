@@ -345,7 +345,7 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
         }
 
         add(PlanlagtJobb.Oppstart(
-            navn = "Setup",
+            navn = "SetupK9",
             prioritet = 1,
         ) {
             koin.get<OmrådeSetup>().setup()

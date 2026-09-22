@@ -1,5 +1,6 @@
 package no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.oppgavedefinisjon
 
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.kodeverk.AktOppgavetypenavn
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgavedefinisjon.oppgavetype.OppgavefeltDto
 import no.nav.k9.los.oppgavedefinisjon.oppgavetype.OppgavetypeDto
@@ -10,8 +11,8 @@ object AktivitetspengerOppgaver {
         return OppgavetyperDto(
             område = Områder.AKTIVITETSPENGER,
             oppgavetyper = setOf(
-                lagAktivitetspengerOrdinær("AktivitetspengerOrdinærDel1"),
-                lagAktivitetspengerOrdinær("AktivitetspengerOrdinærDel2")
+                lagAktivitetspengerOrdinær(AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1.kode),
+                lagAktivitetspengerOrdinær(AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2.kode)
                 //TODO: klage, feilutbetaling
             )
         )
