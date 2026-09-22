@@ -42,6 +42,7 @@ import no.nav.k9.los.domeneadaptere.eventlager.EventlagerApi
 import no.nav.k9.los.domeneadaptere.eventmottak.kafka.KafkaConsumerLifecycleService
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.EventTilOppgaveAdapter
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.HistorikkvaskTjeneste
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.Områdesetup
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.OmrådeSetup
 import no.nav.k9.los.domeneadaptere.k9.refreshk9sakoppgaver.K9sakBehandlingsoppfriskingJobb
 import no.nav.k9.los.domeneadaptere.k9.refreshk9sakoppgaver.RefreshK9v3
@@ -111,6 +112,7 @@ fun Application.k9Los() {
     koin.get<EventlagerNokkeltallPrometheusCollector>()
 
     koin.get<OmrådeSetup>().setup()
+    koin.get<Områdesetup>().setup()
 
     konfigurerJobber(koin, configuration)
 
@@ -349,6 +351,7 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
             prioritet = 1,
         ) {
             koin.get<OmrådeSetup>().setup()
+            koin.get<Områdesetup>().setup()
         })
 
         if (configuration.koinProfile == KoinProfile.LOCAL) {
