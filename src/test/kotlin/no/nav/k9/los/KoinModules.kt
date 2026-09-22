@@ -3,7 +3,7 @@ package no.nav.k9.los
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.channels.Channel
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.OmrådeSetup
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.Områdesetup
 import no.nav.k9.los.domeneadaptere.k9.avstemming.AvstemmingsTjeneste
 import no.nav.k9.los.domeneadaptere.eventmottak.FeilRekkefølgeSjekker
 import no.nav.k9.los.domeneadaptere.eventlager.EventRepository
@@ -227,7 +227,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     single { FeltdefinisjonRepository(områdeRepository = get()) }
     single { OmrådeRepository(dataSource = get()) }
     single(createdAtStart = true) {
-        OmrådeSetup(
+        Områdesetup(
             områdeRepository = get(),
             feltdefinisjonTjeneste = get(),
             oppgavetypeTjeneste = get(),

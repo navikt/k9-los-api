@@ -5,7 +5,7 @@ import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.OmrådeSetup
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.Områdesetup
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import org.koin.test.KoinTest
 import org.koin.test.get
@@ -34,7 +34,7 @@ class OppgaveInnsendingSpec: KoinTest, FreeSpec(){
          */
         afterSpec {
             oppgavemodellBuilder.slettOppgavemodell()
-            get<OmrådeSetup>().setup()
+            get<Områdesetup>().setup()
         }
 
         "En oppgaveDto pakket inn i NyOppgaveversjon" - {

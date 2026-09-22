@@ -16,7 +16,7 @@ import javax.sql.DataSource
  * Isolasjonsenheten er **området**. Både feltdefinisjoner og oppgavetyper er scopet til område, og
  * [FeltdefinisjonTjeneste.oppdater]/[OppgavetypeTjeneste.oppdater] har erstatt-semantikk — de sletter
  * det som ikke ligger i den innkommende dtoen. Ligger det allerede en modell på området (K9 settes
- * opp én gang av `OmrådeSetup`), feiler den slettingen på fremmednøkkelen fra `oppgavefelt`.
+ * opp én gang av `Områdesetup`), feiler den slettingen på fremmednøkkelen fra `oppgavefelt`.
  *
  * [byggOppgavemodell] river derfor ned oppgavemodellen for området før den bygges opp igjen, slik at
  * testen alltid starter fra et kjent utgangspunkt uavhengig av hva som lå der fra før. Tester som

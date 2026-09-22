@@ -5,7 +5,7 @@ import assertk.assertions.isEqualTo
 import com.fasterxml.jackson.module.kotlin.readValue
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus
 import no.nav.k9.los.AbstractK9LosIntegrationTest
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.OmrådeSetup
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.Områdesetup
 import no.nav.k9.los.domeneadaptere.eventmottak.k9.tilbakekrav.K9TilbakeEventDto
 import no.nav.k9.los.domeneadaptere.eventmottak.k9.tilbakekrav.K9TilbakeEventHandler
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
@@ -34,7 +34,7 @@ class K9TilbakeEventHandlerTest : AbstractK9LosIntegrationTest() {
 
     @BeforeEach
     fun setup() {
-        get<OmrådeSetup>().setup()
+        get<Områdesetup>().setup()
         k9TilbakeEventHandler = get<K9TilbakeEventHandler>()
         oppgaveRepository = get<OppgaveRepository>()
         oppgaveQueryService = get<OppgaveQueryService>()

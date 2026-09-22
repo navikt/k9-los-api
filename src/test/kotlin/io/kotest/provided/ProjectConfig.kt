@@ -8,7 +8,7 @@ import io.kotest.core.listeners.TestListener
 import io.kotest.core.test.TestCase
 import io.kotest.engine.test.TestResult
 import no.nav.k9.los.buildAndTestConfig
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.OmrådeSetup
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.Områdesetup
 import no.nav.k9.los.infrastruktur.db.runMigration
 import no.nav.k9.los.tjenester.mock.localSetup.getKoin
 import org.koin.core.context.startKoin
@@ -51,7 +51,7 @@ class ProjectConfig : AbstractProjectConfig() {
             )
         }
 
-        getKoin().get<OmrådeSetup>().setup()
+        getKoin().get<Områdesetup>().setup()
     }
 
     override suspend fun afterProject() {
@@ -69,8 +69,8 @@ object DbCleanupListener : TestListener {
 
 /**
  * Kotest-spesifikk cleanup som bevarer strukturelle tabeller (omrade, oppgavetype, oppgavefelt, feltdefinisjon,
- * kodeverk, kodeverk_verdi) som settes opp én gang i beforeProject via OmrådeSetup.
- * JUnit-testene bruker TØM_DATA_SQL som truncater alt, men de kaller OmrådeSetup.setup() i @BeforeEach.
+ * kodeverk, kodeverk_verdi) som settes opp én gang i beforeProject via Områdesetup.
+ * JUnit-testene bruker TØM_DATA_SQL som truncater alt, men de kaller Områdesetup.setup() i @BeforeEach.
  */
 private const val KOTEST_TØM_DATA_SQL = """
              truncate 

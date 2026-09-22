@@ -4,7 +4,7 @@ package no.nav.k9.los.oppgavedefinisjon.omraade
  * Registeret over gyldige område-eksternIder i Los.
  *
  * Et område er et subdomene for oppgaver. Radene i tabellen `omrade` opprettes av
- * OmrådeSetup og tilsvarende klasser ved oppstart. Et nytt område legges til i denne
+ * Områdesetup og tilsvarende klasser ved oppstart. Et nytt område legges til i denne
  * enumen i samme commit som oppsettet for området — for en gitt kompilering er derfor
  * alle områder kjent.
  *

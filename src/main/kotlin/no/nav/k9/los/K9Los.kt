@@ -42,8 +42,8 @@ import no.nav.k9.los.domeneadaptere.eventlager.EventlagerApi
 import no.nav.k9.los.domeneadaptere.eventmottak.kafka.KafkaConsumerLifecycleService
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.EventTilOppgaveAdapter
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.HistorikkvaskTjeneste
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.Områdesetup
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.OmrådeSetup
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.Områdesetup as AktOmrådesetup
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.Områdesetup as K9Områdesetup
 import no.nav.k9.los.domeneadaptere.k9.refreshk9sakoppgaver.K9sakBehandlingsoppfriskingJobb
 import no.nav.k9.los.domeneadaptere.k9.refreshk9sakoppgaver.RefreshK9v3
 import no.nav.k9.los.domeneadaptere.statistikk.OppgavestatistikkTjeneste
@@ -110,9 +110,6 @@ fun Application.k9Los() {
     val koin = getKoin()
 
     koin.get<EventlagerNokkeltallPrometheusCollector>()
-
-    koin.get<OmrådeSetup>().setup()
-    koin.get<Områdesetup>().setup()
 
     konfigurerJobber(koin, configuration)
 
@@ -350,8 +347,8 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
             navn = "SetupK9",
             prioritet = 1,
         ) {
-            koin.get<OmrådeSetup>().setup()
-            koin.get<Områdesetup>().setup()
+            koin.get<K9Områdesetup>().setup()
+            koin.get<AktOmrådesetup>().setup()
         })
 
         if (configuration.koinProfile == KoinProfile.LOCAL) {

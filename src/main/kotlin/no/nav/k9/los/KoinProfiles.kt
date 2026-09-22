@@ -19,8 +19,8 @@ import no.nav.k9.los.domeneadaptere.eventmottak.kafka.KafkaConsumerLifecycleServ
 import no.nav.k9.los.domeneadaptere.eventmottak.ung.sak.UngSakEventHandler
 import no.nav.k9.los.domeneadaptere.eventmottak.ung.tilbake.UngTilbakeEventHandler
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.*
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.Områdesetup
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.OmrådeSetup
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.Områdesetup as AktOmrådesetup
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.Områdesetup as K9Områdesetup
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.klagetillos.beriker.K9KlageBerikerInterfaceKludge
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.klagetillos.beriker.K9KlageBerikerKlientLocal
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.klagetillos.beriker.K9KlageBerikerSystemKlient
@@ -346,7 +346,7 @@ fun common(app: Application, config: Configuration) = module {
     }
 
     single {
-        OmrådeSetup(
+        K9Områdesetup(
             områdeRepository = get(),
             feltdefinisjonTjeneste = get(),
             oppgavetypeTjeneste = get(),
@@ -354,7 +354,7 @@ fun common(app: Application, config: Configuration) = module {
         )
     }
     single {
-        Områdesetup(
+        AktOmrådesetup(
             områdeRepository = get(),
             feltdefinisjonTjeneste = get(),
             oppgavetypeTjeneste = get(),

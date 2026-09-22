@@ -12,7 +12,7 @@ import no.nav.helse.dusseldorf.ktor.jackson.dusseldorfConfigured
 import no.nav.k9.los.AbstractPostgresTest
 import no.nav.k9.los.FeltType
 import no.nav.k9.los.buildAndTestConfig
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.OmrådeSetup
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.Områdesetup
 import no.nav.k9.los.domeneadaptere.eventmottak.EventHendelse
 import no.nav.k9.los.domeneadaptere.eventlager.EventNøkkel
 import no.nav.k9.los.domeneadaptere.eventmottak.k9.punsj.K9PunsjEventDto
@@ -79,7 +79,7 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
             coEvery { pepClient.harTilgangTilOppgaveV3(any<Oppgave>(), any<Saksbehandler>(), any<Action>()) } returns true
         }
 
-        val områdeSetup = get<OmrådeSetup>()
+        val områdeSetup = get<Områdesetup>()
         områdeSetup.setup()
     }
 

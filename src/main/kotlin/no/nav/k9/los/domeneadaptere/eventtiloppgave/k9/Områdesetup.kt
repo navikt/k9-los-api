@@ -31,13 +31,13 @@ import org.slf4j.LoggerFactory
 import no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon as KlageAksjonspunktDefinisjon
 import no.nav.k9.kodeverk.api.Kodeverdi as KodeverdiK9Sak
 
-class OmrådeSetup(
+class Områdesetup(
     private val områdeRepository: OmrådeRepository,
     private val feltdefinisjonTjeneste: FeltdefinisjonTjeneste,
     private val oppgavetypeTjeneste: OppgavetypeTjeneste,
     private val config: Configuration,
 ) {
-    private val log: Logger = LoggerFactory.getLogger(OmrådeSetup::class.java)
+    private val log: Logger = LoggerFactory.getLogger(Områdesetup::class.java)
     private val område: Områder = Områder.K9
 
     fun setup() {
@@ -77,7 +77,7 @@ class OmrådeSetup(
 
     private fun lesOppgavetyper(oppgavedefinisjon: String, frontendUrl: String): Set<OppgavetypeDto> {
         val oppgavetyperDto = LosObjectMapper.instance.readValue(
-            OmrådeSetup::class.java.getResource(oppgavedefinisjon)!!
+            Områdesetup::class.java.getResource(oppgavedefinisjon)!!
                 .readText(),
             OppgavetyperDto::class.java
         )
@@ -102,7 +102,7 @@ class OmrådeSetup(
     private fun oppdaterFeltdefinisjoner() {
         val objectMapper = jacksonObjectMapper()
         val feltdefinisjonerDto = objectMapper.readValue(
-            OmrådeSetup::class.java.getResource("/adapterdefinisjoner/k9-feltdefinisjoner-v2.json")!!
+            Områdesetup::class.java.getResource("/adapterdefinisjoner/k9-feltdefinisjoner-v2.json")!!
                 .readText(),
             FeltdefinisjonerDto::class.java
         )
