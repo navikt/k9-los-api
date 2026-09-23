@@ -7,14 +7,12 @@ import com.fasterxml.jackson.databind.ser.std.ToStringSerializer
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer
 import no.nav.k9.los.domeneadaptere.eventmottak.EventHendelse
-import no.nav.k9.los.forvaltning.SENSITIVE_FIELDS
 import no.nav.k9.los.forvaltning.SensitiveField
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
 
 data class K9TilbakeEventDto(
-
     /**
      * Ekstern id for behandlingen. Id benyttes til oppslag i fagsystem.
      * Benytt samme id for alle oppdateringer av aksjonspunkt/prosess innenfor samme behandling.
@@ -22,7 +20,7 @@ data class K9TilbakeEventDto(
     val eksternId: UUID?,
     val fagsystem: String,
     val saksnummer: String,
-    @field:SensitiveField(SENSITIVE_FIELDS.AKTOR_ID)
+    @field:SensitiveField
     val aktørId: String,
 
     val behandlingId: Long?, // fjernes etter overgang til eksternId
@@ -70,23 +68,4 @@ data class K9TilbakeEventDto(
     val feilutbetaltBeløp: Long? = null,
     val ansvarligSaksbehandlerIdent: String? = null,
     val ansvarligBeslutterIdent: String? = null
-
-) {
-    fun tryggPrint(): String {
-        return """BehandlingProsessEventTilbakeDto(
-            aksjonspunktKoderMedStatusListe=$aksjonspunktKoderMedStatusListe, 
-            eksternId=$eksternId, saksnummer='$saksnummer', ytelseTypeKode='$ytelseTypeKode', 
-            fagsystem='$fagsystem', behandlingstidFrist=$behandlingstidFrist, eventTid=$eventTid, 
-            førsteFeilutbetaling=$førsteFeilutbetaling, feilutbetaltBeløp=$feilutbetaltBeløp)
-            eventHendelse=$eventHendelse, behandlingStatus=$behandlingStatus, 
-            behandlingSteg=$behandlingSteg, resultatType=$resultatType, 
-            behandlingTypeKode='$behandlingTypeKode', 
-            opprettetBehandling=$opprettetBehandling, 
-            """
-            .trimMargin()
-    }
-
-    companion object
-
-
-}
+)

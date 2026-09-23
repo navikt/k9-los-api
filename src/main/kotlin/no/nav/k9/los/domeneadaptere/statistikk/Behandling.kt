@@ -123,6 +123,7 @@ data class Behandling(
 
     fun toJson(): String = JsonSchemas.toJson(this)
 
+    //TODO: Erstatte med annotasjon @SensitiveField
     fun tryggToString(): String {
         return """Behandling(
             saksnummer=$saksnummer,

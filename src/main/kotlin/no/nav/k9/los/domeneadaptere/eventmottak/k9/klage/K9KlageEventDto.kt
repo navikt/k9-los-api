@@ -12,7 +12,6 @@ import no.nav.k9.klage.kontrakt.behandling.oppgavetillos.Aksjonspunkttilstand
 import no.nav.k9.klage.typer.AktørId
 import no.nav.k9.klage.typer.Periode
 import no.nav.k9.los.domeneadaptere.eventmottak.k9.KodeverkDeserializer
-import no.nav.k9.los.forvaltning.SENSITIVE_FIELDS
 import no.nav.k9.los.forvaltning.SensitiveField
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -33,7 +32,7 @@ data class K9KlageEventDto(
     val behandlingstidFrist: LocalDate?,
 
     val saksnummer: String,
-    @field:SensitiveField(SENSITIVE_FIELDS.AKTOR_ID)
+    @field:SensitiveField
     val aktørId: String,
 
     @JsonSerialize(using = ToStringSerializer::class)
@@ -54,9 +53,9 @@ data class K9KlageEventDto(
     @JsonDeserialize(using = LocalDateTimeDeserializer::class)
     val opprettetBehandling: LocalDateTime,
     val fagsakPeriode: Periode?,
-    @field:SensitiveField(SENSITIVE_FIELDS.AKTOR_ID)
+    @field:SensitiveField
     val pleietrengendeAktørId: AktørId?,
-    @field:SensitiveField(SENSITIVE_FIELDS.AKTOR_ID)
+    @field:SensitiveField
     val relatertPartAktørId: AktørId?,
     val aksjonspunkttilstander: List<Aksjonspunkttilstand> = emptyList(),
 
@@ -67,31 +66,3 @@ data class K9KlageEventDto(
     @JsonDeserialize(using = KodeverkDeserializer::class)
     val behandlingsårsaker: List<String>? = emptyList()
 )
-
-fun K9KlageEventDto.tryggToString(): String {
-    return """K9KlageEventDto(
-            eksternId=$eksternId, 
-            påklagdBehandlingId=$påklagdBehandlingId,
-            påklagdBehandlingType=$påklagdBehandlingType,
-            fagsystem=$fagsystem, 
-            utenlandstilsnitt=$utenlandstilsnitt,
-            behandlingstidFrist=$behandlingstidFrist,
-            saksnummer='$saksnummer', 
-            eventTid=$eventTid, 
-            eventHendelse=$eventHendelse, 
-            behandlingStatus=$behandlingStatus, 
-            behandlingSteg=$behandlingSteg, 
-            behandlendeEnhet=$behandlendeEnhet,
-            ansvarligBeslutter=$ansvarligBeslutter,
-            ansvarligSaksbehandler=$ansvarligSaksbehandler, 
-            resultatType=$resultatType,
-            ytelseTypeKode='$ytelseTypeKode', 
-            behandlingTypeKode='$behandlingTypeKode', 
-            opprettetBehandling=$opprettetBehandling,
-            fagsakPeriode=$fagsakPeriode,
-            aksjonspunktTilstander=$aksjonspunkttilstander,
-            vedtaksdato=$vedtaksdato,
-            behandlingsårsaker=$behandlingsårsaker
-            )"""
-        .trimMargin()
-}

@@ -1,8 +1,7 @@
 package no.nav.k9.los.domeneadaptere.eventmottak.k9.punsj
 
-import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
-import no.nav.k9.los.forvaltning.SENSITIVE_FIELDS
 import no.nav.k9.los.forvaltning.SensitiveField
+import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.sak.typer.AktørId
 import no.nav.k9.sak.typer.JournalpostId
 import java.time.LocalDateTime
@@ -15,10 +14,10 @@ data class K9PunsjEventDto(
     val journalpostId: JournalpostId,
     val eventTid: LocalDateTime,
     val status: Oppgavestatus? = null,
-    @field:SensitiveField(SENSITIVE_FIELDS.AKTOR_ID)
+    @field:SensitiveField
     val aktørId: AktørId?,
     val aksjonspunktKoderMedStatusListe: MutableMap<String, String>,
-    @field:SensitiveField(SENSITIVE_FIELDS.AKTOR_ID)
+    @field:SensitiveField
     val pleietrengendeAktørId: String? = null,
     val type : String? = null,
     val ytelse : String? = null,

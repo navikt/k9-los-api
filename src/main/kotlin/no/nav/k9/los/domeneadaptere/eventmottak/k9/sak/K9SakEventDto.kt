@@ -8,10 +8,9 @@ import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer
 import no.nav.k9.kodeverk.behandling.FagsakStatus
 import no.nav.k9.kodeverk.produksjonsstyring.MerknadType
+import no.nav.k9.los.domeneadaptere.eventlager.Fagsystem
 import no.nav.k9.los.domeneadaptere.eventmottak.EventHendelse
 import no.nav.k9.los.domeneadaptere.eventmottak.k9.KodeverkDeserializer
-import no.nav.k9.los.domeneadaptere.eventlager.Fagsystem
-import no.nav.k9.los.forvaltning.SENSITIVE_FIELDS
 import no.nav.k9.los.forvaltning.SensitiveField
 import no.nav.k9.sak.kontrakt.aksjonspunkt.AksjonspunktTilstandDto
 import no.nav.k9.sak.typer.Periode
@@ -20,7 +19,6 @@ import java.time.LocalDateTime
 import java.util.*
 
 data class K9SakEventDto(
-
     /**
      * Ekstern id for behandlingen. Id benyttes til oppslag i fagsystem.
      * Benytt samme id for alle oppdateringer av aksjonspunkt/prosess innenfor samme behandling.
@@ -28,7 +26,7 @@ data class K9SakEventDto(
     val eksternId: UUID?,
     val fagsystem: Fagsystem,
     val saksnummer: String,
-    @field:SensitiveField(SENSITIVE_FIELDS.AKTOR_ID)
+    @field:SensitiveField
     val aktørId: String,
     val vedtaksdato: LocalDate?,
 
@@ -92,9 +90,9 @@ data class K9SakEventDto(
 
     val fagsakPeriode: Periode? = null,
 
-    @field:SensitiveField(SENSITIVE_FIELDS.AKTOR_ID)
+    @field:SensitiveField
     val pleietrengendeAktørId: String? = null,
-    @field:SensitiveField(SENSITIVE_FIELDS.AKTOR_ID)
+    @field:SensitiveField
     val relatertPartAktørId: String? = null,
     val aksjonspunktTilstander: List<AksjonspunktTilstandDto> = emptyList(),
     val nyeKrav: Boolean? = null,
@@ -106,34 +104,4 @@ data class K9SakEventDto(
     @JsonDeserialize(using = KodeverkDeserializer::class)
     val behandlingsårsaker: List<String> = emptyList(),
     val relevanteSøknadsperioder: List<Periode>? = emptyList()
-) {
-
-    // Denne skal ikke ha fnr, aktørider, orgnumre eller beløp som kan identifisere brukeren
-    fun tryggToString(): String {
-        return """BehandlingProsessEventDto(
-            eksternId=$eksternId, 
-            fagsystem=$fagsystem, 
-            saksnummer='$saksnummer', 
-            behandlingstidFrist=$behandlingstidFrist, 
-            eventTid=$eventTid, 
-            eventHendelse=$eventHendelse, 
-            behandlingStatus=$behandlingStatus, 
-            behandlingSteg=$behandlingSteg, 
-            behandlendeEnhet=$behandlendeEnhet, 
-            resultatType=$resultatType, 
-            ytelseTypeKode='$ytelseTypeKode', 
-            behandlingTypeKode='$behandlingTypeKode', 
-            opprettetBehandling=$opprettetBehandling, 
-            aksjonspunktKoderMedStatusListe=$aksjonspunktKoderMedStatusListe, 
-            ansvarligSaksbehandlerIdent=$ansvarligSaksbehandlerIdent, 
-            ansvarligSaksbehandlerForTotrinn=$ansvarligSaksbehandlerForTotrinn, 
-            ansvarligBeslutterForTotrinn=$ansvarligBeslutterForTotrinn, 
-            fagsakPeriode=$fagsakPeriode,
-            aksjonspunktTilstander=$aksjonspunktTilstander,
-            nyeKrav=$nyeKrav
-            fraEndringsdialog=$fraEndringsdialog,
-            søknadsårsaker=$søknadsårsaker
-            )"""
-            .trimMargin()
-    }
-}
+)
