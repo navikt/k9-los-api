@@ -113,7 +113,7 @@ fun common(app: Application, config: Configuration) = module {
     single { config.koinProfile() }
     single { config }
     single { RequestContextService(profile = get()) }
-    single<DataSource> { app.hikariConfig(config) }
+    single<DataSource> { hikariConfig(config) }
 
     single(named("oppgaveKøOppdatert")) {
         Channel<UUID>(Channel.UNLIMITED)

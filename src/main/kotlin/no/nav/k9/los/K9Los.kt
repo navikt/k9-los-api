@@ -101,6 +101,7 @@ fun Application.k9Los() {
     DefaultExports.initialize()
 
     val configuration = Configuration(environment.config)
+    migrate(configuration)
     val issuers = configuration.issuers()
 
     install(Koin) {
@@ -108,6 +109,9 @@ fun Application.k9Los() {
     }
 
     val koin = getKoin()
+
+    koin.get<K9Områdesetup>().setup()
+    koin.get<AktOmrådesetup>().setup()
 
     koin.get<EventlagerNokkeltallPrometheusCollector>()
 
@@ -343,14 +347,6 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
                 }
             )
         }
-
-        add(PlanlagtJobb.Oppstart(
-            navn = "SetupK9",
-            prioritet = 1,
-        ) {
-            koin.get<K9Områdesetup>().setup()
-            koin.get<AktOmrådesetup>().setup()
-        })
 
         if (configuration.koinProfile == KoinProfile.LOCAL) {
             add(PlanlagtJobb.Oppstart(

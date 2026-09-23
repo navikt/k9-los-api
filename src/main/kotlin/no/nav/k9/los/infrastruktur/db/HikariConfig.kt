@@ -29,9 +29,6 @@ fun createHikariConfig(jdbcUrl: String, username: String? = null, password: Stri
         metricsTrackerFactory = PrometheusMetricsTrackerFactory()
     }
 
-fun Application.hikariConfig(configuration: Configuration): HikariDataSource {
-    if (!configuration.migreringEtterOppstart) {
-        migrate(configuration)
-    }
+fun hikariConfig(configuration: Configuration): HikariDataSource {
     return getDataSource(configuration)
 }
