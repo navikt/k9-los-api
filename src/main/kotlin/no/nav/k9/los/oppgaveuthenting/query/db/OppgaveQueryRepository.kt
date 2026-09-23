@@ -89,14 +89,6 @@ class OppgaveQueryRepository(
             }.asList
         )
 
-        val oppgavetypeNavn = tx.run(
-            queryOf(
-                """
-                    SELECT ot.ekstern_id FROM oppgavetype as ot 
-                    """.trimIndent()
-            ).map { it.string(1) }.asList
-        )
-
         val standardfelter = listOf(
             Oppgavefelt(
                 null,
@@ -133,21 +125,6 @@ class OppgaveQueryRepository(
                     Verdiforklaring(
                         verdi = it.kode,
                         visningsnavn = it.beskrivelse,
-                        synlighet = Synlighet.OVER_STREKEN,
-                        gruppering = null
-                    )
-                }
-            ),
-            Oppgavefelt(
-                område = null,
-                kode = "oppgavetype",
-                visningsnavn = "Oppgavetype",
-                tolkes_som = "String",
-                synlighet = Synlighet.OVER_STREKEN,
-                verdiforklaringer = oppgavetypeNavn.map {
-                    Verdiforklaring(
-                        verdi = it,
-                        visningsnavn = it,
                         synlighet = Synlighet.OVER_STREKEN,
                         gruppering = null
                     )

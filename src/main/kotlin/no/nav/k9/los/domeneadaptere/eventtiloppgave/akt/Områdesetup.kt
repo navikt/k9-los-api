@@ -2,6 +2,7 @@ package no.nav.k9.los.domeneadaptere.eventtiloppgave.akt
 
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.kodeverk.AktFagsystem
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.kodeverk.AktBehandlendeEnhet
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.kodeverk.AktOppgavetypenavn
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.oppgavedefinisjon.AktivitetspengerFeltdefinisjoner
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.oppgavedefinisjon.AktivitetspengerOppgaver
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.FeltdefinisjonTjeneste
@@ -46,7 +47,27 @@ class Områdesetup(
             kodeverkYtelsetype(),
             kodeverkBehandlendeEnhet(),
             kodeverkAksjonspunkt(),
-            kodeverkVenteårsak()
+            kodeverkVenteårsak(),
+            kodeverkOppgavetypenavn()
+        )
+    }
+
+    private fun kodeverkOppgavetypenavn(): KodeverkDto {
+        return KodeverkDto(
+            område = område,
+            eksternId = AktOppgavetypenavn::class.java.simpleName,
+            beskrivelse = "Oppgavetype",
+            uttømmende = true,
+            verdier = AktOppgavetypenavn.entries
+                .map { oppgavetypenavn ->
+                    KodeverkVerdiDto(
+                        verdi = oppgavetypenavn.kode,
+                        visningsnavn = oppgavetypenavn.navn,
+                        synlighet = Synlighet.OVER_STREKEN,
+                        gruppering = null,
+                        rekkefølge = null
+                    )
+                }
         )
     }
 
