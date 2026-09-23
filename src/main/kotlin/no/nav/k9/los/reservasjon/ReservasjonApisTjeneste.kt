@@ -10,6 +10,7 @@ import no.nav.k9.los.kodeverk.BehandlingType
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.OppgaveNøkkelDto
 import no.nav.k9.los.oppgaveuthenting.enkeltoppslag.AktivOppgaveOppslag
+import no.nav.k9.los.oppgaveuthenting.sammendrag.OppgaveSammendragDtoBuilder
 import no.nav.k9.los.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
 import org.slf4j.Logger
@@ -25,6 +26,7 @@ class ReservasjonApisTjeneste(
     private val reservasjonV3DtoBuilder: ReservasjonV3DtoBuilder,
     private val aktivOppgaveOppslag: AktivOppgaveOppslag,
     private val pepClient: IPepClient,
+    private val oppgaveSammendragDtoBuilder: OppgaveSammendragDtoBuilder,
 ) {
 
     companion object {
@@ -93,7 +95,7 @@ class ReservasjonApisTjeneste(
         tilBrukerIdent: String? = null,
         reserverTil: LocalDate? = null,
         begrunnelse: String? = null
-    ): ReservasjonV3Dto {
+    ) {
         val tilSaksbehandler =
             tilBrukerIdent?.let { saksbehandlerRepository.finnSaksbehandlerMedIdent(it, innloggetBruker.skjermet) }
 
@@ -113,8 +115,6 @@ class ReservasjonApisTjeneste(
 
         val reservertAv = saksbehandlerRepository.finnSaksbehandlerMedId(nyReservasjon.reservasjonV3.reservertAv)!!
         log.info("endreReservasjon: ${nyReservasjon.reservasjonV3}, reservertAv: $reservertAv")
-
-        return reservasjonV3DtoBuilder.byggReservasjonV3Dto(nyReservasjon, reservertAv)
     }
 
     suspend fun forlengReservasjon(
@@ -122,6 +122,24 @@ class ReservasjonApisTjeneste(
         forlengReservasjonDto: ForlengReservasjonDto,
         innloggetBruker: Saksbehandler
     ): ReservasjonV3Dto {
+        val (reservasjon, reservertAv) = forleng(område, forlengReservasjonDto, innloggetBruker)
+        return reservasjonV3DtoBuilder.byggReservasjonV3Dto(reservasjon, reservertAv)
+    }
+
+    suspend fun forlengReservasjonNy(
+        område: Områder,
+        forlengReservasjonDto: ForlengReservasjonDto,
+        innloggetBruker: Saksbehandler
+    ): ReservasjonMedOppgaverDto {
+        val (reservasjon, reservertAv) = forleng(område, forlengReservasjonDto, innloggetBruker)
+        return tilReservasjonMedOppgaverDto(reservasjon, reservertAv)
+    }
+
+    private fun forleng(
+        område: Områder,
+        forlengReservasjonDto: ForlengReservasjonDto,
+        innloggetBruker: Saksbehandler
+    ): Pair<ReservasjonV3MedOppgaver, Saksbehandler> {
         val forlengetReservasjon =
             reservasjonV3Tjeneste.forlengReservasjon(
                 område = område,
@@ -135,7 +153,7 @@ class ReservasjonApisTjeneste(
             saksbehandlerRepository.finnSaksbehandlerMedId(forlengetReservasjon.reservasjonV3.reservertAv)!!
         log.info("forlengReservasjon: ${forlengetReservasjon.reservasjonV3}, reservertAv: $reservertAv")
 
-        return reservasjonV3DtoBuilder.byggReservasjonV3Dto(forlengetReservasjon, reservertAv)
+        return forlengetReservasjon to reservertAv
     }
 
     suspend fun overførReservasjon(
@@ -143,6 +161,24 @@ class ReservasjonApisTjeneste(
         params: FlyttReservasjonDto,
         innloggetBruker: Saksbehandler
     ): ReservasjonV3Dto {
+        val (reservasjon, tilSaksbehandler) = overfør(område, params, innloggetBruker)
+        return reservasjonV3DtoBuilder.byggReservasjonV3Dto(reservasjon, tilSaksbehandler)
+    }
+
+    suspend fun overførReservasjonNy(
+        område: Områder,
+        params: FlyttReservasjonDto,
+        innloggetBruker: Saksbehandler
+    ): ReservasjonMedOppgaverDto {
+        val (reservasjon, tilSaksbehandler) = overfør(område, params, innloggetBruker)
+        return tilReservasjonMedOppgaverDto(reservasjon, tilSaksbehandler)
+    }
+
+    private fun overfør(
+        område: Områder,
+        params: FlyttReservasjonDto,
+        innloggetBruker: Saksbehandler
+    ): Pair<ReservasjonV3MedOppgaver, Saksbehandler> {
         val tilSaksbehandler = saksbehandlerRepository.finnSaksbehandlerMedIdent(
             params.brukerIdent,
             innloggetBruker.skjermet
@@ -158,7 +194,7 @@ class ReservasjonApisTjeneste(
         )
         log.info("overførReservasjon: ${nyReservasjon.reservasjonV3}, utførtAv: $innloggetBruker., tilSaksbehandler: $tilSaksbehandler")
 
-        return reservasjonV3DtoBuilder.byggReservasjonV3Dto(nyReservasjon, tilSaksbehandler)
+        return nyReservasjon to tilSaksbehandler
     }
 
     private fun annullerReservasjon(
@@ -203,7 +239,38 @@ class ReservasjonApisTjeneste(
         }
     }
 
+    suspend fun hentReserverteOppgaverForSaksbehandlerNy(
+        område: Områder,
+        saksbehandler: Saksbehandler
+    ): List<ReservasjonMedOppgaverDto> {
+        return reservasjonV3Tjeneste.hentReservasjonerForSaksbehandler(område, saksbehandler.id)
+            .map { tilReservasjonMedOppgaverDto(it, saksbehandler) }
+    }
+
     suspend fun hentAktivReservasjon(område: Områder, idToken: IIdToken, oppgaveNøkkel: OppgaveNøkkelDto): ReservasjonV3Dto? {
+        val (reservasjon, reservertAv) = finnAktivReservasjon(område, idToken, oppgaveNøkkel) ?: return null
+        return ReservasjonV3Dto(
+            reservasjonV3 = reservasjon,
+            oppgaver = emptyList(),
+            reservertAv = reservertAv,
+            endretAvNavn = null
+        )
+    }
+
+    suspend fun hentAktivReservasjonNy(
+        område: Områder,
+        idToken: IIdToken,
+        oppgaveNøkkel: OppgaveNøkkelDto
+    ): ReservasjonsinfoDto? {
+        val (reservasjon, reservertAv) = finnAktivReservasjon(område, idToken, oppgaveNøkkel) ?: return null
+        return ReservasjonsinfoDto(reservasjon, reservertAv, endretAvNavn(reservasjon))
+    }
+
+    private suspend fun finnAktivReservasjon(
+        område: Områder,
+        idToken: IIdToken,
+        oppgaveNøkkel: OppgaveNøkkelDto
+    ): Pair<ReservasjonV3, Saksbehandler>? {
         val oppgave = aktivOppgaveOppslag.hentAktivOppgave(
                 område,
                 oppgaveNøkkel.oppgaveEksternId,
@@ -216,13 +283,22 @@ class ReservasjonApisTjeneste(
             ?: return null
         val reservertAv = saksbehandlerRepository.finnSaksbehandlerMedId(reservasjon.reservertAv)
             ?: throw IllegalStateException("Fant ikke saksbehandler med id ${reservasjon.reservertAv} som har reservert oppgave ${oppgave.eksternId}")
-        return ReservasjonV3Dto(
-            reservasjonV3 = reservasjon,
-            oppgaver = emptyList(),
-            reservertAv = reservertAv,
-            endretAvNavn = null
+        return reservasjon to reservertAv
+    }
+
+    private suspend fun tilReservasjonMedOppgaverDto(
+        reservasjonMedOppgaver: ReservasjonV3MedOppgaver,
+        reservertAv: Saksbehandler,
+    ): ReservasjonMedOppgaverDto {
+        val reservasjon = reservasjonMedOppgaver.reservasjonV3
+        return ReservasjonMedOppgaverDto(
+            reservasjon = ReservasjonsinfoDto(reservasjon, reservertAv, endretAvNavn(reservasjon)),
+            oppgaver = oppgaveSammendragDtoBuilder.bygg(reservasjonMedOppgaver.oppgaverV3),
         )
     }
+
+    private fun endretAvNavn(reservasjon: ReservasjonV3): String? =
+        reservasjon.endretAv?.let { saksbehandlerRepository.finnSaksbehandlerMedId(it)?.navn }
 
     fun hentAlleAktiveReservasjoner(område: Områder, kode6: Boolean): List<ReservasjonDto> {
         return reservasjonV3Tjeneste.hentAlleAktiveReservasjoner(område).flatMap { reservasjonMedOppgaver ->

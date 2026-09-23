@@ -70,7 +70,7 @@ internal fun Route.ReservasjonApisNy() {
         operationId = "hentReserverteOppgaver"
         summary = "Hent reserverte oppgaver"
         response {
-            HttpStatusCode.OK to { body<List<ReservasjonV3Dto>>() }
+            HttpStatusCode.OK to { body<List<ReservasjonMedOppgaverDto>>() }
             HttpStatusCode.Forbidden to { description = "Brukeren mangler basistilgang" }
             HttpStatusCode.InternalServerError to {
                 body<String>()
@@ -87,11 +87,11 @@ internal fun Route.ReservasjonApisNy() {
                 )
 
                 if (innloggetBruker != null) {
-                    val reservasjonV3Dtos = reservasjonApisTjeneste.hentReserverteOppgaverForSaksbehandler(
+                    val reservasjoner = reservasjonApisTjeneste.hentReserverteOppgaverForSaksbehandlerNy(
                         område = coroutineContext.område(),
                         saksbehandler = innloggetBruker
                     )
-                    call.respond(reservasjonV3Dtos)
+                    call.respond(reservasjoner)
                 } else {
                     log.info("Innlogger bruker med brukernavn $innloggetBrukerNavIdent finnes ikke i saksbehandlertabellen")
                     call.respond(
@@ -150,7 +150,7 @@ internal fun Route.ReservasjonApisNy() {
             body<ForlengReservasjonDto> { description = "Reservasjonen og ny sluttdato" }
         }
         response {
-            HttpStatusCode.OK to { body<ReservasjonV3Dto>() }
+            HttpStatusCode.OK to { body<ReservasjonMedOppgaverDto>() }
             HttpStatusCode.Forbidden to { description = "Brukeren mangler basistilgang" }
             HttpStatusCode.NotFound to {
                 body<String>()
@@ -167,7 +167,7 @@ internal fun Route.ReservasjonApisNy() {
                 )!!
 
                 try {
-                    call.respond(reservasjonApisTjeneste.forlengReservasjon(
+                    call.respond(reservasjonApisTjeneste.forlengReservasjonNy(
                         område = coroutineContext.område(),
                         forlengReservasjonDto = forlengReservasjonDto,
                         innloggetBruker = innloggetBruker
@@ -188,7 +188,7 @@ internal fun Route.ReservasjonApisNy() {
             body<FlyttReservasjonDto> { description = "Reservasjonen og saksbehandleren den skal flyttes til" }
         }
         response {
-            HttpStatusCode.OK to { body<ReservasjonV3Dto>() }
+            HttpStatusCode.OK to { body<ReservasjonMedOppgaverDto>() }
             HttpStatusCode.Forbidden to { description = "Brukeren mangler basistilgang" }
             HttpStatusCode.NotFound to {
                 body<String>()
@@ -207,7 +207,7 @@ internal fun Route.ReservasjonApisNy() {
 
                 try {
                     log.info("Flytter reservasjonen til ${params.brukerIdent} (Gjort av ${innloggetBruker.navident})")
-                    call.respond(reservasjonApisTjeneste.overførReservasjon(
+                    call.respond(reservasjonApisTjeneste.overførReservasjonNy(
                         område = coroutineContext.område(),
                         params = params,
                         innloggetBruker = innloggetBruker
@@ -298,7 +298,7 @@ internal fun Route.ReservasjonApisNy() {
             }
         }
         response {
-            HttpStatusCode.OK to { body<ReservasjonV3Dto>() }
+            HttpStatusCode.OK to { body<ReservasjonsinfoDto>() }
             HttpStatusCode.NoContent to { description = "Oppgaven har ingen aktiv reservasjon" }
             HttpStatusCode.Forbidden to { description = "Brukeren mangler tilgang til oppgaven" }
         }
@@ -310,7 +310,7 @@ internal fun Route.ReservasjonApisNy() {
                     call.queryParameters["oppgaveTypeEksternId"]!!,
                     coroutineContext.område()
                 )
-                val aktivReservasjon = reservasjonApisTjeneste.hentAktivReservasjon(
+                val aktivReservasjon = reservasjonApisTjeneste.hentAktivReservasjonNy(
                     område = coroutineContext.område(),
                     idToken = coroutineContext.idToken(),
                     oppgaveNøkkel = oppgaveNøkkel
