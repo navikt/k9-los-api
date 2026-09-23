@@ -198,12 +198,6 @@ fun Application.k9Los() {
         )
 
         if ((KoinProfile.LOCAL == koin.get<KoinProfile>())) {
-            localSetup.initSaksbehandlere()
-            localSetup.initPunsjoppgaver(0)
-            localSetup.initTilbakeoppgaver(0)
-            localSetup.initKlageoppgaver(0)
-            localSetup.initK9SakOppgaver(0)
-            localSetup.initAktivitetspengeroppgaver(0)
             api()
         } else {
             authenticate(*issuers.allIssuers()) {
@@ -351,11 +345,12 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
         if (configuration.koinProfile == KoinProfile.LOCAL) {
             add(PlanlagtJobb.Oppstart(
                 navn = "Testdata",
-                prioritet = 1,
+                prioritet = 2,
             ) {
                 localSetup.initSaksbehandlere()
                 localSetup.initPunsjoppgaver(0)
                 localSetup.initTilbakeoppgaver(0)
+                localSetup.initKlageoppgaver(0)
                 localSetup.initK9SakOppgaver(0)
                 localSetup.initAktivitetspengeroppgaver(0)
             })

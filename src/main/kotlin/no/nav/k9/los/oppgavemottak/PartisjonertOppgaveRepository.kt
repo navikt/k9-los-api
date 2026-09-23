@@ -278,8 +278,9 @@ class PartisjonertOppgaveRepository(val oppgavetypeRepository: OppgavetypeReposi
         tx: TransactionalSession
     ): Oppgave {
         val oppgavetypeEksternId = row.string("oppgavetype_ekstern_id")
-        val oppgavetype = oppgavetypeRepository.hentOppgavetype(Områder.K9, oppgavetypeEksternId, tx)
-        val oppgavefelter = hentOppgavefelter(tx, row.long("id"), oppgavetype)
+        val område = Områder.fraEksternId(row.string("omrade_ekstern_id"))
+        val oppgavetype = oppgavetypeRepository.hentOppgavetype(område, oppgavetypeEksternId, tx)
+        val oppgavefelter = hentOppgavefelter(tx, row.long("id"), oppgavetype, område)
         return Oppgave(
             eksternId = row.string("oppgave_ekstern_id"),
             eksternVersjon = row.string("oppgave_ekstern_versjon"),
@@ -291,22 +292,31 @@ class PartisjonertOppgaveRepository(val oppgavetypeRepository: OppgavetypeReposi
         ).fyllDefaultverdier().utledTransienteFelter(now)
     }
 
-    private fun hentOppgavefelter(tx: TransactionalSession, oppgaveId: Long, oppgavetype: Oppgavetype): List<Oppgavefelt> {
+    private fun hentOppgavefelter(
+        tx: TransactionalSession,
+        oppgaveId: Long,
+        oppgavetype: Oppgavetype,
+        område: Områder
+    ): List<Oppgavefelt> {
         return tx.run(
             queryOf(
                 """
                 select ov.feltdefinisjon_ekstern_id as ekstern_id, fd.liste_type, f.pakrevd, ov.verdi, ov.verdi_bigint
                 from oppgavefelt_verdi_part ov
-                inner join feltdefinisjon fd on ov.feltdefinisjon_ekstern_id = fd.ekstern_id
+                inner join feltdefinisjon fd on ov.feltdefinisjon_ekstern_id = fd.ekstern_id and fd.omrade_id = :omradeId
                 inner join oppgavefelt f on fd.id = f.feltdefinisjon_id and f.oppgavetype_id = :oppgavetypeId
                 where ov.oppgave_id = :oppgaveId
                 order by ov.feltdefinisjon_ekstern_id
                 """.trimIndent(),
-                mapOf("oppgaveId" to oppgaveId, "oppgavetypeId" to oppgavetype.id)
+                mapOf(
+                    "oppgaveId" to oppgaveId,
+                    "oppgavetypeId" to oppgavetype.id,
+                    "omradeId" to oppgavetype.område.id
+                )
             ).map { row ->
                 Oppgavefelt(
                     eksternId = row.string("ekstern_id"),
-                    område = Områder.K9,
+                    område = område,
                     listetype = row.boolean("liste_type"),
                     påkrevd = row.boolean("pakrevd"),
                     verdi = row.string("verdi"),
