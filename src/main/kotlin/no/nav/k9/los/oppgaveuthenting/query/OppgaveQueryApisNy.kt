@@ -2,15 +2,14 @@ package no.nav.k9.los.oppgaveuthenting.query
 
 import io.github.smiley4.ktoropenapi.get
 import io.github.smiley4.ktoropenapi.post
-import io.ktor.http.HttpStatusCode
-import io.ktor.server.request.receive
-import io.ktor.server.response.respond
-import io.ktor.server.routing.Route
-import no.nav.k9.los.ManglerFlerområde
+import io.ktor.http.*
+import io.ktor.server.request.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.rest.RequestContextService
 import no.nav.k9.los.infrastruktur.rest.område
-import no.nav.k9.los.oppgaveuthenting.query.dto.felter.Oppgavefelter
+import no.nav.k9.los.oppgaveuthenting.query.dto.felter.Oppgavefelt
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.OppgaveQuery
 import org.koin.ktor.ext.inject
 
@@ -79,13 +78,13 @@ fun Route.OppgaveQueryApisNy() {
         operationId = "hentOppgavefelter"
         summary = "Hent oppgavefelter for området"
         response {
-            HttpStatusCode.OK to { body<Oppgavefelter>() }
+            HttpStatusCode.OK to { body<List<Oppgavefelt>>() }
             HttpStatusCode.Forbidden to { description = "Brukeren mangler basistilgang" }
         }
     }) {
         requestContextService.withRequestContext(call) {
             if (pepClient.harBasisTilgang()) {
-                call.respond(@ManglerFlerområde oppgaveQueryService.hentAlleFelter())
+                call.respond(oppgaveQueryService.hentAlleFelter(coroutineContext.område()))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }

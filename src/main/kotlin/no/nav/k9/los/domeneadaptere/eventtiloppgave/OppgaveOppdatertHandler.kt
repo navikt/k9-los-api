@@ -79,6 +79,7 @@ class OppgaveOppdatertHandler(
     ) {
         if (oppgave.status == Oppgavestatus.LUKKET || oppgave.status == Oppgavestatus.VENTER) {
             reservasjonV3Tjeneste.annullerReservasjonHvisFinnes(
+                oppgave.område,
                 oppgave.reservasjonsnøkkel,
                 "Maskinelt annullert reservasjon, siden oppgave på reservasjonen er avsluttet eller på vent",
                 null,

@@ -305,7 +305,7 @@ private fun Route.apiUnderConstruction() {
     route("api/fleromrade", {
         specName = "frontend"
     }) {
-        route("innlogget-bruker/områder", { tags("Innlogget bruker") }) { InnloggetBrukersOmråderApi() }
+        route("innlogget-bruker/omrader", { tags("Innlogget bruker") }) { InnloggetBrukersOmråderApi() }
 
         route({
             request {
