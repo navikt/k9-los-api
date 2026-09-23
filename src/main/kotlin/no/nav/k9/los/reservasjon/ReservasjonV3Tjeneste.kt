@@ -61,7 +61,7 @@ class ReservasjonV3Tjeneste(
                 tx = tx,
             )
             log.info("taReservasjon: Ny reservasjon $reservasjon, utført av $utføresAvId, for saksbehandler $reserverForId")
-            køpåvirkendeHendelseChannel.send(ReservasjonTatt(reservasjonsnøkkel = reservasjonsnøkkel))
+            køpåvirkendeHendelseChannel.send(ReservasjonTatt(område = område, reservasjonsnøkkel = reservasjonsnøkkel))
             reservasjon
         } catch (e: AlleredeReservertException) {
             val aktivReservasjon = reservasjonV3Repository.hentAktivReservasjonForReservasjonsnøkkel(
@@ -76,6 +76,7 @@ class ReservasjonV3Tjeneste(
             } else if (aktivReservasjon.gyldigTil < gyldigTil) {
                 log.info("ForsøkReservasjonOgReturnerAktiv: Sb $reserverForId har allerede reservasjonen ${aktivReservasjon}. Forlenger. Utført av $utføresAvId.")
                 reservasjonV3Repository.forlengReservasjon(
+                    område,
                     aktivReservasjon,
                     endretAvBrukerId = utføresAvId,
                     nyTildato = gyldigTil,
@@ -135,9 +136,9 @@ class ReservasjonV3Tjeneste(
             kommentar = kommentar,
             endretAv = null
         )
-        val reservasjon = reservasjonV3Repository.lagreReservasjon(reservasjonTilLagring, tx)
+        val reservasjon = reservasjonV3Repository.lagreReservasjon(område, reservasjonTilLagring, tx)
         log.info("taReservasjon: Ny reservasjon $reservasjon, utført av $utføresAvId, for saksbehandler $reserverForId")
-        køpåvirkendeHendelseChannel.send(ReservasjonTatt(reservasjonsnøkkel = reservasjonsnøkkel))
+        køpåvirkendeHendelseChannel.send(ReservasjonTatt(område = område, reservasjonsnøkkel = reservasjonsnøkkel))
         return reservasjon
     }
 
@@ -192,7 +193,7 @@ class ReservasjonV3Tjeneste(
                 tx
             )
             runBlocking {
-                køpåvirkendeHendelseChannel.send(ReservasjonAnnullert(reservasjonsnøkkel = reservasjonsnøkkel))
+                køpåvirkendeHendelseChannel.send(ReservasjonAnnullert(område = område, reservasjonsnøkkel = reservasjonsnøkkel))
             }
             return true
         }
@@ -221,6 +222,7 @@ class ReservasjonV3Tjeneste(
         return transactionalManager.transaction { tx ->
             val aktivReservasjon = finnAktivReservasjon(område, reservasjonsnøkkel, tx)
             val nyReservasjon = reservasjonV3Repository.forlengReservasjon(
+                område = område,
                 aktivReservasjon = aktivReservasjon,
                 endretAvBrukerId = utførtAvBrukerId,
                 nyTildato = nyTildato ?: aktivReservasjon.gyldigTil.leggTilDagerHoppOverHelg(1),
@@ -243,6 +245,7 @@ class ReservasjonV3Tjeneste(
         return transactionalManager.transaction { tx ->
             val aktivReservasjon = finnAktivReservasjon(område, reservasjonsnøkkel, tx)
             val nyReservasjon = reservasjonV3Repository.overførReservasjon(
+                område = område,
                 aktivReservasjon = aktivReservasjon,
                 saksbehandlerSomSkalHaReservasjonId = tilSaksbehandlerId,
                 endretAvBrukerId = utførtAvBrukerId,
@@ -266,6 +269,7 @@ class ReservasjonV3Tjeneste(
             val aktivReservasjon = finnAktivReservasjon(område, reservasjonsnøkkel, tx)
 
             val nyReservasjon = reservasjonV3Repository.endreReservasjon(
+                område = område,
                 reservasjonSomSkalEndres = aktivReservasjon,
                 endretAvBrukerId = endretAvBrukerId,
                 nyTildato = nyTildato,
@@ -274,7 +278,7 @@ class ReservasjonV3Tjeneste(
                 tx = tx
             )
             runBlocking {
-                køpåvirkendeHendelseChannel.send(ReservasjonEndret(reservasjonsnøkkel = reservasjonsnøkkel))
+                køpåvirkendeHendelseChannel.send(ReservasjonEndret(område = område, reservasjonsnøkkel = reservasjonsnøkkel))
             }
             finnOppgaverFor(område, nyReservasjon, tx)
         }

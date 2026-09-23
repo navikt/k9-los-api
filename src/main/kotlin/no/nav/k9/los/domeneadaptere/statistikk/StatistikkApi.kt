@@ -15,8 +15,9 @@ internal fun Route.StatistikkApi() {
     val oppgavestatistikkTjeneste by inject<OppgavestatistikkTjeneste>()
     val pepClient by inject<IPepClient>()
 
-    put("spillAvUsendtStatistikk", {
+    put({
         tags("Forvaltning")
+        summary = "Spill av usendt statistikk"
     }) {
         requestContextService.withRequestContext(call) {
             if (pepClient.kanLeggeUtDriftsmelding()) {

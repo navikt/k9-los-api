@@ -17,16 +17,17 @@ class ReservasjonV3Repository(
 ) {
     private val log: Logger = LoggerFactory.getLogger("ReservasjonV3Repository")
 
-    fun lagreReservasjon(reservasjonV3: ReservasjonV3, tx: TransactionalSession): ReservasjonV3 {
+    fun lagreReservasjon(område: Områder, reservasjonV3: ReservasjonV3, tx: TransactionalSession): ReservasjonV3 {
         try {
             return reservasjonV3.copy(
                 tx.updateAndReturnGeneratedKey(
                     queryOf(
                         """
-                    insert into RESERVASJON_V3(reservertAv, reservasjonsnokkel, gyldig_tidsrom, kommentar)
-                    values (:reservertAv, :nokkel, tsrange(:gyldig_fra, :gyldig_til), :kommentar)
+                    insert into RESERVASJON_V3(omrade_id, reservertAv, reservasjonsnokkel, gyldig_tidsrom, kommentar)
+                    values ((select id from omrade where ekstern_id = :omrade_ekstern_id), :reservertAv, :nokkel, tsrange(:gyldig_fra, :gyldig_til), :kommentar)
                 """.trimIndent(),
                         mapOf(
+                            "omrade_ekstern_id" to område.eksternId,
                             "reservertAv" to reservasjonV3.reservertAv,
                             "nokkel" to reservasjonV3.reservasjonsnøkkel,
                             "kommentar" to reservasjonV3.kommentar,
@@ -49,6 +50,7 @@ class ReservasjonV3Repository(
     }
 
     fun endreReservasjon(
+        område: Områder,
         reservasjonSomSkalEndres: ReservasjonV3,
         endretAvBrukerId: Long,
         nySaksbehandlerId: Long?,
@@ -58,6 +60,7 @@ class ReservasjonV3Repository(
     ): ReservasjonV3 {
         val annullertReservasjonId = annullerAktivReservasjon(reservasjonSomSkalEndres, kommentar ?: "", tx)!!
         val nyReservasjon = lagreReservasjon(
+            område,
             ReservasjonV3(
                 reservasjonsnøkkel = reservasjonSomSkalEndres.reservasjonsnøkkel,
                 reservertAv = nySaksbehandlerId ?: reservasjonSomSkalEndres.reservertAv,
@@ -101,6 +104,7 @@ class ReservasjonV3Repository(
     }
 
     fun forlengReservasjon(
+        område: Områder,
         aktivReservasjon: ReservasjonV3,
         endretAvBrukerId: Long,
         nyTildato: LocalDateTime,
@@ -109,6 +113,7 @@ class ReservasjonV3Repository(
     ): ReservasjonV3 {
         val annullertReservasjonId = annullerAktivReservasjon(aktivReservasjon, kommentar, tx)!!
         val nyReservasjon = lagreReservasjon(
+            område,
             ReservasjonV3(
                 reservertAv = aktivReservasjon.reservertAv,
                 reservasjonsnøkkel = aktivReservasjon.reservasjonsnøkkel,
@@ -132,6 +137,7 @@ class ReservasjonV3Repository(
     }
 
     fun overførReservasjon(
+        område: Områder,
         aktivReservasjon: ReservasjonV3,
         saksbehandlerSomSkalHaReservasjonId: Long,
         endretAvBrukerId: Long,
@@ -144,6 +150,7 @@ class ReservasjonV3Repository(
         val annullertReservasjonId = annullerAktivReservasjon(aktivReservasjon, kommentar, tx)!!
 
         val nyReservasjon = lagreReservasjon(
+            område,
             ReservasjonV3(
                 reservertAv = saksbehandlerSomSkalHaReservasjonId,
                 reservasjonsnøkkel = aktivReservasjon.reservasjonsnøkkel,

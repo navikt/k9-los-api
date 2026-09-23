@@ -143,7 +143,7 @@ class ReservasjonV3TjenesteTest : AbstractK9LosIntegrationTest() {
         )
 
         transactionalManager.transaction { tx ->
-            repo.lagreReservasjon(reservasjon, tx)
+            repo.lagreReservasjon(Områder.K9, reservasjon, tx)
         }
 
         val overførTildato = LocalDateTime.now().plusDays(2)
@@ -188,7 +188,7 @@ class ReservasjonV3TjenesteTest : AbstractK9LosIntegrationTest() {
         )
 
         transactionalManager.transaction { tx ->
-            repo.lagreReservasjon(reservasjon, tx)
+            repo.lagreReservasjon(Områder.K9, reservasjon, tx)
         }
 
         val overførTildato = LocalDateTime.now().plusDays(2).truncatedTo(ChronoUnit.MICROS)

@@ -145,7 +145,11 @@ fun Route.UttrekkApi() {
     }) {
         requestContextService.withRequestContext(call) {
             if (pepClient.harBasisTilgang()) {
-                val antallSlettet = uttrekkTjeneste.slettForLagretSøk(call.parameters["lagretSokId"]!!.toLong())
+                val antallSlettet = uttrekkTjeneste.slettForLagretSøk(
+                    område = coroutineContext.område(),
+                    navIdent = coroutineContext.idToken().getNavIdent(),
+                    lagretSøkId = call.parameters["lagretSokId"]!!.toLong()
+                )
                 call.respond(HttpStatusCode.OK, antallSlettet)
             } else {
                 call.respond(HttpStatusCode.Forbidden)

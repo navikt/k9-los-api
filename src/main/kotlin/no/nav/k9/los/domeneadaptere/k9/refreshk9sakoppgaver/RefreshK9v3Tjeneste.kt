@@ -50,6 +50,7 @@ class RefreshK9v3Tjeneste(
             .filterNot { it is OppgaveHendelseMottatt && it.fagsystem != Fagsystem.K9SAK }
             .filterNot { it is KødefinisjonSlettet }
             .filterNot { it is ReservasjonEndret }
+            .filterNot { it is ReservasjonHendelse && it.område != Områder.K9 }
             .filterNot { it is Kødefinisjon && hendelser.any { hendelse -> hendelse is KødefinisjonSlettet && hendelse.køId == it.køId } }
 
         if (aktuelleHendelser.isEmpty()) {

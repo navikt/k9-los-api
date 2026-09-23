@@ -190,7 +190,13 @@ fun Route.UttrekkApiNy() {
     }) {
         requestContextService.withRequestContext(call) {
             if (pepClient.harBasisTilgang()) {
-                call.respond(uttrekkTjeneste.slettForLagretSøk(call.parameters["lagretSokId"]!!.toLong()))
+                call.respond(
+                    uttrekkTjeneste.slettForLagretSøk(
+                        område = coroutineContext.område(),
+                        navIdent = coroutineContext.idToken().getNavIdent(),
+                        lagretSøkId = call.parameters["lagretSokId"]!!.toLong()
+                    )
+                )
             } else call.respond(HttpStatusCode.Forbidden)
         }
     }
