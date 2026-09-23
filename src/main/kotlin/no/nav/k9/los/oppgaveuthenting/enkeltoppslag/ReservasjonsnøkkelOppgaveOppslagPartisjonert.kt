@@ -78,7 +78,7 @@ class ReservasjonsnøkkelOppgaveOppslagPartisjonert(
             ).map { row ->
                 Oppgavefelt(
                     eksternId = row.string("ekstern_id"),
-                    område = Områder.K9,
+                    område = oppgavetype.område.tilOmråderEnum(),
                     listetype = row.boolean("liste_type"),
                     påkrevd = row.boolean("pakrevd"),
                     verdi = row.string("verdi"),

@@ -141,7 +141,7 @@ data class Oppgave(
                 if (felter.find { it.eksternId == påkrevdFelt.feltDefinisjon.eksternId && !påkrevdFelt.feltDefinisjon.listetype } == null) {
                     Oppgavefelt(
                         eksternId = påkrevdFelt.feltDefinisjon.eksternId,
-                        område = Områder.K9,
+                        område = oppgavetype.område.tilOmråderEnum(),
                         listetype = false, //listetyper er aldri påkrevd
                         påkrevd = true,
                         verdi = påkrevdFelt.defaultverdi.toString(),
