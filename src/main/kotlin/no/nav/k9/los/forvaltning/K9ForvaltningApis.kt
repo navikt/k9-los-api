@@ -317,10 +317,10 @@ fun Route.K9ForvaltningApis() {
                 val reservasjonsnøkkel = utledReservasjonsnøkkel(oppgave, false)
                 val reservasjonsnøkkel_beslutter = utledReservasjonsnøkkel(oppgave, true)
                 val reservasjonerOrdinær = transactionalManager.transaction { tx ->
-                    reservasjonV3Repository.hentReservasjonTidslinjeMedEndringer(reservasjonsnøkkel, tx)
+                    reservasjonV3Repository.hentReservasjonTidslinjeMedEndringer(oppgave.område, reservasjonsnøkkel, tx)
                 }
                 val reservasjonerBeslutter = transactionalManager.transaction { tx ->
-                    reservasjonV3Repository.hentReservasjonTidslinjeMedEndringer(reservasjonsnøkkel_beslutter, tx)
+                    reservasjonV3Repository.hentReservasjonTidslinjeMedEndringer(oppgave.område, reservasjonsnøkkel_beslutter, tx)
                 }
 
                 val reservasjonerSamlet =

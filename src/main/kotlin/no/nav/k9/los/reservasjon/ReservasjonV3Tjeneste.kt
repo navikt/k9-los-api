@@ -243,6 +243,7 @@ class ReservasjonV3Tjeneste(
         kommentar: String,
     ): ReservasjonV3MedOppgaver {
         return transactionalManager.transaction { tx ->
+            sjekkSaksbehandlerErIOmråde(område, tilSaksbehandlerId)
             val aktivReservasjon = finnAktivReservasjon(område, reservasjonsnøkkel, tx)
             val nyReservasjon = reservasjonV3Repository.overførReservasjon(
                 område = område,
@@ -266,6 +267,7 @@ class ReservasjonV3Tjeneste(
         kommentar: String?
     ): ReservasjonV3MedOppgaver {
         return transactionalManager.transaction { tx ->
+            nySaksbehandlerId?.let { sjekkSaksbehandlerErIOmråde(område, it) }
             val aktivReservasjon = finnAktivReservasjon(område, reservasjonsnøkkel, tx)
 
             val nyReservasjon = reservasjonV3Repository.endreReservasjon(
@@ -322,6 +324,13 @@ class ReservasjonV3Tjeneste(
         val saksbehandlerIdentSomSkalHaReservasjon = saksbehandler.navident
 
         return ansvarligSaksbehandlerIdent == saksbehandlerIdentSomSkalHaReservasjon
+    }
+
+    private fun sjekkSaksbehandlerErIOmråde(område: Områder, saksbehandlerId: Long) {
+        val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedId(saksbehandlerId)
+        if (saksbehandler == null || område !in saksbehandler.områder) {
+            throw FinnerIkkeDataException("Fant ikke saksbehandler med id $saksbehandlerId i område ${område.eksternId}")
+        }
     }
 
     fun finnAktivReservasjon(

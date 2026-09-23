@@ -3,7 +3,9 @@ package no.nav.k9.los.reservasjon
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import no.nav.k9.los.AbstractK9LosIntegrationTest
+import no.nav.k9.los.feilhandtering.FinnerIkkeDataException
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
+import no.nav.k9.los.oppgavedefinisjon.omraade.OmrådeRepository
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.query.equalsWithPrecision
 import no.nav.k9.los.saksbehandleradmin.Saksbehandler
@@ -209,6 +211,55 @@ class ReservasjonV3TjenesteTest : AbstractK9LosIntegrationTest() {
             assertEquals(saksbehandler1.id, reservasjonHentet!!.reservertAv)
             assertTrue(reservasjon.gyldigTil.equals(reservasjonHentet.gyldigTil))
             assertEquals(reservasjon.reservasjonsnøkkel, reservasjonHentet.reservasjonsnøkkel)
+        }
+    }
+
+    @Test
+    fun `overføre eller endre reservasjon til saksbehandler i annet område feiler`() {
+        get<OmrådeRepository>().lagre(Områder.AKTIVITETSPENGER)
+        val repo = get<ReservasjonV3Repository>()
+        val reservasjonV3Tjeneste = get<ReservasjonV3Tjeneste>()
+        val transactionalManager = get<TransactionalManager>()
+        val testSaksbehandlerRepository = get<TestSaksbehandlerRepository>()
+
+        val aktSaksbehandler = runBlocking {
+            testSaksbehandlerRepository.opprettSaksbehandler(
+                OpprettSaksbehandler(
+                    navident = null,
+                    navn = null,
+                    epost = "akt@test.no",
+                    enhet = null,
+                    områder = listOf(Områder.AKTIVITETSPENGER)
+                )
+            )
+        }
+
+        val reservasjon = ReservasjonV3(
+            reservertAv = saksbehandler1.id,
+            reservasjonsnøkkel = "test1",
+            kommentar = "",
+            gyldigFra = LocalDateTime.now(),
+            gyldigTil = LocalDateTime.now().plusDays(1),
+            endretAv = null
+        )
+        transactionalManager.transaction { tx ->
+            repo.lagreReservasjon(Områder.K9, reservasjon, tx)
+        }
+
+        assertThrows<FinnerIkkeDataException> {
+            reservasjonV3Tjeneste.overførReservasjon(
+                Områder.K9, "test1", LocalDateTime.now().plusDays(2), aktSaksbehandler.id, saksbehandler1.id, ""
+            )
+        }
+        assertThrows<FinnerIkkeDataException> {
+            reservasjonV3Tjeneste.endreReservasjon(
+                Områder.K9, "test1", saksbehandler1.id, null, aktSaksbehandler.id, null
+            )
+        }
+
+        transactionalManager.transaction { tx ->
+            val reservasjonHentet = repo.hentAktivReservasjonForReservasjonsnøkkel(Områder.K9, "test1", tx)
+            assertEquals(saksbehandler1.id, reservasjonHentet!!.reservertAv)
         }
     }
 

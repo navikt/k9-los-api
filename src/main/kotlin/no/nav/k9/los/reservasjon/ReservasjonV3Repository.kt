@@ -177,19 +177,18 @@ class ReservasjonV3Repository(
         kommentar: String?,
         tx: TransactionalSession
     ): Long? {
+        val id = requireNotNull(aktivReservasjon.id) { "Kan ikke annullere reservasjon uten id" }
         return tx.updateAndReturnGeneratedKey(
             queryOf(
                 """
                     UPDATE public.reservasjon_v3
                     SET annullert_for_utlop = true, sist_endret = localtimestamp, kommentar = :kommentar
-                    WHERE reservertAv = :reservertAv
-                    and reservasjonsnokkel = :reservasjonsnokkel
+                    WHERE id = :id
                     and upper(gyldig_tidsrom) > :now
                     and annullert_for_utlop = false
                     """.trimIndent(),
                 mapOf(
-                    "reservertAv" to aktivReservasjon.reservertAv,
-                    "reservasjonsnokkel" to aktivReservasjon.reservasjonsnøkkel,
+                    "id" to id,
                     "kommentar" to kommentar,
                     "now" to LocalDateTime.now().truncatedTo(ChronoUnit.MICROS),
                 )
@@ -367,6 +366,7 @@ class ReservasjonV3Repository(
 
 
     fun hentReservasjonTidslinjeMedEndringer(
+        område: Områder,
         reservasjonsnøkkel: String,
         tx: TransactionalSession
     ): List<ReservasjonV3MedEndring> {
@@ -390,10 +390,11 @@ class ReservasjonV3Repository(
                         re.opprettet as endring_opprettet
                     from reservasjon_v3 r
                     left outer join reservasjon_v3_endring re on re.annullert_reservasjon_id = r.id 
-                    where r.reservasjonsnokkel = :nokkel
+                    where r.omrade_id = (select id from omrade where ekstern_id = :omrade_ekstern_id)
+                      and r.reservasjonsnokkel = :nokkel
                     order by r.opprettet ASC
                 """.trimIndent(),
-                mapOf("nokkel" to reservasjonsnøkkel)
+                mapOf("omrade_ekstern_id" to område.eksternId, "nokkel" to reservasjonsnøkkel)
             ).map { row ->
                 ReservasjonV3MedEndring(
                     id = row.long("reservasjon_id"),

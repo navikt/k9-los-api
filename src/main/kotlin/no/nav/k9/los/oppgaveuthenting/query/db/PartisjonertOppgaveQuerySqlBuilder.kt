@@ -110,6 +110,7 @@ class PartisjonertOppgaveQuerySqlBuilder(
             SELECT 1 
             FROM reservasjon_v3 rv 
             WHERE rv.reservasjonsnokkel = o.reservasjonsnokkel
+            AND rv.omrade_id = (SELECT id FROM omrade WHERE ekstern_id = :omrade)
             AND upper(rv.gyldig_tidsrom) > :now 
             AND rv.annullert_for_utlop = false 
         )
