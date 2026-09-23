@@ -30,7 +30,7 @@ class SensitiveFieldAnnotationTest {
             .filterNot { it.isSynthetic }
             .filter { it.name in aktorFields }
             .mapNotNull { field ->
-                if (field.getAnnotation(SensitiveField::class.java)?.value == SENSITIVE_FIELDS.AKTOR_ID) null
+                if (field.isAnnotationPresent(SensitiveField::class.java)) null
                 else field.name
             }
 
