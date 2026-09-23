@@ -13,26 +13,45 @@ import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.Venteårsak
 import no.nav.k9.kodeverk.uttak.SøknadÅrsak
 import no.nav.k9.los.KoinProfile
-import no.nav.k9.los.domeneadaptere.k9.eventmottak.EventHendelse
-import no.nav.k9.los.domeneadaptere.k9.eventmottak.klage.K9KlageEventDto
-import no.nav.k9.los.domeneadaptere.k9.eventmottak.klage.K9KlageEventHandler
-import no.nav.k9.los.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventDto
-import no.nav.k9.los.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventHandler
-import no.nav.k9.los.domeneadaptere.k9.eventmottak.sak.K9SakEventDto
-import no.nav.k9.los.domeneadaptere.k9.eventmottak.sak.K9SakEventHandler
-import no.nav.k9.los.domeneadaptere.k9.eventmottak.tilbakekrav.AksjonspunktDefinisjonK9Tilbake
-import no.nav.k9.los.domeneadaptere.k9.eventmottak.tilbakekrav.K9TilbakeEventDto
-import no.nav.k9.los.domeneadaptere.k9.eventmottak.tilbakekrav.K9TilbakeEventHandler
+import no.nav.k9.los.domeneadaptere.eventmottak.EventHendelse
+import no.nav.k9.los.domeneadaptere.eventmottak.k9.klage.K9KlageEventDto
+import no.nav.k9.los.domeneadaptere.eventmottak.k9.klage.K9KlageEventHandler
+import no.nav.k9.los.domeneadaptere.eventmottak.k9.punsj.K9PunsjEventDto
+import no.nav.k9.los.domeneadaptere.eventmottak.k9.punsj.K9PunsjEventHandler
+import no.nav.k9.los.domeneadaptere.eventmottak.k9.sak.K9SakEventDto
+import no.nav.k9.los.domeneadaptere.eventmottak.k9.sak.K9SakEventHandler
+import no.nav.k9.los.domeneadaptere.eventmottak.k9.tilbakekrav.AksjonspunktDefinisjonK9Tilbake
+import no.nav.k9.los.domeneadaptere.eventmottak.k9.tilbakekrav.K9TilbakeEventDto
+import no.nav.k9.los.domeneadaptere.eventmottak.k9.tilbakekrav.K9TilbakeEventHandler
+import no.nav.k9.los.domeneadaptere.eventmottak.ung.sak.UngSakEventDto
+import no.nav.k9.los.domeneadaptere.eventmottak.ung.sak.UngSakEventHandler
+import no.nav.k9.los.domeneadaptere.eventlager.EventNøkkel
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.EventTilOppgaveAdapter
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.kodeverk.AktBehandlendeEnhet
+import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.kodeverk.BehandlingStatus
 import no.nav.k9.los.kodeverk.BehandlingType
-import no.nav.k9.los.kodeverk.FagsakYtelseType
-import no.nav.k9.los.kodeverk.Fagsystem
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.kodeverk.K9FagsakYtelseType
+import no.nav.k9.los.domeneadaptere.eventlager.Fagsystem
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.sak.kontrakt.aksjonspunkt.AksjonspunktTilstandDto
 import no.nav.k9.sak.typer.AktørId
 import no.nav.k9.sak.typer.JournalpostId
 import no.nav.k9.sak.typer.Periode
+import no.nav.ung.kodeverk.Fagsystem as UngFagsystem
+import no.nav.ung.kodeverk.behandling.BehandlingResultatType as UngBehandlingResultatType
+import no.nav.ung.kodeverk.behandling.BehandlingStatus as UngBehandlingStatus
+import no.nav.ung.kodeverk.behandling.BehandlingStegType as UngBehandlingStegType
+import no.nav.ung.kodeverk.behandling.BehandlingType as UngBehandlingType
+import no.nav.ung.kodeverk.behandling.BehandlingÅrsakType as UngBehandlingÅrsakType
+import no.nav.ung.kodeverk.behandling.FagsakYtelseType as UngFagsakYtelseType
+import no.nav.ung.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon as UngAksjonspunktDefinisjon
+import no.nav.ung.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus as UngAksjonspunktStatus
+import no.nav.ung.kodeverk.behandling.aksjonspunkt.Venteårsak as UngVenteårsak
+import no.nav.ung.kodeverk.hendelse.EventHendelse as UngEventHendelse
+import no.nav.ung.sak.kontrakt.aksjonspunkt.AksjonspunktTilstandDto as UngAksjonspunktTilstandDto
+import no.nav.ung.sak.typer.Periode as UngPeriode
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.time.LocalDate
@@ -46,6 +65,8 @@ object localSetup : KoinComponent {
     private val tilbakeEventHandler: K9TilbakeEventHandler by inject()
     private val sakEventHandler: K9SakEventHandler by inject()
     private val klageEventHandler: K9KlageEventHandler by inject()
+    private val ungSakEventHandler: UngSakEventHandler by inject()
+    private val eventTilOppgaveAdapter: EventTilOppgaveAdapter by inject()
     private val profile: KoinProfile by inject()
     private val dataSource: DataSource by inject()
 
@@ -76,6 +97,19 @@ object localSetup : KoinComponent {
                         on conflict do nothing
                      """,
                         mapOf("saksbehandler_id" to saksbehandlerId, "omrade" to Områder.K9.eksternId)
+                    ).asExecute
+                )
+                tx.run(
+                    queryOf(
+                        """
+                        insert into saksbehandler_omrade(saksbehandler_id, omrade_id)
+                        values (:saksbehandler_id, (select id from omrade where ekstern_id = :omrade))
+                        on conflict do nothing
+                     """,
+                        mapOf(
+                            "saksbehandler_id" to saksbehandlerId,
+                            "omrade" to Områder.AKTIVITETSPENGER.eksternId
+                        )
                     ).asExecute
                 )
             }
@@ -119,10 +153,10 @@ object localSetup : KoinComponent {
                 val behandlingId = Random.nextLong(0, 2000)
                 val saksnummer = behandlingId.toString(36).uppercase().replace("O", "o").replace("I", "i")
                 val ytelseTypeKode = listOf(
-                    FagsakYtelseType.PLEIEPENGER_SYKT_BARN,
-                    FagsakYtelseType.PPN,
-                    FagsakYtelseType.OLP,
-                    FagsakYtelseType.OMSORGSPENGER_AO,
+                    K9FagsakYtelseType.PLEIEPENGER_SYKT_BARN,
+                    K9FagsakYtelseType.PPN,
+                    K9FagsakYtelseType.OLP,
+                    K9FagsakYtelseType.OMSORGSPENGER_AO,
                 ).shuffled().first().kode
                 val opprettetBehandling = LocalDateTime.now().minusDays(Random.nextLong(10, 20))
                 val aktørId = "2392173967319"
@@ -278,7 +312,7 @@ object localSetup : KoinComponent {
                     eventHendelse = EventHendelse.AKSJONSPUNKT_OPPRETTET,
                     eventTid = LocalDateTime.now().minusSeconds((antall - i).toLong()),
                     aksjonspunktKoderMedStatusListe = mutableMapOf(AksjonspunktDefinisjonK9Tilbake.VURDER_TILBAKEKREVING.kode to AksjonspunktStatus.OPPRETTET.kode),
-                    ytelseTypeKode = FagsakYtelseType.PLEIEPENGER_SYKT_BARN.kode,
+                    ytelseTypeKode = K9FagsakYtelseType.PLEIEPENGER_SYKT_BARN.kode,
                     ansvarligBeslutterIdent = null,
                     førsteFeilutbetaling = LocalDate.now().minusDays(Random.nextLong(100)).toString(),
                     feilutbetaltBeløp = Random.nextLong(1000, 20000),
@@ -304,7 +338,7 @@ object localSetup : KoinComponent {
                         pleietrengendeAktørId = null,
                         type = BehandlingType.entries.filter { it.kodeverk == "PUNSJ_INNSENDING_TYPE" }.shuffled()
                             .first().kode,
-                        ytelse = FagsakYtelseType.entries.filter { it != FagsakYtelseType.UNGDOMSYTELSE && it != FagsakYtelseType.OMSORGSDAGER }
+                        ytelse = K9FagsakYtelseType.entries.filter { it != K9FagsakYtelseType.UNGDOMSYTELSE && it != K9FagsakYtelseType.OMSORGSDAGER }
                             .shuffled().first().kode,
                         sendtInn = null,
                         ferdigstiltAv = null,
@@ -313,5 +347,132 @@ object localSetup : KoinComponent {
                 )
             }
         }
+    }
+
+    private val lokalkontorAksjonspunkter = listOf(
+        UngAksjonspunktDefinisjon.LOKALKONTOR_FORESLÅR_VILKÅR,
+        UngAksjonspunktDefinisjon.LOKALKONTOR_BESLUTTER_VILKÅR,
+        UngAksjonspunktDefinisjon.VURDER_FAKTA_OM_BOSTED,
+        UngAksjonspunktDefinisjon.VURDER_BOSTEDVILKÅR,
+        UngAksjonspunktDefinisjon.VURDER_BISTANDSVILKÅR,
+    )
+
+    private val navSentraltAksjonspunkter = listOf(
+        UngAksjonspunktDefinisjon.KONTROLLER_INNTEKT,
+        UngAksjonspunktDefinisjon.KONTROLLER_OPPLYSNINGER_OM_SØKNADSFRIST,
+        UngAksjonspunktDefinisjon.FORESLÅ_VEDTAK,
+        UngAksjonspunktDefinisjon.FATTER_VEDTAK,
+        UngAksjonspunktDefinisjon.AUTO_SATT_PÅ_VENT_RAPPORTERINGSFRIST,
+    )
+
+    fun initAktivitetspengeroppgaver(antall: Int) {
+        if (profile != KoinProfile.LOCAL) {
+            return
+        }
+        for (i in 0..<antall) {
+            val eksternId = UUID.randomUUID()
+            val saksnummer = "AKT" + Random.nextInt(100_000, 999_999)
+            val aktørId = Random.nextLong(1_000_000_000_000, 9_000_000_000_000).toString()
+            val opprettetBehandling = LocalDateTime.now().minusDays(Random.nextLong(3, 40))
+            val eventTid = LocalDateTime.now().minusSeconds((antall - i).toLong())
+            val behandlingType = listOf(
+                UngBehandlingType.FØRSTEGANGSSØKNAD,
+                UngBehandlingType.REVURDERING,
+            ).shuffled().first()
+
+            val hosLokalkontor = Random.nextBoolean()
+            val aksjonspunkt = if (hosLokalkontor) {
+                lokalkontorAksjonspunkter.shuffled().first()
+            } else {
+                navSentraltAksjonspunkter.shuffled().first()
+            }
+
+            val aksjonspunktTilstand = UngAksjonspunktTilstandDto(
+                aksjonspunkt.kode,
+                UngAksjonspunktStatus.OPPRETTET,
+                if (aksjonspunkt.erAutopunkt()) UngVenteårsak.VENT_INNTEKT_RAPPORTERINGSFRIST else UngVenteårsak.UDEFINERT,
+                null,
+                if (aksjonspunkt.erAutopunkt()) LocalDateTime.now().plusDays(14) else null,
+                opprettetBehandling,
+                opprettetBehandling,
+            )
+
+            val åpentEvent = UngSakEventDto(
+                eksternId = eksternId,
+                fagsystem = UngFagsystem.UNG_SAK,
+                saksnummer = saksnummer,
+                aktørId = aktørId,
+                eventTid = eventTid,
+                eventHendelse = UngEventHendelse.AKSJONSPUNKT_OPPRETTET,
+                behandlingStatus = UngBehandlingStatus.UTREDES.kode,
+                behandlingSteg = aksjonspunkt.behandlingSteg.kode,
+                behandlendeEnhet = AktBehandlendeEnhet.entries
+                    .filter { it != AktBehandlendeEnhet.UKJENT }
+                    .shuffled().first().kode,
+                ansvarligBeslutterForTotrinn = null,
+                ansvarligSaksbehandlerForTotrinn = null,
+                navKontorAnsvarligSaksbehandler = if (hosLokalkontor) "Z123456" else null,
+                navKontorBeslutter = null,
+                resultatType = UngBehandlingResultatType.IKKE_FASTSATT.kode,
+                ytelseTypeKode = UngFagsakYtelseType.AKTIVITETSPENGER.kode,
+                behandlingTypeKode = behandlingType.kode,
+                eldsteDatoMedEndringFraSøker = opprettetBehandling,
+                opprettetBehandling = opprettetBehandling,
+                fagsakPeriode = UngPeriode(LocalDate.now().minusMonths(3), LocalDate.now()),
+                aksjonspunktTilstander = listOf(aksjonspunktTilstand),
+                nyeKrav = Random.nextBoolean(),
+                vedtaksdato = null,
+                behandlingstidFrist = LocalDate.now().plusWeeks(3),
+                behandlingsårsaker = if (behandlingType == UngBehandlingType.REVURDERING) {
+                    listOf(UngBehandlingÅrsakType.RE_ANNET.kode)
+                } else {
+                    emptyList()
+                },
+            )
+            prosesserUngSakEvent(åpentEvent)
+
+            // Ferdigstill noen av behandlingene. Kun for nav-sentrale aksjonspunkt, slik at
+            // oppgavetypen (del1/del2) ikke endrer seg mellom versjonene av samme oppgave.
+            if (!hosLokalkontor && Random.nextBoolean()) {
+                prosesserUngSakEvent(
+                    åpentEvent.copy(
+                        eventTid = eventTid.plusSeconds(1),
+                        eventHendelse = UngEventHendelse.AKSJONSPUNKT_UTFØRT,
+                        behandlingStatus = UngBehandlingStatus.AVSLUTTET.kode,
+                        behandlingSteg = UngBehandlingStegType.IVERKSETT_VEDTAK.kode,
+                        ansvarligSaksbehandlerForTotrinn = "Z123456",
+                        ansvarligBeslutterForTotrinn = "Z167457",
+                        resultatType = UngBehandlingResultatType.INNVILGET.kode,
+                        aksjonspunktTilstander = listOf(
+                            UngAksjonspunktTilstandDto(
+                                aksjonspunkt.kode,
+                                UngAksjonspunktStatus.UTFØRT,
+                                UngVenteårsak.UDEFINERT,
+                                "Z123456",
+                                null,
+                                opprettetBehandling,
+                                LocalDateTime.now(),
+                            )
+                        ),
+                        vedtaksdato = LocalDate.now(),
+                    )
+                )
+            }
+        }
+    }
+
+    /**
+     * UngSakEventHandler lagrer kun eventet, så oppgaven må mappes eksplisitt her
+     * i stedet for å vente på oppgavevaktmesteren.
+     */
+    private fun prosesserUngSakEvent(event: UngSakEventDto) {
+        ungSakEventHandler.prosesser(
+            eksternId = event.eksternId.toString(),
+            eksternVersjon = event.eventTid.toString(),
+            event = LosObjectMapper.instance.writeValueAsString(event),
+        )
+        eventTilOppgaveAdapter.oppdaterOppgaveForEksternId(
+            EventNøkkel(Fagsystem.UNGSAK, event.eksternId.toString())
+        )
     }
 }

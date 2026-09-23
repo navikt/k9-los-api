@@ -5,7 +5,7 @@ import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import no.nav.k9.los.AbstractK9LosIntegrationTest
-import no.nav.k9.los.domeneadaptere.k9.OmrådeSetup
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.Områdesetup
 import no.nav.k9.los.infrastruktur.idtoken.IIdToken
 import no.nav.k9.los.infrastruktur.rest.CoroutineRequestContext
 import no.nav.k9.los.infrastruktur.rest.idToken
@@ -13,7 +13,6 @@ import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.koin.test.get
-import kotlin.coroutines.coroutineContext
 import kotlin.test.assertEquals
 
 class TransactionalManagerTest : AbstractK9LosIntegrationTest() {
@@ -22,7 +21,7 @@ class TransactionalManagerTest : AbstractK9LosIntegrationTest() {
 
     @BeforeEach
     fun setup() {
-        get<OmrådeSetup>().setup()
+        get<Områdesetup>().setup()
         transactionalManager = get()
     }
 

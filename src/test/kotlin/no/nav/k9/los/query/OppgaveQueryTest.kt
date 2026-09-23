@@ -708,7 +708,7 @@ byggFilter(FeltType.MOTTATT_DATO, EksternFeltverdiOperator.EQUALS, "2023-05-15")
 
     @Test
     fun `Beslutter-kø skal inneholde oppgaver for k9klage-behandlinger med aksjonspunkt 5016`() {
-        OppgaveTestDataBuilder(definisjonskilde = "k9-klage-til-los", oppgaveTypeNavn = "k9klage")
+        OppgaveTestDataBuilder(oppgaveTypeNavn = "k9klage")
             .medOppgaveFeltVerdi(FeltType.BEHANDLINGUUID, UUID.randomUUID().toString())
             .medOppgaveFeltVerdi(FeltType.LØSBART_AKSJONSPUNKT, "5016")
             .medOppgaveFeltVerdi(FeltType.LIGGER_HOS_BESLUTTER, true.toString())
@@ -730,7 +730,7 @@ byggFilter(FeltType.MOTTATT_DATO, EksternFeltverdiOperator.EQUALS, "2023-05-15")
     @Test
     fun `Beslutter-kø for skal inneholde oppgaver for k9-tilbake-behandlinger med aksjonspunkt 5005`() {
         val eksternId = UUID.randomUUID().toString()
-        OppgaveTestDataBuilder(definisjonskilde = "k9-tilbake-til-los", oppgaveTypeNavn = "k9tilbake")
+        OppgaveTestDataBuilder(oppgaveTypeNavn = "k9tilbake")
             .medOppgaveFeltVerdi(FeltType.BEHANDLINGUUID, eksternId)
             .medOppgaveFeltVerdi(FeltType.LØSBART_AKSJONSPUNKT, "5005")
             .medOppgaveFeltVerdi(FeltType.LIGGER_HOS_BESLUTTER, true.toString())
@@ -1208,7 +1208,7 @@ byggFilter(FeltType.MOTTATT_DATO, EksternFeltverdiOperator.EQUALS, "2023-05-15")
 
     @Test
     fun `queryForGruppering aggregerer heltallsfelt datatypebevisst`() {
-        val builder = OppgaveTestDataBuilder(definisjonskilde = "k9-tilbake-til-los", oppgaveTypeNavn = "k9tilbake")
+        val builder = OppgaveTestDataBuilder(oppgaveTypeNavn = "k9tilbake")
         builder.medOppgaveFeltVerdi(FeltType.FEILUTBETALT_BELØP, "100").lagOgLagre()
         builder.medOppgaveFeltVerdi(FeltType.FEILUTBETALT_BELØP, "200").lagOgLagre()
 

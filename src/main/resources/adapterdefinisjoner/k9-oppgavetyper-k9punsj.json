@@ -1,6 +1,5 @@
 {
   "område": "K9",
-  "definisjonskilde": "k9-punsj-til-los",
   "oppgavetyper": [
     {
       "id": "k9punsj",
@@ -65,13 +64,13 @@
           "id": "ferdigstiltTidspunkt",
           "visPåOppgave": false,
           "påkrevd": false,
-          "feltutleder": "no.nav.k9.los.oppgavemottak.feltutlederforlagring.FerdigstiltTidspunkt"
+          "feltutlederForLagring": "no.nav.k9.los.oppgavemottak.feltutlederforlagring.FerdigstiltTidspunkt"
         },
         {
           "id": "ferdigstiltEnhet",
           "visPåOppgave": false,
           "påkrevd": false,
-          "feltutleder": "no.nav.k9.los.oppgavemottak.feltutlederforlagring.FerdigstiltEnhet"
+          "feltutlederForLagring": "no.nav.k9.los.oppgavemottak.feltutlederforlagring.FerdigstiltEnhet"
         }
       ]
     }

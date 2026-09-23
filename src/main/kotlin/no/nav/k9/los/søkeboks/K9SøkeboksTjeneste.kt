@@ -1,10 +1,10 @@
 package no.nav.k9.los.søkeboks
 
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.kodeverk.K9FagsakYtelseType
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.pdl.IPdlService
 import no.nav.k9.los.infrastruktur.pdl.navn
 import no.nav.k9.los.kodeverk.BehandlingStatus
-import no.nav.k9.los.kodeverk.FagsakYtelseType
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.query.OppgaveQueryService
@@ -153,8 +153,8 @@ class K9SøkeboksTjeneste(
         return SøkeresultatOppgaveDto(
             navn = navn,
             oppgaveNøkkel = OppgaveNøkkelDto(oppgave),
-            ytelsestype = oppgave.hentVerdi("ytelsestype")?.let { FagsakYtelseType.fraKode(it).navn }
-                ?: FagsakYtelseType.UKJENT.navn,
+            ytelsestype = oppgave.hentVerdi("ytelsestype")?.let { K9FagsakYtelseType.fraKode(it).navn }
+                ?: K9FagsakYtelseType.UKJENT.navn,
             saksnummer = oppgave.hentVerdi("saksnummer"),
             hastesak = oppgave.hentVerdi("hastesak") == "true",
             journalpostId = oppgave.hentVerdi("journalpostId"),

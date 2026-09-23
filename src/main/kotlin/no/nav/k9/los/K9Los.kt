@@ -39,14 +39,15 @@ import no.nav.helse.dusseldorf.ktor.jackson.JacksonStatusPages
 import no.nav.helse.dusseldorf.ktor.jackson.dusseldorfConfigured
 import no.nav.helse.dusseldorf.ktor.metrics.init
 import no.nav.k9.los.domeneadaptere.eventlager.EventlagerApi
-import no.nav.k9.los.domeneadaptere.k9.OmrådeSetup
-import no.nav.k9.los.domeneadaptere.k9.eventtiloppgave.EventTilOppgaveAdapter
-import no.nav.k9.los.domeneadaptere.k9.eventtiloppgave.HistorikkvaskTjeneste
+import no.nav.k9.los.domeneadaptere.eventmottak.kafka.KafkaConsumerLifecycleService
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.EventTilOppgaveAdapter
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.HistorikkvaskTjeneste
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.Områdesetup as AktOmrådesetup
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.Områdesetup as K9Områdesetup
 import no.nav.k9.los.domeneadaptere.k9.refreshk9sakoppgaver.K9sakBehandlingsoppfriskingJobb
 import no.nav.k9.los.domeneadaptere.k9.refreshk9sakoppgaver.RefreshK9v3
-import no.nav.k9.los.domeneadaptere.k9.statistikk.OppgavestatistikkTjeneste
-import no.nav.k9.los.domeneadaptere.k9.statistikk.StatistikkApi
-import no.nav.k9.los.domeneadaptere.kafka.AsynkronProsesseringV1Service
+import no.nav.k9.los.domeneadaptere.statistikk.OppgavestatistikkTjeneste
+import no.nav.k9.los.domeneadaptere.statistikk.StatistikkApi
 import no.nav.k9.los.driftsmelding.DriftsmeldingerApis
 import no.nav.k9.los.forvaltning.K9ForvaltningApis
 import no.nav.k9.los.infrastruktur.abac.SifAbacPdpUtilgjengeligException
@@ -100,6 +101,7 @@ fun Application.k9Los() {
     DefaultExports.initialize()
 
     val configuration = Configuration(environment.config)
+    migrate(configuration)
     val issuers = configuration.issuers()
 
     install(Koin) {
@@ -108,9 +110,10 @@ fun Application.k9Los() {
 
     val koin = getKoin()
 
-    koin.get<EventlagerNokkeltallPrometheusCollector>()
+    koin.get<K9Områdesetup>().setup()
+    koin.get<AktOmrådesetup>().setup()
 
-    koin.get<OmrådeSetup>().setup()
+    koin.get<EventlagerNokkeltallPrometheusCollector>()
 
     konfigurerJobber(koin, configuration)
 
@@ -147,13 +150,12 @@ fun Application.k9Los() {
     ) { start(koin.get<Channel<KøpåvirkendeHendelse>>(named("KøpåvirkendeHendelseChannel"))) }
 
 
-
-    val asynkronProsesseringV1Service = koin.get<AsynkronProsesseringV1Service>()
+    val kafkaConsumerLifecycleService = koin.get<KafkaConsumerLifecycleService>()
 
     monitor.subscribe(ApplicationStopping) {
-        log.info("Stopper AsynkronProsesseringV1Service.")
-        asynkronProsesseringV1Service.stop()
-        log.info("AsynkronProsesseringV1Service Stoppet.")
+        log.info("Stopper kafka-consumere.")
+        kafkaConsumerLifecycleService.stop()
+        log.info("Kafka-consumere stoppet.")
         log.info("Stopper pipeline")
         refreshOppgaveV3Jobb.cancel()
     }
@@ -196,11 +198,6 @@ fun Application.k9Los() {
         )
 
         if ((KoinProfile.LOCAL == koin.get<KoinProfile>())) {
-            localSetup.initSaksbehandlere()
-            localSetup.initPunsjoppgaver(0)
-            localSetup.initTilbakeoppgaver(0)
-            localSetup.initKlageoppgaver(0)
-            localSetup.initK9SakOppgaver(0)
             api()
         } else {
             authenticate(*issuers.allIssuers()) {
@@ -345,22 +342,17 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
             )
         }
 
-        add(PlanlagtJobb.Oppstart(
-            navn = "Setup",
-            prioritet = 1,
-        ) {
-            koin.get<OmrådeSetup>().setup()
-        })
-
         if (configuration.koinProfile == KoinProfile.LOCAL) {
             add(PlanlagtJobb.Oppstart(
                 navn = "Testdata",
-                prioritet = 1,
+                prioritet = 2,
             ) {
                 localSetup.initSaksbehandlere()
                 localSetup.initPunsjoppgaver(0)
                 localSetup.initTilbakeoppgaver(0)
+                localSetup.initKlageoppgaver(0)
                 localSetup.initK9SakOppgaver(0)
+                localSetup.initAktivitetspengeroppgaver(0)
             })
         }
 

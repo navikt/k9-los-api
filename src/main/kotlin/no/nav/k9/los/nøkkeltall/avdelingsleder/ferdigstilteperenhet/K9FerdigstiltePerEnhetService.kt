@@ -5,8 +5,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import no.nav.k9.los.infrastruktur.utils.Cache
 import no.nav.k9.los.infrastruktur.utils.CacheObject
-import no.nav.k9.los.kodeverk.BehandlendeEnhet
-import no.nav.k9.los.kodeverk.FagsakYtelseType
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.kodeverk.K9BehandlendeEnhet
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.kodeverk.K9FagsakYtelseType
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.query.OppgaveQueryService
@@ -24,7 +24,7 @@ import kotlin.time.measureTime
 class K9FerdigstiltePerEnhetService(
     private val queryService: OppgaveQueryService
 ) {
-    private val enheter = BehandlendeEnhet.entries.minusElement(BehandlendeEnhet.UKJENT)
+    private val enheter = K9BehandlendeEnhet.entries.minusElement(K9BehandlendeEnhet.UKJENT)
     private val parametre = enheter.map { enhet -> FerdigstiltParameter.Enhet(enhet) } + FerdigstiltParameter.Helautomatisk + FerdigstiltParameter.Andre
     private var oppdatertTidspunkt: LocalDateTime? = null
     private val cache = Cache<LocalDate, List<FerdigstiltePerEnhetTall>>(null)
@@ -141,7 +141,7 @@ class K9FerdigstiltePerEnhetService(
 
     private fun hentAntallFraDatabase(
         dato: LocalDate,
-        ytelser: List<FagsakYtelseType>? = null,
+        ytelser: List<K9FagsakYtelseType>? = null,
         oppgavetype: String? = null,
         parameter: FerdigstiltParameter,
     ): Int {

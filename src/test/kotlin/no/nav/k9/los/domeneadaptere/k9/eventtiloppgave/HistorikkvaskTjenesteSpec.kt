@@ -8,14 +8,16 @@ import io.kotest.matchers.equals.shouldNotBeEqual
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import kotliquery.queryOf
-import no.nav.k9.los.domeneadaptere.k9.K9Oppgavetypenavn
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.kodeverk.K9Oppgavetypenavn
 import no.nav.k9.los.domeneadaptere.eventlager.EventNøkkel
 import no.nav.k9.los.domeneadaptere.eventlager.EventRepository
 import no.nav.k9.los.domeneadaptere.eventlager.HistorikkvaskBestilling
-import no.nav.k9.los.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventDto
+import no.nav.k9.los.domeneadaptere.eventmottak.k9.punsj.K9PunsjEventDto
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
-import no.nav.k9.los.kodeverk.Fagsystem
+import no.nav.k9.los.domeneadaptere.eventlager.Fagsystem
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.EventTilOppgaveAdapter
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.HistorikkvaskTjeneste
 import no.nav.k9.los.oppgavemottak.OppgaveV3Tjeneste
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
@@ -108,7 +110,6 @@ class HistorikkvaskTjenesteSpec: FreeSpec(), KoinTest {
             }
             oppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(Fagsystem.PUNSJ, eksternId1.toString()))
             oppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(Fagsystem.PUNSJ, eksternId2.toString()))
-            
             "skal kunne vaskes med eventlagerNøkkel fra bestillingen" {
                 eventRepository.bestillHistorikkvask(Fagsystem.PUNSJ)
                 eventRepository.hentAntallHistorikkvaskbestillinger() shouldBe 2
@@ -140,7 +141,6 @@ class HistorikkvaskTjenesteSpec: FreeSpec(), KoinTest {
                 eventer.forEach { eventRepository.lagre(Fagsystem.PUNSJ, it, tx) }
             }
             eksternIder.forEach { oppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(Fagsystem.PUNSJ, it.toString())) }
-            
             "skal kunne prosessere alle bestillinger" {
                 eventRepository.bestillHistorikkvask(Fagsystem.PUNSJ)
                 val antallFør = eventRepository.hentAntallHistorikkvaskbestillinger()

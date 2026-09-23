@@ -2,15 +2,12 @@ package no.nav.k9.los.domeneadaptere.eventlager
 
 import kotliquery.*
 import no.nav.k9.los.infrastruktur.db.util.InClauseHjelper
-import no.nav.k9.los.kodeverk.Fagsystem
 import org.jetbrains.annotations.VisibleForTesting
 import org.slf4j.LoggerFactory
 import javax.sql.DataSource
 
-
-
 class EventRepository(
-    private val dataSource: DataSource,
+    private val dataSource: DataSource
 ) {
     private val log = LoggerFactory.getLogger(EventRepository::class.java)
 
@@ -188,7 +185,7 @@ class EventRepository(
                         where e.event_nokkel_id = en.id
                         and e.dirty = true
                     )
-                    and en.FAGSYSTEM in ('K9SAK','K9TILBAKE','K9KLAGE','PUNSJ')
+                    and en.FAGSYSTEM in ('K9SAK','K9TILBAKE','K9KLAGE','PUNSJ', 'UNGSAK')
                 """.trimIndent()
                 ).map { row ->
                     EventNøkkel(

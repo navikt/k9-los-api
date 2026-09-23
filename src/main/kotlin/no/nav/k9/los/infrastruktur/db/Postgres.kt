@@ -31,6 +31,10 @@ fun dataSourceFromVault(hikariConfig: Configuration, role: Role): HikariDataSour
     )
 
 fun Application.migrate(configuration: Configuration) {
+    if (configuration.migreringEtterOppstart) {
+        log.warn("Migrering av database er satt til å skje etter oppstart")
+        return
+    }
     log.info("Migrerer database")
     val (antallMigrert, tidsbruk) = measureTimedValue {
         if (configuration.koinProfile() == KoinProfile.LOCAL) {
