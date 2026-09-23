@@ -1,5 +1,6 @@
 package no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.oppgavedefinisjon
 
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.kodeverk.AktBehandlendeEnhet
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.kodeverk.AktFagsystem
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.*
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
@@ -138,7 +139,7 @@ object AktivitetspengerFeltdefinisjoner {
                     listetype = false,
                     tolkesSom = Datatype.STRING,
                     synlighet = Synlighet.UNDER_STREKEN,
-                    kodeverkreferanse = kodeverk(Områder.AKTIVITETSPENGER, "behandlendeEnhet"),
+                    kodeverkreferanse = kodeverk(Områder.AKTIVITETSPENGER, AktBehandlendeEnhet::class.java.simpleName),
                 ),
                 felt(
                     id = AktivitetspengerFeltIder.Vedtak.TOTRINNSKONTROLL,
