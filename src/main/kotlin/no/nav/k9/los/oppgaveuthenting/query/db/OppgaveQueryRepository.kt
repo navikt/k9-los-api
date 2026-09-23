@@ -6,14 +6,13 @@ import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.k9.los.kodeverk.PersonBeskyttelseType
+import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.FeltdefinisjonRepository
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.Kodeverkreferanse
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.Synlighet
-import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.query.QueryRequest
 import no.nav.k9.los.oppgaveuthenting.query.dto.felter.Oppgavefelt
-import no.nav.k9.los.oppgaveuthenting.query.dto.felter.Oppgavefelter
 import no.nav.k9.los.oppgaveuthenting.query.dto.felter.Verdiforklaring
 import no.nav.k9.los.oppgaveuthenting.query.dto.resultat.OppgaveQueryRad
 import no.nav.k9.los.oppgaveuthenting.query.mapping.OppgaveQueryToSqlMapper
@@ -31,19 +30,14 @@ class OppgaveQueryRepository(
     private val log: Logger = LoggerFactory.getLogger("OppgaveQueryRepository")
 
     @WithSpan
-    fun hentAlleFelter(): Oppgavefelter {
+    fun hentAlleFelter(område: Områder): List<Oppgavefelt> {
         return using(sessionOf(datasource)) {
-            it.transaction { tx -> Oppgavefelter(hentAlleFelter(tx)) }
+            it.transaction { tx -> hentAlleFelterMedMer(område, tx = tx).map { it.oppgavefelt } }
         }
     }
 
     @WithSpan
-    private fun hentAlleFelter(tx: TransactionalSession, medKodeverk: Boolean = true): List<Oppgavefelt> {
-        return hentAlleFelterMedMer(tx, medKodeverk).map { it.oppgavefelt }
-    }
-
-    @WithSpan
-    private fun hentAlleFelterMedMer(tx: TransactionalSession, medKodeverk: Boolean = true): List<OppgavefeltMedMer> {
+    private fun hentAlleFelterMedMer(område: Områder, medKodeverk: Boolean = true, tx: TransactionalSession): List<OppgavefeltMedMer> {
         val felterFraDatabase = tx.run(
             queryOf(
                 """
@@ -58,8 +52,9 @@ class OppgaveQueryRepository(
                     FROM Feltdefinisjon fd INNER JOIN Omrade fo ON (
                       fo.id = fd.omrade_id
                     )
-                    WHERE fd.synlighet != 'INTERNT'
-                """.trimIndent()
+                    WHERE fo.ekstern_id = :omrade_ekstern_id AND fd.synlighet != 'INTERNT'
+                """.trimIndent(),
+                mapOf("omrade_ekstern_id" to område.eksternId)
             ).map { row ->
                 val kodeverk = if (medKodeverk) {
                     row.stringOrNull("kodeverkreferanse")?.let {
@@ -201,7 +196,7 @@ class OppgaveQueryRepository(
         request: QueryRequest,
         now: LocalDateTime
     ): List<OppgaveQueryRad> {
-        val felter = hentAlleFelterMedMer(tx, medKodeverk = false)
+        val felter = hentAlleFelterMedMer(request.område, medKodeverk = false, tx)
             .associateBy { felt -> OmrådeOgKode(felt.oppgavefelt.område, felt.oppgavefelt.kode) }
 
         val sqlBuilder = OppgaveQueryToSqlMapper.toSql(request, felter, now)

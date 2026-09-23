@@ -4,6 +4,7 @@ import io.opentelemetry.instrumentation.annotations.WithSpan
 import kotliquery.TransactionalSession
 import kotliquery.sessionOf
 import kotliquery.using
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgavemottak.PartisjonertOppgaveRepository
 import no.nav.k9.los.oppgaveuthenting.query.db.EksternOppgaveId
 import no.nav.k9.los.oppgaveuthenting.query.db.OppgaveQueryRepository
@@ -16,6 +17,7 @@ import no.nav.k9.los.oppgaveuthenting.query.dto.query.OppgaveQuery
 import no.nav.k9.los.oppgaveuthenting.query.dto.resultat.OppgaveQueryRad
 import no.nav.k9.los.oppgaveuthenting.Oppgave
 import no.nav.k9.los.oppgaveuthenting.OppgaveRepository
+import no.nav.k9.los.oppgaveuthenting.query.dto.felter.Oppgavefelt
 import java.time.LocalDateTime
 import javax.sql.DataSource
 
@@ -81,8 +83,8 @@ class OppgaveQueryService(
     }
 
     @WithSpan
-    fun hentAlleFelter(): Oppgavefelter {
-        return oppgaveQueryRepository.hentAlleFelter()
+    fun hentAlleFelter(område: Områder): List<Oppgavefelt> {
+        return oppgaveQueryRepository.hentAlleFelter(område)
     }
 
     fun validate(request: QueryRequest): Boolean {
