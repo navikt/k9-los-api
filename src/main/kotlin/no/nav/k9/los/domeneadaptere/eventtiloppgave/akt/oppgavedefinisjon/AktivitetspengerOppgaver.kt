@@ -7,21 +7,26 @@ import no.nav.k9.los.oppgavedefinisjon.oppgavetype.OppgavetypeDto
 import no.nav.k9.los.oppgavedefinisjon.oppgavetype.OppgavetyperDto
 
 object AktivitetspengerOppgaver {
-    fun lagOppgaveDefinisjon(): OppgavetyperDto {
+    /**
+     * @param frontendUrl settes inn direkte i URL-malen. Plassholdere i `{}` tolkes som oppgavefelt
+     * av [no.nav.k9.los.oppgaveuthenting.Oppgave.getOppgaveBehandlingsurl], så base-URL-en kan ikke
+     * ligge igjen som plassholder.
+     */
+    fun lagOppgaveDefinisjon(frontendUrl: String): OppgavetyperDto {
         return OppgavetyperDto(
             område = Områder.AKTIVITETSPENGER,
             oppgavetyper = setOf(
-                lagAktivitetspengerOrdinær(AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1.kode),
-                lagAktivitetspengerOrdinær(AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2.kode)
+                lagAktivitetspengerOrdinær(AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1.kode, frontendUrl),
+                lagAktivitetspengerOrdinær(AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2.kode, frontendUrl)
                 //TODO: klage, feilutbetaling
             )
         )
     }
 
-    private fun lagAktivitetspengerOrdinær(id: String): OppgavetypeDto {
+    private fun lagAktivitetspengerOrdinær(id: String, frontendUrl: String): OppgavetypeDto {
         return OppgavetypeDto(
             id = id,
-            oppgavebehandlingsUrlTemplate = "{baseUrl}/fagsak/{K9.saksnummer}/",
+            oppgavebehandlingsUrlTemplate = "$frontendUrl/fagsak/{${AktivitetspengerFeltIder.Sak.SAKSNUMMER}}/",
             oppgavefelter = setOf(
                 // Behandling
                 OppgavefeltDto(AktivitetspengerFeltIder.Behandling.UUID, visPåOppgave = true, påkrevd = true),

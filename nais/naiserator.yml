@@ -110,6 +110,8 @@ spec:
       value: {{app_k9sak_frontend_url}}
     - name: APP_K9PUNSJ_FRONTEND_URL
       value: {{app_k9punsj_frontend_url}}
+    - name: APP_UNGSAK_FRONTEND_URL
+      value: {{app_ungsak_frontend_url}}
     - name: APP_SIF_ABAC_PDP_URL
       value: http://sif-abac-pdp/sif/sif-abac-pdp
 

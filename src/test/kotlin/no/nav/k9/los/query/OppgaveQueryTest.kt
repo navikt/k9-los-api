@@ -6,6 +6,9 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.withContext
+import no.nav.k9.los.infrastruktur.idtoken.IdTokenLocal
+import no.nav.k9.los.infrastruktur.rest.CoroutineRequestContext
 import no.nav.helse.dusseldorf.ktor.jackson.dusseldorfConfigured
 import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.FeltType
@@ -772,15 +775,17 @@ byggFilter(FeltType.MOTTATT_DATO, EksternFeltverdiOperator.EQUALS, "2023-05-15")
         builder.lagre(builder.lag(reservasjonsnøkkel = "test"))
 
         val reservasjonstjeneste = get<ReservasjonV3Tjeneste>()
-        reservasjonstjeneste.taReservasjon(
-            Områder.K9,
-            "test",
-            saksbehandler.id,
-            saksbehandler.id,
-            "test",
-            LocalDateTime.now(),
-            LocalDateTime.now().plusDays(2)
-        )
+        withContext(CoroutineRequestContext(IdTokenLocal(), Områder.K9)) {
+            reservasjonstjeneste.taReservasjon(
+                Områder.K9,
+                "test",
+                saksbehandler.id,
+                saksbehandler.id,
+                "test",
+                LocalDateTime.now(),
+                LocalDateTime.now().plusDays(2)
+            )
+        }
 
         val query = OppgaveQuery(
             listOf(

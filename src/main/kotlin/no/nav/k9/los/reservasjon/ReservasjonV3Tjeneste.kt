@@ -7,6 +7,7 @@ import no.nav.k9.los.feilhandtering.FinnerIkkeDataException
 import no.nav.k9.los.infrastruktur.abac.Action
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
+import no.nav.k9.los.infrastruktur.rest.idToken
 import no.nav.k9.los.infrastruktur.utils.leggTilDagerHoppOverHelg
 import no.nav.k9.los.ko.KøpåvirkendeHendelse
 import no.nav.k9.los.ko.ReservasjonAnnullert
@@ -20,6 +21,7 @@ import no.nav.k9.los.oppgaveuthenting.enkeltoppslag.ReservasjonsnøkkelOppgaveOp
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
+import kotlin.coroutines.coroutineContext
 
 class ReservasjonV3Tjeneste(
     private val transactionalManager: TransactionalManager,
@@ -122,7 +124,7 @@ class ReservasjonV3Tjeneste(
         //sjekke tilgang på alle oppgaver tilknyttet nøkkel
         val oppgaverForReservasjonsnøkkel =
             reservasjonsnøkkelOppgaveOppslag.hentÅpneOppgaverForReservasjonsnøkkel(område, reservasjonsnøkkel, tx)
-        if (!sjekkTilganger(område, oppgaverForReservasjonsnøkkel, reserverForId)) {
+        if (!sjekkTilganger(område, oppgaverForReservasjonsnøkkel, reserverForId, utføresAvId)) {
             val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedId(reserverForId)!!
             throw ManglerTilgangException("Saksbehandler ${saksbehandler.navn} mangler tilgang til å reservere nøkkel $reservasjonsnøkkel")
         }
@@ -298,9 +300,16 @@ class ReservasjonV3Tjeneste(
     private suspend fun sjekkTilganger(
         område: Områder,
         oppgaver: List<Oppgave>,
-        brukerIdSomSkalHaReservasjon: Long
+        brukerIdSomSkalHaReservasjon: Long,
+        utføresAvId: Long,
     ): Boolean {
         val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedId(brukerIdSomSkalHaReservasjon)!!
+        // Reserverer innlogget bruker for seg selv, brukes innlogget brukers token.
+        // Ellers må tilgang sjekkes for den andre saksbehandleren.
+        val idTokenInnloggetBruker = if (brukerIdSomSkalHaReservasjon == utføresAvId) {
+            coroutineContext.idToken()
+        } else null
+
         return oppgaver.all { oppgave ->
             if (beslutterErSaksbehandler(
                     oppgave,
@@ -308,7 +317,11 @@ class ReservasjonV3Tjeneste(
                 )
             ) throw ManglerTilgangException("Saksbehandler kan ikke være beslutter på egen behandling")
 
-            pepClient.harTilgangTilOppgaveV3(område, oppgave, saksbehandler, Action.reserver)
+            if (idTokenInnloggetBruker != null) {
+                pepClient.harTilgangTilOppgaveV3(område, idTokenInnloggetBruker, oppgave, Action.reserver)
+            } else {
+                pepClient.harTilgangTilOppgaveV3(område, oppgave, saksbehandler, Action.reserver)
+            }
         }
     }
 

@@ -103,7 +103,7 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         assertThat(antallIKø).isEqualTo(0)
 
         val reservasjonTjeneste = get<ReservasjonApisTjeneste>()
-        val reservasjoner = runBlocking {
+        val reservasjoner = runBlocking(CoroutineRequestContext(mockk<IIdToken>(relaxed = true), Områder.K9)) {
             reservasjonTjeneste.reserverOppgave(
                 Områder.K9,
                 TestSaksbehandler.SARA,

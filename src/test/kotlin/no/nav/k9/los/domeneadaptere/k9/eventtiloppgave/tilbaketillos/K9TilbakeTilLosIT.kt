@@ -3,6 +3,8 @@ package no.nav.k9.los.domeneadaptere.k9.eventtiloppgave.tilbaketillos
 import assertk.assertThat
 import assertk.assertions.*
 import kotlinx.coroutines.runBlocking
+import no.nav.k9.los.infrastruktur.idtoken.IdTokenLocal
+import no.nav.k9.los.infrastruktur.rest.CoroutineRequestContext
 import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.OppgaveTestDataBuilder
@@ -76,7 +78,7 @@ class K9TilbakeTilLosIT : AbstractK9LosIntegrationTest() {
     }
 
     private fun taReservasjon(saksbehandler: Saksbehandler, eksternId: UUID) {
-        runBlocking {
+        runBlocking(CoroutineRequestContext(IdTokenLocal(), Områder.K9)) {
             get<ReservasjonApisTjeneste>().reserverOppgave(
                 Områder.K9,
                 saksbehandler, OppgaveIdMedOverstyringDto(
