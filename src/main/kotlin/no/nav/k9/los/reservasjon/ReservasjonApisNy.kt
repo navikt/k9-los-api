@@ -221,7 +221,7 @@ internal fun Route.ReservasjonApisNy() {
         }
     }
 
-    post("/reservasjon/endre", {
+    post("/endre", {
         operationId = "endreReservasjoner"
         summary = "Endre reservasjoner"
         request {
@@ -260,7 +260,7 @@ internal fun Route.ReservasjonApisNy() {
 
     get("/saksbehandlere", {
         operationId = "hentSaksbehandlereForReservasjon"
-        summary = "Hent saksbehandlere"
+        summary = "Hent saksbehandlere reservasjonen kan flyttes til"
         response {
             HttpStatusCode.OK to { body<List<SaksbehandlerPåReservasjonDto>>() }
             HttpStatusCode.Forbidden to { description = "Brukeren mangler basistilgang" }
