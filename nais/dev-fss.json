@@ -16,7 +16,7 @@
   "app_k9punsj_url": "https://k9-punsj.intern.dev.nav.no/api",
   "app_k9sak_frontend_url": "https://k9.intern.dev.nav.no/k9/web",
   "app_k9punsj_frontend_url": "https://k9-punsj-frontend.intern.dev.nav.no",
-  "app_ungsak_frontend_url": "https://ung.intern.dev.nav.no/ung/web",
+  "app_aktivitetspenger_frontend_url": "https://aktivitetspenger.intern.dev.nav.no/ung/web",
   "deployment_environment": "q",
   "nokkeltall_enheter": "2970 NAV IKT DRIFT"
 }

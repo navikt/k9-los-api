@@ -32,7 +32,7 @@ data class Configuration(private val config: ApplicationConfig) {
     internal fun k9FrontendUrl() = config.getRequiredString("nav.register_urls.k9_frontend_url", secret = false)
     internal fun k9PunsjFrontendUrl() =
         config.getRequiredString("nav.register_urls.k9_punsj_frontend_url", secret = false)
-    internal fun ungSakFrontendUrl() = config.getRequiredString("nav.register_urls.ungsak_frontend_url", secret = false)
+    internal fun aktivitetspengerFrontendUrl() = config.getRequiredString("nav.register_urls.aktivitetspenger_frontend_url", secret = false)
 
     internal fun sifAbacPdpUrl() = config.getRequiredString("nav.register_urls.sif_abac_pdp_url", secret = false)
     internal fun sifAbacPdpScope(): String {

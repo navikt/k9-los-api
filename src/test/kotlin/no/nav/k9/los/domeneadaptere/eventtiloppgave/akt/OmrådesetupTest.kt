@@ -89,7 +89,7 @@ class OmrådesetupTest {
     }
 
     private companion object {
-        const val FRONTEND_URL = "http://ungsak.frontend"
+        const val FRONTEND_URL = "http://aktivitetspenger.frontend"
     }
 
     private fun List<KodeverkDto>.medEksternId(eksternId: String) =

@@ -97,7 +97,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     every { config.koinProfile() } returns KoinProfile.LOCAL
     every { config.k9FrontendUrl() } returns "http://localhost:9000"
     every { config.k9PunsjFrontendUrl() } returns "http://localhost:8080"
-    every { config.ungSakFrontendUrl() } returns "http://localhost:9005"
+    every { config.aktivitetspengerFrontendUrl() } returns "http://localhost:9005"
 
     single { KoinProfile.LOCAL }
 
@@ -244,7 +244,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             områdeRepository = get(),
             feltdefinisjonTjeneste = get(),
             oppgavetypeTjeneste = get(),
-            frontendUrl = config.ungSakFrontendUrl(),
+            frontendUrl = config.aktivitetspengerFrontendUrl(),
         )
     }
     single {

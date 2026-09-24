@@ -358,7 +358,7 @@ fun common(app: Application, config: Configuration) = module {
             områdeRepository = get(),
             feltdefinisjonTjeneste = get(),
             oppgavetypeTjeneste = get(),
-            frontendUrl = config.ungSakFrontendUrl(),
+            frontendUrl = config.aktivitetspengerFrontendUrl(),
         )
     }
 
