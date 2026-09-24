@@ -30,7 +30,7 @@ internal fun Route.ReservasjonApisNy() {
         operationId = "reserverOppgave"
         summary = "Reserver oppgave"
         request {
-            body<OppgaveNøkkelDtoWrapper> { description = "Oppgaven som skal reserveres, med eventuell overstyring" }
+            body<OppgaveNøkkelUtenOmrådeDto> { description = "Oppgaven som skal reserveres" }
         }
         response {
             HttpStatusCode.OK to { body<OppgaveStatusDto>() }
