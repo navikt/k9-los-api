@@ -83,7 +83,7 @@ class AktivitetspengerDel1Del2EventserieTest : AbstractK9LosIntegrationTest() {
             Triple(2, DEL2, eksternVersjoner[5]),
         )
 
-        assertThat(VaskeeventSerieutleder.nummererEventserie(eventer).tilTriple())
+        assertThat(VaskeeventSerieutleder.nummererEventseriePerOppgavetype(eventer).tilTriple())
             .containsExactly(*forventet.toTypedArray())
         assertThat(VaskeeventSerieutleder.nummererEventseriePerOppgavetype(eventer).tilTriple())
             .containsExactly(*forventet.toTypedArray())
