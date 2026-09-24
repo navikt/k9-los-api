@@ -305,7 +305,7 @@ private fun Route.flerområdeApi() {
     route("api/wip", {
         specName = "frontend"
     }) {
-        route("innlogget-bruker/omrader", { tags("Innlogget bruker") }) { InnloggetBrukersOmråderApi() }
+        route("innlogget-bruker/områder", { tags("Innlogget bruker") }) { InnloggetBrukersOmråderApi() }
 
         route({
             request {
