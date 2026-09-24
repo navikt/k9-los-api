@@ -138,6 +138,7 @@ class ReservasjonV3Tjeneste(
             kommentar = kommentar,
             endretAv = null
         )
+        sjekkSaksbehandlerErIOmråde(område, reserverForId)
         val reservasjon = reservasjonV3Repository.lagreReservasjon(område, reservasjonTilLagring, tx)
         log.info("taReservasjon: Ny reservasjon $reservasjon, utført av $utføresAvId, for saksbehandler $reserverForId")
         køpåvirkendeHendelseChannel.send(ReservasjonTatt(område = område, reservasjonsnøkkel = reservasjonsnøkkel))
