@@ -77,18 +77,14 @@ class EventTilOppgaveAdapter(
         eventer: List<EventLagret>? = null,
     ): Long {
         log.info("Oppdaterer oppgave for fagsystem: ${eventnøkkel.fagsystem}, eksternId: ${eventnøkkel.eksternId}")
+
         val eventerMedNummerering = hentEventerOgKorriger(eventnøkkel, tx, eventer)
         if (eventerMedNummerering.isEmpty()) return statistikktellerInn
-
-        //TODO: Guard for å holde unna UPY inntil videre. Fjernes når UPY er klar for produksjon.
-        val førsteEvent = eventerMedNummerering.first().second
-        if (førsteEvent is EventLagret.UngSak && førsteEvent.eventDto.ytelseTypeKode == FagsakYtelseType.UNGDOMSYTELSE.kode) {
-            return statistikktellerInn
-        }
 
         var statistikkteller = statistikktellerInn
         var forrigeOppgaveversjon = hentStartversjon(eventnøkkel, eventerMedNummerering, tx)
         var sisteOppgaveversjon: OppgaveV3? = null
+        val sisteVersjonPerOppgavetype = mutableMapOf<String, Pair<Int, OppgaveV3>>()
 
         for ((eventnummer, eventLagret) in eventerMedNummerering) {
             val oppgave = mapOgLagre(eventLagret, eventnummer, forrigeOppgaveversjon, tx)
@@ -108,6 +104,7 @@ class EventTilOppgaveAdapter(
             } else {
                 forrigeOppgaveversjon = hentEksisterendeVersjon(eventnøkkel, eventLagret, eventnummer, tx)
             }
+            forrigeOppgaveversjon?.let { sisteVersjonPerOppgavetype[it.oppgavetype.eksternId] = Pair(eventnummer, it) }
         }
 
         // Oppdater PEP-cache én gang for siste tilstand, i stedet for per event
@@ -115,7 +112,7 @@ class EventTilOppgaveAdapter(
             oppgaveOppdatertHandler.oppdaterPepCache(sisteOppgaveversjon, tx)
         }
 
-        fjernDirtyOgAjourhold(eventerMedNummerering, forrigeOppgaveversjon!!, tx)
+        fjernDirtyOgAjourhold(eventerMedNummerering, sisteVersjonPerOppgavetype, tx)
         return statistikkteller
     }
 
@@ -137,6 +134,7 @@ class EventTilOppgaveAdapter(
 
         var statistikkteller = 0L
         var forrigeOppgaveversjon = hentStartversjon(eventnøkkel, eventerMedNummerering, tx)
+        val sisteVersjonPerOppgavetype = mutableMapOf<String, Pair<Int, OppgaveV3>>()
 
         for ((eventnummer, eventLagret) in eventerMedNummerering) {
             val oppgave = mapOgLagre(eventLagret, eventnummer, forrigeOppgaveversjon, tx)
@@ -146,9 +144,10 @@ class EventTilOppgaveAdapter(
             } else {
                 forrigeOppgaveversjon = hentEksisterendeVersjon(eventnøkkel, eventLagret, eventnummer, tx)
             }
+            forrigeOppgaveversjon?.let { sisteVersjonPerOppgavetype[it.oppgavetype.eksternId] = Pair(eventnummer, it) }
         }
 
-        fjernDirtyOgAjourhold(eventerMedNummerering, forrigeOppgaveversjon!!, tx)
+        fjernDirtyOgAjourhold(eventerMedNummerering, sisteVersjonPerOppgavetype, tx)
         return statistikkteller
     }
 
@@ -158,9 +157,17 @@ class EventTilOppgaveAdapter(
         eventer: List<EventLagret>? = null,
     ): List<Pair<Int, EventLagret>> {
         val låsteEventer = eventer ?: eventRepository.hentAlleEventerMedLås(eventnøkkel, tx)
+        if (låsteEventer.isEmpty()) return emptyList()
+
+        //TODO: Guard for å holde unna UPY inntil videre. Fjernes når UPY er klar for produksjon.
+        val førsteEvent = låsteEventer.first()
+        if (førsteEvent is EventLagret.UngSak && førsteEvent.eventDto.ytelseTypeKode == FagsakYtelseType.UNGDOMSYTELSE.kode) {
+            return emptyList()
+        }
+
         // Oppslag mot kildesystemene gjøres samlet for hele serien, slik at mappingen under er ren.
         val berikedeEventer = eventBeriker.berik(låsteEventer)
-        return VaskeeventSerieutleder.korrigerEventnummerForVaskeeventer(berikedeEventer)
+        return VaskeeventSerieutleder.nummererEventseriePerOppgavetype(berikedeEventer)
     }
 
     private fun hentStartversjon(
@@ -198,20 +205,27 @@ class EventTilOppgaveAdapter(
         forrigeOppgaveversjon: OppgaveV3?,
         tx: TransactionalSession,
     ): OppgaveV3? {
-        val nyOppgaveversjon = eventLagret.tilOppgaveversjon(forrigeOppgaveversjon, eventnummer)
-        return oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(nyOppgaveversjon, tx, forrigeOppgaveversjon)
+        val forrigeAvSammeOppgavetype = forrigeOppgaveversjon
+            ?.takeIf { it.oppgavetype.eksternId == eventLagret.oppgavetypeKode() }
+        val nyOppgaveversjon = eventLagret.tilOppgaveversjon(forrigeAvSammeOppgavetype, eventnummer)
+        return oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(nyOppgaveversjon, tx, forrigeAvSammeOppgavetype)
     }
 
     private fun fjernDirtyOgAjourhold(
         eventerMedNummerering: List<Pair<Int, EventLagret>>,
-        sluttversjon: OppgaveV3,
+        sisteVersjonPerOppgavetype: Map<String, Pair<Int, OppgaveV3>>,
         tx: TransactionalSession,
     ) {
+        check(sisteVersjonPerOppgavetype.isNotEmpty()) {
+            "Fant ingen oppgaveversjon å ajourholde for eksternId: ${eventerMedNummerering.first().second.eksternId}"
+        }
         // Batch-oppdater alle dirty-flagg i én SQL-spørring i stedet for én pr event
         eventRepository.fjernAlleDirty(eventerMedNummerering.first().second.nøkkelId, tx)
         // Kjøres alltid som sikkerhetsnett: ajourhold er også del av vanlig event-ingest, og
         // koster lite hvis staten faktisk er uendret.
-        ajourholdTjeneste.ajourholdOppgave(sluttversjon, eventerMedNummerering.last().first, tx)
+        sisteVersjonPerOppgavetype.values.forEach { (eventnummer, sluttversjon) ->
+            ajourholdTjeneste.ajourholdOppgave(sluttversjon, eventnummer, tx)
+        }
     }
 
 

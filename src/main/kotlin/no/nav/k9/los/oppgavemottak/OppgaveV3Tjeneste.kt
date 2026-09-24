@@ -165,6 +165,7 @@ class OppgaveV3Tjeneste(
         //historikkvasktjenesten skal sørge for at oppgaven med internVersjon = eventNr faktisk eksisterer
         oppgaveV3Repository.slettFeltverdier(
             eksternId = innkommendeOppgave.eksternId,
+            oppgavetype = oppgavetype,
             internVersjon = eventNr,
             tx = tx
         )
@@ -180,6 +181,7 @@ class OppgaveV3Tjeneste(
             eksternVersjon = innkommendeOppgave.eksternVersjon,
             status = innkommendeOppgave.status,
             internVersjon = eventNr,
+            oppgavetype = oppgavetype,
             reservasjonsnokkel = innkommendeOppgave.reservasjonsnøkkel,
             tx = tx)
 
@@ -204,7 +206,13 @@ class OppgaveV3Tjeneste(
     }
 
     fun nyEksternversjon(oppgaveDto: OppgaveDto, tx: TransactionalSession): Boolean {
-        return !oppgaveV3Repository.finnesFraFør(tx, oppgaveDto.eksternId, oppgaveDto.eksternVersjon)
+        return !oppgaveV3Repository.finnesFraFør(
+            tx,
+            oppgaveDto.eksternId,
+            oppgaveDto.eksternVersjon,
+            oppgaveDto.type.kode,
+            oppgaveDto.område
+        )
     }
 
     fun tellAntall(): Pair<Long, Long> {
