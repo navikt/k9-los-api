@@ -82,11 +82,17 @@ class EventTilOppgaveAdapter(
         if (eventerMedNummerering.isEmpty()) return statistikktellerInn
 
         var statistikkteller = statistikktellerInn
-        var forrigeOppgaveversjon = hentStartversjon(eventnøkkel, eventerMedNummerering, tx)
         var sisteOppgaveversjon: OppgaveV3? = null
         val sisteVersjonPerOppgavetype = mutableMapOf<String, Pair<Int, OppgaveV3>>()
 
         for ((eventnummer, eventLagret) in eventerMedNummerering) {
+            val forrigeOppgaveversjon = hentForrigeVersjonAvSammeOppgavetype(
+                eventnøkkel = eventnøkkel,
+                eventLagret = eventLagret,
+                eventnummer = eventnummer,
+                sisteVersjonPerOppgavetype = sisteVersjonPerOppgavetype,
+                tx = tx,
+            )
             val oppgave = mapOgLagre(eventLagret, eventnummer, forrigeOppgaveversjon, tx)
             if (oppgave != null) {
                 // Kun i normalflyt: ny versjon er usendt til DVH inntil kvittert.
@@ -99,12 +105,10 @@ class EventTilOppgaveAdapter(
                 )
                 oppgaveOppdatertHandler.håndterOppgaveOppdatert(eventLagret, oppgave, tx)
                 statistikkteller++
-                forrigeOppgaveversjon = oppgave
                 sisteOppgaveversjon = oppgave
-            } else {
-                forrigeOppgaveversjon = hentEksisterendeVersjon(eventnøkkel, eventLagret, eventnummer, tx)
             }
-            forrigeOppgaveversjon?.let { sisteVersjonPerOppgavetype[it.oppgavetype.eksternId] = Pair(eventnummer, it) }
+            val oppgaveversjon = oppgave ?: hentEksisterendeVersjon(eventnøkkel, eventLagret, eventnummer, tx)
+            oppgaveversjon?.let { sisteVersjonPerOppgavetype[it.oppgavetype.eksternId] = Pair(eventnummer, it) }
         }
 
         // Oppdater PEP-cache én gang for siste tilstand, i stedet for per event
@@ -133,18 +137,22 @@ class EventTilOppgaveAdapter(
         if (eventerMedNummerering.isEmpty()) return 0L
 
         var statistikkteller = 0L
-        var forrigeOppgaveversjon = hentStartversjon(eventnøkkel, eventerMedNummerering, tx)
         val sisteVersjonPerOppgavetype = mutableMapOf<String, Pair<Int, OppgaveV3>>()
 
         for ((eventnummer, eventLagret) in eventerMedNummerering) {
+            val forrigeOppgaveversjon = hentForrigeVersjonAvSammeOppgavetype(
+                eventnøkkel = eventnøkkel,
+                eventLagret = eventLagret,
+                eventnummer = eventnummer,
+                sisteVersjonPerOppgavetype = sisteVersjonPerOppgavetype,
+                tx = tx,
+            )
             val oppgave = mapOgLagre(eventLagret, eventnummer, forrigeOppgaveversjon, tx)
             if (oppgave != null) {
                 statistikkteller++
-                forrigeOppgaveversjon = oppgave
-            } else {
-                forrigeOppgaveversjon = hentEksisterendeVersjon(eventnøkkel, eventLagret, eventnummer, tx)
             }
-            forrigeOppgaveversjon?.let { sisteVersjonPerOppgavetype[it.oppgavetype.eksternId] = Pair(eventnummer, it) }
+            val oppgaveversjon = oppgave ?: hentEksisterendeVersjon(eventnøkkel, eventLagret, eventnummer, tx)
+            oppgaveversjon?.let { sisteVersjonPerOppgavetype[it.oppgavetype.eksternId] = Pair(eventnummer, it) }
         }
 
         fjernDirtyOgAjourhold(eventerMedNummerering, sisteVersjonPerOppgavetype, tx)
@@ -170,15 +178,15 @@ class EventTilOppgaveAdapter(
         return VaskeeventSerieutleder.nummererEventseriePerOppgavetype(berikedeEventer)
     }
 
-    private fun hentStartversjon(
+    private fun hentForrigeVersjonAvSammeOppgavetype(
         eventnøkkel: EventNøkkel,
-        eventerMedNummerering: List<Pair<Int, EventLagret>>,
+        eventLagret: EventLagret,
+        eventnummer: Int,
+        sisteVersjonPerOppgavetype: Map<String, Pair<Int, OppgaveV3>>,
         tx: TransactionalSession,
     ): OppgaveV3? {
-        val førsteEventnummer = eventerMedNummerering.first().first
-        // Første dirty melding er ikke første for oppgaven – hent foregående versjon som kontekst.
-        return if (førsteEventnummer > 0) {
-            hentEksisterendeVersjon(eventnøkkel, eventerMedNummerering.first().second, førsteEventnummer - 1, tx)
+        return sisteVersjonPerOppgavetype[eventLagret.oppgavetypeKode()]?.second ?: if (eventnummer > 0) {
+            hentEksisterendeVersjon(eventnøkkel, eventLagret, eventnummer - 1, tx)
         } else {
             null
         }
@@ -202,11 +210,9 @@ class EventTilOppgaveAdapter(
     private fun mapOgLagre(
         eventLagret: EventLagret,
         eventnummer: Int,
-        forrigeOppgaveversjon: OppgaveV3?,
+        forrigeAvSammeOppgavetype: OppgaveV3?,
         tx: TransactionalSession,
     ): OppgaveV3? {
-        val forrigeAvSammeOppgavetype = forrigeOppgaveversjon
-            ?.takeIf { it.oppgavetype.eksternId == eventLagret.oppgavetypeKode() }
         val nyOppgaveversjon = eventLagret.tilOppgaveversjon(forrigeAvSammeOppgavetype, eventnummer)
         return oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(nyOppgaveversjon, tx, forrigeAvSammeOppgavetype)
     }
