@@ -299,6 +299,18 @@ class ReservasjonApisTjeneste(
     private fun endretAvNavn(reservasjon: ReservasjonV3): String? =
         reservasjon.endretAv?.let { saksbehandlerRepository.finnSaksbehandlerMedId(it)?.navn }
 
+    suspend fun hentAlleAktiveReservasjonerNy(område: Områder, kode6: Boolean): List<ReservasjonMedOppgaverDto> {
+        return reservasjonV3Tjeneste.hentAlleAktiveReservasjoner(område).mapNotNull { reservasjonMedOppgaver ->
+            val reservertAv =
+                saksbehandlerRepository.finnSaksbehandlerMedId(reservasjonMedOppgaver.reservasjonV3.reservertAv)!!
+            if (kode6 != reservertAv.skjermet) {
+                null
+            } else {
+                tilReservasjonMedOppgaverDto(reservasjonMedOppgaver, reservertAv)
+            }
+        }
+    }
+
     fun hentAlleAktiveReservasjoner(område: Områder, kode6: Boolean): List<ReservasjonDto> {
         return reservasjonV3Tjeneste.hentAlleAktiveReservasjoner(område).flatMap { reservasjonMedOppgaver ->
             val saksbehandler =

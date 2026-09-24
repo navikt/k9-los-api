@@ -76,7 +76,7 @@ import no.nav.k9.los.nøkkeltall.saksbehandler.nyeogferdigstilte.K9NyeOgFerdigst
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.query.OppgaveQueryApis
 import no.nav.k9.los.oppgaveuthenting.query.OppgaveQueryApisNy
-import no.nav.k9.los.reservasjon.ReservasjonAdminApi
+import no.nav.k9.los.reservasjon.ReservasjonAdminApiNy
 import no.nav.k9.los.reservasjon.ReservasjonApis
 import no.nav.k9.los.reservasjon.ReservasjonApisNy
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerAdminApis
@@ -331,7 +331,7 @@ private fun Route.flerområdeApi() {
 
                 route("avdelingsleder") {
                     route("saksbehandler-admin", { tags("Avdelingsleder / Saksbehandler admin") }) { SaksbehandlerAdminApisNy() }
-                    route("reservasjon-admin", { tags("Avdelingsleder / Reservasjoner") }) { ReservasjonAdminApi() }
+                    route("reservasjon-admin", { tags("Avdelingsleder / Reservasjoner") }) { ReservasjonAdminApiNy() }
                     route("oppgaveko", { tags("Avdelingsleder / Oppgavekøer") }) { OppgaveKoAvdelingslederApisNy() }
                     // Etter hvert: Trenger å lage en for flere områder
                     // route("nokkeltall") { K9NøkkeltallApis() }
