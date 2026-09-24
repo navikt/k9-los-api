@@ -12,6 +12,7 @@ import no.nav.k9.los.infrastruktur.rest.område
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
 import no.nav.k9.los.oppgaveuthenting.OppgaveNøkkelDto
+import no.nav.k9.los.oppgaveuthenting.OppgaveNøkkelUtenOmrådeDto
 import org.koin.ktor.ext.inject
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -30,20 +31,24 @@ internal fun Route.ReservasjonApis() {
     post("/reserver") {
         requestContextService.withRequestContext(call) {
             if (pepClient.harTilgangTilReserveringAvOppgaver()) {
-                val oppgaveIdMedOverstyringDto = call.receive<OppgaveIdMedOverstyringDto>()
+                val oppgaveIdMedOverstyringDto = call.receive<OppgaveNøkkelDtoWrapper>()
                 val navident = coroutineContext.idToken().getNavIdent()
                 val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedIdent(
                     navident,
                     pepClient.harTilgangTilKode6()
                 )
-                    ?: throw IllegalStateException("Fant ikke saksbehandler $navident ved forsøk på å reservasjon av oppgave")
+                    ?: throw IllegalStateException("Fant ikke saksbehandler $navident ved forsøk på reservasjon av oppgave")
 
                 try {
                     log.info("Forsøker å ta reservasjon direkte på ${oppgaveIdMedOverstyringDto.oppgaveNøkkel.oppgaveEksternId} for ${innloggetBruker.navident}")
                     val oppgave = reservasjonApisTjeneste.reserverOppgave(
                         område = coroutineContext.område(),
-                        innloggetBruker = innloggetBruker,
-                        oppgaveIdMedOverstyringDto = oppgaveIdMedOverstyringDto
+                        kode6 = pepClient.harTilgangTilKode6(),
+                        navIdent = coroutineContext.idToken().getNavIdent(),
+                        oppgaveNøkkel = OppgaveNøkkelUtenOmrådeDto(
+                            oppgaveEksternId = oppgaveIdMedOverstyringDto.oppgaveNøkkel.oppgaveEksternId,
+                            oppgaveTypeEksternId = oppgaveIdMedOverstyringDto.oppgaveNøkkel.oppgaveTypeEksternId,
+                        )
                     )
                     call.respond(oppgave)
                 } catch (e: ManglerTilgangException) {

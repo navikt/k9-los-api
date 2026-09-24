@@ -9,6 +9,7 @@ import no.nav.k9.los.infrastruktur.utils.leggTilDagerHoppOverHelg
 import no.nav.k9.los.kodeverk.BehandlingType
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.OppgaveNøkkelDto
+import no.nav.k9.los.oppgaveuthenting.OppgaveNøkkelUtenOmrådeDto
 import no.nav.k9.los.oppgaveuthenting.enkeltoppslag.AktivOppgaveOppslag
 import no.nav.k9.los.oppgaveuthenting.sammendrag.OppgaveSammendragDtoBuilder
 import no.nav.k9.los.saksbehandleradmin.Saksbehandler
@@ -35,15 +36,15 @@ class ReservasjonApisTjeneste(
 
     suspend fun reserverOppgave(
         område: Områder,
-        innloggetBruker: Saksbehandler,
-        oppgaveIdMedOverstyringDto: OppgaveIdMedOverstyringDto
+        kode6: Boolean,
+        navIdent: String,
+        oppgaveNøkkel: OppgaveNøkkelUtenOmrådeDto
     ): OppgaveStatusDto {
         val reserverFra = LocalDateTime.now()
-        val oppgaveNøkkel = oppgaveIdMedOverstyringDto.oppgaveNøkkel
 
         val reserverForSaksbehandler = saksbehandlerRepository.finnSaksbehandlerMedIdent(
-            oppgaveIdMedOverstyringDto.overstyrIdent ?: innloggetBruker.navident!!,
-            innloggetBruker.skjermet
+            navIdent,
+            kode6
         )!!
 
         val reservasjonV3 = transactionalManager.transactionSuspend { tx ->
@@ -59,19 +60,17 @@ class ReservasjonApisTjeneste(
                 reservasjonsnøkkel = oppgave.reservasjonsnøkkel,
                 reserverForId = reserverForSaksbehandler.id,
                 gyldigFra = reserverFra,
-                utføresAvId = innloggetBruker.id,
-                kommentar = oppgaveIdMedOverstyringDto.overstyrBegrunnelse,
+                utføresAvId = reserverForSaksbehandler.id,
+                kommentar = null,
                 gyldigTil = reserverFra.leggTilDagerHoppOverHelg(2),
                 tx = tx
             )
         }
 
-        val saksbehandlerSomHarReservasjon =
-            saksbehandlerRepository.finnSaksbehandlerMedId(reservasjonV3.reservertAv)!!
-        return OppgaveStatusDto(reservasjonV3, innloggetBruker, saksbehandlerSomHarReservasjon)
+        return OppgaveStatusDto(reservasjonV3, reserverForSaksbehandler)
     }
 
-    suspend fun endreReservasjoner(
+    fun endreReservasjoner(
         område: Områder,
         reservasjonEndringDto: List<ReservasjonEndringDto>,
         innloggetBruker: Saksbehandler
@@ -88,7 +87,7 @@ class ReservasjonApisTjeneste(
         }
     }
 
-    private suspend fun endreReservasjon(
+    private fun endreReservasjon(
         område: Områder,
         innloggetBruker: Saksbehandler,
         endringDto: ReservasjonEndringDto,

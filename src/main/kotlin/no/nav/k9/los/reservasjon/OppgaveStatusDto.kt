@@ -15,14 +15,14 @@ class OppgaveStatusDto(
     val kanOverstyres: Boolean? = false,
     val beskjed: Beskjed? = null
 ) {
-    constructor(reservasjonV3: ReservasjonV3, innloggetBruker: Saksbehandler, saksbehandlerSomHarReservasjon: Saksbehandler) : this (
-    erReservert = true,
-    reservertTilTidspunkt = reservasjonV3.gyldigTil,
-    erReservertAvInnloggetBruker = reservasjonV3.reservertAv == innloggetBruker.id,
-    reservertAv = saksbehandlerSomHarReservasjon.navident,
-    reservertAvNavn = saksbehandlerSomHarReservasjon.navn,
-    flyttetReservasjon = null,
-    kanOverstyres = reservasjonV3.reservertAv != innloggetBruker.id
+    constructor(reservasjonV3: ReservasjonV3, saksbehandlerSomHarReservasjon: Saksbehandler) : this(
+        erReservert = true,
+        reservertTilTidspunkt = reservasjonV3.gyldigTil,
+        erReservertAvInnloggetBruker = true,
+        reservertAv = saksbehandlerSomHarReservasjon.navident,
+        reservertAvNavn = saksbehandlerSomHarReservasjon.navn,
+        flyttetReservasjon = null,
+        kanOverstyres = false
     )
 }
 

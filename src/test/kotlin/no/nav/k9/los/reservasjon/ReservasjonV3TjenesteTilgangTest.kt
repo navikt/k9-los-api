@@ -35,7 +35,9 @@ class ReservasjonV3TjenesteTilgangTest {
     private val oppgave = mockk<Oppgave> {
         every { hentVerdi("liggerHosBeslutter") } returns null
     }
-    private val saksbehandler = mockk<Saksbehandler>(relaxed = true)
+    private val saksbehandler = mockk<Saksbehandler>(relaxed = true) {
+        every { områder } returns listOf(område)
+    }
 
     private val tjeneste = ReservasjonV3Tjeneste(
         transactionalManager = mockk(relaxed = true),
