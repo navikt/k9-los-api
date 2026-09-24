@@ -302,7 +302,7 @@ private fun Route.legacyApi() {
 }
 
 private fun Route.flerområdeApi() {
-    route("api/fleromrade", {
+    route("api/wip", {
         specName = "frontend"
     }) {
         route("innlogget-bruker/omrader", { tags("Innlogget bruker") }) { InnloggetBrukersOmråderApi() }
