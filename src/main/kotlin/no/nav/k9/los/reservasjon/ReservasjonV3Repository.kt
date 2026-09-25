@@ -4,6 +4,7 @@ import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.infrastruktur.db.util.InClauseHjelper
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import org.postgresql.util.PSQLException
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -16,16 +17,17 @@ class ReservasjonV3Repository(
 ) {
     private val log: Logger = LoggerFactory.getLogger("ReservasjonV3Repository")
 
-    fun lagreReservasjon(reservasjonV3: ReservasjonV3, tx: TransactionalSession): ReservasjonV3 {
+    fun lagreReservasjon(område: Områder, reservasjonV3: ReservasjonV3, tx: TransactionalSession): ReservasjonV3 {
         try {
             return reservasjonV3.copy(
                 tx.updateAndReturnGeneratedKey(
                     queryOf(
                         """
-                    insert into RESERVASJON_V3(reservertAv, reservasjonsnokkel, gyldig_tidsrom, kommentar)
-                    values (:reservertAv, :nokkel, tsrange(:gyldig_fra, :gyldig_til), :kommentar)
+                    insert into RESERVASJON_V3(omrade_id, reservertAv, reservasjonsnokkel, gyldig_tidsrom, kommentar)
+                    values ((select id from omrade where ekstern_id = :omrade_ekstern_id), :reservertAv, :nokkel, tsrange(:gyldig_fra, :gyldig_til), :kommentar)
                 """.trimIndent(),
                         mapOf(
+                            "omrade_ekstern_id" to område.eksternId,
                             "reservertAv" to reservasjonV3.reservertAv,
                             "nokkel" to reservasjonV3.reservasjonsnøkkel,
                             "kommentar" to reservasjonV3.kommentar,
@@ -48,6 +50,7 @@ class ReservasjonV3Repository(
     }
 
     fun endreReservasjon(
+        område: Områder,
         reservasjonSomSkalEndres: ReservasjonV3,
         endretAvBrukerId: Long,
         nySaksbehandlerId: Long?,
@@ -57,6 +60,7 @@ class ReservasjonV3Repository(
     ): ReservasjonV3 {
         val annullertReservasjonId = annullerAktivReservasjon(reservasjonSomSkalEndres, kommentar ?: "", tx)!!
         val nyReservasjon = lagreReservasjon(
+            område,
             ReservasjonV3(
                 reservasjonsnøkkel = reservasjonSomSkalEndres.reservasjonsnøkkel,
                 reservertAv = nySaksbehandlerId ?: reservasjonSomSkalEndres.reservertAv,
@@ -100,6 +104,7 @@ class ReservasjonV3Repository(
     }
 
     fun forlengReservasjon(
+        område: Områder,
         aktivReservasjon: ReservasjonV3,
         endretAvBrukerId: Long,
         nyTildato: LocalDateTime,
@@ -108,6 +113,7 @@ class ReservasjonV3Repository(
     ): ReservasjonV3 {
         val annullertReservasjonId = annullerAktivReservasjon(aktivReservasjon, kommentar, tx)!!
         val nyReservasjon = lagreReservasjon(
+            område,
             ReservasjonV3(
                 reservertAv = aktivReservasjon.reservertAv,
                 reservasjonsnøkkel = aktivReservasjon.reservasjonsnøkkel,
@@ -131,6 +137,7 @@ class ReservasjonV3Repository(
     }
 
     fun overførReservasjon(
+        område: Områder,
         aktivReservasjon: ReservasjonV3,
         saksbehandlerSomSkalHaReservasjonId: Long,
         endretAvBrukerId: Long,
@@ -143,6 +150,7 @@ class ReservasjonV3Repository(
         val annullertReservasjonId = annullerAktivReservasjon(aktivReservasjon, kommentar, tx)!!
 
         val nyReservasjon = lagreReservasjon(
+            område,
             ReservasjonV3(
                 reservertAv = saksbehandlerSomSkalHaReservasjonId,
                 reservasjonsnøkkel = aktivReservasjon.reservasjonsnøkkel,
@@ -169,19 +177,18 @@ class ReservasjonV3Repository(
         kommentar: String?,
         tx: TransactionalSession
     ): Long? {
+        val id = requireNotNull(aktivReservasjon.id) { "Kan ikke annullere reservasjon uten id" }
         return tx.updateAndReturnGeneratedKey(
             queryOf(
                 """
                     UPDATE public.reservasjon_v3
                     SET annullert_for_utlop = true, sist_endret = localtimestamp, kommentar = :kommentar
-                    WHERE reservertAv = :reservertAv
-                    and reservasjonsnokkel = :reservasjonsnokkel
+                    WHERE id = :id
                     and upper(gyldig_tidsrom) > :now
                     and annullert_for_utlop = false
                     """.trimIndent(),
                 mapOf(
-                    "reservertAv" to aktivReservasjon.reservertAv,
-                    "reservasjonsnokkel" to aktivReservasjon.reservasjonsnøkkel,
+                    "id" to id,
                     "kommentar" to kommentar,
                     "now" to LocalDateTime.now().truncatedTo(ChronoUnit.MICROS),
                 )
@@ -190,6 +197,7 @@ class ReservasjonV3Repository(
     }
 
     fun tellAktiveReservasjonerForSaksbehandlere(
+        område: Områder,
         saksbehandlerId: Set<Long>,
         tx: TransactionalSession
     ): Map<Long, Int> {
@@ -199,13 +207,15 @@ class ReservasjonV3Repository(
                 """
                    select reservertAv, count(*) as antall
                    from reservasjon_v3 r
-                   where r.reservertAv in ($saksbehandlerIdParametre)
-                       and annullert_for_utlop = false
-                       and lower(r.gyldig_tidsrom) <= :now
-                       and upper(r.gyldig_tidsrom) > :now
+                   where r.omrade_id = (select id from omrade where ekstern_id = :omrade_ekstern_id)
+                     and r.reservertAv in ($saksbehandlerIdParametre)
+                     and annullert_for_utlop = false
+                     and lower(r.gyldig_tidsrom) <= :now
+                     and upper(r.gyldig_tidsrom) > :now
                    group by reservertAv
                     """.trimIndent(),
                 buildMap {
+                    put("omrade_ekstern_id", område.eksternId)
                     put("reservertAv", saksbehandlerId)
                     put("now" ,LocalDateTime.now().truncatedTo(ChronoUnit.MICROS))
                     putAll(InClauseHjelper.parameternavnTilVerdierMap(saksbehandlerId, "saksbehandlerId"))
@@ -230,6 +240,7 @@ class ReservasjonV3Repository(
     )
 
     fun hentAktiveReservasjonerForSaksbehandler(
+        område: Områder,
         saksbehandlerId: Long,
         tx: TransactionalSession
     ): List<ReservasjonV3> {
@@ -238,12 +249,14 @@ class ReservasjonV3Repository(
                 """
                    select r.id, r.reservertAv, r.reservasjonsnokkel, lower(r.gyldig_tidsrom) as fra, upper(r.gyldig_tidsrom) as til, r.annullert_for_utlop, r.kommentar as kommentar, re.endretAv
                    from reservasjon_v3 r left outer join reservasjon_v3_endring re on re.ny_reservasjon_id = r.id
-                   where r.reservertAv = :reservertAv
-                       and annullert_for_utlop = false
-                       and lower(r.gyldig_tidsrom) <= :now
-                       and upper(r.gyldig_tidsrom) > :now
+                   where r.omrade_id = (select id from omrade where ekstern_id = :omrade_ekstern_id)
+                     and r.reservertAv = :reservertAv
+                     and annullert_for_utlop = false
+                     and lower(r.gyldig_tidsrom) <= :now
+                     and upper(r.gyldig_tidsrom) > :now
                     """.trimIndent(),
                 mapOf(
+                    "omrade_ekstern_id" to område.eksternId,
                     "reservertAv" to saksbehandlerId,
                     "now" to LocalDateTime.now().truncatedTo(ChronoUnit.MICROS),
                 )
@@ -262,6 +275,7 @@ class ReservasjonV3Repository(
     }
 
     fun hentAlleAktiveReservasjoner(
+        område: Områder,
         tx: TransactionalSession
     ): List<ReservasjonV3> {
         return tx.run(
@@ -277,11 +291,13 @@ class ReservasjonV3Repository(
                        re.endretav as reservasjon_endret_av
                   from reservasjon_v3 r
                   left outer join reservasjon_v3_endring re on re.ny_reservasjon_id = r.id
-                   where annullert_for_utlop = false
-                       and lower(r.gyldig_tidsrom) <= :now
-                       and upper(r.gyldig_tidsrom) > :now
+                   where omrade_id = (select id from omrade where ekstern_id = :omrade_ekstern_id)
+                     and annullert_for_utlop = false
+                     and lower(r.gyldig_tidsrom) <= :now
+                     and upper(r.gyldig_tidsrom) > :now
                 """.trimIndent(),
                 mapOf(
+                    "omrade_ekstern_id" to område.eksternId,
                     "now" to LocalDateTime.now().truncatedTo(ChronoUnit.MICROS),
                 )
             ).map { row ->
@@ -298,35 +314,22 @@ class ReservasjonV3Repository(
         )
     }
 
-    fun hentAktivReservasjonForReservasjonsnøkkel(nøkkel: String, tx: TransactionalSession): ReservasjonV3? {
+    fun hentAktivReservasjonForReservasjonsnøkkel(område: Områder, nøkkel: String, tx: TransactionalSession): ReservasjonV3? {
         val queryString = """
                    select r.id, r.reservertAv, r.reservasjonsnokkel, lower(r.gyldig_tidsrom) as fra, upper(r.gyldig_tidsrom) as til, r.annullert_for_utlop , kommentar as kommentar, re.endretAv
                    from reservasjon_v3 r
                    left outer join reservasjon_v3_endring re on re.ny_reservasjon_id = r.id
-                   where r.reservasjonsnokkel = :nokkel 
-                       and annullert_for_utlop = false
-                       and lower(r.gyldig_tidsrom) <= :now
-                       and upper(r.gyldig_tidsrom) > :now
+                   where r.omrade_id = (select id from omrade where ekstern_id = :omrade_ekstern_id)
+                     and r.reservasjonsnokkel = :nokkel 
+                     and annullert_for_utlop = false
+                     and lower(r.gyldig_tidsrom) <= :now
+                     and upper(r.gyldig_tidsrom) > :now
                 """.trimIndent()
-        /*
-                log.info("spørring hentAktivReservasjonForReserajovsnsnøkkel: ${queryString}")
-                val explain = tx.run(
-                    queryOf(
-                        "explain " + queryString,
-                        mapOf(
-                            "nokkel" to nøkkel,
-                            "now" to LocalDateTime.now().truncatedTo(ChronoUnit.MICROS),
-                        )
-                    ).map { row ->
-                        row.string(1)
-                    }.asList
-                ).joinToString("\n")
-                log.info("explain hentAktivReservasjonForReserajovsnsnøkkel: $explain")
-         */
         return tx.run(
             queryOf(
                 queryString,
                 mapOf(
+                    "omrade_ekstern_id" to område.eksternId,
                     "nokkel" to nøkkel,
                     "now" to LocalDateTime.now().truncatedTo(ChronoUnit.MICROS),
                 )
@@ -363,6 +366,7 @@ class ReservasjonV3Repository(
 
 
     fun hentReservasjonTidslinjeMedEndringer(
+        område: Områder,
         reservasjonsnøkkel: String,
         tx: TransactionalSession
     ): List<ReservasjonV3MedEndring> {
@@ -386,10 +390,11 @@ class ReservasjonV3Repository(
                         re.opprettet as endring_opprettet
                     from reservasjon_v3 r
                     left outer join reservasjon_v3_endring re on re.annullert_reservasjon_id = r.id 
-                    where r.reservasjonsnokkel = :nokkel
+                    where r.omrade_id = (select id from omrade where ekstern_id = :omrade_ekstern_id)
+                      and r.reservasjonsnokkel = :nokkel
                     order by r.opprettet ASC
                 """.trimIndent(),
-                mapOf("nokkel" to reservasjonsnøkkel)
+                mapOf("omrade_ekstern_id" to område.eksternId, "nokkel" to reservasjonsnøkkel)
             ).map { row ->
                 ReservasjonV3MedEndring(
                     id = row.long("reservasjon_id"),

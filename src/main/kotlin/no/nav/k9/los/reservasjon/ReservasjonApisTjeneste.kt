@@ -9,7 +9,9 @@ import no.nav.k9.los.infrastruktur.utils.leggTilDagerHoppOverHelg
 import no.nav.k9.los.kodeverk.BehandlingType
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.OppgaveNøkkelDto
+import no.nav.k9.los.oppgaveuthenting.OppgaveNøkkelUtenOmrådeDto
 import no.nav.k9.los.oppgaveuthenting.enkeltoppslag.AktivOppgaveOppslag
+import no.nav.k9.los.oppgaveuthenting.sammendrag.OppgaveSammendragDtoBuilder
 import no.nav.k9.los.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
 import org.slf4j.Logger
@@ -25,6 +27,7 @@ class ReservasjonApisTjeneste(
     private val reservasjonV3DtoBuilder: ReservasjonV3DtoBuilder,
     private val aktivOppgaveOppslag: AktivOppgaveOppslag,
     private val pepClient: IPepClient,
+    private val oppgaveSammendragDtoBuilder: OppgaveSammendragDtoBuilder,
 ) {
 
     companion object {
@@ -33,15 +36,15 @@ class ReservasjonApisTjeneste(
 
     suspend fun reserverOppgave(
         område: Områder,
-        innloggetBruker: Saksbehandler,
-        oppgaveIdMedOverstyringDto: OppgaveIdMedOverstyringDto
+        kode6: Boolean,
+        navIdent: String,
+        oppgaveNøkkel: OppgaveNøkkelUtenOmrådeDto
     ): OppgaveStatusDto {
         val reserverFra = LocalDateTime.now()
-        val oppgaveNøkkel = oppgaveIdMedOverstyringDto.oppgaveNøkkel
 
         val reserverForSaksbehandler = saksbehandlerRepository.finnSaksbehandlerMedIdent(
-            oppgaveIdMedOverstyringDto.overstyrIdent ?: innloggetBruker.navident!!,
-            innloggetBruker.skjermet
+            navIdent,
+            kode6
         )!!
 
         val reservasjonV3 = transactionalManager.transactionSuspend { tx ->
@@ -57,19 +60,17 @@ class ReservasjonApisTjeneste(
                 reservasjonsnøkkel = oppgave.reservasjonsnøkkel,
                 reserverForId = reserverForSaksbehandler.id,
                 gyldigFra = reserverFra,
-                utføresAvId = innloggetBruker.id,
-                kommentar = oppgaveIdMedOverstyringDto.overstyrBegrunnelse,
+                utføresAvId = reserverForSaksbehandler.id,
+                kommentar = null,
                 gyldigTil = reserverFra.leggTilDagerHoppOverHelg(2),
                 tx = tx
             )
         }
 
-        val saksbehandlerSomHarReservasjon =
-            saksbehandlerRepository.finnSaksbehandlerMedId(reservasjonV3.reservertAv)!!
-        return OppgaveStatusDto(reservasjonV3, innloggetBruker, saksbehandlerSomHarReservasjon)
+        return OppgaveStatusDto(reservasjonV3, reserverForSaksbehandler)
     }
 
-    suspend fun endreReservasjoner(
+    fun endreReservasjoner(
         område: Områder,
         reservasjonEndringDto: List<ReservasjonEndringDto>,
         innloggetBruker: Saksbehandler
@@ -86,25 +87,20 @@ class ReservasjonApisTjeneste(
         }
     }
 
-    private suspend fun endreReservasjon(
+    private fun endreReservasjon(
         område: Områder,
         innloggetBruker: Saksbehandler,
         endringDto: ReservasjonEndringDto,
         tilBrukerIdent: String? = null,
         reserverTil: LocalDate? = null,
         begrunnelse: String? = null
-    ): ReservasjonV3Dto {
+    ) {
         val tilSaksbehandler =
             tilBrukerIdent?.let { saksbehandlerRepository.finnSaksbehandlerMedIdent(it, innloggetBruker.skjermet) }
 
-        val reservasjonsnøkkel = endringDto.reservasjonsnøkkel ?: aktivOppgaveOppslag.hentAktivOppgave(
-            område,
-            endringDto.oppgaveNøkkel!!.oppgaveEksternId,
-            endringDto.oppgaveNøkkel.oppgaveTypeEksternId
-        ).reservasjonsnøkkel
         val nyReservasjon = reservasjonV3Tjeneste.endreReservasjon(
             område = område,
-            reservasjonsnøkkel = reservasjonsnøkkel,
+            reservasjonsnøkkel = endringDto.reservasjonsnøkkel,
             endretAvBrukerId = innloggetBruker.id,
             nyTildato = reserverTil?.let {
                 LocalDateTime.of(
@@ -118,8 +114,6 @@ class ReservasjonApisTjeneste(
 
         val reservertAv = saksbehandlerRepository.finnSaksbehandlerMedId(nyReservasjon.reservasjonV3.reservertAv)!!
         log.info("endreReservasjon: ${nyReservasjon.reservasjonV3}, reservertAv: $reservertAv")
-
-        return reservasjonV3DtoBuilder.byggReservasjonV3Dto(nyReservasjon, reservertAv)
     }
 
     suspend fun forlengReservasjon(
@@ -127,17 +121,28 @@ class ReservasjonApisTjeneste(
         forlengReservasjonDto: ForlengReservasjonDto,
         innloggetBruker: Saksbehandler
     ): ReservasjonV3Dto {
-        val reservasjonsnøkkel =
-            forlengReservasjonDto.reservasjonsnøkkel ?: aktivOppgaveOppslag.hentAktivOppgave(
-                område,
-                forlengReservasjonDto.oppgaveNøkkel!!.oppgaveEksternId,
-                forlengReservasjonDto.oppgaveNøkkel.oppgaveTypeEksternId
-            ).reservasjonsnøkkel
+        val (reservasjon, reservertAv) = forleng(område, forlengReservasjonDto, innloggetBruker)
+        return reservasjonV3DtoBuilder.byggReservasjonV3Dto(reservasjon, reservertAv)
+    }
 
+    suspend fun forlengReservasjonNy(
+        område: Områder,
+        forlengReservasjonDto: ForlengReservasjonDto,
+        innloggetBruker: Saksbehandler
+    ): ReservasjonMedOppgaverDto {
+        val (reservasjon, reservertAv) = forleng(område, forlengReservasjonDto, innloggetBruker)
+        return tilReservasjonMedOppgaverDto(reservasjon, reservertAv)
+    }
+
+    private fun forleng(
+        område: Områder,
+        forlengReservasjonDto: ForlengReservasjonDto,
+        innloggetBruker: Saksbehandler
+    ): Pair<ReservasjonV3MedOppgaver, Saksbehandler> {
         val forlengetReservasjon =
             reservasjonV3Tjeneste.forlengReservasjon(
                 område = område,
-                reservasjonsnøkkel = reservasjonsnøkkel,
+                reservasjonsnøkkel = forlengReservasjonDto.reservasjonsnøkkel,
                 nyTildato = forlengReservasjonDto.nyTilDato,
                 utførtAvBrukerId = innloggetBruker.id,
                 kommentar = forlengReservasjonDto.kommentar
@@ -147,7 +152,7 @@ class ReservasjonApisTjeneste(
             saksbehandlerRepository.finnSaksbehandlerMedId(forlengetReservasjon.reservasjonV3.reservertAv)!!
         log.info("forlengReservasjon: ${forlengetReservasjon.reservasjonV3}, reservertAv: $reservertAv")
 
-        return reservasjonV3DtoBuilder.byggReservasjonV3Dto(forlengetReservasjon, reservertAv)
+        return forlengetReservasjon to reservertAv
     }
 
     suspend fun overførReservasjon(
@@ -155,20 +160,32 @@ class ReservasjonApisTjeneste(
         params: FlyttReservasjonDto,
         innloggetBruker: Saksbehandler
     ): ReservasjonV3Dto {
+        val (reservasjon, tilSaksbehandler) = overfør(område, params, innloggetBruker)
+        return reservasjonV3DtoBuilder.byggReservasjonV3Dto(reservasjon, tilSaksbehandler)
+    }
+
+    suspend fun overførReservasjonNy(
+        område: Områder,
+        params: FlyttReservasjonDto,
+        innloggetBruker: Saksbehandler
+    ): ReservasjonMedOppgaverDto {
+        val (reservasjon, tilSaksbehandler) = overfør(område, params, innloggetBruker)
+        return tilReservasjonMedOppgaverDto(reservasjon, tilSaksbehandler)
+    }
+
+    private fun overfør(
+        område: Områder,
+        params: FlyttReservasjonDto,
+        innloggetBruker: Saksbehandler
+    ): Pair<ReservasjonV3MedOppgaver, Saksbehandler> {
         val tilSaksbehandler = saksbehandlerRepository.finnSaksbehandlerMedIdent(
             params.brukerIdent,
             innloggetBruker.skjermet
         )!!
 
-        val reservasjonsnøkkel = params.reservasjonsnøkkel ?: aktivOppgaveOppslag.hentAktivOppgave(
-            område,
-            params.oppgaveNøkkel!!.oppgaveEksternId,
-            params.oppgaveNøkkel.oppgaveTypeEksternId
-        ).reservasjonsnøkkel
-
         val nyReservasjon = reservasjonV3Tjeneste.overførReservasjon(
             område = område,
-            reservasjonsnøkkel = reservasjonsnøkkel,
+            reservasjonsnøkkel = params.reservasjonsnøkkel,
             reserverTil = LocalDateTime.now().leggTilDagerHoppOverHelg(1),
             tilSaksbehandlerId = tilSaksbehandler.id,
             utførtAvBrukerId = innloggetBruker.id,
@@ -176,7 +193,7 @@ class ReservasjonApisTjeneste(
         )
         log.info("overførReservasjon: ${nyReservasjon.reservasjonV3}, utførtAv: $innloggetBruker., tilSaksbehandler: $tilSaksbehandler")
 
-        return reservasjonV3DtoBuilder.byggReservasjonV3Dto(nyReservasjon, tilSaksbehandler)
+        return nyReservasjon to tilSaksbehandler
     }
 
     private fun annullerReservasjon(
@@ -184,14 +201,9 @@ class ReservasjonApisTjeneste(
         innloggetBruker: Saksbehandler,
         annullerReservasjon: AnnullerReservasjonDto,
     ) {
-        val reservasjonsnøkkel = annullerReservasjon.reservasjonsnøkkel ?: aktivOppgaveOppslag.hentAktivOppgave(
-            område,
-            annullerReservasjon.oppgaveNøkkel!!.oppgaveEksternId,
-            annullerReservasjon.oppgaveNøkkel.oppgaveTypeEksternId
-        ).reservasjonsnøkkel
-
         val annulleringUtført = reservasjonV3Tjeneste.annullerReservasjonHvisFinnes(
-            reservasjonsnøkkel = reservasjonsnøkkel,
+            område = område,
+            reservasjonsnøkkel = annullerReservasjon.reservasjonsnøkkel,
             null,
             annullertAvBrukerId = innloggetBruker.id
         )
@@ -226,7 +238,38 @@ class ReservasjonApisTjeneste(
         }
     }
 
+    suspend fun hentReserverteOppgaverForSaksbehandlerNy(
+        område: Områder,
+        saksbehandler: Saksbehandler
+    ): List<ReservasjonMedOppgaverDto> {
+        return reservasjonV3Tjeneste.hentReservasjonerForSaksbehandler(område, saksbehandler.id)
+            .map { tilReservasjonMedOppgaverDto(it, saksbehandler) }
+    }
+
     suspend fun hentAktivReservasjon(område: Områder, idToken: IIdToken, oppgaveNøkkel: OppgaveNøkkelDto): ReservasjonV3Dto? {
+        val (reservasjon, reservertAv) = finnAktivReservasjon(område, idToken, oppgaveNøkkel) ?: return null
+        return ReservasjonV3Dto(
+            reservasjonV3 = reservasjon,
+            oppgaver = emptyList(),
+            reservertAv = reservertAv,
+            endretAvNavn = null
+        )
+    }
+
+    suspend fun hentAktivReservasjonNy(
+        område: Områder,
+        idToken: IIdToken,
+        oppgaveNøkkel: OppgaveNøkkelDto
+    ): ReservasjonsinfoDto? {
+        val (reservasjon, reservertAv) = finnAktivReservasjon(område, idToken, oppgaveNøkkel) ?: return null
+        return ReservasjonsinfoDto(reservasjon, reservertAv, endretAvNavn(reservasjon))
+    }
+
+    private suspend fun finnAktivReservasjon(
+        område: Områder,
+        idToken: IIdToken,
+        oppgaveNøkkel: OppgaveNøkkelDto
+    ): Pair<ReservasjonV3, Saksbehandler>? {
         val oppgave = aktivOppgaveOppslag.hentAktivOppgave(
                 område,
                 oppgaveNøkkel.oppgaveEksternId,
@@ -235,16 +278,37 @@ class ReservasjonApisTjeneste(
         if (!pepClient.harTilgangTilOppgaveV3(område, idToken, oppgave, Action.read)) {
             throw ManglerTilgangException("Mangler tilgang til oppgave ${oppgave.eksternId}")
         }
-        val reservasjon = reservasjonV3Tjeneste.finnAktivReservasjon(oppgave.reservasjonsnøkkel)
+        val reservasjon = reservasjonV3Tjeneste.finnAktivReservasjon(område, oppgave.reservasjonsnøkkel)
             ?: return null
         val reservertAv = saksbehandlerRepository.finnSaksbehandlerMedId(reservasjon.reservertAv)
             ?: throw IllegalStateException("Fant ikke saksbehandler med id ${reservasjon.reservertAv} som har reservert oppgave ${oppgave.eksternId}")
-        return ReservasjonV3Dto(
-            reservasjonV3 = reservasjon,
-            oppgaver = emptyList(),
-            reservertAv = reservertAv,
-            endretAvNavn = null
+        return reservasjon to reservertAv
+    }
+
+    private suspend fun tilReservasjonMedOppgaverDto(
+        reservasjonMedOppgaver: ReservasjonV3MedOppgaver,
+        reservertAv: Saksbehandler,
+    ): ReservasjonMedOppgaverDto {
+        val reservasjon = reservasjonMedOppgaver.reservasjonV3
+        return ReservasjonMedOppgaverDto(
+            reservasjon = ReservasjonsinfoDto(reservasjon, reservertAv, endretAvNavn(reservasjon)),
+            oppgaver = oppgaveSammendragDtoBuilder.bygg(reservasjonMedOppgaver.oppgaverV3),
         )
+    }
+
+    private fun endretAvNavn(reservasjon: ReservasjonV3): String? =
+        reservasjon.endretAv?.let { saksbehandlerRepository.finnSaksbehandlerMedId(it)?.navn }
+
+    suspend fun hentAlleAktiveReservasjonerNy(område: Områder, kode6: Boolean): List<ReservasjonMedOppgaverDto> {
+        return reservasjonV3Tjeneste.hentAlleAktiveReservasjoner(område).mapNotNull { reservasjonMedOppgaver ->
+            val reservertAv =
+                saksbehandlerRepository.finnSaksbehandlerMedId(reservasjonMedOppgaver.reservasjonV3.reservertAv)!!
+            if (kode6 != reservertAv.skjermet) {
+                null
+            } else {
+                tilReservasjonMedOppgaverDto(reservasjonMedOppgaver, reservertAv)
+            }
+        }
     }
 
     fun hentAlleAktiveReservasjoner(område: Områder, kode6: Boolean): List<ReservasjonDto> {

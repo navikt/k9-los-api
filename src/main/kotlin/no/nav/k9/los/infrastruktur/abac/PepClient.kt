@@ -16,6 +16,7 @@ import no.nav.sif.abac.kontrakt.abac.Diskresjonskode
 import no.nav.sif.abac.kontrakt.abac.dto.SaksnummerDto
 import no.nav.sif.abac.kontrakt.person.AktørId
 import org.slf4j.LoggerFactory
+import java.util.Stack
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.coroutines.coroutineContext
 
@@ -159,8 +160,9 @@ class PepClient(
             }
 
             Områder.AKTIVITETSPENGER -> {
-                log.warn("Forsøker å gjøre tilgangssjekk for andre saksbehandlere, men aktivitetspenger er ikke støttet")
-                throw IkkeImplementertException("Kan ikke tilgangssjekke for andre saksbehandlere på aktivitetspenger")
+                val exception = IkkeImplementertException("Kan ikke tilgangssjekke for andre saksbehandlere på aktivitetspenger")
+                log.warn("Forsøker å gjøre tilgangssjekk for andre saksbehandlere, men aktivitetspenger er ikke støttet", exception)
+                throw exception
             }
         }
     }

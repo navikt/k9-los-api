@@ -1,19 +1,23 @@
 package no.nav.k9.los.domeneadaptere.k9.eventtiloppgave.tilbaketillos
 
 import assertk.assertThat
-import assertk.assertions.*
+import assertk.assertions.hasSize
+import assertk.assertions.isEmpty
+import assertk.assertions.isEqualTo
+import assertk.assertions.isNotEmpty
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.AbstractK9LosIntegrationTest
-import no.nav.k9.los.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.OppgaveTestDataBuilder
+import no.nav.k9.los.domeneadaptere.eventmottak.k9.tilbakekrav.K9TilbakeEventHandler
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.K9TilbakeEventDtoBuilder
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.TestSaksbehandler
-import no.nav.k9.los.domeneadaptere.eventmottak.k9.tilbakekrav.K9TilbakeEventHandler
+import no.nav.k9.los.infrastruktur.idtoken.IdTokenLocal
+import no.nav.k9.los.infrastruktur.rest.CoroutineRequestContext
 import no.nav.k9.los.ko.OppgaveKoTjeneste
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
-import no.nav.k9.los.reservasjon.OppgaveIdMedOverstyringDto
+import no.nav.k9.los.oppgaveuthenting.OppgaveNøkkelUtenOmrådeDto
 import no.nav.k9.los.reservasjon.ReservasjonApisTjeneste
-import no.nav.k9.los.oppgaveuthenting.OppgaveNøkkelDto
+import no.nav.k9.los.saksbehandleradmin.Saksbehandler
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.koin.test.get
@@ -76,15 +80,14 @@ class K9TilbakeTilLosIT : AbstractK9LosIntegrationTest() {
     }
 
     private fun taReservasjon(saksbehandler: Saksbehandler, eksternId: UUID) {
-        runBlocking {
+        runBlocking(CoroutineRequestContext(IdTokenLocal(), Områder.K9)) {
             get<ReservasjonApisTjeneste>().reserverOppgave(
                 Områder.K9,
-                saksbehandler, OppgaveIdMedOverstyringDto(
-                    OppgaveNøkkelDto(
-                        oppgaveEksternId = eksternId.toString(),
-                        oppgaveTypeEksternId = "k9tilbake",
-                        områdeEksternId = Områder.K9
-                    )
+                saksbehandler.skjermet,
+                saksbehandler.navident!!,
+                OppgaveNøkkelUtenOmrådeDto(
+                    oppgaveEksternId = eksternId.toString(),
+                    oppgaveTypeEksternId = "k9tilbake",
                 )
             )
         }

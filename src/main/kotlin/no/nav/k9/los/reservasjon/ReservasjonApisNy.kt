@@ -1,5 +1,7 @@
 package no.nav.k9.los.reservasjon
 
+import io.github.smiley4.ktoropenapi.get
+import io.github.smiley4.ktoropenapi.post
 import io.ktor.http.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
@@ -9,9 +11,9 @@ import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.rest.RequestContextService
 import no.nav.k9.los.infrastruktur.rest.idToken
 import no.nav.k9.los.infrastruktur.rest.område
-import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
 import no.nav.k9.los.oppgaveuthenting.OppgaveNøkkelDto
+import no.nav.k9.los.oppgaveuthenting.OppgaveNøkkelUtenOmrådeDto
 import org.koin.ktor.ext.inject
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -24,10 +26,23 @@ internal fun Route.ReservasjonApisNy() {
     val pepClient by inject<IPepClient>()
     val reservasjonApisTjeneste by inject<ReservasjonApisTjeneste>()
 
-    post("/reserver") {
+    post("/reserver", {
+        operationId = "reserverOppgave"
+        summary = "Reserver oppgave"
+        request {
+            body<OppgaveNøkkelUtenOmrådeDto> { description = "Oppgaven som skal reserveres" }
+        }
+        response {
+            HttpStatusCode.OK to { body<OppgaveStatusDto>() }
+            HttpStatusCode.Forbidden to {
+                body<String>()
+                description = "Brukeren mangler tilgang til å reservere oppgaven"
+            }
+        }
+    }) {
         requestContextService.withRequestContext(call) {
             if (pepClient.harTilgangTilReserveringAvOppgaver()) {
-                val oppgaveIdMedOverstyringDto = call.receive<OppgaveIdMedOverstyringDto>()
+                val oppgaveNøkkel = call.receive<OppgaveNøkkelUtenOmrådeDto>()
                 val navident = coroutineContext.idToken().getNavIdent()
                 val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedIdent(
                     navident,
@@ -36,11 +51,15 @@ internal fun Route.ReservasjonApisNy() {
                     ?: throw IllegalStateException("Fant ikke saksbehandler $navident ved forsøk på å reservasjon av oppgave")
 
                 try {
-                    log.info("Forsøker å ta reservasjon direkte på ${oppgaveIdMedOverstyringDto.oppgaveNøkkel.oppgaveEksternId} for ${innloggetBruker.navident}")
+                    log.info("Forsøker å ta reservasjon direkte på ${oppgaveNøkkel.oppgaveEksternId} for ${innloggetBruker.navident}")
                     val oppgave = reservasjonApisTjeneste.reserverOppgave(
                         område = coroutineContext.område(),
-                        innloggetBruker = innloggetBruker,
-                        oppgaveIdMedOverstyringDto = oppgaveIdMedOverstyringDto
+                        kode6 = pepClient.harTilgangTilKode6(),
+                        navIdent = coroutineContext.idToken().getNavIdent(),
+                        oppgaveNøkkel = OppgaveNøkkelUtenOmrådeDto(
+                            oppgaveEksternId = oppgaveNøkkel.oppgaveEksternId,
+                            oppgaveTypeEksternId = oppgaveNøkkel.oppgaveTypeEksternId,
+                        )
                     )
                     call.respond(oppgave)
                 } catch (e: ManglerTilgangException) {
@@ -52,7 +71,18 @@ internal fun Route.ReservasjonApisNy() {
         }
     }
 
-    get("/reserverte") {
+    get("/reserverte", {
+        operationId = "hentReserverteOppgaver"
+        summary = "Hent reserverte oppgaver"
+        response {
+            HttpStatusCode.OK to { body<List<ReservasjonMedOppgaverDto>>() }
+            HttpStatusCode.Forbidden to { description = "Brukeren mangler basistilgang" }
+            HttpStatusCode.InternalServerError to {
+                body<String>()
+                description = "Innlogget bruker finnes ikke i saksbehandlertabellen"
+            }
+        }
+    }) {
         requestContextService.withRequestContext(call) {
             if (pepClient.harBasisTilgang()) {
                 val innloggetBrukerNavIdent = coroutineContext.idToken().getNavIdent()
@@ -62,11 +92,11 @@ internal fun Route.ReservasjonApisNy() {
                 )
 
                 if (innloggetBruker != null) {
-                    val reservasjonV3Dtos = reservasjonApisTjeneste.hentReserverteOppgaverForSaksbehandler(
+                    val reservasjoner = reservasjonApisTjeneste.hentReserverteOppgaverForSaksbehandlerNy(
                         område = coroutineContext.område(),
                         saksbehandler = innloggetBruker
                     )
-                    call.respond(reservasjonV3Dtos)
+                    call.respond(reservasjoner)
                 } else {
                     log.info("Innlogger bruker med brukernavn $innloggetBrukerNavIdent finnes ikke i saksbehandlertabellen")
                     call.respond(
@@ -80,7 +110,21 @@ internal fun Route.ReservasjonApisNy() {
         }
     }
 
-    post("/opphev") {
+    post("/opphev", {
+        operationId = "opphevReservasjoner"
+        summary = "Opphev reservasjoner"
+        request {
+            body<List<AnnullerReservasjonDto>> { description = "Reservasjonene som skal oppheves" }
+        }
+        response {
+            HttpStatusCode.OK to { description = "Reservasjonene er opphevet" }
+            HttpStatusCode.Forbidden to { description = "Brukeren mangler basistilgang" }
+            HttpStatusCode.NotFound to {
+                body<String>()
+                description = "Ingen aktiv reservasjon ble funnet"
+            }
+        }
+    }) {
         requestContextService.withRequestContext(call) {
             if (pepClient.harBasisTilgang()) {
                 val params = call.receive<List<AnnullerReservasjonDto>>()
@@ -91,9 +135,7 @@ internal fun Route.ReservasjonApisNy() {
 
                 try {
                     log.info(
-                        "Opphever reservasjoner ${
-                            params.map { it.oppgaveNøkkel }.joinToString(", ")
-                        } (Gjort av ${innloggetBruker.navident})"
+                        "Opphever reservasjoner (gjort av ${innloggetBruker.navident})"
                     )
                     reservasjonApisTjeneste.annullerReservasjoner(coroutineContext.område(), params, innloggetBruker)
                     call.respond(HttpStatusCode.OK) //TODO: Hva er evt meningsfullt å returnere her?
@@ -106,7 +148,21 @@ internal fun Route.ReservasjonApisNy() {
         }
     }
 
-    post("/forleng") {
+    post("/forleng", {
+        operationId = "forlengReservasjon"
+        summary = "Forleng reservasjon"
+        request {
+            body<ForlengReservasjonDto> { description = "Reservasjonen og ny sluttdato" }
+        }
+        response {
+            HttpStatusCode.OK to { body<ReservasjonMedOppgaverDto>() }
+            HttpStatusCode.Forbidden to { description = "Brukeren mangler basistilgang" }
+            HttpStatusCode.NotFound to {
+                body<String>()
+                description = "Ingen aktiv reservasjon ble funnet"
+            }
+        }
+    }) {
         requestContextService.withRequestContext(call) {
             if (pepClient.harBasisTilgang()) {
                 val forlengReservasjonDto = call.receive<ForlengReservasjonDto>()
@@ -116,7 +172,7 @@ internal fun Route.ReservasjonApisNy() {
                 )!!
 
                 try {
-                    call.respond(reservasjonApisTjeneste.forlengReservasjon(
+                    call.respond(reservasjonApisTjeneste.forlengReservasjonNy(
                         område = coroutineContext.område(),
                         forlengReservasjonDto = forlengReservasjonDto,
                         innloggetBruker = innloggetBruker
@@ -130,7 +186,21 @@ internal fun Route.ReservasjonApisNy() {
         }
     }
 
-    post("/flytt") {
+    post("/flytt", {
+        operationId = "flyttReservasjon"
+        summary = "Flytt reservasjon"
+        request {
+            body<FlyttReservasjonDto> { description = "Reservasjonen og saksbehandleren den skal flyttes til" }
+        }
+        response {
+            HttpStatusCode.OK to { body<ReservasjonMedOppgaverDto>() }
+            HttpStatusCode.Forbidden to { description = "Brukeren mangler basistilgang" }
+            HttpStatusCode.NotFound to {
+                body<String>()
+                description = "Ingen aktiv reservasjon ble funnet"
+            }
+        }
+    }) {
         requestContextService.withRequestContext(call) {
             if (pepClient.harBasisTilgang()) {
                 val params = call.receive<FlyttReservasjonDto>()
@@ -142,7 +212,7 @@ internal fun Route.ReservasjonApisNy() {
 
                 try {
                     log.info("Flytter reservasjonen til ${params.brukerIdent} (Gjort av ${innloggetBruker.navident})")
-                    call.respond(reservasjonApisTjeneste.overførReservasjon(
+                    call.respond(reservasjonApisTjeneste.overførReservasjonNy(
                         område = coroutineContext.område(),
                         params = params,
                         innloggetBruker = innloggetBruker
@@ -156,7 +226,21 @@ internal fun Route.ReservasjonApisNy() {
         }
     }
 
-    post("/reservasjon/endre") {
+    post("/endre", {
+        operationId = "endreReservasjoner"
+        summary = "Endre reservasjoner"
+        request {
+            body<List<ReservasjonEndringDto>> { description = "Endringene som skal utføres på reservasjonene" }
+        }
+        response {
+            HttpStatusCode.OK to { description = "Reservasjonene er endret" }
+            HttpStatusCode.Forbidden to { description = "Brukeren mangler basistilgang" }
+            HttpStatusCode.NotFound to {
+                body<String>()
+                description = "Ingen aktiv reservasjon ble funnet"
+            }
+        }
+    }) {
         requestContextService.withRequestContext(call) {
             if (pepClient.harBasisTilgang()) {
                 val reservasjonEndringDto = call.receive<List<ReservasjonEndringDto>>()
@@ -179,23 +263,14 @@ internal fun Route.ReservasjonApisNy() {
         }
     }
 
-    post("/flytt/sok") {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.harBasisTilgang()) {
-                val params = call.receive<BrukerIdentDto>()
-                val sokSaksbehandlerMedIdent = saksbehandlerRepository.sokSaksbehandler(
-                    params.brukerIdent,
-                    område = coroutineContext.område(),
-                    skjermet = pepClient.harTilgangTilKode6()
-                )
-                call.respond(sokSaksbehandlerMedIdent)
-            } else {
-                call.respond(HttpStatusCode.Forbidden)
-            }
+    get("/saksbehandlere", {
+        operationId = "hentSaksbehandlereForReservasjon"
+        summary = "Hent saksbehandlere reservasjonen kan flyttes til"
+        response {
+            HttpStatusCode.OK to { body<List<SaksbehandlerPåReservasjonDto>>() }
+            HttpStatusCode.Forbidden to { description = "Brukeren mangler basistilgang" }
         }
-    }
-
-    get("/saksbehandlere") {
+    }) {
         requestContextService.withRequestContext(call) {
             if (pepClient.harBasisTilgang()) {
                 val alleSaksbehandlere = saksbehandlerRepository.hentAlleSaksbehandlere(
@@ -205,7 +280,7 @@ internal fun Route.ReservasjonApisNy() {
                 val saksbehandlerDtoListe =
                     alleSaksbehandlere.filter { saksbehandler -> !saksbehandler.navn.isNullOrBlank() && !saksbehandler.navident.isNullOrBlank() }
                         .map { saksbehandler ->
-                            SaksbehandlerDto(saksbehandler.navident!!, saksbehandler.navn!!)
+                            SaksbehandlerPåReservasjonDto(saksbehandler.navident!!, saksbehandler.navn!!)
                         }
                 call.respond(saksbehandlerDtoListe)
             } else {
@@ -214,7 +289,25 @@ internal fun Route.ReservasjonApisNy() {
         }
     }
 
-    get("/aktiv-reservasjon") {
+    get("/aktiv-reservasjon", {
+        operationId = "hentAktivReservasjon"
+        summary = "Hent aktiv reservasjon"
+        request {
+            queryParameter<String>("oppgaveEksternId") {
+                description = "Oppgavens eksterne id"
+                required = true
+            }
+            queryParameter<String>("oppgaveTypeEksternId") {
+                description = "Oppgavetypens eksterne id"
+                required = true
+            }
+        }
+        response {
+            HttpStatusCode.OK to { body<ReservasjonsinfoDto>() }
+            HttpStatusCode.NoContent to { description = "Oppgaven har ingen aktiv reservasjon" }
+            HttpStatusCode.Forbidden to { description = "Brukeren mangler tilgang til oppgaven" }
+        }
+    }) {
         requestContextService.withRequestContext(call) {
             if (pepClient.harBasisTilgang()) {
                 val oppgaveNøkkel = OppgaveNøkkelDto(
@@ -222,7 +315,7 @@ internal fun Route.ReservasjonApisNy() {
                     call.queryParameters["oppgaveTypeEksternId"]!!,
                     coroutineContext.område()
                 )
-                val aktivReservasjon = reservasjonApisTjeneste.hentAktivReservasjon(
+                val aktivReservasjon = reservasjonApisTjeneste.hentAktivReservasjonNy(
                     område = coroutineContext.område(),
                     idToken = coroutineContext.idToken(),
                     oppgaveNøkkel = oppgaveNøkkel

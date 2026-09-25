@@ -240,4 +240,27 @@ class UttrekkRepositoryTest : AbstractK9LosIntegrationTest() {
         assertThat(uttrekkRepository.hentResultat(Områder.K9, "test", id)).isNull()
         assertThat(feiletUttrekk.fullførtTidspunkt).isNotNull()
     }
+
+    @Test
+    fun `slettForLagretSøk sletter kun når lagret søk tilhører innlogget bruker i området`() {
+        testSaksbehandlerRepository.opprettSaksbehandler(
+            OpprettSaksbehandler(
+                navident = "annen",
+                navn = "Annen Bruker",
+                epost = "annen@nav.no",
+                enhet = null,
+                områder = listOf(Områder.K9),
+            )
+        )
+        val lagretSøkId = lagretSøkRepository.opprett(testLagretSøk)
+        val lagretSøk = lagretSøkRepository.hent(Områder.K9, "test", lagretSøkId)!!
+        val uttrekkId = uttrekkRepository.opprett(Uttrekk.opprettUttrekk(lagretSøk = lagretSøk, lagetAv = saksbehandlerId))
+        val uttrekkTjeneste = get<UttrekkTjeneste>()
+
+        assertThat(uttrekkTjeneste.slettForLagretSøk(Områder.K9, "annen", lagretSøkId)).isEqualTo(0)
+        assertThat(uttrekkRepository.hent(Områder.K9, "test", uttrekkId)).isNotNull()
+
+        assertThat(uttrekkTjeneste.slettForLagretSøk(Områder.K9, "test", lagretSøkId)).isEqualTo(1)
+        assertThat(uttrekkRepository.hent(Områder.K9, "test", uttrekkId)).isNull()
+    }
 }

@@ -1,6 +1,7 @@
 package no.nav.k9.los.domeneadaptere.statistikk
 
 import io.github.smiley4.ktoropenapi.get
+import io.github.smiley4.ktoropenapi.put
 import io.ktor.http.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
@@ -14,7 +15,10 @@ internal fun Route.StatistikkApi() {
     val oppgavestatistikkTjeneste by inject<OppgavestatistikkTjeneste>()
     val pepClient by inject<IPepClient>()
 
-    put {
+    put({
+        tags("Forvaltning")
+        summary = "Spill av usendt statistikk"
+    }) {
         requestContextService.withRequestContext(call) {
             if (pepClient.kanLeggeUtDriftsmelding()) {
                 thread(

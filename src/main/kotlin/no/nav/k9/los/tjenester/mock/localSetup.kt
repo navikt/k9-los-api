@@ -371,7 +371,7 @@ object localSetup : KoinComponent {
         }
         for (i in 0..<antall) {
             val eksternId = UUID.randomUUID()
-            val saksnummer = "AKT" + Random.nextInt(100_000, 999_999)
+            val saksnummer = "AKT" + Random.nextInt(10_000, 99_999)
             val aktørId = Random.nextLong(1_000_000_000_000, 9_000_000_000_000).toString()
             val opprettetBehandling = LocalDateTime.now().minusDays(Random.nextLong(3, 40))
             val eventTid = LocalDateTime.now().minusSeconds((antall - i).toLong())

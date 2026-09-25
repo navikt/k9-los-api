@@ -4,6 +4,9 @@ import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.withContext
+import no.nav.k9.los.infrastruktur.idtoken.IdTokenLocal
+import no.nav.k9.los.infrastruktur.rest.CoroutineRequestContext
 import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.OppgaveTestDataBuilder
 import no.nav.k9.los.infrastruktur.abac.IPepClient
@@ -216,15 +219,17 @@ class SaksbehandlerRepositoryTest : AbstractK9LosIntegrationTest() {
 
         val reservasjonV3Tjeneste = get<ReservasjonV3Tjeneste>()
 
-        reservasjonV3Tjeneste.taReservasjon(
-            Områder.K9,
-            "test",
-            saksbehandler.id,
-            saksbehandler.id,
-            "test",
-            LocalDateTime.now(),
-            LocalDateTime.now().plusDays(1)
-        )
+        withContext(CoroutineRequestContext(IdTokenLocal(), Områder.K9)) {
+            reservasjonV3Tjeneste.taReservasjon(
+                Områder.K9,
+                "test",
+                saksbehandler.id,
+                saksbehandler.id,
+                "test",
+                LocalDateTime.now(),
+                LocalDateTime.now().plusDays(1)
+            )
+        }
 
         reservasjonV3Tjeneste.forlengReservasjon(Områder.K9,"test", LocalDateTime.now().plusDays(2), saksbehandler.id, "test")
 

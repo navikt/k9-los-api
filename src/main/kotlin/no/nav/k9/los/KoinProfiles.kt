@@ -358,6 +358,7 @@ fun common(app: Application, config: Configuration) = module {
             områdeRepository = get(),
             feltdefinisjonTjeneste = get(),
             oppgavetypeTjeneste = get(),
+            frontendUrl = config.aktivitetspengerFrontendUrl(),
         )
     }
 
@@ -488,6 +489,7 @@ fun common(app: Application, config: Configuration) = module {
             reservasjonV3DtoBuilder = get(),
             aktivOppgaveOppslag = get(),
             pepClient = get(),
+            oppgaveSammendragDtoBuilder = get(),
         )
     }
 

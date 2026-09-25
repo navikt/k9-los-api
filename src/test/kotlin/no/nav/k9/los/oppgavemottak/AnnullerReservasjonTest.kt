@@ -32,7 +32,7 @@ class AnnullerReservasjonTest: AbstractK9LosIntegrationTest() {
         oppgavemodellBuilder.byggOppgavemodell()
         transactionalManager = get()
 
-        justRun { reservasjonV3Tjenestemock.annullerReservasjonHvisFinnes(any(), any(), any()) }
+        justRun { reservasjonV3Tjenestemock.annullerReservasjonHvisFinnes(any(), any(), any(), any()) }
     }
 
 
@@ -41,11 +41,11 @@ class AnnullerReservasjonTest: AbstractK9LosIntegrationTest() {
         transactionalManager.transaction { tx ->
             oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(NyOppgaveversjon(oppgavemodellBuilder.lagOppgaveDto(status = Oppgavestatus.AAPEN.toString())), tx)
         }
-        verify(exactly = 0) { reservasjonV3Tjenestemock.annullerReservasjonHvisFinnes(any(), any(), any()) }
+        verify(exactly = 0) { reservasjonV3Tjenestemock.annullerReservasjonHvisFinnes(any(), any(), any(), any()) }
         transactionalManager.transaction { tx ->
             oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(NyOppgaveversjon(oppgavemodellBuilder.lagOppgaveDto(status = Oppgavestatus.LUKKET.toString())), tx)
         }
-        verify(exactly = 1) { reservasjonV3Tjenestemock.annullerReservasjonHvisFinnes(any(), any(), any()) }
+        verify(exactly = 1) { reservasjonV3Tjenestemock.annullerReservasjonHvisFinnes(any(), any(), any(), any()) }
     }
 
     @Test
@@ -71,7 +71,7 @@ class AnnullerReservasjonTest: AbstractK9LosIntegrationTest() {
                 reservasjonsnøkkel = "felles"
             )), tx)
         }
-        verify(exactly = 0) { reservasjonV3Tjenestemock.annullerReservasjonHvisFinnes(any(), any(), any()) }
+        verify(exactly = 0) { reservasjonV3Tjenestemock.annullerReservasjonHvisFinnes(any(), any(), any(), any()) }
         transactionalManager.transaction { tx ->
             oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(NyOppgaveversjon(oppgavemodellBuilder.lagOppgaveDto(
                 id = "test1",
@@ -79,6 +79,6 @@ class AnnullerReservasjonTest: AbstractK9LosIntegrationTest() {
                 reservasjonsnøkkel = "felles"
             )), tx)
         }
-        verify(exactly = 1) { reservasjonV3Tjenestemock.annullerReservasjonHvisFinnes(any(), any(), any()) }
+        verify(exactly = 1) { reservasjonV3Tjenestemock.annullerReservasjonHvisFinnes(any(), any(), any(), any()) }
     }
 }

@@ -54,7 +54,8 @@ class UttrekkTjeneste(
         uttrekkRepository.slett(uttrekk)
     }
 
-    fun slettForLagretSøk(lagretSøkId: Long): Int {
+    fun slettForLagretSøk(område: Områder, navIdent: String, lagretSøkId: Long): Int {
+        lagretSøkRepository.hent(område, navIdent, lagretSøkId) ?: return 0
         return uttrekkRepository.slettForLagretSøk(lagretSøkId)
     }
 

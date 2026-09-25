@@ -1,6 +1,5 @@
 package no.nav.k9.los.lagretsok
 
-import no.nav.k9.los.infrastruktur.utils.IkkeImplementertException
 import no.nav.k9.los.kodeverk.PersonBeskyttelseType
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
@@ -117,7 +116,23 @@ class LagretSøk private constructor(
                     order = emptyList()
                 )
 
-                else -> throw IkkeImplementertException()
+                Områder.AKTIVITETSPENGER -> OppgaveQuery(
+                    filtere = listOf(
+                        FeltverdiOppgavefilter(
+                            område = null,
+                            kode = "oppgavestatus",
+                            operator = EksternFeltverdiOperator.IN,
+                            verdi = listOf(Oppgavestatus.AAPEN.kode, Oppgavestatus.VENTER.kode)
+                        ),
+                        FeltverdiOppgavefilter(
+                            område = null,
+                            kode = "personbeskyttelse",
+                            operator = EksternFeltverdiOperator.IN,
+                            verdi = listOf(if (kode6) PersonBeskyttelseType.KODE6.kode else PersonBeskyttelseType.UGRADERT.kode)
+                        ),
+                    ),
+                    order = emptyList()
+                )
             }
         }
 

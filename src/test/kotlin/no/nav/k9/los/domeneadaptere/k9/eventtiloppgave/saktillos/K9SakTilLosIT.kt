@@ -11,10 +11,10 @@ import no.nav.k9.kodeverk.behandling.aksjonspunkt.Venteårsak
 import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.FeltType
 import no.nav.k9.los.OppgaveTestDataBuilder
+import no.nav.k9.los.domeneadaptere.eventmottak.k9.sak.K9SakEventHandler
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.K9SakEventDtoBuilder
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.TestSaksbehandler
 import no.nav.k9.los.domeneadaptere.k9.eventmottak.builder
-import no.nav.k9.los.domeneadaptere.eventmottak.k9.sak.K9SakEventHandler
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.idtoken.IIdToken
 import no.nav.k9.los.infrastruktur.rest.CoroutineRequestContext
@@ -25,15 +25,14 @@ import no.nav.k9.los.ko.dto.OppgaveKo
 import no.nav.k9.los.kodeverk.BehandlingStatus
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
+import no.nav.k9.los.oppgaveuthenting.OppgaveNøkkelUtenOmrådeDto
 import no.nav.k9.los.oppgaveuthenting.query.OppgaveQueryService
 import no.nav.k9.los.oppgaveuthenting.query.QueryRequest
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.OppgaveQuery
 import no.nav.k9.los.oppgaveuthenting.query.mapping.EksternFeltverdiOperator
-import no.nav.k9.los.reservasjon.OppgaveIdMedOverstyringDto
 import no.nav.k9.los.reservasjon.ReservasjonApisTjeneste
 import no.nav.k9.los.saksbehandleradmin.Saksbehandler
-import no.nav.k9.los.oppgaveuthenting.OppgaveNøkkelDto
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.koin.test.get
@@ -103,14 +102,13 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         assertThat(antallIKø).isEqualTo(0)
 
         val reservasjonTjeneste = get<ReservasjonApisTjeneste>()
-        val reservasjoner = runBlocking {
+        val reservasjoner = runBlocking(CoroutineRequestContext(mockk<IIdToken>(relaxed = true), Områder.K9)) {
             reservasjonTjeneste.reserverOppgave(
                 Områder.K9,
-                TestSaksbehandler.SARA,
-                OppgaveIdMedOverstyringDto(
-                    oppgaveNøkkel = TestOppgaveNøkkel.forK9sak(eksternId)
+                TestSaksbehandler.SARA.skjermet,
+                TestSaksbehandler.SARA.navident!!,
+                TestOppgaveNøkkel.forK9sak(eksternId)
                 )
-            )
             reservasjonTjeneste.hentReserverteOppgaverForSaksbehandler(Områder.K9, TestSaksbehandler.SARA)
         }
 
@@ -535,10 +533,9 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
 }
 
 object TestOppgaveNøkkel {
-    fun forK9sak(eksternId: UUID) = OppgaveNøkkelDto(
+    fun forK9sak(eksternId: UUID) = OppgaveNøkkelUtenOmrådeDto(
         oppgaveEksternId = eksternId.toString(),
         oppgaveTypeEksternId = "k9sak",
-        områdeEksternId = Områder.K9,
     )
 }
 

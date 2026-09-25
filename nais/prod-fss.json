@@ -16,6 +16,7 @@
   "app_k9punsj_url": "https://k9-punsj.intern.nav.no/api",
   "app_k9sak_frontend_url": "https://k9.intern.nav.no/k9/web",
   "app_k9punsj_frontend_url": "https://k9-punsj-frontend.intern.nav.no",
+  "app_aktivitetspenger_frontend_url": "https://aktivitetspenger.intern.nav.no/ung/web",
   "deployment_environment": "p",
   "nokkeltall_enheter": "4400 NAV ARBEID OG YTELSER STYRINGSENHET,4403 NAV ARBEID OG YTELSER KRISTIANIA,4410 NAV ARBEID OG YTELSER SØRLANDET,2830 YTELSESAVDELINGEN"
 }

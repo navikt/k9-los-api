@@ -26,6 +26,7 @@ class Områdesetup(
     private val områdeRepository: OmrådeRepository,
     private val feltdefinisjonTjeneste: FeltdefinisjonTjeneste,
     private val oppgavetypeTjeneste: OppgavetypeTjeneste,
+    private val frontendUrl: String,
 ) {
     private val område = Områder.AKTIVITETSPENGER
 
@@ -33,7 +34,7 @@ class Områdesetup(
         områdeRepository.lagre(område)
         feltdefinisjonTjeneste.oppdater(oppdaterKodeverk())
         feltdefinisjonTjeneste.oppdater(AktivitetspengerFeltdefinisjoner.lagFeltdefinisjoner())
-        oppgavetypeTjeneste.oppdater(AktivitetspengerOppgaver.lagOppgaveDefinisjon())
+        oppgavetypeTjeneste.oppdater(AktivitetspengerOppgaver.lagOppgaveDefinisjon(frontendUrl))
     }
 
     private fun oppdaterKodeverk(): List<KodeverkDto> {

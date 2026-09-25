@@ -1,41 +1,36 @@
 package no.nav.k9.los.domeneadaptere.eventtiloppgave.akt
 
 import assertk.assertThat
-import assertk.assertions.containsExactly
-import assertk.assertions.containsNone
-import assertk.assertions.isEmpty
-import assertk.assertions.isEqualTo
-import assertk.assertions.isFalse
-import assertk.assertions.isNotNull
-import assertk.assertions.isTrue
+import assertk.assertions.*
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
-import io.mockk.verify
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.kodeverk.AktBehandlendeEnhet
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.kodeverk.AktFagsystem
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.oppgavedefinisjon.AktivitetspengerFeltIder
+import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.FeltdefinisjonTjeneste
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.FeltdefinisjonerDto
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.KodeverkDto
-import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.Synlighet
+import no.nav.k9.los.oppgavedefinisjon.omraade.Område
 import no.nav.k9.los.oppgavedefinisjon.omraade.OmrådeRepository
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
+import no.nav.k9.los.oppgavedefinisjon.oppgavetype.Oppgavetype
 import no.nav.k9.los.oppgavedefinisjon.oppgavetype.OppgavetypeTjeneste
 import no.nav.k9.los.oppgavedefinisjon.oppgavetype.OppgavetyperDto
-import no.nav.ung.kodeverk.behandling.BehandlingResultatType
-import no.nav.ung.kodeverk.behandling.BehandlingStatus
-import no.nav.ung.kodeverk.behandling.BehandlingStegType
-import no.nav.ung.kodeverk.behandling.BehandlingType
-import no.nav.ung.kodeverk.behandling.BehandlingÅrsakType
-import no.nav.ung.kodeverk.behandling.FagsakYtelseType
+import no.nav.k9.los.oppgaveuthenting.Oppgave
+import no.nav.k9.los.oppgaveuthenting.Oppgavefelt
+import no.nav.ung.kodeverk.behandling.*
 import no.nav.ung.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
 import no.nav.ung.kodeverk.behandling.aksjonspunkt.Venteårsak
 import org.junit.jupiter.api.Test
+import java.time.LocalDateTime
 
 class OmrådesetupTest {
 
     private class Kjøring(
-        val kodeverk: List<KodeverkDto>
+        val kodeverk: List<KodeverkDto>,
+        val oppgavetyper: OppgavetyperDto,
     )
 
     private fun kjørSetup(): Kjøring {
@@ -51,11 +46,50 @@ class OmrådesetupTest {
         every { feltdefinisjonTjeneste.oppdater(capture(feltdefinisjonerSlot)) } returns Unit
         every { oppgavetypeTjeneste.oppdater(capture(oppgavetyperSlot)) } returns Unit
 
-        Områdesetup(områdeRepository, feltdefinisjonTjeneste, oppgavetypeTjeneste).setup()
+        Områdesetup(områdeRepository, feltdefinisjonTjeneste, oppgavetypeTjeneste, FRONTEND_URL).setup()
 
         return Kjøring(
-            kodeverk = kodeverkSlot.captured
+            kodeverk = kodeverkSlot.captured,
+            oppgavetyper = oppgavetyperSlot.captured,
         )
+    }
+
+    @Test
+    fun `behandlingsurl bygges fra frontend-url og saksnummer i aktivitetspenger-området`() {
+        val oppgavetyper = kjørSetup().oppgavetyper.oppgavetyper
+        assertThat(oppgavetyper).isNotEmpty()
+
+        oppgavetyper.forEach { dto ->
+            val oppgave = Oppgave(
+                eksternId = "1",
+                eksternVersjon = "1",
+                reservasjonsnøkkel = "r",
+                oppgavetype = Oppgavetype(
+                    eksternId = dto.id,
+                    område = Område(eksternId = Områder.AKTIVITETSPENGER.eksternId),
+                    oppgavebehandlingsUrlTemplate = dto.oppgavebehandlingsUrlTemplate,
+                    oppgavefelter = emptySet(),
+                ),
+                status = Oppgavestatus.AAPEN,
+                endretTidspunkt = LocalDateTime.now(),
+                felter = listOf(
+                    Oppgavefelt(
+                        eksternId = AktivitetspengerFeltIder.Sak.SAKSNUMMER,
+                        område = Områder.AKTIVITETSPENGER,
+                        listetype = false,
+                        påkrevd = true,
+                        verdi = "AKT12345",
+                        verdiBigInt = null,
+                    )
+                ),
+            )
+
+            assertThat(oppgave.getOppgaveBehandlingsurl()).isEqualTo("$FRONTEND_URL/fagsak/AKT12345/")
+        }
+    }
+
+    private companion object {
+        const val FRONTEND_URL = "http://aktivitetspenger.frontend"
     }
 
     private fun List<KodeverkDto>.medEksternId(eksternId: String) =

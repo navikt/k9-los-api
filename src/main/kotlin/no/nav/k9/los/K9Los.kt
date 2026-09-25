@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.PropertyNamingStrategies
 import com.fasterxml.jackson.databind.SerializationFeature
 import io.github.smiley4.ktoropenapi.OpenApi
+import io.github.smiley4.ktoropenapi.config.OpenApiPluginConfig
 import io.github.smiley4.ktoropenapi.openApi
 import io.github.smiley4.ktoropenapi.route
 import io.github.smiley4.ktorswaggerui.swaggerUI
@@ -42,13 +43,12 @@ import no.nav.k9.los.domeneadaptere.eventlager.EventlagerApi
 import no.nav.k9.los.domeneadaptere.eventmottak.kafka.KafkaConsumerLifecycleService
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.EventTilOppgaveAdapter
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.HistorikkvaskTjeneste
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.Områdesetup as AktOmrådesetup
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.Områdesetup as K9Områdesetup
 import no.nav.k9.los.domeneadaptere.k9.refreshk9sakoppgaver.K9sakBehandlingsoppfriskingJobb
 import no.nav.k9.los.domeneadaptere.k9.refreshk9sakoppgaver.RefreshK9v3
 import no.nav.k9.los.domeneadaptere.statistikk.OppgavestatistikkTjeneste
 import no.nav.k9.los.domeneadaptere.statistikk.StatistikkApi
 import no.nav.k9.los.driftsmelding.DriftsmeldingerApis
+import no.nav.k9.los.driftsmelding.DriftsmeldingerApisNy
 import no.nav.k9.los.forvaltning.K9ForvaltningApis
 import no.nav.k9.los.infrastruktur.abac.SifAbacPdpUtilgjengeligException
 import no.nav.k9.los.infrastruktur.abac.cache.PepCacheService
@@ -58,6 +58,7 @@ import no.nav.k9.los.infrastruktur.jobbplanlegger.Jobbplanlegger
 import no.nav.k9.los.infrastruktur.jobbplanlegger.PlanlagtJobb
 import no.nav.k9.los.infrastruktur.jobbplanlegger.Tidsvindu
 import no.nav.k9.los.infrastruktur.metrikker.EventlagerNokkeltallPrometheusCollector
+import no.nav.k9.los.infrastruktur.rest.OmrådeUrlSegment
 import no.nav.k9.los.infrastruktur.rest.områdeApi
 import no.nav.k9.los.infrastruktur.utils.IkkeImplementertException
 import no.nav.k9.los.innloggetbruker.InnloggetBrukerApi
@@ -68,21 +69,25 @@ import no.nav.k9.los.ko.OppgaveKoApis
 import no.nav.k9.los.ko.OppgaveKoAvdelingslederApisNy
 import no.nav.k9.los.ko.OppgaveKoSaksbehandlerApisNy
 import no.nav.k9.los.lagretsok.LagretSøkApi
+import no.nav.k9.los.lagretsok.LagretSøkApiNy
 import no.nav.k9.los.nøkkeltall.K9NøkkeltallApis
 import no.nav.k9.los.nøkkeltall.saksbehandler.nyeogferdigstilte.K9NyeOgFerdigstilteApi
 import no.nav.k9.los.nøkkeltall.saksbehandler.nyeogferdigstilte.K9NyeOgFerdigstilteService
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.query.OppgaveQueryApis
-import no.nav.k9.los.reservasjon.ReservasjonAdminApi
+import no.nav.k9.los.oppgaveuthenting.query.OppgaveQueryApisNy
+import no.nav.k9.los.reservasjon.ReservasjonAdminApiNy
 import no.nav.k9.los.reservasjon.ReservasjonApis
 import no.nav.k9.los.reservasjon.ReservasjonApisNy
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerAdminApis
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerAdminApisNy
 import no.nav.k9.los.sisteoppgaver.SisteOppgaverApi
+import no.nav.k9.los.sisteoppgaver.SisteOppgaverApiNy
 import no.nav.k9.los.søkeboks.K9SøkeboksApi
 import no.nav.k9.los.søkeboks.SøkeboksApiNy
 import no.nav.k9.los.tjenester.mock.localSetup
 import no.nav.k9.los.uttrekk.UttrekkApi
+import no.nav.k9.los.uttrekk.UttrekkApiNy
 import no.nav.k9.los.uttrekk.UttrekkJobb
 import org.koin.core.Koin
 import org.koin.core.qualifier.named
@@ -92,6 +97,8 @@ import java.time.Duration
 import java.util.*
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.Områdesetup as AktOmrådesetup
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.Områdesetup as K9Områdesetup
 
 fun main(args: Array<String>): Unit = EngineMain.main(args)
 
@@ -198,10 +205,10 @@ fun Application.k9Los() {
         )
 
         if ((KoinProfile.LOCAL == koin.get<KoinProfile>())) {
-            api()
+            api(eksponerSwagger = true)
         } else {
             authenticate(*issuers.allIssuers()) {
-                api()
+                api(eksponerSwagger = false)
             }
         }
 
@@ -220,19 +227,49 @@ fun Application.k9Los() {
         fromXCorrelationIdHeader()
     }
 
-    install(OpenApi)
+    install(OpenApi) {
+        k9LosOpenApiConfig()
+    }
 }
 
-private fun Route.api() {
+internal fun OpenApiPluginConfig.k9LosOpenApiConfig() {
+    spec("forvaltning") {
+        info {
+            title = "Los forvaltnings-API"
+            description = "Forvaltningsendepunkter for drift og administrasjon av K9 Los."
+        }
+    }
+    spec("frontend") {
+        info {
+            title = "Los frontend/backend-API"
+            description = "Kontrakten mellom frontend og backend med flerområdestøtte."
+        }
+    }
+}
+
+private fun Route.api(eksponerSwagger: Boolean) {
+    if (eksponerSwagger) {
+        route("openapi.json") { openApi("frontend") }
+        get("/") { call.respondRedirect("/swagger") }
+        route("swagger") {
+            swaggerUI(
+                mapOf(
+                    "Frontend" to "/openapi.json",
+                    "Forvaltning" to "/k9/los/api/openapi.json",
+                )
+            )
+        }
+    }
     legacyApi()
-    apiUnderConstruction()
+    flerområdeApi()
 }
 
 private fun Route.legacyApi() {
-    route("k9/los/api") {
+    route("k9/los/api", {
+        specName = "forvaltning"
+    }) {
         områdeApi(Områder.K9) {
-            route("openapi.json") { openApi() }
-            swaggerUI("openapi.json")
+            route("openapi.json") { openApi("forvaltning") }
             route("/forvaltning") {
                 K9ForvaltningApis()
                 route("eventlager") { EventlagerApi() }
@@ -264,42 +301,44 @@ private fun Route.legacyApi() {
     }
 }
 
-private fun Route.apiUnderConstruction() {
-    route("openapi.json") { openApi() }
-    swaggerUI("openapi.json")
+private fun Route.flerområdeApi() {
+    route("api/wip", {
+        specName = "frontend"
+    }) {
+        route("innlogget-bruker/områder", { tags("Innlogget bruker") }) { InnloggetBrukersOmråderApi() }
 
-    route("api/wip") {
-        route("innlogget-bruker/områder") { InnloggetBrukersOmråderApi() }
-
-        områdeApi {
-            route("innlogget-bruker") { InnloggetBrukerApiNy() }
-            route("driftsmeldinger", { tags("Driftsmelding") }) { DriftsmeldingerApis() }
-
-            route("/forvaltning", { tags("Forvaltning") }) {
-                // Finn ut hvilke av disse som fungerer for flere områder
-    //            route("eventlager") { EventlagerApi() }
-    //            forvaltningApis()
-    //            route("statistikk") { StatistikkApi() }
+        route({
+            request {
+                pathParameter<OmrådeUrlSegment>("omrade") {
+                    description = "Området operasjonen gjelder"
+                    required = true
+                }
             }
+        }) {
+            områdeApi {
+                route("innlogget-bruker", { tags("Innlogget bruker") }) { InnloggetBrukerApiNy() }
+                route("driftsmeldinger", { tags("Driftsmelding") }) { DriftsmeldingerApisNy() }
 
-            route("saksbehandler", { tags("Saksbehandler") }) {
-                route("sok") { SøkeboksApiNy() }
-                route("oppgaveko") { OppgaveKoSaksbehandlerApisNy() }
-                route("reservasjoner") { ReservasjonApisNy() }
-                route("siste-oppgaver") { SisteOppgaverApi() }
+                route("saksbehandler") {
+                    route("sok", { tags("Saksbehandler / Søkeboks") }) { SøkeboksApiNy() }
+                    route("oppgaveko", { tags("Saksbehandler / Oppgavekøer") }) { OppgaveKoSaksbehandlerApisNy() }
+                    route("reservasjoner", { tags("Saksbehandler / Reservasjoner") }) { ReservasjonApisNy() }
+                    route("siste-oppgaver", { tags("Saksbehandler / Siste oppgaver") }) { SisteOppgaverApiNy() }
 
-                // Etter hvert: Trenger å lage en for flere områder
-    //            route("nye-og-ferdigstilte") { NyeOgFerdigstilteApiNy() }
-            }
+                    // Etter hvert: Trenger å lage en for flere områder
+                    // route("nye-og-ferdigstilte") { NyeOgFerdigstilteApiNy() }
+                }
 
-            route("avdelingsleder", { tags("Avdelingsleder") }) {
-                route("saksbehandler-admin") { SaksbehandlerAdminApisNy() }
-                route("reservasjon-admin") { ReservasjonAdminApi() }
-                route("oppgaveko") { OppgaveKoAvdelingslederApisNy() }
-    //            route("nokkeltall") { NøkkeltallV3ApisNy() }
-                route("lagret-sok") { LagretSøkApi() }
-                route("uttrekk") { UttrekkApi() }
-                route("query") { OppgaveQueryApis() }
+                route("avdelingsleder") {
+                    route("saksbehandler-admin", { tags("Avdelingsleder / Saksbehandler admin") }) { SaksbehandlerAdminApisNy() }
+                    route("reservasjon-admin", { tags("Avdelingsleder / Reservasjoner") }) { ReservasjonAdminApiNy() }
+                    route("oppgaveko", { tags("Avdelingsleder / Oppgavekøer") }) { OppgaveKoAvdelingslederApisNy() }
+                    // Etter hvert: Trenger å lage en for flere områder
+                    // route("nokkeltall") { K9NøkkeltallApis() }
+                    route("lagret-sok", { tags("Avdelingsleder / Lagrede søk") }) { LagretSøkApiNy() }
+                    route("uttrekk", { tags("Avdelingsleder / Uttrekk") }) { UttrekkApiNy() }
+                    route("query", { tags("Avdelingsleder / Query") }) { OppgaveQueryApisNy() }
+                }
             }
         }
     }
@@ -312,9 +351,11 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
     val oppgavestatistikkTjeneste = koin.get<OppgavestatistikkTjeneste>()
 
     val pepCacheService = koin.get<PepCacheService>()
-    val statusFordelingService = koin.get<no.nav.k9.los.nøkkeltall.avdelingsleder.statusfordeling.K9StatusFordelingService>()
+    val statusFordelingService =
+        koin.get<no.nav.k9.los.nøkkeltall.avdelingsleder.statusfordeling.K9StatusFordelingService>()
     val dagensTallService = koin.get<no.nav.k9.los.nøkkeltall.avdelingsleder.dagenstall.K9DagensTallService>()
-    val perEnhetService = koin.get<no.nav.k9.los.nøkkeltall.avdelingsleder.ferdigstilteperenhet.K9FerdigstiltePerEnhetService>()
+    val perEnhetService =
+        koin.get<no.nav.k9.los.nøkkeltall.avdelingsleder.ferdigstilteperenhet.K9FerdigstiltePerEnhetService>()
     val nyeOgFerdigstilteService = koin.get<K9NyeOgFerdigstilteService>()
     val uttrekkJobb = koin.get<UttrekkJobb>()
 
@@ -343,17 +384,18 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
         }
 
         if (configuration.koinProfile == KoinProfile.LOCAL) {
-            add(PlanlagtJobb.Oppstart(
-                navn = "Testdata",
-                prioritet = 2,
-            ) {
-                localSetup.initSaksbehandlere()
-                localSetup.initPunsjoppgaver(0)
-                localSetup.initTilbakeoppgaver(0)
-                localSetup.initKlageoppgaver(0)
-                localSetup.initK9SakOppgaver(0)
-                localSetup.initAktivitetspengeroppgaver(0)
-            })
+            add(
+                PlanlagtJobb.Oppstart(
+                    navn = "Testdata",
+                    prioritet = 2,
+                ) {
+                    localSetup.initSaksbehandlere()
+                    localSetup.initPunsjoppgaver(0)
+                    localSetup.initTilbakeoppgaver(0)
+                    localSetup.initKlageoppgaver(0)
+                    localSetup.initK9SakOppgaver(0)
+                    localSetup.initAktivitetspengeroppgaver(0)
+                })
         }
 
         // Hyppig oppdatering i arbeidstiden
@@ -510,7 +552,8 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
         )
 
         add(
-            PlanlagtJobb.Periodisk(navn = "RyddOppUttrekkJobb",
+            PlanlagtJobb.Periodisk(
+                navn = "RyddOppUttrekkJobb",
                 prioritet = lavPrioritet,
                 tidsvindu = heleTiden,
                 startForsinkelse = 0.seconds,
@@ -521,7 +564,8 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
         )
 
         add(
-            PlanlagtJobb.Periodisk(navn = "KjørUttrekkJobb",
+            PlanlagtJobb.Periodisk(
+                navn = "KjørUttrekkJobb",
                 prioritet = lavPrioritet,
                 tidsvindu = heleTiden,
                 startForsinkelse = 10.seconds,
