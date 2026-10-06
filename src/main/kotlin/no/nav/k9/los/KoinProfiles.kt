@@ -40,6 +40,8 @@ import no.nav.k9.los.domeneadaptere.k9.refreshk9sakoppgaver.restklient.K9SakServ
 import no.nav.k9.los.domeneadaptere.statistikk.*
 import no.nav.k9.los.driftsmelding.DriftsmeldingRepository
 import no.nav.k9.los.driftsmelding.DriftsmeldingTjeneste
+import no.nav.k9.los.forvaltning.AdminTilkobling
+import no.nav.k9.los.forvaltning.AnalyzeTjeneste
 import no.nav.k9.los.forvaltning.ForvaltningRepository
 import no.nav.k9.los.infrastruktur.abac.*
 import no.nav.k9.los.infrastruktur.abac.cache.PepCacheRepository
@@ -513,6 +515,13 @@ fun common(app: Application, config: Configuration) = module {
         ForvaltningRepository(
             oppgavetypeRepository = get(),
             transactionalManager = get(),
+        )
+    }
+
+    single {
+        AnalyzeTjeneste(
+            dataSource = get(),
+            adminTilkobling = AdminTilkobling.fraConfiguration(config),
         )
     }
 
