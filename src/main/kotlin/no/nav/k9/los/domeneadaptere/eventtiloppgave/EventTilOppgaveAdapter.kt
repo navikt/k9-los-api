@@ -78,27 +78,18 @@ class EventTilOppgaveAdapter(
         eventer: List<EventLagret>? = null,
     ): Long {
         log.info("Oppdaterer oppgave for fagsystem: ${eventnøkkel.fagsystem}, eksternId: ${eventnøkkel.eksternId}")
-<<<<<<< Updated upstream
-        val eventerMedNummerering = hentEventerOgKorriger(eventnøkkel, tx, eventer)
-        if (eventerMedNummerering.isEmpty()) return statistikktellerInn
-=======
-
         val seriesteg = hentEventhandlinger(eventnøkkel, tx, eventer)
         if (seriesteg.isEmpty()) return statistikktellerInn
->>>>>>> Stashed changes
 
         //TODO: Guard for å holde unna UPY inntil videre. Fjernes når UPY er klar for produksjon.
-        val førsteEvent = eventerMedNummerering.first().second
+        val førsteEvent = seriesteg.first().event
         if (førsteEvent is EventLagret.UngSak && førsteEvent.eventDto.ytelseTypeKode == FagsakYtelseType.UNGDOMSYTELSE.kode) {
             return statistikktellerInn
         }
 
         var statistikkteller = statistikktellerInn
         var sisteOppgaveversjon: OppgaveV3? = null
-<<<<<<< Updated upstream
-=======
         val sisteVersjonPerOppgavetype = mutableMapOf<Oppgavetype, Pair<Int, OppgaveV3>>()
->>>>>>> Stashed changes
 
         for (steg in seriesteg) {
             val forrigeOppgaveversjon = hentForrigeVersjon(eventnøkkel, steg, sisteVersjonPerOppgavetype, tx)
@@ -116,11 +107,8 @@ class EventTilOppgaveAdapter(
                 statistikkteller++
                 sisteOppgaveversjon = oppgave
             }
-<<<<<<< Updated upstream
-=======
             (oppgave ?: hentEksisterendeVersjon(eventnøkkel, steg, steg.eventnummer, tx))
                 ?.let { sisteVersjonPerOppgavetype[steg.oppgavetype] = Pair(steg.eventnummer, it) }
->>>>>>> Stashed changes
         }
 
         // Oppdater PEP-cache én gang for siste tilstand, i stedet for per event
@@ -128,11 +116,7 @@ class EventTilOppgaveAdapter(
             oppgaveOppdatertHandler.oppdaterPepCache(sisteOppgaveversjon, tx)
         }
 
-<<<<<<< Updated upstream
-        fjernDirtyOgAjourhold(eventerMedNummerering, forrigeOppgaveversjon!!, tx)
-=======
         fjernDirtyOgAjourhold(seriesteg, sisteVersjonPerOppgavetype, tx)
->>>>>>> Stashed changes
         return statistikkteller
     }
 
@@ -153,11 +137,7 @@ class EventTilOppgaveAdapter(
         if (seriesteg.isEmpty()) return 0L
 
         var statistikkteller = 0L
-<<<<<<< Updated upstream
-        var forrigeOppgaveversjon = hentStartversjon(eventnøkkel, eventerMedNummerering, tx)
-=======
         val sisteVersjonPerOppgavetype = mutableMapOf<Oppgavetype, Pair<Int, OppgaveV3>>()
->>>>>>> Stashed changes
 
         for (steg in seriesteg) {
             val forrigeOppgaveversjon = hentForrigeVersjon(eventnøkkel, steg, sisteVersjonPerOppgavetype, tx)
@@ -165,17 +145,11 @@ class EventTilOppgaveAdapter(
             if (oppgave != null) {
                 statistikkteller++
             }
-<<<<<<< Updated upstream
-        }
-
-        fjernDirtyOgAjourhold(eventerMedNummerering, forrigeOppgaveversjon!!, tx)
-=======
             (oppgave ?: hentEksisterendeVersjon(eventnøkkel, steg, steg.eventnummer, tx))
                 ?.let { sisteVersjonPerOppgavetype[steg.oppgavetype] = Pair(steg.eventnummer, it) }
         }
 
         fjernDirtyOgAjourhold(seriesteg, sisteVersjonPerOppgavetype, tx)
->>>>>>> Stashed changes
         return statistikkteller
     }
 
@@ -187,11 +161,7 @@ class EventTilOppgaveAdapter(
         val låsteEventer = eventer ?: eventRepository.hentAlleEventerMedLås(eventnøkkel, tx)
         // Oppslag mot kildesystemene gjøres samlet for hele serien, slik at mappingen under er ren.
         val berikedeEventer = eventBeriker.berik(låsteEventer)
-<<<<<<< Updated upstream
-        return VaskeeventSerieutleder.korrigerEventnummerForVaskeeventer(berikedeEventer)
-=======
         return utledEventhandlinger(berikedeEventer)
->>>>>>> Stashed changes
     }
 
     private fun hentForrigeVersjon(
@@ -228,17 +198,6 @@ class EventTilOppgaveAdapter(
         forrigeOppgaveversjon: OppgaveV3?,
         tx: TransactionalSession,
     ): OppgaveV3? {
-<<<<<<< Updated upstream
-        val nyOppgaveversjon = eventLagret.tilOppgaveversjon(forrigeOppgaveversjon, eventnummer)
-        return oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(nyOppgaveversjon, tx, forrigeOppgaveversjon)
-    }
-
-    private fun fjernDirtyOgAjourhold(
-        eventerMedNummerering: List<Pair<Int, EventLagret>>,
-        sluttversjon: OppgaveV3,
-        tx: TransactionalSession,
-    ) {
-=======
         check(forrigeOppgaveversjon == null || forrigeOppgaveversjon.oppgavetype.eksternId == eventhandling.oppgavetype.kode) {
             "Forrige oppgaveversjon har type ${forrigeOppgaveversjon?.oppgavetype?.eksternId}, forventet ${eventhandling.oppgavetype.kode}"
         }
@@ -264,12 +223,13 @@ class EventTilOppgaveAdapter(
         check(sisteVersjonPerOppgavetype.isNotEmpty()) {
             "Fant ingen oppgaveversjon å ajourholde for eksternId: ${nummerertEventHandling.first().event.eksternId}"
         }
->>>>>>> Stashed changes
         // Batch-oppdater alle dirty-flagg i én SQL-spørring i stedet for én pr event
         eventRepository.fjernAlleDirty(nummerertEventHandling.first().event.nøkkelId, tx)
         // Kjøres alltid som sikkerhetsnett: ajourhold er også del av vanlig event-ingest, og
         // koster lite hvis staten faktisk er uendret.
-        ajourholdTjeneste.ajourholdOppgave(sluttversjon, eventerMedNummerering.last().first, tx)
+        sisteVersjonPerOppgavetype.values.forEach { (eventnummer, sluttversjon) ->
+            ajourholdTjeneste.ajourholdOppgave(sluttversjon, eventnummer, tx)
+        }
     }
 
 

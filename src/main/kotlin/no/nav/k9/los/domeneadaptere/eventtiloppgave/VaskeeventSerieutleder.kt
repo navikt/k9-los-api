@@ -4,21 +4,6 @@ import no.nav.k9.los.domeneadaptere.eventlager.EventLagret
 import no.nav.k9.los.domeneadaptere.eventlager.Oppgavetype
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 
-<<<<<<< Updated upstream
-object VaskeeventSerieutleder {
-    /**
-     * Nummererer eventserien slik at vaskeeventer ikke forskyver oppgaveversjonene:
-     * en vaskeevent arver nummeret til forrige ordinære event.
-     */
-    internal fun korrigerEventnummerForVaskeeventer(eventer: List<EventLagret>): List<Pair<Int, EventLagret>> {
-        var antallVask = 0
-        return eventer.mapIndexed { index, lagret ->
-            if (lagret.erVaskeevent) {
-                antallVask++
-            }
-            Pair((index - antallVask).coerceAtLeast(0), lagret)
-        }.filter { it.second.dirty }
-=======
 sealed interface NummerertEventHandling {
     val eventnummer: Int
     val event: EventLagret
@@ -55,7 +40,6 @@ internal fun utledEventhandlinger(eventer: List<EventLagret>): List<NummerertEve
             antallVaskPerOppgavetype[oppgavetype] = antallVaskPerOppgavetype.getOrDefault(oppgavetype, 0) + 1
         }
         return (posisjon - antallVaskPerOppgavetype.getOrDefault(oppgavetype, 0)).coerceAtLeast(0)
->>>>>>> Stashed changes
     }
 
     var forrige: Pair<Oppgavetype, EventLagret>? = null
