@@ -93,8 +93,9 @@ class HistorikkvaskTjeneste(
             val eventer = eventRepository.hentAlleEventerMedLås(eventNøkkel, tx)
 
             if (eventer.isNotEmpty()) {
-                // Område og oppgavetype utledes fra eventet selv, ikke hardkodes til K9.
-                oppgaveV3Tjeneste.slettOppgave(eventer.first().oppgavenøkkel(), tx)
+                eventer.map { it.oppgavenøkkel() }.distinct().forEach { oppgavenøkkel ->
+                    oppgaveV3Tjeneste.slettOppgave(oppgavenøkkel, tx)
+                }
                 eventNrForBehandling = eventTilOppgaveAdapter.oppdaterOppgaveForEksternIdUnderHistorikkvask(
                     eventNøkkel, tx, eventer
                 ).toInt()
