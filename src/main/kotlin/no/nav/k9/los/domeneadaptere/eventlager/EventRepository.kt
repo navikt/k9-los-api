@@ -133,7 +133,7 @@ class EventRepository(
 
 
     fun hentAlleEventerMedLås(eventnøkkel: EventNøkkel, tx: TransactionalSession): List<EventLagret> {
-        val eventId = eventnøkkel.id ?: hentOgLåsEventnøkkel(eventnøkkel.fagsystem, eventnøkkel.eksternId, tx)
+        val eventId = hentOgLåsEventnøkkel(eventnøkkel.fagsystem, eventnøkkel.eksternId, tx)
         return tx.run(
             queryOf(
                 """
@@ -184,6 +184,11 @@ class EventRepository(
                         from event e
                         where e.event_nokkel_id = en.id
                         and e.dirty = true
+                    )
+                    and not exists (
+                        select 1
+                        from event_historikkvask_bestilt hb
+                        where hb.event_nokkel_id = en.id
                     )
                     and en.FAGSYSTEM in ('K9SAK','K9TILBAKE','K9KLAGE','PUNSJ', 'UNGSAK')
                 """.trimIndent()

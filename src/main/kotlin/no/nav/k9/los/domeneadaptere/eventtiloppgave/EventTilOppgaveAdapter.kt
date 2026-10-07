@@ -7,6 +7,7 @@ import no.nav.k9.los.domeneadaptere.eventlager.EventLagret
 import no.nav.k9.los.domeneadaptere.eventlager.EventNøkkel
 import no.nav.k9.los.domeneadaptere.eventlager.EventRepository
 import no.nav.k9.los.domeneadaptere.eventlager.Oppgavetype
+import no.nav.k9.los.domeneadaptere.eventmottak.FeilRekkefølgeSjekker
 import no.nav.k9.los.domeneadaptere.statistikk.StatistikkRepository
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.oppgavemottak.AktivOgPartisjonertOppgaveAjourholdTjeneste
@@ -25,6 +26,7 @@ class EventTilOppgaveAdapter(
     private val oppgaveOppdatertHandler: OppgaveOppdatertHandler,
     private val ajourholdTjeneste: AktivOgPartisjonertOppgaveAjourholdTjeneste,
     private val statistikkRepository: StatistikkRepository,
+    private val feilRekkefølgeSjekker: FeilRekkefølgeSjekker,
 ) {
     private val log: Logger = LoggerFactory.getLogger(EventTilOppgaveAdapter::class.java)
 
@@ -78,7 +80,16 @@ class EventTilOppgaveAdapter(
         eventer: List<EventLagret>? = null,
     ): Long {
         log.info("Oppdaterer oppgave for fagsystem: ${eventnøkkel.fagsystem}, eksternId: ${eventnøkkel.eksternId}")
-        val eventhandlinger = hentEventhandlinger(eventnøkkel, tx, eventer, hoppOverUngdomsytelse = true)
+        val låsteEventer = eventer ?: eventRepository.hentAlleEventerMedLås(eventnøkkel, tx)
+        if (feilRekkefølgeSjekker.sjekkFeilRekkefølge(låsteEventer)) {
+            log.warn(
+                "Oppgave med fagsystem: ${eventnøkkel.fagsystem}, eksternId: ${eventnøkkel.eksternId} " +
+                    "har fått meldinger i feil rekkefølge. Bestiller historikkvask."
+            )
+            eventRepository.bestillHistorikkvask(eventnøkkel.fagsystem, eventnøkkel.eksternId, tx)
+            return statistikktellerInn
+        }
+        val eventhandlinger = hentEventhandlinger(eventnøkkel, tx, låsteEventer, hoppOverUngdomsytelse = true)
         if (eventhandlinger.isEmpty()) return statistikktellerInn
 
         var statistikkteller = statistikktellerInn

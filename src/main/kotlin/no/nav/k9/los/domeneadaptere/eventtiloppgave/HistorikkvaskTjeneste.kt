@@ -88,6 +88,8 @@ class HistorikkvaskTjeneste(
 
         var eventNrForBehandling = 0
         transactionalManager.transaction { tx ->
+            // Lås eventnøkkelen før event-radene oppdateres, samme låserekkefølge som eventhandlerne.
+            eventRepository.hentOgLåsEventnøkkel(eventNøkkel.fagsystem, eventNøkkel.eksternId, tx)
             // Dirty settes før eventene hentes, slik at samme uthenting kan gjenbrukes av adapteren.
             eventRepository.settDirty(eventNøkkel, tx)
             val eventer = eventRepository.hentAlleEventerMedLås(eventNøkkel, tx)
