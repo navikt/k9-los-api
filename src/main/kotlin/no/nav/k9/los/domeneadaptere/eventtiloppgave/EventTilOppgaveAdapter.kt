@@ -78,11 +78,11 @@ class EventTilOppgaveAdapter(
         eventer: List<EventLagret>? = null,
     ): Long {
         log.info("Oppdaterer oppgave for fagsystem: ${eventnøkkel.fagsystem}, eksternId: ${eventnøkkel.eksternId}")
-        val seriesteg = hentEventhandlinger(eventnøkkel, tx, eventer)
-        if (seriesteg.isEmpty()) return statistikktellerInn
+        val eventhandlinger = hentEventhandlinger(eventnøkkel, tx, eventer)
+        if (eventhandlinger.isEmpty()) return statistikktellerInn
 
         //TODO: Guard for å holde unna UPY inntil videre. Fjernes når UPY er klar for produksjon.
-        val førsteEvent = seriesteg.first().event
+        val førsteEvent = eventhandlinger.first().event
         if (førsteEvent is EventLagret.UngSak && førsteEvent.eventDto.ytelseTypeKode == FagsakYtelseType.UNGDOMSYTELSE.kode) {
             return statistikktellerInn
         }
@@ -91,9 +91,9 @@ class EventTilOppgaveAdapter(
         var sisteOppgaveversjon: OppgaveV3? = null
         val sisteVersjonPerOppgavetype = mutableMapOf<Oppgavetype, Pair<Int, OppgaveV3>>()
 
-        for (steg in seriesteg) {
-            val forrigeOppgaveversjon = hentForrigeVersjon(eventnøkkel, steg, sisteVersjonPerOppgavetype, tx)
-            val oppgave = mapOgLagre(steg, forrigeOppgaveversjon, tx)
+        for (eventHandling in eventhandlinger) {
+            val forrigeOppgaveversjon = hentForrigeVersjon(eventnøkkel, eventHandling, sisteVersjonPerOppgavetype, tx)
+            val oppgave = mapOgLagre(eventHandling, forrigeOppgaveversjon, tx)
             if (oppgave != null) {
                 // Kun i normalflyt: ny versjon er usendt til DVH inntil kvittert.
                 // Historikkvask skal ikke trigge resend-semantikk for allerede sendte versjoner.
@@ -103,12 +103,12 @@ class EventTilOppgaveAdapter(
                     oppgavetypeEksternId = oppgave.oppgavetype.eksternId,
                     tx = tx,
                 )
-                oppgaveOppdatertHandler.håndterOppgaveOppdatert(steg.event, oppgave, tx)
+                oppgaveOppdatertHandler.håndterOppgaveOppdatert(eventHandling.event, oppgave, tx)
                 statistikkteller++
                 sisteOppgaveversjon = oppgave
             }
-            (oppgave ?: hentEksisterendeVersjon(eventnøkkel, steg, steg.eventnummer, tx))
-                ?.let { sisteVersjonPerOppgavetype[steg.oppgavetype] = Pair(steg.eventnummer, it) }
+            (oppgave ?: hentEksisterendeVersjon(eventnøkkel, eventHandling, eventHandling.eventnummer, tx))
+                ?.let { sisteVersjonPerOppgavetype[eventHandling.oppgavetype] = Pair(eventHandling.eventnummer, it) }
         }
 
         // Oppdater PEP-cache én gang for siste tilstand, i stedet for per event
@@ -116,7 +116,7 @@ class EventTilOppgaveAdapter(
             oppgaveOppdatertHandler.oppdaterPepCache(sisteOppgaveversjon, tx)
         }
 
-        fjernDirtyOgAjourhold(seriesteg, sisteVersjonPerOppgavetype, tx)
+        fjernDirtyOgAjourhold(eventhandlinger, sisteVersjonPerOppgavetype, tx)
         return statistikkteller
     }
 
@@ -133,23 +133,23 @@ class EventTilOppgaveAdapter(
         eventer: List<EventLagret>? = null,
     ): Long {
         log.info("Vasker oppgave for fagsystem: ${eventnøkkel.fagsystem}, eksternId: ${eventnøkkel.eksternId}")
-        val seriesteg = hentEventhandlinger(eventnøkkel, tx, eventer)
-        if (seriesteg.isEmpty()) return 0L
+        val eventhandlinger = hentEventhandlinger(eventnøkkel, tx, eventer)
+        if (eventhandlinger.isEmpty()) return 0L
 
         var statistikkteller = 0L
         val sisteVersjonPerOppgavetype = mutableMapOf<Oppgavetype, Pair<Int, OppgaveV3>>()
 
-        for (steg in seriesteg) {
-            val forrigeOppgaveversjon = hentForrigeVersjon(eventnøkkel, steg, sisteVersjonPerOppgavetype, tx)
-            val oppgave = mapOgLagre(steg, forrigeOppgaveversjon, tx)
+        for (eventHandling in eventhandlinger) {
+            val forrigeOppgaveversjon = hentForrigeVersjon(eventnøkkel, eventHandling, sisteVersjonPerOppgavetype, tx)
+            val oppgave = mapOgLagre(eventHandling, forrigeOppgaveversjon, tx)
             if (oppgave != null) {
                 statistikkteller++
             }
-            (oppgave ?: hentEksisterendeVersjon(eventnøkkel, steg, steg.eventnummer, tx))
-                ?.let { sisteVersjonPerOppgavetype[steg.oppgavetype] = Pair(steg.eventnummer, it) }
+            (oppgave ?: hentEksisterendeVersjon(eventnøkkel, eventHandling, eventHandling.eventnummer, tx))
+                ?.let { sisteVersjonPerOppgavetype[eventHandling.oppgavetype] = Pair(eventHandling.eventnummer, it) }
         }
 
-        fjernDirtyOgAjourhold(seriesteg, sisteVersjonPerOppgavetype, tx)
+        fjernDirtyOgAjourhold(eventhandlinger, sisteVersjonPerOppgavetype, tx)
         return statistikkteller
     }
 
@@ -166,13 +166,13 @@ class EventTilOppgaveAdapter(
 
     private fun hentForrigeVersjon(
         eventnøkkel: EventNøkkel,
-        steg: NummerertEventHandling,
+        eventHandling: NummerertEventHandling,
         sisteVersjonPerOppgavetype: Map<Oppgavetype, Pair<Int, OppgaveV3>>,
         tx: TransactionalSession,
     ): OppgaveV3? {
-        return sisteVersjonPerOppgavetype[steg.oppgavetype]?.second
-            ?: if (steg.eventnummer > 0) {
-                hentEksisterendeVersjon(eventnøkkel, steg, steg.eventnummer - 1, tx)
+        return sisteVersjonPerOppgavetype[eventHandling.oppgavetype]?.second
+            ?: if (eventHandling.eventnummer > 0) {
+                hentEksisterendeVersjon(eventnøkkel, eventHandling, eventHandling.eventnummer - 1, tx)
             } else {
                 null
             }
@@ -180,13 +180,13 @@ class EventTilOppgaveAdapter(
 
     private fun hentEksisterendeVersjon(
         eventnøkkel: EventNøkkel,
-        steg: NummerertEventHandling,
+        eventHandling: NummerertEventHandling,
         internVersjon: Int,
         tx: TransactionalSession,
     ): OppgaveV3? {
         return oppgaveV3Tjeneste.hentOppgaveversjon(
-            steg.event.område,
-            steg.oppgavetype.kode,
+            eventHandling.event.område,
+            eventHandling.oppgavetype.kode,
             eventnøkkel.eksternId,
             internVersjon,
             tx,
