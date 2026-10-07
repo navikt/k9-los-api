@@ -113,6 +113,17 @@ class AktivitetspengerDel1Del2EventserieTest : AbstractK9LosIntegrationTest() {
         assertOppgaver()
     }
 
+    @Test
+    fun `eventtiloppgaveadapter hopper over ungdomsytelse før utledning av eventhandlinger`() {
+        val event = lagEvent(1, lokalkontor = true).copy(ytelseTypeKode = FagsakYtelseType.UNGDOMSYTELSE.kode)
+        lagre(listOf(event))
+
+        val statistikkteller = adapter.oppdaterOppgaveForEksternId(EventNøkkel(Fagsystem.UNGSAK, eksternId.toString()))
+
+        assertThat(statistikkteller).isEqualTo(0L)
+        assertThat(eventRepository.hentAlleEventer(Fagsystem.UNGSAK, eksternId.toString()).single().dirty).isTrue()
+    }
+
     private fun assertOppgaver() {
         assertVersjonskjede(
             DEL1,
@@ -231,4 +242,3 @@ class AktivitetspengerDel1Del2EventserieTest : AbstractK9LosIntegrationTest() {
         aksjonspunkt.kode, status, Venteårsak.UDEFINERT, null, null, opprettetBehandling, opprettetBehandling,
     )
 }
-

@@ -78,14 +78,8 @@ class EventTilOppgaveAdapter(
         eventer: List<EventLagret>? = null,
     ): Long {
         log.info("Oppdaterer oppgave for fagsystem: ${eventnøkkel.fagsystem}, eksternId: ${eventnøkkel.eksternId}")
-        val eventhandlinger = hentEventhandlinger(eventnøkkel, tx, eventer)
+        val eventhandlinger = hentEventhandlinger(eventnøkkel, tx, eventer, hoppOverUngdomsytelse = true)
         if (eventhandlinger.isEmpty()) return statistikktellerInn
-
-        //TODO: Guard for å holde unna UPY inntil videre. Fjernes når UPY er klar for produksjon.
-        val førsteEvent = eventhandlinger.first().event
-        if (førsteEvent is EventLagret.UngSak && førsteEvent.eventDto.ytelseTypeKode == FagsakYtelseType.UNGDOMSYTELSE.kode) {
-            return statistikktellerInn
-        }
 
         var statistikkteller = statistikktellerInn
         var sisteOppgaveversjon: OppgaveV3? = null
@@ -157,10 +151,19 @@ class EventTilOppgaveAdapter(
         eventnøkkel: EventNøkkel,
         tx: TransactionalSession,
         eventer: List<EventLagret>? = null,
+        hoppOverUngdomsytelse: Boolean = false,
     ): List<NummerertEventHandling> {
         val låsteEventer = eventer ?: eventRepository.hentAlleEventerMedLås(eventnøkkel, tx)
         // Oppslag mot kildesystemene gjøres samlet for hele serien, slik at mappingen under er ren.
         val berikedeEventer = eventBeriker.berik(låsteEventer)
+        // TODO: Hold unna UPY inntil videre. Fjernes når UPY er klar for produksjon.
+        val førsteEvent = berikedeEventer.firstOrNull()
+        if (hoppOverUngdomsytelse &&
+            førsteEvent is EventLagret.UngSak &&
+            førsteEvent.eventDto.ytelseTypeKode == FagsakYtelseType.UNGDOMSYTELSE.kode
+        ) {
+            return emptyList()
+        }
         return utledEventhandlinger(berikedeEventer)
     }
 
