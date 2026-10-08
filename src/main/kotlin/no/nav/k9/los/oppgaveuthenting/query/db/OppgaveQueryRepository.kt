@@ -5,6 +5,8 @@ import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.kodeverk.AktOppgavetypenavn
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.kodeverk.K9Oppgavetypenavn
 import no.nav.k9.los.kodeverk.PersonBeskyttelseType
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.FeltdefinisjonRepository
@@ -37,7 +39,11 @@ class OppgaveQueryRepository(
     }
 
     @WithSpan
-    private fun hentAlleFelterMedMer(område: Områder, medKodeverk: Boolean = true, tx: TransactionalSession): List<OppgavefeltMedMer> {
+    private fun hentAlleFelterMedMer(
+        område: Områder,
+        medKodeverk: Boolean = true,
+        tx: TransactionalSession
+    ): List<OppgavefeltMedMer> {
         val felterFraDatabase = tx.run(
             queryOf(
                 """
@@ -108,6 +114,34 @@ class OppgaveQueryRepository(
             ),
             Oppgavefelt(
                 område = null,
+                kode = "oppgavetype",
+                visningsnavn = "Oppgavetype",
+                tolkes_som = "String",
+                synlighet = Synlighet.OVER_STREKEN,
+                verdiforklaringer = when (område) {
+                    Områder.K9 ->
+                        K9Oppgavetypenavn.entries.map {
+                            Verdiforklaring(
+                                verdi = it.kode,
+                                visningsnavn = it.name,
+                                synlighet = Synlighet.UNDER_STREKEN,
+                                gruppering = null
+                            )
+                        }
+
+                    Områder.AKTIVITETSPENGER ->
+                        AktOppgavetypenavn.entries.map {
+                            Verdiforklaring(
+                                verdi = it.kode,
+                                visningsnavn = it.navn,
+                                synlighet = Synlighet.OVER_STREKEN,
+                                gruppering = null
+                            )
+                        }
+                }
+            ),
+            Oppgavefelt(
+                område = null,
                 "sistEndret",
                 "Tidspunkt siste endring",
                 "Timestamp",
@@ -137,12 +171,14 @@ class OppgaveQueryRepository(
                 tolkes_som = "String",
                 synlighet = Synlighet.SKJULT,
                 verdiforklaringerErUttømmende = true,
-                verdiforklaringer = Spørringstrategi.entries.map { Verdiforklaring(
-                    it.name,
-                    it.navn,
-                    Synlighet.OVER_STREKEN,
-                    null
-                ) }
+                verdiforklaringer = Spørringstrategi.entries.map {
+                    Verdiforklaring(
+                        it.name,
+                        it.navn,
+                        Synlighet.OVER_STREKEN,
+                        null
+                    )
+                }
             ),
             Oppgavefelt(
                 område = null,
