@@ -74,6 +74,7 @@ class EventTilOppgaveAdapterSpec : KoinTest, FreeSpec() {
             oppgaveOppdatertHandler = oppgaveOppdatertHandler,
             ajourholdTjeneste = get(),
             statistikkRepository = get(),
+            feilRekkefølgeSjekker = get(),
         )
 
         oppgaveQueryService = get()

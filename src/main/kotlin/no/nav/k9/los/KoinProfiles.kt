@@ -172,7 +172,6 @@ fun common(app: Application, config: Configuration) = module {
             transactionalManager = get(),
             eventTilOppgaveAdapter = get(),
             eventRepository = get(),
-            feilRekkefølgeSjekker = get(),
         )
     }
 
@@ -181,7 +180,6 @@ fun common(app: Application, config: Configuration) = module {
             transactionalManager = get(),
             eventRepository = get(),
             oppgaveAdapter = get(),
-            feilRekkefølgeSjekker = get(),
         )
     }
 
@@ -190,7 +188,6 @@ fun common(app: Application, config: Configuration) = module {
             transactionalManager = get(),
             eventRepository = get(),
             oppgaveAdapter = get(),
-            feilRekkefølgeSjekker = get(),
         )
     }
 
@@ -199,15 +196,14 @@ fun common(app: Application, config: Configuration) = module {
             transactionalManager = get(),
             oppgaveAdapter = get(),
             eventRepository = get(),
-            feilRekkefølgeSjekker = get(),
         )
     }
 
     single {
         UngSakEventHandler(
             eventRepository = get(),
+            eventTilOppgaveAdapter = get(),
             transactionalManager = get(),
-            feilRekkefølgeSjekker = get(),
         )
     }
 
@@ -371,6 +367,7 @@ fun common(app: Application, config: Configuration) = module {
             oppgaveOppdatertHandler = get<OppgaveOppdatertHandler>(),
             ajourholdTjeneste = get<AktivOgPartisjonertOppgaveAjourholdTjeneste>(),
             statistikkRepository = get<StatistikkRepository>(),
+            feilRekkefølgeSjekker = get(),
         )
     }
 

@@ -88,13 +88,16 @@ class HistorikkvaskTjeneste(
 
         var eventNrForBehandling = 0
         transactionalManager.transaction { tx ->
+            // Lås eventnøkkelen før event-radene oppdateres, samme låserekkefølge som eventhandlerne.
+            eventRepository.hentOgLåsEventnøkkel(eventNøkkel.fagsystem, eventNøkkel.eksternId, tx)
             // Dirty settes før eventene hentes, slik at samme uthenting kan gjenbrukes av adapteren.
             eventRepository.settDirty(eventNøkkel, tx)
             val eventer = eventRepository.hentAlleEventerMedLås(eventNøkkel, tx)
 
             if (eventer.isNotEmpty()) {
-                // Område og oppgavetype utledes fra eventet selv, ikke hardkodes til K9.
-                oppgaveV3Tjeneste.slettOppgave(eventer.first().oppgavenøkkel(), tx)
+                eventer.map { it.oppgavenøkkel() }.distinct().forEach { oppgavenøkkel ->
+                    oppgaveV3Tjeneste.slettOppgave(oppgavenøkkel, tx)
+                }
                 eventNrForBehandling = eventTilOppgaveAdapter.oppdaterOppgaveForEksternIdUnderHistorikkvask(
                     eventNøkkel, tx, eventer
                 ).toInt()

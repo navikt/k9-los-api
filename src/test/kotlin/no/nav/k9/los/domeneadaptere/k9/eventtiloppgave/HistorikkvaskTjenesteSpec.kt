@@ -4,7 +4,6 @@ import io.kotest.core.spec.IsolationMode
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.equals.shouldBeEqual
-import io.kotest.matchers.equals.shouldNotBeEqual
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import kotliquery.queryOf
@@ -84,11 +83,18 @@ class HistorikkvaskTjenesteSpec: FreeSpec(), KoinTest {
                         eventRepository.lagre(Fagsystem.PUNSJ, event2, tx)
                     }
                     oppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(Fagsystem.PUNSJ, eksternId.toString()))
-                    "skal kunne korrigeres med historikkvask" {
-                        val uvasketHistorikk = hentOppgavehistorikk(eksternId.toString())
-                        uvasketHistorikk.size shouldBe 3
-                        uvasketHistorikk.sortedBy { it.second } shouldNotBeEqual uvasketHistorikk.sortedBy { it.third }
+                    "skal ikke prosesseres, men bestille historikkvask" {
+                        hentOppgavehistorikk(eksternId.toString()).size shouldBe 2
+                        eventRepository.hentAlleHistorikkvaskbestillinger()
+                            .filter { it.eksternId == eksternId.toString() } shouldHaveSize 1
+                    }
 
+                    "skal ikke plukkes av vaktmester mens historikkvask er bestilt" {
+                        eventRepository.hentAlleEksternIderMedDirtyEventer()
+                            .filter { it.eksternId == eksternId.toString() } shouldHaveSize 0
+                    }
+
+                    "skal korrigeres med historikkvask" {
                         historikkvaskTjeneste.vaskBestilling(HistorikkvaskBestilling(null, eksternId.toString(), Fagsystem.PUNSJ))
 
                         val vasketHistorikk = hentOppgavehistorikk(eksternId.toString())

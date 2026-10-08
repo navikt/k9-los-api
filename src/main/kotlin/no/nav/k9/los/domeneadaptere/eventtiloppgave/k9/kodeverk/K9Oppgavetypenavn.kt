@@ -3,10 +3,11 @@ package no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.kodeverk
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonValue
 import no.nav.k9.los.domeneadaptere.eventlager.Fagsystem
+import no.nav.k9.los.domeneadaptere.eventlager.Oppgavetype
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgavemottak.OppgaveDtoType
 
-enum class K9Oppgavetypenavn(@JsonValue override val kode: String) : OppgaveDtoType {
+enum class K9Oppgavetypenavn(@JsonValue override val kode: String) : OppgaveDtoType, Oppgavetype {
     SAK("k9sak"),
     KLAGE("k9klage"),
     TILBAKE("k9tilbake"),

@@ -7,7 +7,6 @@ import assertk.assertions.isFalse
 import assertk.assertions.isNull
 import assertk.assertions.isTrue
 import no.nav.k9.los.AbstractK9LosIntegrationTest
-import no.nav.k9.los.domeneadaptere.eventlager.EventLagret
 import no.nav.k9.los.domeneadaptere.eventlager.EventNøkkel
 import no.nav.k9.los.domeneadaptere.eventlager.EventRepository
 import no.nav.k9.los.domeneadaptere.eventlager.Fagsystem
@@ -15,6 +14,7 @@ import no.nav.k9.los.domeneadaptere.eventmottak.ung.sak.UngSakEventDto
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.kodeverk.AktOppgavetypenavn
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
+import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgavemottak.OppgaveV3Tjeneste
 import no.nav.ung.kodeverk.behandling.BehandlingResultatType
@@ -33,6 +33,7 @@ import org.koin.test.get
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
+import kotlin.reflect.KClass
 import no.nav.ung.kodeverk.Fagsystem as UngFagsystem
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.Områdesetup as AktOmrådesetup
 
@@ -70,22 +71,25 @@ class AktivitetspengerDel1Del2EventserieTest : AbstractK9LosIntegrationTest() {
     }
 
     @Test
-    fun `vaskeeventserieutleder nummererer eventserien per oppgavetype`() {
+    fun `vaskeeventserieutleder nummererer eventserien per oppgavetype og lukker forrige oppgavetype ved skifte`() {
         lagre(eventserie)
         val eventer = eventRepository.hentAlleEventer(Fagsystem.UNGSAK, eksternId.toString())
 
         val forventet = listOf(
-            Triple(0, DEL1, eksternVersjoner[0]),
-            Triple(1, DEL1, eksternVersjoner[1]),
-            Triple(0, DEL2, eksternVersjoner[2]),
-            Triple(2, DEL1, eksternVersjoner[3]),
-            Triple(1, DEL2, eksternVersjoner[4]),
-            Triple(2, DEL2, eksternVersjoner[5]),
+            Forventet(NummerertEventHandling.MapEventHandling::class, 0, DEL1, eksternVersjoner[0]),
+            Forventet(NummerertEventHandling.MapEventHandling::class, 1, DEL1, eksternVersjoner[1]),
+            Forventet(NummerertEventHandling.LukkOppgavetype::class, 2, DEL1, eksternVersjoner[2]),
+            Forventet(NummerertEventHandling.MapEventHandling::class, 0, DEL2, eksternVersjoner[2]),
+            Forventet(NummerertEventHandling.LukkOppgavetype::class, 1, DEL2, eksternVersjoner[3]),
+            Forventet(NummerertEventHandling.MapEventHandling::class, 3, DEL1, eksternVersjoner[3]),
+            Forventet(NummerertEventHandling.LukkOppgavetype::class, 4, DEL1, eksternVersjoner[4]),
+            Forventet(NummerertEventHandling.MapEventHandling::class, 2, DEL2, eksternVersjoner[4]),
+            Forventet(NummerertEventHandling.MapEventHandling::class, 3, DEL2, eksternVersjoner[5]),
         )
 
-        assertThat(VaskeeventSerieutleder.nummererEventseriePerOppgavetype(eventer).tilTriple())
+        assertThat(utledEventhandlinger(eventer).tilForventet())
             .containsExactly(*forventet.toTypedArray())
-        assertThat(VaskeeventSerieutleder.nummererEventseriePerOppgavetype(eventer).tilTriple())
+        assertThat(utledEventhandlinger(eventer).tilForventet())
             .containsExactly(*forventet.toTypedArray())
     }
 
@@ -109,26 +113,57 @@ class AktivitetspengerDel1Del2EventserieTest : AbstractK9LosIntegrationTest() {
         assertOppgaver()
     }
 
+    @Test
+    fun `eventtiloppgaveadapter hopper over ungdomsytelse før utledning av eventhandlinger`() {
+        val event = lagEvent(1, lokalkontor = true).copy(ytelseTypeKode = FagsakYtelseType.UNGDOMSYTELSE.kode)
+        lagre(listOf(event))
+
+        val statistikkteller = adapter.oppdaterOppgaveForEksternId(EventNøkkel(Fagsystem.UNGSAK, eksternId.toString()))
+
+        assertThat(statistikkteller).isEqualTo(0L)
+        assertThat(eventRepository.hentAlleEventer(Fagsystem.UNGSAK, eksternId.toString()).single().dirty).isTrue()
+    }
+
     private fun assertOppgaver() {
-        assertVersjonskjede(DEL1, listOf(eksternVersjoner[0], eksternVersjoner[1], eksternVersjoner[3]), "del1")
-        assertVersjonskjede(DEL2, listOf(eksternVersjoner[2], eksternVersjoner[4], eksternVersjoner[5]), "del2")
+        assertVersjonskjede(
+            DEL1,
+            listOf(
+                eksternVersjoner[0] to Oppgavestatus.AAPEN,
+                eksternVersjoner[1] to Oppgavestatus.AAPEN,
+                eksternVersjoner[2] to Oppgavestatus.LUKKET,
+                eksternVersjoner[3] to Oppgavestatus.AAPEN,
+                eksternVersjoner[4] to Oppgavestatus.LUKKET,
+            ),
+            "del1"
+        )
+        assertVersjonskjede(
+            DEL2,
+            listOf(
+                eksternVersjoner[2] to Oppgavestatus.AAPEN,
+                eksternVersjoner[3] to Oppgavestatus.LUKKET,
+                eksternVersjoner[4] to Oppgavestatus.AAPEN,
+                eksternVersjoner[5] to Oppgavestatus.AAPEN,
+            ),
+            "del2"
+        )
         assertThat(eventRepository.hentAlleEventer(Fagsystem.UNGSAK, eksternId.toString()).none { it.dirty }).isTrue()
     }
 
-    private fun assertVersjonskjede(oppgavetype: String, forventedeEksternVersjoner: List<String>, del: String) {
+    private fun assertVersjonskjede(oppgavetype: String, forventedeVersjoner: List<Pair<String, Oppgavestatus>>, del: String) {
         transactionalManager.transaction { tx ->
             assertThat(
                 oppgaveV3Tjeneste.hentHøyesteInternVersjon(eksternId.toString(), oppgavetype, Områder.AKTIVITETSPENGER, tx)
-            ).isEqualTo(forventedeEksternVersjoner.lastIndex)
+            ).isEqualTo(forventedeVersjoner.lastIndex)
 
-            forventedeEksternVersjoner.forEachIndexed { internVersjon, eksternVersjon ->
+            forventedeVersjoner.forEachIndexed { internVersjon, (eksternVersjon, status) ->
                 val oppgave = oppgaveV3Tjeneste.hentOppgaveversjon(
                     Områder.AKTIVITETSPENGER, oppgavetype, eksternId.toString(), internVersjon, tx
                 )!!
                 assertThat(oppgave.oppgavetype.eksternId).isEqualTo(oppgavetype)
                 assertThat(oppgave.eksternVersjon).isEqualTo(eksternVersjon)
+                assertThat(oppgave.status).isEqualTo(status)
                 assertThat(oppgave.reservasjonsnøkkel).isEqualTo("AKT_b_${del}_1234567890123")
-                if (internVersjon == forventedeEksternVersjoner.lastIndex) {
+                if (internVersjon == forventedeVersjoner.lastIndex) {
                     assertThat(oppgave.aktiv).isTrue()
                 } else {
                     assertThat(oppgave.aktiv).isFalse()
@@ -137,17 +172,19 @@ class AktivitetspengerDel1Del2EventserieTest : AbstractK9LosIntegrationTest() {
 
             assertThat(
                 oppgaveV3Tjeneste.hentOppgaveversjon(
-                    Områder.AKTIVITETSPENGER, oppgavetype, eksternId.toString(), forventedeEksternVersjoner.size, tx
+                    Områder.AKTIVITETSPENGER, oppgavetype, eksternId.toString(), forventedeVersjoner.size, tx
                 )
             ).isNull()
 
             val aktiv = oppgaveV3Tjeneste.hentAktivOppgave(eksternId.toString(), oppgavetype, Områder.AKTIVITETSPENGER, tx)
-            assertThat(aktiv.eksternVersjon).isEqualTo(forventedeEksternVersjoner.last())
+            assertThat(aktiv.eksternVersjon).isEqualTo(forventedeVersjoner.last().first)
         }
     }
 
-    private fun List<Pair<Int, EventLagret>>.tilTriple() =
-        map { (nummer, event) -> Triple(nummer, event.oppgavetypeKode(), event.eksternVersjon) }
+    private data class Forventet(val steg: KClass<out NummerertEventHandling>, val eventnummer: Int, val oppgavetype: String, val eksternVersjon: String)
+
+    private fun List<NummerertEventHandling>.tilForventet() =
+        map { Forventet(it::class, it.eventnummer, it.oppgavetype.kode, it.event.eksternVersjon) }
 
     private fun lagre(eventer: List<UngSakEventDto>) {
         transactionalManager.transaction { tx ->
@@ -205,4 +242,3 @@ class AktivitetspengerDel1Del2EventserieTest : AbstractK9LosIntegrationTest() {
         aksjonspunkt.kode, status, Venteårsak.UDEFINERT, null, null, opprettetBehandling, opprettetBehandling,
     )
 }
-

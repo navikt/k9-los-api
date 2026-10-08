@@ -32,3 +32,17 @@ class TransactionalManager(
         }
     }
 }
+
+fun <A> TransactionalSession.medSavepoint(operation: () -> A): A {
+    val connection = this.connection.underlying
+    val savepoint = connection.setSavepoint()
+    try {
+        val resultat = operation()
+        connection.releaseSavepoint(savepoint)
+        return resultat
+    } catch (e: Throwable) {
+        connection.rollback(savepoint)
+        throw e
+    }
+}
+

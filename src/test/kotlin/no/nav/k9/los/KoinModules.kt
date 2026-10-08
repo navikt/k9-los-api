@@ -177,7 +177,6 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             transactionalManager = get(),
             eventTilOppgaveAdapter = get(),
             eventRepository = get(),
-            feilRekkefølgeSjekker = get(),
         )
     }
 
@@ -186,7 +185,6 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             transactionalManager = get(),
             oppgaveAdapter = get(),
             eventRepository = get(),
-            feilRekkefølgeSjekker = get(),
         )
     }
 
@@ -195,7 +193,6 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             transactionalManager = get(),
             oppgaveAdapter = get(),
             eventRepository = get(),
-            feilRekkefølgeSjekker = get(),
         )
     }
 
@@ -204,7 +201,6 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             transactionalManager = get(),
             oppgaveAdapter = get(),
             eventRepository = get(),
-            feilRekkefølgeSjekker = get(),
         )
     }
 
@@ -251,7 +247,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
         UngSakEventHandler(
             eventRepository = get(),
             transactionalManager = get(),
-            feilRekkefølgeSjekker = get(),
+            eventTilOppgaveAdapter = get()
         )
     }
     single {
@@ -324,6 +320,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             oppgaveOppdatertHandler = get<OppgaveOppdatertHandler>(),
             ajourholdTjeneste = get<AktivOgPartisjonertOppgaveAjourholdTjeneste>(),
             statistikkRepository = get<StatistikkRepository>(),
+            feilRekkefølgeSjekker = get(),
         )
     }
 

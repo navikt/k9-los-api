@@ -2,10 +2,10 @@ package no.nav.k9.los.domeneadaptere.eventmottak.k9.sak
 
 import io.opentelemetry.instrumentation.annotations.WithSpan
 import no.nav.k9.los.domeneadaptere.eventmottak.k9.EventHandlerMetrics
-import no.nav.k9.los.domeneadaptere.eventmottak.FeilRekkefølgeSjekker
 import no.nav.k9.los.domeneadaptere.eventlager.EventRepository
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.EventTilOppgaveAdapter
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
+import no.nav.k9.los.infrastruktur.db.medSavepoint
 import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.infrastruktur.utils.OpentelemetrySpanUtil
 import no.nav.k9.los.domeneadaptere.eventlager.Fagsystem
@@ -17,7 +17,6 @@ class K9SakEventHandler(
     private val eventRepository: EventRepository,
     private val eventTilOppgaveAdapter: EventTilOppgaveAdapter,
     private val transactionalManager: TransactionalManager,
-    private val feilRekkefølgeSjekker: FeilRekkefølgeSjekker,
 ) {
     private val log = LoggerFactory.getLogger(K9SakEventHandler::class.java)
 
@@ -42,24 +41,17 @@ class K9SakEventHandler(
 
         transactionalManager.transaction { tx ->
             val eventnøkkel = eventRepository.lagre(Fagsystem.K9SAK, eksternId, eksternVersjon, event, tx)
-            val alleEventer = eventRepository.hentAlleEventerMedLås(eventnøkkel, tx)
 
-            if (feilRekkefølgeSjekker.sjekkFeilRekkefølge(alleEventer)) {
-                log.warn(
-                    "Oppgave med fagsystem: ${eventnøkkel.fagsystem}, eksternId: ${eventnøkkel.eksternId} " +
-                        "har fått meldinger i feil rekkefølge. Bestiller historikkvask."
-                )
-                eventRepository.bestillHistorikkvask(eventnøkkel.fagsystem, eventnøkkel.eksternId, tx)
-            } else {
-                OpentelemetrySpanUtil.span("k9SakTilLosAdapterTjeneste.oppdaterOppgaveForBehandlingUuid") {
-                    try {
-                        eventTilOppgaveAdapter.oppdaterOppgaveForEksternId(eventnøkkel, tx, eventer = alleEventer)
-                    } catch (e: Exception) {
-                        log.error(
-                            "Oppatering av k9-sak-oppgave feilet for ${eksternId}. Oppgaven er ikke oppdatert, men blir plukket av vaktmester",
-                            e
-                        )
+            OpentelemetrySpanUtil.span("k9SakTilLosAdapterTjeneste.oppdaterOppgaveForBehandlingUuid") {
+                try {
+                    tx.medSavepoint {
+                        eventTilOppgaveAdapter.oppdaterOppgaveForEksternId(eventnøkkel, tx)
                     }
+                } catch (e: Exception) {
+                    log.error(
+                        "Oppatering av k9-sak-oppgave feilet for ${eksternId}. Oppgaven er ikke oppdatert, men blir plukket av vaktmester",
+                        e
+                    )
                 }
             }
         }
