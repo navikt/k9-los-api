@@ -133,7 +133,7 @@ class OppgaveQueryRepository(
                         AktOppgavetypenavn.entries.map {
                             Verdiforklaring(
                                 verdi = it.kode,
-                                visningsnavn = it.name,
+                                visningsnavn = it.navn,
                                 synlighet = Synlighet.OVER_STREKEN,
                                 gruppering = null
                             )
