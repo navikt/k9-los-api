@@ -133,6 +133,8 @@ class LagretSøk private constructor(
                     ),
                     order = emptyList()
                 )
+
+                Områder.UNGDOMSPROGRAMYTELSEN -> throw IllegalArgumentException("Ungdomsprogramytelsen er p.t. kun for statistikkrapportering")
             }
         }
 

@@ -151,6 +151,7 @@ class OppgaveKoRepository(
                 order = listOf(
                 )
             )
+            Områder.UNGDOMSPROGRAMYTELSEN -> throw IllegalArgumentException("Kan ikke opprette kø for område ${område.eksternId}")
         }
         val oppgaveKoId = tx.updateAndReturnGeneratedKey(
             queryOf(

@@ -5,6 +5,8 @@ import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.kodeverk.AktOppgavetypenavn
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.kodeverk.K9Oppgavetypenavn
 import no.nav.k9.los.kodeverk.PersonBeskyttelseType
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.FeltdefinisjonRepository
@@ -104,6 +106,34 @@ class OppgaveQueryRepository(
                         synlighet = Synlighet.OVER_STREKEN,
                         gruppering = null
                     )
+                }
+            ),
+            Oppgavefelt(
+                område = område,
+                kode = "oppgavetype",
+                visningsnavn = "Oppgavetype",
+                tolkes_som = "String",
+                synlighet = Synlighet.OVER_STREKEN,
+                verdiforklaringer = when (område) {
+                    Områder.K9 ->
+                        K9Oppgavetypenavn.entries.map {
+                            Verdiforklaring(
+                                verdi = it.kode,
+                                visningsnavn = it.kode,
+                                synlighet = Synlighet.UNDER_STREKEN,
+                                gruppering = null
+                            )
+                        }
+                    Områder.AKTIVITETSPENGER ->
+                        AktOppgavetypenavn.entries.map {
+                            Verdiforklaring(
+                                verdi = it.kode,
+                                visningsnavn = it.navn,
+                                synlighet = Synlighet.OVER_STREKEN,
+                                gruppering = null
+                            )
+                        }
+                    Områder.UNGDOMSPROGRAMYTELSEN -> throw IllegalArgumentException("Unsupported område: $område")
                 }
             ),
             Oppgavefelt(

@@ -106,6 +106,11 @@ class PepClient(
                     idToken
                 )
             }
+
+            Områder.UNGDOMSPROGRAMYTELSEN -> {
+                // UPY skal ikke sees av noen saksbehandlere. For øyeblikket brukes det bare til statistikkrapportering
+                return false
+            }
         }
     }
 
