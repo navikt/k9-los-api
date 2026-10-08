@@ -247,7 +247,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
         UngSakEventHandler(
             eventRepository = get(),
             transactionalManager = get(),
-            feilRekkefølgeSjekker = get(),
+            eventTilOppgaveAdapter = get()
         )
     }
     single {

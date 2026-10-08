@@ -202,8 +202,8 @@ fun common(app: Application, config: Configuration) = module {
     single {
         UngSakEventHandler(
             eventRepository = get(),
+            eventTilOppgaveAdapter = get(),
             transactionalManager = get(),
-            feilRekkefølgeSjekker = get(),
         )
     }
 
