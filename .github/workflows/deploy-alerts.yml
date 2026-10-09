@@ -18,13 +18,13 @@ jobs:
       matrix:
         cluster: [dev-fss, prod-fss]
     steps:
-      - uses: actions/checkout@v6
-      - uses: nais/deploy/actions/deploy@v2
+      - uses: actions/checkout@v7
+      - uses: nais/deploy/actions/deploy@v3
         env:
           CLUSTER: ${{ matrix.cluster }}
           RESOURCE: nais/alerts/alert-manager.yml
           VAR: cluster=${{ matrix.cluster }},slack_channel=${{ matrix.cluster == 'prod-fss' && '#k9-los-alerts' || '#k9-los-alerts-dev' }}
-      - uses: nais/deploy/actions/deploy@v2
+      - uses: nais/deploy/actions/deploy@v3
         env:
           CLUSTER: ${{ matrix.cluster }}
           RESOURCE: nais/alerts/alerts.yml
