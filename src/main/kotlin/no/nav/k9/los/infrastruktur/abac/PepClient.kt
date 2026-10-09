@@ -106,6 +106,11 @@ class PepClient(
                     idToken
                 )
             }
+
+            Områder.UNGDOMSPROGRAMYTELSEN -> {
+                // UPY skal ikke sees av noen saksbehandlere. For øyeblikket brukes det bare til statistikkrapportering
+                return false
+            }
         }
     }
 
@@ -163,6 +168,11 @@ class PepClient(
                 val exception = IkkeImplementertException("Kan ikke tilgangssjekke for andre saksbehandlere på aktivitetspenger")
                 log.warn("Forsøker å gjøre tilgangssjekk for andre saksbehandlere, men aktivitetspenger er ikke støttet", exception)
                 throw exception
+            }
+
+            Områder.UNGDOMSPROGRAMYTELSEN -> {
+                // UPY skal ikke sees av noen saksbehandlere. For øyeblikket brukes det bare til statistikkrapportering
+                return false
             }
         }
     }

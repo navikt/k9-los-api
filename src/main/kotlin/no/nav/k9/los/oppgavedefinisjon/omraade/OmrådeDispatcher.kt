@@ -7,5 +7,6 @@ open class OmrådeDispatcher<T : Any>(
     fun forOmråde(område: Områder): T = when (område) {
         Områder.K9 -> k9
         Områder.AKTIVITETSPENGER -> aktivitetspenger
+        Områder.UNGDOMSPROGRAMYTELSEN -> throw IllegalArgumentException("Ungdomsprogramytelsen er p.t. kun for statistikkrapportering")
     }
 }
