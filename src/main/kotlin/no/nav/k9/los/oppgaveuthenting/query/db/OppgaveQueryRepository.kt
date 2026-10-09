@@ -113,7 +113,7 @@ class OppgaveQueryRepository(
                 }
             ),
             Oppgavefelt(
-                område = område,
+                område = null, //TODO: områderef?
                 kode = "oppgavetype",
                 visningsnavn = "Oppgavetype",
                 tolkes_som = "String",
