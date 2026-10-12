@@ -2,6 +2,7 @@ package no.nav.k9.los.oppgavemottak
 
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.kodeverk.K9Oppgavetypenavn
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.kodeverk.AktOppgavetypenavn
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.upy.kodeverk.UpyOppgavetypenavn
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 
 interface OppgaveDtoType {
@@ -12,6 +13,7 @@ interface OppgaveDtoType {
         fun fra(område: Områder, eksternId: String): OppgaveDtoType = when (område) {
             Områder.K9 -> K9Oppgavetypenavn.fraKode(eksternId)
             Områder.AKTIVITETSPENGER -> AktOppgavetypenavn.fraKode(eksternId)
+            Områder.UNGDOMSPROGRAMYTELSEN -> UpyOppgavetypenavn.fraKode(eksternId)
         }
 
         fun fraEksternId(områdeEksternId: String, eksternId: String): OppgaveDtoType =

@@ -12,6 +12,9 @@ import no.nav.k9.los.domeneadaptere.eventlager.EventRepository
 import no.nav.k9.los.domeneadaptere.eventlager.Fagsystem
 import no.nav.k9.los.domeneadaptere.eventmottak.ung.sak.UngSakEventDto
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.kodeverk.AktOppgavetypenavn
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.Områdesetup as AktOmrådesetup
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.upy.Områdesetup as UpyOmrådesetup
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.upy.kodeverk.UpyOppgavetypenavn
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
@@ -35,7 +38,6 @@ import java.time.LocalDateTime
 import java.util.UUID
 import kotlin.reflect.KClass
 import no.nav.ung.kodeverk.Fagsystem as UngFagsystem
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.Områdesetup as AktOmrådesetup
 
 class AktivitetspengerDel1Del2EventserieTest : AbstractK9LosIntegrationTest() {
 
@@ -114,14 +116,26 @@ class AktivitetspengerDel1Del2EventserieTest : AbstractK9LosIntegrationTest() {
     }
 
     @Test
-    fun `eventtiloppgaveadapter hopper over ungdomsytelse før utledning av eventhandlinger`() {
+    fun `eventtiloppgaveadapter lager oppgave for ungdomsytelse`() {
+        get<UpyOmrådesetup>().setup()
         val event = lagEvent(1, lokalkontor = true).copy(ytelseTypeKode = FagsakYtelseType.UNGDOMSYTELSE.kode)
         lagre(listOf(event))
 
         val statistikkteller = adapter.oppdaterOppgaveForEksternId(EventNøkkel(Fagsystem.UNGSAK, eksternId.toString()))
 
-        assertThat(statistikkteller).isEqualTo(0L)
-        assertThat(eventRepository.hentAlleEventer(Fagsystem.UNGSAK, eksternId.toString()).single().dirty).isTrue()
+        assertThat(statistikkteller).isEqualTo(1L)
+        assertThat(eventRepository.hentAlleEventer(Fagsystem.UNGSAK, eksternId.toString()).single().dirty).isFalse()
+        transactionalManager.transaction { tx ->
+            val oppgave = oppgaveV3Tjeneste.hentAktivOppgave(
+                eksternId.toString(),
+                UpyOppgavetypenavn.UNGDOMSPROGRAMYTELSENORDINÆR.kode,
+                Områder.UNGDOMSPROGRAMYTELSEN,
+                tx
+            )
+            assertThat(oppgave.eksternVersjon).isEqualTo(event.eventTid.toString())
+            assertThat(oppgave.status).isEqualTo(Oppgavestatus.AAPEN)
+            assertThat(oppgave.reservasjonsnøkkel).isEqualTo("UPY_b_del1_1234567890123")
+        }
     }
 
     private fun assertOppgaver() {
