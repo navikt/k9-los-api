@@ -1,5 +1,6 @@
 package no.nav.k9.los.domeneadaptere.eventmottak.ung.sak
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize as Jackson2Deserialize
 import no.nav.ung.kodeverk.Fagsystem
 import no.nav.ung.kodeverk.hendelse.EventHendelse
 import no.nav.ung.sak.kontrakt.aksjonspunkt.AksjonspunktTilstandDto
@@ -26,7 +27,9 @@ data class UngSakEventDto(
     val eventTid: LocalDateTime,
 
     val eventHendelse: EventHendelse,
+    @Jackson2Deserialize(converter = UngSakLegacyKoder.BehandlingStatusConverter::class)
     val behandlingStatus: String,
+    @Jackson2Deserialize(converter = UngSakLegacyKoder.BehandlingStegConverter::class)
     val behandlingSteg: String? = null,
     val behandlendeEnhet: String? = null,
     val ansvarligBeslutterForTotrinn: String? = null,

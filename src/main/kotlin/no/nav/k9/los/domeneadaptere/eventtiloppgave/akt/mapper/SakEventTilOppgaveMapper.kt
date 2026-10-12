@@ -56,7 +56,7 @@ object SakEventTilOppgaveMapper {
             BehandlingType.FØRSTEGANGSSØKNAD,
             BehandlingType.REVURDERING ->
                 if (åpneAksjonspunkter.any { ap ->
-                        AksjonspunktDefinisjon.fraKode(ap.aksjonspunktKode()).aksjonspunktType.erLokalkontorAksjonspunkt()
+                        AksjonspunktDefinisjon.fraKode(ap.aksjonspunktKode()).aksjonspunktType.erNavKontorAksjonspunkt()
                     }) {
                     AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1
                 } else {
