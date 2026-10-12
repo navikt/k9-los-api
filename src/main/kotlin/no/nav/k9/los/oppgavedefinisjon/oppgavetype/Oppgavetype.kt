@@ -32,7 +32,7 @@ class Oppgavetype(
     constructor(
         dto: OppgavetypeDto,
         område: Område,
-        oppgavebehandlingsUrlTemplate: String,
+        oppgavebehandlingsUrlTemplate: String?,
         feltdefinisjoner: Feltdefinisjoner,
         gyldigeFeltutledere: GyldigeFeltutledere
     ) : this(

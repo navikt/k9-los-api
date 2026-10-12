@@ -17,6 +17,7 @@ import no.nav.k9.los.domeneadaptere.eventtiloppgave.EventTilOppgaveAdapter
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.HistorikkvaskTjeneste
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.OppgaveOppdatertHandler
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.Områdesetup as AktOmrådesetup
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.upy.Områdesetup as UpyOmrådesetup
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.klagetillos.beriker.K9KlageBerikerInterfaceKludge
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.klagetillos.beriker.K9KlageBerikerKlientLocal
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.saktillos.beriker.K9SakSystemKlientInterfaceKludge
@@ -241,6 +242,13 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             feltdefinisjonTjeneste = get(),
             oppgavetypeTjeneste = get(),
             frontendUrl = config.aktivitetspengerFrontendUrl(),
+        )
+    }
+    single {
+        UpyOmrådesetup(
+            områdeRepository = get(),
+            feltdefinisjonTjeneste = get(),
+            oppgavetypeTjeneste = get(),
         )
     }
     single {

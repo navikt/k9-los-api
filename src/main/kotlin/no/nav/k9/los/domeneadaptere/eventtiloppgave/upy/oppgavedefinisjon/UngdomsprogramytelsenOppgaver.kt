@@ -8,24 +8,22 @@ import no.nav.k9.los.oppgavedefinisjon.oppgavetype.OppgavetyperDto
 
 object UngdomsprogramytelsenOppgaver {
     /**
-     * @param frontendUrl settes inn direkte i URL-malen. Plassholdere i `{}` tolkes som oppgavefelt
-     * av [no.nav.k9.los.oppgaveuthenting.Oppgave.getOppgaveBehandlingsurl], så base-URL-en kan ikke
-     * ligge igjen som plassholder.
+     * UPY-oppgaver skal ikke vises for saksbehandlere, og har derfor ingen oppgavebehandlings-URL.
      */
-    fun lagOppgaveDefinisjon(frontendUrl: String): OppgavetyperDto {
+    fun lagOppgaveDefinisjon(): OppgavetyperDto {
         return OppgavetyperDto(
             område = Områder.UNGDOMSPROGRAMYTELSEN,
             oppgavetyper = setOf(
-                lagUngdomsprogramytelsenOrdinær(UpyOppgavetypenavn.UNGDOMSPROGRAMYTELSENORDINÆR.kode, frontendUrl),
+                lagUngdomsprogramytelsenOrdinær(UpyOppgavetypenavn.UNGDOMSPROGRAMYTELSENORDINÆR.kode),
                 //TODO: klage, feilutbetaling
             )
         )
     }
 
-    private fun lagUngdomsprogramytelsenOrdinær(id: String, frontendUrl: String): OppgavetypeDto {
+    private fun lagUngdomsprogramytelsenOrdinær(id: String): OppgavetypeDto {
         return OppgavetypeDto(
             id = id,
-            oppgavebehandlingsUrlTemplate = "$frontendUrl/fagsak/{${UngdomsprogramytelsenFeltIder.Sak.SAKSNUMMER}}/",
+            oppgavebehandlingsUrlTemplate = null,
             oppgavefelter = setOf(
                 // Behandling
                 OppgavefeltDto(UngdomsprogramytelsenFeltIder.Behandling.UUID, visPåOppgave = true, påkrevd = true),

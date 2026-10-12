@@ -13,7 +13,6 @@ import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.oppgavemottak.AktivOgPartisjonertOppgaveAjourholdTjeneste
 import no.nav.k9.los.oppgavemottak.OppgaveV3
 import no.nav.k9.los.oppgavemottak.OppgaveV3Tjeneste
-import no.nav.ung.kodeverk.behandling.FagsakYtelseType
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -89,7 +88,7 @@ class EventTilOppgaveAdapter(
             eventRepository.bestillHistorikkvask(eventnøkkel.fagsystem, eventnøkkel.eksternId, tx)
             return statistikktellerInn
         }
-        val eventhandlinger = hentEventhandlinger(eventnøkkel, tx, låsteEventer, hoppOverUngdomsytelse = true)
+        val eventhandlinger = hentEventhandlinger(eventnøkkel, tx, låsteEventer)
         if (eventhandlinger.isEmpty()) return statistikktellerInn
 
         var statistikkteller = statistikktellerInn
@@ -162,19 +161,10 @@ class EventTilOppgaveAdapter(
         eventnøkkel: EventNøkkel,
         tx: TransactionalSession,
         eventer: List<EventLagret>? = null,
-        hoppOverUngdomsytelse: Boolean = false,
     ): List<NummerertEventHandling> {
         val låsteEventer = eventer ?: eventRepository.hentAlleEventerMedLås(eventnøkkel, tx)
         // Oppslag mot kildesystemene gjøres samlet for hele serien, slik at mappingen under er ren.
         val berikedeEventer = eventBeriker.berik(låsteEventer)
-        // TODO: Hold unna UPY inntil videre. Fjernes når UPY er klar for produksjon.
-        val førsteEvent = berikedeEventer.firstOrNull()
-        if (hoppOverUngdomsytelse &&
-            førsteEvent is EventLagret.UngSak &&
-            førsteEvent.eventDto.ytelseTypeKode == FagsakYtelseType.UNGDOMSYTELSE.kode
-        ) {
-            return emptyList()
-        }
         return utledEventhandlinger(berikedeEventer)
     }
 

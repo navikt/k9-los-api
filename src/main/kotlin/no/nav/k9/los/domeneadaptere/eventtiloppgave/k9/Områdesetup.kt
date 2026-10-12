@@ -86,7 +86,7 @@ class Områdesetup(
         }
         return oppgavetyperDto.oppgavetyper.map { oppgavetypeDto ->
             oppgavetypeDto.copy(
-                oppgavebehandlingsUrlTemplate = oppgavetypeDto.oppgavebehandlingsUrlTemplate.replace(
+                oppgavebehandlingsUrlTemplate = oppgavetypeDto.oppgavebehandlingsUrlTemplate?.replace(
                     "{baseUrl}",
                     frontendUrl
                 )

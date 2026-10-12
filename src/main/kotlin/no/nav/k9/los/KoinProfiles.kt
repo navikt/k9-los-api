@@ -21,6 +21,7 @@ import no.nav.k9.los.domeneadaptere.eventmottak.ung.tilbake.UngTilbakeEventHandl
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.*
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.Områdesetup as AktOmrådesetup
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.Områdesetup as K9Områdesetup
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.upy.Områdesetup as UpyOmrådesetup
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.klagetillos.beriker.K9KlageBerikerInterfaceKludge
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.klagetillos.beriker.K9KlageBerikerKlientLocal
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.klagetillos.beriker.K9KlageBerikerSystemKlient
@@ -355,6 +356,13 @@ fun common(app: Application, config: Configuration) = module {
             feltdefinisjonTjeneste = get(),
             oppgavetypeTjeneste = get(),
             frontendUrl = config.aktivitetspengerFrontendUrl(),
+        )
+    }
+    single {
+        UpyOmrådesetup(
+            områdeRepository = get(),
+            feltdefinisjonTjeneste = get(),
+            oppgavetypeTjeneste = get(),
         )
     }
 

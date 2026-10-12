@@ -19,6 +19,7 @@ import no.nav.ung.kodeverk.behandling.BehandlingType.fraKode
 import no.nav.ung.kodeverk.behandling.FagsakYtelseType
 import java.time.LocalDateTime
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.mapper.SakEventTilOppgaveMapper as AktSakEventTilOppgaveMapper
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.upy.mapper.SakEventTilOppgaveMapper as UpySakEventTilOppgaveMapper
 
 /**
  * Ruting fra lagret event til riktig mapper. Mapperne er rene funksjoner – eventuelle
@@ -40,7 +41,9 @@ internal fun EventLagret.tilOppgaveversjon(
             FagsakYtelseType.AKTIVITETSPENGER ->
                 AktSakEventTilOppgaveMapper.lagOppgaveDto(this, forrigeOppgaveversjon, eventnummer)
 
-            FagsakYtelseType.UNGDOMSYTELSE -> throw IkkeImplementertException("Ikke implementert ennå")
+            FagsakYtelseType.UNGDOMSYTELSE ->
+                UpySakEventTilOppgaveMapper.lagOppgaveDto(this, forrigeOppgaveversjon, eventnummer)
+
             else -> throw IllegalStateException(ukjentUngSakYtelse)
         }
     }
@@ -53,7 +56,7 @@ internal fun EventLagret.oppgavetypeKode(): Oppgavetype = when (this) {
     is EventLagret.K9Punsj -> K9Oppgavetypenavn.PUNSJ
     is EventLagret.UngSak -> when (FagsakYtelseType.fraKode(eventDto.ytelseTypeKode)) {
         FagsakYtelseType.AKTIVITETSPENGER -> AktSakEventTilOppgaveMapper.utledOppgavetype(eventDto)
-        FagsakYtelseType.UNGDOMSYTELSE -> throw IkkeImplementertException("Ikke implementert ennå")
+        FagsakYtelseType.UNGDOMSYTELSE -> UpySakEventTilOppgaveMapper.utledOppgavetype(eventDto)
         else -> throw IllegalStateException(ukjentUngSakYtelse)
     }
 }
@@ -63,7 +66,11 @@ internal fun EventLagret.oppgavestatus(): Oppgavestatus = when (this) {
     is EventLagret.K9Tilbake -> TilbakeEventTilOppgaveMapper.utledOppgavestatus(eventDto)
     is EventLagret.K9Klage -> KlageEventTilOppgaveMapper.utledOppgavestatus(eventDto)
     is EventLagret.K9Punsj -> PunsjEventTilOppgaveMapper.utledOppgavestatus(eventDto)
-    is EventLagret.UngSak -> AktSakEventTilOppgaveMapper.utledOppgavestatus(eventDto)
+    is EventLagret.UngSak -> when (FagsakYtelseType.fraKode(eventDto.ytelseTypeKode)) {
+        FagsakYtelseType.AKTIVITETSPENGER -> AktSakEventTilOppgaveMapper.utledOppgavestatus(eventDto)
+        FagsakYtelseType.UNGDOMSYTELSE -> UpySakEventTilOppgaveMapper.utledOppgavestatus(eventDto)
+        else -> throw IllegalStateException(ukjentUngSakYtelse)
+    }
 }
 
 internal fun EventLagret.eventTid(): LocalDateTime = when (this) {
@@ -105,9 +112,12 @@ internal fun EventLagret.utledReservasjonsnøkkel(erTilBeslutter: Boolean): Stri
     is EventLagret.K9Klage -> KlageEventTilOppgaveMapper.utledReservasjonsnøkkel(this, erTilBeslutter)
     is EventLagret.K9Punsj -> PunsjEventTilOppgaveMapper.utledReservasjonsnøkkel(this)
     is EventLagret.K9Tilbake -> TilbakeEventTilOppgaveMapper.utledReservasjonsnøkkel(this, erTilBeslutter)
-    is EventLagret.UngSak -> AktSakEventTilOppgaveMapper.utledReservasjonsnokkel(this, erTilBeslutter)
+    is EventLagret.UngSak -> when (FagsakYtelseType.fraKode(eventDto.ytelseTypeKode)) {
+        FagsakYtelseType.AKTIVITETSPENGER -> AktSakEventTilOppgaveMapper.utledReservasjonsnokkel(this, erTilBeslutter)
+        FagsakYtelseType.UNGDOMSYTELSE -> UpySakEventTilOppgaveMapper.utledReservasjonsnokkel(this, erTilBeslutter)
+        else -> throw IllegalStateException(ukjentUngSakYtelse)
+    }
 }
 
 private const val ukjentUngSakYtelse =
     "UngSak-eventer skal aldri ha andre ytelsestyper enn aktivitetspenger eller ungdomsprogramytelsen"
-
