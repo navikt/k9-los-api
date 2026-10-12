@@ -118,9 +118,10 @@ object SakEventTilOppgaveMapper {
     }
 
     private fun erTilBeslutter(event: UngSakEventDto): Boolean {
-        return getåpneAksjonspunkter(event).firstOrNull { ap ->
-            ap.aksjonspunktKode.equals(AksjonspunktDefinisjon.FATTER_VEDTAK.kode)
-        } != null
+        return getåpneAksjonspunkter(event).any { ap ->
+            ap.aksjonspunktKode == AksjonspunktDefinisjon.FATTER_VEDTAK.kode ||
+                    ap.aksjonspunktKode == AksjonspunktDefinisjon.NAV_KONTOR_BESLUTTER_VILKÅR.kode
+        }
     }
 
     private fun utledTidFørsteGangHosBeslutter(
