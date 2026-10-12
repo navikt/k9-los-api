@@ -117,6 +117,8 @@ class EventTilOppgaveAdapter(
         }
 
         // Oppdater PEP-cache én gang for siste tilstand, i stedet for per event
+        //TODO: deaktiverer PEP-cache for Ungdomsprogramytelsen for å få ned loggstøy
+        //TODO: Dette filteret må fjernes, og vi må ha kontroll på pepcache for UPY før vi kan produsere statistikkdata i prod
         if (sisteOppgaveversjon != null && låsteEventer.first().område != Områder.UNGDOMSPROGRAMYTELSEN) {
             oppgaveOppdatertHandler.oppdaterPepCache(sisteOppgaveversjon, tx)
         }
