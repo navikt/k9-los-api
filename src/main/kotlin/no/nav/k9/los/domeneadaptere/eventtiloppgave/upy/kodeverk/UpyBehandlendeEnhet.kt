@@ -1,10 +1,7 @@
 package no.nav.k9.los.domeneadaptere.eventtiloppgave.upy.kodeverk
 
 enum class UpyBehandlendeEnhet(val kode: String, val navn: String) {
-    STYRINGSENHET("4416", "NAV Arbeid og ytelser Trondheim"),
-    FALKENBORG("5701", "NAV Arbeids- og tjenestelinjen Falkenborg"),
-    LERKENDAL("5702", "NAV Arbeids- og tjenestelinjen Lerkendal"),
-    YTELSESAVDELINGEN("2830", "Ytelsesavdelingen"),
+    NAV_TILTAK_OSLO("0387", "NAV Tiltak Oslo"),
     UKJENT("UKJENT", "Ukjent");
 
     companion object {
