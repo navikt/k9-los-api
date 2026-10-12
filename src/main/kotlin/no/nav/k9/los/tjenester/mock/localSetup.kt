@@ -350,8 +350,8 @@ object localSetup : KoinComponent {
     }
 
     private val lokalkontorAksjonspunkter = listOf(
-        UngAksjonspunktDefinisjon.LOKALKONTOR_FORESLÅR_VILKÅR,
-        UngAksjonspunktDefinisjon.LOKALKONTOR_BESLUTTER_VILKÅR,
+        UngAksjonspunktDefinisjon.NAV_KONTOR_FORESLÅR_VILKÅR,
+        UngAksjonspunktDefinisjon.NAV_KONTOR_BESLUTTER_VILKÅR,
         UngAksjonspunktDefinisjon.VURDER_FAKTA_OM_BOSTED,
         UngAksjonspunktDefinisjon.VURDER_BOSTEDVILKÅR,
         UngAksjonspunktDefinisjon.VURDER_BISTANDSVILKÅR,

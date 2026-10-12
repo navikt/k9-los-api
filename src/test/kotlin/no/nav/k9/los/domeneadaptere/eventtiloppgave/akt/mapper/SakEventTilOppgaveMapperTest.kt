@@ -20,6 +20,7 @@ import no.nav.k9.los.oppgavemottak.VaskOppgaveversjon
 import no.nav.ung.kodeverk.Fagsystem
 import no.nav.ung.kodeverk.behandling.BehandlingResultatType
 import no.nav.ung.kodeverk.behandling.BehandlingStatus
+import no.nav.ung.kodeverk.behandling.BehandlingStegType
 import no.nav.ung.kodeverk.behandling.BehandlingType
 import no.nav.ung.kodeverk.behandling.FagsakYtelseType
 import no.nav.ung.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
@@ -34,7 +35,7 @@ import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import java.util.UUID
 
-private val LOKALKONTOR_AP = AksjonspunktDefinisjon.LOKALKONTOR_FORESLÅR_VILKÅR
+private val NAV_KONTOR_AP = AksjonspunktDefinisjon.NAV_KONTOR_FORESLÅR_VILKÅR
 private val NAV_SENTRALT_AP = AksjonspunktDefinisjon.KONTROLLER_INNTEKT
 private val FORESLÅ_VEDTAK_AP = AksjonspunktDefinisjon.FORESLÅ_VEDTAK
 private val FATTER_VEDTAK_AP = AksjonspunktDefinisjon.FATTER_VEDTAK
@@ -157,7 +158,7 @@ class SakEventTilOppgaveMapperTest {
 
     @Test
     fun `åpent lokalkontoraksjonspunkt gir del1`() {
-        val event = lagEvent(aksjonspunktTilstander = listOf(ap(LOKALKONTOR_AP)))
+        val event = lagEvent(aksjonspunktTilstander = listOf(ap(NAV_KONTOR_AP)))
 
         assertThat(SakEventTilOppgaveMapper.utledOppgavetype(event))
             .isEqualTo(AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1)
@@ -166,7 +167,7 @@ class SakEventTilOppgaveMapperTest {
     @Test
     fun `lokalkontoraksjonspunkt som er utført gir del2`() {
         val event = lagEvent(
-            aksjonspunktTilstander = listOf(ap(LOKALKONTOR_AP, AksjonspunktStatus.UTFØRT))
+            aksjonspunktTilstander = listOf(ap(NAV_KONTOR_AP, AksjonspunktStatus.UTFØRT))
         )
 
         assertThat(SakEventTilOppgaveMapper.utledOppgavetype(event))
@@ -185,7 +186,7 @@ class SakEventTilOppgaveMapperTest {
     fun `revurdering følger samme del-utledning som førstegangssøknad`() {
         val event = lagEvent(
             behandlingTypeKode = BehandlingType.REVURDERING.kode,
-            aksjonspunktTilstander = listOf(ap(LOKALKONTOR_AP)),
+            aksjonspunktTilstander = listOf(ap(NAV_KONTOR_AP)),
         )
 
         assertThat(SakEventTilOppgaveMapper.utledOppgavetype(event))
@@ -285,18 +286,37 @@ class SakEventTilOppgaveMapperTest {
     @Test
     fun `ukjent behandlingsstatus faller tilbake på uavklart`() {
         val event = lagEvent(
-            behandlingStatus = BehandlingStatus.LOKALKONTOR_BESLUTTER_VILKÅR.kode,
-            aksjonspunktTilstander = listOf(ap(LOKALKONTOR_AP)),
+            behandlingStatus = BehandlingStatus.NAV_KONTOR_BESLUTTER_VILKÅR.kode,
+            aksjonspunktTilstander = listOf(ap(NAV_KONTOR_AP)),
         )
 
         assertThat(SakEventTilOppgaveMapper.utledOppgavestatus(event)).isEqualTo(Oppgavestatus.UAVKLART)
+    }
+
+    @Test
+    fun `lagrede eventer med gamle lokalkontor-koder leses som nav-kontor-koder`() {
+        val event = lagEvent(
+            behandlingStatus = BehandlingStatus.NAV_KONTOR_BESLUTTER_VILKÅR.kode,
+            behandlingSteg = BehandlingStegType.NAV_KONTOR_FORESLÅ_VILKÅR.kode,
+            aksjonspunktTilstander = listOf(ap(NAV_KONTOR_AP)),
+        )
+        val gammelJson = LosObjectMapper.instance.writeValueAsString(event)
+            .replace(BehandlingStatus.NAV_KONTOR_BESLUTTER_VILKÅR.kode, "LOKALKONTOR_BESLUTTER_VILKÅR")
+            .replace(BehandlingStegType.NAV_KONTOR_FORESLÅ_VILKÅR.kode, "LOKALKONTOR_FORESLÅ_VILKÅR_STEG")
+
+        val eventLagret = lagEventLagret(event).copy(eventJson = gammelJson)
+
+        assertThat(eventLagret.eventDto.behandlingStatus).isEqualTo(BehandlingStatus.NAV_KONTOR_BESLUTTER_VILKÅR.kode)
+        assertThat(eventLagret.eventDto.behandlingSteg).isEqualTo(BehandlingStegType.NAV_KONTOR_FORESLÅ_VILKÅR.kode)
+        val feltverdier = SakEventTilOppgaveMapper.lagOppgaveDto(eventLagret, null, 1).dto.feltverdier
+        assertThat(feltverdier.verdierFor(AktivitetspengerFeltIder.Aksjonspunkt.LOSBART)).containsOnly(NAV_KONTOR_AP.kode)
     }
 
     // --- utledReservasjonsnokkel ---
 
     @Test
     fun `reservasjonsnøkkel for del1`() {
-        val eventLagret = lagEventLagret(lagEvent(aksjonspunktTilstander = listOf(ap(LOKALKONTOR_AP))))
+        val eventLagret = lagEventLagret(lagEvent(aksjonspunktTilstander = listOf(ap(NAV_KONTOR_AP))))
 
         assertThat(SakEventTilOppgaveMapper.utledReservasjonsnokkel(eventLagret, false))
             .isEqualTo("AKT_b_del1_1234567890123")
@@ -455,7 +475,7 @@ class SakEventTilOppgaveMapperTest {
 
     @Test
     fun `del1 bruker navkontorfeltene for saksbehandler og beslutter`() {
-        val feltverdier = feltverdier(lagEvent(aksjonspunktTilstander = listOf(ap(LOKALKONTOR_AP))))
+        val feltverdier = feltverdier(lagEvent(aksjonspunktTilstander = listOf(ap(NAV_KONTOR_AP))))
 
         assertThat(feltverdier.verdiFor(AktivitetspengerFeltIder.Saksbehandling.ANSVARLIG_SAKSBEHANDLER))
             .isEqualTo("LOKAL_SAKSBEHANDLER")
@@ -518,7 +538,7 @@ class SakEventTilOppgaveMapperTest {
                 ap(NAV_SENTRALT_AP),
                 ap(FATTER_VEDTAK_AP),
                 ap(FORESLÅ_VEDTAK_AP, AksjonspunktStatus.UTFØRT),
-                ap(LOKALKONTOR_AP, AksjonspunktStatus.AVBRUTT),
+                ap(NAV_KONTOR_AP, AksjonspunktStatus.AVBRUTT),
             ),
         )
 
@@ -529,7 +549,7 @@ class SakEventTilOppgaveMapperTest {
                 NAV_SENTRALT_AP.kode,
                 FATTER_VEDTAK_AP.kode,
                 FORESLÅ_VEDTAK_AP.kode,
-                LOKALKONTOR_AP.kode,
+                NAV_KONTOR_AP.kode,
             )
         assertThat(feltverdier.verdierFor(AktivitetspengerFeltIder.Aksjonspunkt.AKTIVE))
             .containsExactlyInAnyOrder(NAV_SENTRALT_AP.kode, FATTER_VEDTAK_AP.kode)
@@ -540,7 +560,7 @@ class SakEventTilOppgaveMapperTest {
         assertThat(feltverdier.verdierFor(AktivitetspengerFeltIder.Aksjonspunkt.UTFORT))
             .containsOnly(FORESLÅ_VEDTAK_AP.kode)
         assertThat(feltverdier.verdierFor(AktivitetspengerFeltIder.Aksjonspunkt.AVBRUTT))
-            .containsOnly(LOKALKONTOR_AP.kode)
+            .containsOnly(NAV_KONTOR_AP.kode)
     }
 
     @Test
