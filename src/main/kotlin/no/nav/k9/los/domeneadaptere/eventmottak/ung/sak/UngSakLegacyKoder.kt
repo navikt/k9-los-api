@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.util.StdConverter
 import no.nav.ung.kodeverk.behandling.BehandlingStatus
 import no.nav.ung.kodeverk.behandling.BehandlingStegType
 
+//TODO: Dette er for konvertering av testdata i Q, og har aldri vært relevant for prod. Dette er kode som bør fjernes etter prodsetting
 object UngSakLegacyKoder {
     private val behandlingStatus = mapOf(
         "LOKALKONTOR_BESLUTTER_VILKÅR" to BehandlingStatus.NAV_KONTOR_BESLUTTER_VILKÅR.kode,
