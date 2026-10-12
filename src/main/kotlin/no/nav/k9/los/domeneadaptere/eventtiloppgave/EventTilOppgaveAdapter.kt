@@ -10,6 +10,7 @@ import no.nav.k9.los.domeneadaptere.eventlager.Oppgavetype
 import no.nav.k9.los.domeneadaptere.eventmottak.FeilRekkefølgeSjekker
 import no.nav.k9.los.domeneadaptere.statistikk.StatistikkRepository
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgavemottak.AktivOgPartisjonertOppgaveAjourholdTjeneste
 import no.nav.k9.los.oppgavemottak.OppgaveV3
 import no.nav.k9.los.oppgavemottak.OppgaveV3Tjeneste
@@ -116,7 +117,7 @@ class EventTilOppgaveAdapter(
         }
 
         // Oppdater PEP-cache én gang for siste tilstand, i stedet for per event
-        if (sisteOppgaveversjon != null) {
+        if (sisteOppgaveversjon != null && låsteEventer.first().område != Områder.UNGDOMSPROGRAMYTELSEN) {
             oppgaveOppdatertHandler.oppdaterPepCache(sisteOppgaveversjon, tx)
         }
 
