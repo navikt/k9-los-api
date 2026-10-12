@@ -202,14 +202,14 @@ class AktivitetspengerDel1Del2EventserieTest : AbstractK9LosIntegrationTest() {
 
     private fun lagEvent(nummer: Long, lokalkontor: Boolean): UngSakEventDto {
         val aksjonspunkter = if (lokalkontor) {
-            listOf(ap(AksjonspunktDefinisjon.LOKALKONTOR_FORESLÅR_VILKÅR, AksjonspunktStatus.OPPRETTET))
+            listOf(ap(AksjonspunktDefinisjon.NAV_KONTOR_FORESLÅR_VILKÅR, AksjonspunktStatus.OPPRETTET))
         } else {
             listOf(
-                ap(AksjonspunktDefinisjon.LOKALKONTOR_FORESLÅR_VILKÅR, AksjonspunktStatus.UTFØRT),
+                ap(AksjonspunktDefinisjon.NAV_KONTOR_FORESLÅR_VILKÅR, AksjonspunktStatus.UTFØRT),
                 ap(AksjonspunktDefinisjon.KONTROLLER_INNTEKT, AksjonspunktStatus.OPPRETTET),
             )
         }
-        val åpentAksjonspunkt = if (lokalkontor) AksjonspunktDefinisjon.LOKALKONTOR_FORESLÅR_VILKÅR else AksjonspunktDefinisjon.KONTROLLER_INNTEKT
+        val åpentAksjonspunkt = if (lokalkontor) AksjonspunktDefinisjon.NAV_KONTOR_FORESLÅR_VILKÅR else AksjonspunktDefinisjon.KONTROLLER_INNTEKT
         return UngSakEventDto(
             eksternId = eksternId,
             fagsystem = UngFagsystem.UNG_SAK,

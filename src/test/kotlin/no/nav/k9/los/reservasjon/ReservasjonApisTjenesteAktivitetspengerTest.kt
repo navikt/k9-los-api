@@ -88,7 +88,7 @@ class ReservasjonApisTjenesteAktivitetspengerTest : AbstractK9LosIntegrationTest
 
     private fun opprettAktivitetspengeroppgave(eksternId: UUID) {
         val opprettet = LocalDateTime.now().minusDays(3)
-        val aksjonspunkt = AksjonspunktDefinisjon.LOKALKONTOR_FORESLÅR_VILKÅR
+        val aksjonspunkt = AksjonspunktDefinisjon.NAV_KONTOR_FORESLÅR_VILKÅR
         val event = UngSakEventDto(
             eksternId = eksternId,
             fagsystem = UngFagsystem.UNG_SAK,
