@@ -35,6 +35,7 @@ import java.util.UUID
 
 private val MANUELT_AP = AksjonspunktDefinisjon.KONTROLLER_INNTEKT
 private val FATTER_VEDTAK_AP = AksjonspunktDefinisjon.FATTER_VEDTAK
+private val NAV_KONTOR_BESLUTTER_AP = AksjonspunktDefinisjon.NAV_KONTOR_BESLUTTER_VILKÅR
 private val AUTOPUNKT_AP = AksjonspunktDefinisjon.AUTO_SATT_PÅ_VENT_RAPPORTERINGSFRIST
 private val EVENT_TID = LocalDateTime.of(2026, 3, 4, 10, 0)
 private val OPPRETTET_BEHANDLING = LocalDateTime.of(2026, 2, 1, 8, 30, 15)
@@ -201,6 +202,34 @@ class SakEventTilOppgaveMapperTest {
             .isEqualTo("UPY_b_del1_1234567890123")
         assertThat(SakEventTilOppgaveMapper.utledReservasjonsnokkel(hosBeslutter, true))
             .isEqualTo("UPY_b_del1_1234567890123_beslutter")
+    }
+
+    @Test
+    fun `åpent nav-kontor beslutteraksjonspunkt sender oppgaven til beslutter`() {
+        val åpent = SakEventTilOppgaveMapper.lagOppgaveDto(
+            lagEventLagret(lagEvent(aksjonspunktTilstander = listOf(ap(NAV_KONTOR_BESLUTTER_AP)))),
+            null,
+            1,
+        ).dto
+        val lukket = SakEventTilOppgaveMapper.lagOppgaveDto(
+            lagEventLagret(
+                lagEvent(aksjonspunktTilstander = listOf(ap(NAV_KONTOR_BESLUTTER_AP, AksjonspunktStatus.UTFØRT)))
+            ),
+            null,
+            1,
+        ).dto
+
+        assertThat(åpent.reservasjonsnøkkel).isEqualTo("UPY_b_del1_1234567890123_beslutter")
+        assertThat(åpent.feltverdier.verdiFor(UngdomsprogramytelsenFeltIder.Saksbehandling.LIGGER_HOS_BESLUTTER))
+            .isEqualTo("true")
+        assertThat(åpent.feltverdier.verdiFor(UngdomsprogramytelsenFeltIder.Saksbehandling.TID_FORSTE_GANG_HOS_BESLUTTER))
+            .isEqualTo(EVENT_TID.toString())
+
+        assertThat(lukket.reservasjonsnøkkel).isEqualTo("UPY_b_del1_1234567890123")
+        assertThat(lukket.feltverdier.verdiFor(UngdomsprogramytelsenFeltIder.Saksbehandling.LIGGER_HOS_BESLUTTER))
+            .isEqualTo("false")
+        assertThat(lukket.feltverdier.verdiFor(UngdomsprogramytelsenFeltIder.Saksbehandling.TID_FORSTE_GANG_HOS_BESLUTTER))
+            .isEqualTo(null)
     }
 
     @Test
