@@ -215,7 +215,10 @@ class SakEventTilOppgaveMapperTest {
             lagEventLagret(
                 lagEvent(aksjonspunktTilstander = listOf(ap(NAV_KONTOR_BESLUTTER_AP, AksjonspunktStatus.UTFØRT)))
             ),
-            null,
+            forrigeOppgave(
+                UngdomsprogramytelsenFeltIder.Saksbehandling.TID_FORSTE_GANG_HOS_BESLUTTER to
+                    åpent.feltverdier.verdiFor(UngdomsprogramytelsenFeltIder.Saksbehandling.TID_FORSTE_GANG_HOS_BESLUTTER)
+            ),
             1,
         ).dto
 
@@ -229,7 +232,7 @@ class SakEventTilOppgaveMapperTest {
         assertThat(lukket.feltverdier.verdiFor(UngdomsprogramytelsenFeltIder.Saksbehandling.LIGGER_HOS_BESLUTTER))
             .isEqualTo("false")
         assertThat(lukket.feltverdier.verdiFor(UngdomsprogramytelsenFeltIder.Saksbehandling.TID_FORSTE_GANG_HOS_BESLUTTER))
-            .isEqualTo(null)
+            .isEqualTo(EVENT_TID.toString())
     }
 
     @Test
