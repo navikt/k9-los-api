@@ -71,7 +71,6 @@ object SakEventTilOppgaveMapper {
             BehandlingStatus.AVSLUTTET -> Oppgavestatus.LUKKET
             BehandlingStatus.FATTER_VEDTAK,
             BehandlingStatus.IVERKSETTER_VEDTAK,
-            BehandlingStatus.NAV_KONTOR_BESLUTTER_VILKÅR,
             BehandlingStatus.UTREDES -> {
                 val harÅpentManueltAksjonspunkt: Boolean =
                     event.aksjonspunktTilstander
@@ -88,7 +87,9 @@ object SakEventTilOppgaveMapper {
                 } else {
                     Oppgavestatus.UAVKLART
                 }
+
             }
+            else -> throw IllegalStateException("Ugyldig behandlingstatus for UNG event: ${event.behandlingStatus}")
         }
     }
 

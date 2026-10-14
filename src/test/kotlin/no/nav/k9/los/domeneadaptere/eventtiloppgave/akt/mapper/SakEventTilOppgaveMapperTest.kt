@@ -284,10 +284,30 @@ class SakEventTilOppgaveMapperTest {
     }
 
     @Test
-    fun `ukjent behandlingsstatus faller tilbake på uavklart`() {
+    fun `nav-kontor beslutter vilkår med åpent manuelt aksjonspunkt er aapen`() {
         val event = lagEvent(
             behandlingStatus = BehandlingStatus.NAV_KONTOR_BESLUTTER_VILKÅR.kode,
             aksjonspunktTilstander = listOf(ap(NAV_KONTOR_AP)),
+        )
+
+        assertThat(SakEventTilOppgaveMapper.utledOppgavestatus(event)).isEqualTo(Oppgavestatus.AAPEN)
+    }
+
+    @Test
+    fun `nav-kontor beslutter vilkår med åpent autopunkt venter`() {
+        val event = lagEvent(
+            behandlingStatus = BehandlingStatus.NAV_KONTOR_BESLUTTER_VILKÅR.kode,
+            aksjonspunktTilstander = listOf(ap(NAV_KONTOR_AP), ap(AUTOPUNKT_AP)),
+        )
+
+        assertThat(SakEventTilOppgaveMapper.utledOppgavestatus(event)).isEqualTo(Oppgavestatus.VENTER)
+    }
+
+    @Test
+    fun `nav-kontor beslutter vilkår uten åpne aksjonspunkt er uavklart`() {
+        val event = lagEvent(
+            behandlingStatus = BehandlingStatus.NAV_KONTOR_BESLUTTER_VILKÅR.kode,
+            aksjonspunktTilstander = listOf(ap(NAV_KONTOR_AP, AksjonspunktStatus.UTFØRT)),
         )
 
         assertThat(SakEventTilOppgaveMapper.utledOppgavestatus(event)).isEqualTo(Oppgavestatus.UAVKLART)
@@ -681,4 +701,3 @@ class SakEventTilOppgaveMapperTest {
         assertThat(feltverdier.verdiFor(AktivitetspengerFeltIder.Ventetid.AKTIV_FRIST)).isEqualTo(null)
     }
 }
-
