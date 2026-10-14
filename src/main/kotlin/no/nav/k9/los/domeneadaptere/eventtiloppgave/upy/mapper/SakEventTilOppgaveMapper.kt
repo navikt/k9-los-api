@@ -89,7 +89,7 @@ object SakEventTilOppgaveMapper {
                 }
 
             }
-            else -> throw IllegalStateException("Ugyldig behandlingstatus for UNG event: ${event.behandlingStatus}")
+            else -> throw IllegalStateException("Ugyldig behandlingsstatus for UNG event: ${event.behandlingStatus}")
         }
     }
 
