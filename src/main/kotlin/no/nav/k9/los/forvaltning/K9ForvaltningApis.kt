@@ -56,6 +56,57 @@ fun Route.K9ForvaltningApis() {
 
     val pepClient by inject<IPepClient>()
     val requestContextService by inject<RequestContextService>()
+    val analyzeTjeneste by inject<AnalyzeTjeneste>()
+
+
+    post("/analyze/{tabell}", {
+        tags("Forvaltning")
+        description = "Starter ANALYZE på én oppgavetabell eller -partisjon, og returnerer med en gang. " +
+            "Kjøringen fortsetter i bakgrunnen og rapporterer fremgang i loggen hvert minutt, " +
+            "samt en sluttlinje med tidsbruk. ANALYZE tar kun ShareUpdateExclusiveLock og blokkerer " +
+            "verken lesing eller skriving. Merk at kjøringen avbrytes dersom poden restarter."
+        request {
+            pathParameter<String>("tabell") {
+                description = "Tabell eller partisjon. Må starte med 'oppgave_v3' eller 'oppgavefelt_verdi' " +
+                    "og slutte med '_part'."
+                example("oppgave_v3_part") {
+                    value = "oppgave_v3_part"
+                    description = "Foreldretabellen, rekurserer ned i alle partisjoner"
+                }
+                example("oppgavefelt_verdi_lukket_2024_part") {
+                    value = "oppgavefelt_verdi_lukket_2024_part"
+                    description = "Én frossen partisjon som autoanalyze aldri treffer"
+                }
+            }
+        }
+    }) {
+        requestContextService.withRequestContext(call) {
+            if (pepClient.kanLeggeUtDriftsmelding()) {
+                when (val resultat = analyzeTjeneste.startAnalyze(call.parameters["tabell"]!!)) {
+                    is AnalyzeStartResultat.Startet -> call.respond(
+                        HttpStatusCode.Accepted,
+                        AnalyzeStartetResponse(
+                            tabell = resultat.tabell,
+                            størrelse = resultat.størrelse,
+                            melding = "ANALYZE startet i bakgrunnen. Følg fremgangen i loggen."
+                        )
+                    )
+
+                    is AnalyzeStartResultat.AlleredeIGang -> call.respond(
+                        HttpStatusCode.Conflict,
+                        "ANALYZE pågår allerede for ${resultat.tabell}."
+                    )
+
+                    is AnalyzeStartResultat.UgyldigTabell -> call.respond(
+                        HttpStatusCode.BadRequest,
+                        resultat.begrunnelse
+                    )
+                }
+            } else {
+                call.respond(HttpStatusCode.Forbidden)
+            }
+        }
+    }
 
 
     get("/index_oversikt", {
