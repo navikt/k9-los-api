@@ -129,7 +129,8 @@ object SakEventTilOppgaveMapper {
 
     private fun erTilBeslutter(event: UngSakEventDto): Boolean {
         return getåpneAksjonspunkter(event).firstOrNull { ap ->
-            ap.aksjonspunktKode.equals(AksjonspunktDefinisjon.FATTER_VEDTAK.kode)
+            ap.aksjonspunktKode.equals(AksjonspunktDefinisjon.FATTER_VEDTAK.kode) ||
+                    ap.aksjonspunktKode.equals(AksjonspunktDefinisjon.NAV_KONTOR_BESLUTTER_VILKÅR.kode)
         } != null
     }
 
