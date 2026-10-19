@@ -45,7 +45,9 @@ class PepClient(
 
     override suspend fun basisTilgangIOmråder(): Set<Områder> = coroutineScope {
         suspend fun harBasisTilgang(område: Områder): Boolean =
-            try {
+            if (område == Områder.UNGDOMSPROGRAMYTELSEN)
+                false
+            else try {
                 tilganger(område).basis
             } catch (e: CancellationException) {
                 throw e
