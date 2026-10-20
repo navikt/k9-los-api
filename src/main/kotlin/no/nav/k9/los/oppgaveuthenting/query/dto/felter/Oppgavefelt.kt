@@ -11,5 +11,5 @@ class Oppgavefelt(
     val synlighet: Synlighet,
     val listetype: Boolean = false,
     val verdiforklaringerErUttømmende: Boolean = false,
-    val verdiforklaringer: List<Verdiforklaring>?
+    val verdiforklaringer: List<Verdiforklaring>
 )

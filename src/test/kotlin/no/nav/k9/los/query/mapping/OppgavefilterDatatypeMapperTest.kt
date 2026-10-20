@@ -22,7 +22,7 @@ class OppgavefilterDatatypeMapperTest {
                 visningsnavn = "Testet felt",
                 tolkes_som = "boolean",
                 synlighet = Synlighet.OVER_STREKEN,
-                verdiforklaringer = null
+                verdiforklaringer = emptyList()
             ),
             transientFeltutleder = null
         ),
@@ -33,7 +33,7 @@ class OppgavefilterDatatypeMapperTest {
                 visningsnavn = "Testet felt",
                 tolkes_som = "Timestamp",
                 synlighet = Synlighet.OVER_STREKEN,
-                verdiforklaringer = null
+                verdiforklaringer = emptyList()
             ),
             transientFeltutleder = null
         ),
@@ -44,7 +44,7 @@ class OppgavefilterDatatypeMapperTest {
                 visningsnavn = "Testet felt",
                 tolkes_som = "Integer",
                 synlighet = Synlighet.OVER_STREKEN,
-                verdiforklaringer = null
+                verdiforklaringer = emptyList()
             ),
             transientFeltutleder = null
         )
