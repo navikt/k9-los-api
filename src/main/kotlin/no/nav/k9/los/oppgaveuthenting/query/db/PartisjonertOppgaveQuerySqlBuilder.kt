@@ -183,7 +183,7 @@ class PartisjonertOppgaveQuerySqlBuilder(
         }
 
         // 2. Felt med område
-        if (feltområde != null) {
+        if (feltområde != null && feltkode != OPPGAVETYPE) {
             // Hvis null-verdi er det kun en verdi, allerede håndtert i filterRens
             if (feltverdier.first() == null) {
                 utenOppgavefelt(combineOperator, feltkode, operator)
@@ -792,6 +792,10 @@ class PartisjonertOppgaveQuerySqlBuilder(
                 }
             }
         }
+    }
+
+    companion object {
+        private const val OPPGAVETYPE = "oppgavetype"
     }
 
     override fun getParams(): Map<String, Any?> {
