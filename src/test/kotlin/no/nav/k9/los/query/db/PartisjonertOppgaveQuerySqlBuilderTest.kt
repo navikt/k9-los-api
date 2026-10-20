@@ -27,6 +27,17 @@ class PartisjonertOppgaveQuerySqlBuilderTest {
                 verdiforklaringer = emptyList()
             ),
             null
+        ),
+        OmrådeOgKode(Områder.K9, "oppgavetype") to OppgavefeltMedMer(
+            Oppgavefelt(
+                område = Områder.K9,
+                kode = "oppgavetype",
+                visningsnavn = "Oppgavetype",
+                tolkes_som = "String",
+                synlighet = Synlighet.UNDER_STREKEN,
+                verdiforklaringer = emptyList()
+            ),
+            null
         )
     )
 
@@ -210,4 +221,71 @@ class PartisjonertOppgaveQuerySqlBuilderTest {
         assertTrue(sql.contains("o.ferdigstilt_dato"), "SQL burde inneholde o.ferdigstilt_dato i ORDER BY")
         assertTrue(sql.contains("DESC"), "SQL burde inneholde synkende sortering")
     }
+
+    @Test
+    fun `medSelectFelter bruker oppgavetypekolonnen for områdescopet oppgavetype`() {
+        val builder = PartisjonertOppgaveQuerySqlBuilder(
+            område = Områder.K9,
+            felter = mockFelter,
+            oppgavestatusFilter = listOf(Oppgavestatus.AAPEN),
+            now = LocalDateTime.now(),
+            ferdigstiltDatoFilter = null
+        )
+
+        builder.medSelectFelter(listOf(EnkelSelectFelt(Områder.K9, "oppgavetype")))
+
+        assertTrue(builder.getQuery().contains("o.oppgavetype_ekstern_id AS felt_0"))
+    }
+
+    @Test
+    fun `medEnkelOrder bruker oppgavetypekolonnen for områdescopet oppgavetype`() {
+        val builder = PartisjonertOppgaveQuerySqlBuilder(
+            område = Områder.K9,
+            felter = mockFelter,
+            oppgavestatusFilter = listOf(Oppgavestatus.AAPEN),
+            now = LocalDateTime.now(),
+            ferdigstiltDatoFilter = null
+        )
+
+        builder.medEnkelOrder(Områder.K9, "oppgavetype", true)
+
+        assertTrue(builder.getQuery().contains("o.oppgavetype_ekstern_id ASC"))
+    }
+
+    @Test
+    fun `medAggregering grupperer områdescopet oppgavetype på oppgavetypekolonnen`() {
+        val builder = PartisjonertOppgaveQuerySqlBuilder(
+            område = Områder.K9,
+            felter = mockFelter,
+            oppgavestatusFilter = listOf(Oppgavestatus.AAPEN),
+            now = LocalDateTime.now(),
+            ferdigstiltDatoFilter = null
+        )
+
+        builder.medAggregering(
+            listOf(EnkelSelectFelt(Områder.K9, "oppgavetype")),
+            listOf(AggregertSelectFelt(Aggregeringsfunksjon.ANTALL))
+        )
+
+        assertTrue(builder.getQuery().contains("o.oppgavetype_ekstern_id AS gruppe_0"))
+    }
+
+    @Test
+    fun `byggAggregeringsgrunnlag bruker oppgavetypekolonnen for områdescopet oppgavetype`() {
+        val builder = PartisjonertOppgaveQuerySqlBuilder(
+            område = Områder.K9,
+            felter = mockFelter,
+            oppgavestatusFilter = listOf(Oppgavestatus.AAPEN),
+            now = LocalDateTime.now(),
+            ferdigstiltDatoFilter = null
+        )
+
+        builder.medAggregering(
+            emptyList(),
+            listOf(AggregertSelectFelt(Aggregeringsfunksjon.MIN, Områder.K9, "oppgavetype"))
+        )
+
+        assertTrue(builder.getQuery().contains("MIN(o.oppgavetype_ekstern_id) AS agg_0"))
+    }
+
 }

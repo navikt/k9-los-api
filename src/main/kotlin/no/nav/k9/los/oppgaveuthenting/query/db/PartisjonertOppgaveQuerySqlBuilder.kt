@@ -261,7 +261,7 @@ class PartisjonertOppgaveQuerySqlBuilder(
             return
         }
 
-        if (feltområde != null) {
+        if (feltområde != null && feltkode != OPPGAVETYPE) {
             medEnkelOrderAvOppgavefelt(feltområde, feltkode, økende)
             return
         }
@@ -537,7 +537,7 @@ class PartisjonertOppgaveQuerySqlBuilder(
         val datatype = datatypeForFelt(felt.område, feltKode)
         validerStøttetAggregering(felt.funksjon, datatype, feltKode)
 
-        if (felt.område == null) {
+        if (felt.område == null || feltKode == OPPGAVETYPE) {
             return Aggregeringsgrunnlag(
                 uttrykk = kolonneForAggregeringsfeltUtenOmråde(feltKode),
                 datatype = datatype
@@ -611,7 +611,7 @@ class PartisjonertOppgaveQuerySqlBuilder(
         selectFelter.forEachIndexed { index, felt ->
             val alias = "felt_$index"
 
-            if (felt.område != null) {
+            if (felt.område != null && felt.kode != OPPGAVETYPE) {
                 val transientFeltutleder = hentTransientFeltutleder(felt.område, felt.kode)
                 if (transientFeltutleder != null) {
                     val sqlMedParams = sikreUnikeParams(
@@ -686,7 +686,7 @@ class PartisjonertOppgaveQuerySqlBuilder(
         grupperingsFelter.forEachIndexed { index, felt ->
             val alias = "gruppe_$index"
 
-            if (felt.område != null) {
+            if (felt.område != null && felt.kode != OPPGAVETYPE) {
                 val transientFeltutleder = hentTransientFeltutleder(felt.område, felt.kode)
                 if (transientFeltutleder != null) {
                     val sqlMedParams = sikreUnikeParams(
