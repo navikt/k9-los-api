@@ -95,6 +95,23 @@ class OppgaveQueryRepository(
             }.asList
         )
 
+        val k9Oppgavetyper = K9Oppgavetypenavn.entries.map {
+            Verdiforklaring(
+                verdi = it.kode,
+                visningsnavn = it.kode,
+                synlighet = Synlighet.UNDER_STREKEN,
+                gruppering = null
+            )
+        }
+        val aktOppgavetyper = AktOppgavetypenavn.entries.map {
+            Verdiforklaring(
+                verdi = it.kode,
+                visningsnavn = it.navn,
+                synlighet = Synlighet.OVER_STREKEN,
+                gruppering = null
+            )
+        }
+
         val standardfelter = listOf(
             Oppgavefelt(
                 null,
@@ -119,26 +136,18 @@ class OppgaveQueryRepository(
                 tolkes_som = "String",
                 synlighet = Synlighet.OVER_STREKEN,
                 verdiforklaringer = when (område) {
-                    Områder.K9 ->
-                        K9Oppgavetypenavn.entries.map {
-                            Verdiforklaring(
-                                verdi = it.kode,
-                                visningsnavn = it.kode,
-                                synlighet = Synlighet.UNDER_STREKEN,
-                                gruppering = null
-                            )
-                        }
-                    Områder.AKTIVITETSPENGER ->
-                        AktOppgavetypenavn.entries.map {
-                            Verdiforklaring(
-                                verdi = it.kode,
-                                visningsnavn = it.navn,
-                                synlighet = Synlighet.OVER_STREKEN,
-                                gruppering = null
-                            )
-                        }
+                    Områder.K9 -> k9Oppgavetyper
+                    Områder.AKTIVITETSPENGER -> aktOppgavetyper
                     Områder.UNGDOMSPROGRAMYTELSEN -> throw IllegalArgumentException("Unsupported område: $område")
                 }
+            ),
+            Oppgavefelt(
+                område = null,
+                kode = "oppgavetype",
+                visningsnavn = "Oppgavetype",
+                tolkes_som = "String",
+                synlighet = Synlighet.SKJULT,
+                verdiforklaringer = k9Oppgavetyper + aktOppgavetyper
             ),
             Oppgavefelt(
                 område = null,
@@ -211,10 +220,6 @@ class OppgaveQueryRepository(
     ): List<OppgaveQueryRad> {
         val felter = hentAlleFelterMedMer(request.område, medKodeverk = false, tx)
             .associateBy { felt -> OmrådeOgKode(felt.oppgavefelt.område, felt.oppgavefelt.kode) }
-            .let { felter ->
-                val oppgavetype = felter[OmrådeOgKode(request.område, "oppgavetype")]
-                if (oppgavetype != null) felter + (OmrådeOgKode(null, "oppgavetype") to oppgavetype) else felter
-            }
 
         val sqlBuilder = OppgaveQueryToSqlMapper.toSql(request, felter, now)
         loggSqlDebug(sqlBuilder)
