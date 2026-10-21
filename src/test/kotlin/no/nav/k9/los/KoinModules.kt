@@ -555,6 +555,19 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
         )
     }
 
+    single {
+        no.nav.k9.los.nøkkeltall.avdelingsleder.statusfordeling.AktivitetspengerStatusFordelingService(
+            queryService = get()
+        )
+    }
+
+    single {
+        no.nav.k9.los.nøkkeltall.avdelingsleder.statusfordeling.StatusFordelingService(
+            k9 = get(),
+            aktivitetspenger = get(),
+        )
+    }
+
     single<LagretSøkRepository> {
         LagretSøkRepository(dataSource = get())
     }

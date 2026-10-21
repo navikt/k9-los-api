@@ -71,6 +71,8 @@ import no.nav.k9.los.ko.OppgaveKoSaksbehandlerApisNy
 import no.nav.k9.los.lagretsok.LagretSøkApi
 import no.nav.k9.los.lagretsok.LagretSøkApiNy
 import no.nav.k9.los.nøkkeltall.K9NøkkeltallApis
+import no.nav.k9.los.nøkkeltall.NøkkeltallApis
+import no.nav.k9.los.nøkkeltall.avdelingsleder.statusfordeling.StatusFordelingService
 import no.nav.k9.los.nøkkeltall.saksbehandler.nyeogferdigstilte.K9NyeOgFerdigstilteApi
 import no.nav.k9.los.nøkkeltall.saksbehandler.nyeogferdigstilte.K9NyeOgFerdigstilteService
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
@@ -335,8 +337,7 @@ private fun Route.flerområdeApi() {
                     route("saksbehandler-admin", { tags("Avdelingsleder / Saksbehandler admin") }) { SaksbehandlerAdminApisNy() }
                     route("reservasjon-admin", { tags("Avdelingsleder / Reservasjoner") }) { ReservasjonAdminApiNy() }
                     route("oppgaveko", { tags("Avdelingsleder / Oppgavekøer") }) { OppgaveKoAvdelingslederApisNy() }
-                    // Etter hvert: Trenger å lage en for flere områder
-                    // route("nokkeltall") { K9NøkkeltallApis() }
+                    route("nokkeltall", { tags("Avdelingsleder / Nøkkeltall") }) { NøkkeltallApis() }
                     route("lagret-sok", { tags("Avdelingsleder / Lagrede søk") }) { LagretSøkApiNy() }
                     route("uttrekk", { tags("Avdelingsleder / Uttrekk") }) { UttrekkApiNy() }
                     route("query", { tags("Avdelingsleder / Query") }) { OppgaveQueryApisNy() }
@@ -353,8 +354,7 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
     val oppgavestatistikkTjeneste = koin.get<OppgavestatistikkTjeneste>()
 
     val pepCacheService = koin.get<PepCacheService>()
-    val statusFordelingService =
-        koin.get<no.nav.k9.los.nøkkeltall.avdelingsleder.statusfordeling.K9StatusFordelingService>()
+    val statusFordelingService = koin.get<StatusFordelingService>()
     val dagensTallService = koin.get<no.nav.k9.los.nøkkeltall.avdelingsleder.dagenstall.K9DagensTallService>()
     val perEnhetService =
         koin.get<no.nav.k9.los.nøkkeltall.avdelingsleder.ferdigstilteperenhet.K9FerdigstiltePerEnhetService>()
@@ -467,7 +467,9 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
                 navn = "StatusFordelingOppstart",
                 prioritet = mediumPrioritet,
             ) {
-                statusFordelingService.oppdaterCache(kode6 = false)
+                listOf(Områder.K9, Områder.AKTIVITETSPENGER).forEach { område ->
+                    statusFordelingService.oppdaterCache(område, kode6 = false)
+                }
             }
         )
 
@@ -505,7 +507,9 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
                 tidsvindu = utvidetArbeidstid,
                 minutter = (0..55 step 5).toList(),
             ) {
-                statusFordelingService.oppdaterCache(kode6 = false)
+                listOf(Områder.K9, Områder.AKTIVITETSPENGER).forEach { område ->
+                    statusFordelingService.oppdaterCache(område, kode6 = false)
+                }
             }
         )
 

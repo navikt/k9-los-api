@@ -24,16 +24,16 @@ import kotlin.time.Duration.Companion.minutes
 import kotlin.time.measureTime
 import kotlin.time.toJavaDuration
 
-class K9StatusFordelingService(val queryService: OppgaveQueryService) {
+class K9StatusFordelingService(val queryService: OppgaveQueryService) : StatusFordeling {
     private val cache: Cache<Boolean, StatusFordelingResponse> = Cache(2)
     private val cacheLevetid = 5.minutes.toJavaDuration()
     private val log: Logger = LoggerFactory.getLogger(K9StatusFordelingService::class.java)
 
-    fun hentVerdi(kode6: Boolean): StatusFordelingResponse {
+    override fun hentVerdi(kode6: Boolean): StatusFordelingResponse {
         return cache.hent(kode6, cacheLevetid) { StatusFordelingResponse(LocalDateTime.now(), hentFraDatabase(kode6)) }
     }
 
-    fun oppdaterCache(kode6: Boolean) {
+    override fun oppdaterCache(kode6: Boolean) {
         val tidBruktPåOppdatering = measureTime {
             val tall = hentFraDatabase(kode6)
             cache.set(
