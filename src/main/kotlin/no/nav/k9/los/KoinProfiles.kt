@@ -573,6 +573,25 @@ fun common(app: Application, config: Configuration) = module {
     }
 
     single {
+        no.nav.k9.los.nøkkeltall.avdelingsleder.inngangogferdigstilte.K9InngangOgFerdigstilteService(
+            kilde = get(),
+        )
+    }
+
+    single {
+        no.nav.k9.los.nøkkeltall.avdelingsleder.inngangogferdigstilte.AktivitetspengerInngangOgFerdigstilteService(
+            queryService = get(),
+        )
+    }
+
+    single {
+        no.nav.k9.los.nøkkeltall.avdelingsleder.inngangogferdigstilte.InngangOgFerdigstilteService(
+            k9 = get(),
+            aktivitetspenger = get(),
+        )
+    }
+
+    single {
         no.nav.k9.los.nøkkeltall.avdelingsleder.ferdigstilteperenhet.K9FerdigstiltePerEnhetService(
             queryService = get()
         )

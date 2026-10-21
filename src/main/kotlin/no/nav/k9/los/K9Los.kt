@@ -72,6 +72,7 @@ import no.nav.k9.los.lagretsok.LagretSøkApi
 import no.nav.k9.los.lagretsok.LagretSøkApiNy
 import no.nav.k9.los.nøkkeltall.K9NøkkeltallApis
 import no.nav.k9.los.nøkkeltall.NøkkeltallApis
+import no.nav.k9.los.nøkkeltall.avdelingsleder.inngangogferdigstilte.InngangOgFerdigstilteService
 import no.nav.k9.los.nøkkeltall.avdelingsleder.statusfordeling.StatusFordelingService
 import no.nav.k9.los.nøkkeltall.saksbehandler.nyeogferdigstilte.K9NyeOgFerdigstilteApi
 import no.nav.k9.los.nøkkeltall.saksbehandler.nyeogferdigstilte.K9NyeOgFerdigstilteService
@@ -355,6 +356,7 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
 
     val pepCacheService = koin.get<PepCacheService>()
     val statusFordelingService = koin.get<StatusFordelingService>()
+    val inngangOgFerdigstilteService = koin.get<InngangOgFerdigstilteService>()
     val dagensTallService = koin.get<no.nav.k9.los.nøkkeltall.avdelingsleder.dagenstall.K9DagensTallService>()
     val perEnhetService =
         koin.get<no.nav.k9.los.nøkkeltall.avdelingsleder.ferdigstilteperenhet.K9FerdigstiltePerEnhetService>()
@@ -484,6 +486,15 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
 
         add(
             PlanlagtJobb.Oppstart(
+                navn = "InngangOgFerdigstilteAktivitetspengerOppstart",
+                prioritet = mediumPrioritet,
+            ) {
+                inngangOgFerdigstilteService.oppdaterCache(Områder.AKTIVITETSPENGER, this)
+            }
+        )
+
+        add(
+            PlanlagtJobb.Oppstart(
                 navn = "PerEnhetOppstart",
                 prioritet = mediumPrioritet,
             ) {
@@ -521,6 +532,17 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
                 minutter = listOf(0),
             ) {
                 dagensTallService.oppdaterCache(this)
+            }
+        )
+
+        add(
+            PlanlagtJobb.TimeJobb(
+                navn = "InngangOgFerdigstilteAktivitetspengerOppdaterer",
+                prioritet = lavPrioritet,
+                tidsvindu = Tidsvindu.alleDager(),
+                minutter = listOf(0),
+            ) {
+                inngangOgFerdigstilteService.oppdaterCache(Områder.AKTIVITETSPENGER, this)
             }
         )
 

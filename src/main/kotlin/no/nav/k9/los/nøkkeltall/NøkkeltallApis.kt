@@ -8,8 +8,8 @@ import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.rest.RequestContextService
 import no.nav.k9.los.infrastruktur.rest.område
 import no.nav.k9.los.infrastruktur.utils.IkkeImplementertException
-import no.nav.k9.los.nøkkeltall.avdelingsleder.dagenstall.DagensTallResponse
-import no.nav.k9.los.nøkkeltall.avdelingsleder.dagenstall.K9DagensTallService
+import no.nav.k9.los.nøkkeltall.avdelingsleder.inngangogferdigstilte.InngangOgFerdigstilteResponse
+import no.nav.k9.los.nøkkeltall.avdelingsleder.inngangogferdigstilte.InngangOgFerdigstilteService
 import no.nav.k9.los.nøkkeltall.avdelingsleder.ferdigstilteperenhet.FerdigstiltePerEnhetGruppe
 import no.nav.k9.los.nøkkeltall.avdelingsleder.ferdigstilteperenhet.FerdigstiltePerEnhetResponse
 import no.nav.k9.los.nøkkeltall.avdelingsleder.ferdigstilteperenhet.K9FerdigstiltePerEnhetService
@@ -20,7 +20,7 @@ import org.koin.ktor.ext.inject
 
 fun Route.NøkkeltallApis() {
     val statusFordelingService by inject<StatusFordelingService>()
-    val dagensTallService by inject<K9DagensTallService>()
+    val inngangOgFerdigstilteService by inject<InngangOgFerdigstilteService>()
     val perEnhetService by inject<K9FerdigstiltePerEnhetService>()
     val requestContextService by inject<RequestContextService>()
     val pepClient by inject<IPepClient>()
@@ -43,20 +43,18 @@ fun Route.NøkkeltallApis() {
         }
     }
 
-    get("dagens-tall", {
-        operationId = "hentDagensTall"
-        summary = "Hent dagens nøkkeltall"
-        description = "Støttes foreløpig bare for K9."
+    get("inngang-og-ferdigstilte", {
+        operationId = "hentInngangOgFerdigstilte"
+        summary = "Hent inngang og ferdigstilte for området"
+        description = "Antall mottatte og ferdigstilte oppgaver i dag og siste én, to og fire uker. Grupper varierer per område. Aktivitetspenger har ikke manuelt/automatisk-fordeling."
         response {
-            HttpStatusCode.OK to { body<DagensTallResponse>() }
+            HttpStatusCode.OK to { body<InngangOgFerdigstilteResponse>() }
             HttpStatusCode.Forbidden to { description = "Brukeren mangler tilgang til oppgavestyring i området" }
-            HttpStatusCode.NotImplemented to { description = "Nøkkeltallet støttes ikke for området" }
         }
     }) {
         requestContextService.withRequestContext(call) {
             if (pepClient.erOppgaveStyrer()) {
-                krevK9(coroutineContext.område())
-                call.respond(dagensTallService.hentCachetVerdi())
+                call.respond(inngangOgFerdigstilteService.hentCachetVerdi(coroutineContext.område()))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }

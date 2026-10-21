@@ -538,6 +538,25 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     }
 
     single {
+        no.nav.k9.los.nøkkeltall.avdelingsleder.inngangogferdigstilte.K9InngangOgFerdigstilteService(
+            kilde = get(),
+        )
+    }
+
+    single {
+        no.nav.k9.los.nøkkeltall.avdelingsleder.inngangogferdigstilte.AktivitetspengerInngangOgFerdigstilteService(
+            queryService = get(),
+        )
+    }
+
+    single {
+        no.nav.k9.los.nøkkeltall.avdelingsleder.inngangogferdigstilte.InngangOgFerdigstilteService(
+            k9 = get(),
+            aktivitetspenger = get(),
+        )
+    }
+
+    single {
         K9FerdigstiltePerEnhetService(
             queryService = get()
         )

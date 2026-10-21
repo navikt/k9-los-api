@@ -27,13 +27,11 @@ import no.nav.k9.los.infrastruktur.rest.RequestContextService
 import no.nav.k9.los.infrastruktur.rest.område
 import no.nav.k9.los.infrastruktur.rest.områdeApi
 import no.nav.k9.los.infrastruktur.utils.IkkeImplementertException
-import no.nav.k9.los.nøkkeltall.avdelingsleder.dagenstall.DagensTallResponse
-import no.nav.k9.los.nøkkeltall.avdelingsleder.dagenstall.K9DagensTallService
+import no.nav.k9.los.nøkkeltall.avdelingsleder.inngangogferdigstilte.InngangOgFerdigstilteResponse
+import no.nav.k9.los.nøkkeltall.avdelingsleder.inngangogferdigstilte.InngangOgFerdigstilteService
 import no.nav.k9.los.nøkkeltall.avdelingsleder.ferdigstilteperenhet.FerdigstiltePerEnhetGruppe
 import no.nav.k9.los.nøkkeltall.avdelingsleder.ferdigstilteperenhet.FerdigstiltePerEnhetResponse
 import no.nav.k9.los.nøkkeltall.avdelingsleder.ferdigstilteperenhet.K9FerdigstiltePerEnhetService
-import no.nav.k9.los.nøkkeltall.avdelingsleder.status.K9StatusService
-import no.nav.k9.los.nøkkeltall.avdelingsleder.status.StatusDto
 import no.nav.k9.los.nøkkeltall.avdelingsleder.statusfordeling.StatusFordelingResponse
 import no.nav.k9.los.nøkkeltall.avdelingsleder.statusfordeling.StatusFordelingService
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
@@ -49,12 +47,11 @@ import kotlin.test.assertTrue
 class NøkkeltallApisTest {
     private val pepClient = mockk<IPepClient>()
     private val statusFordeling = mockk<StatusFordelingService>()
-    private val status = mockk<K9StatusService>()
-    private val dagensTall = mockk<K9DagensTallService>()
+    private val inngangOgFerdigstilte = mockk<InngangOgFerdigstilteService>()
     private val perEnhet = mockk<K9FerdigstiltePerEnhetService>()
     private val base = "/api/wip"
     private val nøkkeltall = "avdelingsleder/nokkeltall"
-    private val endepunkter = listOf("statusfordeling", "dagens-tall", "ferdigstilte-per-enhet")
+    private val endepunkter = listOf("statusfordeling", "inngang-og-ferdigstilte", "ferdigstilte-per-enhet")
 
     @AfterEach
     fun stoppKoin() = stopKoin()
@@ -95,7 +92,7 @@ class NøkkeltallApisTest {
         }
 
         coVerify(exactly = 0) { pepClient.harTilgangTilKode6() }
-        verify { listOf(statusFordeling, status, dagensTall, perEnhet) wasNot Called }
+        verify { listOf(statusFordeling, inngangOgFerdigstilte, perEnhet) wasNot Called }
     }
 
     @Test
@@ -103,27 +100,45 @@ class NøkkeltallApisTest {
         setup()
         coEvery { pepClient.erOppgaveStyrer() } returns true
 
-        for (endepunkt in endepunkter - "statusfordeling") {
-            assertEquals(HttpStatusCode.NotImplemented, client.get("$base/akt/$nøkkeltall/$endepunkt").status)
-        }
+        assertEquals(HttpStatusCode.NotImplemented, client.get("$base/akt/$nøkkeltall/ferdigstilte-per-enhet").status)
 
-        verify { listOf(status, dagensTall, perEnhet) wasNot Called }
+        verify { listOf(inngangOgFerdigstilte, perEnhet) wasNot Called }
     }
 
     @Test
     fun `K9 får eksisterende nøkkeltall og queryparametre på ny route`() = testApplication {
         setup()
         coEvery { pepClient.erOppgaveStyrer() } returns true
-        coEvery { pepClient.harTilgangTilKode6() } returns false
-        every { status.hentStatus(false) } returns listOf(StatusDto("Åpne behandlinger", 5))
-        every { dagensTall.hentCachetVerdi() } returns DagensTallResponse(null, emptyList(), emptyList(), emptyList())
+        every { inngangOgFerdigstilte.hentCachetVerdi(Områder.K9) } returns InngangOgFerdigstilteResponse(null, emptyList(), emptyList(), emptyList())
         every { perEnhet.hentCachetVerdi(any(), any()) } returns FerdigstiltePerEnhetResponse()
 
-        assertEquals(HttpStatusCode.OK, client.get("$base/k9/$nøkkeltall/dagens-tall").status)
+        assertEquals(HttpStatusCode.OK, client.get("$base/k9/$nøkkeltall/inngang-og-ferdigstilte").status)
         assertEquals(HttpStatusCode.OK, client.get("$base/k9/$nøkkeltall/ferdigstilte-per-enhet").status)
         assertEquals(HttpStatusCode.OK, client.get("$base/k9/$nøkkeltall/ferdigstilte-per-enhet?gruppe=PLEIEPENGER_SYKT_BARN&uker=4").status)
         verify(exactly = 1) { perEnhet.hentCachetVerdi(FerdigstiltePerEnhetGruppe.ALLE, 2) }
         verify(exactly = 1) { perEnhet.hentCachetVerdi(FerdigstiltePerEnhetGruppe.PLEIEPENGER_SYKT_BARN, 4) }
+    }
+
+    @Test
+    fun `inngang og ferdigstilte bruker områdets tjeneste for både K9 og aktivitetspenger`() = testApplication {
+        setup()
+        val tilgangsområder = mutableListOf<Områder>()
+        coEvery { pepClient.erOppgaveStyrer() } coAnswers {
+            tilgangsområder += coroutineContext.område()
+            true
+        }
+        every { inngangOgFerdigstilte.hentCachetVerdi(any()) } returns
+            InngangOgFerdigstilteResponse(null, emptyList(), emptyList(), emptyList())
+
+        for (område in listOf("k9", "akt")) {
+            assertEquals(HttpStatusCode.OK, client.get("$base/$område/$nøkkeltall/inngang-og-ferdigstilte").status)
+            assertEquals(HttpStatusCode.NotFound, client.get("$base/$område/$nøkkeltall/dagens-tall").status)
+            assertEquals(HttpStatusCode.NotFound, client.get("$base/$område/$nøkkeltall/status").status)
+        }
+
+        assertEquals(listOf(Områder.K9, Områder.AKTIVITETSPENGER), tilgangsområder)
+        verify(exactly = 1) { inngangOgFerdigstilte.hentCachetVerdi(Områder.K9) }
+        verify(exactly = 1) { inngangOgFerdigstilte.hentCachetVerdi(Områder.AKTIVITETSPENGER) }
     }
 
     @Test
@@ -146,8 +161,10 @@ class NøkkeltallApisTest {
             val operation = spec["paths"]["$base/{omrade}/$nøkkeltall/$endepunkt"]["get"]
             assertTrue(operation["responses"].has("200"))
             assertTrue(operation["responses"].has("403"))
-            if (endepunkt != "statusfordeling") assertTrue(operation["responses"].has("501"))
+            if (endepunkt == "ferdigstilte-per-enhet") assertTrue(operation["responses"].has("501"))
         }
+        assertEquals("hentInngangOgFerdigstilte", spec["paths"]["$base/{omrade}/$nøkkeltall/inngang-og-ferdigstilte"]["get"]["operationId"].textValue())
+        assertTrue(!spec["paths"].has("$base/{omrade}/$nøkkeltall/dagens-tall"))
     }
 
     private fun TestApplicationBuilder.setup() {
@@ -156,8 +173,7 @@ class NøkkeltallApisTest {
                 modules(module {
                     single { pepClient }
                     single { statusFordeling }
-                    single { status }
-                    single { dagensTall }
+                    single { inngangOgFerdigstilte }
                     single { perEnhet }
                     single { RequestContextService(KoinProfile.LOCAL) }
                 })
