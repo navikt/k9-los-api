@@ -71,8 +71,13 @@ import no.nav.k9.los.ko.OppgaveKoSaksbehandlerApisNy
 import no.nav.k9.los.lagretsok.LagretSøkApi
 import no.nav.k9.los.lagretsok.LagretSøkApiNy
 import no.nav.k9.los.nøkkeltall.K9NøkkeltallApis
+import no.nav.k9.los.nøkkeltall.AvdelingslederNøkkeltallApis
+import no.nav.k9.los.nøkkeltall.SaksbehandlerNøkkeltallApi
+import no.nav.k9.los.nøkkeltall.avdelingsleder.inngangogferdigstilte.InngangOgFerdigstilteService
+import no.nav.k9.los.nøkkeltall.avdelingsleder.statusfordeling.StatusFordelingService
 import no.nav.k9.los.nøkkeltall.saksbehandler.nyeogferdigstilte.K9NyeOgFerdigstilteApi
 import no.nav.k9.los.nøkkeltall.saksbehandler.nyeogferdigstilte.K9NyeOgFerdigstilteService
+import no.nav.k9.los.nøkkeltall.saksbehandler.nyeogferdigstilte.NyeOgFerdigstilteService
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.query.OppgaveQueryApis
 import no.nav.k9.los.oppgaveuthenting.query.OppgaveQueryApisNy
@@ -326,17 +331,14 @@ private fun Route.flerområdeApi() {
                     route("oppgaveko", { tags("Saksbehandler / Oppgavekøer") }) { OppgaveKoSaksbehandlerApisNy() }
                     route("reservasjoner", { tags("Saksbehandler / Reservasjoner") }) { ReservasjonApisNy() }
                     route("siste-oppgaver", { tags("Saksbehandler / Siste oppgaver") }) { SisteOppgaverApiNy() }
-
-                    // Etter hvert: Trenger å lage en for flere områder
-                    // route("nye-og-ferdigstilte") { NyeOgFerdigstilteApiNy() }
+                    route("nokkeltall", { tags("Saksbehandler / Nøkkeltall") }) { SaksbehandlerNøkkeltallApi() }
                 }
 
                 route("avdelingsleder") {
                     route("saksbehandler-admin", { tags("Avdelingsleder / Saksbehandler admin") }) { SaksbehandlerAdminApisNy() }
                     route("reservasjon-admin", { tags("Avdelingsleder / Reservasjoner") }) { ReservasjonAdminApiNy() }
                     route("oppgaveko", { tags("Avdelingsleder / Oppgavekøer") }) { OppgaveKoAvdelingslederApisNy() }
-                    // Etter hvert: Trenger å lage en for flere områder
-                    // route("nokkeltall") { K9NøkkeltallApis() }
+                    route("nokkeltall", { tags("Avdelingsleder / Nøkkeltall") }) { AvdelingslederNøkkeltallApis() }
                     route("lagret-sok", { tags("Avdelingsleder / Lagrede søk") }) { LagretSøkApiNy() }
                     route("uttrekk", { tags("Avdelingsleder / Uttrekk") }) { UttrekkApiNy() }
                     route("query", { tags("Avdelingsleder / Query") }) { OppgaveQueryApisNy() }
@@ -353,12 +355,13 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
     val oppgavestatistikkTjeneste = koin.get<OppgavestatistikkTjeneste>()
 
     val pepCacheService = koin.get<PepCacheService>()
-    val statusFordelingService =
-        koin.get<no.nav.k9.los.nøkkeltall.avdelingsleder.statusfordeling.K9StatusFordelingService>()
+    val statusFordelingService = koin.get<StatusFordelingService>()
+    val inngangOgFerdigstilteService = koin.get<InngangOgFerdigstilteService>()
     val dagensTallService = koin.get<no.nav.k9.los.nøkkeltall.avdelingsleder.dagenstall.K9DagensTallService>()
     val perEnhetService =
         koin.get<no.nav.k9.los.nøkkeltall.avdelingsleder.ferdigstilteperenhet.K9FerdigstiltePerEnhetService>()
     val nyeOgFerdigstilteService = koin.get<K9NyeOgFerdigstilteService>()
+    val nyeOgFerdigstilteOmrådeservice = koin.get<NyeOgFerdigstilteService>()
     val uttrekkJobb = koin.get<UttrekkJobb>()
 
     val k9sakBehandlingsoppfriskingJobb = K9sakBehandlingsoppfriskingJobb(
@@ -467,7 +470,9 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
                 navn = "StatusFordelingOppstart",
                 prioritet = mediumPrioritet,
             ) {
-                statusFordelingService.oppdaterCache(kode6 = false)
+                listOf(Områder.K9, Områder.AKTIVITETSPENGER).forEach { område ->
+                    statusFordelingService.oppdaterCache(område, kode6 = false)
+                }
             }
         )
 
@@ -477,6 +482,15 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
                 prioritet = mediumPrioritet,
             ) {
                 dagensTallService.oppdaterCache(this)
+            }
+        )
+
+        add(
+            PlanlagtJobb.Oppstart(
+                navn = "InngangOgFerdigstilteAktivitetspengerOppstart",
+                prioritet = mediumPrioritet,
+            ) {
+                inngangOgFerdigstilteService.oppdaterCache(Områder.AKTIVITETSPENGER, this)
             }
         )
 
@@ -499,13 +513,24 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
         )
 
         add(
+            PlanlagtJobb.Oppstart(
+                navn = "NyeOgFerdigstilteAktivitetspengerOppstart",
+                prioritet = mediumPrioritet,
+            ) {
+                nyeOgFerdigstilteOmrådeservice.oppdaterCache(Områder.AKTIVITETSPENGER, this)
+            }
+        )
+
+        add(
             PlanlagtJobb.TimeJobb(
                 navn = "StatusFordelingOppdaterer",
                 prioritet = lavPrioritet,
                 tidsvindu = utvidetArbeidstid,
                 minutter = (0..55 step 5).toList(),
             ) {
-                statusFordelingService.oppdaterCache(kode6 = false)
+                listOf(Områder.K9, Områder.AKTIVITETSPENGER).forEach { område ->
+                    statusFordelingService.oppdaterCache(område, kode6 = false)
+                }
             }
         )
 
@@ -517,6 +542,17 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
                 minutter = listOf(0),
             ) {
                 dagensTallService.oppdaterCache(this)
+            }
+        )
+
+        add(
+            PlanlagtJobb.TimeJobb(
+                navn = "InngangOgFerdigstilteAktivitetspengerOppdaterer",
+                prioritet = lavPrioritet,
+                tidsvindu = Tidsvindu.alleDager(),
+                minutter = listOf(0),
+            ) {
+                inngangOgFerdigstilteService.oppdaterCache(Områder.AKTIVITETSPENGER, this)
             }
         )
 
@@ -539,6 +575,17 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
                 minutter = listOf(0),
             ) {
                 nyeOgFerdigstilteService.oppdaterCache(this)
+            }
+        )
+
+        add(
+            PlanlagtJobb.TimeJobb(
+                navn = "NyeOgFerdigstilteAktivitetspengerOppdaterer",
+                prioritet = lavPrioritet,
+                tidsvindu = Tidsvindu.alleDager(),
+                minutter = listOf(0),
+            ) {
+                nyeOgFerdigstilteOmrådeservice.oppdaterCache(Områder.AKTIVITETSPENGER, this)
             }
         )
 

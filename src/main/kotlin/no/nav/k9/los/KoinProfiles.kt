@@ -573,6 +573,25 @@ fun common(app: Application, config: Configuration) = module {
     }
 
     single {
+        no.nav.k9.los.nøkkeltall.avdelingsleder.inngangogferdigstilte.K9InngangOgFerdigstilteService(
+            kilde = get(),
+        )
+    }
+
+    single {
+        no.nav.k9.los.nøkkeltall.avdelingsleder.inngangogferdigstilte.AktivitetspengerInngangOgFerdigstilteService(
+            queryService = get(),
+        )
+    }
+
+    single {
+        no.nav.k9.los.nøkkeltall.avdelingsleder.inngangogferdigstilte.InngangOgFerdigstilteService(
+            k9 = get(),
+            aktivitetspenger = get(),
+        )
+    }
+
+    single {
         no.nav.k9.los.nøkkeltall.avdelingsleder.ferdigstilteperenhet.K9FerdigstiltePerEnhetService(
             queryService = get()
         )
@@ -585,8 +604,33 @@ fun common(app: Application, config: Configuration) = module {
     }
 
     single {
+        no.nav.k9.los.nøkkeltall.saksbehandler.nyeogferdigstilte.K9NyeOgFerdigstilteAdapter(kilde = get())
+    }
+
+    single {
+        no.nav.k9.los.nøkkeltall.saksbehandler.nyeogferdigstilte.AktivitetspengerNyeOgFerdigstilteService(queryService = get())
+    }
+
+    single {
+        no.nav.k9.los.nøkkeltall.saksbehandler.nyeogferdigstilte.NyeOgFerdigstilteService(k9 = get(), aktivitetspenger = get())
+    }
+
+    single {
         no.nav.k9.los.nøkkeltall.avdelingsleder.statusfordeling.K9StatusFordelingService(
             queryService = get()
+        )
+    }
+
+    single {
+        no.nav.k9.los.nøkkeltall.avdelingsleder.statusfordeling.AktivitetspengerStatusFordelingService(
+            queryService = get()
+        )
+    }
+
+    single {
+        no.nav.k9.los.nøkkeltall.avdelingsleder.statusfordeling.StatusFordelingService(
+            k9 = get(),
+            aktivitetspenger = get(),
         )
     }
 
