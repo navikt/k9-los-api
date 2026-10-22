@@ -18,7 +18,7 @@ import no.nav.k9.los.nøkkeltall.avdelingsleder.statusfordeling.StatusFordelingS
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import org.koin.ktor.ext.inject
 
-fun Route.NøkkeltallApis() {
+fun Route.AvdelingslederNøkkeltallApis() {
     val statusFordelingService by inject<StatusFordelingService>()
     val inngangOgFerdigstilteService by inject<InngangOgFerdigstilteService>()
     val perEnhetService by inject<K9FerdigstiltePerEnhetService>()
@@ -27,7 +27,7 @@ fun Route.NøkkeltallApis() {
 
     get("statusfordeling", {
         operationId = "hentStatusfordeling"
-        summary = "Hent statusfordeling for området"
+        summary = "Hent statusfordeling, tellingen vises som kort på toppen av siden"
         description = "K9 har statuskort per behandlingsgruppe. Aktivitetspenger har behandlinger samlet, del 1, del 2, klager og feilutbetalinger."
         response {
             HttpStatusCode.OK to { body<StatusFordelingResponse>() }
@@ -45,7 +45,7 @@ fun Route.NøkkeltallApis() {
 
     get("inngang-og-ferdigstilte", {
         operationId = "hentInngangOgFerdigstilte"
-        summary = "Hent inngang og ferdigstilte for området"
+        summary = "Hent inngang og ferdigstilte, tidligere kalt dagens tall"
         description = "Antall mottatte og ferdigstilte oppgaver i dag og siste én, to og fire uker. Grupper varierer per område. Aktivitetspenger har ikke manuelt/automatisk-fordeling."
         response {
             HttpStatusCode.OK to { body<InngangOgFerdigstilteResponse>() }

@@ -44,7 +44,7 @@ import kotlin.coroutines.coroutineContext
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-class NøkkeltallApisTest {
+class AvdelingslederNøkkeltallApisTest {
     private val pepClient = mockk<IPepClient>()
     private val statusFordeling = mockk<StatusFordelingService>()
     private val inngangOgFerdigstilte = mockk<InngangOgFerdigstilteService>()
@@ -186,7 +186,7 @@ class NøkkeltallApisTest {
             routing {
                 route(base) {
                     områdeApi {
-                        route(nøkkeltall) { NøkkeltallApis() }
+                        route(nøkkeltall) { AvdelingslederNøkkeltallApis() }
                     }
                 }
                 route("openapi.json") { openApi() }

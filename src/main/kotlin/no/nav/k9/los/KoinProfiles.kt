@@ -604,6 +604,18 @@ fun common(app: Application, config: Configuration) = module {
     }
 
     single {
+        no.nav.k9.los.nøkkeltall.saksbehandler.nyeogferdigstilte.K9NyeOgFerdigstilteAdapter(kilde = get())
+    }
+
+    single {
+        no.nav.k9.los.nøkkeltall.saksbehandler.nyeogferdigstilte.AktivitetspengerNyeOgFerdigstilteService(queryService = get())
+    }
+
+    single {
+        no.nav.k9.los.nøkkeltall.saksbehandler.nyeogferdigstilte.NyeOgFerdigstilteService(k9 = get(), aktivitetspenger = get())
+    }
+
+    single {
         no.nav.k9.los.nøkkeltall.avdelingsleder.statusfordeling.K9StatusFordelingService(
             queryService = get()
         )
