@@ -28,7 +28,7 @@ fun Route.NøkkeltallApis() {
     get("statusfordeling", {
         operationId = "hentStatusfordeling"
         summary = "Hent statusfordeling for området"
-        description = "K9 har statuskort per behandlingsgruppe. Aktivitetspenger har behandlinger samlet, del 1 og del 2."
+        description = "K9 har statuskort per behandlingsgruppe. Aktivitetspenger har behandlinger samlet, del 1, del 2, klager og feilutbetalinger."
         response {
             HttpStatusCode.OK to { body<StatusFordelingResponse>() }
             HttpStatusCode.Forbidden to { description = "Brukeren mangler tilgang til oppgavestyring i området" }

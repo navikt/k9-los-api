@@ -36,9 +36,11 @@ class StatusFordelingServiceTest {
     fun `aktivitetspenger teller samlet og per del med tilsvarende kildespørringer`() {
         val forespørsler = mutableListOf<QueryRequest>()
         every { queryService.query(capture(forespørsler), any()) } answers {
-            when (firstArg<QueryRequest>().oppgaveQuery.filter("oppgavetype").verdi) {
-                listOf(del1) -> listOf(rad(Oppgavestatus.AAPEN, 2), rad(Oppgavestatus.VENTER, 3))
-                listOf(del2) -> listOf(rad(Oppgavestatus.AAPEN, 7), rad(Oppgavestatus.UAVKLART, 5))
+            val query = firstArg<QueryRequest>().oppgaveQuery
+            when {
+                query.filtere.filterIsInstance<FeltverdiOppgavefilter>().any { it.kode == "behandlingTypekode" } -> emptyList()
+                query.filterOrNull("oppgavetype")?.verdi == listOf(del1) -> listOf(rad(Oppgavestatus.AAPEN, 2), rad(Oppgavestatus.VENTER, 3))
+                query.filterOrNull("oppgavetype")?.verdi == listOf(del2) -> listOf(rad(Oppgavestatus.AAPEN, 7), rad(Oppgavestatus.UAVKLART, 5))
                 else -> listOf(rad(Oppgavestatus.AAPEN, 9), rad(Oppgavestatus.VENTER, 3), rad(Oppgavestatus.UAVKLART, 5))
             }
         }
@@ -50,14 +52,14 @@ class StatusFordelingServiceTest {
         assertEquals(listOf(9L, 2L, 7L), kort.map { it.topplinje.verdi })
         assertEquals(listOf("venter"), kort[1].linjer.map { it.visningsnavn })
         assertEquals(listOf("uavklart"), kort[2].linjer.map { it.visningsnavn })
-        assertEquals(3, forespørsler.size)
+        assertEquals(5, forespørsler.size)
         assertTrue(forespørsler.all { it.område == Områder.AKTIVITETSPENGER })
 
         kort.forEachIndexed { indeks, statuskort ->
             val forespørsel = forespørsler[indeks].oppgaveQuery
             assertEquals(forespørsel.filtere, statuskort.bunnlinje.kildespørring.filtere)
             (listOf(statuskort.topplinje, statuskort.bunnlinje) + statuskort.linjer).forEach { linje ->
-                assertEquals(forespørsel.filter("oppgavetype"), linje.kildespørring.filter("oppgavetype"))
+                assertEquals(forespørsel.filterOrNull("oppgavetype"), linje.kildespørring.filterOrNull("oppgavetype"))
                 assertEquals(listOf(PersonBeskyttelseType.UTEN_KODE6.kode), linje.kildespørring.filter("personbeskyttelse").verdi)
                 assertTrue(linje.kildespørring.select.isEmpty())
             }
@@ -69,7 +71,8 @@ class StatusFordelingServiceTest {
     @Test
     fun `tomme kort utelates mens kort med bare ventende oppgaver beholder åpne lik null`() {
         every { queryService.query(any(), any()) } answers {
-            if (firstArg<QueryRequest>().oppgaveQuery.filter("oppgavetype").verdi == listOf(del2)) emptyList()
+            val query = firstArg<QueryRequest>().oppgaveQuery
+            if (query.filterOrNull("oppgavetype")?.verdi == listOf(del2) || query.filterOrNull("behandlingTypekode") != null) emptyList()
             else listOf(rad(Oppgavestatus.VENTER, 4))
         }
 
@@ -90,14 +93,14 @@ class StatusFordelingServiceTest {
         service.hentVerdi(Områder.AKTIVITETSPENGER, true)
         service.hentVerdi(Områder.K9, false)
 
-        assertEquals(3, forespørsler.count { it.område == Områder.AKTIVITETSPENGER && it.oppgaveQuery.filter("personbeskyttelse").verdi == listOf(PersonBeskyttelseType.KODE6.kode) })
+        assertEquals(5, forespørsler.count { it.område == Områder.AKTIVITETSPENGER && it.oppgaveQuery.filter("personbeskyttelse").verdi == listOf(PersonBeskyttelseType.KODE6.kode) })
         assertEquals(6, forespørsler.count { it.område == Områder.K9 })
 
         service.oppdaterCache(Områder.AKTIVITETSPENGER, false)
         val oppdatert = service.hentVerdi(Områder.AKTIVITETSPENGER, false)
         assertTrue(oppdatert !== utenKode6)
         assertSame(oppdatert, service.hentVerdi(Områder.AKTIVITETSPENGER, false))
-        verify(exactly = 15) { queryService.query(any(), any()) }
+        verify(exactly = 21) { queryService.query(any(), any()) }
         verify(exactly = 1) { queryService.queryForAntall(any(), any()) }
     }
 
@@ -117,6 +120,7 @@ class StatusFordelingServiceTest {
     }
 
     private fun OppgaveQuery.filter(kode: String) = filtere.filterIsInstance<FeltverdiOppgavefilter>().single { it.kode == kode }
+    private fun OppgaveQuery.filterOrNull(kode: String) = filtere.filterIsInstance<FeltverdiOppgavefilter>().singleOrNull { it.kode == kode }
 
     private fun rad(status: Oppgavestatus, antall: Long) = OppgaveQueryRad(
         feltverdier = listOf(Oppgavefeltverdi(null, "oppgavestatus", status.kode)),

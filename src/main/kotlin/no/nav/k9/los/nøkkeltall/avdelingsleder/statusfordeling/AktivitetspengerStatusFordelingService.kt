@@ -1,6 +1,7 @@
 package no.nav.k9.los.nøkkeltall.avdelingsleder.statusfordeling
 
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.kodeverk.AktOppgavetypenavn
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.oppgavedefinisjon.AktivitetspengerFeltIder
 import no.nav.k9.los.infrastruktur.utils.Cache
 import no.nav.k9.los.infrastruktur.utils.CacheObject
 import no.nav.k9.los.kodeverk.PersonBeskyttelseType
@@ -15,6 +16,7 @@ import no.nav.k9.los.oppgaveuthenting.query.dto.query.EnkelSelectFelt
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.OppgaveQuery
 import no.nav.k9.los.oppgaveuthenting.query.mapping.EksternFeltverdiOperator
+import no.nav.ung.kodeverk.behandling.BehandlingType
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 import kotlin.time.Duration.Companion.minutes
@@ -45,10 +47,23 @@ class AktivitetspengerStatusFordelingService(
         )
         val del1 = AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1.kode
         val del2 = AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2.kode
+        fun oppgavetype(kode: String) = FeltverdiOppgavefilter(null, "oppgavetype", EksternFeltverdiOperator.IN, listOf(kode))
+        fun behandlingstyper(vararg typer: BehandlingType) = FeltverdiOppgavefilter(
+            Områder.AKTIVITETSPENGER, AktivitetspengerFeltIder.Behandling.TYPEKODE,
+            EksternFeltverdiOperator.IN, typer.map { it.kode },
+        )
         val tall = listOf(
-            byggStatuskort(KodeOgNavn("BEHANDLINGER", "Behandlinger"), personbeskyttelse, listOf(del1, del2)),
-            byggStatuskort(KodeOgNavn("DEL1", "Del 1"), personbeskyttelse, listOf(del1)),
-            byggStatuskort(KodeOgNavn("DEL2", "Del 2"), personbeskyttelse, listOf(del2)),
+            byggStatuskort(KodeOgNavn("BEHANDLINGER", "Behandlinger"), personbeskyttelse),
+            byggStatuskort(KodeOgNavn("DEL1", "Del 1"), personbeskyttelse, oppgavetype(del1)),
+            byggStatuskort(KodeOgNavn("DEL2", "Del 2"), personbeskyttelse, oppgavetype(del2)),
+            byggStatuskort(
+                KodeOgNavn("KLAGE", "Klager"), personbeskyttelse,
+                behandlingstyper(BehandlingType.KLAGE, BehandlingType.ANKE),
+            ),
+            byggStatuskort(
+                KodeOgNavn("FEILUTBETALING", "Feilutbetalinger"), personbeskyttelse,
+                behandlingstyper(BehandlingType.TILBAKEKREVING, BehandlingType.REVURDERING_TILBAKEKREVING),
+            ),
         ).filter { it.bunnlinje.verdi > 0 }
             .map { kort -> kort.copy(linjer = kort.linjer.filter { it.verdi > 0 }) }
 
@@ -58,12 +73,9 @@ class AktivitetspengerStatusFordelingService(
     private fun byggStatuskort(
         tittel: KodeOgNavn,
         personbeskyttelse: FeltverdiOppgavefilter,
-        oppgavetyper: List<String>,
+        vararg gruppefiltre: FeltverdiOppgavefilter,
     ): StatuskortDto {
-        val grunnfiltre = listOf(
-            personbeskyttelse,
-            FeltverdiOppgavefilter(null, "oppgavetype", EksternFeltverdiOperator.IN, oppgavetyper),
-        )
+        val grunnfiltre = listOf(personbeskyttelse) + gruppefiltre
         val aktiveStatuser = FeltverdiOppgavefilter(
             null, "oppgavestatus", EksternFeltverdiOperator.IN,
             listOf(Oppgavestatus.AAPEN.kode, Oppgavestatus.VENTER.kode, Oppgavestatus.UAVKLART.kode),

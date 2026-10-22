@@ -34,14 +34,18 @@ class AktivitetspengerInngangOgFerdigstilteService(
         KodeOgNavn("TOTALT", "Totalt"),
         KodeOgNavn("FØRSTEGANG", "Førstegangsbehandlinger"),
         KodeOgNavn("REVURDERING", "Revurderinger"),
+        KodeOgNavn("KLAGE", "Klager"),
+        KodeOgNavn("FEILUTBETALING", "Feilutbetalinger"),
     )
     private val oppgavetyper = mapOf(
         "DEL1" to AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1.kode,
         "DEL2" to AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2.kode,
     )
     private val behandlingstyper = mapOf(
-        "FØRSTEGANG" to BehandlingType.FØRSTEGANGSSØKNAD.kode,
-        "REVURDERING" to BehandlingType.REVURDERING.kode,
+        "FØRSTEGANG" to setOf(BehandlingType.FØRSTEGANGSSØKNAD.kode),
+        "REVURDERING" to setOf(BehandlingType.REVURDERING.kode),
+        "KLAGE" to setOf(BehandlingType.KLAGE.kode, BehandlingType.ANKE.kode),
+        "FEILUTBETALING" to setOf(BehandlingType.TILBAKEKREVING.kode, BehandlingType.REVURDERING_TILBAKEKREVING.kode),
     )
 
     override fun hentCachetVerdi(): InngangOgFerdigstilteResponse =
@@ -66,9 +70,7 @@ class AktivitetspengerInngangOgFerdigstilteService(
             QueryRequest(
                 Områder.AKTIVITETSPENGER,
                 OppgaveQuery(
-                    filtere = listOf(
-                        FeltverdiOppgavefilter(null, "oppgavetype", EksternFeltverdiOperator.IN, oppgavetyper.values.toList()),
-                    ) + filtre,
+                    filtere = filtre,
                     select = listOf(
                         EnkelSelectFelt(null, "oppgavetype"),
                         EnkelSelectFelt(Områder.AKTIVITETSPENGER, AktivitetspengerFeltIder.Behandling.TYPEKODE),
@@ -113,7 +115,7 @@ class AktivitetspengerInngangOgFerdigstilteService(
                 navn,
                 filter { rad ->
                     (hovedgruppe == "ALLE" || rad.oppgavetype == oppgavetyper[hovedgruppe]) &&
-                        (undergruppe == "TOTALT" || rad.behandlingstype == behandlingstyper[undergruppe])
+                        (undergruppe == "TOTALT" || rad.behandlingstype in behandlingstyper.getValue(undergruppe))
                 }.sumOf { it.antall },
             ),
         )

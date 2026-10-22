@@ -82,8 +82,8 @@ class InngangOgFerdigstilteServiceTest {
 
         assertNotNull(verdi.oppdatertTidspunkt)
         assertEquals(listOf("ALLE", "DEL1", "DEL2"), verdi.hovedgrupper.map { it.kode })
-        assertEquals(listOf("TOTALT", "FØRSTEGANG", "REVURDERING"), verdi.undergrupper.map { it.kode })
-        assertEquals(9, verdi.tall.size)
+        assertEquals(listOf("TOTALT", "FØRSTEGANG", "REVURDERING", "KLAGE", "FEILUTBETALING"), verdi.undergrupper.map { it.kode })
+        assertEquals(15, verdi.tall.size)
         assertTrue(verdi.tall.all { it.serier.keys == setOf("idag", "sisteUke", "siste2Uker", "siste4Uker") })
         assertTrue(verdi.tall.all { rad -> rad.serier.values.all { it.first.hovedtall.verdi == 0L && it.second.hovedtall.verdi == 0L } })
         assertSame(verdi, service.hentCachetVerdi())

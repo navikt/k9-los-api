@@ -4,12 +4,14 @@ import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.Områdesetup
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.kodeverk.AktOppgavetypenavn
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.oppgavedefinisjon.AktivitetspengerOppgaver
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nøkkeltall.avdelingsleder.inngangogferdigstilte.InngangOgFerdigstilteService
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.oppgavedefinisjon.omraade.OmrådeRepository
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgavedefinisjon.oppgavetype.OppgavetypeRepository
+import no.nav.k9.los.oppgavedefinisjon.oppgavetype.OppgavetypeTjeneste
 import no.nav.k9.los.oppgavemottak.AktivOgPartisjonertOppgaveAjourholdTjeneste
 import no.nav.k9.los.oppgavemottak.OppgaveFeltverdi
 import no.nav.k9.los.oppgavemottak.OppgaveV3
@@ -59,6 +61,41 @@ class AktivitetspengerInngangOgFerdigstilteIntegrationTest : AbstractK9LosIntegr
             assertEquals(kort.first.hovedtall.verdi, delkort.sumOf { it.first.hovedtall.verdi })
             assertEquals(kort.second.hovedtall.verdi, delkort.sumOf { it.second.hovedtall.verdi })
         }
+    }
+
+    @Test
+    fun `klager og feilutbetalinger telles utenfor ordinære oppgavetyper i alle perioder`() {
+        get<Områdesetup>().setup()
+        val klage = AktOppgavetypenavn.AKTIVITETSPENGERKLAGE.kode
+        val feilutbetaling = "test-feilutbetaling"
+        // Testdefinisjoner inntil eventmottaket støtter disse oppgavetypene.
+        val definisjon = AktivitetspengerOppgaver.lagOppgaveDefinisjon("http://localhost")
+        val mal = definisjon.oppgavetyper.first()
+        get<OppgavetypeTjeneste>().oppdater(definisjon.copy(
+            oppgavetyper = definisjon.oppgavetyper + setOf(mal.copy(id = klage), mal.copy(id = feilutbetaling)),
+        ))
+        lagreOppgave(klage, BehandlingType.KLAGE.kode, mottattDagerSiden = 0, ferdigstiltDagerSiden = 0)
+        lagreOppgave(klage, BehandlingType.ANKE.kode, mottattDagerSiden = 7, ferdigstiltDagerSiden = 7)
+        lagreOppgave(feilutbetaling, BehandlingType.TILBAKEKREVING.kode, mottattDagerSiden = 14, ferdigstiltDagerSiden = 14)
+        lagreOppgave(feilutbetaling, BehandlingType.REVURDERING_TILBAKEKREVING.kode, mottattDagerSiden = 28, ferdigstiltDagerSiden = 28)
+        lagreOppgave(feilutbetaling, BehandlingType.TILBAKEKREVING.kode, mottattDagerSiden = 29, ferdigstiltDagerSiden = 29)
+
+        val service = get<InngangOgFerdigstilteService>()
+        runBlocking { service.oppdaterCache(Områder.AKTIVITETSPENGER, this) }
+        val verdi = service.hentCachetVerdi(Områder.AKTIVITETSPENGER)
+        val forventedeAntall = mapOf(
+            "TOTALT" to listOf(1L, 2L, 3L, 4L),
+            "KLAGE" to listOf(1L, 2L, 2L, 2L),
+            "FEILUTBETALING" to listOf(0L, 0L, 1L, 2L),
+        )
+        for ((undergruppe, antall) in forventedeAntall) {
+            val rad = verdi.tall.single { it.hovedgruppe == "ALLE" && it.undergruppe == undergruppe }
+            assertEquals(antall, rad.serier.values.map { it.first.hovedtall.verdi })
+            assertEquals(antall, rad.serier.values.map { it.second.hovedtall.verdi })
+        }
+        assertTrue(verdi.tall.filter { it.hovedgruppe != "ALLE" }.all { rad ->
+            rad.serier.values.all { it.first.hovedtall.verdi == 0L && it.second.hovedtall.verdi == 0L }
+        })
     }
 
     private fun lagreOppgave(
