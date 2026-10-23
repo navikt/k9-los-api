@@ -1,5 +1,7 @@
 package no.nav.k9.los.nøkkeltall
 
+import io.mockk.Called
+import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -33,7 +35,7 @@ class StatusFordelingServiceTest {
     private val del2 = AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2.kode
 
     @Test
-    fun `aktivitetspenger teller samlet og per del med tilsvarende kildespørringer`() {
+    fun `aktivitetspenger teller samlet og per Nav-enhet med tilsvarende kildespørringer`() {
         val forespørsler = mutableListOf<QueryRequest>()
         every { queryService.query(capture(forespørsler), any()) } answers {
             val query = firstArg<QueryRequest>().oppgaveQuery
@@ -47,12 +49,15 @@ class StatusFordelingServiceTest {
 
         val kort = service.hentVerdi(Områder.AKTIVITETSPENGER, kode6 = false).tall
 
-        assertEquals(listOf("BEHANDLINGER", "DEL1", "DEL2"), kort.map { it.tittel.kode })
+        assertEquals(listOf(
+            KodeOgNavn("BEHANDLINGER", "Behandlinger"),
+            KodeOgNavn("NAVKONTOR", "Nav-kontor"),
+            KodeOgNavn("NAVFORVALTNING", "Nav-forvaltning"),
+        ), kort.map { it.tittel })
         assertEquals(listOf(17L, 5L, 12L), kort.map { it.bunnlinje.verdi })
         assertEquals(listOf(9L, 2L, 7L), kort.map { it.topplinje.verdi })
         assertEquals(listOf("venter"), kort[1].linjer.map { it.visningsnavn })
         assertEquals(listOf("uavklart"), kort[2].linjer.map { it.visningsnavn })
-        assertEquals(5, forespørsler.size)
         assertTrue(forespørsler.all { it.område == Områder.AKTIVITETSPENGER })
 
         kort.forEachIndexed { indeks, statuskort ->
@@ -78,7 +83,7 @@ class StatusFordelingServiceTest {
 
         val kort = aktivitetspenger.hentVerdi(kode6 = false).tall
 
-        assertEquals(listOf("BEHANDLINGER", "DEL1"), kort.map { it.tittel.kode })
+        assertEquals(listOf("BEHANDLINGER", "NAVKONTOR"), kort.map { it.tittel.kode })
         assertTrue(kort.all { it.topplinje.verdi == 0L && it.bunnlinje.verdi == 4L })
     }
 
@@ -89,19 +94,28 @@ class StatusFordelingServiceTest {
         every { queryService.queryForAntall(any(), any()) } returns 0L
 
         val utenKode6 = service.hentVerdi(Områder.AKTIVITETSPENGER, false)
-        assertSame(utenKode6, service.hentVerdi(Områder.AKTIVITETSPENGER, false))
-        service.hentVerdi(Områder.AKTIVITETSPENGER, true)
-        service.hentVerdi(Områder.K9, false)
+        val medKode6 = service.hentVerdi(Områder.AKTIVITETSPENGER, true)
+        val k9Verdi = service.hentVerdi(Områder.K9, false)
 
-        assertEquals(5, forespørsler.count { it.område == Områder.AKTIVITETSPENGER && it.oppgaveQuery.filter("personbeskyttelse").verdi == listOf(PersonBeskyttelseType.KODE6.kode) })
-        assertEquals(6, forespørsler.count { it.område == Områder.K9 })
+        assertTrue(forespørsler.any { it.område == Områder.AKTIVITETSPENGER && it.oppgaveQuery.filter("personbeskyttelse").verdi == listOf(PersonBeskyttelseType.KODE6.kode) })
+        assertTrue(forespørsler.any { it.område == Områder.K9 })
+
+        clearMocks(queryService, answers = false)
+        assertSame(utenKode6, service.hentVerdi(Områder.AKTIVITETSPENGER, false))
+        assertSame(medKode6, service.hentVerdi(Områder.AKTIVITETSPENGER, true))
+        assertSame(k9Verdi, service.hentVerdi(Områder.K9, false))
+        verify { queryService wasNot Called }
 
         service.oppdaterCache(Områder.AKTIVITETSPENGER, false)
+        verify(atLeast = 1) { queryService.query(any(), any()) }
+
+        clearMocks(queryService, answers = false)
         val oppdatert = service.hentVerdi(Områder.AKTIVITETSPENGER, false)
         assertTrue(oppdatert !== utenKode6)
         assertSame(oppdatert, service.hentVerdi(Områder.AKTIVITETSPENGER, false))
-        verify(exactly = 21) { queryService.query(any(), any()) }
-        verify(exactly = 1) { queryService.queryForAntall(any(), any()) }
+        assertSame(medKode6, service.hentVerdi(Områder.AKTIVITETSPENGER, true))
+        assertSame(k9Verdi, service.hentVerdi(Områder.K9, false))
+        verify { queryService wasNot Called }
     }
 
     @Test

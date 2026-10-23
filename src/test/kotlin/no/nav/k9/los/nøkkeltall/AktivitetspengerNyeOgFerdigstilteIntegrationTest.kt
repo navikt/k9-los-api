@@ -62,8 +62,8 @@ class AktivitetspengerNyeOgFerdigstilteIntegrationTest : AbstractK9LosIntegratio
         assertEquals(listOf(0, 1, 1, 1, 1, 1, 1), svar.serier[1].data)
 
         val forventet = mapOf(
-            "DEL1" to (listOf(0, 0, 0, 0, 0, 1, 1) to listOf(0, 0, 0, 0, 0, 1, 0)),
-            "DEL2" to (listOf(1, 0, 0, 0, 0, 0, 0) to listOf(0, 0, 0, 0, 0, 0, 1)),
+            "NAVKONTOR" to (listOf(0, 0, 0, 0, 0, 1, 1) to listOf(0, 0, 0, 0, 0, 1, 0)),
+            "NAVFORVALTNING" to (listOf(1, 0, 0, 0, 0, 0, 0) to listOf(0, 0, 0, 0, 0, 0, 1)),
             "KLAGE" to (listOf(0, 0, 1, 0, 1, 0, 0) to listOf(0, 0, 1, 0, 1, 0, 0)),
             "FEILUTBETALING" to (listOf(0, 1, 0, 1, 0, 0, 0) to listOf(0, 1, 0, 1, 0, 0, 0)),
         )

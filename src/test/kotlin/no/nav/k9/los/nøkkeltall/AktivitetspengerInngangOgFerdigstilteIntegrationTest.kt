@@ -26,7 +26,7 @@ import kotlin.test.assertTrue
 
 class AktivitetspengerInngangOgFerdigstilteIntegrationTest : AbstractK9LosIntegrationTest() {
     @Test
-    fun `inngang og ferdigstilte avgrenser område periode del og behandlingstype`() {
+    fun `inngang og ferdigstilte avgrenser område periode Nav-enhet og behandlingstype`() {
         get<Områdesetup>().setup()
         get<no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.Områdesetup>().setup()
         val del1 = AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1.kode
@@ -52,9 +52,15 @@ class AktivitetspengerInngangOgFerdigstilteIntegrationTest : AbstractK9LosIntegr
         val førstegangIdag = verdi.tall.single { it.hovedgruppe == "ALLE" && it.undergruppe == "FØRSTEGANG" }.serier.getValue("idag")
         assertEquals(1L, førstegangIdag.first.hovedtall.verdi)
         assertEquals(0L, førstegangIdag.second.hovedtall.verdi)
-        val del1Idag = verdi.tall.single { it.hovedgruppe == "DEL1" && it.undergruppe == "TOTALT" }.serier.getValue("idag")
-        assertEquals(1L, del1Idag.first.hovedtall.verdi)
-        assertEquals(0L, del1Idag.second.hovedtall.verdi)
+        val forventetPerGruppe = mapOf(
+            "NAVKONTOR" to (listOf(1L, 1L, 2L, 2L) to listOf(0L, 1L, 1L, 1L)),
+            "NAVFORVALTNING" to (listOf(0L, 1L, 1L, 2L) to listOf(1L, 1L, 2L, 3L)),
+        )
+        for ((gruppe, antall) in forventetPerGruppe) {
+            val rad = verdi.tall.single { it.hovedgruppe == gruppe && it.undergruppe == "TOTALT" }
+            assertEquals(antall.first, rad.serier.values.map { it.first.hovedtall.verdi })
+            assertEquals(antall.second, rad.serier.values.map { it.second.hovedtall.verdi })
+        }
         assertTrue(verdi.tall.all { rad -> rad.serier.values.all { it.first.linjer.isEmpty() && it.second.linjer.isEmpty() } })
         for ((periode, kort) in totalt.serier) {
             val delkort = verdi.tall.filter { it.hovedgruppe != "ALLE" && it.undergruppe == "TOTALT" }.map { it.serier.getValue(periode) }

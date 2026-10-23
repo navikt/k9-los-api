@@ -27,8 +27,8 @@ class AktivitetspengerInngangOgFerdigstilteService(
     private val log = LoggerFactory.getLogger(AktivitetspengerInngangOgFerdigstilteService::class.java)
     private val hovedgrupper = listOf(
         KodeOgNavn("ALLE", "Alle behandlinger"),
-        KodeOgNavn("DEL1", "Del 1"),
-        KodeOgNavn("DEL2", "Del 2"),
+        KodeOgNavn("NAVKONTOR", "Nav-kontor"),
+        KodeOgNavn("NAVFORVALTNING", "Nav-forvaltning"),
     )
     private val undergrupper = listOf(
         KodeOgNavn("TOTALT", "Totalt"),
@@ -38,8 +38,8 @@ class AktivitetspengerInngangOgFerdigstilteService(
         KodeOgNavn("FEILUTBETALING", "Feilutbetalinger"),
     )
     private val oppgavetyper = mapOf(
-        "DEL1" to AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1.kode,
-        "DEL2" to AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2.kode,
+        "NAVKONTOR" to AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1.kode,
+        "NAVFORVALTNING" to AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2.kode,
     )
     private val behandlingstyper = mapOf(
         "FØRSTEGANG" to setOf(BehandlingType.FØRSTEGANGSSØKNAD.kode),
@@ -125,16 +125,18 @@ class AktivitetspengerInngangOgFerdigstilteService(
             hovedgrupper = hovedgrupper,
             undergrupper = undergrupper,
             tall = hovedgrupper.flatMap { hovedgruppe ->
-                undergrupper.map { undergruppe ->
-                    InngangOgFerdigstilteDto(
-                        hovedgruppe.kode,
-                        undergruppe.kode,
-                        perioder.mapValues { (periode, _) ->
-                            inngang.getValue(periode).kort("Inngang", hovedgruppe.kode, undergruppe.kode) to
-                                ferdigstilte.getValue(periode).kort("Ferdigstilt", hovedgruppe.kode, undergruppe.kode)
-                        },
-                    )
-                }
+                undergrupper
+                    .filterNot { undergruppe -> hovedgruppe.kode == "NAVKONTOR" && undergruppe.kode == "FEILUTBETALING" }
+                    .map { undergruppe ->
+                        InngangOgFerdigstilteDto(
+                            hovedgruppe.kode,
+                            undergruppe.kode,
+                            perioder.mapValues { (periode, _) ->
+                                inngang.getValue(periode).kort("Inngang", hovedgruppe.kode, undergruppe.kode) to
+                                    ferdigstilte.getValue(periode).kort("Ferdigstilt", hovedgruppe.kode, undergruppe.kode)
+                            },
+                        )
+                    }
             },
         )
     }

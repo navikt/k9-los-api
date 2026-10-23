@@ -44,7 +44,7 @@ class AktivitetspengerStatusFordelingIntegrationTest : AbstractK9LosIntegrationT
         val service = get<StatusFordelingService>()
         val kort = service.hentVerdi(Områder.AKTIVITETSPENGER, kode6 = false).tall
 
-        assertEquals(listOf("BEHANDLINGER", "DEL1", "DEL2"), kort.map { it.tittel.kode })
+        assertEquals(listOf("BEHANDLINGER", "NAVKONTOR", "NAVFORVALTNING"), kort.map { it.tittel.kode })
         assertEquals(listOf(3L, 2L, 1L), kort.map { it.bunnlinje.verdi })
         assertEquals(listOf(1L, 1L, 0L), kort.map { it.topplinje.verdi })
         for (statuskort in kort) {
@@ -57,7 +57,7 @@ class AktivitetspengerStatusFordelingIntegrationTest : AbstractK9LosIntegrationT
         }
 
         val kode6Kort = service.hentVerdi(Områder.AKTIVITETSPENGER, kode6 = true).tall
-        assertEquals(listOf("BEHANDLINGER", "DEL2"), kode6Kort.map { it.tittel.kode })
+        assertEquals(listOf("BEHANDLINGER", "NAVFORVALTNING"), kode6Kort.map { it.tittel.kode })
         assertEquals(listOf(1L, 1L), kode6Kort.map { it.bunnlinje.verdi })
     }
 

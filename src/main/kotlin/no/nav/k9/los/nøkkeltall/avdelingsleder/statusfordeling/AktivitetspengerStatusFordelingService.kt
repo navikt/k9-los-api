@@ -54,8 +54,8 @@ class AktivitetspengerStatusFordelingService(
         )
         val tall = listOf(
             byggStatuskort(KodeOgNavn("BEHANDLINGER", "Behandlinger"), personbeskyttelse),
-            byggStatuskort(KodeOgNavn("DEL1", "Del 1"), personbeskyttelse, oppgavetype(del1)),
-            byggStatuskort(KodeOgNavn("DEL2", "Del 2"), personbeskyttelse, oppgavetype(del2)),
+            byggStatuskort(KodeOgNavn("NAVKONTOR", "Nav-kontor"), personbeskyttelse, oppgavetype(del1)),
+            byggStatuskort(KodeOgNavn("NAVFORVALTNING", "Nav-forvaltning"), personbeskyttelse, oppgavetype(del2)),
             byggStatuskort(
                 KodeOgNavn("KLAGE", "Klager"), personbeskyttelse,
                 behandlingstyper(BehandlingType.KLAGE, BehandlingType.ANKE),

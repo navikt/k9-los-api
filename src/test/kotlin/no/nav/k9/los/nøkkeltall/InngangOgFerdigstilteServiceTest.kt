@@ -2,6 +2,8 @@ package no.nav.k9.los.nøkkeltall
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
+import io.mockk.Called
+import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -81,12 +83,22 @@ class InngangOgFerdigstilteServiceTest {
         val verdi = service.hentCachetVerdi()
 
         assertNotNull(verdi.oppdatertTidspunkt)
-        assertEquals(listOf("ALLE", "DEL1", "DEL2"), verdi.hovedgrupper.map { it.kode })
+        assertEquals(listOf(
+            KodeOgNavn("ALLE", "Alle behandlinger"),
+            KodeOgNavn("NAVKONTOR", "Nav-kontor"),
+            KodeOgNavn("NAVFORVALTNING", "Nav-forvaltning"),
+        ), verdi.hovedgrupper)
         assertEquals(listOf("TOTALT", "FØRSTEGANG", "REVURDERING", "KLAGE", "FEILUTBETALING"), verdi.undergrupper.map { it.kode })
-        assertEquals(15, verdi.tall.size)
+        assertEquals(mapOf(
+            "ALLE" to listOf("TOTALT", "FØRSTEGANG", "REVURDERING", "KLAGE", "FEILUTBETALING"),
+            "NAVKONTOR" to listOf("TOTALT", "FØRSTEGANG", "REVURDERING", "KLAGE"),
+            "NAVFORVALTNING" to listOf("TOTALT", "FØRSTEGANG", "REVURDERING", "KLAGE", "FEILUTBETALING"),
+        ), verdi.tall.groupBy({ it.hovedgruppe }, { it.undergruppe }))
         assertTrue(verdi.tall.all { it.serier.keys == setOf("idag", "sisteUke", "siste2Uker", "siste4Uker") })
         assertTrue(verdi.tall.all { rad -> rad.serier.values.all { it.first.hovedtall.verdi == 0L && it.second.hovedtall.verdi == 0L } })
+
+        clearMocks(queryService, answers = false)
         assertSame(verdi, service.hentCachetVerdi())
-        verify(exactly = 8) { queryService.query(any(), any()) }
+        verify { queryService wasNot Called }
     }
 }

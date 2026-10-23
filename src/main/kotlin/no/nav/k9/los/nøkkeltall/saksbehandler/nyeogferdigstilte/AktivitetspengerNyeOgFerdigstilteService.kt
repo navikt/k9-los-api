@@ -26,8 +26,8 @@ class AktivitetspengerNyeOgFerdigstilteService(
 ) : NyeOgFerdigstilte {
     override val grupper = listOf(
         KodeOgNavn("ALLE", "Alle behandlinger"),
-        KodeOgNavn("DEL1", "Del 1"),
-        KodeOgNavn("DEL2", "Del 2"),
+        KodeOgNavn("NAVKONTOR", "Nav-kontor"),
+        KodeOgNavn("NAVFORVALTNING", "Nav-forvaltning"),
         KodeOgNavn("KLAGE", "Klager"),
         KodeOgNavn("FEILUTBETALING", "Feilutbetalinger"),
     )
@@ -61,8 +61,8 @@ class AktivitetspengerNyeOgFerdigstilteService(
     private data class TelleRad(val oppgavetype: String?, val behandlingstype: String?, val antall: Long) {
         fun matcher(gruppe: String): Boolean = when (gruppe) {
             "ALLE" -> true
-            "DEL1" -> oppgavetype == AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1.kode
-            "DEL2" -> oppgavetype == AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2.kode
+            "NAVKONTOR" -> oppgavetype == AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1.kode
+            "NAVFORVALTNING" -> oppgavetype == AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2.kode
             "KLAGE" -> behandlingstype in setOf(BehandlingType.KLAGE.kode, BehandlingType.ANKE.kode)
             "FEILUTBETALING" -> behandlingstype in setOf(BehandlingType.TILBAKEKREVING.kode, BehandlingType.REVURDERING_TILBAKEKREVING.kode)
             else -> error("Ukjent gruppe: $gruppe")
