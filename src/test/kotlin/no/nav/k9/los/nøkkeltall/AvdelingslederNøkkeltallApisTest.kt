@@ -106,13 +106,11 @@ class AvdelingslederNøkkeltallApisTest {
     }
 
     @Test
-    fun `K9 får eksisterende nøkkeltall og queryparametre på ny route`() = testApplication {
+    fun `K9 får ferdigstilte per enhet med standardverdier og queryparametre`() = testApplication {
         setup()
         coEvery { pepClient.erOppgaveStyrer() } returns true
-        every { inngangOgFerdigstilte.hentCachetVerdi(Områder.K9) } returns InngangOgFerdigstilteResponse(null, emptyList(), emptyList(), emptyList())
         every { perEnhet.hentCachetVerdi(any(), any()) } returns FerdigstiltePerEnhetResponse()
 
-        assertEquals(HttpStatusCode.OK, client.get("$base/k9/$nøkkeltall/inngang-og-ferdigstilte").status)
         assertEquals(HttpStatusCode.OK, client.get("$base/k9/$nøkkeltall/ferdigstilte-per-enhet").status)
         assertEquals(HttpStatusCode.OK, client.get("$base/k9/$nøkkeltall/ferdigstilte-per-enhet?gruppe=PLEIEPENGER_SYKT_BARN&uker=4").status)
         verify(exactly = 1) { perEnhet.hentCachetVerdi(FerdigstiltePerEnhetGruppe.ALLE, 2) }

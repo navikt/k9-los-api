@@ -1,5 +1,7 @@
 package no.nav.k9.los.nøkkeltall
 
+import io.mockk.Called
+import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -58,7 +60,13 @@ class NyeOgFerdigstilteServiceTest {
         val iDag = LocalDate.now()
         val forventedeDatoer = (6L downTo 0L).map { iDag.minusDays(it).format(DateTimeFormatter.ofPattern("dd.MM")) }
         assertNull(svar.oppdatertTidspunkt)
-        assertEquals(listOf("ALLE", "DEL1", "DEL2", "KLAGE", "FEILUTBETALING"), svar.grupper.map { it.kode })
+        assertEquals(listOf(
+            KodeOgNavn("ALLE", "Alle behandlinger"),
+            KodeOgNavn("NAVKONTOR", "Nav-kontor"),
+            KodeOgNavn("NAVFORVALTNING", "Nav-forvaltning"),
+            KodeOgNavn("KLAGE", "Klager"),
+            KodeOgNavn("FEILUTBETALING", "Feilutbetalinger"),
+        ), svar.grupper)
         assertEquals(forventedeDatoer, svar.kolonner)
         assertEquals(emptyList(), svar.serier)
         assertFailsWith<IllegalArgumentException> { service.hentCachetVerdi("PUNSJ") }
@@ -68,7 +76,9 @@ class NyeOgFerdigstilteServiceTest {
         val cachet = service.hentCachetVerdi("ALLE")
         assertEquals(listOf("Nye", "Ferdigstilte"), cachet.serier.map { it.navn })
         assertEquals(listOf(List(7) { 0 }, List(7) { 0 }), cachet.serier.map { it.data })
+
+        clearMocks(queryService, answers = false)
         assertSame(cachet, service.hentCachetVerdi("ALLE"))
-        verify(exactly = 14) { queryService.query(any(), any()) }
+        verify { queryService wasNot Called }
     }
 }

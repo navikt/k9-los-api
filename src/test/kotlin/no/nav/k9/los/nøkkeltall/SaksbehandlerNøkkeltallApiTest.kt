@@ -74,19 +74,23 @@ class SaksbehandlerNøkkeltallApiTest {
         coEvery { pepClient.harBasisTilgang() } returns true
         every { service.grupper(Områder.K9) } returns listOf(KodeOgNavn("PUNSJ", "Punsj"))
         every { service.grupper(Områder.AKTIVITETSPENGER) } returns listOf(
-            KodeOgNavn("DEL1", "Del 1"), KodeOgNavn("KLAGE", "Klager"), KodeOgNavn("FEILUTBETALING", "Feilutbetalinger"),
+            KodeOgNavn("NAVKONTOR", "Nav-kontor"), KodeOgNavn("NAVFORVALTNING", "Nav-forvaltning"),
+            KodeOgNavn("KLAGE", "Klager"), KodeOgNavn("FEILUTBETALING", "Feilutbetalinger"),
         )
         every { service.hentCachetVerdi(any(), any()) } returns NyeOgFerdigstilteResponse(null)
 
         assertEquals(HttpStatusCode.OK, client.get("$sti/k9/saksbehandler/nokkeltall?gruppe=PUNSJ").status)
-        for (gruppe in listOf("DEL1", "KLAGE", "FEILUTBETALING")) {
+        for (gruppe in listOf("NAVKONTOR", "NAVFORVALTNING", "KLAGE", "FEILUTBETALING")) {
             assertEquals(HttpStatusCode.OK, client.get("$sti/akt/saksbehandler/nokkeltall?gruppe=$gruppe").status)
             verify(exactly = 1) { service.hentCachetVerdi(Områder.AKTIVITETSPENGER, gruppe) }
         }
-        assertEquals(HttpStatusCode.BadRequest, client.get("$sti/k9/saksbehandler/nokkeltall?gruppe=DEL1").status)
+        assertEquals(HttpStatusCode.BadRequest, client.get("$sti/k9/saksbehandler/nokkeltall?gruppe=NAVKONTOR").status)
+        for (gruppe in listOf("DEL1", "DEL2")) {
+            assertEquals(HttpStatusCode.BadRequest, client.get("$sti/akt/saksbehandler/nokkeltall?gruppe=$gruppe").status)
+        }
         assertEquals(HttpStatusCode.BadRequest, client.get("$sti/akt/saksbehandler/nokkeltall?gruppe=PUNSJ").status)
         assertEquals(HttpStatusCode.BadRequest, client.get("$sti/akt/saksbehandler/nokkeltall?gruppe=").status)
-        verify(exactly = 4) { service.hentCachetVerdi(any(), any()) }
+        verify(exactly = 5) { service.hentCachetVerdi(any(), any()) }
     }
 
     @Test
