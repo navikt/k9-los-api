@@ -15,7 +15,7 @@
     "tom": "2027-08-20"
   },
   "behandlingSteg": "INREG",
-  "ytelseTypeKode": "AKT",
+  "ytelseTypeKode": "AVP",
   "behandlendeEnhet": "0387",
   "behandlingStatus": "UTRED",
   "søknadsårsaker": [], //TODO: ikke i bruk, fjern i ung-sak
@@ -46,7 +46,7 @@
     "tom": "2027-08-20"
   },
   "behandlingSteg": "VURDER_BOSTEDVILKÅR",
-  "ytelseTypeKode": "AKT",
+  "ytelseTypeKode": "AVP",
   "behandlendeEnhet": "0387",
   "behandlingStatus": "UTRED",
   "søknadsårsaker": [],
@@ -88,7 +88,7 @@
     "tom": "2027-08-20"
   },
   "behandlingSteg": "VURDER_ANDRE_LIVSOPPHOLDSYTELSER",
-  "ytelseTypeKode": "AKT",
+  "ytelseTypeKode": "AVP",
   "behandlendeEnhet": "0387",
   "behandlingStatus": "UTRED",
   "søknadsårsaker": [],
