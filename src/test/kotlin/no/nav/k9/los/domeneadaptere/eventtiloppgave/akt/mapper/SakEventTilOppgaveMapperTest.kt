@@ -429,12 +429,12 @@ class SakEventTilOppgaveMapperTest {
     // --- datoutledning ---
 
     @Test
-    fun `mottatt dato hentes fra eldste endring fra søker og trunkeres til sekund`() {
-        val eldsteEndring = LocalDateTime.of(2026, 2, 20, 12, 0, 0, 999_000_000)
+    fun `mottatt dato hentes fra eldste endring fra søker og trunkeres til mikrosekund`() {
+        val eldsteEndring = LocalDateTime.of(2026, 2, 20, 12, 0, 0, 999_999_999)
         val feltverdier = feltverdier(lagEvent(eldsteDatoMedEndringFraSøker = eldsteEndring))
 
         assertThat(feltverdier.verdiFor(AktivitetspengerFelter.Sak.MOTTATT_DATO.id))
-            .isEqualTo(eldsteEndring.truncatedTo(ChronoUnit.SECONDS).toString())
+            .isEqualTo(eldsteEndring.truncatedTo(ChronoUnit.MICROS).toString())
     }
 
     @Test
@@ -460,7 +460,7 @@ class SakEventTilOppgaveMapperTest {
     @Test
     fun `mottatt og registrert dato faller tilbake på opprettet behandling`() {
         val feltverdier = feltverdier(lagEvent())
-        val forventet = OPPRETTET_BEHANDLING.truncatedTo(ChronoUnit.SECONDS).toString()
+        val forventet = OPPRETTET_BEHANDLING.truncatedTo(ChronoUnit.MICROS).toString()
 
         assertThat(feltverdier.verdiFor(AktivitetspengerFelter.Sak.MOTTATT_DATO.id)).isEqualTo(forventet)
         assertThat(feltverdier.verdiFor(AktivitetspengerFelter.Sak.REGISTRERT_DATO.id)).isEqualTo(forventet)

@@ -4,7 +4,7 @@ import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.Områdesetup
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.kodeverk.AktOppgavetypenavn
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.oppgavedefinisjon.AktivitetspengerOppgaver
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.oppgavedefinisjon.AktivitetspengerOppgavetyper
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nøkkeltall.saksbehandler.nyeogferdigstilte.NyeOgFerdigstilteService
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
@@ -35,7 +35,7 @@ class AktivitetspengerNyeOgFerdigstilteIntegrationTest : AbstractK9LosIntegratio
         val del2 = AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2.kode
         val klage = AktOppgavetypenavn.AKTIVITETSPENGERKLAGE.kode
         val feilutbetaling = "test-feilutbetaling"
-        val definisjon = AktivitetspengerOppgaver.lagOppgaveDefinisjon("http://localhost")
+        val definisjon = AktivitetspengerOppgavetyper.tilDto("http://localhost")
         val mal = definisjon.oppgavetyper.first()
         get<OppgavetypeTjeneste>().oppdater(definisjon.copy(
             oppgavetyper = definisjon.oppgavetyper + setOf(mal.copy(id = klage), mal.copy(id = feilutbetaling)),

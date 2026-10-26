@@ -186,7 +186,7 @@ class SakEventTilOppgaveMapperBostedEventserieTest {
         assertThat(feltverdier.verdierFor(AktivitetspengerFelter.Aksjonspunkt.FREMTIDIG.id)).containsOnly(null)
         assertThat(feltverdier.verdiFor(AktivitetspengerFelter.Saksbehandling.LIGGER_HOS_BESLUTTER.id)).isEqualTo("true")
         assertThat(feltverdier.verdierFor(AktivitetspengerFelter.Saksbehandling.TID_FORSTE_GANG_HOS_BESLUTTER.id))
-            .containsOnly("2026-08-21T12:44:50")
+            .containsOnly("2026-08-21T12:44:50.221793")
         assertThat(feltverdier.verdierFor(AktivitetspengerFelter.Aksjonspunkt.UTFORT.id))
             .containsExactlyInAnyOrder("5130", "5140", "5100")
     }

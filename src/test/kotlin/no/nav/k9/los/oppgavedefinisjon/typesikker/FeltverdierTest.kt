@@ -70,10 +70,10 @@ class FeltverdierTest {
     }
 
     @Test
-    fun `timestamp trunkeres til sekunder`() {
+    fun `timestamp trunkeres til mikrosekunder`() {
         val tidspunkt = LocalDateTime.of(2026, 8, 21, 12, 44, 50, 221_793_894)
 
-        assertThat(TestFelter.Gruppe.TIDSPUNKT.serialiser(tidspunkt)).isEqualTo("2026-08-21T12:44:50")
+        assertThat(TestFelter.Gruppe.TIDSPUNKT.serialiser(tidspunkt)).isEqualTo("2026-08-21T12:44:50.221793")
     }
 
     @Test
