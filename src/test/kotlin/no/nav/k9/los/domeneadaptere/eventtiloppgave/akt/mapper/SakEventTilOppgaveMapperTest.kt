@@ -10,7 +10,7 @@ import io.mockk.mockk
 import no.nav.k9.los.domeneadaptere.eventlager.EventLagret
 import no.nav.k9.los.domeneadaptere.eventmottak.ung.sak.UngSakEventDto
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.kodeverk.AktOppgavetypenavn
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.oppgavedefinisjon.AktivitetspengerFeltIder
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.oppgavedefinisjon.AktivitetspengerFelter
 import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.oppgavemottak.NyOppgaveversjon
@@ -329,7 +329,7 @@ class SakEventTilOppgaveMapperTest {
         assertThat(eventLagret.eventDto.behandlingStatus).isEqualTo(BehandlingStatus.NAV_KONTOR_BESLUTTER_VILKÅR.kode)
         assertThat(eventLagret.eventDto.behandlingSteg).isEqualTo(BehandlingStegType.NAV_KONTOR_FORESLÅ_VILKÅR.kode)
         val feltverdier = SakEventTilOppgaveMapper.lagOppgaveDto(eventLagret, null, 1).dto.feltverdier
-        assertThat(feltverdier.verdierFor(AktivitetspengerFeltIder.Aksjonspunkt.LOSBART)).containsOnly(NAV_KONTOR_AP.kode)
+        assertThat(feltverdier.verdierFor(AktivitetspengerFelter.Aksjonspunkt.LOSBART.id)).containsOnly(NAV_KONTOR_AP.kode)
     }
 
     // --- utledReservasjonsnokkel ---
@@ -376,7 +376,7 @@ class SakEventTilOppgaveMapperTest {
         ).dto
 
         assertThat(dto.reservasjonsnøkkel).isEqualTo("AKT_b_del2_1234567890123_beslutter")
-        assertThat(dto.feltverdier.verdiFor(AktivitetspengerFeltIder.Saksbehandling.LIGGER_HOS_BESLUTTER))
+        assertThat(dto.feltverdier.verdiFor(AktivitetspengerFelter.Saksbehandling.LIGGER_HOS_BESLUTTER.id))
             .isEqualTo("true")
     }
 
@@ -390,7 +390,7 @@ class SakEventTilOppgaveMapperTest {
             1,
         ).dto
 
-        assertThat(dto.feltverdier.verdiFor(AktivitetspengerFeltIder.Saksbehandling.LIGGER_HOS_BESLUTTER))
+        assertThat(dto.feltverdier.verdiFor(AktivitetspengerFelter.Saksbehandling.LIGGER_HOS_BESLUTTER.id))
             .isEqualTo("false")
     }
 
@@ -400,7 +400,7 @@ class SakEventTilOppgaveMapperTest {
     fun `tid første gang hos beslutter settes når oppgaven havner hos beslutter`() {
         val feltverdier = feltverdier(lagEvent(aksjonspunktTilstander = listOf(ap(FATTER_VEDTAK_AP))))
 
-        assertThat(feltverdier.verdiFor(AktivitetspengerFeltIder.Saksbehandling.TID_FORSTE_GANG_HOS_BESLUTTER))
+        assertThat(feltverdier.verdiFor(AktivitetspengerFelter.Saksbehandling.TID_FORSTE_GANG_HOS_BESLUTTER.id))
             .isEqualTo(EVENT_TID.toString())
     }
 
@@ -410,11 +410,11 @@ class SakEventTilOppgaveMapperTest {
         val feltverdier = feltverdier(
             event = lagEvent(aksjonspunktTilstander = listOf(ap(NAV_SENTRALT_AP))),
             forrige = forrigeOppgave(
-                AktivitetspengerFeltIder.Saksbehandling.TID_FORSTE_GANG_HOS_BESLUTTER to tidligere
+                AktivitetspengerFelter.Saksbehandling.TID_FORSTE_GANG_HOS_BESLUTTER.id to tidligere
             ),
         )
 
-        assertThat(feltverdier.verdiFor(AktivitetspengerFeltIder.Saksbehandling.TID_FORSTE_GANG_HOS_BESLUTTER))
+        assertThat(feltverdier.verdiFor(AktivitetspengerFelter.Saksbehandling.TID_FORSTE_GANG_HOS_BESLUTTER.id))
             .isEqualTo(tidligere)
     }
 
@@ -422,7 +422,7 @@ class SakEventTilOppgaveMapperTest {
     fun `tid første gang hos beslutter settes ikke når oppgaven aldri har vært hos beslutter`() {
         val feltverdier = feltverdier(lagEvent(aksjonspunktTilstander = listOf(ap(NAV_SENTRALT_AP))))
 
-        assertThat(feltverdier.verdierFor(AktivitetspengerFeltIder.Saksbehandling.TID_FORSTE_GANG_HOS_BESLUTTER))
+        assertThat(feltverdier.verdierFor(AktivitetspengerFelter.Saksbehandling.TID_FORSTE_GANG_HOS_BESLUTTER.id))
             .isEqualTo(emptyList<String?>())
     }
 
@@ -433,7 +433,7 @@ class SakEventTilOppgaveMapperTest {
         val eldsteEndring = LocalDateTime.of(2026, 2, 20, 12, 0, 0, 999_000_000)
         val feltverdier = feltverdier(lagEvent(eldsteDatoMedEndringFraSøker = eldsteEndring))
 
-        assertThat(feltverdier.verdiFor(AktivitetspengerFeltIder.Sak.MOTTATT_DATO))
+        assertThat(feltverdier.verdiFor(AktivitetspengerFelter.Sak.MOTTATT_DATO.id))
             .isEqualTo(eldsteEndring.truncatedTo(ChronoUnit.SECONDS).toString())
     }
 
@@ -441,20 +441,20 @@ class SakEventTilOppgaveMapperTest {
     fun `mottatt dato arves fra forrige oppgave når eventet mangler endring fra søker`() {
         val feltverdier = feltverdier(
             event = lagEvent(),
-            forrige = forrigeOppgave(AktivitetspengerFeltIder.Sak.MOTTATT_DATO to "2026-01-05T07:00"),
+            forrige = forrigeOppgave(AktivitetspengerFelter.Sak.MOTTATT_DATO.id to "2026-01-05T07:00"),
         )
 
-        assertThat(feltverdier.verdiFor(AktivitetspengerFeltIder.Sak.MOTTATT_DATO)).isEqualTo("2026-01-05T07:00")
+        assertThat(feltverdier.verdiFor(AktivitetspengerFelter.Sak.MOTTATT_DATO.id)).isEqualTo("2026-01-05T07:00")
     }
 
     @Test
     fun `mottatt dato faller tilbake på registrert dato fra forrige oppgave`() {
         val feltverdier = feltverdier(
             event = lagEvent(),
-            forrige = forrigeOppgave(AktivitetspengerFeltIder.Sak.REGISTRERT_DATO to "2026-01-06T07:00"),
+            forrige = forrigeOppgave(AktivitetspengerFelter.Sak.REGISTRERT_DATO.id to "2026-01-06T07:00"),
         )
 
-        assertThat(feltverdier.verdiFor(AktivitetspengerFeltIder.Sak.MOTTATT_DATO)).isEqualTo("2026-01-06T07:00")
+        assertThat(feltverdier.verdiFor(AktivitetspengerFelter.Sak.MOTTATT_DATO.id)).isEqualTo("2026-01-06T07:00")
     }
 
     @Test
@@ -462,33 +462,33 @@ class SakEventTilOppgaveMapperTest {
         val feltverdier = feltverdier(lagEvent())
         val forventet = OPPRETTET_BEHANDLING.truncatedTo(ChronoUnit.SECONDS).toString()
 
-        assertThat(feltverdier.verdiFor(AktivitetspengerFeltIder.Sak.MOTTATT_DATO)).isEqualTo(forventet)
-        assertThat(feltverdier.verdiFor(AktivitetspengerFeltIder.Sak.REGISTRERT_DATO)).isEqualTo(forventet)
+        assertThat(feltverdier.verdiFor(AktivitetspengerFelter.Sak.MOTTATT_DATO.id)).isEqualTo(forventet)
+        assertThat(feltverdier.verdiFor(AktivitetspengerFelter.Sak.REGISTRERT_DATO.id)).isEqualTo(forventet)
     }
 
     @Test
     fun `registrert dato er uendret fra forrige oppgave`() {
         val feltverdier = feltverdier(
             event = lagEvent(),
-            forrige = forrigeOppgave(AktivitetspengerFeltIder.Sak.REGISTRERT_DATO to "2025-12-24T10:00"),
+            forrige = forrigeOppgave(AktivitetspengerFelter.Sak.REGISTRERT_DATO.id to "2025-12-24T10:00"),
         )
 
-        assertThat(feltverdier.verdiFor(AktivitetspengerFeltIder.Sak.REGISTRERT_DATO)).isEqualTo("2025-12-24T10:00")
+        assertThat(feltverdier.verdiFor(AktivitetspengerFelter.Sak.REGISTRERT_DATO.id)).isEqualTo("2025-12-24T10:00")
     }
 
     @Test
     fun `vedtaksdato hentes fra eventet og ellers fra forrige oppgave`() {
         val medVedtaksdato = feltverdier(lagEvent(vedtaksdato = LocalDate.of(2026, 3, 1)))
-        assertThat(medVedtaksdato.verdiFor(AktivitetspengerFeltIder.Vedtak.DATO)).isEqualTo("2026-03-01")
+        assertThat(medVedtaksdato.verdiFor(AktivitetspengerFelter.Vedtak.DATO.id)).isEqualTo("2026-03-01")
 
         val arvet = feltverdier(
             event = lagEvent(),
-            forrige = forrigeOppgave(AktivitetspengerFeltIder.Vedtak.DATO to "2026-02-28"),
+            forrige = forrigeOppgave(AktivitetspengerFelter.Vedtak.DATO.id to "2026-02-28"),
         )
-        assertThat(arvet.verdiFor(AktivitetspengerFeltIder.Vedtak.DATO)).isEqualTo("2026-02-28")
+        assertThat(arvet.verdiFor(AktivitetspengerFelter.Vedtak.DATO.id)).isEqualTo("2026-02-28")
 
         val uten = feltverdier(lagEvent())
-        assertThat(uten.verdiFor(AktivitetspengerFeltIder.Vedtak.DATO)).isEqualTo(null)
+        assertThat(uten.verdiFor(AktivitetspengerFelter.Vedtak.DATO.id)).isEqualTo(null)
     }
 
     // --- ansvarlig saksbehandler og beslutter ---
@@ -497,9 +497,9 @@ class SakEventTilOppgaveMapperTest {
     fun `del1 bruker navkontorfeltene for saksbehandler og beslutter`() {
         val feltverdier = feltverdier(lagEvent(aksjonspunktTilstander = listOf(ap(NAV_KONTOR_AP))))
 
-        assertThat(feltverdier.verdiFor(AktivitetspengerFeltIder.Saksbehandling.ANSVARLIG_SAKSBEHANDLER))
+        assertThat(feltverdier.verdiFor(AktivitetspengerFelter.Saksbehandling.ANSVARLIG_SAKSBEHANDLER.id))
             .isEqualTo("LOKAL_SAKSBEHANDLER")
-        assertThat(feltverdier.verdiFor(AktivitetspengerFeltIder.Saksbehandling.ANSVARLIG_BESLUTTER))
+        assertThat(feltverdier.verdiFor(AktivitetspengerFelter.Saksbehandling.ANSVARLIG_BESLUTTER.id))
             .isEqualTo("LOKAL_BESLUTTER")
     }
 
@@ -507,9 +507,9 @@ class SakEventTilOppgaveMapperTest {
     fun `del2 bruker totrinnsfeltene for saksbehandler og beslutter`() {
         val feltverdier = feltverdier(lagEvent(aksjonspunktTilstander = listOf(ap(NAV_SENTRALT_AP))))
 
-        assertThat(feltverdier.verdiFor(AktivitetspengerFeltIder.Saksbehandling.ANSVARLIG_SAKSBEHANDLER))
+        assertThat(feltverdier.verdiFor(AktivitetspengerFelter.Saksbehandling.ANSVARLIG_SAKSBEHANDLER.id))
             .isEqualTo("SENTRAL_SAKSBEHANDLER")
-        assertThat(feltverdier.verdiFor(AktivitetspengerFeltIder.Saksbehandling.ANSVARLIG_BESLUTTER))
+        assertThat(feltverdier.verdiFor(AktivitetspengerFelter.Saksbehandling.ANSVARLIG_BESLUTTER.id))
             .isEqualTo("SENTRAL_BESLUTTER")
     }
 
@@ -519,15 +519,15 @@ class SakEventTilOppgaveMapperTest {
     fun `resultattype defaulter til ikke fastsatt`() {
         val feltverdier = feltverdier(lagEvent())
 
-        assertThat(feltverdier.verdiFor(AktivitetspengerFeltIder.Behandling.RESULTATTYPE))
+        assertThat(feltverdier.verdiFor(AktivitetspengerFelter.Behandling.RESULTATTYPE.id))
             .isEqualTo(BehandlingResultatType.IKKE_FASTSATT.kode)
     }
 
     @Test
     fun `nye krav mappes kun når det er satt`() {
-        assertThat(feltverdier(lagEvent(nyeKrav = true)).verdiFor(AktivitetspengerFeltIder.Soknad.NYE_KRAV))
+        assertThat(feltverdier(lagEvent(nyeKrav = true)).verdiFor(AktivitetspengerFelter.Soknad.NYE_KRAV.id))
             .isEqualTo("true")
-        assertThat(feltverdier(lagEvent()).verdierFor(AktivitetspengerFeltIder.Soknad.NYE_KRAV))
+        assertThat(feltverdier(lagEvent()).verdierFor(AktivitetspengerFelter.Soknad.NYE_KRAV.id))
             .isEqualTo(emptyList<String?>())
     }
 
@@ -537,7 +537,7 @@ class SakEventTilOppgaveMapperTest {
     fun `behandlingsårsaker mappes som liste`() {
         val feltverdier = feltverdier(lagEvent(behandlingsårsaker = listOf("RE-ANNET", "RE-KLAG")))
 
-        assertThat(feltverdier.verdierFor(AktivitetspengerFeltIder.Behandling.ARSAK))
+        assertThat(feltverdier.verdierFor(AktivitetspengerFelter.Behandling.ARSAK.id))
             .containsExactlyInAnyOrder("RE-ANNET", "RE-KLAG")
     }
 
@@ -545,7 +545,7 @@ class SakEventTilOppgaveMapperTest {
     fun `tomme behandlingsårsaker gir nullverdi`() {
         val feltverdier = feltverdier(lagEvent())
 
-        assertThat(feltverdier.verdierFor(AktivitetspengerFeltIder.Behandling.ARSAK)).containsOnly(null)
+        assertThat(feltverdier.verdierFor(AktivitetspengerFelter.Behandling.ARSAK.id)).containsOnly(null)
     }
 
     // --- aksjonspunktfelter ---
@@ -564,22 +564,22 @@ class SakEventTilOppgaveMapperTest {
 
         val feltverdier = feltverdier(event)
 
-        assertThat(feltverdier.verdierFor(AktivitetspengerFeltIder.Aksjonspunkt.ALLE))
+        assertThat(feltverdier.verdierFor(AktivitetspengerFelter.Aksjonspunkt.ALLE.id))
             .containsExactlyInAnyOrder(
                 NAV_SENTRALT_AP.kode,
                 FATTER_VEDTAK_AP.kode,
                 FORESLÅ_VEDTAK_AP.kode,
                 NAV_KONTOR_AP.kode,
             )
-        assertThat(feltverdier.verdierFor(AktivitetspengerFeltIder.Aksjonspunkt.AKTIVE))
+        assertThat(feltverdier.verdierFor(AktivitetspengerFelter.Aksjonspunkt.AKTIVE.id))
             .containsExactlyInAnyOrder(NAV_SENTRALT_AP.kode, FATTER_VEDTAK_AP.kode)
-        assertThat(feltverdier.verdierFor(AktivitetspengerFeltIder.Aksjonspunkt.LOSBART))
+        assertThat(feltverdier.verdierFor(AktivitetspengerFelter.Aksjonspunkt.LOSBART.id))
             .containsOnly(NAV_SENTRALT_AP.kode)
-        assertThat(feltverdier.verdierFor(AktivitetspengerFeltIder.Aksjonspunkt.FREMTIDIG))
+        assertThat(feltverdier.verdierFor(AktivitetspengerFelter.Aksjonspunkt.FREMTIDIG.id))
             .containsOnly(FATTER_VEDTAK_AP.kode)
-        assertThat(feltverdier.verdierFor(AktivitetspengerFeltIder.Aksjonspunkt.UTFORT))
+        assertThat(feltverdier.verdierFor(AktivitetspengerFelter.Aksjonspunkt.UTFORT.id))
             .containsOnly(FORESLÅ_VEDTAK_AP.kode)
-        assertThat(feltverdier.verdierFor(AktivitetspengerFeltIder.Aksjonspunkt.AVBRUTT))
+        assertThat(feltverdier.verdierFor(AktivitetspengerFelter.Aksjonspunkt.AVBRUTT.id))
             .containsOnly(NAV_KONTOR_AP.kode)
     }
 
@@ -587,12 +587,12 @@ class SakEventTilOppgaveMapperTest {
     fun `uten aksjonspunkt settes nullverdier`() {
         val feltverdier = feltverdier(lagEvent())
 
-        assertThat(feltverdier.verdierFor(AktivitetspengerFeltIder.Aksjonspunkt.ALLE)).containsOnly(null)
-        assertThat(feltverdier.verdierFor(AktivitetspengerFeltIder.Aksjonspunkt.AKTIVE)).containsOnly(null)
-        assertThat(feltverdier.verdierFor(AktivitetspengerFeltIder.Aksjonspunkt.FREMTIDIG)).containsOnly(null)
-        assertThat(feltverdier.verdierFor(AktivitetspengerFeltIder.Aksjonspunkt.UTFORT)).containsOnly(null)
-        assertThat(feltverdier.verdierFor(AktivitetspengerFeltIder.Aksjonspunkt.AVBRUTT)).containsOnly(null)
-        assertThat(feltverdier.verdierFor(AktivitetspengerFeltIder.Aksjonspunkt.LOSBART))
+        assertThat(feltverdier.verdierFor(AktivitetspengerFelter.Aksjonspunkt.ALLE.id)).containsOnly(null)
+        assertThat(feltverdier.verdierFor(AktivitetspengerFelter.Aksjonspunkt.AKTIVE.id)).containsOnly(null)
+        assertThat(feltverdier.verdierFor(AktivitetspengerFelter.Aksjonspunkt.FREMTIDIG.id)).containsOnly(null)
+        assertThat(feltverdier.verdierFor(AktivitetspengerFelter.Aksjonspunkt.UTFORT.id)).containsOnly(null)
+        assertThat(feltverdier.verdierFor(AktivitetspengerFelter.Aksjonspunkt.AVBRUTT.id)).containsOnly(null)
+        assertThat(feltverdier.verdierFor(AktivitetspengerFelter.Aksjonspunkt.LOSBART.id))
             .isEqualTo(emptyList<String?>())
     }
 
@@ -605,10 +605,10 @@ class SakEventTilOppgaveMapperTest {
 
         val feltverdier = feltverdier(event)
 
-        assertThat(feltverdier.verdierFor(AktivitetspengerFeltIder.Aksjonspunkt.AKTIVE))
+        assertThat(feltverdier.verdierFor(AktivitetspengerFelter.Aksjonspunkt.AKTIVE.id))
             .containsOnly(AUTOPUNKT_AP.kode)
-        assertThat(feltverdier.verdierFor(AktivitetspengerFeltIder.Aksjonspunkt.LOSBART)).containsOnly(null)
-        assertThat(feltverdier.verdierFor(AktivitetspengerFeltIder.Aksjonspunkt.FREMTIDIG)).containsOnly(null)
+        assertThat(feltverdier.verdierFor(AktivitetspengerFelter.Aksjonspunkt.LOSBART.id)).containsOnly(null)
+        assertThat(feltverdier.verdierFor(AktivitetspengerFelter.Aksjonspunkt.FREMTIDIG.id)).containsOnly(null)
     }
 
     @Test
@@ -617,8 +617,8 @@ class SakEventTilOppgaveMapperTest {
 
         val feltverdier = feltverdier(event)
 
-        assertThat(feltverdier.verdierFor(AktivitetspengerFeltIder.Aksjonspunkt.LOSBART)).containsOnly(null)
-        assertThat(feltverdier.verdierFor(AktivitetspengerFeltIder.Aksjonspunkt.FREMTIDIG))
+        assertThat(feltverdier.verdierFor(AktivitetspengerFelter.Aksjonspunkt.LOSBART.id)).containsOnly(null)
+        assertThat(feltverdier.verdierFor(AktivitetspengerFelter.Aksjonspunkt.FREMTIDIG.id))
             .containsOnly(NAV_SENTRALT_AP.kode)
     }
 
@@ -628,7 +628,7 @@ class SakEventTilOppgaveMapperTest {
     fun `foreslå vedtak markerer totrinnskontroll`() {
         val feltverdier = feltverdier(lagEvent(aksjonspunktTilstander = listOf(ap(FORESLÅ_VEDTAK_AP))))
 
-        assertThat(feltverdier.verdiFor(AktivitetspengerFeltIder.Vedtak.TOTRINNSKONTROLL)).isEqualTo("true")
+        assertThat(feltverdier.verdiFor(AktivitetspengerFelter.Vedtak.TOTRINNSKONTROLL.id)).isEqualTo("true")
     }
 
     @Test
@@ -637,7 +637,7 @@ class SakEventTilOppgaveMapperTest {
             lagEvent(aksjonspunktTilstander = listOf(ap(FORESLÅ_VEDTAK_AP, AksjonspunktStatus.UTFØRT)))
         )
 
-        assertThat(feltverdier.verdiFor(AktivitetspengerFeltIder.Vedtak.TOTRINNSKONTROLL)).isEqualTo("true")
+        assertThat(feltverdier.verdiFor(AktivitetspengerFelter.Vedtak.TOTRINNSKONTROLL.id)).isEqualTo("true")
     }
 
     @Test
@@ -646,14 +646,14 @@ class SakEventTilOppgaveMapperTest {
             lagEvent(aksjonspunktTilstander = listOf(ap(FORESLÅ_VEDTAK_AP, AksjonspunktStatus.AVBRUTT)))
         )
 
-        assertThat(feltverdier.verdiFor(AktivitetspengerFeltIder.Vedtak.TOTRINNSKONTROLL)).isEqualTo("false")
+        assertThat(feltverdier.verdiFor(AktivitetspengerFelter.Vedtak.TOTRINNSKONTROLL.id)).isEqualTo("false")
     }
 
     @Test
     fun `uten foreslå vedtak er det ingen totrinnskontroll`() {
         val feltverdier = feltverdier(lagEvent(aksjonspunktTilstander = listOf(ap(NAV_SENTRALT_AP))))
 
-        assertThat(feltverdier.verdiFor(AktivitetspengerFeltIder.Vedtak.TOTRINNSKONTROLL)).isEqualTo("false")
+        assertThat(feltverdier.verdiFor(AktivitetspengerFelter.Vedtak.TOTRINNSKONTROLL.id)).isEqualTo("false")
     }
 
     // --- ventetid ---
@@ -669,17 +669,17 @@ class SakEventTilOppgaveMapperTest {
             )
         )
 
-        assertThat(feltverdier.verdiFor(AktivitetspengerFeltIder.Ventetid.AKTIV_ARSAK))
+        assertThat(feltverdier.verdiFor(AktivitetspengerFelter.Ventetid.AKTIV_ARSAK.id))
             .isEqualTo(Venteårsak.VENT_INNTEKT_RAPPORTERINGSFRIST.kode)
-        assertThat(feltverdier.verdiFor(AktivitetspengerFeltIder.Ventetid.AKTIV_FRIST)).isEqualTo(frist.toString())
+        assertThat(feltverdier.verdiFor(AktivitetspengerFelter.Ventetid.AKTIV_FRIST.id)).isEqualTo(frist.toString())
     }
 
     @Test
     fun `udefinert venteårsak gir ingen ventetid`() {
         val feltverdier = feltverdier(lagEvent(aksjonspunktTilstander = listOf(ap(NAV_SENTRALT_AP))))
 
-        assertThat(feltverdier.verdiFor(AktivitetspengerFeltIder.Ventetid.AKTIV_ARSAK)).isEqualTo(null)
-        assertThat(feltverdier.verdiFor(AktivitetspengerFeltIder.Ventetid.AKTIV_FRIST)).isEqualTo(null)
+        assertThat(feltverdier.verdiFor(AktivitetspengerFelter.Ventetid.AKTIV_ARSAK.id)).isEqualTo(null)
+        assertThat(feltverdier.verdiFor(AktivitetspengerFelter.Ventetid.AKTIV_FRIST.id)).isEqualTo(null)
     }
 
     @Test
@@ -697,7 +697,7 @@ class SakEventTilOppgaveMapperTest {
             )
         )
 
-        assertThat(feltverdier.verdiFor(AktivitetspengerFeltIder.Ventetid.AKTIV_ARSAK)).isEqualTo(null)
-        assertThat(feltverdier.verdiFor(AktivitetspengerFeltIder.Ventetid.AKTIV_FRIST)).isEqualTo(null)
+        assertThat(feltverdier.verdiFor(AktivitetspengerFelter.Ventetid.AKTIV_ARSAK.id)).isEqualTo(null)
+        assertThat(feltverdier.verdiFor(AktivitetspengerFelter.Ventetid.AKTIV_FRIST.id)).isEqualTo(null)
     }
 }

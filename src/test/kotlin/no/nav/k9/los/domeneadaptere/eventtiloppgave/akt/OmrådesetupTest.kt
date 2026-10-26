@@ -7,7 +7,7 @@ import io.mockk.mockk
 import io.mockk.slot
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.kodeverk.AktBehandlendeEnhet
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.kodeverk.AktFagsystem
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.oppgavedefinisjon.AktivitetspengerFeltIder
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.oppgavedefinisjon.AktivitetspengerFelter
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.FeltdefinisjonTjeneste
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.FeltdefinisjonerDto
@@ -74,7 +74,7 @@ class OmrådesetupTest {
                 endretTidspunkt = LocalDateTime.now(),
                 felter = listOf(
                     Oppgavefelt(
-                        eksternId = AktivitetspengerFeltIder.Sak.SAKSNUMMER,
+                        eksternId = AktivitetspengerFelter.Sak.SAKSNUMMER.id,
                         område = Områder.AKTIVITETSPENGER,
                         listetype = false,
                         påkrevd = true,
