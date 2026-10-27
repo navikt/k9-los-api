@@ -38,6 +38,7 @@ data class UngSakEventDto(
     val navKontorBeslutter: String? = null,
 
     val resultatType: String? = null, //behandlingsresultat
+    @Jackson2Deserialize(converter = UngSakLegacyKoder.YtelseTypeConverter::class)
     val ytelseTypeKode: String,
     val behandlingTypeKode: String,
 
