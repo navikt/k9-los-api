@@ -32,7 +32,11 @@ class SifAbacPdpKlient(
 ) : ISifAbacPdpKlient {
     val log: Logger = LoggerFactory.getLogger("SifAbacPdpKlient")
     private val tilgangerCache = Cache<TilgangerCacheKey, Tilganger>(300)
-    private val områdeDispatcher = OmrådeDispatcher(sifAbacPdpKlientK9, sifAbacPdpKlientAktivitetspenger)
+    private val områdeDispatcher = OmrådeDispatcher(
+        k9 = sifAbacPdpKlientK9,
+        aktivitetspenger = sifAbacPdpKlientAktivitetspenger,
+        ungdomsprogramytelsen = sifAbacPdpKlientAktivitetspenger,
+    )
 
     override suspend fun hentTilganger(idToken: IIdToken): Tilganger {
         return hentTilganger(coroutineContext.område(), idToken)
