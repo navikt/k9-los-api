@@ -677,6 +677,7 @@ fun common(app: Application, config: Configuration) = module {
         SifAbacPdpKlient(
             sifAbacPdpKlientK9 = get<ISifAbacPdpKlient>(named("sifAbacPdpKlientK9")),
             sifAbacPdpKlientAktivitetspenger = get<ISifAbacPdpKlient>(named("sifAbacPdpKlientAktivitetspenger")),
+            sifAbacPdpKlientUngdomsprogramytelsen = get<ISifAbacPdpKlient>(named("sifAbacPdpKlientUngdomsprogramytelsen")),
         )
     }
 }
@@ -716,6 +717,10 @@ fun localDevConfig() = module {
     }
 
     single<ISifAbacPdpKlient>(named("sifAbacPdpKlientAktivitetspenger")) {
+        SifAbacPdpKlientLocal()
+    }
+
+    single<ISifAbacPdpKlient>(named("sifAbacPdpKlientUngdomsprogramytelsen")) {
         SifAbacPdpKlientLocal()
     }
 }
@@ -780,6 +785,14 @@ fun naisCommonConfig() = module {
 
     single<ISifAbacPdpKlient>(named("sifAbacPdpKlientAktivitetspenger")) {
         SifAbacPdpKlientAktivitetspenger(
+            configuration = get(),
+            accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
+            httpClient = get(named("sifAbacPdpHttpClient"))
+        )
+    }
+
+    single<ISifAbacPdpKlient>(named("sifAbacPdpKlientUngdomsprogramytelsen")) {
+        SifAbacPdpKlientUngdomsprogramytelsen(
             configuration = get(),
             accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
             httpClient = get(named("sifAbacPdpHttpClient"))

@@ -13,7 +13,7 @@ import no.nav.sif.abac.kontrakt.person.AktørId
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.Duration
-import java.util.UUID
+import java.util.*
 import kotlin.coroutines.coroutineContext
 import kotlin.time.Duration.Companion.seconds
 
@@ -28,11 +28,16 @@ data class TilgangerCacheKey(
 class SifAbacPdpKlient(
     sifAbacPdpKlientK9: ISifAbacPdpKlient,
     sifAbacPdpKlientAktivitetspenger: ISifAbacPdpKlient,
+    sifAbacPdpKlientUngdomsprogramytelsen: ISifAbacPdpKlient,
     private val hentTilgangerTimeout: kotlin.time.Duration = 5.seconds,
 ) : ISifAbacPdpKlient {
     val log: Logger = LoggerFactory.getLogger("SifAbacPdpKlient")
     private val tilgangerCache = Cache<TilgangerCacheKey, Tilganger>(300)
-    private val områdeDispatcher = OmrådeDispatcher(sifAbacPdpKlientK9, sifAbacPdpKlientAktivitetspenger)
+    private val områdeDispatcher = OmrådeDispatcher(
+        k9 = sifAbacPdpKlientK9,
+        aktivitetspenger = sifAbacPdpKlientAktivitetspenger,
+        ungdomsprogramytelsen = sifAbacPdpKlientUngdomsprogramytelsen,
+    )
 
     override suspend fun hentTilganger(idToken: IIdToken): Tilganger {
         return hentTilganger(coroutineContext.område(), idToken)
