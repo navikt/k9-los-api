@@ -115,6 +115,32 @@ internal class SifAbacPdpKlientHentTilgangerTest {
         coVerify(exactly = 1) { k9.harTilgangTilSak(Action.reserver, saksnummer, "Z123456", grupper) }
     }
 
+    @Test
+    fun `ruter kun diskresjonskoder for ungdomsprogramytelsen til aktivitetspenger`() = runBlocking<Unit> {
+        val k9 = mockk<ISifAbacPdpKlient>()
+        val aktivitetspenger = mockk<ISifAbacPdpKlient>()
+        val aktørId = mockk<no.nav.sif.abac.kontrakt.person.AktørId>()
+        val saksnummer = mockk<no.nav.sif.abac.kontrakt.abac.dto.SaksnummerDto>()
+        val klient = SifAbacPdpKlient(k9, aktivitetspenger)
+
+        coEvery { aktivitetspenger.diskresjonskoderPerson(aktørId) } returns emptySet()
+        coEvery { aktivitetspenger.diskresjonskoderSak(saksnummer) } returns emptySet()
+
+        klient.diskresjonskoderPerson(Områder.UNGDOMSPROGRAMYTELSEN, aktørId) shouldBe emptySet()
+        klient.diskresjonskoderSak(Områder.UNGDOMSPROGRAMYTELSEN, saksnummer) shouldBe emptySet()
+        shouldThrow<IllegalArgumentException> {
+            klient.hentTilganger(Områder.UNGDOMSPROGRAMYTELSEN, idToken)
+        }
+        shouldThrow<IllegalArgumentException> {
+            klient.harTilgangTilSak(Områder.UNGDOMSPROGRAMYTELSEN, Action.read, saksnummer, idToken)
+        }
+
+        coVerify(exactly = 1) { aktivitetspenger.diskresjonskoderPerson(aktørId) }
+        coVerify(exactly = 1) { aktivitetspenger.diskresjonskoderSak(saksnummer) }
+        coVerify(exactly = 0) { aktivitetspenger.hentTilganger(any()) }
+        coVerify(exactly = 0) { aktivitetspenger.harTilgangTilSak(any(), any(), any()) }
+    }
+
     private val idToken = mockk<IIdToken> {
         every { value } returns "validert-innkommende-token"
         every { getNavIdent() } returns "brukerident"

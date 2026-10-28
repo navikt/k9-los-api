@@ -35,6 +35,10 @@ class SifAbacPdpKlient(
     private val områdeDispatcher = OmrådeDispatcher(
         k9 = sifAbacPdpKlientK9,
         aktivitetspenger = sifAbacPdpKlientAktivitetspenger,
+    )
+    private val diskresjonskodeOmrådeDispatcher = OmrådeDispatcher(
+        k9 = sifAbacPdpKlientK9,
+        aktivitetspenger = sifAbacPdpKlientAktivitetspenger,
         ungdomsprogramytelsen = sifAbacPdpKlientAktivitetspenger,
     )
 
@@ -55,14 +59,14 @@ class SifAbacPdpKlient(
     }
 
     suspend fun diskresjonskoderPerson(område: Områder, aktørId: AktørId): Set<Diskresjonskode> =
-        områdeDispatcher.forOmråde(område).diskresjonskoderPerson(aktørId)
+        diskresjonskodeOmrådeDispatcher.forOmråde(område).diskresjonskoderPerson(aktørId)
 
     override suspend fun diskresjonskoderSak(saksnummerDto: SaksnummerDto): Set<Diskresjonskode> {
         return diskresjonskoderSak(coroutineContext.område(), saksnummerDto)
     }
 
     suspend fun diskresjonskoderSak(område: Områder, saksnummerDto: SaksnummerDto): Set<Diskresjonskode> =
-        områdeDispatcher.forOmråde(område).diskresjonskoderSak(saksnummerDto)
+        diskresjonskodeOmrådeDispatcher.forOmråde(område).diskresjonskoderSak(saksnummerDto)
 
     override suspend fun harTilgangTilSak(
         action: Action,
