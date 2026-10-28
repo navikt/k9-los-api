@@ -13,7 +13,7 @@ import no.nav.sif.abac.kontrakt.person.AktørId
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.Duration
-import java.util.UUID
+import java.util.*
 import kotlin.coroutines.coroutineContext
 import kotlin.time.Duration.Companion.seconds
 
@@ -28,6 +28,7 @@ data class TilgangerCacheKey(
 class SifAbacPdpKlient(
     sifAbacPdpKlientK9: ISifAbacPdpKlient,
     sifAbacPdpKlientAktivitetspenger: ISifAbacPdpKlient,
+    sifAbacPdpKlientUngdomsprogramytelsen: ISifAbacPdpKlient,
     private val hentTilgangerTimeout: kotlin.time.Duration = 5.seconds,
 ) : ISifAbacPdpKlient {
     val log: Logger = LoggerFactory.getLogger("SifAbacPdpKlient")
@@ -35,11 +36,7 @@ class SifAbacPdpKlient(
     private val områdeDispatcher = OmrådeDispatcher(
         k9 = sifAbacPdpKlientK9,
         aktivitetspenger = sifAbacPdpKlientAktivitetspenger,
-    )
-    private val diskresjonskodeOmrådeDispatcher = OmrådeDispatcher(
-        k9 = sifAbacPdpKlientK9,
-        aktivitetspenger = sifAbacPdpKlientAktivitetspenger,
-        ungdomsprogramytelsen = sifAbacPdpKlientAktivitetspenger,
+        ungdomsprogramytelsen = sifAbacPdpKlientUngdomsprogramytelsen,
     )
 
     override suspend fun hentTilganger(idToken: IIdToken): Tilganger {
@@ -59,14 +56,14 @@ class SifAbacPdpKlient(
     }
 
     suspend fun diskresjonskoderPerson(område: Områder, aktørId: AktørId): Set<Diskresjonskode> =
-        diskresjonskodeOmrådeDispatcher.forOmråde(område).diskresjonskoderPerson(aktørId)
+        områdeDispatcher.forOmråde(område).diskresjonskoderPerson(aktørId)
 
     override suspend fun diskresjonskoderSak(saksnummerDto: SaksnummerDto): Set<Diskresjonskode> {
         return diskresjonskoderSak(coroutineContext.område(), saksnummerDto)
     }
 
     suspend fun diskresjonskoderSak(område: Områder, saksnummerDto: SaksnummerDto): Set<Diskresjonskode> =
-        diskresjonskodeOmrådeDispatcher.forOmråde(område).diskresjonskoderSak(saksnummerDto)
+        områdeDispatcher.forOmråde(område).diskresjonskoderSak(saksnummerDto)
 
     override suspend fun harTilgangTilSak(
         action: Action,

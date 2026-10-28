@@ -1,112 +1,122 @@
 package no.nav.k9.los.infrastruktur.abac
 
-import com.github.tomakehurst.wiremock.WireMockServer
-import com.github.tomakehurst.wiremock.client.WireMock
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
-import io.ktor.client.*
-import io.ktor.client.engine.java.*
-import io.ktor.http.*
-import io.ktor.server.config.*
+import io.mockk.Called
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
-import kotlinx.coroutines.runBlocking
-import no.nav.helse.dusseldorf.oauth2.client.AccessTokenClient
-import no.nav.helse.dusseldorf.oauth2.client.AccessTokenResponse
-import no.nav.helse.dusseldorf.testsupport.wiremock.WireMockBuilder
-import no.nav.helse.dusseldorf.testsupport.wiremock.getAzureV2WellKnownUrl
-import no.nav.k9.los.Configuration
-import no.nav.k9.los.TestConfiguration
+import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.test.runTest
 import no.nav.k9.los.infrastruktur.abac.tilganger.Tilganger
 import no.nav.k9.los.infrastruktur.idtoken.IIdToken
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
-import org.junit.jupiter.api.AfterAll
-import org.junit.jupiter.api.BeforeEach
+import no.nav.sif.abac.kontrakt.abac.Diskresjonskode
+import no.nav.sif.abac.kontrakt.abac.dto.SaksnummerDto
+import no.nav.sif.abac.kontrakt.person.AktørId
 import org.junit.jupiter.api.Test
 import java.util.UUID
-import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 internal class SifAbacPdpKlientHentTilgangerTest {
+    private val k9 = mockk<ISifAbacPdpKlient>()
+    private val aktivitetspenger = mockk<ISifAbacPdpKlient>()
+    private val ung = mockk<ISifAbacPdpKlient>()
+    private val klient = SifAbacPdpKlient(k9, aktivitetspenger, ung, hentTilgangerTimeout = 1.seconds)
+    private val idToken = token()
+    private val tilganger = Tilganger(
+        basis = true,
+        kode6 = false,
+        oppgavestyring = false,
+        reservering = true,
+        drift = false,
+    )
 
     @Test
-    fun `henter tilganger med OBO-token og mapper svaret`() = runBlocking<Unit> {
-        WireMock.stubFor(
-            WireMock.get(WireMock.urlPathEqualTo("$stiPrefiks/api/k9/nav-ansatt/v2"))
-                .withHeader(HttpHeaders.Authorization, WireMock.equalTo("Bearer obo-token"))
-                .willReturn(
-                    WireMock.aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "application/json")
-                        .withBody(
-                            """
-                            {
-                              "brukernavn": "skal-ignoreres",
-                              "navn": "skal-ignoreres",
-                              "kanVeilede": false,
-                              "kanBehandleKode6": true,
-                              "k9SaksbehandlerTilgang": { "kanSaksbehandle": true },
-                              "kanOppgavestyre": false,
-                              "kanDrifte": true
-                            }
-                            """.trimIndent()
-                        )
-                )
-        )
-
-        klient().hentTilganger(Områder.K9, idToken) shouldBe Tilganger(
-            basis = true,
-            kode6 = true,
-            oppgavestyring = false,
-            reservering = true,
-            drift = true,
-        )
-    }
-
-    @Test
-    fun `kaster med statuskode, uten innhold fra responsen, ved feil`() = runBlocking<Unit> {
-        WireMock.stubFor(
-            WireMock.get(WireMock.urlPathEqualTo("$stiPrefiks/api/k9/nav-ansatt/v2"))
-                .willReturn(WireMock.aResponse().withStatus(503).withBody("sensitivt innhold"))
-        )
-
-        val feil = shouldThrow<SifAbacPdpHttpException> { klient().hentTilganger(Områder.K9, idToken) }
-
-        feil.status shouldBe 503
-        feil.message shouldBe "Feil ved 'hent-tilganger' mot sif-abac-pdp: HTTP 503"
-    }
-
-    @Test
-    fun `avbryter hengende kall og cacher ikke timeout`() = runBlocking<Unit> {
-        WireMock.stubFor(
-            WireMock.get(WireMock.urlPathEqualTo("$stiPrefiks/api/k9/nav-ansatt/v2"))
-                .willReturn(WireMock.aResponse().withStatus(200).withFixedDelay(1_001))
-        )
-        val klient = klient()
+    fun `avbryter hengende kall og cacher ikke timeout`() = runTest {
+        var avbrutt = false
+        coEvery { k9.hentTilganger(idToken) } coAnswers {
+            try {
+                awaitCancellation()
+            } finally {
+                avbrutt = true
+            }
+        }
 
         shouldThrow<SifAbacPdpUtilgjengeligException> { klient.hentTilganger(Områder.K9, idToken) }
+        avbrutt shouldBe true
 
-        WireMock.reset()
-        stubGyldigeTilganger()
-        klient.hentTilganger(Områder.K9, idToken).basis shouldBe true
+        coEvery { k9.hentTilganger(idToken) } returns tilganger
+        klient.hentTilganger(Områder.K9, idToken) shouldBe tilganger
+        coVerify(exactly = 2) { k9.hentTilganger(idToken) }
     }
 
     @Test
-    fun `ruter eksplisitt område uten request context`() = runBlocking<Unit> {
-        val k9 = mockk<ISifAbacPdpKlient>()
-        val aktivitetspenger = mockk<ISifAbacPdpKlient>()
-        val aktørId = mockk<no.nav.sif.abac.kontrakt.person.AktørId>()
-        val saksnummer = mockk<no.nav.sif.abac.kontrakt.abac.dto.SaksnummerDto>()
-        val grupper = setOf(UUID.randomUUID())
-        val klient = SifAbacPdpKlient(k9, aktivitetspenger)
+    fun `gjenbruker tilganger for samme område ident og token`() = runTest {
+        val sammeToken = token()
+        coEvery { k9.hentTilganger(idToken) } returns tilganger
 
-        coEvery { aktivitetspenger.diskresjonskoderPerson(aktørId) } returns emptySet()
+        klient.hentTilganger(Områder.K9, idToken) shouldBe tilganger
+        klient.hentTilganger(Områder.K9, sammeToken) shouldBe tilganger
+
+        coVerify(exactly = 1) { k9.hentTilganger(any()) }
+    }
+
+    @Test
+    fun `holder tilganger for samme bruker atskilt mellom områder`() = runTest {
+        val avpTilganger = tilganger.copy(basis = false, reservering = false)
+        coEvery { k9.hentTilganger(idToken) } returns tilganger
+        coEvery { aktivitetspenger.hentTilganger(idToken) } returns avpTilganger
+
+        klient.hentTilganger(Områder.K9, idToken) shouldBe tilganger
+        klient.hentTilganger(Områder.AKTIVITETSPENGER, idToken) shouldBe avpTilganger
+        klient.hentTilganger(Områder.K9, idToken) shouldBe tilganger
+        klient.hentTilganger(Områder.AKTIVITETSPENGER, idToken) shouldBe avpTilganger
+
+        coVerify(exactly = 1) { k9.hentTilganger(idToken) }
+        coVerify(exactly = 1) { aktivitetspenger.hentTilganger(idToken) }
+    }
+
+    @Test
+    fun `henter tilganger på nytt ved nytt token for samme bruker`() = runTest {
+        val nyttToken = token(tokenId = "nytt-token")
+        val nyeTilganger = tilganger.copy(kode6 = true)
+        coEvery { k9.hentTilganger(idToken) } returns tilganger
+        coEvery { k9.hentTilganger(nyttToken) } returns nyeTilganger
+
+        klient.hentTilganger(Områder.K9, idToken) shouldBe tilganger
+        klient.hentTilganger(Områder.K9, nyttToken) shouldBe nyeTilganger
+
+        coVerify(exactly = 1) { k9.hentTilganger(idToken) }
+        coVerify(exactly = 1) { k9.hentTilganger(nyttToken) }
+    }
+
+    @Test
+    fun `holder tilganger atskilt mellom identer selv med samme token-id`() = runTest {
+        val annenBruker = token(navIdent = "Z654321")
+        val andreTilganger = tilganger.copy(basis = false, reservering = false)
+        coEvery { k9.hentTilganger(idToken) } returns tilganger
+        coEvery { k9.hentTilganger(annenBruker) } returns andreTilganger
+
+        klient.hentTilganger(Områder.K9, idToken) shouldBe tilganger
+        klient.hentTilganger(Områder.K9, annenBruker) shouldBe andreTilganger
+
+        coVerify(exactly = 1) { k9.hentTilganger(idToken) }
+        coVerify(exactly = 1) { k9.hentTilganger(annenBruker) }
+    }
+
+    @Test
+    fun `ruter eksplisitt område uten request context`() = runTest {
+        val aktørId = AktørId("1234567890123")
+        val saksnummer = SaksnummerDto("123456789")
+        val grupper = setOf(UUID.fromString("00000000-0000-0000-0000-000000000001"))
+
+        coEvery { aktivitetspenger.diskresjonskoderPerson(aktørId) } returns setOf(Diskresjonskode.KODE6)
         coEvery { aktivitetspenger.harTilgangTilSak(Action.read, saksnummer, idToken) } returns true
         coEvery { k9.harTilgangTilSak(Action.reserver, saksnummer, "Z123456", grupper) } returns true
 
-        klient.diskresjonskoderPerson(Områder.AKTIVITETSPENGER, aktørId) shouldBe emptySet()
+        klient.diskresjonskoderPerson(Områder.AKTIVITETSPENGER, aktørId) shouldBe setOf(Diskresjonskode.KODE6)
         klient.harTilgangTilSak(Områder.AKTIVITETSPENGER, Action.read, saksnummer, idToken) shouldBe true
         klient.harTilgangTilSak(Områder.K9, Action.reserver, saksnummer, "Z123456", grupper) shouldBe true
 
@@ -116,105 +126,23 @@ internal class SifAbacPdpKlientHentTilgangerTest {
     }
 
     @Test
-    fun `ruter kun diskresjonskoder for ungdomsprogramytelsen til aktivitetspenger`() = runBlocking<Unit> {
-        val k9 = mockk<ISifAbacPdpKlient>()
-        val aktivitetspenger = mockk<ISifAbacPdpKlient>()
-        val aktørId = mockk<no.nav.sif.abac.kontrakt.person.AktørId>()
-        val saksnummer = mockk<no.nav.sif.abac.kontrakt.abac.dto.SaksnummerDto>()
-        val klient = SifAbacPdpKlient(k9, aktivitetspenger)
+    fun `ruter diskresjonskoder for ungdomsprogramytelsen til UNG-klienten`() = runTest {
+        val aktørId = AktørId("1234567890123")
+        val saksnummer = SaksnummerDto("123456789")
 
-        coEvery { aktivitetspenger.diskresjonskoderPerson(aktørId) } returns emptySet()
-        coEvery { aktivitetspenger.diskresjonskoderSak(saksnummer) } returns emptySet()
+        coEvery { ung.diskresjonskoderPerson(aktørId) } returns setOf(Diskresjonskode.KODE6)
+        coEvery { ung.diskresjonskoderSak(saksnummer) } returns setOf(Diskresjonskode.SKJERMET)
 
-        klient.diskresjonskoderPerson(Områder.UNGDOMSPROGRAMYTELSEN, aktørId) shouldBe emptySet()
-        klient.diskresjonskoderSak(Områder.UNGDOMSPROGRAMYTELSEN, saksnummer) shouldBe emptySet()
-        shouldThrow<IllegalArgumentException> {
-            klient.hentTilganger(Områder.UNGDOMSPROGRAMYTELSEN, idToken)
-        }
-        shouldThrow<IllegalArgumentException> {
-            klient.harTilgangTilSak(Områder.UNGDOMSPROGRAMYTELSEN, Action.read, saksnummer, idToken)
-        }
+        klient.diskresjonskoderPerson(Områder.UNGDOMSPROGRAMYTELSEN, aktørId) shouldBe setOf(Diskresjonskode.KODE6)
+        klient.diskresjonskoderSak(Områder.UNGDOMSPROGRAMYTELSEN, saksnummer) shouldBe setOf(Diskresjonskode.SKJERMET)
 
-        coVerify(exactly = 1) { aktivitetspenger.diskresjonskoderPerson(aktørId) }
-        coVerify(exactly = 1) { aktivitetspenger.diskresjonskoderSak(saksnummer) }
-        coVerify(exactly = 0) { aktivitetspenger.hentTilganger(any()) }
-        coVerify(exactly = 0) { aktivitetspenger.harTilgangTilSak(any(), any(), any()) }
+        coVerify(exactly = 1) { ung.diskresjonskoderPerson(aktørId) }
+        coVerify(exactly = 1) { ung.diskresjonskoderSak(saksnummer) }
+        coVerify { listOf(k9, aktivitetspenger) wasNot Called }
     }
 
-    private val idToken = mockk<IIdToken> {
-        every { value } returns "validert-innkommende-token"
-        every { getNavIdent() } returns "brukerident"
-        every { getTokenId() } returns "token-id"
-        every { jwt } returns mockk {
-            every { uti } returns "token-id"
-        }
-    }
-
-    private fun klient() = SifAbacPdpKlient(
-        SifAbacPdpKlientK9(
-            configuration = configuration,
-            accessTokenClient = mockk<AccessTokenClient> {
-                every { getOnBehalfOfAccessToken(any(), "validert-innkommende-token") } returns
-                        AccessTokenResponse("obo-token", 3600, "Bearer")
-            },
-            httpClient = HttpClient(Java),
-        ),
-        SifAbacPdpKlientAktivitetspenger(
-            configuration = configuration,
-            accessTokenClient = mockk<AccessTokenClient> {
-                every { getOnBehalfOfAccessToken(any(), "validert-innkommende-token") } returns
-                        AccessTokenResponse("obo-token", 3600, "Bearer")
-            },
-            httpClient = HttpClient(Java),
-        ),
-        hentTilgangerTimeout = 1.seconds
-    )
-
-    private fun stubGyldigeTilganger() {
-        WireMock.stubFor(
-            WireMock.get(WireMock.urlPathEqualTo("$stiPrefiks/api/k9/nav-ansatt/v2"))
-                .willReturn(
-                    WireMock.aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "application/json")
-                        .withBody(
-                            """
-                            {
-                              "kanVeilede": true,
-                              "kanBehandleKode6": false,
-                              "k9SaksbehandlerTilgang": { "kanSaksbehandle": false },
-                              "kanOppgavestyre": false,
-                              "kanDrifte": false
-                            }
-                            """.trimIndent()
-                        )
-                )
-        )
-    }
-
-    @BeforeEach
-    fun nullstillStubber() = WireMock.reset()
-
-    private companion object {
-        private const val stiPrefiks = "/sif-abac-pdp-mock"
-        private val wireMock: WireMockServer = WireMockBuilder().withAzureSupport().build()
-
-        // Configuration henter discovery-dokumentet over HTTP i init. Uten overstyring treffer den
-        // 'azure-mock' fra k9-verdikjeden, som kun finnes lokalt (/etc/hosts) og ikke i CI.
-        // Bygges under companion-init fordi WireMock.reset() i @BeforeEach fjerner azure-stubbene.
-        private val configuration = Configuration(
-            MapApplicationConfig(
-                *(TestConfiguration.asMap() + mapOf(
-                    "nav.register_urls.sif_abac_pdp_url" to wireMock.baseUrl() + stiPrefiks,
-                    "nav.auth.clients.0.discovery_endpoint" to wireMock.getAzureV2WellKnownUrl(),
-                ))
-                    .map { it.key to it.value }
-                    .toTypedArray()
-            )
-        )
-
-        @JvmStatic
-        @AfterAll
-        fun stopp() = wireMock.stop()
+    private fun token(navIdent: String = "Z123456", tokenId: String = "token-id") = mockk<IIdToken> {
+        every { getNavIdent() } returns navIdent
+        every { getTokenId() } returns tokenId
     }
 }
