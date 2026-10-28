@@ -1,11 +1,10 @@
 package no.nav.k9.los.domeneadaptere.eventmottak.ung.sak
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize as Jackson2Deserialize
+import no.nav.k9.los.forvaltning.SensitiveField
 import no.nav.ung.kodeverk.Fagsystem
 import no.nav.ung.kodeverk.hendelse.EventHendelse
 import no.nav.ung.sak.kontrakt.aksjonspunkt.AksjonspunktTilstandDto
 import no.nav.ung.sak.typer.Periode
-import no.nav.k9.los.forvaltning.SensitiveField
 import tools.jackson.databind.annotation.JsonDeserialize
 import tools.jackson.databind.annotation.JsonSerialize
 import tools.jackson.databind.ext.javatime.deser.LocalDateDeserializer
@@ -13,7 +12,8 @@ import tools.jackson.databind.ext.javatime.deser.LocalDateTimeDeserializer
 import tools.jackson.databind.ser.std.ToStringSerializer
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.util.UUID
+import java.util.*
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize as Jackson2Deserialize
 
 data class UngSakEventDto(
     val eksternId: UUID,
@@ -36,6 +36,7 @@ data class UngSakEventDto(
     val ansvarligSaksbehandlerForTotrinn: String? = null,
     val navKontorAnsvarligSaksbehandler: String? = null,
     val navKontorBeslutter: String? = null,
+    val navKontorbehandlendeEnhet: String? = null,
 
     val resultatType: String? = null, //behandlingsresultat
     @Jackson2Deserialize(converter = UngSakLegacyKoder.YtelseTypeConverter::class)
