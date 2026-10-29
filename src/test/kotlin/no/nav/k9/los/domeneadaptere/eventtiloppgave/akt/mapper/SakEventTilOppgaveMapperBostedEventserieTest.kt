@@ -1,15 +1,11 @@
 package no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.mapper
 
 import assertk.assertThat
-import assertk.assertions.containsExactlyInAnyOrder
-import assertk.assertions.containsOnly
-import assertk.assertions.endsWith
-import assertk.assertions.hasSize
-import assertk.assertions.isEqualTo
-import assertk.assertions.isInstanceOf
+import assertk.assertions.*
 import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 import no.nav.k9.los.domeneadaptere.eventlager.EventLagret
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.kodeverk.AktOppgavetypenavn
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.oppgavedefinisjon.AktivitetspengerFeltIder
 import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
@@ -63,7 +59,9 @@ class SakEventTilOppgaveMapperBostedEventserieTest {
     @Test
     fun `felles feltverdier for alle eventer i serien`() {
         eventer.indices.forEach { indeks ->
-            val feltverdier = map(indeks).feltverdier
+            val dto = map(indeks)
+            val feltverdier = dto.feltverdier
+            val forventetEnhet = if (dto.type == AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1) "5701" else "0387"
 
             assertThat(feltverdier.verdiFor(AktivitetspengerFeltIder.Behandling.UUID)).isEqualTo(eksternId)
             assertThat(feltverdier.verdiFor(AktivitetspengerFeltIder.Sak.AKTOR_ID)).isEqualTo(aktørId)
@@ -71,7 +69,7 @@ class SakEventTilOppgaveMapperBostedEventserieTest {
             assertThat(feltverdier.verdiFor(AktivitetspengerFeltIder.Sak.SAKSNUMMER)).isEqualTo("300DiQ")
             assertThat(feltverdier.verdiFor(AktivitetspengerFeltIder.Behandling.RESULTATTYPE)).isEqualTo("IKKE_FASTSATT")
             assertThat(feltverdier.verdiFor(AktivitetspengerFeltIder.Vedtak.YTELSESTYPE)).isEqualTo("AVP")
-            assertThat(feltverdier.verdiFor(AktivitetspengerFeltIder.Vedtak.BEHANDLENDE_ENHET)).isEqualTo("0387")
+            assertThat(feltverdier.verdiFor(AktivitetspengerFeltIder.Vedtak.BEHANDLENDE_ENHET)).isEqualTo(forventetEnhet)
             assertThat(feltverdier.verdiFor(AktivitetspengerFeltIder.Behandling.TYPEKODE)).isEqualTo("BT-004")
             assertThat(feltverdier.verdiFor(AktivitetspengerFeltIder.Sak.MOTTATT_DATO)).isEqualTo("2026-06-30T09:28:07")
             assertThat(feltverdier.verdiFor(AktivitetspengerFeltIder.Sak.REGISTRERT_DATO)).isEqualTo("2026-06-30T09:28:07")

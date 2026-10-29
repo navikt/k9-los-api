@@ -2,9 +2,9 @@ package no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.mapper
 
 import no.nav.k9.los.domeneadaptere.eventlager.EventLagret
 import no.nav.k9.los.domeneadaptere.eventlager.Fagsystem
+import no.nav.k9.los.domeneadaptere.eventmottak.ung.sak.UngSakEventDto
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.kodeverk.AktOppgavetypenavn
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.oppgavedefinisjon.AktivitetspengerFeltIder
-import no.nav.k9.los.domeneadaptere.eventmottak.ung.sak.UngSakEventDto
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.oppgavemottak.*
 import no.nav.ung.kodeverk.behandling.BehandlingResultatType
@@ -224,7 +224,12 @@ object SakEventTilOppgaveMapper {
             ),
             OppgaveFeltverdiDto(
                 nøkkel = AktivitetspengerFeltIder.Vedtak.BEHANDLENDE_ENHET,
-                verdi = event.behandlendeEnhet,
+                verdi = when (utledOppgavetype(event)) {
+                    AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1 -> event.navKontorbehandlendeEnhet
+
+                    AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2,
+                    AktOppgavetypenavn.AKTIVITETSPENGERKLAGE -> event.behandlendeEnhet
+                },
             ),
             OppgaveFeltverdiDto(
                 nøkkel = AktivitetspengerFeltIder.Behandling.TYPEKODE,
