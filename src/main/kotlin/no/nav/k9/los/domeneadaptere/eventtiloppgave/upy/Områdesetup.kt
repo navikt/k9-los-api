@@ -3,8 +3,8 @@ package no.nav.k9.los.domeneadaptere.eventtiloppgave.upy
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.upy.kodeverk.UpyFagsystem
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.upy.kodeverk.UpyBehandlendeEnhet
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.upy.kodeverk.UpyOppgavetypenavn
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.upy.oppgavedefinisjon.UngdomsprogramytelsenFeltdefinisjoner
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.upy.oppgavedefinisjon.UngdomsprogramytelsenOppgaver
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.upy.oppgavedefinisjon.UngdomsprogramytelsenFelter
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.upy.oppgavedefinisjon.UngdomsprogramytelsenOppgavetyper
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.FeltdefinisjonTjeneste
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.KodeverkDto
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.KodeverkVerdiDto
@@ -32,8 +32,8 @@ class Områdesetup(
     fun setup() {
         områdeRepository.lagre(område)
         feltdefinisjonTjeneste.oppdater(oppdaterKodeverk())
-        feltdefinisjonTjeneste.oppdater(UngdomsprogramytelsenFeltdefinisjoner.lagFeltdefinisjoner())
-        oppgavetypeTjeneste.oppdater(UngdomsprogramytelsenOppgaver.lagOppgaveDefinisjon())
+        feltdefinisjonTjeneste.oppdater(UngdomsprogramytelsenFelter.tilDto())
+        oppgavetypeTjeneste.oppdater(UngdomsprogramytelsenOppgavetyper.tilDto())
     }
 
     private fun oppdaterKodeverk(): List<KodeverkDto> {

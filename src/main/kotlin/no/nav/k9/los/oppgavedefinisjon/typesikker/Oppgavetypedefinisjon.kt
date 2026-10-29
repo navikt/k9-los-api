@@ -27,7 +27,7 @@ class Oppgavefeltsett(bygg: Oppgavefeltbygger.() -> Unit) {
 
 class Oppgavetypedefinisjon(
     val id: String,
-    private val behandlingsUrl: (frontendUrl: String) -> String,
+    private val behandlingsUrl: ((frontendUrl: String) -> String)?,
     bygg: Oppgavefeltbygger.() -> Unit,
 ) {
     private val oppgavefelter: Map<String, Oppgavefelt> = Oppgavefeltbygger().apply(bygg).felter
@@ -36,9 +36,11 @@ class Oppgavetypedefinisjon(
 
     fun inneholder(felt: Felt<*>) = oppgavefelter[felt.id]?.felt === felt
 
-    fun tilDto(frontendUrl: String) = OppgavetypeDto(
+    fun tilDto(frontendUrl: String?) = OppgavetypeDto(
         id = id,
-        oppgavebehandlingsUrlTemplate = behandlingsUrl(frontendUrl),
+        oppgavebehandlingsUrlTemplate = behandlingsUrl?.invoke(
+            requireNotNull(frontendUrl) { "Oppgavetype $id har behandlings-URL, men frontendUrl er ikke oppgitt" }
+        ),
         oppgavefelter = felter.map { OppgavefeltDto(it.felt.id, visPåOppgave = it.visPåOppgave, påkrevd = it.påkrevd) }.toSet(),
     )
 }
@@ -50,7 +52,7 @@ abstract class Oppgavetypekatalog(private val feltkatalog: Feltkatalog) {
         oppgavetyper.firstOrNull { it.id == id }
             ?: throw IllegalArgumentException("Oppgavetype $id er ikke definert for ${feltkatalog.område}")
 
-    fun tilDto(frontendUrl: String): OppgavetyperDto {
+    fun tilDto(frontendUrl: String? = null): OppgavetyperDto {
         val kjenteFelter = feltkatalog.felter.toSet()
         oppgavetyper.forEach { oppgavetype ->
             val ukjente = oppgavetype.felter.map { it.felt }.filterNot { it in kjenteFelter }
@@ -64,4 +66,3 @@ abstract class Oppgavetypekatalog(private val feltkatalog: Feltkatalog) {
         )
     }
 }
-
