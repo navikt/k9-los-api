@@ -16,7 +16,6 @@ import no.nav.sif.abac.kontrakt.abac.Diskresjonskode
 import no.nav.sif.abac.kontrakt.abac.dto.SaksnummerDto
 import no.nav.sif.abac.kontrakt.person.AktørId
 import org.slf4j.LoggerFactory
-import java.util.Stack
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.coroutines.coroutineContext
 
@@ -65,6 +64,16 @@ class PepClient(
     }
 
     // Tilgang til oppgave, for innlogget bruker
+    override suspend fun harTilgangTilPersoner(
+        område: Områder,
+        idToken: IIdToken,
+        aktørIder: List<String>,
+        action: Action,
+    ): Boolean {
+        require(aktørIder.isNotEmpty()) { "Må ha minst én aktørId for å sjekke tilgang til personer" }
+        return sifAbacPdpKlient.harTilgangTilPersoner(område, action, aktørIder.map { AktørId(it) }, idToken)
+    }
+
     override suspend fun harTilgangTilOppgaveV3(oppgave: Oppgave, action: Action): Boolean {
         val område = coroutineContext.område()
         val idToken = coroutineContext.idToken()
