@@ -70,7 +70,7 @@ class SakEventTilOppgaveMapperBostedEventserieTest {
             assertThat(feltverdier.verdiFor(AktivitetspengerFelter.Sak.FAGSYSTEM.id)).isEqualTo("UNG_SAK")
             assertThat(feltverdier.verdiFor(AktivitetspengerFelter.Sak.SAKSNUMMER.id)).isEqualTo("300DiQ")
             assertThat(feltverdier.verdiFor(AktivitetspengerFelter.Behandling.RESULTATTYPE.id)).isEqualTo("IKKE_FASTSATT")
-            assertThat(feltverdier.verdiFor(AktivitetspengerFelter.Vedtak.YTELSESTYPE.id)).isEqualTo("AKT")
+            assertThat(feltverdier.verdiFor(AktivitetspengerFelter.Vedtak.YTELSESTYPE.id)).isEqualTo("AVP")
             assertThat(feltverdier.verdiFor(AktivitetspengerFelter.Vedtak.BEHANDLENDE_ENHET.id)).isEqualTo("0387")
             assertThat(feltverdier.verdiFor(AktivitetspengerFelter.Behandling.TYPEKODE.id)).isEqualTo("BT-004")
             assertThat(feltverdier.verdiFor(AktivitetspengerFelter.Sak.MOTTATT_DATO.id)).isEqualTo("2026-06-30T09:28:07")

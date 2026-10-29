@@ -646,10 +646,15 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
         SifAbacPdpKlientLocal()
     }
 
+    single<ISifAbacPdpKlient>(named("sifAbacPdpKlientUngdomsprogramytelsen")) {
+        SifAbacPdpKlientLocal()
+    }
+
     single {
         SifAbacPdpKlient(
             sifAbacPdpKlientK9 = get<ISifAbacPdpKlient>(named("sifAbacPdpKlientK9")),
             sifAbacPdpKlientAktivitetspenger = get<ISifAbacPdpKlient>(named("sifAbacPdpKlientAktivitetspenger")),
+            sifAbacPdpKlientUngdomsprogramytelsen = get<ISifAbacPdpKlient>(named("sifAbacPdpKlientUngdomsprogramytelsen"))
         )
     }
 }
