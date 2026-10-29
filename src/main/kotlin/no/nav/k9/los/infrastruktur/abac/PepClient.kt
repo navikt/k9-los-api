@@ -63,7 +63,6 @@ class PepClient(
             .toSet()
     }
 
-    // Tilgang til oppgave, for innlogget bruker
     override suspend fun harTilgangTilPersoner(
         område: Områder,
         idToken: IIdToken,
@@ -74,6 +73,7 @@ class PepClient(
         return sifAbacPdpKlient.harTilgangTilPersoner(område, action, aktørIder.map { AktørId(it) }, idToken)
     }
 
+    // Tilgang til oppgave, for innlogget bruker
     override suspend fun harTilgangTilOppgaveV3(oppgave: Oppgave, action: Action): Boolean {
         val område = coroutineContext.område()
         val idToken = coroutineContext.idToken()
