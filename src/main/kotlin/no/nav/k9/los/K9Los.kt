@@ -309,9 +309,6 @@ private fun Route.legacyApi() {
 }
 
 private fun Route.flerområdeApi() {
-    // For bakoverkompatibilitet, dette er eneste nye endepunkt i bruk i prod p.t. Slett når frontend også er endret
-    route("api/wip/innlogget-bruker/områder") { InnloggetBrukersOmråderApi() }
-
     route("api/fleromrade", {
         specName = "frontend"
     }) {
