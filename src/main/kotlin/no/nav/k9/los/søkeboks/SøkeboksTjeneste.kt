@@ -19,7 +19,8 @@ class SøkeboksTjeneste(
 ) {
     suspend fun finnOppgaverSammendrag(område: Områder, idToken: IIdToken, søkeord: String): SøkeresultatSammendrag {
         val adapterForOmråde = oppgavesøkere.forOmråde(område)
-        val oppgaver = finnOppgaverFor(område, idToken, søkeord, adapterForOmråde) ?: return SøkeresultatSammendrag.IkkeTilgang
+        val oppgaver = finnOppgaverFor(område, idToken, søkeord, adapterForOmråde)
+            ?: return SøkeresultatSammendrag.IkkeTilgang
         return transformerTilSøkeresultatSammendrag(område, idToken, oppgaver, adapterForOmråde)
     }
 
@@ -33,7 +34,19 @@ class SøkeboksTjeneste(
         søkeord: String,
         adapter: Oppgavesøk,
     ): List<Oppgave>? {
-        val klassifisertSøkeord = klassifiser(område, idToken, søkeord) ?: return null
+        val klassifisertSøkeord = klassifiser(søkeord)
+
+        // Sjekker tilgang på person før oppslag på oppgaver
+        if (klassifisertSøkeord is Søkeord.Person) {
+            if (klassifisertSøkeord.ikkeTilgangPdl || klassifisertSøkeord.aktørIder.isEmpty()) return null
+            if (!pepClient.harTilgangTilPersoner(
+                    område,
+                    idToken,
+                    klassifisertSøkeord.aktørIder
+                )
+            ) return null
+        }
+
         val query = adapter.lagQuery(klassifisertSøkeord) ?: return emptyList()
         return queryService.queryForOppgave(QueryRequest(
             oppgaveQuery = query,
@@ -42,31 +55,17 @@ class SøkeboksTjeneste(
     }
 
     /**
-     * Utleder søkeordvariant fra lengden på input. 11 tegn antas å være fødselsnummer,
-     * 9 tegn journalpostId, ellers saksnummer. Returnerer null ved manglende tilgang til
-     * personen bak et fødselsnummer.
+     * Utleder søkeordvariant fra lengden på input
      */
-    private suspend fun klassifiser(område: Områder, idToken: IIdToken, søkeord: String): Søkeord? = when (søkeord.length) {
+    private suspend fun klassifiser(søkeord: String): Søkeord = when (søkeord.length) {
         11 -> {
             val pdlRespons = pdlService.identifikator(søkeord)
             val aktørIder = pdlRespons.aktorId?.data?.hentIdenter?.identer?.map { it.ident } ?: emptyList()
-            if (pdlRespons.ikkeTilgang || !harTilgangTilPersonAVP(område, idToken, aktørIder)) {
-                null
-            } else {
-                Søkeord.Person(søkeord, aktørIder)
-            }
+            Søkeord.Person(søkeord,pdlRespons.ikkeTilgang, aktørIder)
         }
 
         9 -> Søkeord.Journalpost(søkeord)
         else -> Søkeord.Sak(søkeord)
-    }
-
-    /**
-     * For aktivitetspenger sjekkes tilgang til personen før oppgavesøket.
-     */
-    private suspend fun harTilgangTilPersonAVP(område: Områder, idToken: IIdToken, aktørIder: List<String>): Boolean {
-        if (område != Områder.AKTIVITETSPENGER || aktørIder.isEmpty()) return true
-        return pepClient.harTilgangTilPersoner(område, idToken, aktørIder)
     }
 
     private suspend fun transformerTilSøkeresultatSammendrag(
