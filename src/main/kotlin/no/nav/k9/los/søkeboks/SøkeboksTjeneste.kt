@@ -38,8 +38,8 @@ class SøkeboksTjeneste(
 
         // Sjekker tilgang på person før oppslag på oppgaver
         if (klassifisertSøkeord is Søkeord.Person) {
-            if (klassifisertSøkeord.ikkeTilgangPdl || klassifisertSøkeord.aktørIder.isEmpty()) return null
-            if (!pepClient.harTilgangTilPersoner(
+            if (klassifisertSøkeord.ikkeTilgangPdl) return null
+            if (klassifisertSøkeord.aktørIder.isNotEmpty() && !pepClient.harTilgangTilPersoner(
                     område,
                     idToken,
                     klassifisertSøkeord.aktørIder

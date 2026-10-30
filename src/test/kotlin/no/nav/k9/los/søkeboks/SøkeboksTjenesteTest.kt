@@ -83,7 +83,7 @@ class SøkeboksTjenesteTest {
     }
 
     @Test
-    fun `ukjent fnr gir IkkeTilgang uten tilgangssjekk`() = runTest {
+    fun `ukjent fnr gir TomtResultat uten tilgangssjekk`() = runTest {
         val pdl = mockk<IPdlService>()
         val query = mockk<OppgaveQueryService>()
         val pep = mockk<IPepClient>()
@@ -93,7 +93,7 @@ class SøkeboksTjenesteTest {
 
         val resultat = tjeneste.finnOppgaverSammendrag(Områder.AKTIVITETSPENGER, IdTokenLocal(), FNR)
 
-        assertThat(resultat).isEqualTo(SøkeresultatSammendrag.IkkeTilgang)
+        assertThat(resultat).isEqualTo(SøkeresultatSammendrag.TomtResultat)
         coVerify { pep wasNot Called }
     }
 
