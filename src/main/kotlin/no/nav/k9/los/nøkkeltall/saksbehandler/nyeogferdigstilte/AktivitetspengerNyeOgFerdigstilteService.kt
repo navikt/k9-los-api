@@ -4,7 +4,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.kodeverk.AktOppgavetypenavn
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.oppgavedefinisjon.AktivitetspengerFeltIder
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.oppgavedefinisjon.AktivitetspengerFelter
 import no.nav.k9.los.infrastruktur.utils.Cache
 import no.nav.k9.los.infrastruktur.utils.CacheObject
 import no.nav.k9.los.nøkkeltall.KodeOgNavn
@@ -76,7 +76,7 @@ class AktivitetspengerNyeOgFerdigstilteService(
                 filtere = filtre.toList(),
                 select = listOf(
                     EnkelSelectFelt(null, "oppgavetype"),
-                    EnkelSelectFelt(Områder.AKTIVITETSPENGER, AktivitetspengerFeltIder.Behandling.TYPEKODE),
+                    EnkelSelectFelt(Områder.AKTIVITETSPENGER, AktivitetspengerFelter.Behandling.TYPEKODE.id),
                     AggregertSelectFelt(Aggregeringsfunksjon.ANTALL),
                 ),
             ),
@@ -84,7 +84,7 @@ class AktivitetspengerNyeOgFerdigstilteService(
     ).map { rad ->
         TelleRad(
             oppgavetype = rad.feltverdier.find { it.kode == "oppgavetype" }?.verdi?.toString(),
-            behandlingstype = rad.feltverdier.find { it.kode == AktivitetspengerFeltIder.Behandling.TYPEKODE }?.verdi?.toString(),
+            behandlingstype = rad.feltverdier.find { it.kode == AktivitetspengerFelter.Behandling.TYPEKODE.id }?.verdi?.toString(),
             antall = checkNotNull(rad.aggregeringer.first { it.type == Aggregeringsfunksjon.ANTALL }.verdi) as Long,
         )
     }
@@ -93,7 +93,7 @@ class AktivitetspengerNyeOgFerdigstilteService(
         val datoer = dato.sisteSjuDager()
         val nye = datoer.map { dag ->
             hentGrupperte(FeltverdiOppgavefilter(
-                Områder.AKTIVITETSPENGER, AktivitetspengerFeltIder.Sak.MOTTATT_DATO,
+                Områder.AKTIVITETSPENGER, AktivitetspengerFelter.Sak.MOTTATT_DATO.id,
                 EksternFeltverdiOperator.EQUALS, listOf(dag.toString()),
             ))
         }

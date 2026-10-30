@@ -3,9 +3,18 @@ package no.nav.k9.los.domeneadaptere.eventtiloppgave.upy.mapper
 import no.nav.k9.los.domeneadaptere.eventlager.EventLagret
 import no.nav.k9.los.domeneadaptere.eventlager.Fagsystem
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.upy.kodeverk.UpyOppgavetypenavn
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.upy.oppgavedefinisjon.UngdomsprogramytelsenFeltIder
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.upy.oppgavedefinisjon.UngdomsprogramytelsenFelter.Aksjonspunkt
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.upy.oppgavedefinisjon.UngdomsprogramytelsenFelter.Behandling
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.upy.oppgavedefinisjon.UngdomsprogramytelsenFelter.Sak
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.upy.oppgavedefinisjon.UngdomsprogramytelsenFelter.Saksbehandling
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.upy.oppgavedefinisjon.UngdomsprogramytelsenFelter.Soknad
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.upy.oppgavedefinisjon.UngdomsprogramytelsenFelter.Vedtak
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.upy.oppgavedefinisjon.UngdomsprogramytelsenFelter.Ventetid
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.upy.oppgavedefinisjon.UngdomsprogramytelsenOppgavetyper
 import no.nav.k9.los.domeneadaptere.eventmottak.ung.sak.UngSakEventDto
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
+import no.nav.k9.los.oppgavedefinisjon.typesikker.Feltverdier
+import no.nav.k9.los.oppgavedefinisjon.typesikker.hent
 import no.nav.k9.los.oppgavemottak.*
 import no.nav.ung.kodeverk.behandling.BehandlingResultatType
 import no.nav.ung.kodeverk.behandling.BehandlingStatus
@@ -15,7 +24,6 @@ import no.nav.ung.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
 import no.nav.ung.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus
 import no.nav.ung.kodeverk.behandling.aksjonspunkt.Venteårsak
 import no.nav.ung.sak.kontrakt.aksjonspunkt.AksjonspunktTilstandDto
-import java.time.temporal.ChronoUnit
 
 object SakEventTilOppgaveMapper {
     fun lagOppgaveDto(
@@ -31,14 +39,15 @@ object SakEventTilOppgaveMapper {
             throw IllegalArgumentException("Kan kun mappe UNGDOMSYTELSE ytelse til oppgave")
         }
 
+        val oppgavetype = utledOppgavetype(event)
         val oppgaveDto = OppgaveDto(
             eksternId = event.eksternId.toString(),
             eksternVersjon = event.eventTid.toString(),
-            type = utledOppgavetype(eventLagret.eventDto),
+            type = oppgavetype,
             status = utledOppgavestatus(event),
             endretTidspunkt = event.eventTid,
             reservasjonsnøkkel = utledReservasjonsnokkel(eventLagret, erTilBeslutter(event)),
-            feltverdier = lagFeltverdier(event, forrigeOppgave),
+            feltverdier = lagFeltverdier(event, forrigeOppgave, oppgavetype),
         )
 
         return if (eventLagret.erVaskeevent) {
@@ -95,25 +104,14 @@ object SakEventTilOppgaveMapper {
 
     fun utledReservasjonsnokkel(eventLagret: EventLagret.UngSak, tilBeslutter: Boolean): String {
         val event = eventLagret.eventDto
-        val del = when (utledOppgavetype(event)) {
-            UpyOppgavetypenavn.UNGDOMSPROGRAMYTELSENORDINÆR -> "del1"
-            UpyOppgavetypenavn.UNGDOMSPROGRAMYTELSENKLAGE -> throw NotImplementedError()
-        }
-        val behandlingtype = when (BehandlingType.fraKode(eventLagret.eventDto.behandlingTypeKode)) {
-            BehandlingType.FØRSTEGANGSSØKNAD,
-            BehandlingType.REVURDERING -> "b"
-
-            BehandlingType.KLAGE,
-            BehandlingType.ANKE -> "k"
-
-            BehandlingType.TILBAKEKREVING,
-            BehandlingType.REVURDERING_TILBAKEKREVING,
-            BehandlingType.UDEFINERT -> throw IllegalStateException("Ugyldig behandlingstype for UNGSAK event: ${eventLagret.eventDto.behandlingTypeKode}")
+        val prefiks = when (utledOppgavetype(event)) {
+            UpyOppgavetypenavn.UNGDOMSPROGRAMYTELSENORDINÆR -> "UPY_b_del1"
+            UpyOppgavetypenavn.UNGDOMSPROGRAMYTELSENKLAGE -> "UPY_k"
         }
         return if (tilBeslutter) {
-            "UPY_${behandlingtype}_${del}_${event.aktørId}_beslutter"
+            "${prefiks}_${event.aktørId}_beslutter"
         } else {
-            "UPY_${behandlingtype}_${del}_${event.aktørId}"
+            "${prefiks}_${event.aktørId}"
         }
     }
 
@@ -124,307 +122,99 @@ object SakEventTilOppgaveMapper {
         }
     }
 
-    private fun utledTidFørsteGangHosBeslutter(
-        event: UngSakEventDto,
-        forrigeOppgave: OppgaveV3?
-    ): OppgaveFeltverdiDto? {
-        return forrigeOppgave?.hentVerdi(UngdomsprogramytelsenFeltIder.Saksbehandling.TID_FORSTE_GANG_HOS_BESLUTTER)
-            ?.let {
-                OppgaveFeltverdiDto(
-                    nøkkel = UngdomsprogramytelsenFeltIder.Saksbehandling.TID_FORSTE_GANG_HOS_BESLUTTER,
-                    verdi = it,
-                )
-            } ?: if (erTilBeslutter(event)) {
-            OppgaveFeltverdiDto(
-                nøkkel = UngdomsprogramytelsenFeltIder.Saksbehandling.TID_FORSTE_GANG_HOS_BESLUTTER,
-                verdi = event.eventTid.toString(),
-            )
-        } else {
-            null
-        }
-    }
-
     private fun getåpneAksjonspunkter(event: UngSakEventDto) =
         event.aksjonspunktTilstander.filter { aksjonspunktTilstand ->
             aksjonspunktTilstand.status.erÅpentAksjonspunkt()
         }
 
+    private fun AksjonspunktTilstandDto.definisjon() = AksjonspunktDefinisjon.fraKode(aksjonspunktKode)
+
     private fun lagFeltverdier(
         event: UngSakEventDto,
         forrigeOppgave: OppgaveV3?,
+        oppgavetype: UpyOppgavetypenavn,
     ): List<OppgaveFeltverdiDto> {
-        val feltverdier = mapEnkeltverdier(event, forrigeOppgave)
-        utledAksjonspunkter(event, feltverdier)
-        utledApneAksjonspunkter(event, feltverdier)
-        utledFremtidigeAksjonspunkter(event, feltverdier)
-        utledUtforteAksjonspunkter(event, feltverdier)
-        utledAvbrutteAksjonspunkter(event, feltverdier)
-        utledTotrinnskontroll(event, feltverdier)
-        utledAktivVentetid(event, feltverdier)
-        utledBehandlingsarsaker(event, feltverdier)
-        return feltverdier
-    }
-
-    private fun getApneAksjonspunkter(event: UngSakEventDto): List<AksjonspunktTilstandDto> {
-        return event.aksjonspunktTilstander.filter { aksjonspunktTilstand ->
-            aksjonspunktTilstand.status.erÅpentAksjonspunkt()
-        }
+        val verdier = Feltverdier(UngdomsprogramytelsenOppgavetyper.hent(oppgavetype))
+        mapEnkeltverdier(event, forrigeOppgave, verdier)
+        utledAksjonspunkter(event, verdier)
+        utledTotrinnskontroll(event, verdier)
+        utledAktivVentetid(event, verdier)
+        return verdier.tilDto()
     }
 
     private fun mapEnkeltverdier(
         event: UngSakEventDto,
-        forrigeOppgave: OppgaveV3?
-    ): MutableList<OppgaveFeltverdiDto> {
-        return mutableListOf(
-            OppgaveFeltverdiDto(
-                nøkkel = UngdomsprogramytelsenFeltIder.Saksbehandling.LIGGER_HOS_BESLUTTER,
-                verdi = erTilBeslutter(event).toString(),
-            ),
-            OppgaveFeltverdiDto(
-                nøkkel = UngdomsprogramytelsenFeltIder.Behandling.UUID,
-                verdi = event.eksternId.toString(),
-            ),
-            OppgaveFeltverdiDto(
-                nøkkel = UngdomsprogramytelsenFeltIder.Sak.AKTOR_ID,
-                verdi = event.aktørId,
-            ),
-            OppgaveFeltverdiDto(
-                nøkkel = UngdomsprogramytelsenFeltIder.Sak.FAGSYSTEM,
-                verdi = event.fagsystem.kode,
-            ),
-            OppgaveFeltverdiDto(
-                nøkkel = UngdomsprogramytelsenFeltIder.Sak.SAKSNUMMER,
-                verdi = event.saksnummer,
-            ),
-            OppgaveFeltverdiDto(
-                nøkkel = UngdomsprogramytelsenFeltIder.Behandling.RESULTATTYPE,
-                verdi = event.resultatType ?: BehandlingResultatType.IKKE_FASTSATT.kode,
-            ),
-            OppgaveFeltverdiDto(
-                nøkkel = UngdomsprogramytelsenFeltIder.Vedtak.YTELSESTYPE,
-                verdi = event.ytelseTypeKode,
-            ),
-            OppgaveFeltverdiDto(
-                nøkkel = UngdomsprogramytelsenFeltIder.Behandling.STATUS,
-                verdi = event.behandlingStatus,
-            ),
-            OppgaveFeltverdiDto(
-                nøkkel = UngdomsprogramytelsenFeltIder.Behandling.STEG,
-                verdi = event.behandlingSteg,
-            ),
-            OppgaveFeltverdiDto(
-                nøkkel = UngdomsprogramytelsenFeltIder.Vedtak.BEHANDLENDE_ENHET,
-                verdi = event.behandlendeEnhet,
-            ),
-            OppgaveFeltverdiDto(
-                nøkkel = UngdomsprogramytelsenFeltIder.Behandling.TYPEKODE,
-                verdi = event.behandlingTypeKode,
-            ),
-            OppgaveFeltverdiDto(
-                nøkkel = UngdomsprogramytelsenFeltIder.Saksbehandling.ANSVARLIG_BESLUTTER,
-                verdi = event.ansvarligBeslutterForTotrinn
-            ),
-            OppgaveFeltverdiDto(
-                nøkkel = UngdomsprogramytelsenFeltIder.Saksbehandling.ANSVARLIG_SAKSBEHANDLER,
-                verdi = event.ansvarligSaksbehandlerForTotrinn,
-            ),
-            OppgaveFeltverdiDto(
-                nøkkel = UngdomsprogramytelsenFeltIder.Sak.MOTTATT_DATO,
-                verdi = event.eldsteDatoMedEndringFraSøker?.truncatedTo(ChronoUnit.SECONDS)?.toString()
-                    ?: forrigeOppgave?.hentVerdi(UngdomsprogramytelsenFeltIder.Sak.MOTTATT_DATO)
-                    ?: forrigeOppgave?.hentVerdi(UngdomsprogramytelsenFeltIder.Sak.REGISTRERT_DATO)
-                    ?: event.opprettetBehandling.truncatedTo(ChronoUnit.SECONDS).toString(),
-            ),
-            OppgaveFeltverdiDto(
-                nøkkel = UngdomsprogramytelsenFeltIder.Sak.REGISTRERT_DATO,
-                verdi = forrigeOppgave?.hentVerdi(UngdomsprogramytelsenFeltIder.Sak.REGISTRERT_DATO)
-                    ?: event.opprettetBehandling.truncatedTo(ChronoUnit.SECONDS).toString(),
-            ),
-            OppgaveFeltverdiDto(
-                nøkkel = UngdomsprogramytelsenFeltIder.Vedtak.DATO,
-                verdi = event.vedtaksdato?.toString()
-                    ?: forrigeOppgave?.hentVerdi(UngdomsprogramytelsenFeltIder.Vedtak.DATO),
-            ),
-            event.nyeKrav?.let {
-                OppgaveFeltverdiDto(
-                    nøkkel = UngdomsprogramytelsenFeltIder.Soknad.NYE_KRAV,
-                    verdi = it.toString(),
-                )
-            },
-            utledTidFørsteGangHosBeslutter(event, forrigeOppgave)
-        ).filterNotNull().toMutableList()
-    }
-
-    private fun utledBehandlingsarsaker(event: UngSakEventDto, feltverdier: MutableList<OppgaveFeltverdiDto>) {
-        if (event.behandlingsårsaker.isNotEmpty()) {
-            feltverdier.addAll(event.behandlingsårsaker.map { arsak ->
-                OppgaveFeltverdiDto(
-                    nøkkel = UngdomsprogramytelsenFeltIder.Behandling.ARSAK,
-                    verdi = arsak,
-                )
-            })
-        } else {
-            feltverdier.add(
-                OppgaveFeltverdiDto(
-                    nøkkel = UngdomsprogramytelsenFeltIder.Behandling.ARSAK,
-                    verdi = null,
-                )
-            )
-        }
-    }
-
-    private fun utledAksjonspunkter(event: UngSakEventDto, feltverdier: MutableList<OppgaveFeltverdiDto>) {
-        if (event.aksjonspunktTilstander.isNotEmpty()) {
-            feltverdier.addAll(event.aksjonspunktTilstander.map { aksjonspunkt ->
-                OppgaveFeltverdiDto(
-                    nøkkel = UngdomsprogramytelsenFeltIder.Aksjonspunkt.ALLE,
-                    verdi = aksjonspunkt.aksjonspunktKode
-                )
-            })
-        } else {
-            feltverdier.add(
-                OppgaveFeltverdiDto(
-                    nøkkel = UngdomsprogramytelsenFeltIder.Aksjonspunkt.ALLE,
-                    verdi = null,
-                )
-            )
-        }
-    }
-
-    private fun utledApneAksjonspunkter(event: UngSakEventDto, feltverdier: MutableList<OppgaveFeltverdiDto>) {
-        val åpneAksjonspunkter = getApneAksjonspunkter(event)
-        if (åpneAksjonspunkter.isNotEmpty()) {
-            åpneAksjonspunkter.forEach { åpentAksjonspunkt ->
-                feltverdier.add(
-                    OppgaveFeltverdiDto(
-                        nøkkel = UngdomsprogramytelsenFeltIder.Aksjonspunkt.AKTIVE,
-                        verdi = åpentAksjonspunkt.aksjonspunktKode
-                    )
-                )
-            }
-            val løsbartAksjonspunkt = if (event.behandlingSteg != null) {
-                åpneAksjonspunkter.firstOrNull { åpentAksjonspunkt ->
-                    val aksjonspunktDefinisjon = AksjonspunktDefinisjon.fraKode(åpentAksjonspunkt.aksjonspunktKode)
-                    !aksjonspunktDefinisjon.erAutopunkt() && aksjonspunktDefinisjon.behandlingSteg != null && aksjonspunktDefinisjon.behandlingSteg.kode == event.behandlingSteg
-                }?.aksjonspunktKode
-            } else {
-                null
-            }
-            feltverdier.add(
-                OppgaveFeltverdiDto(
-                    nøkkel = UngdomsprogramytelsenFeltIder.Aksjonspunkt.LOSBART,
-                    verdi = løsbartAksjonspunkt,
-                )
-            )
-        } else {
-            feltverdier.add(
-                OppgaveFeltverdiDto(
-                    nøkkel = UngdomsprogramytelsenFeltIder.Aksjonspunkt.AKTIVE,
-                    verdi = null
-                )
-            )
-        }
-    }
-
-    private fun utledFremtidigeAksjonspunkter(
-        event: UngSakEventDto,
-        feltverdier: MutableList<OppgaveFeltverdiDto>
+        forrigeOppgave: OppgaveV3?,
+        verdier: Feltverdier,
     ) {
-        val fremtidige = getApneAksjonspunkter(event).filter { åpentAksjonspunkt ->
-            val aksjonspunktDefinisjon = AksjonspunktDefinisjon.fraKode(åpentAksjonspunkt.aksjonspunktKode)
-            !aksjonspunktDefinisjon.erAutopunkt() &&
-                    (aksjonspunktDefinisjon.behandlingSteg == null || aksjonspunktDefinisjon.behandlingSteg.kode != event.behandlingSteg)
-        }
+        verdier[Behandling.UUID] = event.eksternId.toString()
+        verdier[Behandling.TYPEKODE] = BehandlingType.fraKode(event.behandlingTypeKode)
+        verdier[Behandling.STATUS] = BehandlingStatus.fraKode(event.behandlingStatus)
+        verdier[Behandling.STEG] = event.behandlingSteg
+        verdier[Behandling.ARSAK] = event.behandlingsårsaker
+        verdier[Behandling.RESULTATTYPE] = event.resultatType ?: BehandlingResultatType.IKKE_FASTSATT.kode
 
-        if (fremtidige.isNotEmpty()) {
-            feltverdier.addAll(fremtidige.map { åpentAksjonspunkt ->
-                OppgaveFeltverdiDto(
-                    nøkkel = UngdomsprogramytelsenFeltIder.Aksjonspunkt.FREMTIDIG,
-                    verdi = åpentAksjonspunkt.aksjonspunktKode,
-                )
-            })
-        } else {
-            feltverdier.add(
-                OppgaveFeltverdiDto(
-                    nøkkel = UngdomsprogramytelsenFeltIder.Aksjonspunkt.FREMTIDIG,
-                    verdi = null,
-                )
-            )
-        }
+        event.nyeKrav?.let { verdier[Soknad.NYE_KRAV] = it }
+
+        verdier[Sak.AKTOR_ID] = event.aktørId
+        verdier[Sak.FAGSYSTEM] = event.fagsystem.kode
+        verdier[Sak.SAKSNUMMER] = event.saksnummer
+        verdier[Sak.MOTTATT_DATO] = event.eldsteDatoMedEndringFraSøker
+            ?: forrigeOppgave?.hent(Sak.MOTTATT_DATO)
+            ?: forrigeOppgave?.hent(Sak.REGISTRERT_DATO)
+            ?: event.opprettetBehandling
+        verdier[Sak.REGISTRERT_DATO] = forrigeOppgave?.hent(Sak.REGISTRERT_DATO)
+            ?: event.opprettetBehandling
+
+        verdier[Vedtak.DATO] = event.vedtaksdato ?: forrigeOppgave?.hent(Vedtak.DATO)
+        verdier[Vedtak.YTELSESTYPE] = FagsakYtelseType.fraKode(event.ytelseTypeKode)
+        verdier[Vedtak.BEHANDLENDE_ENHET] = event.behandlendeEnhet
+
+        verdier[Saksbehandling.LIGGER_HOS_BESLUTTER] = erTilBeslutter(event)
+        verdier[Saksbehandling.ANSVARLIG_BESLUTTER] = event.ansvarligBeslutterForTotrinn
+        verdier[Saksbehandling.ANSVARLIG_SAKSBEHANDLER] = event.ansvarligSaksbehandlerForTotrinn
+        (forrigeOppgave?.hent(Saksbehandling.TID_FORSTE_GANG_HOS_BESLUTTER)
+            ?: event.eventTid.takeIf { erTilBeslutter(event) })
+            ?.let { verdier[Saksbehandling.TID_FORSTE_GANG_HOS_BESLUTTER] = it }
     }
 
-    private fun utledUtforteAksjonspunkter(event: UngSakEventDto, feltverdier: MutableList<OppgaveFeltverdiDto>) {
-        val utforte = event.aksjonspunktTilstander.filter { it.status == AksjonspunktStatus.UTFØRT }
-        if (utforte.isNotEmpty()) {
-            feltverdier.addAll(utforte.map { aksjonspunkt ->
-                OppgaveFeltverdiDto(
-                    nøkkel = UngdomsprogramytelsenFeltIder.Aksjonspunkt.UTFORT,
-                    verdi = aksjonspunkt.aksjonspunktKode,
-                )
-            })
-        } else {
-            feltverdier.add(
-                OppgaveFeltverdiDto(
-                    nøkkel = UngdomsprogramytelsenFeltIder.Aksjonspunkt.UTFORT,
-                    verdi = null,
-                )
-            )
+    private fun utledAksjonspunkter(event: UngSakEventDto, verdier: Feltverdier) {
+        val åpneAksjonspunkter = getåpneAksjonspunkter(event).map { it.definisjon() }
+
+        verdier[Aksjonspunkt.ALLE] = event.aksjonspunktTilstander.map { it.definisjon() }
+        verdier[Aksjonspunkt.AKTIVE] = åpneAksjonspunkter
+        if (åpneAksjonspunkter.isNotEmpty()) {
+            verdier[Aksjonspunkt.LOSBART] = event.behandlingSteg?.let { steg ->
+                åpneAksjonspunkter.firstOrNull { !it.erAutopunkt() && it.behandlingSteg?.kode == steg }
+            }
         }
+        verdier[Aksjonspunkt.FREMTIDIG] = åpneAksjonspunkter.filter {
+            !it.erAutopunkt() && (it.behandlingSteg == null || it.behandlingSteg.kode != event.behandlingSteg)
+        }
+        verdier[Aksjonspunkt.UTFORT] = event.aksjonspunktTilstander
+            .filter { it.status == AksjonspunktStatus.UTFØRT }
+            .map { it.definisjon() }
+        verdier[Aksjonspunkt.AVBRUTT] = event.aksjonspunktTilstander
+            .filter { it.status == AksjonspunktStatus.AVBRUTT }
+            .map { it.definisjon() }
     }
 
-    private fun utledAvbrutteAksjonspunkter(event: UngSakEventDto, feltverdier: MutableList<OppgaveFeltverdiDto>) {
-        val avbrutte = event.aksjonspunktTilstander.filter { it.status == AksjonspunktStatus.AVBRUTT }
-        if (avbrutte.isNotEmpty()) {
-            feltverdier.addAll(avbrutte.map { aksjonspunktTilstand ->
-                OppgaveFeltverdiDto(
-                    nøkkel = UngdomsprogramytelsenFeltIder.Aksjonspunkt.AVBRUTT,
-                    verdi = aksjonspunktTilstand.aksjonspunktKode,
-                )
-            })
-        } else {
-            feltverdier.add(
-                OppgaveFeltverdiDto(
-                    nøkkel = UngdomsprogramytelsenFeltIder.Aksjonspunkt.AVBRUTT,
-                    verdi = null,
-                )
-            )
+    private fun utledTotrinnskontroll(event: UngSakEventDto, verdier: Feltverdier) {
+        verdier[Vedtak.TOTRINNSKONTROLL] = event.aksjonspunktTilstander.any { aksjonspunktTilstandDto ->
+            aksjonspunktTilstandDto.aksjonspunktKode.equals("5015") && aksjonspunktTilstandDto.status != AksjonspunktStatus.AVBRUTT
         }
     }
 
-    private fun utledTotrinnskontroll(event: UngSakEventDto, feltverdier: MutableList<OppgaveFeltverdiDto>) {
-        feltverdier.add(
-            OppgaveFeltverdiDto(
-                nøkkel = UngdomsprogramytelsenFeltIder.Vedtak.TOTRINNSKONTROLL,
-                verdi = event.aksjonspunktTilstander.filter { aksjonspunktTilstandDto ->
-                    aksjonspunktTilstandDto.aksjonspunktKode.equals("5015") && aksjonspunktTilstandDto.status !in listOf(
-                        AksjonspunktStatus.AVBRUTT,
-                    )
-                }.isNotEmpty().toString(),
-            )
-        )
-    }
-
-    private fun utledAktivVentetid(event: UngSakEventDto, feltverdier: MutableList<OppgaveFeltverdiDto>) {
-        val åpneAksjonspunkter = getApneAksjonspunkter(event)
-        val ventendeAksjonspunkt = åpneAksjonspunkter
+    private fun utledAktivVentetid(event: UngSakEventDto, verdier: Feltverdier) {
+        val ventendeAksjonspunkt = getåpneAksjonspunkter(event)
             .filter { aksjonspunktTilstandDto ->
                 aksjonspunktTilstandDto.venteårsak != null && aksjonspunktTilstandDto.venteårsak != Venteårsak.UDEFINERT &&
                         aksjonspunktTilstandDto.status == AksjonspunktStatus.OPPRETTET
             }
             .singleOrNull()
 
-        feltverdier.add(
-            OppgaveFeltverdiDto(
-                nøkkel = UngdomsprogramytelsenFeltIder.Ventetid.AKTIV_ARSAK,
-                verdi = ventendeAksjonspunkt?.venteårsak?.kode?.toString(),
-            )
-        )
-        feltverdier.add(
-            OppgaveFeltverdiDto(
-                nøkkel = UngdomsprogramytelsenFeltIder.Ventetid.AKTIV_FRIST,
-                verdi = ventendeAksjonspunkt?.fristTid?.toString(),
-            )
-        )
+        verdier[Ventetid.AKTIV_ARSAK] = ventendeAksjonspunkt?.venteårsak
+        verdier[Ventetid.AKTIV_FRIST] = ventendeAksjonspunkt?.fristTid
     }
 }
 

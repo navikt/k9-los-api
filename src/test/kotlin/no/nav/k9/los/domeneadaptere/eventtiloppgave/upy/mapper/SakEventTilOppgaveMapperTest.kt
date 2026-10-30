@@ -10,7 +10,7 @@ import io.mockk.mockk
 import no.nav.k9.los.domeneadaptere.eventlager.EventLagret
 import no.nav.k9.los.domeneadaptere.eventmottak.ung.sak.UngSakEventDto
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.upy.kodeverk.UpyOppgavetypenavn
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.upy.oppgavedefinisjon.UngdomsprogramytelsenFeltIder
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.upy.oppgavedefinisjon.UngdomsprogramytelsenFelter
 import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.oppgavemottak.NyOppgaveversjon
@@ -161,6 +161,29 @@ class SakEventTilOppgaveMapperTest {
     }
 
     @Test
+    fun `klage og anke mappes til klageoppgave med egen reservasjonsnøkkel`() {
+        listOf(BehandlingType.KLAGE, BehandlingType.ANKE).forEach { behandlingType ->
+            val vanlig = SakEventTilOppgaveMapper.lagOppgaveDto(
+                lagEventLagret(lagEvent(behandlingTypeKode = behandlingType.kode, aksjonspunktTilstander = listOf(ap(MANUELT_AP)))),
+                null,
+                1,
+            ).dto
+            val hosBeslutter = SakEventTilOppgaveMapper.lagOppgaveDto(
+                lagEventLagret(lagEvent(behandlingTypeKode = behandlingType.kode, aksjonspunktTilstander = listOf(ap(FATTER_VEDTAK_AP)))),
+                null,
+                1,
+            ).dto
+
+            assertThat(vanlig.type).isEqualTo(UpyOppgavetypenavn.UNGDOMSPROGRAMYTELSENKLAGE)
+            assertThat(vanlig.status).isEqualTo(Oppgavestatus.AAPEN)
+            assertThat(vanlig.reservasjonsnøkkel).isEqualTo("UPY_k_1234567890123")
+            assertThat(vanlig.feltverdier.verdiFor(UngdomsprogramytelsenFelter.Behandling.TYPEKODE.id))
+                .isEqualTo(behandlingType.kode)
+            assertThat(hosBeslutter.reservasjonsnøkkel).isEqualTo("UPY_k_1234567890123_beslutter")
+        }
+    }
+
+    @Test
     fun `tilbakekreving og udefinert behandlingstype er ugyldig`() {
         listOf(
             BehandlingType.TILBAKEKREVING,
@@ -216,22 +239,22 @@ class SakEventTilOppgaveMapperTest {
                 lagEvent(aksjonspunktTilstander = listOf(ap(NAV_KONTOR_BESLUTTER_AP, AksjonspunktStatus.UTFØRT)))
             ),
             forrigeOppgave(
-                UngdomsprogramytelsenFeltIder.Saksbehandling.TID_FORSTE_GANG_HOS_BESLUTTER to
-                    åpent.feltverdier.verdiFor(UngdomsprogramytelsenFeltIder.Saksbehandling.TID_FORSTE_GANG_HOS_BESLUTTER)
+                UngdomsprogramytelsenFelter.Saksbehandling.TID_FORSTE_GANG_HOS_BESLUTTER.id to
+                    åpent.feltverdier.verdiFor(UngdomsprogramytelsenFelter.Saksbehandling.TID_FORSTE_GANG_HOS_BESLUTTER.id)
             ),
             1,
         ).dto
 
         assertThat(åpent.reservasjonsnøkkel).isEqualTo("UPY_b_del1_1234567890123_beslutter")
-        assertThat(åpent.feltverdier.verdiFor(UngdomsprogramytelsenFeltIder.Saksbehandling.LIGGER_HOS_BESLUTTER))
+        assertThat(åpent.feltverdier.verdiFor(UngdomsprogramytelsenFelter.Saksbehandling.LIGGER_HOS_BESLUTTER.id))
             .isEqualTo("true")
-        assertThat(åpent.feltverdier.verdiFor(UngdomsprogramytelsenFeltIder.Saksbehandling.TID_FORSTE_GANG_HOS_BESLUTTER))
+        assertThat(åpent.feltverdier.verdiFor(UngdomsprogramytelsenFelter.Saksbehandling.TID_FORSTE_GANG_HOS_BESLUTTER.id))
             .isEqualTo(EVENT_TID.toString())
 
         assertThat(lukket.reservasjonsnøkkel).isEqualTo("UPY_b_del1_1234567890123")
-        assertThat(lukket.feltverdier.verdiFor(UngdomsprogramytelsenFeltIder.Saksbehandling.LIGGER_HOS_BESLUTTER))
+        assertThat(lukket.feltverdier.verdiFor(UngdomsprogramytelsenFelter.Saksbehandling.LIGGER_HOS_BESLUTTER.id))
             .isEqualTo("false")
-        assertThat(lukket.feltverdier.verdiFor(UngdomsprogramytelsenFeltIder.Saksbehandling.TID_FORSTE_GANG_HOS_BESLUTTER))
+        assertThat(lukket.feltverdier.verdiFor(UngdomsprogramytelsenFelter.Saksbehandling.TID_FORSTE_GANG_HOS_BESLUTTER.id))
             .isEqualTo(EVENT_TID.toString())
     }
 
@@ -246,15 +269,15 @@ class SakEventTilOppgaveMapperTest {
         assertThat(dto.type).isEqualTo(UpyOppgavetypenavn.UNGDOMSPROGRAMYTELSENORDINÆR)
         assertThat(dto.status).isEqualTo(Oppgavestatus.UAVKLART)
         assertThat(dto.reservasjonsnøkkel).isEqualTo("UPY_b_del1_1234567890123")
-        assertThat(dto.feltverdier.verdiFor(UngdomsprogramytelsenFeltIder.Sak.AKTOR_ID)).isEqualTo("1234567890123")
-        assertThat(dto.feltverdier.verdiFor(UngdomsprogramytelsenFeltIder.Sak.FAGSYSTEM)).isEqualTo(Fagsystem.UNG_SAK.kode)
-        assertThat(dto.feltverdier.verdiFor(UngdomsprogramytelsenFeltIder.Sak.SAKSNUMMER)).isEqualTo("UPY123456")
-        assertThat(dto.feltverdier.verdiFor(UngdomsprogramytelsenFeltIder.Behandling.RESULTATTYPE))
+        assertThat(dto.feltverdier.verdiFor(UngdomsprogramytelsenFelter.Sak.AKTOR_ID.id)).isEqualTo("1234567890123")
+        assertThat(dto.feltverdier.verdiFor(UngdomsprogramytelsenFelter.Sak.FAGSYSTEM.id)).isEqualTo(Fagsystem.UNG_SAK.kode)
+        assertThat(dto.feltverdier.verdiFor(UngdomsprogramytelsenFelter.Sak.SAKSNUMMER.id)).isEqualTo("UPY123456")
+        assertThat(dto.feltverdier.verdiFor(UngdomsprogramytelsenFelter.Behandling.RESULTATTYPE.id))
             .isEqualTo(BehandlingResultatType.IKKE_FASTSATT.kode)
-        assertThat(dto.feltverdier.verdiFor(UngdomsprogramytelsenFeltIder.Vedtak.YTELSESTYPE))
+        assertThat(dto.feltverdier.verdiFor(UngdomsprogramytelsenFelter.Vedtak.YTELSESTYPE.id))
             .isEqualTo(FagsakYtelseType.UNGDOMSYTELSE.kode)
-        assertThat(dto.feltverdier.verdiFor(UngdomsprogramytelsenFeltIder.Soknad.NYE_KRAV)).isEqualTo("true")
-        assertThat(dto.feltverdier.verdierFor(UngdomsprogramytelsenFeltIder.Behandling.ARSAK))
+        assertThat(dto.feltverdier.verdiFor(UngdomsprogramytelsenFelter.Soknad.NYE_KRAV.id)).isEqualTo("true")
+        assertThat(dto.feltverdier.verdierFor(UngdomsprogramytelsenFelter.Behandling.ARSAK.id))
             .containsExactlyInAnyOrder("RE-ANNET", "RE-KLAG")
     }
 
@@ -271,13 +294,13 @@ class SakEventTilOppgaveMapperTest {
 
         val verdier = feltverdier(event)
 
-        assertThat(verdier.verdierFor(UngdomsprogramytelsenFeltIder.Aksjonspunkt.ALLE))
+        assertThat(verdier.verdierFor(UngdomsprogramytelsenFelter.Aksjonspunkt.ALLE.id))
             .containsExactlyInAnyOrder(MANUELT_AP.kode, FATTER_VEDTAK_AP.kode, AUTOPUNKT_AP.kode)
-        assertThat(verdier.verdierFor(UngdomsprogramytelsenFeltIder.Aksjonspunkt.AKTIVE))
+        assertThat(verdier.verdierFor(UngdomsprogramytelsenFelter.Aksjonspunkt.AKTIVE.id))
             .containsExactlyInAnyOrder(MANUELT_AP.kode, FATTER_VEDTAK_AP.kode)
-        assertThat(verdier.verdierFor(UngdomsprogramytelsenFeltIder.Aksjonspunkt.LOSBART))
+        assertThat(verdier.verdierFor(UngdomsprogramytelsenFelter.Aksjonspunkt.LOSBART.id))
             .containsOnly(MANUELT_AP.kode)
-        assertThat(verdier.verdierFor(UngdomsprogramytelsenFeltIder.Aksjonspunkt.UTFORT))
+        assertThat(verdier.verdierFor(UngdomsprogramytelsenFelter.Aksjonspunkt.UTFORT.id))
             .containsOnly(AUTOPUNKT_AP.kode)
     }
 
@@ -291,18 +314,18 @@ class SakEventTilOppgaveMapperTest {
         val verdier = feltverdier(
             event,
             forrigeOppgave(
-                UngdomsprogramytelsenFeltIder.Saksbehandling.TID_FORSTE_GANG_HOS_BESLUTTER to beslutterTid,
-                UngdomsprogramytelsenFeltIder.Sak.MOTTATT_DATO to mottattDato,
-                UngdomsprogramytelsenFeltIder.Sak.REGISTRERT_DATO to registrertDato,
-                UngdomsprogramytelsenFeltIder.Vedtak.DATO to vedtaksdato,
+                UngdomsprogramytelsenFelter.Saksbehandling.TID_FORSTE_GANG_HOS_BESLUTTER.id to beslutterTid,
+                UngdomsprogramytelsenFelter.Sak.MOTTATT_DATO.id to mottattDato,
+                UngdomsprogramytelsenFelter.Sak.REGISTRERT_DATO.id to registrertDato,
+                UngdomsprogramytelsenFelter.Vedtak.DATO.id to vedtaksdato,
             ),
         )
 
-        assertThat(verdier.verdiFor(UngdomsprogramytelsenFeltIder.Saksbehandling.TID_FORSTE_GANG_HOS_BESLUTTER))
+        assertThat(verdier.verdiFor(UngdomsprogramytelsenFelter.Saksbehandling.TID_FORSTE_GANG_HOS_BESLUTTER.id))
             .isEqualTo(beslutterTid)
-        assertThat(verdier.verdiFor(UngdomsprogramytelsenFeltIder.Sak.MOTTATT_DATO)).isEqualTo(mottattDato)
-        assertThat(verdier.verdiFor(UngdomsprogramytelsenFeltIder.Sak.REGISTRERT_DATO)).isEqualTo(registrertDato)
-        assertThat(verdier.verdiFor(UngdomsprogramytelsenFeltIder.Vedtak.DATO)).isEqualTo(vedtaksdato)
+        assertThat(verdier.verdiFor(UngdomsprogramytelsenFelter.Sak.MOTTATT_DATO.id)).isEqualTo(mottattDato)
+        assertThat(verdier.verdiFor(UngdomsprogramytelsenFelter.Sak.REGISTRERT_DATO.id)).isEqualTo(registrertDato)
+        assertThat(verdier.verdiFor(UngdomsprogramytelsenFelter.Vedtak.DATO.id)).isEqualTo(vedtaksdato)
     }
 
     @Test
@@ -316,8 +339,8 @@ class SakEventTilOppgaveMapperTest {
             )
         )
 
-        assertThat(verdier.verdiFor(UngdomsprogramytelsenFeltIder.Ventetid.AKTIV_ARSAK))
+        assertThat(verdier.verdiFor(UngdomsprogramytelsenFelter.Ventetid.AKTIV_ARSAK.id))
             .isEqualTo(Venteårsak.VENT_INNTEKT_RAPPORTERINGSFRIST.kode)
-        assertThat(verdier.verdiFor(UngdomsprogramytelsenFeltIder.Ventetid.AKTIV_FRIST)).isEqualTo(frist.toString())
+        assertThat(verdier.verdiFor(UngdomsprogramytelsenFelter.Ventetid.AKTIV_FRIST.id)).isEqualTo(frist.toString())
     }
 }

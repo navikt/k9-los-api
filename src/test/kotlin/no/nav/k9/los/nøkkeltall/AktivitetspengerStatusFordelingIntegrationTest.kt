@@ -3,7 +3,7 @@ package no.nav.k9.los.nøkkeltall
 import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.Områdesetup
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.kodeverk.AktOppgavetypenavn
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.oppgavedefinisjon.AktivitetspengerOppgaver
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.oppgavedefinisjon.AktivitetspengerOppgavetyper
 import no.nav.k9.los.infrastruktur.abac.cache.PepCache
 import no.nav.k9.los.infrastruktur.abac.cache.PepCacheRepository
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
@@ -67,7 +67,7 @@ class AktivitetspengerStatusFordelingIntegrationTest : AbstractK9LosIntegrationT
         val klage = AktOppgavetypenavn.AKTIVITETSPENGERKLAGE.kode
         val feilutbetaling = "test-feilutbetaling"
         // Testdefinisjoner inntil eventmottaket støtter disse oppgavetypene.
-        val definisjon = AktivitetspengerOppgaver.lagOppgaveDefinisjon("http://localhost")
+        val definisjon = AktivitetspengerOppgavetyper.tilDto("http://localhost")
         val mal = definisjon.oppgavetyper.first()
         get<OppgavetypeTjeneste>().oppdater(definisjon.copy(
             oppgavetyper = definisjon.oppgavetyper + setOf(mal.copy(id = klage), mal.copy(id = feilutbetaling)),
