@@ -13,6 +13,7 @@ import no.nav.k9.kodeverk.behandling.FagsakYtelseType
 import no.nav.k9.los.domeneadaptere.eventlager.EventRepository
 import no.nav.k9.los.domeneadaptere.eventlager.Fagsystem
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.kodeverk.K9Oppgavetypenavn
+import no.nav.k9.los.domeneadaptere.k9.avstemming.Avstemmingsrapport
 import no.nav.k9.los.domeneadaptere.k9.avstemming.AvstemmingsTjeneste
 import no.nav.k9.los.domeneadaptere.statistikk.StatistikkRepository
 import no.nav.k9.los.infrastruktur.abac.IPepClient
@@ -20,7 +21,6 @@ import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.infrastruktur.rest.RequestContextService
 import no.nav.k9.los.infrastruktur.rest.område
 import no.nav.k9.los.infrastruktur.utils.IkkeImplementertException
-import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.ko.OppgaveKoTjeneste
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgavedefinisjon.oppgavetype.OppgavetypeRepository
@@ -34,6 +34,7 @@ import no.nav.k9.los.oppgaveuthenting.query.dto.query.EnkelSelectFelt
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.OppgaveQuery
 import no.nav.k9.los.oppgaveuthenting.query.mapping.EksternFeltverdiOperator
+import no.nav.k9.los.reservasjon.ReservasjonV3MedEndring
 import no.nav.k9.los.reservasjon.ReservasjonV3Repository
 import org.koin.ktor.ext.inject
 import org.slf4j.LoggerFactory
@@ -46,7 +47,6 @@ fun Route.K9ForvaltningApis() {
     val oppgaveKoTjeneste by inject<OppgaveKoTjeneste>()
     val oppgaveQueryService by inject<OppgaveQueryService>()
     val reservasjonV3Repository by inject<ReservasjonV3Repository>()
-    val objectMapper = LosObjectMapper.prettyInstance
     val transactionalManager by inject<TransactionalManager>()
     val avstemmingsTjeneste by inject<AvstemmingsTjeneste>()
     val eventRepository by inject<EventRepository>()
@@ -63,8 +63,10 @@ fun Route.K9ForvaltningApis() {
         description = "index_oversikt"
         response {
             HttpStatusCode.OK to {
-                description = "test test test"
+                description = "Indekser med størrelse og antall scans, kommaseparert"
+                body<List<String>>()
             }
+            HttpStatusCode.Forbidden to { description = "Mangler tilgang til forvaltning" }
         }
     }) {
         requestContextService.withRequestContext(call) {
@@ -132,6 +134,10 @@ fun Route.K9ForvaltningApis() {
             pathParameter<String>("saksnummer") {
                 description = "Oppgavens saksnummer, evt journalpostId for punsjoppgaver"
             }
+        }
+        response {
+            HttpStatusCode.OK to { body<List<FinnEksternIdResponse>>() }
+            HttpStatusCode.Forbidden to { description = "Mangler tilgang til forvaltning" }
         }
     }) {
         requestContextService.withRequestContext(call) {
@@ -220,6 +226,12 @@ fun Route.K9ForvaltningApis() {
                 description = "Oppgavens eksterne Id, definert av innleverende fagsystem"
             }
         }
+        response {
+            HttpStatusCode.OK to {
+                body<OppgaveIkkeSensitiv>()
+            }
+            HttpStatusCode.Forbidden to { description = "Mangler tilgang til forvaltning" }
+        }
     }) {
         requestContextService.withRequestContext(call) {
             if (pepClient.kanLeggeUtDriftsmelding()) {
@@ -228,7 +240,7 @@ fun Route.K9ForvaltningApis() {
 
                 val oppgave =
                     oppgaveOppslagTjeneste.hentAktivOppgave(coroutineContext.område(), oppgaveEksternId, oppgavetype)
-                call.respond(objectMapper.writeValueAsString(OppgaveIkkeSensitiv(oppgave)))
+                call.respond(OppgaveIkkeSensitiv(oppgave))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
@@ -250,6 +262,13 @@ fun Route.K9ForvaltningApis() {
                 description = "Oppgavens eksterne Id, definert av innleverende fagsystem"
             }
         }
+        response {
+            HttpStatusCode.OK to {
+                body<List<OppgaveIkkeSensitiv>>()
+            }
+            HttpStatusCode.NotFound to { description = "Fant ingen oppgave" }
+            HttpStatusCode.Forbidden to { description = "Mangler tilgang til forvaltning" }
+        }
     }) {
         requestContextService.withRequestContext(call) {
             if (pepClient.kanLeggeUtDriftsmelding()) {
@@ -265,7 +284,7 @@ fun Route.K9ForvaltningApis() {
                     call.respond(HttpStatusCode.NotFound)
                 } else {
                     val tidsserieIkkeSensitiv = oppgaveTidsserie.map { oppgave -> OppgaveIkkeSensitiv(oppgave) }
-                    call.respond(objectMapper.writeValueAsString(tidsserieIkkeSensitiv))
+                    call.respond(tidsserieIkkeSensitiv)
                 }
             } else {
                 call.respond(HttpStatusCode.Forbidden)
@@ -294,6 +313,16 @@ fun Route.K9ForvaltningApis() {
             pathParameter<String>("oppgaveEksternId") {
                 description = "Oppgavens eksterne Id, definert av innleverende fagsystem"
             }
+        }
+        response {
+            HttpStatusCode.OK to {
+                body<List<ReservasjonV3MedEndring>>()
+            }
+            HttpStatusCode.NotFound to {
+                description = "Ukjent oppgavetype"
+                body<String>()
+            }
+            HttpStatusCode.Forbidden to { description = "Mangler tilgang til forvaltning" }
         }
     }) {
         requestContextService.withRequestContext(call) {
@@ -325,7 +354,7 @@ fun Route.K9ForvaltningApis() {
 
                 val reservasjonerSamlet =
                     (reservasjonerOrdinær + reservasjonerBeslutter).sortedBy { it.reservasjonOpprettet }
-                call.respond(objectMapper.writeValueAsString(reservasjonerSamlet))
+                call.respond(reservasjonerSamlet)
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
@@ -341,6 +370,13 @@ fun Route.K9ForvaltningApis() {
                 description = "Kildesystem som har levert eventene"
             }
         }
+        response {
+            HttpStatusCode.OK to {
+                description = "BehandlingRapport for saksbehandlingssystemer, JournalpostRapport for punsj"
+                body<Avstemmingsrapport>()
+            }
+            HttpStatusCode.Forbidden to { description = "Mangler tilgang til forvaltning" }
+        }
     }) {
         /*
         For et gitt fagsystem/oppgavetype
@@ -352,7 +388,7 @@ fun Route.K9ForvaltningApis() {
             if (pepClient.kanLeggeUtDriftsmelding()) {
                 val fagsystem = Fagsystem.fraParameter(call.parameters["fagsystem"]!!)
                 val avstemmingsrapport = avstemmingsTjeneste.avstem(fagsystem)
-                call.respond(objectMapper.writeValueAsString(avstemmingsrapport))
+                call.respond(avstemmingsrapport)
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
@@ -360,7 +396,14 @@ fun Route.K9ForvaltningApis() {
     }
 
     route("/ytelse") {
-        get("/oppgaveko/antall", { tags("Forvaltning") }) {
+        get("/oppgaveko/antall", {
+            tags("Forvaltning")
+            description = "Ytelsestest: tell oppgaver i alle oppgavekøer. Returnerer antall køer"
+            response {
+                HttpStatusCode.OK to { body<Int>() }
+                HttpStatusCode.Forbidden to { description = "Mangler tilgang til forvaltning" }
+            }
+        }) {
             requestContextService.withRequestContext(call) {
                 if (pepClient.kanLeggeUtDriftsmelding()) {
                     val antall =
@@ -379,7 +422,14 @@ fun Route.K9ForvaltningApis() {
             }
         }
 
-        get("/oppgaveko", { tags("Forvaltning") }) {
+        get("/oppgaveko", {
+            tags("Forvaltning")
+            description = "Hent id til alle oppgavekøer"
+            response {
+                HttpStatusCode.OK to { body<List<Long>>() }
+                HttpStatusCode.Forbidden to { description = "Mangler tilgang til forvaltning" }
+            }
+        }) {
             requestContextService.withRequestContext(call) {
                 if (pepClient.kanLeggeUtDriftsmelding()) {
                     call.respond(oppgaveKoTjeneste.hentOppgavekøer(område = coroutineContext.område(), skjermet = false).map { it.id })
@@ -389,7 +439,21 @@ fun Route.K9ForvaltningApis() {
             }
         }
 
-        get("/oppgaveko/{ko}/antall", { tags("Forvaltning") }) {
+        get("/oppgaveko/{ko}/antall", {
+            tags("Forvaltning")
+            description = "Tell oppgaver i en oppgavekø"
+            request {
+                pathParameter<Long>("ko") { description = "Id til oppgavekøen" }
+                queryParameter<Boolean>("reserverte") { description = "Om reserverte oppgaver skal filtreres bort" }
+            }
+            response {
+                HttpStatusCode.OK to {
+                    description = "Antall oppgaver i køen, eller -1 dersom antallet er 10 eller færre"
+                    body<Int>()
+                }
+                HttpStatusCode.Forbidden to { description = "Mangler tilgang til forvaltning" }
+            }
+        }) {
             requestContextService.withRequestContext(call) {
                 if (pepClient.kanLeggeUtDriftsmelding()) {
                     val køId = call.parameters["ko"]!!.toLong()
@@ -420,6 +484,10 @@ fun Route.K9ForvaltningApis() {
                 description = "Feltdefinisjonens kode (eksternId)"
                 example("ytelsestype") { value = "ytelsestype" }
             }
+        }
+        response {
+            HttpStatusCode.OK to { body<FeltbrukDetaljerDto>() }
+            HttpStatusCode.Forbidden to { description = "Mangler tilgang til forvaltning" }
         }
     }) {
         requestContextService.withRequestContext(call) {
@@ -459,6 +527,10 @@ fun Route.K9ForvaltningApis() {
         tags("Forvaltning")
         description =
             "Hent oversikt over alle feltdefinisjoner som er brukt som kriterie i oppgavekøer og lagrede søk, med antall for hver"
+        response {
+            HttpStatusCode.OK to { body<List<FeltbrukOversiktDto>>() }
+            HttpStatusCode.Forbidden to { description = "Mangler tilgang til forvaltning" }
+        }
     }) {
         requestContextService.withRequestContext(call) {
             if (pepClient.kanLeggeUtDriftsmelding()) {
@@ -506,6 +578,15 @@ fun Route.K9ForvaltningApis() {
             pathParameter<Fagsystem>("fagsystem") {
                 description = "Fagsystemet oppgavene tilhører"
             }
+            body<OppgaveQuery> { description = "Oppgavequery som avgjør hvilke oppgaver som bestilles" }
+        }
+        response {
+            HttpStatusCode.OK to { body<BestillingFraQueryResponse>() }
+            HttpStatusCode.BadRequest to {
+                description = "OppgaveQuery.select er ikke støttet"
+                body<String>()
+            }
+            HttpStatusCode.Forbidden to { description = "Mangler tilgang til forvaltning" }
         }
     }) {
         requestContextService.withRequestContext(call) {
@@ -560,6 +641,15 @@ fun Route.K9ForvaltningApis() {
                     description = "Oppgaver fra k9klage"
                 }
             }
+            body<OppgaveQuery> { description = "Oppgavequery som avgjør hvilke oppgaver som bestilles" }
+        }
+        response {
+            HttpStatusCode.OK to { body<BestillingFraQueryResponse>() }
+            HttpStatusCode.BadRequest to {
+                description = "OppgaveQuery.select er ikke støttet"
+                body<String>()
+            }
+            HttpStatusCode.Forbidden to { description = "Mangler tilgang til forvaltning" }
         }
     }) {
         requestContextService.withRequestContext(call) {
