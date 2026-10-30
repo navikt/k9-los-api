@@ -449,7 +449,7 @@ fun Route.K9ForvaltningApis() {
             response {
                 HttpStatusCode.OK to {
                     description = "Antall oppgaver i køen, eller -1 dersom antallet er 10 eller færre"
-                    body<Int>()
+                    body<Long>()
                 }
                 HttpStatusCode.Forbidden to { description = "Mangler tilgang til forvaltning" }
             }
