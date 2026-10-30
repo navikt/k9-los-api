@@ -495,14 +495,14 @@ class SakEventTilOppgaveMapperTest {
     fun `del1 bruker navkontorets behandlende enhet`() {
         val feltverdier = feltverdier(lagEvent(aksjonspunktTilstander = listOf(ap(NAV_KONTOR_AP))))
 
-        assertThat(feltverdier.verdiFor(AktivitetspengerFeltIder.Vedtak.BEHANDLENDE_ENHET)).isEqualTo(AktBehandlendeEnhet.FALKENBORG.kode)
+        assertThat(feltverdier.verdiFor(AktivitetspengerFelter.Vedtak.BEHANDLENDE_ENHET.id)).isEqualTo(AktBehandlendeEnhet.FALKENBORG.kode)
     }
 
     @Test
     fun `del2 bruker sentral behandlende enhet`() {
         val feltverdier = feltverdier(lagEvent(aksjonspunktTilstander = listOf(ap(NAV_SENTRALT_AP))))
 
-        assertThat(feltverdier.verdiFor(AktivitetspengerFeltIder.Vedtak.BEHANDLENDE_ENHET)).isEqualTo(AktBehandlendeEnhet.STYRINGSENHET.kode)
+        assertThat(feltverdier.verdiFor(AktivitetspengerFelter.Vedtak.BEHANDLENDE_ENHET.id)).isEqualTo(AktBehandlendeEnhet.STYRINGSENHET.kode)
     }
 
     @Test
