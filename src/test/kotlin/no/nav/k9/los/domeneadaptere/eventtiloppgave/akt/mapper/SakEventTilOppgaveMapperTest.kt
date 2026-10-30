@@ -9,6 +9,7 @@ import io.mockk.every
 import io.mockk.mockk
 import no.nav.k9.los.domeneadaptere.eventlager.EventLagret
 import no.nav.k9.los.domeneadaptere.eventmottak.ung.sak.UngSakEventDto
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.kodeverk.AktBehandlendeEnhet
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.kodeverk.AktOppgavetypenavn
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.oppgavedefinisjon.AktivitetspengerFelter
 import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
@@ -18,11 +19,7 @@ import no.nav.k9.los.oppgavemottak.OppgaveFeltverdiDto
 import no.nav.k9.los.oppgavemottak.OppgaveV3
 import no.nav.k9.los.oppgavemottak.VaskOppgaveversjon
 import no.nav.ung.kodeverk.Fagsystem
-import no.nav.ung.kodeverk.behandling.BehandlingResultatType
-import no.nav.ung.kodeverk.behandling.BehandlingStatus
-import no.nav.ung.kodeverk.behandling.BehandlingStegType
-import no.nav.ung.kodeverk.behandling.BehandlingType
-import no.nav.ung.kodeverk.behandling.FagsakYtelseType
+import no.nav.ung.kodeverk.behandling.*
 import no.nav.ung.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
 import no.nav.ung.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus
 import no.nav.ung.kodeverk.behandling.aksjonspunkt.Venteårsak
@@ -33,7 +30,7 @@ import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
-import java.util.UUID
+import java.util.*
 
 private val NAV_KONTOR_AP = AksjonspunktDefinisjon.NAV_KONTOR_FORESLÅR_VILKÅR
 private val NAV_SENTRALT_AP = AksjonspunktDefinisjon.KONTROLLER_INNTEKT
@@ -84,7 +81,8 @@ private fun lagEvent(
     eventHendelse = eventHendelse,
     behandlingStatus = behandlingStatus,
     behandlingSteg = behandlingSteg,
-    behandlendeEnhet = "4416",
+    behandlendeEnhet = AktBehandlendeEnhet.STYRINGSENHET.kode,
+    navKontorbehandlendeEnhet = AktBehandlendeEnhet.FALKENBORG.kode,
     ansvarligBeslutterForTotrinn = ansvarligBeslutterForTotrinn,
     ansvarligSaksbehandlerForTotrinn = ansvarligSaksbehandlerForTotrinn,
     navKontorAnsvarligSaksbehandler = navKontorAnsvarligSaksbehandler,
@@ -492,6 +490,20 @@ class SakEventTilOppgaveMapperTest {
     }
 
     // --- ansvarlig saksbehandler og beslutter ---
+
+    @Test
+    fun `del1 bruker navkontorets behandlende enhet`() {
+        val feltverdier = feltverdier(lagEvent(aksjonspunktTilstander = listOf(ap(NAV_KONTOR_AP))))
+
+        assertThat(feltverdier.verdiFor(AktivitetspengerFeltIder.Vedtak.BEHANDLENDE_ENHET)).isEqualTo(AktBehandlendeEnhet.FALKENBORG.kode)
+    }
+
+    @Test
+    fun `del2 bruker sentral behandlende enhet`() {
+        val feltverdier = feltverdier(lagEvent(aksjonspunktTilstander = listOf(ap(NAV_SENTRALT_AP))))
+
+        assertThat(feltverdier.verdiFor(AktivitetspengerFeltIder.Vedtak.BEHANDLENDE_ENHET)).isEqualTo(AktBehandlendeEnhet.STYRINGSENHET.kode)
+    }
 
     @Test
     fun `del1 bruker navkontorfeltene for saksbehandler og beslutter`() {

@@ -2,6 +2,7 @@ package no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.mapper
 
 import no.nav.k9.los.domeneadaptere.eventlager.EventLagret
 import no.nav.k9.los.domeneadaptere.eventlager.Fagsystem
+import no.nav.k9.los.domeneadaptere.eventmottak.ung.sak.UngSakEventDto
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.kodeverk.AktOppgavetypenavn
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.oppgavedefinisjon.AktivitetspengerFelter.Aksjonspunkt
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.oppgavedefinisjon.AktivitetspengerFelter.Behandling
@@ -11,7 +12,6 @@ import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.oppgavedefinisjon.Aktivi
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.oppgavedefinisjon.AktivitetspengerFelter.Vedtak
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.oppgavedefinisjon.AktivitetspengerFelter.Ventetid
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.oppgavedefinisjon.AktivitetspengerOppgavetyper
-import no.nav.k9.los.domeneadaptere.eventmottak.ung.sak.UngSakEventDto
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.oppgavedefinisjon.typesikker.Feltverdier
 import no.nav.k9.los.oppgavedefinisjon.typesikker.hent
@@ -190,7 +190,12 @@ object SakEventTilOppgaveMapper {
 
         verdier[Vedtak.DATO] = event.vedtaksdato ?: forrigeOppgave?.hent(Vedtak.DATO)
         verdier[Vedtak.YTELSESTYPE] = FagsakYtelseType.fraKode(event.ytelseTypeKode)
-        verdier[Vedtak.BEHANDLENDE_ENHET] = event.behandlendeEnhet
+        verdier[Vedtak.BEHANDLENDE_ENHET] = when (utledOppgavetype(event)) {
+            AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1 -> event.navKontorbehandlendeEnhet
+
+            AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2,
+            AktOppgavetypenavn.AKTIVITETSPENGERKLAGE -> event.behandlendeEnhet
+        }
 
         verdier[Saksbehandling.LIGGER_HOS_BESLUTTER] = erTilBeslutter(event)
         verdier[Saksbehandling.ANSVARLIG_BESLUTTER] = when (oppgavetype) {

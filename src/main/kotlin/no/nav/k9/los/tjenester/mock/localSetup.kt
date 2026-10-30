@@ -13,6 +13,8 @@ import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.Venteårsak
 import no.nav.k9.kodeverk.uttak.SøknadÅrsak
 import no.nav.k9.los.KoinProfile
+import no.nav.k9.los.domeneadaptere.eventlager.EventNøkkel
+import no.nav.k9.los.domeneadaptere.eventlager.Fagsystem
 import no.nav.k9.los.domeneadaptere.eventmottak.EventHendelse
 import no.nav.k9.los.domeneadaptere.eventmottak.k9.klage.K9KlageEventDto
 import no.nav.k9.los.domeneadaptere.eventmottak.k9.klage.K9KlageEventHandler
@@ -25,20 +27,25 @@ import no.nav.k9.los.domeneadaptere.eventmottak.k9.tilbakekrav.K9TilbakeEventDto
 import no.nav.k9.los.domeneadaptere.eventmottak.k9.tilbakekrav.K9TilbakeEventHandler
 import no.nav.k9.los.domeneadaptere.eventmottak.ung.sak.UngSakEventDto
 import no.nav.k9.los.domeneadaptere.eventmottak.ung.sak.UngSakEventHandler
-import no.nav.k9.los.domeneadaptere.eventlager.EventNøkkel
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.EventTilOppgaveAdapter
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.kodeverk.AktBehandlendeEnhet
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.kodeverk.K9FagsakYtelseType
 import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.kodeverk.BehandlingStatus
 import no.nav.k9.los.kodeverk.BehandlingType
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.kodeverk.K9FagsakYtelseType
-import no.nav.k9.los.domeneadaptere.eventlager.Fagsystem
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.sak.kontrakt.aksjonspunkt.AksjonspunktTilstandDto
 import no.nav.k9.sak.typer.AktørId
 import no.nav.k9.sak.typer.JournalpostId
 import no.nav.k9.sak.typer.Periode
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.util.*
+import javax.sql.DataSource
+import kotlin.random.Random
 import no.nav.ung.kodeverk.Fagsystem as UngFagsystem
 import no.nav.ung.kodeverk.behandling.BehandlingResultatType as UngBehandlingResultatType
 import no.nav.ung.kodeverk.behandling.BehandlingStatus as UngBehandlingStatus
@@ -52,13 +59,6 @@ import no.nav.ung.kodeverk.behandling.aksjonspunkt.Venteårsak as UngVenteårsak
 import no.nav.ung.kodeverk.hendelse.EventHendelse as UngEventHendelse
 import no.nav.ung.sak.kontrakt.aksjonspunkt.AksjonspunktTilstandDto as UngAksjonspunktTilstandDto
 import no.nav.ung.sak.typer.Periode as UngPeriode
-import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.util.*
-import javax.sql.DataSource
-import kotlin.random.Random
 
 object localSetup : KoinComponent {
     private val punsjEventHandler: K9PunsjEventHandler by inject()
@@ -413,6 +413,7 @@ object localSetup : KoinComponent {
                 ansvarligSaksbehandlerForTotrinn = null,
                 navKontorAnsvarligSaksbehandler = if (hosLokalkontor) "Z123456" else null,
                 navKontorBeslutter = null,
+                navKontorbehandlendeEnhet = if (hosLokalkontor) AktBehandlendeEnhet.FALKENBORG.kode else null,
                 resultatType = UngBehandlingResultatType.IKKE_FASTSATT.kode,
                 ytelseTypeKode = UngFagsakYtelseType.AKTIVITETSPENGER.kode,
                 behandlingTypeKode = behandlingType.kode,
