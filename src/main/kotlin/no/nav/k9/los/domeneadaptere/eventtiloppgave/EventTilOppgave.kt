@@ -34,12 +34,13 @@ internal fun EventLagret.tilOppgaveversjon(
     is EventLagret.K9Klage -> KlageEventTilOppgaveMapper.lagOppgaveDto(this, forrigeOppgaveversjon, eventnummer)
     is EventLagret.K9Punsj -> PunsjEventTilOppgaveMapper.lagOppgaveDto(this, forrigeOppgaveversjon)
     is EventLagret.UngSak -> {
-        if (fraKode(this.eventDto.behandlingTypeKode) in listOf(BehandlingType.ANKE, BehandlingType.KLAGE)) {
-            throw IkkeImplementertException("Ikke implementert ennå for anke/klage i UngSak")
-        }
         when (FagsakYtelseType.fraKode(eventDto.ytelseTypeKode)) {
-            FagsakYtelseType.AKTIVITETSPENGER ->
+            FagsakYtelseType.AKTIVITETSPENGER -> {
+                if (fraKode(this.eventDto.behandlingTypeKode) in listOf(BehandlingType.ANKE, BehandlingType.KLAGE)) {
+                    throw IkkeImplementertException("Ikke implementert ennå for anke/klage i UngSak for aktivitetspenger")
+                }
                 AktSakEventTilOppgaveMapper.lagOppgaveDto(this, forrigeOppgaveversjon, eventnummer)
+            }
 
             FagsakYtelseType.UNGDOMSYTELSE ->
                 UpySakEventTilOppgaveMapper.lagOppgaveDto(this, forrigeOppgaveversjon, eventnummer)

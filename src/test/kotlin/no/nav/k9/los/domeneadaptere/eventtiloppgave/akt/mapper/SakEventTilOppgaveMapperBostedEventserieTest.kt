@@ -6,7 +6,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 import no.nav.k9.los.domeneadaptere.eventlager.EventLagret
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.kodeverk.AktOppgavetypenavn
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.oppgavedefinisjon.AktivitetspengerFeltIder
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.oppgavedefinisjon.AktivitetspengerFelter
 import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.oppgavemottak.NyOppgaveversjon
@@ -63,25 +63,25 @@ class SakEventTilOppgaveMapperBostedEventserieTest {
             val feltverdier = dto.feltverdier
             val forventetEnhet = if (dto.type == AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1) "5701" else "0387"
 
-            assertThat(feltverdier.verdiFor(AktivitetspengerFeltIder.Behandling.UUID)).isEqualTo(eksternId)
-            assertThat(feltverdier.verdiFor(AktivitetspengerFeltIder.Sak.AKTOR_ID)).isEqualTo(aktørId)
-            assertThat(feltverdier.verdiFor(AktivitetspengerFeltIder.Sak.FAGSYSTEM)).isEqualTo("UNG_SAK")
-            assertThat(feltverdier.verdiFor(AktivitetspengerFeltIder.Sak.SAKSNUMMER)).isEqualTo("300DiQ")
-            assertThat(feltverdier.verdiFor(AktivitetspengerFeltIder.Behandling.RESULTATTYPE)).isEqualTo("IKKE_FASTSATT")
-            assertThat(feltverdier.verdiFor(AktivitetspengerFeltIder.Vedtak.YTELSESTYPE)).isEqualTo("AVP")
-            assertThat(feltverdier.verdiFor(AktivitetspengerFeltIder.Vedtak.BEHANDLENDE_ENHET)).isEqualTo(forventetEnhet)
-            assertThat(feltverdier.verdiFor(AktivitetspengerFeltIder.Behandling.TYPEKODE)).isEqualTo("BT-004")
-            assertThat(feltverdier.verdiFor(AktivitetspengerFeltIder.Sak.MOTTATT_DATO)).isEqualTo("2026-06-30T09:28:07")
-            assertThat(feltverdier.verdiFor(AktivitetspengerFeltIder.Sak.REGISTRERT_DATO)).isEqualTo("2026-06-30T09:28:07")
-            assertThat(feltverdier.verdiFor(AktivitetspengerFeltIder.Vedtak.DATO)).isEqualTo(null)
-            assertThat(feltverdier.verdiFor(AktivitetspengerFeltIder.Soknad.NYE_KRAV)).isEqualTo("false")
-            assertThat(feltverdier.verdiFor(AktivitetspengerFeltIder.Saksbehandling.ANSVARLIG_SAKSBEHANDLER)).isEqualTo(null)
-            assertThat(feltverdier.verdiFor(AktivitetspengerFeltIder.Saksbehandling.ANSVARLIG_BESLUTTER)).isEqualTo(null)
-            assertThat(feltverdier.verdiFor(AktivitetspengerFeltIder.Vedtak.TOTRINNSKONTROLL)).isEqualTo("false")
-            assertThat(feltverdier.verdiFor(AktivitetspengerFeltIder.Ventetid.AKTIV_ARSAK)).isEqualTo(null)
-            assertThat(feltverdier.verdiFor(AktivitetspengerFeltIder.Ventetid.AKTIV_FRIST)).isEqualTo(null)
-            assertThat(feltverdier.verdierFor(AktivitetspengerFeltIder.Behandling.ARSAK)).containsOnly("ENDRET-BOSTED")
-            assertThat(feltverdier.verdierFor(AktivitetspengerFeltIder.Aksjonspunkt.AVBRUTT)).containsOnly(null)
+            assertThat(feltverdier.verdiFor(AktivitetspengerFelter.Behandling.UUID.id)).isEqualTo(eksternId)
+            assertThat(feltverdier.verdiFor(AktivitetspengerFelter.Sak.AKTOR_ID.id)).isEqualTo(aktørId)
+            assertThat(feltverdier.verdiFor(AktivitetspengerFelter.Sak.FAGSYSTEM.id)).isEqualTo("UNG_SAK")
+            assertThat(feltverdier.verdiFor(AktivitetspengerFelter.Sak.SAKSNUMMER.id)).isEqualTo("300DiQ")
+            assertThat(feltverdier.verdiFor(AktivitetspengerFelter.Behandling.RESULTATTYPE.id)).isEqualTo("IKKE_FASTSATT")
+            assertThat(feltverdier.verdiFor(AktivitetspengerFelter.Vedtak.YTELSESTYPE.id)).isEqualTo("AVP")
+            assertThat(feltverdier.verdiFor(AktivitetspengerFelter.Vedtak.BEHANDLENDE_ENHET.id)).isEqualTo(forventetEnhet)
+            assertThat(feltverdier.verdiFor(AktivitetspengerFelter.Behandling.TYPEKODE.id)).isEqualTo("BT-004")
+            assertThat(feltverdier.verdiFor(AktivitetspengerFelter.Sak.MOTTATT_DATO.id)).isEqualTo("2026-06-30T09:28:07")
+            assertThat(feltverdier.verdiFor(AktivitetspengerFelter.Sak.REGISTRERT_DATO.id)).isEqualTo("2026-06-30T09:28:07")
+            assertThat(feltverdier.verdiFor(AktivitetspengerFelter.Vedtak.DATO.id)).isEqualTo(null)
+            assertThat(feltverdier.verdiFor(AktivitetspengerFelter.Soknad.NYE_KRAV.id)).isEqualTo("false")
+            assertThat(feltverdier.verdiFor(AktivitetspengerFelter.Saksbehandling.ANSVARLIG_SAKSBEHANDLER.id)).isEqualTo(null)
+            assertThat(feltverdier.verdiFor(AktivitetspengerFelter.Saksbehandling.ANSVARLIG_BESLUTTER.id)).isEqualTo(null)
+            assertThat(feltverdier.verdiFor(AktivitetspengerFelter.Vedtak.TOTRINNSKONTROLL.id)).isEqualTo("false")
+            assertThat(feltverdier.verdiFor(AktivitetspengerFelter.Ventetid.AKTIV_ARSAK.id)).isEqualTo(null)
+            assertThat(feltverdier.verdiFor(AktivitetspengerFelter.Ventetid.AKTIV_FRIST.id)).isEqualTo(null)
+            assertThat(feltverdier.verdierFor(AktivitetspengerFelter.Behandling.ARSAK.id)).containsOnly("ENDRET-BOSTED")
+            assertThat(feltverdier.verdierFor(AktivitetspengerFelter.Aksjonspunkt.AVBRUTT.id)).containsOnly(null)
         }
     }
 
@@ -89,8 +89,8 @@ class SakEventTilOppgaveMapperBostedEventserieTest {
     fun `ligger ikke hos beslutter før nav-kontor beslutter vilkår`() {
         (0..3).forEach { indeks ->
             val feltverdier = map(indeks).feltverdier
-            assertThat(feltverdier.verdiFor(AktivitetspengerFeltIder.Saksbehandling.LIGGER_HOS_BESLUTTER)).isEqualTo("false")
-            assertThat(feltverdier.verdierFor(AktivitetspengerFeltIder.Saksbehandling.TID_FORSTE_GANG_HOS_BESLUTTER))
+            assertThat(feltverdier.verdiFor(AktivitetspengerFelter.Saksbehandling.LIGGER_HOS_BESLUTTER.id)).isEqualTo("false")
+            assertThat(feltverdier.verdierFor(AktivitetspengerFelter.Saksbehandling.TID_FORSTE_GANG_HOS_BESLUTTER.id))
                 .isEqualTo(emptyList<String?>())
         }
     }
@@ -103,13 +103,13 @@ class SakEventTilOppgaveMapperBostedEventserieTest {
         assertThat(dto.status).isEqualTo(Oppgavestatus.UAVKLART)
 
         val feltverdier = dto.feltverdier
-        assertThat(feltverdier.verdiFor(AktivitetspengerFeltIder.Behandling.STATUS)).isEqualTo("UTRED")
-        assertThat(feltverdier.verdiFor(AktivitetspengerFeltIder.Behandling.STEG)).isEqualTo("INREG")
-        assertThat(feltverdier.verdierFor(AktivitetspengerFeltIder.Aksjonspunkt.ALLE)).containsOnly(null)
-        assertThat(feltverdier.verdierFor(AktivitetspengerFeltIder.Aksjonspunkt.AKTIVE)).containsOnly(null)
-        assertThat(feltverdier.verdierFor(AktivitetspengerFeltIder.Aksjonspunkt.LOSBART)).isEqualTo(emptyList<String?>())
-        assertThat(feltverdier.verdierFor(AktivitetspengerFeltIder.Aksjonspunkt.FREMTIDIG)).containsOnly(null)
-        assertThat(feltverdier.verdierFor(AktivitetspengerFeltIder.Aksjonspunkt.UTFORT)).containsOnly(null)
+        assertThat(feltverdier.verdiFor(AktivitetspengerFelter.Behandling.STATUS.id)).isEqualTo("UTRED")
+        assertThat(feltverdier.verdiFor(AktivitetspengerFelter.Behandling.STEG.id)).isEqualTo("INREG")
+        assertThat(feltverdier.verdierFor(AktivitetspengerFelter.Aksjonspunkt.ALLE.id)).containsOnly(null)
+        assertThat(feltverdier.verdierFor(AktivitetspengerFelter.Aksjonspunkt.AKTIVE.id)).containsOnly(null)
+        assertThat(feltverdier.verdierFor(AktivitetspengerFelter.Aksjonspunkt.LOSBART.id)).isEqualTo(emptyList<String?>())
+        assertThat(feltverdier.verdierFor(AktivitetspengerFelter.Aksjonspunkt.FREMTIDIG.id)).containsOnly(null)
+        assertThat(feltverdier.verdierFor(AktivitetspengerFelter.Aksjonspunkt.UTFORT.id)).containsOnly(null)
     }
 
     @Test
@@ -120,13 +120,13 @@ class SakEventTilOppgaveMapperBostedEventserieTest {
         assertThat(dto.status).isEqualTo(Oppgavestatus.AAPEN)
 
         val feltverdier = dto.feltverdier
-        assertThat(feltverdier.verdiFor(AktivitetspengerFeltIder.Behandling.STATUS)).isEqualTo("UTRED")
-        assertThat(feltverdier.verdiFor(AktivitetspengerFeltIder.Behandling.STEG)).isEqualTo("VURDER_FAKTA_OM_BOSTED")
-        assertThat(feltverdier.verdierFor(AktivitetspengerFeltIder.Aksjonspunkt.ALLE)).containsOnly("5130")
-        assertThat(feltverdier.verdierFor(AktivitetspengerFeltIder.Aksjonspunkt.AKTIVE)).containsOnly("5130")
-        assertThat(feltverdier.verdierFor(AktivitetspengerFeltIder.Aksjonspunkt.LOSBART)).containsOnly("5130")
-        assertThat(feltverdier.verdierFor(AktivitetspengerFeltIder.Aksjonspunkt.FREMTIDIG)).containsOnly(null)
-        assertThat(feltverdier.verdierFor(AktivitetspengerFeltIder.Aksjonspunkt.UTFORT)).containsOnly(null)
+        assertThat(feltverdier.verdiFor(AktivitetspengerFelter.Behandling.STATUS.id)).isEqualTo("UTRED")
+        assertThat(feltverdier.verdiFor(AktivitetspengerFelter.Behandling.STEG.id)).isEqualTo("VURDER_FAKTA_OM_BOSTED")
+        assertThat(feltverdier.verdierFor(AktivitetspengerFelter.Aksjonspunkt.ALLE.id)).containsOnly("5130")
+        assertThat(feltverdier.verdierFor(AktivitetspengerFelter.Aksjonspunkt.AKTIVE.id)).containsOnly("5130")
+        assertThat(feltverdier.verdierFor(AktivitetspengerFelter.Aksjonspunkt.LOSBART.id)).containsOnly("5130")
+        assertThat(feltverdier.verdierFor(AktivitetspengerFelter.Aksjonspunkt.FREMTIDIG.id)).containsOnly(null)
+        assertThat(feltverdier.verdierFor(AktivitetspengerFelter.Aksjonspunkt.UTFORT.id)).containsOnly(null)
     }
 
     @Test
@@ -137,14 +137,14 @@ class SakEventTilOppgaveMapperBostedEventserieTest {
         assertThat(dto.status).isEqualTo(Oppgavestatus.AAPEN)
 
         val feltverdier = dto.feltverdier
-        assertThat(feltverdier.verdiFor(AktivitetspengerFeltIder.Behandling.STATUS)).isEqualTo("UTRED")
-        assertThat(feltverdier.verdiFor(AktivitetspengerFeltIder.Behandling.STEG)).isEqualTo("VURDER_BOSTEDVILKÅR")
-        assertThat(feltverdier.verdierFor(AktivitetspengerFeltIder.Aksjonspunkt.ALLE))
+        assertThat(feltverdier.verdiFor(AktivitetspengerFelter.Behandling.STATUS.id)).isEqualTo("UTRED")
+        assertThat(feltverdier.verdiFor(AktivitetspengerFelter.Behandling.STEG.id)).isEqualTo("VURDER_BOSTEDVILKÅR")
+        assertThat(feltverdier.verdierFor(AktivitetspengerFelter.Aksjonspunkt.ALLE.id))
             .containsExactlyInAnyOrder("5140", "5130")
-        assertThat(feltverdier.verdierFor(AktivitetspengerFeltIder.Aksjonspunkt.AKTIVE)).containsOnly("5140")
-        assertThat(feltverdier.verdierFor(AktivitetspengerFeltIder.Aksjonspunkt.LOSBART)).containsOnly("5140")
-        assertThat(feltverdier.verdierFor(AktivitetspengerFeltIder.Aksjonspunkt.FREMTIDIG)).containsOnly(null)
-        assertThat(feltverdier.verdierFor(AktivitetspengerFeltIder.Aksjonspunkt.UTFORT)).containsOnly("5130")
+        assertThat(feltverdier.verdierFor(AktivitetspengerFelter.Aksjonspunkt.AKTIVE.id)).containsOnly("5140")
+        assertThat(feltverdier.verdierFor(AktivitetspengerFelter.Aksjonspunkt.LOSBART.id)).containsOnly("5140")
+        assertThat(feltverdier.verdierFor(AktivitetspengerFelter.Aksjonspunkt.FREMTIDIG.id)).containsOnly(null)
+        assertThat(feltverdier.verdierFor(AktivitetspengerFelter.Aksjonspunkt.UTFORT.id)).containsOnly("5130")
     }
 
     @Test
@@ -155,14 +155,14 @@ class SakEventTilOppgaveMapperBostedEventserieTest {
         assertThat(dto.status).isEqualTo(Oppgavestatus.AAPEN)
 
         val feltverdier = dto.feltverdier
-        assertThat(feltverdier.verdiFor(AktivitetspengerFeltIder.Behandling.STATUS)).isEqualTo("UTRED")
-        assertThat(feltverdier.verdiFor(AktivitetspengerFeltIder.Behandling.STEG)).isEqualTo("NAV_KONTOR_FORESLÅ_VILKÅR_STEG")
-        assertThat(feltverdier.verdierFor(AktivitetspengerFeltIder.Aksjonspunkt.ALLE))
+        assertThat(feltverdier.verdiFor(AktivitetspengerFelter.Behandling.STATUS.id)).isEqualTo("UTRED")
+        assertThat(feltverdier.verdiFor(AktivitetspengerFelter.Behandling.STEG.id)).isEqualTo("NAV_KONTOR_FORESLÅ_VILKÅR_STEG")
+        assertThat(feltverdier.verdierFor(AktivitetspengerFelter.Aksjonspunkt.ALLE.id))
             .containsExactlyInAnyOrder("5100", "5130", "5140")
-        assertThat(feltverdier.verdierFor(AktivitetspengerFeltIder.Aksjonspunkt.AKTIVE)).containsOnly("5100")
-        assertThat(feltverdier.verdierFor(AktivitetspengerFeltIder.Aksjonspunkt.LOSBART)).containsOnly("5100")
-        assertThat(feltverdier.verdierFor(AktivitetspengerFeltIder.Aksjonspunkt.FREMTIDIG)).containsOnly(null)
-        assertThat(feltverdier.verdierFor(AktivitetspengerFeltIder.Aksjonspunkt.UTFORT))
+        assertThat(feltverdier.verdierFor(AktivitetspengerFelter.Aksjonspunkt.AKTIVE.id)).containsOnly("5100")
+        assertThat(feltverdier.verdierFor(AktivitetspengerFelter.Aksjonspunkt.LOSBART.id)).containsOnly("5100")
+        assertThat(feltverdier.verdierFor(AktivitetspengerFelter.Aksjonspunkt.FREMTIDIG.id)).containsOnly(null)
+        assertThat(feltverdier.verdierFor(AktivitetspengerFelter.Aksjonspunkt.UTFORT.id))
             .containsExactlyInAnyOrder("5130", "5140")
     }
 
@@ -175,17 +175,17 @@ class SakEventTilOppgaveMapperBostedEventserieTest {
         assertThat(dto.reservasjonsnøkkel).endsWith("_beslutter")
 
         val feltverdier = dto.feltverdier
-        assertThat(feltverdier.verdiFor(AktivitetspengerFeltIder.Behandling.STATUS)).isEqualTo("NAV_KONTOR_BESLUTTER_VILKÅR")
-        assertThat(feltverdier.verdiFor(AktivitetspengerFeltIder.Behandling.STEG)).isEqualTo("NAV_KONTOR_BESLUTTE_VILKÅR_STEG")
-        assertThat(feltverdier.verdierFor(AktivitetspengerFeltIder.Aksjonspunkt.ALLE))
+        assertThat(feltverdier.verdiFor(AktivitetspengerFelter.Behandling.STATUS.id)).isEqualTo("NAV_KONTOR_BESLUTTER_VILKÅR")
+        assertThat(feltverdier.verdiFor(AktivitetspengerFelter.Behandling.STEG.id)).isEqualTo("NAV_KONTOR_BESLUTTE_VILKÅR_STEG")
+        assertThat(feltverdier.verdierFor(AktivitetspengerFelter.Aksjonspunkt.ALLE.id))
             .containsExactlyInAnyOrder("5200", "5130", "5140", "5100")
-        assertThat(feltverdier.verdierFor(AktivitetspengerFeltIder.Aksjonspunkt.AKTIVE)).containsOnly("5200")
-        assertThat(feltverdier.verdierFor(AktivitetspengerFeltIder.Aksjonspunkt.LOSBART)).containsOnly("5200")
-        assertThat(feltverdier.verdierFor(AktivitetspengerFeltIder.Aksjonspunkt.FREMTIDIG)).containsOnly(null)
-        assertThat(feltverdier.verdiFor(AktivitetspengerFeltIder.Saksbehandling.LIGGER_HOS_BESLUTTER)).isEqualTo("true")
-        assertThat(feltverdier.verdierFor(AktivitetspengerFeltIder.Saksbehandling.TID_FORSTE_GANG_HOS_BESLUTTER))
-            .containsOnly("2026-08-21T12:44:50.221793894")
-        assertThat(feltverdier.verdierFor(AktivitetspengerFeltIder.Aksjonspunkt.UTFORT))
+        assertThat(feltverdier.verdierFor(AktivitetspengerFelter.Aksjonspunkt.AKTIVE.id)).containsOnly("5200")
+        assertThat(feltverdier.verdierFor(AktivitetspengerFelter.Aksjonspunkt.LOSBART.id)).containsOnly("5200")
+        assertThat(feltverdier.verdierFor(AktivitetspengerFelter.Aksjonspunkt.FREMTIDIG.id)).containsOnly(null)
+        assertThat(feltverdier.verdiFor(AktivitetspengerFelter.Saksbehandling.LIGGER_HOS_BESLUTTER.id)).isEqualTo("true")
+        assertThat(feltverdier.verdierFor(AktivitetspengerFelter.Saksbehandling.TID_FORSTE_GANG_HOS_BESLUTTER.id))
+            .containsOnly("2026-08-21T12:44:50.221793")
+        assertThat(feltverdier.verdierFor(AktivitetspengerFelter.Aksjonspunkt.UTFORT.id))
             .containsExactlyInAnyOrder("5130", "5140", "5100")
     }
 }

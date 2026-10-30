@@ -3,8 +3,8 @@ package no.nav.k9.los.domeneadaptere.eventtiloppgave.akt
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.kodeverk.AktFagsystem
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.kodeverk.AktBehandlendeEnhet
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.kodeverk.AktOppgavetypenavn
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.oppgavedefinisjon.AktivitetspengerFeltdefinisjoner
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.oppgavedefinisjon.AktivitetspengerOppgaver
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.oppgavedefinisjon.AktivitetspengerFelter
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.oppgavedefinisjon.AktivitetspengerOppgavetyper
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.FeltdefinisjonTjeneste
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.KodeverkDto
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.KodeverkVerdiDto
@@ -33,8 +33,8 @@ class Områdesetup(
     fun setup() {
         områdeRepository.lagre(område)
         feltdefinisjonTjeneste.oppdater(oppdaterKodeverk())
-        feltdefinisjonTjeneste.oppdater(AktivitetspengerFeltdefinisjoner.lagFeltdefinisjoner())
-        oppgavetypeTjeneste.oppdater(AktivitetspengerOppgaver.lagOppgaveDefinisjon(frontendUrl))
+        feltdefinisjonTjeneste.oppdater(AktivitetspengerFelter.tilDto())
+        oppgavetypeTjeneste.oppdater(AktivitetspengerOppgavetyper.tilDto(frontendUrl))
     }
 
     private fun oppdaterKodeverk(): List<KodeverkDto> {
