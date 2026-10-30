@@ -89,6 +89,14 @@ class FeltverdierTest {
     }
 
     @Test
+    fun `nullverdi i påkrevd felt avvises`() {
+        val verdier = Feltverdier(oppgavetype)
+        verdier[TestFelter.Gruppe.PÅKREVD] = null
+
+        assertThrows<IllegalArgumentException> { verdier.tilDto() }
+    }
+
+    @Test
     fun `oppgavetype med felt som ikke er i feltkatalogen avvises`() {
         val katalog = object : Oppgavetypekatalog(TestFelter) {
             override val oppgavetyper = listOf(Oppgavetypedefinisjon("ugyldig", { it }) { valgfri(UregistrertGruppe.FELT) })
@@ -96,4 +104,3 @@ class FeltverdierTest {
         assertThrows<IllegalArgumentException> { katalog.tilDto("http://x") }
     }
 }
-

@@ -24,7 +24,7 @@ class Feltverdier(private val oppgavetype: Oppgavetypedefinisjon) {
         val manglende = oppgavetype.felter
             .filter { it.påkrevd && !it.felt.listetype && it.felt.transientFeltutleder == null }
             .map { it.felt }
-            .filterNot { it in verdier }
+            .filterNot { verdier[it]?.any { verdi -> verdi != null } == true }
         require(manglende.isEmpty()) { "Påkrevde felt er ikke satt for oppgavetype ${oppgavetype.id}: $manglende" }
 
         return verdier.flatMap { (felt, liste) -> liste.map { OppgaveFeltverdiDto(nøkkel = felt.id, verdi = it) } }
@@ -34,4 +34,3 @@ class Feltverdier(private val oppgavetype: Oppgavetypedefinisjon) {
 fun <T : Any> OppgaveV3.hent(felt: Enkeltfelt<T>): T? = hentVerdi(felt.id)?.let(felt.deserialiser)
 
 fun <T : Any> Oppgave.hent(felt: Enkeltfelt<T>): T? = hentVerdi(felt.id)?.let(felt.deserialiser)
-
