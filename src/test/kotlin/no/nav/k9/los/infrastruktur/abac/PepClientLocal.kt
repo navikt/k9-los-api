@@ -27,6 +27,8 @@ class PepClientLocal : IPepClient {
     override suspend fun harTilgangTilReserveringAvOppgaver(): Boolean = tilganger.reservering
     override suspend fun basisTilgangIOmråder(): Set<Områder> = Områder.entries.toSet()
 
+    override suspend fun harTilgangTilPersoner(område: Områder, idToken: IIdToken, aktørIder: List<String>, action: Action): Boolean = true
+
     override suspend fun harTilgangTilOppgaveV3(oppgave: Oppgave, action: Action): Boolean = true
     override suspend fun harTilgangTilOppgaveV3(område: Områder, idToken: IIdToken, oppgave: Oppgave, action: Action): Boolean = true
 

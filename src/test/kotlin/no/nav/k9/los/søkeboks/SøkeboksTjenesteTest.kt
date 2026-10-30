@@ -2,19 +2,12 @@ package no.nav.k9.los.søkeboks
 
 import assertk.assertThat
 import assertk.assertions.isEqualTo
-import io.mockk.Called
-import io.mockk.coEvery
-import io.mockk.coVerify
-import io.mockk.every
-import io.mockk.mockk
-import io.mockk.verify
+import io.mockk.*
 import kotlinx.coroutines.test.runTest
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.idtoken.IIdToken
 import no.nav.k9.los.infrastruktur.idtoken.IdTokenLocal
-import no.nav.k9.los.infrastruktur.pdl.IPdlService
-import no.nav.k9.los.infrastruktur.pdl.PersonPdl
-import no.nav.k9.los.infrastruktur.pdl.PersonPdlResponse
+import no.nav.k9.los.infrastruktur.pdl.*
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.oppgavedefinisjon.omraade.Område
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
@@ -22,11 +15,13 @@ import no.nav.k9.los.oppgavedefinisjon.oppgavetype.Oppgavetype
 import no.nav.k9.los.oppgaveuthenting.Oppgave
 import no.nav.k9.los.oppgaveuthenting.Oppgavefelt
 import no.nav.k9.los.oppgaveuthenting.query.OppgaveQueryService
-import no.nav.k9.los.søkeboks.k9.K9Oppgavesøk
-import no.nav.k9.los.søkeboks.aktivitetspenger.AktivitetspengerOppgavesøk
 import no.nav.k9.los.oppgaveuthenting.sammendrag.OppgaveSammendragDtoBuilder
+import no.nav.k9.los.søkeboks.aktivitetspenger.AktivitetspengerOppgavesøk
+import no.nav.k9.los.søkeboks.k9.K9Oppgavesøk
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
+
+private const val FNR = "12345678901"
 
 class SøkeboksTjenesteTest {
     @Test
@@ -70,6 +65,48 @@ class SøkeboksTjenesteTest {
         coVerify { pdl wasNot Called }
         coVerify { builder wasNot Called }
     }
+
+    @Test
+    fun `aktivitetspenger - mangler tilgang til person gir IkkeTilgang uten oppgavesøk`() = runTest {
+        val pdl = mockk<IPdlService>()
+        val query = mockk<OppgaveQueryService>()
+        val pep = mockk<IPepClient>()
+        val builder = mockk<OppgaveSammendragDtoBuilder>()
+        coEvery { pdl.identifikator(FNR) } returns identifikatorRespons("aktor-1")
+        coEvery { pep.harTilgangTilPersoner(Områder.AKTIVITETSPENGER, any(), listOf("aktor-1"), any()) } returns false
+        val tjeneste = SøkeboksTjeneste(pdl, pep, builder, query, Oppgavesøkere(K9Oppgavesøk(), AktivitetspengerOppgavesøk()))
+
+        val resultat = tjeneste.finnOppgaverSammendrag(Områder.AKTIVITETSPENGER, IdTokenLocal(), FNR)
+
+        assertThat(resultat).isEqualTo(SøkeresultatSammendrag.IkkeTilgang)
+        verify { query wasNot Called }
+    }
+
+    @Test
+    fun `ukjent fnr gir TomtResultat uten tilgangssjekk`() = runTest {
+        val pdl = mockk<IPdlService>()
+        val query = mockk<OppgaveQueryService>()
+        val pep = mockk<IPepClient>()
+        val builder = mockk<OppgaveSammendragDtoBuilder>()
+        coEvery { pdl.identifikator(FNR) } returns PdlResponse(false, null)
+        val tjeneste = SøkeboksTjeneste(pdl, pep, builder, query, Oppgavesøkere(K9Oppgavesøk(), AktivitetspengerOppgavesøk()))
+
+        val resultat = tjeneste.finnOppgaverSammendrag(Områder.AKTIVITETSPENGER, IdTokenLocal(), FNR)
+
+        assertThat(resultat).isEqualTo(SøkeresultatSammendrag.TomtResultat)
+        coVerify { pep wasNot Called }
+    }
+
+    private fun identifikatorRespons(aktørId: String) = PdlResponse(
+        false,
+        AktøridPdl(
+            data = AktøridPdl.Data(
+                hentIdenter = AktøridPdl.Data.HentIdenter(
+                    identer = listOf(AktøridPdl.Data.HentIdenter.Identer(ident = aktørId, historisk = false, gruppe = "AKTORID"))
+                )
+            )
+        )
+    )
 
     private fun oppgave(
         eksternId: String,
