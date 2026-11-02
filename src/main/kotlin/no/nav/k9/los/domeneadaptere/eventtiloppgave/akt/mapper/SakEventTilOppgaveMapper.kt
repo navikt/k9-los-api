@@ -16,13 +16,17 @@ import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.oppgavedefinisjon.typesikker.Feltverdier
 import no.nav.k9.los.oppgavedefinisjon.typesikker.hent
 import no.nav.k9.los.oppgavemottak.*
+import no.nav.ung.kodeverk.behandling.BehandlingDel
 import no.nav.ung.kodeverk.behandling.BehandlingResultatType
 import no.nav.ung.kodeverk.behandling.BehandlingStatus
+import no.nav.ung.kodeverk.behandling.BehandlingStegDel
+import no.nav.ung.kodeverk.behandling.BehandlingStegType
 import no.nav.ung.kodeverk.behandling.BehandlingType
 import no.nav.ung.kodeverk.behandling.FagsakYtelseType
 import no.nav.ung.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
 import no.nav.ung.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus
 import no.nav.ung.kodeverk.behandling.aksjonspunkt.Venteårsak
+import no.nav.ung.kodeverk.hendelse.EventHendelse
 import no.nav.ung.sak.kontrakt.aksjonspunkt.AksjonspunktTilstandDto
 
 object SakEventTilOppgaveMapper {
@@ -59,30 +63,26 @@ object SakEventTilOppgaveMapper {
 
 
     fun utledOppgavetype(event: UngSakEventDto): AktOppgavetypenavn {
-        val åpneAksjonspunkter = getåpneAksjonspunkter(event)
+        if (event.eventHendelse == EventHendelse.AVSLUTTE_NAVKONTOR) {
+            return AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1
+        }
+        if (event.eventHendelse == EventHendelse.GJENOPPTA_NAVKONTOR) {
+            return AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2
+        }
+        if (event.behandlingSteg == null) { //Såvidt vi ser, kan første eller siste melding for en behandling mangle behandlingSteg. Vi antar at det er del 2 som gjelder da.
+            return AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2
+        }
 
-        return when (BehandlingType.fraKode(event.behandlingTypeKode)) {
-            BehandlingType.FØRSTEGANGSSØKNAD,
-            BehandlingType.REVURDERING ->
-                if (åpneAksjonspunkter.any { ap ->
-                        AksjonspunktDefinisjon.fraKode(ap.aksjonspunktKode()).aksjonspunktType.erNavKontorAksjonspunkt()
-                    }) {
-                    AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1
-                } else {
-                    AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2
-                }
-
-            BehandlingType.KLAGE,
-            BehandlingType.ANKE ->
-                AktOppgavetypenavn.AKTIVITETSPENGERKLAGE
-
-            BehandlingType.TILBAKEKREVING,
-            BehandlingType.REVURDERING_TILBAKEKREVING,
-            BehandlingType.UDEFINERT -> throw IllegalStateException("Ugyldig behandlingstype for UNGSAK event: ${event.behandlingTypeKode}")
+        when (BehandlingStegDel.utled(FagsakYtelseType.AKTIVITETSPENGER, BehandlingStegType.fraKode(event.behandlingSteg)).get()) {
+            BehandlingDel.NAV_KONTOR -> return AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1
+            BehandlingDel.SENTRAL -> return AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2
         }
     }
 
     fun utledOppgavestatus(event: UngSakEventDto): Oppgavestatus {
+        if (event.eventHendelse == EventHendelse.AVSLUTTE_NAVKONTOR || event.eventHendelse == EventHendelse.GJENOPPTA_NAVKONTOR) {
+            return Oppgavestatus.LUKKET
+        }
         return when (BehandlingStatus.fraKode(event.behandlingStatus)) {
             BehandlingStatus.OPPRETTET -> Oppgavestatus.UAVKLART
             BehandlingStatus.AVSLUTTET -> Oppgavestatus.LUKKET
