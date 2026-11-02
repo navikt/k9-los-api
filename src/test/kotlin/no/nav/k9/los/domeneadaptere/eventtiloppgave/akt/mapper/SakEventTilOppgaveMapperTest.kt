@@ -155,64 +155,109 @@ class SakEventTilOppgaveMapperTest {
     // --- utledOppgavetype ---
 
     @Test
-    fun `åpent lokalkontoraksjonspunkt gir del1`() {
-        val event = lagEvent(aksjonspunktTilstander = listOf(ap(NAV_KONTOR_AP)))
-
-        assertThat(SakEventTilOppgaveMapper.utledOppgavetype(event))
-            .isEqualTo(AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1)
-    }
-
-    @Test
-    fun `lokalkontoraksjonspunkt som er utført gir del2`() {
-        val event = lagEvent(
-            aksjonspunktTilstander = listOf(ap(NAV_KONTOR_AP, AksjonspunktStatus.UTFØRT))
-        )
-
-        assertThat(SakEventTilOppgaveMapper.utledOppgavetype(event))
-            .isEqualTo(AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2)
-    }
-
-    @Test
-    fun `kun nav-sentralt aksjonspunkt gir del2`() {
-        val event = lagEvent(aksjonspunktTilstander = listOf(ap(NAV_SENTRALT_AP)))
-
-        assertThat(SakEventTilOppgaveMapper.utledOppgavetype(event))
-            .isEqualTo(AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2)
-    }
-
-    @Test
-    fun `revurdering følger samme del-utledning som førstegangssøknad`() {
-        val event = lagEvent(
-            behandlingTypeKode = BehandlingType.REVURDERING.kode,
-            aksjonspunktTilstander = listOf(ap(NAV_KONTOR_AP)),
-        )
-
-        assertThat(SakEventTilOppgaveMapper.utledOppgavetype(event))
-            .isEqualTo(AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1)
-    }
-
-    @Test
-    fun `klage og anke gir klageoppgave`() {
-        listOf(BehandlingType.KLAGE, BehandlingType.ANKE).forEach { behandlingType ->
-            val event = lagEvent(behandlingTypeKode = behandlingType.kode)
+    fun `nav-kontorsteg gir del1 uten aksjonspunkt`() {
+        listOf(
+            BehandlingStegType.NAV_KONTOR_FORESLÅ_VILKÅR,
+            BehandlingStegType.NAV_KONTOR_BESLUTTER_VILKÅR,
+        ).forEach { steg ->
+            val event = lagEvent(behandlingSteg = steg.kode)
 
             assertThat(SakEventTilOppgaveMapper.utledOppgavetype(event))
-                .isEqualTo(AktOppgavetypenavn.AKTIVITETSPENGERKLAGE)
+                .isEqualTo(AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1)
         }
     }
 
     @Test
-    fun `tilbakekreving og udefinert behandlingstype er ugyldig`() {
-        listOf(
-            BehandlingType.TILBAKEKREVING,
-            BehandlingType.REVURDERING_TILBAKEKREVING,
-            BehandlingType.UDEFINERT,
-        ).forEach { behandlingType ->
-            val event = lagEvent(behandlingTypeKode = behandlingType.kode)
+    fun `sentrale steg gir del2 uten aksjonspunkt`() {
+        listOf(BehandlingStegType.FORESLÅ_VEDTAK, BehandlingStegType.FATTE_VEDTAK).forEach { steg ->
+            val event = lagEvent(behandlingSteg = steg.kode)
 
-            assertThrows(IllegalStateException::class.java) {
-                SakEventTilOppgaveMapper.utledOppgavetype(event)
-            }
+            assertThat(SakEventTilOppgaveMapper.utledOppgavetype(event))
+                .isEqualTo(AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2)
+        }
+    }
+
+    @Test
+    fun `steg bestemmer del uavhengig av aksjonspunktenes status`() {
+        listOf(AksjonspunktStatus.OPPRETTET, AksjonspunktStatus.UTFØRT, AksjonspunktStatus.AVBRUTT).forEach { status ->
+            val event = lagEvent(aksjonspunktTilstander = listOf(ap(NAV_KONTOR_AP, status), ap(NAV_SENTRALT_AP, status)))
+
+            assertThat(SakEventTilOppgaveMapper.utledOppgavetype(
+                event.copy(behandlingSteg = BehandlingStegType.NAV_KONTOR_FORESLÅ_VILKÅR.kode)
+            )).isEqualTo(AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1)
+            assertThat(SakEventTilOppgaveMapper.utledOppgavetype(
+                event.copy(behandlingSteg = BehandlingStegType.FORESLÅ_VEDTAK.kode)
+            )).isEqualTo(AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2)
+        }
+    }
+
+    @Test
+    fun `manglende steg gir del2 selv med åpent nav-kontoraksjonspunkt`() {
+        val event = lagEvent(
+            behandlingSteg = null,
+            aksjonspunktTilstander = listOf(ap(NAV_KONTOR_AP)),
+        )
+
+        assertThat(SakEventTilOppgaveMapper.utledOppgavetype(event))
+            .isEqualTo(AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2)
+    }
+
+    @Test
+    fun `behandlingstype endrer ikke steg-basert oppgavetype`() {
+        listOf(
+            BehandlingType.FØRSTEGANGSSØKNAD,
+            BehandlingType.REVURDERING,
+            BehandlingType.KLAGE,
+            BehandlingType.ANKE,
+        ).forEach { behandlingType ->
+            val event = lagEvent(
+                behandlingTypeKode = behandlingType.kode,
+                behandlingSteg = BehandlingStegType.NAV_KONTOR_FORESLÅ_VILKÅR.kode,
+            )
+
+            assertThat(SakEventTilOppgaveMapper.utledOppgavetype(event))
+                .isEqualTo(AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1)
+            assertThat(SakEventTilOppgaveMapper.utledOppgavetype(
+                event.copy(behandlingSteg = BehandlingStegType.FORESLÅ_VEDTAK.kode)
+            )).isEqualTo(AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2)
+        }
+    }
+
+    @Test
+    fun `avslutte navkontor lukker del1 uavhengig av steg`() {
+        listOf(null, BehandlingStegType.FORESLÅ_VEDTAK.kode).forEach { steg ->
+            val dto = SakEventTilOppgaveMapper.lagOppgaveDto(
+                lagEventLagret(lagEvent(
+                    eventHendelse = EventHendelse.AVSLUTTE_NAVKONTOR,
+                    behandlingSteg = steg,
+                    aksjonspunktTilstander = listOf(ap(NAV_SENTRALT_AP)),
+                )),
+                null,
+                1,
+            ).dto
+
+            assertThat(dto.type).isEqualTo(AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1)
+            assertThat(dto.status).isEqualTo(Oppgavestatus.LUKKET)
+            assertThat(dto.reservasjonsnøkkel).isEqualTo("AKT_b_del1_1234567890123")
+        }
+    }
+
+    @Test
+    fun `gjenoppta navkontor lukker del2 uavhengig av steg`() {
+        listOf(null, BehandlingStegType.NAV_KONTOR_FORESLÅ_VILKÅR.kode).forEach { steg ->
+            val dto = SakEventTilOppgaveMapper.lagOppgaveDto(
+                lagEventLagret(lagEvent(
+                    eventHendelse = EventHendelse.GJENOPPTA_NAVKONTOR,
+                    behandlingSteg = steg,
+                    aksjonspunktTilstander = listOf(ap(NAV_KONTOR_AP)),
+                )),
+                null,
+                1,
+            ).dto
+
+            assertThat(dto.type).isEqualTo(AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2)
+            assertThat(dto.status).isEqualTo(Oppgavestatus.LUKKET)
+            assertThat(dto.reservasjonsnøkkel).isEqualTo("AKT_b_del2_1234567890123")
         }
     }
 
@@ -334,7 +379,7 @@ class SakEventTilOppgaveMapperTest {
 
     @Test
     fun `reservasjonsnøkkel for del1`() {
-        val eventLagret = lagEventLagret(lagEvent(aksjonspunktTilstander = listOf(ap(NAV_KONTOR_AP))))
+        val eventLagret = lagEventLagret(lagEvent(behandlingSteg = BehandlingStegType.NAV_KONTOR_FORESLÅ_VILKÅR.kode))
 
         assertThat(SakEventTilOppgaveMapper.utledReservasjonsnokkel(eventLagret, false))
             .isEqualTo("AKT_b_del1_1234567890123")
@@ -342,7 +387,7 @@ class SakEventTilOppgaveMapperTest {
 
     @Test
     fun `reservasjonsnøkkel for del2`() {
-        val eventLagret = lagEventLagret(lagEvent(aksjonspunktTilstander = listOf(ap(NAV_SENTRALT_AP))))
+        val eventLagret = lagEventLagret(lagEvent(behandlingSteg = BehandlingStegType.FORESLÅ_VEDTAK.kode))
 
         assertThat(SakEventTilOppgaveMapper.utledReservasjonsnokkel(eventLagret, false))
             .isEqualTo("AKT_b_del2_1234567890123")
@@ -357,11 +402,33 @@ class SakEventTilOppgaveMapperTest {
     }
 
     @Test
-    fun `reservasjonsnøkkel for klage er ikke implementert`() {
-        val eventLagret = lagEventLagret(lagEvent(behandlingTypeKode = BehandlingType.KLAGE.kode))
+    fun `reservasjonsnøkkel for klage og anke bruker steg-basert del`() {
+        listOf(BehandlingType.KLAGE, BehandlingType.ANKE).forEach { behandlingType ->
+            val event = lagEvent(
+                behandlingTypeKode = behandlingType.kode,
+                behandlingSteg = BehandlingStegType.NAV_KONTOR_FORESLÅ_VILKÅR.kode,
+            )
 
-        assertThrows(NotImplementedError::class.java) {
-            SakEventTilOppgaveMapper.utledReservasjonsnokkel(eventLagret, false)
+            assertThat(SakEventTilOppgaveMapper.utledReservasjonsnokkel(lagEventLagret(event), false))
+                .isEqualTo("AKT_k_del1_1234567890123")
+            assertThat(SakEventTilOppgaveMapper.utledReservasjonsnokkel(
+                lagEventLagret(event.copy(behandlingSteg = BehandlingStegType.FORESLÅ_VEDTAK.kode)), false
+            )).isEqualTo("AKT_k_del2_1234567890123")
+        }
+    }
+
+    @Test
+    fun `tilbakekreving og udefinert behandlingstype gir ugyldig reservasjonsnøkkel`() {
+        listOf(
+            BehandlingType.TILBAKEKREVING,
+            BehandlingType.REVURDERING_TILBAKEKREVING,
+            BehandlingType.UDEFINERT,
+        ).forEach { behandlingType ->
+            val eventLagret = lagEventLagret(lagEvent(behandlingTypeKode = behandlingType.kode))
+
+            assertThrows(IllegalStateException::class.java) {
+                SakEventTilOppgaveMapper.utledReservasjonsnokkel(eventLagret, false)
+            }
         }
     }
 
@@ -493,21 +560,21 @@ class SakEventTilOppgaveMapperTest {
 
     @Test
     fun `del1 bruker navkontorets behandlende enhet`() {
-        val feltverdier = feltverdier(lagEvent(aksjonspunktTilstander = listOf(ap(NAV_KONTOR_AP))))
+        val feltverdier = feltverdier(lagEvent(behandlingSteg = BehandlingStegType.NAV_KONTOR_FORESLÅ_VILKÅR.kode))
 
         assertThat(feltverdier.verdiFor(AktivitetspengerFelter.Vedtak.BEHANDLENDE_ENHET.id)).isEqualTo(AktBehandlendeEnhet.FALKENBORG.kode)
     }
 
     @Test
     fun `del2 bruker sentral behandlende enhet`() {
-        val feltverdier = feltverdier(lagEvent(aksjonspunktTilstander = listOf(ap(NAV_SENTRALT_AP))))
+        val feltverdier = feltverdier(lagEvent(behandlingSteg = BehandlingStegType.FORESLÅ_VEDTAK.kode))
 
         assertThat(feltverdier.verdiFor(AktivitetspengerFelter.Vedtak.BEHANDLENDE_ENHET.id)).isEqualTo(AktBehandlendeEnhet.STYRINGSENHET.kode)
     }
 
     @Test
     fun `del1 bruker navkontorfeltene for saksbehandler og beslutter`() {
-        val feltverdier = feltverdier(lagEvent(aksjonspunktTilstander = listOf(ap(NAV_KONTOR_AP))))
+        val feltverdier = feltverdier(lagEvent(behandlingSteg = BehandlingStegType.NAV_KONTOR_FORESLÅ_VILKÅR.kode))
 
         assertThat(feltverdier.verdiFor(AktivitetspengerFelter.Saksbehandling.ANSVARLIG_SAKSBEHANDLER.id))
             .isEqualTo("LOKAL_SAKSBEHANDLER")
@@ -517,7 +584,7 @@ class SakEventTilOppgaveMapperTest {
 
     @Test
     fun `del2 bruker totrinnsfeltene for saksbehandler og beslutter`() {
-        val feltverdier = feltverdier(lagEvent(aksjonspunktTilstander = listOf(ap(NAV_SENTRALT_AP))))
+        val feltverdier = feltverdier(lagEvent(behandlingSteg = BehandlingStegType.FORESLÅ_VEDTAK.kode))
 
         assertThat(feltverdier.verdiFor(AktivitetspengerFelter.Saksbehandling.ANSVARLIG_SAKSBEHANDLER.id))
             .isEqualTo("SENTRAL_SAKSBEHANDLER")

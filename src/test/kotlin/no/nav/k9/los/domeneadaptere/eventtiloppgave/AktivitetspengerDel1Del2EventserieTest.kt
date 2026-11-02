@@ -47,14 +47,17 @@ class AktivitetspengerDel1Del2EventserieTest : AbstractK9LosIntegrationTest() {
     private val eksternId = UUID.randomUUID()
     private val opprettetBehandling = LocalDateTime.of(2026, 3, 1, 8, 0, 0)
 
-    // e1: del1, e2: del1, e3: del2, e4: del1, e5: del2, e6: del2
+    // e1: del1, e2: del1, e3: lukk del1, e4: del2, e5: lukk del2, e6: del1, e7: lukk del1, e8: del2, e9: del2
     private val eventserie: List<UngSakEventDto> = listOf(
         lagEvent(1, lokalkontor = true),
         lagEvent(2, lokalkontor = true),
-        lagEvent(3, lokalkontor = false),
-        lagEvent(4, lokalkontor = true),
-        lagEvent(5, lokalkontor = false),
-        lagEvent(6, lokalkontor = false),
+        lagEvent(3, lokalkontor = false, hendelse = EventHendelse.AVSLUTTE_NAVKONTOR),
+        lagEvent(4, lokalkontor = false),
+        lagEvent(5, lokalkontor = true, hendelse = EventHendelse.GJENOPPTA_NAVKONTOR),
+        lagEvent(6, lokalkontor = true),
+        lagEvent(7, lokalkontor = false, hendelse = EventHendelse.AVSLUTTE_NAVKONTOR),
+        lagEvent(8, lokalkontor = false),
+        lagEvent(9, lokalkontor = false),
     )
     private val eksternVersjoner = eventserie.map { it.eventTid.toString() }
 
@@ -73,20 +76,20 @@ class AktivitetspengerDel1Del2EventserieTest : AbstractK9LosIntegrationTest() {
     }
 
     @Test
-    fun `vaskeeventserieutleder nummererer eventserien per oppgavetype og lukker forrige oppgavetype ved skifte`() {
+    fun `vaskeeventserieutleder nummererer eventserien per oppgavetype`() {
         lagre(eventserie)
         val eventer = eventRepository.hentAlleEventer(Fagsystem.UNGSAK, eksternId.toString())
 
         val forventet = listOf(
             Forventet(NummerertEventHandling.MapEventHandling::class, 0, DEL1, eksternVersjoner[0]),
             Forventet(NummerertEventHandling.MapEventHandling::class, 1, DEL1, eksternVersjoner[1]),
-            Forventet(NummerertEventHandling.LukkOppgavetype::class, 2, DEL1, eksternVersjoner[2]),
-            Forventet(NummerertEventHandling.MapEventHandling::class, 0, DEL2, eksternVersjoner[2]),
-            Forventet(NummerertEventHandling.LukkOppgavetype::class, 1, DEL2, eksternVersjoner[3]),
-            Forventet(NummerertEventHandling.MapEventHandling::class, 3, DEL1, eksternVersjoner[3]),
-            Forventet(NummerertEventHandling.LukkOppgavetype::class, 4, DEL1, eksternVersjoner[4]),
-            Forventet(NummerertEventHandling.MapEventHandling::class, 2, DEL2, eksternVersjoner[4]),
-            Forventet(NummerertEventHandling.MapEventHandling::class, 3, DEL2, eksternVersjoner[5]),
+            Forventet(NummerertEventHandling.MapEventHandling::class, 2, DEL1, eksternVersjoner[2]),
+            Forventet(NummerertEventHandling.MapEventHandling::class, 0, DEL2, eksternVersjoner[3]),
+            Forventet(NummerertEventHandling.MapEventHandling::class, 1, DEL2, eksternVersjoner[4]),
+            Forventet(NummerertEventHandling.MapEventHandling::class, 3, DEL1, eksternVersjoner[5]),
+            Forventet(NummerertEventHandling.MapEventHandling::class, 4, DEL1, eksternVersjoner[6]),
+            Forventet(NummerertEventHandling.MapEventHandling::class, 2, DEL2, eksternVersjoner[7]),
+            Forventet(NummerertEventHandling.MapEventHandling::class, 3, DEL2, eksternVersjoner[8]),
         )
 
         assertThat(utledEventhandlinger(eventer).tilForventet())
@@ -106,10 +109,10 @@ class AktivitetspengerDel1Del2EventserieTest : AbstractK9LosIntegrationTest() {
 
     @Test
     fun `eventtiloppgaveadapter lager separate versjonskjeder for del1 og del2 over flere kjøringer`() {
-        lagre(eventserie.subList(0, 3))
+        lagre(eventserie.subList(0, 4))
         adapter.oppdaterOppgaveForEksternId(EventNøkkel(Fagsystem.UNGSAK, eksternId.toString()))
 
-        lagre(eventserie.subList(3, 6))
+        lagre(eventserie.subList(4, 9))
         adapter.oppdaterOppgaveForEksternId(EventNøkkel(Fagsystem.UNGSAK, eksternId.toString()))
 
         assertOppgaver()
@@ -145,18 +148,18 @@ class AktivitetspengerDel1Del2EventserieTest : AbstractK9LosIntegrationTest() {
                 eksternVersjoner[0] to Oppgavestatus.AAPEN,
                 eksternVersjoner[1] to Oppgavestatus.AAPEN,
                 eksternVersjoner[2] to Oppgavestatus.LUKKET,
-                eksternVersjoner[3] to Oppgavestatus.AAPEN,
-                eksternVersjoner[4] to Oppgavestatus.LUKKET,
+                eksternVersjoner[5] to Oppgavestatus.AAPEN,
+                eksternVersjoner[6] to Oppgavestatus.LUKKET,
             ),
             "del1"
         )
         assertVersjonskjede(
             DEL2,
             listOf(
-                eksternVersjoner[2] to Oppgavestatus.AAPEN,
-                eksternVersjoner[3] to Oppgavestatus.LUKKET,
-                eksternVersjoner[4] to Oppgavestatus.AAPEN,
-                eksternVersjoner[5] to Oppgavestatus.AAPEN,
+                eksternVersjoner[3] to Oppgavestatus.AAPEN,
+                eksternVersjoner[4] to Oppgavestatus.LUKKET,
+                eksternVersjoner[7] to Oppgavestatus.AAPEN,
+                eksternVersjoner[8] to Oppgavestatus.AAPEN,
             ),
             "del2"
         )
@@ -214,7 +217,11 @@ class AktivitetspengerDel1Del2EventserieTest : AbstractK9LosIntegrationTest() {
         }
     }
 
-    private fun lagEvent(nummer: Long, lokalkontor: Boolean): UngSakEventDto {
+    private fun lagEvent(
+        nummer: Long,
+        lokalkontor: Boolean,
+        hendelse: EventHendelse = EventHendelse.AKSJONSPUNKT_OPPRETTET,
+    ): UngSakEventDto {
         val aksjonspunkter = if (lokalkontor) {
             listOf(ap(AksjonspunktDefinisjon.NAV_KONTOR_FORESLÅR_VILKÅR, AksjonspunktStatus.OPPRETTET))
         } else {
@@ -230,7 +237,7 @@ class AktivitetspengerDel1Del2EventserieTest : AbstractK9LosIntegrationTest() {
             saksnummer = "AKT123456",
             aktørId = "1234567890123",
             eventTid = opprettetBehandling.plusHours(nummer),
-            eventHendelse = EventHendelse.AKSJONSPUNKT_OPPRETTET,
+            eventHendelse = hendelse,
             behandlingStatus = BehandlingStatus.UTREDES.kode,
             behandlingSteg = åpentAksjonspunkt.behandlingSteg.kode,
             behandlendeEnhet = "4416",
