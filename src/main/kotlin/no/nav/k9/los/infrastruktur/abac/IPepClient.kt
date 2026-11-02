@@ -22,6 +22,9 @@ interface IPepClient {
     suspend fun harBasisTilgangIEttEllerFlereOmråder(): Boolean = basisTilgangIOmråder().isNotEmpty()
     suspend fun basisTilgangIOmråder(): Set<Områder>
 
+    // Tilgang til personer uavhengig av sak/oppgave, for innlogget bruker
+    suspend fun harTilgangTilPersoner(område: Områder, idToken: IIdToken, aktørIder: List<String>, action: Action = Action.read): Boolean
+
     // Tilgang til oppgave, for innlogget bruker
     @Deprecated("Avhengig av coroutineContext")
     suspend fun harTilgangTilOppgaveV3(oppgave: Oppgave, action: Action = Action.read): Boolean

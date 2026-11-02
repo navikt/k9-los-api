@@ -207,11 +207,6 @@ class EventTilOppgaveAdapter(
         }
         val innsending = when (eventhandling) {
             is NummerertEventHandling.MapEventHandling -> eventhandling.event.tilOppgaveversjon(forrigeOppgaveversjon, eventhandling.eventnummer)
-            is NummerertEventHandling.LukkOppgavetype -> eventhandling.event.lukkOppgaveversjon(
-                checkNotNull(forrigeOppgaveversjon) {
-                    "Fant ingen oppgaveversjon av type ${eventhandling.oppgavetype} å lukke for eksternId: ${eventhandling.event.eksternId}"
-                }
-            )
         }
         check(innsending.dto.type.kode == eventhandling.oppgavetype.kode) {
             "Innsending har type ${innsending.dto.type.kode}, forventet ${eventhandling.oppgavetype.kode}"

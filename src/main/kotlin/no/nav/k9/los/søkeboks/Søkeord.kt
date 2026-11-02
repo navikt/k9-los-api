@@ -11,8 +11,8 @@ package no.nav.k9.los.søkeboks
  * Nye varianter her vil bryte kompileringen i hver [Oppgavesøk], som er meningen.
  */
 sealed interface Søkeord {
-    /** Fødselsnummer, sammen med aktørId-ene PDL kjenner for personen. */
-    data class Person(val fnr: String, val aktørIder: List<String>) : Søkeord
+    /** Fødselsnummer, sammen med resultat fra PDL om aktør-ider og eventuelt ikkeTilgang . */
+    data class Person(val fnr: String, val ikkeTilgangPdl: Boolean, val aktørIder: List<String>) : Søkeord
 
     data class Journalpost(val journalpostId: String) : Søkeord
 
