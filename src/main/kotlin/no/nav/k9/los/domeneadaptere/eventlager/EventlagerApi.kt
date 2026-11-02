@@ -43,6 +43,18 @@ internal fun Route.EventlagerApi() {
                 description = "Oppgavens eksterne Id, definert av innleverende fagsystem"
             }
         }
+        response {
+            HttpStatusCode.OK to {
+                description = "Liste med eventer serialisert som JSON, med sensitive felter fjernet. Eventformatet avhenger av fagsystem"
+                body<String>()
+            }
+            HttpStatusCode.NotFound to { description = "Fant ingen eventer" }
+            HttpStatusCode.Forbidden to { description = "Mangler tilgang til forvaltning" }
+            HttpStatusCode.NotImplemented to {
+                description = "Fagsystemet er ikke støttet"
+                body<String>()
+            }
+        }
     }) {
         requestContextService.withRequestContext(call) {
             if (pepClient.kanLeggeUtDriftsmelding()) {
@@ -84,17 +96,26 @@ internal fun Route.EventlagerApi() {
 
     put("/spillAvDirtyEventer", {
         tags("Forvaltning")
+        description = "Starter avspilling av ubehandlede eventer i bakgrunnen"
+        response {
+            HttpStatusCode.NoContent to { description = "Avspilling er startet" }
+            HttpStatusCode.Forbidden to { description = "Mangler tilgang til forvaltning" }
+        }
     }) {
         requestContextService.withRequestContext(call) {
-            thread(
-                start = true,
-                isDaemon = true,
-                name = oppgaveAdapter.javaClass.simpleName,
-            ) {
-                oppgaveAdapter.spillAvBehandlingProsessEventer()
-            }
+            if (pepClient.kanLeggeUtDriftsmelding()) {
+                thread(
+                    start = true,
+                    isDaemon = true,
+                    name = oppgaveAdapter.javaClass.simpleName,
+                ) {
+                    oppgaveAdapter.spillAvBehandlingProsessEventer()
+                }
 
-            call.respond(HttpStatusCode.NoContent)
+                call.respond(HttpStatusCode.NoContent)
+            } else {
+                call.respond(HttpStatusCode.Forbidden)
+            }
         }
     }
 
@@ -110,11 +131,21 @@ internal fun Route.EventlagerApi() {
                 }
             }
         }
+        response {
+            HttpStatusCode.NoContent to { description = "Historikkvask er bestilt for alle oppgaver i fagsystemet" }
+            HttpStatusCode.Forbidden to { description = "Mangler tilgang til forvaltning" }
+        }
     }) {
-        val fagsystem = Fagsystem.fraParameter(call.parameters["fagsystem"]!!)
-        eventRepository.bestillHistorikkvask(fagsystem)
+        requestContextService.withRequestContext(call) {
+            if (pepClient.kanLeggeUtDriftsmelding()) {
+                val fagsystem = Fagsystem.fraParameter(call.parameters["fagsystem"]!!)
+                eventRepository.bestillHistorikkvask(fagsystem)
 
-        call.respond(HttpStatusCode.NoContent)
+                call.respond(HttpStatusCode.NoContent)
+            } else {
+                call.respond(HttpStatusCode.Forbidden)
+            }
+        }
     }
 
     put("bestillHistorikkvaskForEnkeltoppgave", {
@@ -135,13 +166,21 @@ internal fun Route.EventlagerApi() {
                 }
             }
         }
+        response {
+            HttpStatusCode.NoContent to { description = "Historikkvask er bestilt for oppgaven" }
+            HttpStatusCode.Forbidden to { description = "Mangler tilgang til forvaltning" }
+        }
     }) {
         requestContextService.withRequestContext(call) {
-            val fagsystem = Fagsystem.fraParameter(call.parameters["fagsystem"]!!)
-            val eksternId = call.parameters["eksternId"]!!
-            eventRepository.bestillHistorikkvask(fagsystem, eksternId)
+            if (pepClient.kanLeggeUtDriftsmelding()) {
+                val fagsystem = Fagsystem.fraParameter(call.parameters["fagsystem"]!!)
+                val eksternId = call.parameters["eksternId"]!!
+                eventRepository.bestillHistorikkvask(fagsystem, eksternId)
 
-            call.respond(HttpStatusCode.NoContent)
+                call.respond(HttpStatusCode.NoContent)
+            } else {
+                call.respond(HttpStatusCode.Forbidden)
+            }
         }
     }
 
