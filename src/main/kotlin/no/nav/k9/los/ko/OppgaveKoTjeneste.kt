@@ -74,7 +74,7 @@ class OppgaveKoTjeneste(
             område = område,
             idToken = idToken,
             kø = kø,
-            ønsketAntallOppgaver = ønsketAntallOppgaver,
+            avgrensning = Avgrensning.maxAntall(ønsketAntallOppgaver),
             fjernReserverte = fjernReserverte,
         )
 
@@ -89,11 +89,12 @@ class OppgaveKoTjeneste(
         kode6: Boolean,
         idToken: IIdToken,
         oppgaveKoId: Long,
-        ønsketAntallOppgaver: Long,
+        limit: Long,
         fjernReserverte: Boolean = false,
+        offset: Long = 0,
     ): List<OppgaveSammendragDto> {
         val kø = oppgaveKoRepository.hent(område, kode6, oppgaveKoId)
-        val oppgaver = hentTilgjengeligeOppgaverFraKø(område, idToken, kø, ønsketAntallOppgaver, fjernReserverte)
+        val oppgaver = hentTilgjengeligeOppgaverFraKø(område, idToken, kø, Avgrensning(limit, offset), fjernReserverte)
         return oppgaveSammendragDtoBuilder.bygg(oppgaver)
     }
 
@@ -101,7 +102,7 @@ class OppgaveKoTjeneste(
         område: Områder,
         idToken: IIdToken,
         kø: OppgaveKo,
-        ønsketAntallOppgaver: Long,
+        avgrensning: Avgrensning,
         fjernReserverte: Boolean,
     ): List<Oppgave> {
         val kandidatOppgaver = oppgaveQueryService.queryForOppgave(
@@ -109,7 +110,7 @@ class OppgaveKoTjeneste(
                 område = område,
                 oppgaveQuery = kø.oppgaveQuery,
                 fjernReserverte = fjernReserverte,
-                avgrensning = Avgrensning.maxAntall(ønsketAntallOppgaver),
+                avgrensning = avgrensning,
             )
         )
 
