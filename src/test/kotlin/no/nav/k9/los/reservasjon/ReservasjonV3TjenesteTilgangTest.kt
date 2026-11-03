@@ -18,6 +18,7 @@ import no.nav.k9.los.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.saksbehandleradmin.SaksbehandlerRepository
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
+import kotlin.test.assertFailsWith
 
 class ReservasjonV3TjenesteTilgangTest {
 
@@ -36,7 +37,7 @@ class ReservasjonV3TjenesteTilgangTest {
         every { hentVerdi("liggerHosBeslutter") } returns null
     }
     private val saksbehandler = mockk<Saksbehandler>(relaxed = true) {
-        every { områder } returns listOf(område)
+        every { områder } returns listOf(område, Områder.K9)
     }
 
     private val tjeneste = ReservasjonV3Tjeneste(
@@ -49,11 +50,11 @@ class ReservasjonV3TjenesteTilgangTest {
     )
 
     init {
-        every { oppslag.hentÅpneOppgaverForReservasjonsnøkkel(område, nøkkel, tx) } returns listOf(oppgave)
+        every { oppslag.hentÅpneOppgaverForReservasjonsnøkkel(any(), nøkkel, tx) } returns listOf(oppgave)
         every { saksbehandlerRepository.finnSaksbehandlerMedId(any()) } returns saksbehandler
     }
 
-    private fun reserver(reserverForId: Long, utføresAvId: Long) =
+    private fun reserver(reserverForId: Long, utføresAvId: Long, område: Områder = this.område) =
         runBlocking(CoroutineRequestContext(idToken, område)) {
             tjeneste.taReservasjon(
                 område = område,
@@ -78,12 +79,35 @@ class ReservasjonV3TjenesteTilgangTest {
     }
 
     @Test
-    fun `reservasjon for annen saksbehandler sjekker tilgang for den saksbehandleren`() {
+    fun `reservasjon for annen saksbehandler i K9 sjekker mottakerens tilgang`() {
+        val område = Områder.K9
         coEvery { pepClient.harTilgangTilOppgaveV3(område, oppgave, saksbehandler, Action.reserver) } returns true
 
-        reserver(reserverForId = annenId, utføresAvId = innloggetId)
+        reserver(reserverForId = annenId, utføresAvId = innloggetId, område = område)
 
         coVerify(exactly = 1) { pepClient.harTilgangTilOppgaveV3(område, oppgave, saksbehandler, Action.reserver) }
         coVerify(exactly = 0) { pepClient.harTilgangTilOppgaveV3(any(), any<IIdToken>(), any(), any()) }
+    }
+
+    @Test
+    fun `reservasjon for annen saksbehandler på aktivitetspenger sjekker innlogget brukers tilgang`() {
+        coEvery { pepClient.harTilgangTilOppgaveV3(område, idToken, oppgave, Action.reserver) } returns true
+
+        reserver(reserverForId = annenId, utføresAvId = innloggetId)
+
+        coVerify(exactly = 1) { pepClient.harTilgangTilOppgaveV3(område, idToken, oppgave, Action.reserver) }
+        coVerify(exactly = 0) { pepClient.harTilgangTilOppgaveV3(any(), any<Oppgave>(), any<Saksbehandler>(), any()) }
+    }
+
+    @Test
+    fun `reservasjon for andre på aktivitetspenger avvises når innlogget bruker mangler tilgang`() {
+        coEvery { pepClient.harTilgangTilOppgaveV3(område, idToken, oppgave, Action.reserver) } returns false
+
+        assertFailsWith<ManglerTilgangException> {
+            reserver(reserverForId = annenId, utføresAvId = innloggetId)
+        }
+
+        io.mockk.verify(exactly = 0) { reservasjonV3Repository.lagreReservasjon(any(), any(), any()) }
+        coVerify(exactly = 0) { pepClient.harTilgangTilOppgaveV3(any(), any<Oppgave>(), any<Saksbehandler>(), any()) }
     }
 }

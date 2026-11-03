@@ -1,5 +1,6 @@
 package no.nav.k9.los.reservasjon
 
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.github.smiley4.ktoropenapi.OpenApi
 import io.ktor.client.request.post
 import io.ktor.client.request.get
@@ -36,7 +37,6 @@ import org.koin.core.context.stopKoin
 import org.koin.dsl.module
 import org.koin.ktor.plugin.Koin
 import kotlin.test.assertEquals
-import tools.jackson.module.kotlin.jacksonObjectMapper
 
 class ReservasjonApisNyTest {
     private val pepClient = mockk<IPepClient>()
@@ -65,8 +65,8 @@ class ReservasjonApisNyTest {
             assertEquals(HttpStatusCode.OK, response.status)
             val json = jacksonObjectMapper().readTree(response.bodyAsText())
             assertEquals(2, json.size())
-            assertEquals("NAV 2103", json[0]["enhet"].asString())
-            assertEquals("Z222222", json[1]["brukerIdent"].asString())
+            assertEquals("NAV 2103", json[0]["enhet"].asText())
+            assertEquals("Z222222", json[1]["brukerIdent"].asText())
             assertEquals(true, json[1]["enhet"].isNull)
             verify(exactly = 1) { repository.hentAlleSaksbehandlere(område, false) }
         }
