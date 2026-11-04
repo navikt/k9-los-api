@@ -1,4 +1,4 @@
-package no.nav.k9.los.domeneadaptere.statistikk
+package no.nav.k9.los.domeneadaptere.statistikk.k9
 
 import kotliquery.*
 import no.nav.k9.los.infrastruktur.db.util.InClauseHjelper

@@ -45,8 +45,8 @@ import no.nav.k9.los.domeneadaptere.eventtiloppgave.EventTilOppgaveAdapter
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.HistorikkvaskTjeneste
 import no.nav.k9.los.domeneadaptere.k9.refreshk9sakoppgaver.K9sakBehandlingsoppfriskingJobb
 import no.nav.k9.los.domeneadaptere.k9.refreshk9sakoppgaver.RefreshK9v3
-import no.nav.k9.los.domeneadaptere.statistikk.OppgavestatistikkTjeneste
-import no.nav.k9.los.domeneadaptere.statistikk.StatistikkApi
+import no.nav.k9.los.domeneadaptere.statistikk.k9.OppgavestatistikkTjeneste
+import no.nav.k9.los.domeneadaptere.statistikk.k9.StatistikkApi
 import no.nav.k9.los.driftsmelding.DriftsmeldingerApis
 import no.nav.k9.los.driftsmelding.DriftsmeldingerApisNy
 import no.nav.k9.los.forvaltning.K9ForvaltningApis

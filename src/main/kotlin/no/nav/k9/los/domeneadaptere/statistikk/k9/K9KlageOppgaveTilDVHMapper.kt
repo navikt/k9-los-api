@@ -1,4 +1,4 @@
-package no.nav.k9.los.domeneadaptere.statistikk
+package no.nav.k9.los.domeneadaptere.statistikk.k9
 
 import no.nav.k9.klage.kodeverk.behandling.BehandlingResultatType
 import no.nav.k9.klage.kodeverk.behandling.BehandlingStatus

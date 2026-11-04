@@ -1,4 +1,4 @@
-package no.nav.k9.los.domeneadaptere.statistikk
+package no.nav.k9.los.domeneadaptere.statistikk.k9
 
 import io.opentelemetry.instrumentation.annotations.SpanAttribute
 import io.opentelemetry.instrumentation.annotations.WithSpan

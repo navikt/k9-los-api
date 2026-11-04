@@ -1,4 +1,4 @@
-package no.nav.k9.los.domeneadaptere.statistikk
+package no.nav.k9.los.domeneadaptere.statistikk.k9
 
 import io.github.smiley4.ktoropenapi.get
 import io.github.smiley4.ktoropenapi.put

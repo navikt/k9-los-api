@@ -25,11 +25,11 @@ import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.saktillos.beriker.K9SakSy
 import no.nav.k9.los.domeneadaptere.k9.refreshk9sakoppgaver.RefreshK9v3Tjeneste
 import no.nav.k9.los.domeneadaptere.k9.refreshk9sakoppgaver.restklient.IK9SakService
 import no.nav.k9.los.domeneadaptere.k9.refreshk9sakoppgaver.restklient.K9SakServiceLocal
-import no.nav.k9.los.domeneadaptere.statistikk.K9KlageOppgaveTilDVHMapper
-import no.nav.k9.los.domeneadaptere.statistikk.K9SakOppgaveTilDVHMapper
-import no.nav.k9.los.domeneadaptere.statistikk.OppgavestatistikkTjeneste
-import no.nav.k9.los.domeneadaptere.statistikk.StatistikkPublisher
-import no.nav.k9.los.domeneadaptere.statistikk.StatistikkRepository
+import no.nav.k9.los.domeneadaptere.statistikk.k9.K9KlageOppgaveTilDVHMapper
+import no.nav.k9.los.domeneadaptere.statistikk.k9.K9SakOppgaveTilDVHMapper
+import no.nav.k9.los.domeneadaptere.statistikk.k9.OppgavestatistikkTjeneste
+import no.nav.k9.los.domeneadaptere.statistikk.k9.StatistikkPublisher
+import no.nav.k9.los.domeneadaptere.statistikk.k9.StatistikkRepository
 import no.nav.k9.los.driftsmelding.DriftsmeldingRepository
 import no.nav.k9.los.forvaltning.ForvaltningRepository
 import no.nav.k9.los.infrastruktur.abac.*

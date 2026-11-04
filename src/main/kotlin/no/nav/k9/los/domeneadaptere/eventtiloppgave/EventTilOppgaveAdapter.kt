@@ -8,7 +8,7 @@ import no.nav.k9.los.domeneadaptere.eventlager.EventNøkkel
 import no.nav.k9.los.domeneadaptere.eventlager.EventRepository
 import no.nav.k9.los.domeneadaptere.eventlager.Oppgavetype
 import no.nav.k9.los.domeneadaptere.eventmottak.FeilRekkefølgeSjekker
-import no.nav.k9.los.domeneadaptere.statistikk.StatistikkRepository
+import no.nav.k9.los.domeneadaptere.statistikk.k9.StatistikkRepository
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.oppgavemottak.AktivOgPartisjonertOppgaveAjourholdTjeneste
 import no.nav.k9.los.oppgavemottak.OppgaveV3
