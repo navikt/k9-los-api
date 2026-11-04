@@ -1,4 +1,4 @@
-package no.nav.k9.los.domeneadaptere.k9.avstemming
+package no.nav.k9.los.domeneadaptere.avstemming.k9
 
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.oppgaveuthenting.Oppgave

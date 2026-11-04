@@ -28,11 +28,11 @@ import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.klagetillos.beriker.K9Kla
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.saktillos.beriker.K9SakSystemKlient
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.saktillos.beriker.K9SakSystemKlientInterfaceKludge
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.saktillos.beriker.K9SakSystemKlientLocal
-import no.nav.k9.los.domeneadaptere.k9.avstemming.AvstemmingsTjeneste
-import no.nav.k9.los.domeneadaptere.k9.avstemming.punsj.systemklient.LocalPunsjAvstemmingsklient
-import no.nav.k9.los.domeneadaptere.k9.avstemming.punsj.systemklient.RestPunsjAvstemmingsklient
-import no.nav.k9.los.domeneadaptere.k9.avstemming.saksbehandling.systemklient.LocalSakAvstemmingsklient
-import no.nav.k9.los.domeneadaptere.k9.avstemming.saksbehandling.systemklient.RestSakAvstemmingsklient
+import no.nav.k9.los.domeneadaptere.avstemming.k9.AvstemmingsTjeneste
+import no.nav.k9.los.domeneadaptere.avstemming.k9.punsj.systemklient.LocalPunsjAvstemmingsklient
+import no.nav.k9.los.domeneadaptere.avstemming.k9.punsj.systemklient.RestPunsjAvstemmingsklient
+import no.nav.k9.los.domeneadaptere.avstemming.k9.saksbehandling.systemklient.LocalSakAvstemmingsklient
+import no.nav.k9.los.domeneadaptere.avstemming.k9.saksbehandling.systemklient.RestSakAvstemmingsklient
 import no.nav.k9.los.domeneadaptere.k9.refreshk9sakoppgaver.RefreshK9v3Tjeneste
 import no.nav.k9.los.domeneadaptere.k9.refreshk9sakoppgaver.restklient.IK9SakService
 import no.nav.k9.los.domeneadaptere.k9.refreshk9sakoppgaver.restklient.K9SakBehandlingOppfrisketRepository

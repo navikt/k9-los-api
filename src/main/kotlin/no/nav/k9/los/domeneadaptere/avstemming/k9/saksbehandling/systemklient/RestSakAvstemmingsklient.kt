@@ -1,4 +1,4 @@
-package no.nav.k9.los.domeneadaptere.k9.avstemming.saksbehandling.systemklient
+package no.nav.k9.los.domeneadaptere.avstemming.k9.saksbehandling.systemklient
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import io.ktor.client.*
@@ -9,7 +9,7 @@ import kotlinx.coroutines.runBlocking
 import no.nav.helse.dusseldorf.ktor.core.Retry
 import no.nav.helse.dusseldorf.oauth2.client.AccessTokenClient
 import no.nav.helse.dusseldorf.oauth2.client.CachedAccessTokenClient
-import no.nav.k9.los.domeneadaptere.k9.avstemming.saksbehandling.Behandlingstilstand
+import no.nav.k9.los.domeneadaptere.avstemming.k9.saksbehandling.Behandlingstilstand
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.TransientException
 import no.nav.k9.los.infrastruktur.rest.NavHeaders
 import no.nav.k9.los.infrastruktur.utils.LosObjectMapper

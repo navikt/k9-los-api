@@ -1,7 +1,7 @@
-package no.nav.k9.los.domeneadaptere.k9.avstemming
+package no.nav.k9.los.domeneadaptere.avstemming.k9
 
-import no.nav.k9.los.domeneadaptere.k9.avstemming.punsj.Journalposttilstand
-import no.nav.k9.los.domeneadaptere.k9.avstemming.saksbehandling.Behandlingstilstand
+import no.nav.k9.los.domeneadaptere.avstemming.k9.punsj.Journalposttilstand
+import no.nav.k9.los.domeneadaptere.avstemming.k9.saksbehandling.Behandlingstilstand
 
 sealed class Avstemmingsrapport {
     data class BehandlingRapport(

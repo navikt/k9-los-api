@@ -4,7 +4,7 @@ import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.channels.Channel
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.Områdesetup
-import no.nav.k9.los.domeneadaptere.k9.avstemming.AvstemmingsTjeneste
+import no.nav.k9.los.domeneadaptere.avstemming.k9.AvstemmingsTjeneste
 import no.nav.k9.los.domeneadaptere.eventmottak.FeilRekkefølgeSjekker
 import no.nav.k9.los.domeneadaptere.eventlager.EventRepository
 import no.nav.k9.los.domeneadaptere.eventmottak.k9.klage.K9KlageEventHandler

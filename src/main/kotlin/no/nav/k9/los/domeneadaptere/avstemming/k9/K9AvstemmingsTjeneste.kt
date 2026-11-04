@@ -1,14 +1,14 @@
-package no.nav.k9.los.domeneadaptere.k9.avstemming
+package no.nav.k9.los.domeneadaptere.avstemming.k9
 
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import no.nav.k9.los.ManglerFlerområde
+import no.nav.k9.los.domeneadaptere.avstemming.k9.punsj.PunsjAvstemmer
+import no.nav.k9.los.domeneadaptere.avstemming.k9.punsj.systemklient.PunsjAvstemmingsklient
+import no.nav.k9.los.domeneadaptere.avstemming.k9.saksbehandling.Behandlingstilstand
+import no.nav.k9.los.domeneadaptere.avstemming.k9.saksbehandling.SakAvstemmer
 import no.nav.k9.los.domeneadaptere.eventlager.Fagsystem
-import no.nav.k9.los.domeneadaptere.k9.avstemming.punsj.PunsjAvstemmer
-import no.nav.k9.los.domeneadaptere.k9.avstemming.punsj.systemklient.PunsjAvstemmingsklient
-import no.nav.k9.los.domeneadaptere.k9.avstemming.saksbehandling.Behandlingstilstand
-import no.nav.k9.los.domeneadaptere.k9.avstemming.saksbehandling.SakAvstemmer
-import no.nav.k9.los.domeneadaptere.k9.avstemming.saksbehandling.systemklient.SakAvstemmingsklient
+import no.nav.k9.los.domeneadaptere.avstemming.k9.saksbehandling.systemklient.SakAvstemmingsklient
 import no.nav.k9.los.infrastruktur.utils.IkkeImplementertException
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
@@ -18,6 +18,7 @@ import no.nav.k9.los.oppgaveuthenting.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.OppgaveQuery
 import no.nav.k9.los.oppgaveuthenting.query.mapping.EksternFeltverdiOperator
 import no.nav.k9.los.oppgaveuthenting.Oppgave
+import org.slf4j.LoggerFactory
 
 class AvstemmingsTjeneste(
     private val oppgaveQueryService: OppgaveQueryService,
@@ -25,7 +26,7 @@ class AvstemmingsTjeneste(
     private val k9KlageAvstemmingsklient: SakAvstemmingsklient,
     private val k9PunsjAvstemmingsklient: PunsjAvstemmingsklient,
 ) {
-    private val log = org.slf4j.LoggerFactory.getLogger(AvstemmingsTjeneste::class.java)
+    private val log = LoggerFactory.getLogger(AvstemmingsTjeneste::class.java)
 
     suspend fun avstem(fagsystem: Fagsystem) : Avstemmingsrapport {
         log.info("Starter avstemming for fagsystem: $fagsystem")

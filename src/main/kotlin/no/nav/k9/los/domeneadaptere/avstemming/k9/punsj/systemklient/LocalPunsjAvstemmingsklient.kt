@@ -1,6 +1,6 @@
-package no.nav.k9.los.domeneadaptere.k9.avstemming.punsj.systemklient
+package no.nav.k9.los.domeneadaptere.avstemming.k9.punsj.systemklient
 
-import no.nav.k9.los.domeneadaptere.k9.avstemming.punsj.Journalposttilstand
+import no.nav.k9.los.domeneadaptere.avstemming.k9.punsj.Journalposttilstand
 
 class LocalPunsjAvstemmingsklient : PunsjAvstemmingsklient {
     override fun hentUferdigeJournalposter(): List<Journalposttilstand> {

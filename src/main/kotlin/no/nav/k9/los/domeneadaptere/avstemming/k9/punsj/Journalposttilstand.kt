@@ -1,4 +1,4 @@
-package no.nav.k9.los.domeneadaptere.k9.avstemming.punsj
+package no.nav.k9.los.domeneadaptere.avstemming.k9.punsj
 
 import com.fasterxml.jackson.annotation.JsonAlias
 

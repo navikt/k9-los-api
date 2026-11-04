@@ -1,7 +1,7 @@
-package no.nav.k9.los.domeneadaptere.k9.avstemming.punsj
+package no.nav.k9.los.domeneadaptere.avstemming.k9.punsj
 
-import no.nav.k9.los.domeneadaptere.k9.avstemming.Avstemmingsrapport
-import no.nav.k9.los.domeneadaptere.k9.avstemming.Oppgavetilstand
+import no.nav.k9.los.domeneadaptere.avstemming.k9.Avstemmingsrapport
+import no.nav.k9.los.domeneadaptere.avstemming.k9.Oppgavetilstand
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.kodeverk.K9FagsakYtelseType
 import no.nav.k9.los.domeneadaptere.eventlager.Fagsystem
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
