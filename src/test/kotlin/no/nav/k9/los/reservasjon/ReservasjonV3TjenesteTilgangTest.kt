@@ -90,24 +90,37 @@ class ReservasjonV3TjenesteTilgangTest {
     }
 
     @Test
-    fun `reservasjon for annen saksbehandler på aktivitetspenger sjekker innlogget brukers tilgang`() {
-        coEvery { pepClient.harTilgangTilOppgaveV3(område, idToken, oppgave, Action.reserver) } returns true
+    fun `reservasjon for annen saksbehandler på aktivitetspenger sjekker mottakerens tilgang`() {
+        coEvery { pepClient.harTilgangTilOppgaveV3(område, oppgave, saksbehandler, Action.reserver) } returns true
 
         reserver(reserverForId = annenId, utføresAvId = innloggetId)
 
-        coVerify(exactly = 1) { pepClient.harTilgangTilOppgaveV3(område, idToken, oppgave, Action.reserver) }
-        coVerify(exactly = 0) { pepClient.harTilgangTilOppgaveV3(any(), any<Oppgave>(), any<Saksbehandler>(), any()) }
+        coVerify(exactly = 1) { pepClient.harTilgangTilOppgaveV3(område, oppgave, saksbehandler, Action.reserver) }
+        coVerify(exactly = 0) { pepClient.harTilgangTilOppgaveV3(any(), any<IIdToken>(), any(), any()) }
     }
 
     @Test
-    fun `reservasjon for andre på aktivitetspenger avvises når innlogget bruker mangler tilgang`() {
-        coEvery { pepClient.harTilgangTilOppgaveV3(område, idToken, oppgave, Action.reserver) } returns false
+    fun `reservasjon for andre på aktivitetspenger avvises når mottaker mangler tilgang selv om utfører har tilgang`() {
+        coEvery { pepClient.harTilgangTilOppgaveV3(område, idToken, oppgave, Action.reserver) } returns true
+        coEvery { pepClient.harTilgangTilOppgaveV3(område, oppgave, saksbehandler, Action.reserver) } returns false
 
         assertFailsWith<ManglerTilgangException> {
             reserver(reserverForId = annenId, utføresAvId = innloggetId)
         }
 
         io.mockk.verify(exactly = 0) { reservasjonV3Repository.lagreReservasjon(any(), any(), any()) }
-        coVerify(exactly = 0) { pepClient.harTilgangTilOppgaveV3(any(), any<Oppgave>(), any<Saksbehandler>(), any()) }
+        coVerify(exactly = 1) { pepClient.harTilgangTilOppgaveV3(område, oppgave, saksbehandler, Action.reserver) }
+        coVerify(exactly = 0) { pepClient.harTilgangTilOppgaveV3(any(), any<IIdToken>(), any(), any()) }
+    }
+
+    @Test
+    fun `feil i mottakers tilgangssjekk lagrer ingen reservasjon`() {
+        coEvery { pepClient.harTilgangTilOppgaveV3(område, oppgave, saksbehandler, Action.reserver) } throws IllegalStateException("PDP utilgjengelig")
+
+        assertFailsWith<IllegalStateException> {
+            reserver(reserverForId = annenId, utføresAvId = innloggetId)
+        }
+
+        io.mockk.verify(exactly = 0) { reservasjonV3Repository.lagreReservasjon(any(), any(), any()) }
     }
 }

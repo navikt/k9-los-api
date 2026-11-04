@@ -305,9 +305,7 @@ class ReservasjonV3Tjeneste(
         utføresAvId: Long,
     ): Boolean {
         val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedId(brukerIdSomSkalHaReservasjon)!!
-        // Aktivitetspenger bruker innlogget brukers tilgang også ved reservasjon for andre.
-        // K9 sjekker mottakerens tilgang når reservasjonen tas på vegne av andre.
-        val idTokenInnloggetBruker = if (brukerIdSomSkalHaReservasjon == utføresAvId || område == Områder.AKTIVITETSPENGER) {
+        val idTokenInnloggetBruker = if (brukerIdSomSkalHaReservasjon == utføresAvId) {
             coroutineContext.idToken()
         } else null
 
