@@ -3,6 +3,7 @@ package no.nav.k9.los.reservasjon
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import no.nav.k9.los.AbstractK9LosIntegrationTest
+import no.nav.k9.los.OppgaveTestDataBuilder
 import no.nav.k9.los.feilhandtering.FinnerIkkeDataException
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.oppgavedefinisjon.omraade.OmrådeRepository
@@ -54,6 +55,8 @@ class ReservasjonV3TjenesteTest : AbstractK9LosIntegrationTest() {
 
     @Test
     fun `ta reservasjon`() = runTest {
+        val oppgaveBuilder = OppgaveTestDataBuilder()
+        oppgaveBuilder.lagre(oppgaveBuilder.lag(reservasjonsnøkkel = "test1"))
         val transactionalManager = get<TransactionalManager>()
         val reservasjonV3Tjeneste = get<ReservasjonV3Tjeneste>()
 
@@ -86,6 +89,8 @@ class ReservasjonV3TjenesteTest : AbstractK9LosIntegrationTest() {
 
     @Test
     fun `annullerReservasjon`() = runTest {
+        val oppgaveBuilder = OppgaveTestDataBuilder()
+        oppgaveBuilder.lagre(oppgaveBuilder.lag(reservasjonsnøkkel = "test1"))
         val transactionalManager = get<TransactionalManager>()
         val reservasjonV3Tjeneste = get<ReservasjonV3Tjeneste>()
 
