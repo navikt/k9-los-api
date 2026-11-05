@@ -1,9 +1,9 @@
 package no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.kodeverk
 
 enum class AktBehandlendeEnhet(val kode: String, val navn: String) {
-    STYRINGSENHET("4416", "NAV Arbeid og ytelser Trondheim"),
-    FALKENBORG("5701", "NAV Arbeids- og tjenestelinjen Falkenborg"),
-    LERKENDAL("5702", "NAV Arbeids- og tjenestelinjen Lerkendal"),
+    STYRINGSENHET("4416", "Nav Arbeid og Ytelser Trondheim"),
+    FALKENBORG("5701", "Nav Falkenborg"),
+    LERKENDAL("5702", "Nav Lerkendal"),
     YTELSESAVDELINGEN("2830", "Ytelsesavdelingen"),
     UKJENT("UKJENT", "Ukjent");
 
