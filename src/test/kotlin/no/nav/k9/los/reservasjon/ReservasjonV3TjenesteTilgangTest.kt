@@ -1,12 +1,15 @@
 package no.nav.k9.los.reservasjon
 
+import io.mockk.Called
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
 import kotliquery.TransactionalSession
+import no.nav.k9.los.feilhandtering.FinnerIkkeDataException
 import no.nav.k9.los.infrastruktur.abac.Action
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.idtoken.IIdToken
@@ -67,6 +70,23 @@ class ReservasjonV3TjenesteTilgangTest {
                 tx = tx,
             )
         }
+
+    @Test
+    fun `reservasjonsnøkkel uten åpne oppgaver avvises for seg selv og andre i begge områder`() {
+        every { oppslag.hentÅpneOppgaverForReservasjonsnøkkel(any(), nøkkel, tx) } returns emptyList()
+
+        for (område in listOf(Områder.K9, Områder.AKTIVITETSPENGER)) {
+            for (mottakerId in listOf(innloggetId, annenId)) {
+                assertFailsWith<FinnerIkkeDataException> {
+                    reserver(reserverForId = mottakerId, utføresAvId = innloggetId, område = område)
+                }
+            }
+        }
+
+        verify { reservasjonV3Repository wasNot Called }
+        verify { saksbehandlerRepository wasNot Called }
+        coVerify { pepClient wasNot Called }
+    }
 
     @Test
     fun `reservasjon for seg selv sjekker tilgang med innlogget brukers token`() {

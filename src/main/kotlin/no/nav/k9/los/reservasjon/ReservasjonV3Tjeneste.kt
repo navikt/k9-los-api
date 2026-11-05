@@ -124,6 +124,9 @@ class ReservasjonV3Tjeneste(
         //sjekke tilgang på alle oppgaver tilknyttet nøkkel
         val oppgaverForReservasjonsnøkkel =
             reservasjonsnøkkelOppgaveOppslag.hentÅpneOppgaverForReservasjonsnøkkel(område, reservasjonsnøkkel, tx)
+        if (oppgaverForReservasjonsnøkkel.isEmpty()) {
+            throw FinnerIkkeDataException("Fant ingen ikke-lukkede oppgaver for reservasjonsnøkkel $reservasjonsnøkkel")
+        }
         if (!sjekkTilganger(område, oppgaverForReservasjonsnøkkel, reserverForId, utføresAvId)) {
             val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedId(reserverForId)!!
             throw ManglerTilgangException("Saksbehandler ${saksbehandler.navn} mangler tilgang til å reservere nøkkel $reservasjonsnøkkel")
@@ -305,6 +308,7 @@ class ReservasjonV3Tjeneste(
         utføresAvId: Long,
     ): Boolean {
         val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedId(brukerIdSomSkalHaReservasjon)!!
+        // Ved tildeling til andre sjekkes bare mottakerens oppgavetilgang, ikke utførerens.
         val idTokenInnloggetBruker = if (brukerIdSomSkalHaReservasjon == utføresAvId) {
             coroutineContext.idToken()
         } else null
