@@ -99,7 +99,16 @@ class PartisjonertOppgaveQuerySqlBuilder(
 
     private var whereClause = "WHERE o.omrade_ekstern_id = :omrade AND o.oppgavestatus IN ($oppgavestatusPlaceholder) ${ferdigstiltDatoBetingelse("o")}"
     private val orderByClauses = mutableListOf<String>()
-    private val orderByClause get() = if (orderByClauses.isNotEmpty()) "ORDER BY " + orderByClauses.joinToString(", ") else ""
+    private val orderByClause get(): String {
+        val sortering = if (pagingClause.isNotBlank() && aggregerteFelter.isEmpty() && grupperingsFelter.isEmpty()) {
+            // Oppgave-ID gir entydig rekkefølge også ved like sorteringsverdier eller uten egen sortering,
+            // slik at offset-paginering ikke gjentar eller hopper over oppgaver når køen er uendret.
+            orderByClauses + "o.id ASC"
+        } else {
+            orderByClauses
+        }
+        return if (sortering.isNotEmpty()) "ORDER BY " + sortering.joinToString(", ") else ""
+    }
     private var groupByClause = ""
     private var pagingClause = ""
     private val grupperingsAlias = mutableMapOf<OmrådeOgKode, String>()

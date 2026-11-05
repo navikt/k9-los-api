@@ -103,6 +103,44 @@ class PartisjonertOppgaveQuerySqlBuilderTest {
         val sql = builder.getQuery()
 
         assertTrue(sql.contains("LIMIT 10 OFFSET 20"), "SQL burde inneholde korrekt paging")
+        assertTrue(sql.contains("ORDER BY o.id ASC LIMIT 10 OFFSET 20"), "Paginering uten egen sortering skal sortere på oppgave-ID")
+    }
+
+    @Test
+    fun `paginering bruker oppgave-ID etter eksisterende sortering`() {
+        val builder = PartisjonertOppgaveQuerySqlBuilder(
+            område = Områder.K9,
+            felter = mockFelter,
+            oppgavestatusFilter = listOf(Oppgavestatus.AAPEN),
+            now = LocalDateTime.now(),
+            ferdigstiltDatoFilter = null
+        )
+
+        builder.medPaging(10, 20)
+        builder.medEnkelOrder(Områder.K9, "testfelt", false)
+
+        val sql = builder.getQuery()
+
+        assertTrue(sql.contains("DESC, o.id ASC LIMIT 10 OFFSET 20"), "Oppgave-ID skal avgjøre rekkefølgen ved like sorteringsverdier")
+    }
+
+    @Test
+    fun `paginert aggregering legger ikke oppgave-ID til sorteringen`() {
+        val builder = PartisjonertOppgaveQuerySqlBuilder(
+            område = Områder.K9,
+            felter = mockFelter,
+            oppgavestatusFilter = listOf(Oppgavestatus.AAPEN),
+            now = LocalDateTime.now(),
+            ferdigstiltDatoFilter = null
+        )
+
+        builder.medPaging(10, 20)
+        builder.medAggregering(emptyList(), listOf(AggregertSelectFelt(Aggregeringsfunksjon.ANTALL)))
+
+        val sql = builder.getQuery()
+
+        assertTrue(sql.contains("COUNT(*)"))
+        assertTrue(!sql.contains("ORDER BY o.id"), "Aggregering skal ikke sortere på en ugruppert oppgave-ID")
     }
     
     @Test

@@ -71,6 +71,55 @@ internal fun Route.ReservasjonApisNy() {
         }
     }
 
+    post("/reserver-for-saksbehandler", {
+        operationId = "reserverOppgaveForSaksbehandler"
+        summary = "Reserver oppgave for en saksbehandler, annen enn seg selv"
+        request {
+            body<ReserverForSaksbehandlerDto> { description = "Oppgaven og navidenten til saksbehandleren" }
+        }
+        response {
+            HttpStatusCode.OK to { description = "Oppgaven er reservert for saksbehandleren" }
+            HttpStatusCode.BadRequest to { description = "Oppgavenøkkel og navident må være utfylt" }
+            HttpStatusCode.Forbidden to { description = "Brukeren eller mottakeren mangler tilgang til reservering" }
+            HttpStatusCode.NotFound to { description = "Fant ikke oppgaven eller saksbehandler i samme kode6 og område" }
+            HttpStatusCode.Conflict to { description = "Oppgaven er allerede reservert av en annen saksbehandler" }
+        }
+    }) {
+        requestContextService.withRequestContext(call) {
+            if (pepClient.harTilgangTilReserveringAvOppgaver()) {
+                val params = call.receive<ReserverForSaksbehandlerDto>()
+                if (params.navident.isBlank() || params.oppgaveNøkkel.oppgaveEksternId.isBlank() ||
+                    params.oppgaveNøkkel.oppgaveTypeEksternId.isBlank()
+                ) {
+                    call.respond(HttpStatusCode.BadRequest)
+                    return@withRequestContext
+                }
+
+                val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedIdent(
+                    coroutineContext.idToken().getNavIdent(),
+                    pepClient.harTilgangTilKode6()
+                ) ?: throw IllegalStateException("Fant ikke innlogget saksbehandler ved reservering for en annen saksbehandler")
+
+                try {
+                    reservasjonApisTjeneste.reserverOppgaveForSaksbehandler(
+                        område = coroutineContext.område(),
+                        params = params,
+                        innloggetBruker = innloggetBruker
+                    )
+                    call.respond(HttpStatusCode.OK)
+                } catch (e: ManglerTilgangException) {
+                    call.respond(HttpStatusCode.Forbidden)
+                } catch (e: FinnerIkkeDataException) {
+                    call.respond(HttpStatusCode.NotFound)
+                } catch (e: AlleredeReservertException) {
+                    call.respond(HttpStatusCode.Conflict)
+                }
+            } else {
+                call.respond(HttpStatusCode.Forbidden)
+            }
+        }
+    }
+
     get("/reserverte", {
         operationId = "hentReserverteOppgaver"
         summary = "Hent reserverte oppgaver"
@@ -280,7 +329,7 @@ internal fun Route.ReservasjonApisNy() {
                 val saksbehandlerDtoListe =
                     alleSaksbehandlere.filter { saksbehandler -> !saksbehandler.navn.isNullOrBlank() && !saksbehandler.navident.isNullOrBlank() }
                         .map { saksbehandler ->
-                            SaksbehandlerPåReservasjonDto(saksbehandler.navident!!, saksbehandler.navn!!)
+                            SaksbehandlerPåReservasjonDto(saksbehandler.navident!!, saksbehandler.navn!!, saksbehandler.enhet)
                         }
                 call.respond(saksbehandlerDtoListe)
             } else {

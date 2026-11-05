@@ -1,6 +1,7 @@
 package no.nav.k9.los.reservasjon
 
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.kodeverk.K9FagsakYtelseType
+import no.nav.k9.los.feilhandtering.FinnerIkkeDataException
 import no.nav.k9.los.infrastruktur.abac.Action
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
@@ -68,6 +69,39 @@ class ReservasjonApisTjeneste(
         }
 
         return OppgaveStatusDto(reservasjonV3, reserverForSaksbehandler)
+    }
+
+    suspend fun reserverOppgaveForSaksbehandler(
+        område: Områder,
+        params: ReserverForSaksbehandlerDto,
+        innloggetBruker: Saksbehandler,
+    ) {
+        val mottaker = saksbehandlerRepository.finnSaksbehandlerMedIdent(params.navident, innloggetBruker.skjermet)
+            ?.takeIf { område in it.områder }
+            ?: throw FinnerIkkeDataException("Fant ikke mottaker i samme kode6-leir og område")
+        val oppgave = aktivOppgaveOppslag.hentAktivOppgaveHvisFinnes(
+            område,
+            params.oppgaveNøkkel.oppgaveEksternId,
+            params.oppgaveNøkkel.oppgaveTypeEksternId,
+        ) ?: throw FinnerIkkeDataException("Fant ikke oppgaven i angitt område")
+        val reserverFra = LocalDateTime.now()
+
+        try {
+            reservasjonV3Tjeneste.taReservasjon(
+                område = område,
+                reservasjonsnøkkel = oppgave.reservasjonsnøkkel,
+                reserverForId = mottaker.id,
+                utføresAvId = innloggetBruker.id,
+                gyldigFra = reserverFra,
+                gyldigTil = reserverFra.leggTilDagerHoppOverHelg(2),
+                kommentar = null,
+            )
+        } catch (e: AlleredeReservertException) {
+            val aktivReservasjon = reservasjonV3Tjeneste.finnAktivReservasjon(område, oppgave.reservasjonsnøkkel)
+            if (aktivReservasjon?.reservertAv != mottaker.id) {
+                throw e
+            }
+        }
     }
 
     fun endreReservasjoner(

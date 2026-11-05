@@ -7,6 +7,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.infrastruktur.abac.Action
@@ -41,7 +42,12 @@ import java.time.LocalDateTime
 class OppgaveKoTjenesteTest {
 
     @Test
-    fun `hentOppgaverFraKøSammendrag bruker felles builder etter pep-filtrering`() = runBlocking {
+    fun `hentOppgaverFraKøSammendrag bruker paginering og felles builder etter pep-filtrering`() = runBlocking {
+        verifiserSammendragMedPaginering(limit = 10, offset = 0)
+        verifiserSammendragMedPaginering(limit = 100, offset = 25)
+    }
+
+    private suspend fun verifiserSammendragMedPaginering(limit: Long, offset: Long) {
         val oppgaveKoRepository = mockk<OppgaveKoRepository>()
         val oppgaveQueryService = mockk<OppgaveQueryService>()
         val pepClient = mockk<IPepClient>()
@@ -92,9 +98,14 @@ class OppgaveKoTjenesteTest {
             oppgaveSammendragDtoBuilder = builder,
         )
 
-        val resultat = tjeneste.hentOppgaverFraKøSammendrag(Områder.K9, false, IdTokenLocal(), 1L, 10L, true)
+        val resultat = tjeneste.hentOppgaverFraKøSammendrag(Områder.K9, false, IdTokenLocal(), 1L, limit, true, offset)
 
         assertThat(resultat).containsExactly(sammendrag)
+        verify(exactly = 1) {
+            oppgaveQueryService.queryForOppgave(
+                QueryRequest(Områder.K9, kø.oppgaveQuery, true, Avgrensning(limit, offset))
+            )
+        }
         coVerify(exactly = 1) { builder.bygg(listOf(oppgave), emptyMap()) }
     }
 
