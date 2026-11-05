@@ -126,6 +126,22 @@ internal class SifAbacPdpKlientHentTilgangerTest {
     }
 
     @Test
+    fun `ruter tilgangssjekk for andre saksbehandlere til aktivitetspenger`() = runTest {
+        val aktører = listOf(AktørId("1234567890123"))
+        val saksnummer = SaksnummerDto("123456789")
+        val grupper = setOf(UUID.fromString("00000000-0000-0000-0000-000000000001"))
+        coEvery { aktivitetspenger.harTilgangTilSak(Action.reserver, saksnummer, "Z123456", grupper) } returns true
+        coEvery { aktivitetspenger.harTilgangTilPersoner(Action.read, aktører, "Z123456", grupper) } returns false
+
+        klient.harTilgangTilSak(Områder.AKTIVITETSPENGER, Action.reserver, saksnummer, "Z123456", grupper) shouldBe true
+        klient.harTilgangTilPersoner(Områder.AKTIVITETSPENGER, Action.read, aktører, "Z123456", grupper) shouldBe false
+
+        coVerify(exactly = 1) { aktivitetspenger.harTilgangTilSak(Action.reserver, saksnummer, "Z123456", grupper) }
+        coVerify(exactly = 1) { aktivitetspenger.harTilgangTilPersoner(Action.read, aktører, "Z123456", grupper) }
+        coVerify { listOf(k9, ung) wasNot Called }
+    }
+
+    @Test
     fun `ruter diskresjonskoder for ungdomsprogramytelsen til UNG-klienten`() = runTest {
         val aktørId = AktørId("1234567890123")
         val saksnummer = SaksnummerDto("123456789")

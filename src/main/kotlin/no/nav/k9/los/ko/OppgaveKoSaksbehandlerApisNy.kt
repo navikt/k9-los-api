@@ -61,12 +61,21 @@ fun Route.OppgaveKoSaksbehandlerApisNy() {
             pathParameter<Long>("id") {
                 required = true
             }
+            queryParameter<Long>("limit") {
+                description = "Maksimalt antall oppgaver. Standard er 10. Må være mellom 1 og 100."
+                required = false
+            }
+            queryParameter<Long>("offset") {
+                description = "Antall oppgaver som hoppes over før tilgangsfiltrering. Standard er 0. Må være 0 eller større."
+                required = false
+            }
         }
         response {
             HttpStatusCode.OK to {
-                description = "Inntil ti tilgjengelige oppgaver fra oppgavekøen"
+                description = "Inntil 'limit' (default 10) tilgjengelige oppgaver fra oppgavekøen"
                 body<List<OppgaveSammendragDto>>()
             }
+            HttpStatusCode.BadRequest to { description = "Ugyldig limit eller offset" }
             HttpStatusCode.Forbidden to { description = "Innlogget bruker mangler basistilgang" }
             HttpStatusCode.NotFound to { description = "Oppgavekøen finnes ikke for gjeldende område og skjerming" }
         }
@@ -74,14 +83,25 @@ fun Route.OppgaveKoSaksbehandlerApisNy() {
         requestContextService.withRequestContext(call) {
             if (pepClient.harBasisTilgang()) {
                 val oppgavekøId = call.parameters["id"]!!
+                val limit = call.request.queryParameters["limit"].let { if (it == null) 10L else it.toLongOrNull() }
+                val offset = call.request.queryParameters["offset"].let { if (it == null) 0L else it.toLongOrNull() }
+                if (limit == null || limit !in 1L..100L) {
+                    call.respond(HttpStatusCode.BadRequest, "limit må være et heltall mellom 1 og 100")
+                    return@withRequestContext
+                }
+                if (offset == null || offset < 0) {
+                    call.respond(HttpStatusCode.BadRequest, "offset må være et heltall som er 0 eller større")
+                    return@withRequestContext
+                }
                 call.respond(
                     oppgaveKoTjeneste.hentOppgaverFraKøSammendrag(
                         coroutineContext.område(),
                         pepClient.harTilgangTilKode6(),
                         coroutineContext.idToken(),
                         oppgavekøId.toLong(),
-                        10,
-                        fjernReserverte = true
+                        limit = limit,
+                        fjernReserverte = true,
+                        offset = offset,
                     )
                 )
             } else {
