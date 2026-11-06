@@ -13,15 +13,16 @@ import no.nav.k9.los.infrastruktur.abac.tilganger.InnloggetAnsattUngV2Dto
 import no.nav.k9.los.infrastruktur.abac.tilganger.Tilganger
 import no.nav.k9.los.infrastruktur.idtoken.IIdToken
 import no.nav.k9.los.infrastruktur.rest.NavHeaders
-import no.nav.k9.los.infrastruktur.utils.IkkeImplementertException
 import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
 import no.nav.sif.abac.kontrakt.abac.BeskyttetRessursActionAttributt
 import no.nav.sif.abac.kontrakt.abac.Diskresjonskode
 import no.nav.sif.abac.kontrakt.abac.ResourceType
 import no.nav.sif.abac.kontrakt.abac.dto.OperasjonDto
 import no.nav.sif.abac.kontrakt.abac.dto.PersonerOperasjonDto
+import no.nav.sif.abac.kontrakt.abac.dto.PersonerOperasjonGrupperDto
 import no.nav.sif.abac.kontrakt.abac.dto.SaksnummerDto
 import no.nav.sif.abac.kontrakt.abac.dto.SaksnummerOperasjonDto
+import no.nav.sif.abac.kontrakt.abac.dto.SaksnummerOperasjonGrupperDto
 import no.nav.sif.abac.kontrakt.abac.resultat.Tilgangsbeslutning
 import no.nav.sif.abac.kontrakt.abac.resultat.TilgangsbeslutningOgSporingshint
 import no.nav.sif.abac.kontrakt.person.AktørId
@@ -77,7 +78,6 @@ class SifAbacPdpKlientAktivitetspenger(
             Action.read -> BeskyttetRessursActionAttributt.READ
             Action.create -> BeskyttetRessursActionAttributt.CREATE
             Action.update -> BeskyttetRessursActionAttributt.UPDATE
-            // Serveren avviser RESERVER inntil støtte er implementert. Ingen lokal erstatningspolicy.
             Action.reserver -> BeskyttetRessursActionAttributt.RESERVER
         },
         emptySet(),
@@ -116,7 +116,14 @@ class SifAbacPdpKlientAktivitetspenger(
         saksbehandlersIdent: String,
         saksbehandlersGrupper: Set<UUID>
     ): Boolean {
-        throw IkkeImplementertException("Ikke støttet for aktivitetspenger i sif-abac-pdp")
+        require(saksbehandlersIdent.matches(Regex("^[A-ZÆØÅ][0-9]{6}$"))) { "Saksbehandlers ident passer ikke med validering" }
+        require(saksnummerDto.saksnummer.isNotBlank()) { "Mangler saksnummer" }
+        return LosObjectMapper.instance.readValue<Tilgangsbeslutning>(
+            kall(
+                "tilgangskontroll-sak-grupper", "/api/tilgangskontroll/v2/aktivitetspenger/sak-grupper",
+                SaksnummerOperasjonGrupperDto(saksbehandlersIdent, saksbehandlersGrupper.toList(), saksnummerDto, operasjon(action)),
+            )
+        ).harTilgang()
     }
 
     override suspend fun harTilgangTilPersoner(
@@ -125,6 +132,13 @@ class SifAbacPdpKlientAktivitetspenger(
         saksbehandlersIdent: String,
         saksbehandlersGrupper: Set<UUID>
     ): Boolean {
-        throw IkkeImplementertException("Ikke støttet for aktivitetspenger i sif-abac-pdp")
+        require(saksbehandlersIdent.matches(Regex("^[A-ZÆØÅ][0-9]{6}$"))) { "Saksbehandlers ident passer ikke med validering" }
+        require(aktørIder.isNotEmpty()) { "Må ha minst én aktørId for å sjekke tilgang til personer" }
+        return LosObjectMapper.instance.readValue<Tilgangsbeslutning>(
+            kall(
+                "tilgangskontroll-personer-grupper", "/api/tilgangskontroll/v2/aktivitetspenger/personer-grupper",
+                PersonerOperasjonGrupperDto(saksbehandlersIdent, saksbehandlersGrupper.toList(), aktørIder, emptyList(), operasjon(action)),
+            )
+        ).harTilgang()
     }
 }

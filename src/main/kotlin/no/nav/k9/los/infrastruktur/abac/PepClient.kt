@@ -3,13 +3,14 @@ package no.nav.k9.los.infrastruktur.abac
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.oppgavedefinisjon.AktivitetspengerFelter
 import no.nav.k9.los.infrastruktur.abac.tilganger.Tilganger
 import no.nav.k9.los.infrastruktur.azuregraph.IAzureGraphService
 import no.nav.k9.los.infrastruktur.idtoken.IIdToken
 import no.nav.k9.los.infrastruktur.rest.idToken
 import no.nav.k9.los.infrastruktur.rest.område
-import no.nav.k9.los.infrastruktur.utils.IkkeImplementertException
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
+import no.nav.k9.los.oppgavedefinisjon.typesikker.hent
 import no.nav.k9.los.oppgaveuthenting.Oppgave
 import no.nav.k9.los.saksbehandleradmin.Saksbehandler
 import no.nav.sif.abac.kontrakt.abac.Diskresjonskode
@@ -176,9 +177,14 @@ class PepClient(
             }
 
             Områder.AKTIVITETSPENGER -> {
-                val exception = IkkeImplementertException("Kan ikke tilgangssjekke for andre saksbehandlere på aktivitetspenger")
-                log.warn("Forsøker å gjøre tilgangssjekk for andre saksbehandlere, men aktivitetspenger er ikke støttet", exception)
-                throw exception
+                val saksnummer = oppgave.hent(AktivitetspengerFelter.Sak.SAKSNUMMER)
+                return !saksnummer.isNullOrBlank() && sifAbacPdpKlient.harTilgangTilSak(
+                    område,
+                    action,
+                    SaksnummerDto(saksnummer),
+                    ident,
+                    azureGraphService.hentGrupperForSaksbehandler(ident)
+                )
             }
 
             Områder.UNGDOMSPROGRAMYTELSEN -> {
