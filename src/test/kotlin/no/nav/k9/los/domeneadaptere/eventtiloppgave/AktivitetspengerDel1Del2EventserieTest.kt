@@ -11,10 +11,10 @@ import no.nav.k9.los.domeneadaptere.eventlager.EventNøkkel
 import no.nav.k9.los.domeneadaptere.eventlager.EventRepository
 import no.nav.k9.los.domeneadaptere.eventlager.Fagsystem
 import no.nav.k9.los.domeneadaptere.eventmottak.ung.sak.UngSakEventDto
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.kodeverk.AktOppgavetypenavn
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.Områdesetup as AktOmrådesetup
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.upy.Områdesetup as UpyOmrådesetup
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.upy.kodeverk.UpyOppgavetypenavn
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.kodeverk.AktOppgavetypenavn
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.Områdesetup as AktOmrådesetup
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.ung.Områdesetup as UpyOmrådesetup
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.ung.kodeverk.UpyOppgavetypenavn
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus

@@ -19,9 +19,9 @@ import no.nav.k9.los.domeneadaptere.eventmottak.kafka.KafkaConsumerLifecycleServ
 import no.nav.k9.los.domeneadaptere.eventmottak.ung.sak.UngSakEventHandler
 import no.nav.k9.los.domeneadaptere.eventmottak.ung.tilbake.UngTilbakeEventHandler
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.*
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.Områdesetup as AktOmrådesetup
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.Områdesetup as AktOmrådesetup
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.Områdesetup as K9Områdesetup
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.upy.Områdesetup as UpyOmrådesetup
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.ung.Områdesetup as UpyOmrådesetup
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.klagetillos.beriker.K9KlageBerikerInterfaceKludge
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.klagetillos.beriker.K9KlageBerikerKlientLocal
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.klagetillos.beriker.K9KlageBerikerSystemKlient
@@ -40,9 +40,10 @@ import no.nav.k9.los.domeneadaptere.k9.refreshk9sakoppgaver.restklient.K9SakServ
 import no.nav.k9.los.domeneadaptere.k9.refreshk9sakoppgaver.restklient.K9SakServiceSystemClient
 import no.nav.k9.los.domeneadaptere.statistikk.k9.K9KlageOppgaveTilDVHMapper
 import no.nav.k9.los.domeneadaptere.statistikk.k9.K9SakOppgaveTilDVHMapper
-import no.nav.k9.los.domeneadaptere.statistikk.k9.OppgavestatistikkTjeneste
+import no.nav.k9.los.domeneadaptere.statistikk.avp.AvpStatistikkPublisher
+import no.nav.k9.los.domeneadaptere.statistikk.OppgavestatistikkTjeneste
 import no.nav.k9.los.domeneadaptere.statistikk.k9.StatistikkPublisher
-import no.nav.k9.los.domeneadaptere.statistikk.k9.StatistikkRepository
+import no.nav.k9.los.domeneadaptere.statistikk.StatistikkRepository
 import no.nav.k9.los.driftsmelding.DriftsmeldingRepository
 import no.nav.k9.los.driftsmelding.DriftsmeldingTjeneste
 import no.nav.k9.los.forvaltning.ForvaltningRepository
@@ -316,9 +317,17 @@ fun common(app: Application, config: Configuration) = module {
     single {
         OppgavestatistikkTjeneste(
             statistikkPublisher = get(),
+            avpStatistikkPublisher = get(),
             transactionalManager = get(),
             statistikkRepository = get(),
             pepCacheRepository = get(),
+        )
+    }
+
+    single {
+        AvpStatistikkPublisher(
+            kafkaConfig = config.getProfileAwareKafkaAivenConfig(),
+            config = config
         )
     }
 

@@ -45,8 +45,8 @@ import no.nav.k9.los.domeneadaptere.eventtiloppgave.EventTilOppgaveAdapter
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.HistorikkvaskTjeneste
 import no.nav.k9.los.domeneadaptere.k9.refreshk9sakoppgaver.K9sakBehandlingsoppfriskingJobb
 import no.nav.k9.los.domeneadaptere.k9.refreshk9sakoppgaver.RefreshK9v3
-import no.nav.k9.los.domeneadaptere.statistikk.k9.OppgavestatistikkTjeneste
-import no.nav.k9.los.domeneadaptere.statistikk.k9.StatistikkApi
+import no.nav.k9.los.domeneadaptere.statistikk.OppgavestatistikkTjeneste
+import no.nav.k9.los.domeneadaptere.statistikk.StatistikkApi
 import no.nav.k9.los.driftsmelding.DriftsmeldingerApis
 import no.nav.k9.los.driftsmelding.DriftsmeldingerApisNy
 import no.nav.k9.los.forvaltning.K9ForvaltningApis
@@ -102,9 +102,9 @@ import java.time.Duration
 import java.util.*
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.Områdesetup as AktOmrådesetup
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.Områdesetup as AktOmrådesetup
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.Områdesetup as K9Områdesetup
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.upy.Områdesetup as UpyOmrådesetup
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.ung.Områdesetup as UpyOmrådesetup
 
 fun main(args: Array<String>): Unit = EngineMain.main(args)
 
@@ -176,6 +176,7 @@ fun Application.k9Los() {
 
     OppgavestatistikkTjeneste(
         statistikkPublisher = koin.get(),
+        avpStatistikkPublisher = koin.get(),
         transactionalManager = koin.get(),
         statistikkRepository = koin.get(),
         pepCacheRepository = koin.get(),

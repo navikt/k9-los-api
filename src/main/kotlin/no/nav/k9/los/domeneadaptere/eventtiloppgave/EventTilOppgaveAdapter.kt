@@ -8,7 +8,7 @@ import no.nav.k9.los.domeneadaptere.eventlager.EventNøkkel
 import no.nav.k9.los.domeneadaptere.eventlager.EventRepository
 import no.nav.k9.los.domeneadaptere.eventlager.Oppgavetype
 import no.nav.k9.los.domeneadaptere.eventmottak.FeilRekkefølgeSjekker
-import no.nav.k9.los.domeneadaptere.statistikk.k9.StatistikkRepository
+import no.nav.k9.los.domeneadaptere.statistikk.StatistikkRepository
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.oppgavemottak.AktivOgPartisjonertOppgaveAjourholdTjeneste
 import no.nav.k9.los.oppgavemottak.OppgaveV3
@@ -102,6 +102,7 @@ class EventTilOppgaveAdapter(
                 // Kun i normalflyt: ny versjon er usendt til DVH inntil kvittert.
                 // Historikkvask skal ikke trigge resend-semantikk for allerede sendte versjoner.
                 statistikkRepository.bestillDvhSending(
+                    område = oppgave.område,
                     eksternId = oppgave.eksternId,
                     eksternVersjon = oppgave.eksternVersjon,
                     oppgavetypeEksternId = oppgave.oppgavetype.eksternId,

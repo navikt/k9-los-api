@@ -14,7 +14,7 @@ import no.nav.k9.los.domeneadaptere.eventlager.EventRepository
 import no.nav.k9.los.domeneadaptere.eventlager.Fagsystem
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.kodeverk.K9Oppgavetypenavn
 import no.nav.k9.los.domeneadaptere.avstemming.k9.AvstemmingsTjeneste
-import no.nav.k9.los.domeneadaptere.statistikk.k9.StatistikkRepository
+import no.nav.k9.los.domeneadaptere.statistikk.StatistikkRepository
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.infrastruktur.rest.RequestContextService

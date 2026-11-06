@@ -7,7 +7,7 @@ import no.nav.k9.los.domeneadaptere.eventlager.Fagsystem
 import no.nav.k9.los.domeneadaptere.eventmottak.ung.sak.UngSakEventDto
 import no.nav.k9.los.domeneadaptere.eventmottak.ung.sak.UngSakEventHandler
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.EventTilOppgaveAdapter
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.kodeverk.AktBehandlendeEnhet
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.kodeverk.AktBehandlendeEnhet
 import no.nav.k9.los.infrastruktur.idtoken.IdTokenLocal
 import no.nav.k9.los.infrastruktur.rest.CoroutineRequestContext
 import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
@@ -32,7 +32,7 @@ import org.koin.test.get
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.Områdesetup as AktOmrådesetup
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.Områdesetup as AktOmrådesetup
 import no.nav.ung.kodeverk.Fagsystem as UngFagsystem
 
 class ReservasjonApisTjenesteAktivitetspengerTest : AbstractK9LosIntegrationTest() {

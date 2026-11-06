@@ -1,7 +1,6 @@
 package no.nav.k9.los.domeneadaptere.statistikk.k9
 
 import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.annotation.JsonProperty
 import no.nav.k9.statistikk.kontrakter.JsonSchemas
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -9,109 +8,40 @@ import java.time.OffsetDateTime
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 data class Behandling(
-    @JsonProperty("sakId")
     val sakId: String? = null,
-
-    @JsonProperty("behandlingId")
     val behandlingId: String,
-
-    @JsonProperty("funksjonellTid")
     val funksjonellTid: OffsetDateTime? = null,
-
-    @JsonProperty("tekniskTid")
     val tekniskTid: OffsetDateTime? = null,
-
-    @JsonProperty("mottattDato")
     val mottattDato: LocalDate? = null,
-
-    @JsonProperty("registrertDato")
     val registrertDato: LocalDate? = null,
-
-    @JsonProperty("vedtaksDato")
     val vedtaksDato: LocalDate? = null,
-
-    @JsonProperty("relatertBehandlingId")
     val relatertBehandlingId: String? = null,
-
-    @JsonProperty("relatertBehandlingFagsystem")
     val relatertBehandlingFagsystem: String? = null,
-
-    @JsonProperty("vedtakId")
     val vedtakId: String? = null,
-
-    @JsonProperty("saksnummer")
     val saksnummer: String? = null,
-
-    @JsonProperty("behandlingType")
     val behandlingType: String? = null,
-
-    @JsonProperty("behandlingStatus")
     val behandlingStatus: String? = null,
-
-    @JsonProperty("resultat")
     val resultat: String? = null,
-
-    @JsonProperty("resultatBegrunnelse")
     val resultatBegrunnelse: String? = null,
-
-    @JsonProperty("utenlandstilsnitt")
     val utenlandstilsnitt: Boolean? = null,
-
-    @JsonProperty("behandlingTypeBeskrivelse")
     val behandlingTypeBeskrivelse: String? = null,
-
-    @JsonProperty("behandlingStatusBeskrivelse")
     val behandlingStatusBeskrivelse: String? = null,
-
-    @JsonProperty("resultatBeskrivelse")
     val resultatBeskrivelse: String? = null,
-
-    @JsonProperty("resultatBegrunnelseBeskrivelse")
     val resultatBegrunnelseBeskrivelse: String? = null,
-
-    @JsonProperty("utenlandstilsnittBeskrivelse")
     val utenlandstilsnittBeskrivelse: String? = null,
-
-    @JsonProperty("beslutter")
     val beslutter: String? = null,
-
-    @JsonProperty("saksbehandler")
     val saksbehandler: String? = null,
-
-    @JsonProperty("behandlingOpprettetAv")
     val behandlingOpprettetAv: String? = null,
-
-    @JsonProperty("behandlingOpprettetType")
     val behandlingOpprettetType: String? = null,
-
-    @JsonProperty("behandlingOpprettetTypeBeskrivelse")
     val behandlingOpprettetTypeBeskrivelse: String? = null,
-
-    @JsonProperty("ansvarligEnhetKode")
     val ansvarligEnhetKode: String? = null,
-
-    @JsonProperty("ansvarligEnhetType")
     val ansvarligEnhetType: String? = null,
-
-    @JsonProperty("datoForUttak")
     val datoForUttak: LocalDate? = null,
-
-    @JsonProperty("datoForUtbetaling")
     val datoForUtbetaling: LocalDate? = null,
-
-    @JsonProperty("totrinnsbehandling")
     val totrinnsbehandling: Boolean? = null,
-
-    @JsonProperty("helautomatiskBehandlet")
     val helautomatiskBehandlet: Boolean? = false,
-
-    @JsonProperty("avsender")
     val avsender: String? = null,
-
-    @JsonProperty("oversendtKlageinstans")
     val oversendtKlageinstans: LocalDateTime? = null,
-
-    @JsonProperty("versjon")
     val versjon: Long? = null
 ) {
     companion object {
@@ -122,24 +52,6 @@ data class Behandling(
     }
 
     fun toJson(): String = JsonSchemas.toJson(this)
-
-    //TODO: Erstatte med annotasjon @SensitiveField
-    fun tryggToString(): String {
-        return """Behandling(
-            saksnummer=$saksnummer,
-            behandlingId=$behandlingId,
-            funksjonellTid=$funksjonellTid,
-            tekniskTid=$tekniskTid,
-            registrertDato=$registrertDato,
-            vedtaksDato=$vedtaksDato,
-            avsender=$avsender,
-            resultatBeskrivelse=$resultatBeskrivelse,
-            oversendtKlageinstans=$oversendtKlageinstans,
-            relatertBehandlingId=$relatertBehandlingId,
-            relatertBehandlingFagsystem=$relatertBehandlingFagsystem,
-        )""".trimIndent()
-    }
-
 }
 
 class BehandlingBuilder(behandlingId: String, saksnummer: String) {

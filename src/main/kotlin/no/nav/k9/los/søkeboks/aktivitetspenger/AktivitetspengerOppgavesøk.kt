@@ -1,6 +1,6 @@
 package no.nav.k9.los.søkeboks.aktivitetspenger
 
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.oppgavedefinisjon.AktivitetspengerFelter
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.oppgavedefinisjon.AktivitetspengerFelter
 import no.nav.k9.los.infrastruktur.pdl.PersonPdl
 import no.nav.k9.los.infrastruktur.pdl.doedsdato
 import no.nav.k9.los.infrastruktur.pdl.fnr

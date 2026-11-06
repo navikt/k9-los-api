@@ -2,9 +2,9 @@ package no.nav.k9.los.nøkkeltall
 
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.AbstractK9LosIntegrationTest
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.Områdesetup
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.kodeverk.AktOppgavetypenavn
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.oppgavedefinisjon.AktivitetspengerOppgavetyper
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.Områdesetup
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.kodeverk.AktOppgavetypenavn
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.oppgavedefinisjon.AktivitetspengerOppgavetyper
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nøkkeltall.saksbehandler.nyeogferdigstilte.NyeOgFerdigstilteService
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus

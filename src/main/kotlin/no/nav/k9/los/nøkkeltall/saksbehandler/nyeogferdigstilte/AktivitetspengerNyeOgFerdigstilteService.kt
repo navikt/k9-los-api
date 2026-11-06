@@ -3,8 +3,8 @@ package no.nav.k9.los.nøkkeltall.saksbehandler.nyeogferdigstilte
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.kodeverk.AktOppgavetypenavn
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.oppgavedefinisjon.AktivitetspengerFelter
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.kodeverk.AktOppgavetypenavn
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.oppgavedefinisjon.AktivitetspengerFelter
 import no.nav.k9.los.infrastruktur.utils.Cache
 import no.nav.k9.los.infrastruktur.utils.CacheObject
 import no.nav.k9.los.nøkkeltall.KodeOgNavn
