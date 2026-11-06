@@ -1,6 +1,5 @@
 package no.nav.k9.los
 
-import io.ktor.server.testing.*
 import no.nav.helse.dusseldorf.testsupport.asArguments
 
 class K9LosDev {
@@ -8,10 +7,11 @@ class K9LosDev {
 
         @JvmStatic
         fun main(args: Array<String>) {
-            val testArgs = TestConfiguration.asMap()
-            testApplication {
-                no.nav.k9.los.main(testArgs.asArguments())
-            }
+            val testArgs = TestConfiguration.asMap() + mapOf(
+                "nav.testdata.enabled" to "true",
+                "ktor.deployment.host" to "127.0.0.1",
+            )
+            no.nav.k9.los.main(testArgs.asArguments() + args)
         }
     }
 }

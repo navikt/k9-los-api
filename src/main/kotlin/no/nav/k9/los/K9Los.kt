@@ -91,6 +91,8 @@ import no.nav.k9.los.sisteoppgaver.SisteOppgaverApiNy
 import no.nav.k9.los.søkeboks.K9SøkeboksApi
 import no.nav.k9.los.søkeboks.SøkeboksApiNy
 import no.nav.k9.los.tjenester.mock.localSetup
+import no.nav.k9.los.tjenester.mock.TestdataTjeneste
+import no.nav.k9.los.tjenester.mock.testdataApi
 import no.nav.k9.los.uttrekk.UttrekkApi
 import no.nav.k9.los.uttrekk.UttrekkApiNy
 import no.nav.k9.los.uttrekk.UttrekkJobb
@@ -204,6 +206,14 @@ fun Application.k9Los() {
         }
         DefaultProbeRoutes()
         HealthRoute(healthService = koin.get())
+
+        testdataApi(
+            profile = configuration.koinProfile,
+            enabled = environment.config.propertyOrNull("nav.testdata.enabled")?.getString() == "true",
+            clusterName = environment.config.propertyOrNull("nav.clustername")?.getString(),
+        ) {
+            TestdataTjeneste(koin.get(), koin.get(), koin.get(), koin.get(), koin.get())
+        }
 
         HealthReporter(
             app = appId,
