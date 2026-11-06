@@ -28,7 +28,7 @@ import no.nav.k9.los.domeneadaptere.eventmottak.k9.tilbakekrav.K9TilbakeEventHan
 import no.nav.k9.los.domeneadaptere.eventmottak.ung.sak.UngSakEventDto
 import no.nav.k9.los.domeneadaptere.eventmottak.ung.sak.UngSakEventHandler
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.EventTilOppgaveAdapter
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.kodeverk.AktBehandlendeEnhet
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.kodeverk.AktBehandlendeEnhet
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.kodeverk.K9FagsakYtelseType
 import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.kodeverk.BehandlingStatus

@@ -1,9 +1,9 @@
 package no.nav.k9.los.nøkkeltall
 
 import no.nav.k9.los.AbstractK9LosIntegrationTest
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.Områdesetup
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.kodeverk.AktOppgavetypenavn
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.oppgavedefinisjon.AktivitetspengerOppgavetyper
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.Områdesetup
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.kodeverk.AktOppgavetypenavn
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.oppgavedefinisjon.AktivitetspengerOppgavetyper
 import no.nav.k9.los.infrastruktur.abac.cache.PepCache
 import no.nav.k9.los.infrastruktur.abac.cache.PepCacheRepository
 import no.nav.k9.los.infrastruktur.db.TransactionalManager

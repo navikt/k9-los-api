@@ -90,9 +90,9 @@ class EventRepositoryPerLinjeForKonverteringTest() : AbstractK9LosIntegrationTes
             tx.run(
                 queryOf(
                     """
-                    insert into oppgave_v3_dvh_pending (ekstern_id, ekstern_versjon, oppgavetype_ekstern_id)
-                    values (:ekstern_id, :ekstern_versjon, :oppgavetype_ekstern_id)
-                    on conflict (ekstern_id, ekstern_versjon) do nothing
+                    insert into oppgave_v3_dvh_pending (omrade_ekstern_id, ekstern_id, ekstern_versjon, oppgavetype_ekstern_id)
+                    values ('K9', :ekstern_id, :ekstern_versjon, :oppgavetype_ekstern_id)
+                    on conflict do nothing
                     """.trimIndent(),
                     mapOf(
                         "ekstern_id" to eksternId,

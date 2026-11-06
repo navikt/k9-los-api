@@ -4,7 +4,7 @@ import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.channels.Channel
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.Områdesetup
-import no.nav.k9.los.domeneadaptere.k9.avstemming.AvstemmingsTjeneste
+import no.nav.k9.los.domeneadaptere.avstemming.k9.AvstemmingsTjeneste
 import no.nav.k9.los.domeneadaptere.eventmottak.FeilRekkefølgeSjekker
 import no.nav.k9.los.domeneadaptere.eventlager.EventRepository
 import no.nav.k9.los.domeneadaptere.eventmottak.k9.klage.K9KlageEventHandler
@@ -16,8 +16,8 @@ import no.nav.k9.los.domeneadaptere.eventtiloppgave.EventBeriker
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.EventTilOppgaveAdapter
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.HistorikkvaskTjeneste
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.OppgaveOppdatertHandler
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.Områdesetup as AktOmrådesetup
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.upy.Områdesetup as UpyOmrådesetup
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.Områdesetup as AktOmrådesetup
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.ung.Områdesetup as UpyOmrådesetup
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.klagetillos.beriker.K9KlageBerikerInterfaceKludge
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.klagetillos.beriker.K9KlageBerikerKlientLocal
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.saktillos.beriker.K9SakSystemKlientInterfaceKludge
@@ -25,10 +25,12 @@ import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.saktillos.beriker.K9SakSy
 import no.nav.k9.los.domeneadaptere.k9.refreshk9sakoppgaver.RefreshK9v3Tjeneste
 import no.nav.k9.los.domeneadaptere.k9.refreshk9sakoppgaver.restklient.IK9SakService
 import no.nav.k9.los.domeneadaptere.k9.refreshk9sakoppgaver.restklient.K9SakServiceLocal
-import no.nav.k9.los.domeneadaptere.statistikk.K9KlageOppgaveTilDVHMapper
-import no.nav.k9.los.domeneadaptere.statistikk.K9SakOppgaveTilDVHMapper
+import no.nav.k9.los.domeneadaptere.statistikk.k9.K9KlageOppgaveTilDVHMapper
+import no.nav.k9.los.domeneadaptere.statistikk.k9.K9SakOppgaveTilDVHMapper
+import no.nav.k9.los.domeneadaptere.statistikk.avp.AvpStatistikkPublisher
+import no.nav.k9.los.domeneadaptere.statistikk.ung.UngStatistikkPublisher
 import no.nav.k9.los.domeneadaptere.statistikk.OppgavestatistikkTjeneste
-import no.nav.k9.los.domeneadaptere.statistikk.StatistikkPublisher
+import no.nav.k9.los.domeneadaptere.statistikk.k9.StatistikkPublisher
 import no.nav.k9.los.domeneadaptere.statistikk.StatistikkRepository
 import no.nav.k9.los.driftsmelding.DriftsmeldingRepository
 import no.nav.k9.los.forvaltning.ForvaltningRepository
@@ -283,11 +285,16 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     single {
         OppgavestatistikkTjeneste(
             statistikkPublisher = get(),
+            avpStatistikkPublisher = get(),
+            ungStatistikkPublisher = get(),
             transactionalManager = get(),
             statistikkRepository = get(),
             pepCacheRepository = get(),
         )
     }
+
+    single { mockk<AvpStatistikkPublisher>() }
+    single { mockk<UngStatistikkPublisher>() }
 
     single {
         FeltdefinisjonTjeneste(

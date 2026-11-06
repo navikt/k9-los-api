@@ -5,7 +5,7 @@ import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.kodeverk.AktOppgavetypenavn
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.kodeverk.AktOppgavetypenavn
 import no.nav.k9.los.kodeverk.PersonBeskyttelseType
 import no.nav.k9.los.nøkkeltall.avdelingsleder.statusfordeling.AktivitetspengerStatusFordelingService
 import no.nav.k9.los.nøkkeltall.avdelingsleder.statusfordeling.K9StatusFordelingService

@@ -1,6 +1,8 @@
 package no.nav.k9.los.domeneadaptere.statistikk
 
 import kotliquery.*
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.kodeverk.AktOppgavetypenavn
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.ung.kodeverk.UpyOppgavetypenavn
 import no.nav.k9.los.infrastruktur.db.util.InClauseHjelper
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
@@ -22,7 +24,8 @@ class StatistikkRepository(
     private val oppgavetypeRepository: OppgavetypeRepository
 ) {
 
-    fun hentOppgaverSomIkkeErSendt(): List<Long> {
+    fun hentOppgaverSomIkkeErSendt(område: Områder = Områder.K9): List<Long> {
+        val oppgavetyper = DVH_OPPGAVETYPER[område] ?: return emptyList()
         return using(sessionOf(dataSource)) {
             it.run(
                 queryOf(
@@ -32,7 +35,7 @@ class StatistikkRepository(
                         join oppgave_v3 ov
                             on ov.ekstern_id = p.ekstern_id
                            and ov.ekstern_versjon = p.ekstern_versjon
-                           and ov.oppgavetype_ekstern_id in ('k9sak', 'k9klage')
+                           and ov.oppgavetype_ekstern_id = p.oppgavetype_ekstern_id
                         left join lateral (
                             select ofv.verdi as saksnummer
                             from oppgavefelt_verdi ofv
@@ -44,11 +47,14 @@ class StatistikkRepository(
                                 on fd.omrade_id = om.id
                             where ofv.oppgave_id = ov.id
                                 and fd.ekstern_id = 'saksnummer'
-                                and om.ekstern_id = 'K9'
+                                and om.ekstern_id = :omrade
                         ) saksnummer on true
-                        where p.oppgavetype_ekstern_id in ('k9sak', 'k9klage')
-                        order by saksnummer.saksnummer nulls last, ov.ekstern_id, ov.ekstern_versjon
-                    """.trimIndent()
+                        where p.omrade_ekstern_id = :omrade
+                          and p.oppgavetype_ekstern_id in (${InClauseHjelper.tilParameternavn(oppgavetyper, "oppgavetype")})
+                        order by saksnummer.saksnummer nulls last, ov.ekstern_id, ov.oppgavetype_ekstern_id, ov.ekstern_versjon
+                    """.trimIndent(),
+                    mapOf("omrade" to område.eksternId) +
+                        InClauseHjelper.parameternavnTilVerdierMap(oppgavetyper, "oppgavetype")
                 ).map { row -> row.long("id") }.asList
             )
         }
@@ -56,81 +62,55 @@ class StatistikkRepository(
 
     fun kvitterSending(id: Long) {
         using(sessionOf(dataSource)) {
-            it.run(
-                queryOf(
-                    """
-                        delete from oppgave_v3_dvh_pending
-                        where (ekstern_id, ekstern_versjon) in (
-                            select ekstern_id, ekstern_versjon from oppgave_v3 where id = :id
-                        )
-                    """.trimIndent(),
-                    mapOf("id" to id)
-                ).asUpdate
-            )
+            it.run(kvitterSendingQuery(id).asUpdate)
         }
     }
 
     fun kvitterSending(tx: TransactionalSession, id: Long) {
-        tx.run(
-            queryOf(
-                """
-                    delete from oppgave_v3_dvh_pending
-                    where (ekstern_id, ekstern_versjon) in (
-                        select ekstern_id, ekstern_versjon from oppgave_v3 where id = :id
-                    )
-                """.trimIndent(),
-                mapOf("id" to id)
-            ).asUpdate
-        )
+        tx.run(kvitterSendingQuery(id).asUpdate)
     }
 
+    private fun kvitterSendingQuery(id: Long) = queryOf(
+        """
+            delete from oppgave_v3_dvh_pending p
+            using oppgave_v3 ov
+            where ov.id = :id
+              and p.ekstern_id = ov.ekstern_id
+              and p.ekstern_versjon = ov.ekstern_versjon
+              and p.oppgavetype_ekstern_id = ov.oppgavetype_ekstern_id
+        """.trimIndent(),
+        mapOf("id" to id)
+    )
 
     fun fjernSendtMarkering(oppgave: OppgaveNøkkelDto, tx: TransactionalSession) {
+        val oppgavetyper = DVH_OPPGAVETYPER[oppgave.områdeEksternId] ?: return
         // Legg alle versjoner av oppgaven tilbake som pending (resend fra start)
         tx.run(
             queryOf(
                 """
-                insert into oppgave_v3_dvh_pending (ekstern_id, ekstern_versjon, oppgavetype_ekstern_id)
-                select ekstern_id, ekstern_versjon, oppgavetype_ekstern_id
+                insert into oppgave_v3_dvh_pending (omrade_ekstern_id, oppgavetype_ekstern_id, ekstern_id, ekstern_versjon)
+                select :omrade, oppgavetype_ekstern_id, ekstern_id, ekstern_versjon
                 from oppgave_v3
                 where ekstern_id = :id
-                  and oppgavetype_ekstern_id in ('k9sak', 'k9klage')
-                on conflict (ekstern_id, ekstern_versjon) do nothing
+                  and oppgavetype_ekstern_id in (${InClauseHjelper.tilParameternavn(oppgavetyper, "oppgavetype")})
+                on conflict do nothing
                 """.trimIndent(),
-                mapOf("id" to oppgave.oppgaveEksternId)
+                mapOf("id" to oppgave.oppgaveEksternId, "omrade" to oppgave.områdeEksternId.eksternId) +
+                    InClauseHjelper.parameternavnTilVerdierMap(oppgavetyper, "oppgavetype")
             ).asUpdate
         )
     }
 
-fun fjernSendtMarkering(oppgavetype: String? = null) {
-    if (oppgavetype != null && oppgavetype !in DVH_OPPGAVETYPER) return
-    using(sessionOf(dataSource)) {
-        if (oppgavetype != null) {
-                it.run(
-                    queryOf(
-                        """
-                        insert into oppgave_v3_dvh_pending (ekstern_id, ekstern_versjon, oppgavetype_ekstern_id)
-                        select ov.ekstern_id, ov.ekstern_versjon, ov.oppgavetype_ekstern_id
-                        from oppgave_v3 ov
-                        where ov.oppgavetype_ekstern_id = :oppgavetype
-                        on conflict (ekstern_id, ekstern_versjon) do nothing
-                        """.trimIndent(),
-                        mapOf("oppgavetype" to oppgavetype)
-                    ).asUpdate
-                )
-            } else {
-                // Repopuler pending for alle relevante oppgavetyper
-                it.run(
-                    queryOf(
-                        """
-                        insert into oppgave_v3_dvh_pending (ekstern_id, ekstern_versjon, oppgavetype_ekstern_id)
-                        select ov.ekstern_id, ov.ekstern_versjon, ov.oppgavetype_ekstern_id
-                        from oppgave_v3 ov
-                        where ov.oppgavetype_ekstern_id in ('k9sak', 'k9klage')
-                        on conflict (ekstern_id, ekstern_versjon) do nothing
-                        """.trimIndent()
-                    ).asUpdate
-                )
+    fun fjernSendtMarkering(oppgavetype: String? = null) {
+        val oppgavetyperPerOmråde = if (oppgavetype != null) {
+            val område = DVH_OPPGAVETYPER.entries.firstOrNull { oppgavetype in it.value }?.key ?: return
+            mapOf(område to setOf(oppgavetype))
+        } else {
+            DVH_OPPGAVETYPER
+        }
+        using(sessionOf(dataSource)) { session ->
+            oppgavetyperPerOmråde.forEach { (område, oppgavetyper) ->
+                session.run(leggTilPendingFraOppgaveV3Query(område, oppgavetyper).asUpdate)
             }
         }
     }
@@ -138,23 +118,25 @@ fun fjernSendtMarkering(oppgavetype: String? = null) {
     /**
      * Dual-write: registrerer en ny oppgaveversjon i pending-tabellen så snart den er lagret
      * i oppgave_v3, men før den er sendt til DVH. Kalles fra EventTilOppgaveAdapter.
-     * Kun relevant for oppgavetyper som sendes til DVH (k9sak, k9klage).
+     * Kun relevant for oppgavetyper som sendes til DVH, se [DVH_OPPGAVETYPER].
      */
     fun bestillDvhSending(
+        område: Områder,
         eksternId: String,
         eksternVersjon: String,
         oppgavetypeEksternId: String,
         tx: TransactionalSession,
     ) {
-        if (oppgavetypeEksternId !in DVH_OPPGAVETYPER) return
+        if (oppgavetypeEksternId !in DVH_OPPGAVETYPER[område].orEmpty()) return
         tx.run(
             queryOf(
                 """
-                insert into oppgave_v3_dvh_pending (ekstern_id, ekstern_versjon, oppgavetype_ekstern_id)
-                values (:eksternId, :eksternVersjon, :oppgavetypeEksternId)
-                on conflict (ekstern_id, ekstern_versjon) do nothing
+                insert into oppgave_v3_dvh_pending (omrade_ekstern_id, oppgavetype_ekstern_id, ekstern_id, ekstern_versjon)
+                values (:omrade, :oppgavetypeEksternId, :eksternId, :eksternVersjon)
+                on conflict do nothing
                 """.trimIndent(),
                 mapOf(
+                    "omrade" to område.eksternId,
                     "eksternId" to eksternId,
                     "eksternVersjon" to eksternVersjon,
                     "oppgavetypeEksternId" to oppgavetypeEksternId,
@@ -165,26 +147,49 @@ fun fjernSendtMarkering(oppgavetype: String? = null) {
 
     fun bestillDvhSendingForEksternIder(eksternIder: List<String>, tx: TransactionalSession) {
         if (eksternIder.isEmpty()) return
+        val oppgavetyper = DVH_OPPGAVETYPER.getValue(Områder.K9)
 
         tx.run(
             queryOf(
                 """
-                insert into oppgave_v3_dvh_pending (ekstern_id, ekstern_versjon, oppgavetype_ekstern_id)
-                select ov.ekstern_id, ov.ekstern_versjon, ov.oppgavetype_ekstern_id
+                insert into oppgave_v3_dvh_pending (omrade_ekstern_id, oppgavetype_ekstern_id, ekstern_id, ekstern_versjon)
+                select :omrade, ov.oppgavetype_ekstern_id, ov.ekstern_id, ov.ekstern_versjon
                 from oppgave_v3 ov
                 where ov.ekstern_id in (${InClauseHjelper.tilParameternavn(eksternIder, "ekstern_id")})
-                  and ov.oppgavetype_ekstern_id in ('k9sak', 'k9klage')
-                on conflict (ekstern_id, ekstern_versjon) do nothing
+                  and ov.oppgavetype_ekstern_id in (${InClauseHjelper.tilParameternavn(oppgavetyper, "oppgavetype")})
+                on conflict do nothing
                 """.trimIndent(),
-                InClauseHjelper.parameternavnTilVerdierMap(eksternIder, "ekstern_id")
+                mapOf("omrade" to Områder.K9.eksternId) +
+                    InClauseHjelper.parameternavnTilVerdierMap(eksternIder, "ekstern_id") +
+                    InClauseHjelper.parameternavnTilVerdierMap(oppgavetyper, "oppgavetype")
             ).asUpdate
         )
     }
 
     companion object {
-        /** Oppgavetyper hvis versjoner spores i oppgave_v3_dvh_pending for sending til DVH. */
-        private val DVH_OPPGAVETYPER = setOf("k9sak", "k9klage")
+        /** Oppgavetyper per område hvis versjoner spores i oppgave_v3_dvh_pending for sending til DVH. */
+        val DVH_OPPGAVETYPER: Map<Områder, Set<String>> = mapOf(
+            Områder.K9 to setOf("k9sak", "k9klage"),
+            Områder.AKTIVITETSPENGER to setOf(
+                AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1.kode,
+                AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2.kode,
+            ),
+            Områder.UNGDOMSPROGRAMYTELSEN to setOf(
+                UpyOppgavetypenavn.UNGDOMSPROGRAMYTELSENORDINÆR.kode,
+            ),
+        )
     }
+
+    private fun leggTilPendingFraOppgaveV3Query(område: Områder, oppgavetyper: Set<String>) = queryOf(
+        """
+        insert into oppgave_v3_dvh_pending (omrade_ekstern_id, oppgavetype_ekstern_id, ekstern_id, ekstern_versjon)
+        select :omrade, ov.oppgavetype_ekstern_id, ov.ekstern_id, ov.ekstern_versjon
+        from oppgave_v3 ov
+        where ov.oppgavetype_ekstern_id in (${InClauseHjelper.tilParameternavn(oppgavetyper, "oppgavetype")})
+        on conflict do nothing
+        """.trimIndent(),
+        mapOf("omrade" to område.eksternId) + InClauseHjelper.parameternavnTilVerdierMap(oppgavetyper, "oppgavetype")
+    )
 
     /**
      * Populerer oppgave_v3_dvh_pending fra oppgave_v3.
@@ -193,18 +198,10 @@ fun fjernSendtMarkering(oppgavetype: String? = null) {
      * Returnerer antall rader lagt til.
      */
     fun populerPendingFraOppgaveV3(): Int {
-        return using(sessionOf(dataSource)) {
-            it.run(
-                queryOf(
-                    """
-                    insert into oppgave_v3_dvh_pending (ekstern_id, ekstern_versjon, oppgavetype_ekstern_id)
-                    select ov.ekstern_id, ov.ekstern_versjon, ov.oppgavetype_ekstern_id
-                    from oppgave_v3 ov
-                    where ov.oppgavetype_ekstern_id in ('k9sak', 'k9klage')
-                    on conflict (ekstern_id, ekstern_versjon) do nothing
-                    """.trimIndent()
-                ).asUpdate
-            )
+        return using(sessionOf(dataSource)) { session ->
+            DVH_OPPGAVETYPER.entries.sumOf { (område, oppgavetyper) ->
+                session.run(leggTilPendingFraOppgaveV3Query(område, oppgavetyper).asUpdate)
+            }
         }
     }
 

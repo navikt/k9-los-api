@@ -102,9 +102,9 @@ import java.time.Duration
 import java.util.*
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.Områdesetup as AktOmrådesetup
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.Områdesetup as AktOmrådesetup
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.Områdesetup as K9Områdesetup
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.upy.Områdesetup as UpyOmrådesetup
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.ung.Områdesetup as UpyOmrådesetup
 
 fun main(args: Array<String>): Unit = EngineMain.main(args)
 
@@ -176,6 +176,8 @@ fun Application.k9Los() {
 
     OppgavestatistikkTjeneste(
         statistikkPublisher = koin.get(),
+        avpStatistikkPublisher = koin.get(),
+        ungStatistikkPublisher = koin.get(),
         transactionalManager = koin.get(),
         statistikkRepository = koin.get(),
         pepCacheRepository = koin.get(),

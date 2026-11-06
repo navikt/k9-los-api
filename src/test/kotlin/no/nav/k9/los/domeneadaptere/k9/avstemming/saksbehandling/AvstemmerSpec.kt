@@ -2,6 +2,8 @@ package no.nav.k9.los.domeneadaptere.k9.avstemming.saksbehandling
 
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.shouldBe
+import no.nav.k9.los.domeneadaptere.avstemming.k9.saksbehandling.Behandlingstilstand
+import no.nav.k9.los.domeneadaptere.avstemming.k9.saksbehandling.SakAvstemmer
 import no.nav.k9.los.kodeverk.BehandlingStatus
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.kodeverk.K9FagsakYtelseType
 import no.nav.k9.los.domeneadaptere.eventlager.Fagsystem
