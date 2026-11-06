@@ -2,6 +2,7 @@ package no.nav.k9.los.domeneadaptere.statistikk
 
 import kotliquery.*
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.kodeverk.AktOppgavetypenavn
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.ung.kodeverk.UpyOppgavetypenavn
 import no.nav.k9.los.infrastruktur.db.util.InClauseHjelper
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
@@ -172,6 +173,9 @@ class StatistikkRepository(
             Områder.AKTIVITETSPENGER to setOf(
                 AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1.kode,
                 AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2.kode,
+            ),
+            Områder.UNGDOMSPROGRAMYTELSEN to setOf(
+                UpyOppgavetypenavn.UNGDOMSPROGRAMYTELSENORDINÆR.kode,
             ),
         )
     }

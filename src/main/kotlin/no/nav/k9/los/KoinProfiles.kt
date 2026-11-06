@@ -41,6 +41,7 @@ import no.nav.k9.los.domeneadaptere.k9.refreshk9sakoppgaver.restklient.K9SakServ
 import no.nav.k9.los.domeneadaptere.statistikk.k9.K9KlageOppgaveTilDVHMapper
 import no.nav.k9.los.domeneadaptere.statistikk.k9.K9SakOppgaveTilDVHMapper
 import no.nav.k9.los.domeneadaptere.statistikk.avp.AvpStatistikkPublisher
+import no.nav.k9.los.domeneadaptere.statistikk.ung.UngStatistikkPublisher
 import no.nav.k9.los.domeneadaptere.statistikk.OppgavestatistikkTjeneste
 import no.nav.k9.los.domeneadaptere.statistikk.k9.StatistikkPublisher
 import no.nav.k9.los.domeneadaptere.statistikk.StatistikkRepository
@@ -318,6 +319,7 @@ fun common(app: Application, config: Configuration) = module {
         OppgavestatistikkTjeneste(
             statistikkPublisher = get(),
             avpStatistikkPublisher = get(),
+            ungStatistikkPublisher = get(),
             transactionalManager = get(),
             statistikkRepository = get(),
             pepCacheRepository = get(),
@@ -326,6 +328,13 @@ fun common(app: Application, config: Configuration) = module {
 
     single {
         AvpStatistikkPublisher(
+            kafkaConfig = config.getProfileAwareKafkaAivenConfig(),
+            config = config
+        )
+    }
+
+    single {
+        UngStatistikkPublisher(
             kafkaConfig = config.getProfileAwareKafkaAivenConfig(),
             config = config
         )

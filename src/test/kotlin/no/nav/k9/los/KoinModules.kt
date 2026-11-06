@@ -28,6 +28,7 @@ import no.nav.k9.los.domeneadaptere.k9.refreshk9sakoppgaver.restklient.K9SakServ
 import no.nav.k9.los.domeneadaptere.statistikk.k9.K9KlageOppgaveTilDVHMapper
 import no.nav.k9.los.domeneadaptere.statistikk.k9.K9SakOppgaveTilDVHMapper
 import no.nav.k9.los.domeneadaptere.statistikk.avp.AvpStatistikkPublisher
+import no.nav.k9.los.domeneadaptere.statistikk.ung.UngStatistikkPublisher
 import no.nav.k9.los.domeneadaptere.statistikk.OppgavestatistikkTjeneste
 import no.nav.k9.los.domeneadaptere.statistikk.k9.StatistikkPublisher
 import no.nav.k9.los.domeneadaptere.statistikk.StatistikkRepository
@@ -285,6 +286,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
         OppgavestatistikkTjeneste(
             statistikkPublisher = get(),
             avpStatistikkPublisher = get(),
+            ungStatistikkPublisher = get(),
             transactionalManager = get(),
             statistikkRepository = get(),
             pepCacheRepository = get(),
@@ -292,6 +294,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     }
 
     single { mockk<AvpStatistikkPublisher>() }
+    single { mockk<UngStatistikkPublisher>() }
 
     single {
         FeltdefinisjonTjeneste(

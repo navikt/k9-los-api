@@ -12,6 +12,9 @@ import no.nav.k9.los.domeneadaptere.statistikk.k9.K9KlageOppgaveTilDVHMapper
 import no.nav.k9.los.domeneadaptere.statistikk.k9.K9SakOppgaveTilDVHMapper
 import no.nav.k9.los.domeneadaptere.statistikk.k9.Sak
 import no.nav.k9.los.domeneadaptere.statistikk.k9.StatistikkPublisher
+import no.nav.k9.los.domeneadaptere.statistikk.ung.UngBehandling
+import no.nav.k9.los.domeneadaptere.statistikk.ung.UngOppgaveTilDVHMapper
+import no.nav.k9.los.domeneadaptere.statistikk.ung.UngStatistikkPublisher
 import no.nav.k9.los.forvaltning.ForvaltningSensitiveObjectMapper
 import no.nav.k9.los.infrastruktur.abac.cache.PepCacheRepository
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
@@ -22,6 +25,7 @@ import org.slf4j.LoggerFactory
 class OppgavestatistikkTjeneste(
     private val statistikkPublisher: StatistikkPublisher,
     private val avpStatistikkPublisher: AvpStatistikkPublisher,
+    private val ungStatistikkPublisher: UngStatistikkPublisher,
     private val transactionalManager: TransactionalManager,
     private val statistikkRepository: StatistikkRepository,
     private val pepCacheRepository: PepCacheRepository
@@ -61,6 +65,7 @@ class OppgavestatistikkTjeneste(
     private val k9SakMapper = K9SakOppgaveTilDVHMapper()
     private val k9KlageMapper = K9KlageOppgaveTilDVHMapper()
     private val avpMapper = AvpOppgaveTilDVHMapper()
+    private val ungMapper = UngOppgaveTilDVHMapper()
 
     companion object {
         private const val FLUSH_INTERVAL = 100
@@ -109,6 +114,7 @@ class OppgavestatistikkTjeneste(
             when (oppgave.område) {
                 Områder.K9 -> sendK9Statistikk(oppgave, versjon, pepCacheState, tx)
                 Områder.AKTIVITETSPENGER -> sendAvpStatistikk(oppgave, pepCacheState, tx)
+                Områder.UNGDOMSPROGRAMYTELSEN -> sendUngStatistikk(oppgave, pepCacheState, tx)
                 else -> throw IllegalStateException("Ukjent område for sending til DVH: ${oppgave.område}")
             }
         }
@@ -129,6 +135,23 @@ class OppgavestatistikkTjeneste(
             )
         }
         avpStatistikkPublisher.publiserAsynkront(behandlingTilSending)
+    }
+
+    private fun sendUngStatistikk(oppgave: Oppgave, pepCacheState: PepCachePerSaksnummerState, tx: TransactionalSession) {
+        val behandling = ungMapper.lagBehandling(oppgave)
+        val erKode6 = pepCacheState.hentEllerOppdater(
+            saksnummer = oppgave.hentVerdi("saksnummer")!!,
+            oppgaveEksternId = oppgave.eksternId,
+            tx = tx,
+        )
+        val behandlingTilSending = if (erKode6) nullUtEventuelleSensitiveFelter(behandling) else behandling
+        if (log.isDebugEnabled) {
+            log.debug(
+                "Utgående UngBehandling: {}",
+                ForvaltningSensitiveObjectMapper.prettyInstance.writeValueAsString(behandlingTilSending),
+            )
+        }
+        ungStatistikkPublisher.publiserAsynkront(behandlingTilSending)
     }
 
     private fun sendK9Statistikk(
@@ -162,6 +185,7 @@ class OppgavestatistikkTjeneste(
         when (område) {
             Områder.K9 -> statistikkPublisher.flushOgValider()
             Områder.AKTIVITETSPENGER -> avpStatistikkPublisher.flushOgValider()
+            Områder.UNGDOMSPROGRAMYTELSEN -> ungStatistikkPublisher.flushOgValider()
             else -> throw IllegalStateException("Ukjent område for sending til DVH: $område")
         }
         oppgaveIderTilKvittering.forEach { oppgaveId ->
@@ -189,7 +213,15 @@ class OppgavestatistikkTjeneste(
             beslutter = "-5",
             saksbehandler = "-5",
             ansvarligEnhetKode = "-5",
-            behandlendeEnhetKode = "-5",
+        )
+    }
+
+    // TODO: Avklar hvordan søkersAktørId skal håndteres for kode 6
+    private fun nullUtEventuelleSensitiveFelter(behandling: UngBehandling): UngBehandling {
+        return behandling.copy(
+            beslutter = "-5",
+            saksbehandler = "-5",
+            ansvarligEnhetKode = "-5",
         )
     }
 
