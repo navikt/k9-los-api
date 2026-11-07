@@ -116,3 +116,16 @@ Testdataoppsettet lager åpne PSB-oppgaver med kjent aksjonspunkt gjennom den ek
 `.github/e2e/` inneholder støttetjenestene og oppstarten for GitHub Actions. Sertifikater og databasepassord lages for hver kjøring. CI bruker ikke utviklerens `~/.modig`, og starter verken VTP eller k9-sak. Se `k9-los-web` for Playwright-kommandoer og valg av backend-revisjon i workflowen.
 
 ![logo](Los.png)
+
+## CI og verdikjedetesting
+
+Byggejobben lager et image også på feature-brancher. Branch-images lastes opp som workflow-artifacts, men publiseres ikke til registry. Hovedbranchen publiserer sitt byggede image som før.
+
+Etter bygg kjører to uavhengige testjobber:
+
+- `verdikjede-los-api` kjører Java-suiten `los-api` fra en fast valgt commit i `k9-verdikjede`, med API-imaget fra denne byggejobben. Den bruker ikke LOS-web, Node eller Playwright. Den delte workflowen avviser `latest` fra API-pipelinen og verifiserer image-ID/OCI-versjon.
+- `los-web-kompatibilitet` kjører de avgrensede Playwright-testene fra en fast valgt commit i `k9-los-web`, mot backend-kildekoden fra `${{ github.sha }}`. Dette er LOS-stacken med støttetjenester, ikke hele K9-verdikjeden.
+
+Dev-deploy kan gå parallelt med testjobbene. Prod-deploy krever at både bygg og begge testjobber er grønne. Pipeline-kjøringer på samme branch serialiseres for å unngå overlappende deploys.
+
+Workflow-, test- og web-referanser er pinnet til commit-SHA-er. Før første GitHub Actions-kjøring må de refererte commitene i `sif-gha-workflows`, `k9-verdikjede` og `k9-los-web` være publisert. Lokale commits er ikke tilstrekkelig. Ikke skriv om eller squash pinnede commits uten å oppdatere referansene til de nye SHA-ene.
