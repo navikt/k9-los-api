@@ -99,20 +99,4 @@ Eller kjør direkte med JAR:
 java -jar target/app.jar
 ```
 
-### Playwright og automatisert dev-oppstart
-
-`K9LosDev` aktiverer `/api/testdata` for Playwright-testene i `k9-los-web` og binder serveren til loopback. Endpoints registreres bare når både LOCAL-profilen og `nav.testdata.enabled=true` er valgt, og ingen cluster-konfigurasjon er satt. Ordinær oppstart aktiverer dem ikke.
-
-Med de vanlige støttetjenestene kjørende kan samme starter kjøres uten IntelliJ:
-
-```bash
-bash scripts/start-dev.sh
-```
-
-Scriptet kompilerer teststarteren og starter backend med testavhengigheter på classpath. Konfigurasjon kan overstyres med Ktor-argumenter, for eksempel `'-P:nav.db.url=jdbc:postgresql://localhost:5432/k9los_unit'`. `--no-build` hopper over kompileringen når `target/dev-classpath.txt` allerede er bygget, slik CI gjør.
-
-Testdataoppsettet lager åpne PSB-oppgaver med kjent aksjonspunkt gjennom den eksisterende hendelses- og oppgavebehandlingen. Det returnerer først når oppgaven er lagret som åpen. Opprydding sletter bare oppgaver opprettet gjennom testdata-API-et i samme backend-instans, inkludert tilhørende reservasjoner, hendelser og søkedata. Det finnes ingen database-reset. Ved backend-restart mistes eierskapsoversikten i minnet.
-
-`.github/e2e/` inneholder støttetjenestene og oppstarten for GitHub Actions. Sertifikater og databasepassord lages for hver kjøring. CI bruker ikke utviklerens `~/.modig`, og starter verken VTP eller k9-sak. Se `k9-los-web` for Playwright-kommandoer og valg av backend-revisjon i workflowen.
-
 ![logo](Los.png)
