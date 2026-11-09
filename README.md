@@ -123,9 +123,9 @@ Byggejobben lager et image også på feature-brancher. Branch-images lastes opp 
 
 Etter bygg kjører to uavhengige testjobber:
 
-- `verdikjede-los-api` kjører Java-suiten `los-api` fra en fast valgt commit i `k9-verdikjede`, med API-imaget fra denne byggejobben. Den bruker ikke LOS-web, Node eller Playwright. Den delte workflowen avviser `latest` fra API-pipelinen og verifiserer image-ID/OCI-versjon.
-- `los-web-kompatibilitet` kjører de avgrensede Playwright-testene fra en fast valgt commit i `k9-los-web`, mot backend-kildekoden fra `${{ github.sha }}`. Dette er LOS-stacken med støttetjenester, ikke hele K9-verdikjeden.
+- `verdikjede-los-api` kjører Java-suiten `los-api` fra `master` i `k9-verdikjede`, med API-imaget fra denne byggejobben. Den bruker ikke LOS-web, Node eller Playwright. Den delte workflowen avviser `latest` for selve API-kandidaten og verifiserer image-ID/OCI-versjon.
+- `los-web-kompatibilitet` kjører de avgrensede Playwright-testene fra `master` i `k9-los-web`, mot backend-kildekoden fra `${{ github.sha }}`. Dette er LOS-stacken med støttetjenester, ikke hele K9-verdikjeden.
 
 Dev-deploy kan gå parallelt med testjobbene. Prod-deploy krever at både bygg og begge testjobber er grønne. Pipeline-kjøringer på samme branch serialiseres for å unngå overlappende deploys.
 
-Workflow-, test- og web-referanser er pinnet til commit-SHA-er. Før første GitHub Actions-kjøring må de refererte commitene i `sif-gha-workflows`, `k9-verdikjede` og `k9-los-web` være publisert. Lokale commits er ikke tilstrekkelig. Ikke skriv om eller squash pinnede commits uten å oppdatere referansene til de nye SHA-ene.
+Interne workflows og actions følger `main` i `sif-gha-workflows`; testkode og web følger `master` i sine repoer. API-kandidaten er fortsatt den eksakte versjonen fra byggejobben, ikke `latest`. De nye workflowene og testsuitene må være tilgjengelige på hovedbranchene før pipeline-kjøringen kan fungere. Faktiske web-/API-commits og image-versjoner logges for feilsøking.
