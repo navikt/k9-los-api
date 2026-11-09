@@ -51,7 +51,7 @@ class StatistikkRepository(
                         ) saksnummer on true
                         where p.omrade_ekstern_id = :omrade
                           and p.oppgavetype_ekstern_id in (${InClauseHjelper.tilParameternavn(oppgavetyper, "oppgavetype")})
-                        order by saksnummer.saksnummer nulls last, ov.ekstern_id, ov.oppgavetype_ekstern_id, ov.ekstern_versjon
+                        order by saksnummer.saksnummer nulls last, ov.ekstern_id, ov.ekstern_versjon, ov.oppgavetype_ekstern_id
                     """.trimIndent(),
                     mapOf("omrade" to område.eksternId) +
                         InClauseHjelper.parameternavnTilVerdierMap(oppgavetyper, "oppgavetype")
