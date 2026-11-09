@@ -2,7 +2,6 @@
 set -euo pipefail
 : "${E2E_CERT_DIR:?}" "${E2E_STORE_PASSWORD:?}"
 
-# Bare kortlivede sertifikater til dette CI-miljøet, aldri utviklerens ~/.modig.
 mkdir -p "$E2E_CERT_DIR"
 keytool -genkeypair -alias los-e2e -keyalg RSA -keysize 2048 -validity 2 \
   -dname 'CN=localhost' -ext 'SAN=dns:localhost,dns:kafka' \

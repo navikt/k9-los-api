@@ -14,7 +14,7 @@ services:
       timeout: 5s
       retries: 30
   azure-mock:
-    image: ghcr.io/navikt/azure-mock@sha256:95efddb105acc8f78f3f17606d53c0cde16858715122daae98f601649a0b505e
+    image: ghcr.io/navikt/azure-mock@latest
     platform: linux/amd64
     ports:
       - '127.0.0.1:${E2E_AZURE_PORT:-8100}:8100'

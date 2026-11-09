@@ -82,7 +82,7 @@ jobs:
       id-token: write
       contents: write
     if: ${{ github.ref_name == github.event.repository.default_branch}}
-    needs: [build-app, verdikjede-los-api, los-web-kompatibilitet]
+    needs: [ build-app ]
     uses: navikt/sif-gha-workflows/.github/workflows/maven-deploy.yml@main
     with:
       gar: true
