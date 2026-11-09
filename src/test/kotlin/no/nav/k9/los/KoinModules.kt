@@ -30,7 +30,7 @@ import no.nav.k9.los.domeneadaptere.statistikk.k9.K9SakOppgaveTilDVHMapper
 import no.nav.k9.los.domeneadaptere.statistikk.avp.AvpStatistikkPublisher
 import no.nav.k9.los.domeneadaptere.statistikk.ung.UngStatistikkPublisher
 import no.nav.k9.los.domeneadaptere.statistikk.OppgavestatistikkTjeneste
-import no.nav.k9.los.domeneadaptere.statistikk.k9.StatistikkPublisher
+import no.nav.k9.los.domeneadaptere.statistikk.k9.K9StatistikkPublisher
 import no.nav.k9.los.domeneadaptere.statistikk.StatistikkRepository
 import no.nav.k9.los.driftsmelding.DriftsmeldingRepository
 import no.nav.k9.los.forvaltning.ForvaltningRepository
@@ -280,11 +280,11 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
         )
     }
 
-    single { mockk<StatistikkPublisher>() }
+    single { mockk<K9StatistikkPublisher>() }
 
     single {
         OppgavestatistikkTjeneste(
-            statistikkPublisher = get(),
+            k9StatistikkPublisher = get(),
             avpStatistikkPublisher = get(),
             ungStatistikkPublisher = get(),
             transactionalManager = get(),

@@ -3,6 +3,7 @@ package no.nav.k9.los.domeneadaptere.statistikk.k9
 import no.nav.k9.kodeverk.behandling.BehandlingResultatType
 import no.nav.k9.kodeverk.behandling.BehandlingStatus
 import no.nav.k9.kodeverk.behandling.FagsakYtelseType
+import no.nav.k9.los.domeneadaptere.statistikk.Aktør
 import no.nav.k9.los.kodeverk.BehandlingType
 import no.nav.k9.los.oppgaveuthenting.Oppgave
 import java.time.LocalDate
@@ -16,9 +17,9 @@ class K9SakOppgaveTilDVHMapper {
         val zoneId = ZoneId.of("Europe/Oslo")
     }
 
-    fun lagBehandlinger(oppgave: Oppgave, versjon: Int): List<Behandling> {
+    fun lagBehandlinger(oppgave: Oppgave, versjon: Int): List<K9Behandling> {
         val behandlingstatus = BehandlingStatus.fraKode(oppgave.hentVerdi("behandlingsstatus"))
-        val behandlinger = mutableListOf<Behandling>()
+        val behandlinger = mutableListOf<K9Behandling>()
         if (behandlingstatus == BehandlingStatus.AVSLUTTET) {
             if (versjon == 0) {
                 val mottattDato = LocalDateTime.parse(oppgave.hentVerdi("mottattDato")).toLocalDate()
@@ -39,8 +40,8 @@ class K9SakOppgaveTilDVHMapper {
         vedtaksDato: LocalDate? = oppgave.hentVerdi("vedtaksdato")?.let { LocalDate.parse(it) },
         registrertDato: LocalDate = LocalDateTime.parse(oppgave.hentVerdi("registrertDato")).toLocalDate(),
         behandlingStatus: BehandlingStatus
-    ): Behandling {
-        return Behandling(
+    ): K9Behandling {
+        return K9Behandling(
             sakId = oppgave.hentVerdi("saksnummer"),
             behandlingId = oppgave.eksternId,
             funksjonellTid = LocalDateTime.parse(oppgave.eksternVersjon).atZone(zoneId).toOffsetDateTime(),

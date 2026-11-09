@@ -2,11 +2,11 @@ package no.nav.k9.los.domeneadaptere.statistikk.ung
 
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.ung.kodeverk.UpyOppgavetypenavn
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.ung.oppgavedefinisjon.UngdomsprogramytelsenFelter
+import no.nav.k9.los.domeneadaptere.statistikk.Aktør
 import no.nav.k9.los.oppgaveuthenting.Oppgave
 import no.nav.ung.kodeverk.behandling.BehandlingResultatType
 import no.nav.ung.kodeverk.behandling.BehandlingStatus
 import no.nav.ung.kodeverk.behandling.BehandlingType
-import no.nav.ung.sak.typer.AktørId
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
@@ -26,7 +26,7 @@ class UngOppgaveTilDVHMapper {
         return UngBehandling(
             sakId = oppgave.hentVerdi(UngdomsprogramytelsenFelter.Sak.SAKSNUMMER.id),
             behandlingId = oppgave.eksternId,
-            søkersAktørId = AktørId(oppgave.hentVerdi(UngdomsprogramytelsenFelter.Sak.AKTOR_ID.id)!!),
+            søkersAktørId = Aktør(oppgave.hentVerdi(UngdomsprogramytelsenFelter.Sak.AKTOR_ID.id)!!.toLong(), "Søker", "Søker"),
             funksjonellTid = LocalDateTime.parse(oppgave.eksternVersjon).atZone(zoneId).toOffsetDateTime(),
             tekniskTid = OffsetDateTime.now(zoneId),
             mottattDato = oppgave.hentVerdi(UngdomsprogramytelsenFelter.Sak.MOTTATT_DATO.id)?.let { LocalDateTime.parse(it).toLocalDate() },

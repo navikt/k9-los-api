@@ -30,7 +30,7 @@ import java.time.LocalDateTime
 import java.util.*
 import kotlin.test.assertEquals
 
-class BehandlingObsoleteTest : AbstractK9LosIntegrationTest() {
+class K9BehandlingObsoleteTest : AbstractK9LosIntegrationTest() {
     private lateinit var eventBeriker: EventBeriker
     private val k9SakBerikerKlientLocal = mockk<K9SakSystemKlientLocal>()
 

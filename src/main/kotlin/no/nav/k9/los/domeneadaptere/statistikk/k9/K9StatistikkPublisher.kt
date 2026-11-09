@@ -13,7 +13,7 @@ import org.apache.kafka.common.serialization.StringSerializer
 import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicReference
 
-class StatistikkPublisher(
+class K9StatistikkPublisher(
     val kafkaConfig: IKafkaConfig,
     val config: Configuration
 ) : HealthCheck {
@@ -24,7 +24,7 @@ class StatistikkPublisher(
     private companion object {
         private const val NAME = "NyStatistikkPublisher"
 
-        private val log = LoggerFactory.getLogger(StatistikkPublisher::class.java)
+        private val log = LoggerFactory.getLogger(K9StatistikkPublisher::class.java)
     }
 
     private val producer: KafkaProducer<String, String> = KafkaProducer(
@@ -39,9 +39,9 @@ class StatistikkPublisher(
      * Legger meldinger i producer-bufferen uten å blokkere.
      * Kall [flushOgValider] periodisk for å sikre levering og oppdage feil.
      */
-    fun publiserAsynkront(sak: Sak, behandling: Behandling) {
+    fun publiserAsynkront(sak: Sak, k9Behandling: K9Behandling) {
         sendAsync(sak, sak.saksnummer, statistikkSakTopic)
-        sendAsync(behandling, behandling.behandlingId, statistikkBehandlingTopic)
+        sendAsync(k9Behandling, k9Behandling.behandlingId, statistikkBehandlingTopic)
     }
 
     /**

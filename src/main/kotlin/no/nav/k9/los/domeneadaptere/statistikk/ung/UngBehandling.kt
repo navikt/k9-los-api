@@ -1,8 +1,8 @@
 package no.nav.k9.los.domeneadaptere.statistikk.ung
 
 import com.fasterxml.jackson.annotation.JsonInclude
+import no.nav.k9.los.domeneadaptere.statistikk.Aktør
 import no.nav.k9.statistikk.kontrakter.JsonSchemas
-import no.nav.ung.sak.typer.AktørId
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
@@ -11,8 +11,12 @@ import java.time.OffsetDateTime
 data class UngBehandling(
     val sakId: String? = null,
     val behandlingId: String,
+<<<<<<< Updated upstream
     @field:no.nav.k9.los.forvaltning.SensitiveField
     val søkersAktørId: AktørId,
+=======
+    val søkersAktørId: Aktør,
+>>>>>>> Stashed changes
     val funksjonellTid: OffsetDateTime? = null,
     val tekniskTid: OffsetDateTime? = null,
     val mottattDato: LocalDate? = null,

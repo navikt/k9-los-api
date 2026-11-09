@@ -3,6 +3,7 @@ package no.nav.k9.los.domeneadaptere.statistikk.k9
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
 import no.nav.k9.statistikk.kontrakter.JsonSchemas
+import no.nav.k9.los.domeneadaptere.statistikk.Aktør
 import java.time.LocalDate
 import java.time.OffsetDateTime
 

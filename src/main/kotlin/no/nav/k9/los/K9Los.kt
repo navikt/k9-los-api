@@ -175,7 +175,7 @@ fun Application.k9Los() {
     }
 
     OppgavestatistikkTjeneste(
-        statistikkPublisher = koin.get(),
+        k9StatistikkPublisher = koin.get(),
         avpStatistikkPublisher = koin.get(),
         ungStatistikkPublisher = koin.get(),
         transactionalManager = koin.get(),

@@ -6,12 +6,11 @@ import kotliquery.TransactionalSession
 import no.nav.k9.los.domeneadaptere.statistikk.avp.AvpBehandling
 import no.nav.k9.los.domeneadaptere.statistikk.avp.AvpOppgaveTilDVHMapper
 import no.nav.k9.los.domeneadaptere.statistikk.avp.AvpStatistikkPublisher
-import no.nav.k9.los.domeneadaptere.statistikk.k9.Aktør
-import no.nav.k9.los.domeneadaptere.statistikk.k9.Behandling
+import no.nav.k9.los.domeneadaptere.statistikk.k9.K9Behandling
 import no.nav.k9.los.domeneadaptere.statistikk.k9.K9KlageOppgaveTilDVHMapper
 import no.nav.k9.los.domeneadaptere.statistikk.k9.K9SakOppgaveTilDVHMapper
 import no.nav.k9.los.domeneadaptere.statistikk.k9.Sak
-import no.nav.k9.los.domeneadaptere.statistikk.k9.StatistikkPublisher
+import no.nav.k9.los.domeneadaptere.statistikk.k9.K9StatistikkPublisher
 import no.nav.k9.los.domeneadaptere.statistikk.ung.UngBehandling
 import no.nav.k9.los.domeneadaptere.statistikk.ung.UngOppgaveTilDVHMapper
 import no.nav.k9.los.domeneadaptere.statistikk.ung.UngStatistikkPublisher
@@ -23,7 +22,7 @@ import no.nav.k9.los.oppgaveuthenting.Oppgave
 import org.slf4j.LoggerFactory
 
 class OppgavestatistikkTjeneste(
-    private val statistikkPublisher: StatistikkPublisher,
+    private val k9StatistikkPublisher: K9StatistikkPublisher,
     private val avpStatistikkPublisher: AvpStatistikkPublisher,
     private val ungStatistikkPublisher: UngStatistikkPublisher,
     private val transactionalManager: TransactionalManager,
@@ -57,7 +56,7 @@ class OppgavestatistikkTjeneste(
 
     private data class Oppgavestatistikkgrunnlag(
         val sak: Sak,
-        val behandlinger: List<Behandling>,
+        val behandlinger: List<K9Behandling>,
         val oppgaveEksternId: String,
     )
 
@@ -177,13 +176,13 @@ class OppgavestatistikkTjeneste(
                     ForvaltningSensitiveObjectMapper.prettyInstance.writeValueAsString(behandlingTilSending),
                 )
             }
-            statistikkPublisher.publiserAsynkront(sakTilSending, behandlingTilSending)
+            k9StatistikkPublisher.publiserAsynkront(sakTilSending, behandlingTilSending)
         }
     }
 
     private fun flushOgKvitter(område: Områder, oppgaveIderTilKvittering: MutableList<Long>) {
         when (område) {
-            Områder.K9 -> statistikkPublisher.flushOgValider()
+            Områder.K9 -> k9StatistikkPublisher.flushOgValider()
             Områder.AKTIVITETSPENGER -> avpStatistikkPublisher.flushOgValider()
             Områder.UNGDOMSPROGRAMYTELSEN -> ungStatistikkPublisher.flushOgValider()
             else -> throw IllegalStateException("Ukjent område for sending til DVH: $område")
@@ -198,7 +197,7 @@ class OppgavestatistikkTjeneste(
         return sak.copy(aktorer = sak.aktorer.map { Aktør(aktorId = -5, rolle = "-5", rolleBeskrivelse = "-5") })
     }
 
-    private fun nullUtEventuelleSensitiveFelter(behandling: Behandling): Behandling {
+    private fun nullUtEventuelleSensitiveFelter(behandling: K9Behandling): K9Behandling {
         return behandling.copy(
             beslutter = "-5",
             saksbehandler = "-5",
@@ -207,21 +206,21 @@ class OppgavestatistikkTjeneste(
         )
     }
 
-    // TODO: Avklar hvordan søkersAktørId skal håndteres for kode 6
     private fun nullUtEventuelleSensitiveFelter(behandling: AvpBehandling): AvpBehandling {
         return behandling.copy(
             beslutter = "-5",
             saksbehandler = "-5",
             ansvarligEnhetKode = "-5",
+            søkersAktørId = Aktør(aktorId = -5, rolle = "-5", rolleBeskrivelse = "-5"),
         )
     }
 
-    // TODO: Avklar hvordan søkersAktørId skal håndteres for kode 6
     private fun nullUtEventuelleSensitiveFelter(behandling: UngBehandling): UngBehandling {
         return behandling.copy(
             beslutter = "-5",
             saksbehandler = "-5",
             ansvarligEnhetKode = "-5",
+            søkersAktørId = Aktør(aktorId = -5, rolle = "-5", rolleBeskrivelse = "-5"),
         )
     }
 

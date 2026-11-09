@@ -7,7 +7,7 @@ import java.time.LocalDateTime
 import java.time.OffsetDateTime
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-data class Behandling(
+data class K9Behandling(
     val sakId: String? = null,
     val behandlingId: String,
     val funksjonellTid: OffsetDateTime? = null,
@@ -45,8 +45,8 @@ data class Behandling(
     val versjon: Long? = null
 ) {
     companion object {
-        fun fromJson(json: String): Behandling =
-            JsonSchemas.fromJson(json, Behandling::class.java)
+        fun fromJson(json: String): K9Behandling =
+            JsonSchemas.fromJson(json, K9Behandling::class.java)
 
         fun builder(behandlingId: String, saksnummer: String): BehandlingBuilder = BehandlingBuilder(behandlingId, saksnummer)
     }
@@ -55,35 +55,35 @@ data class Behandling(
 }
 
 class BehandlingBuilder(behandlingId: String, saksnummer: String) {
-    private var behandling = Behandling(
+    private var k9Behandling = K9Behandling(
         behandlingId = behandlingId,
         saksnummer = saksnummer,
     )
 
-    fun build(): Behandling = behandling
+    fun build(): K9Behandling = k9Behandling
 
     fun behandlingId(behandlingId: String): BehandlingBuilder {
-        behandling = behandling.copy(behandlingId = behandlingId)
+        k9Behandling = k9Behandling.copy(behandlingId = behandlingId)
         return this
     }
 
     fun mottattDato(mottattDato: LocalDate?): BehandlingBuilder {
-        behandling = behandling.copy(mottattDato = mottattDato)
+        k9Behandling = k9Behandling.copy(mottattDato = mottattDato)
         return this
     }
 
     fun registrertDato(registrertDato: LocalDate?): BehandlingBuilder {
-        behandling = behandling.copy(registrertDato = registrertDato)
+        k9Behandling = k9Behandling.copy(registrertDato = registrertDato)
         return this
     }
 
     fun saksnummer(saksnummer: String): BehandlingBuilder {
-        behandling = behandling.copy(saksnummer = saksnummer)
+        k9Behandling = k9Behandling.copy(saksnummer = saksnummer)
         return this
     }
 
     fun behandlingType(kode: String?, beskrivelse: String?): BehandlingBuilder {
-        behandling = behandling.copy(behandlingType = kode, behandlingTypeBeskrivelse = beskrivelse)
+        k9Behandling = k9Behandling.copy(behandlingType = kode, behandlingTypeBeskrivelse = beskrivelse)
         return this
     }
 }

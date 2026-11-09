@@ -3,11 +3,11 @@ package no.nav.k9.los.domeneadaptere.statistikk.avp
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.kodeverk.AktOppgavetypenavn
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.oppgavedefinisjon.AktivitetspengerFelter
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.oppgavedefinisjon.AktivitetspengerOppgavetyper
+import no.nav.k9.los.domeneadaptere.statistikk.Aktør
 import no.nav.k9.los.oppgaveuthenting.Oppgave
 import no.nav.ung.kodeverk.behandling.BehandlingResultatType
 import no.nav.ung.kodeverk.behandling.BehandlingStatus
 import no.nav.ung.kodeverk.behandling.BehandlingType
-import no.nav.ung.sak.typer.AktørId
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
@@ -28,7 +28,7 @@ class AvpOppgaveTilDVHMapper {
         return AvpBehandling(
             sakId = oppgave.hentVerdi(AktivitetspengerFelter.Sak.SAKSNUMMER.id),
             behandlingId = oppgave.eksternId,
-            søkersAktørId = AktørId(oppgave.hentVerdi(AktivitetspengerFelter.Sak.AKTOR_ID.id)!!),
+            søkersAktørId = Aktør(oppgave.hentVerdi(AktivitetspengerFelter.Sak.AKTOR_ID.id)!!.toLong(), "Søker", "Søker"),
             funksjonellTid = LocalDateTime.parse(oppgave.eksternVersjon).atZone(zoneId).toOffsetDateTime(),
             tekniskTid = OffsetDateTime.now(zoneId),
             mottattDato = oppgave.hentVerdi(AktivitetspengerFelter.Sak.MOTTATT_DATO.id)?.let { LocalDateTime.parse(it).toLocalDate() },

@@ -4,6 +4,7 @@ import no.nav.k9.klage.kodeverk.behandling.BehandlingResultatType
 import no.nav.k9.klage.kodeverk.behandling.BehandlingStatus
 import no.nav.k9.klage.kodeverk.behandling.FagsakYtelseType
 import no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
+import no.nav.k9.los.domeneadaptere.statistikk.Aktør
 import no.nav.k9.los.kodeverk.BehandlingType
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.klagetillos.KlageEventTilOppgaveMapper
 import no.nav.k9.los.oppgaveuthenting.Oppgave
@@ -18,8 +19,8 @@ class K9KlageOppgaveTilDVHMapper {
         val zoneId = ZoneId.of("Europe/Oslo")
     }
 
-    fun lagBehandling(oppgave: Oppgave): Behandling {
-        return Behandling(
+    fun lagBehandling(oppgave: Oppgave): K9Behandling {
+        return K9Behandling(
             sakId = oppgave.hentVerdi("saksnummer"),
             behandlingId = oppgave.eksternId,
             funksjonellTid = LocalDateTime.parse(oppgave.eksternVersjon).atZone(zoneId).toOffsetDateTime(),
