@@ -9,35 +9,19 @@ import no.nav.k9.los.KoinProfile
 import java.util.UUID
 
 internal fun Route.testdataApi(
-    profile: KoinProfile,
-    enabled: Boolean,
-    clusterName: String? = null,
-    tjeneste: () -> TestdataTjeneste,
+    testdataTjeneste: TestdataTjeneste,
 ) {
-    if (profile != KoinProfile.LOCAL || !enabled || !clusterName.isNullOrBlank()) return
-
-    val testdata by lazy(tjeneste)
     route("/api/testdata") {
         get("/ready") {
-            call.respond(if (testdata.erKlar()) HttpStatusCode.OK else HttpStatusCode.ServiceUnavailable)
+            call.respond(if (testdataTjeneste.erKlar()) HttpStatusCode.OK else HttpStatusCode.ServiceUnavailable)
         }
         post("/oppgaver") {
-            // HTML-skjemaer fra andre nettsteder skal ikke kunne opprette lokale testdata.
-            if (!call.request.contentType().match(ContentType.Application.Json)) {
-                call.respond(HttpStatusCode.UnsupportedMediaType)
-            } else {
-                call.respond(HttpStatusCode.Created, testdata.opprettOppgave())
-            }
+            call.respond(HttpStatusCode.Created, testdataTjeneste.opprettOppgave())
         }
         delete("/oppgaver/{id}") {
-            val id = runCatching { UUID.fromString(call.parameters["id"]) }.getOrNull()
-            if (id == null) {
-                call.respond(HttpStatusCode.BadRequest)
-            } else if (testdata.slettOppgave(id)) {
-                call.respond(HttpStatusCode.NoContent)
-            } else {
-                call.respond(HttpStatusCode.NotFound)
-            }
+            val id = UUID.fromString(call.parameters["id"])
+            testdataTjeneste.slettOppgave(id)
+            call.respond(HttpStatusCode.NoContent)
         }
     }
 }
