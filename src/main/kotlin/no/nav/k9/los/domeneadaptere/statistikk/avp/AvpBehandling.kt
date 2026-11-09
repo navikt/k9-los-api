@@ -11,6 +11,7 @@ import java.time.OffsetDateTime
 data class AvpBehandling(
     val sakId: String? = null,
     val behandlingId: String,
+    @field:no.nav.k9.los.forvaltning.SensitiveField
     val søkersAktørId: AktørId,
     val funksjonellTid: OffsetDateTime? = null,
     val tekniskTid: OffsetDateTime? = null,
