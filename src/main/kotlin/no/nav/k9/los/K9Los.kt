@@ -219,14 +219,6 @@ fun Application.k9Los() {
         DefaultProbeRoutes()
         HealthRoute(healthService = koin.get())
 
-        testdataApi(
-            profile = configuration.koinProfile,
-            enabled = environment.config.propertyOrNull("nav.testdata.enabled")?.getString() == "true",
-            clusterName = environment.config.propertyOrNull("nav.clustername")?.getString(),
-        ) {
-            TestdataTjeneste(koin.get(), koin.get(), koin.get(), koin.get(), koin.get())
-        }
-
         HealthReporter(
             app = appId,
             healthService = koin.get(),
@@ -235,6 +227,9 @@ fun Application.k9Los() {
 
         if ((KoinProfile.LOCAL == koin.get<KoinProfile>())) {
             api(eksponerSwagger = true)
+            testdataApi(
+                TestdataTjeneste(koin.get(), koin.get(), koin.get(), koin.get(), koin.get())
+            )
         } else {
             authenticate(*issuers.allIssuers()) {
                 api(eksponerSwagger = false)
