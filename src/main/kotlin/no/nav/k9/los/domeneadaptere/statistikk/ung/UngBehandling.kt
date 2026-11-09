@@ -29,7 +29,7 @@ data class UngBehandling(
     val utenlandssak: Boolean? = null,
     val beslutter: String? = null,
     val saksbehandler: String? = null,
-    val ansvarligEnhetKode: String,
+    val ansvarligEnhetKode: String?,
     val totrinnsbehandling: Boolean? = null,
     val helautomatiskBehandlet: Boolean? = false,
     val avsender: String? = null,

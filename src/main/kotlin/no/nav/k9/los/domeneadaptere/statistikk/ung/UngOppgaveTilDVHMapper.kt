@@ -42,7 +42,7 @@ class UngOppgaveTilDVHMapper {
             utenlandssak = null, // TODO
             beslutter = oppgave.hentVerdi(UngdomsprogramytelsenFelter.Saksbehandling.ANSVARLIG_BESLUTTER.id),
             saksbehandler = oppgave.hentVerdi(UngdomsprogramytelsenFelter.Saksbehandling.ANSVARLIG_SAKSBEHANDLER.id),
-            ansvarligEnhetKode = oppgave.hentVerdi(UngdomsprogramytelsenFelter.Vedtak.BEHANDLENDE_ENHET.id)!!, //dvh kaller fagsystemets behandlende enhet for ansvarlig enhet. De utleder en egen behandlende enhet baser på ansvarlig saksbehandlers enhetstilhørighet
+            ansvarligEnhetKode = oppgave.hentVerdi(UngdomsprogramytelsenFelter.Vedtak.BEHANDLENDE_ENHET.id), //dvh kaller fagsystemets behandlende enhet for ansvarlig enhet. De utleder en egen behandlende enhet baser på ansvarlig saksbehandlers enhetstilhørighet
             totrinnsbehandling = oppgave.hentVerdi(UngdomsprogramytelsenFelter.Vedtak.TOTRINNSKONTROLL.id)?.toBoolean(),
             helautomatiskBehandlet = null, // TODO
             avsender = "K9los",
