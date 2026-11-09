@@ -2,7 +2,7 @@ package no.nav.k9.los.domeneadaptere.eventtiloppgave.ung.mapper
 
 import no.nav.k9.los.domeneadaptere.eventlager.EventLagret
 import no.nav.k9.los.domeneadaptere.eventlager.Fagsystem
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.ung.kodeverk.UpyOppgavetypenavn
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.ung.kodeverk.UngOppgavetypenavn
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.ung.oppgavedefinisjon.UngdomsprogramytelsenFelter.Aksjonspunkt
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.ung.oppgavedefinisjon.UngdomsprogramytelsenFelter.Behandling
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.ung.oppgavedefinisjon.UngdomsprogramytelsenFelter.Sak
@@ -58,15 +58,15 @@ object SakEventTilOppgaveMapper {
     }
 
 
-    fun utledOppgavetype(event: UngSakEventDto): UpyOppgavetypenavn {
+    fun utledOppgavetype(event: UngSakEventDto): UngOppgavetypenavn {
         return when (BehandlingType.fraKode(event.behandlingTypeKode)) {
             BehandlingType.FØRSTEGANGSSØKNAD,
             BehandlingType.REVURDERING ->
-                UpyOppgavetypenavn.UNGDOMSPROGRAMYTELSENORDINÆR
+                UngOppgavetypenavn.UNGDOMSPROGRAMYTELSENORDINÆR
 
             BehandlingType.KLAGE,
             BehandlingType.ANKE ->
-                UpyOppgavetypenavn.UNGDOMSPROGRAMYTELSENKLAGE
+                UngOppgavetypenavn.UNGDOMSPROGRAMYTELSENKLAGE
 
             BehandlingType.TILBAKEKREVING,
             BehandlingType.REVURDERING_TILBAKEKREVING,
@@ -105,8 +105,8 @@ object SakEventTilOppgaveMapper {
     fun utledReservasjonsnokkel(eventLagret: EventLagret.UngSak, tilBeslutter: Boolean): String {
         val event = eventLagret.eventDto
         val prefiks = when (utledOppgavetype(event)) {
-            UpyOppgavetypenavn.UNGDOMSPROGRAMYTELSENORDINÆR -> "UPY_b_del1"
-            UpyOppgavetypenavn.UNGDOMSPROGRAMYTELSENKLAGE -> "UPY_k"
+            UngOppgavetypenavn.UNGDOMSPROGRAMYTELSENORDINÆR -> "UPY_b_del1"
+            UngOppgavetypenavn.UNGDOMSPROGRAMYTELSENKLAGE -> "UPY_k"
         }
         return if (tilBeslutter) {
             "${prefiks}_${event.aktørId}_beslutter"
@@ -132,7 +132,7 @@ object SakEventTilOppgaveMapper {
     private fun lagFeltverdier(
         event: UngSakEventDto,
         forrigeOppgave: OppgaveV3?,
-        oppgavetype: UpyOppgavetypenavn,
+        oppgavetype: UngOppgavetypenavn,
     ): List<OppgaveFeltverdiDto> {
         val verdier = Feltverdier(UngdomsprogramytelsenOppgavetyper.hent(oppgavetype))
         mapEnkeltverdier(event, forrigeOppgave, verdier)

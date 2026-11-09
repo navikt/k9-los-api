@@ -9,7 +9,7 @@ import io.mockk.every
 import io.mockk.mockk
 import no.nav.k9.los.domeneadaptere.eventlager.EventLagret
 import no.nav.k9.los.domeneadaptere.eventmottak.ung.sak.UngSakEventDto
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.ung.kodeverk.UpyOppgavetypenavn
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.ung.kodeverk.UngOppgavetypenavn
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.ung.oppgavedefinisjon.UngdomsprogramytelsenFelter
 import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
@@ -148,7 +148,7 @@ class SakEventTilOppgaveMapperTest {
     fun `førstegangssøknad og revurdering gir ordinær oppgave`() {
         listOf(BehandlingType.FØRSTEGANGSSØKNAD, BehandlingType.REVURDERING).forEach { behandlingType ->
             assertThat(SakEventTilOppgaveMapper.utledOppgavetype(lagEvent(behandlingTypeKode = behandlingType.kode)))
-                .isEqualTo(UpyOppgavetypenavn.UNGDOMSPROGRAMYTELSENORDINÆR)
+                .isEqualTo(UngOppgavetypenavn.UNGDOMSPROGRAMYTELSENORDINÆR)
         }
     }
 
@@ -156,7 +156,7 @@ class SakEventTilOppgaveMapperTest {
     fun `klage og anke gir klageoppgave`() {
         listOf(BehandlingType.KLAGE, BehandlingType.ANKE).forEach { behandlingType ->
             assertThat(SakEventTilOppgaveMapper.utledOppgavetype(lagEvent(behandlingTypeKode = behandlingType.kode)))
-                .isEqualTo(UpyOppgavetypenavn.UNGDOMSPROGRAMYTELSENKLAGE)
+                .isEqualTo(UngOppgavetypenavn.UNGDOMSPROGRAMYTELSENKLAGE)
         }
     }
 
@@ -174,7 +174,7 @@ class SakEventTilOppgaveMapperTest {
                 1,
             ).dto
 
-            assertThat(vanlig.type).isEqualTo(UpyOppgavetypenavn.UNGDOMSPROGRAMYTELSENKLAGE)
+            assertThat(vanlig.type).isEqualTo(UngOppgavetypenavn.UNGDOMSPROGRAMYTELSENKLAGE)
             assertThat(vanlig.status).isEqualTo(Oppgavestatus.AAPEN)
             assertThat(vanlig.reservasjonsnøkkel).isEqualTo("UPY_k_1234567890123")
             assertThat(vanlig.feltverdier.verdiFor(UngdomsprogramytelsenFelter.Behandling.TYPEKODE.id))
@@ -266,7 +266,7 @@ class SakEventTilOppgaveMapperTest {
 
         assertThat(dto.eksternId).isEqualTo(event.eksternId.toString())
         assertThat(dto.eksternVersjon).isEqualTo(EVENT_TID.toString())
-        assertThat(dto.type).isEqualTo(UpyOppgavetypenavn.UNGDOMSPROGRAMYTELSENORDINÆR)
+        assertThat(dto.type).isEqualTo(UngOppgavetypenavn.UNGDOMSPROGRAMYTELSENORDINÆR)
         assertThat(dto.status).isEqualTo(Oppgavestatus.UAVKLART)
         assertThat(dto.reservasjonsnøkkel).isEqualTo("UPY_b_del1_1234567890123")
         assertThat(dto.feltverdier.verdiFor(UngdomsprogramytelsenFelter.Sak.AKTOR_ID.id)).isEqualTo("1234567890123")

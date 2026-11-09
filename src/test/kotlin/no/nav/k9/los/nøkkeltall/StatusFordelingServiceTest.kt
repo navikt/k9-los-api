@@ -5,7 +5,7 @@ import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.kodeverk.AktOppgavetypenavn
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.kodeverk.AvpOppgavetypenavn
 import no.nav.k9.los.kodeverk.PersonBeskyttelseType
 import no.nav.k9.los.nøkkeltall.avdelingsleder.statusfordeling.AktivitetspengerStatusFordelingService
 import no.nav.k9.los.nøkkeltall.avdelingsleder.statusfordeling.K9StatusFordelingService
@@ -31,8 +31,8 @@ class StatusFordelingServiceTest {
     private val k9 = K9StatusFordelingService(queryService)
     private val aktivitetspenger = AktivitetspengerStatusFordelingService(queryService)
     private val service = StatusFordelingService(k9, aktivitetspenger)
-    private val del1 = AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1.kode
-    private val del2 = AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2.kode
+    private val del1 = AvpOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1.kode
+    private val del2 = AvpOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2.kode
 
     @Test
     fun `aktivitetspenger teller samlet og per Nav-enhet med tilsvarende kildespørringer`() {

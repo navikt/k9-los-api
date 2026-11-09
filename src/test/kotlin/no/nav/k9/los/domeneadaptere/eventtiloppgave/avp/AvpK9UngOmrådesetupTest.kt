@@ -5,8 +5,8 @@ import assertk.assertions.*
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.kodeverk.AktBehandlendeEnhet
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.kodeverk.AktFagsystem
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.kodeverk.AvpBehandlendeEnhet
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.kodeverk.AvpFagsystem
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.oppgavedefinisjon.AktivitetspengerFelter
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.FeltdefinisjonTjeneste
@@ -26,7 +26,7 @@ import no.nav.ung.kodeverk.behandling.aksjonspunkt.Venteårsak
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 
-class OmrådesetupTest {
+class AvpK9UngOmrådesetupTest {
 
     private class Kjøring(
         val kodeverk: List<KodeverkDto>,
@@ -46,7 +46,7 @@ class OmrådesetupTest {
         every { feltdefinisjonTjeneste.oppdater(capture(feltdefinisjonerSlot)) } returns Unit
         every { oppgavetypeTjeneste.oppdater(capture(oppgavetyperSlot)) } returns Unit
 
-        Områdesetup(områdeRepository, feltdefinisjonTjeneste, oppgavetypeTjeneste, FRONTEND_URL).setup()
+        AvpOmrådesetup(områdeRepository, feltdefinisjonTjeneste, oppgavetypeTjeneste, FRONTEND_URL).setup()
 
         return Kjøring(
             kodeverk = kodeverkSlot.captured,
@@ -110,14 +110,14 @@ class OmrådesetupTest {
             BehandlingType::class.java.simpleName,
             BehandlingStatus::class.java.simpleName,
             BehandlingÅrsakType::class.java.simpleName,
-            AktFagsystem::class.java.simpleName,
+            AvpFagsystem::class.java.simpleName,
             BehandlingResultatType::class.java.simpleName,
             FagsakYtelseType::class.java.simpleName,
         ).forEach { assertThat(kodeverk.medEksternId(it).uttømmende).isTrue() }
 
         listOf(
             BehandlingStegType::class.java.simpleName,
-            AktBehandlendeEnhet::class.java.simpleName,
+            AvpBehandlendeEnhet::class.java.simpleName,
             AksjonspunktDefinisjon::class.java.simpleName,
             Venteårsak::class.java.simpleName,
         ).forEach { assertThat(kodeverk.medEksternId(it).uttømmende).isFalse() }

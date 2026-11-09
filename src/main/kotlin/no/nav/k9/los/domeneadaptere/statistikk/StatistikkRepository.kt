@@ -1,14 +1,13 @@
 package no.nav.k9.los.domeneadaptere.statistikk
 
 import kotliquery.*
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.kodeverk.AktOppgavetypenavn
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.ung.kodeverk.UpyOppgavetypenavn
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.kodeverk.AvpOppgavetypenavn
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.ung.kodeverk.UngOppgavetypenavn
 import no.nav.k9.los.infrastruktur.db.util.InClauseHjelper
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgavedefinisjon.oppgavetype.OppgavetypeRepository
 import no.nav.k9.los.oppgaveuthenting.Oppgave
-import no.nav.k9.los.oppgaveuthenting.OppgaveNøkkelDto
 import no.nav.k9.los.oppgaveuthenting.Oppgavefelt
 import java.time.LocalDateTime
 import javax.sql.DataSource
@@ -82,26 +81,7 @@ class StatistikkRepository(
         mapOf("id" to id)
     )
 
-    fun fjernSendtMarkering(oppgave: OppgaveNøkkelDto, tx: TransactionalSession) {
-        val oppgavetyper = DVH_OPPGAVETYPER[oppgave.områdeEksternId] ?: return
-        // Legg alle versjoner av oppgaven tilbake som pending (resend fra start)
-        tx.run(
-            queryOf(
-                """
-                insert into oppgave_v3_dvh_pending (omrade_ekstern_id, oppgavetype_ekstern_id, ekstern_id, ekstern_versjon)
-                select :omrade, oppgavetype_ekstern_id, ekstern_id, ekstern_versjon
-                from oppgave_v3
-                where ekstern_id = :id
-                  and oppgavetype_ekstern_id in (${InClauseHjelper.tilParameternavn(oppgavetyper, "oppgavetype")})
-                on conflict do nothing
-                """.trimIndent(),
-                mapOf("id" to oppgave.oppgaveEksternId, "omrade" to oppgave.områdeEksternId.eksternId) +
-                    InClauseHjelper.parameternavnTilVerdierMap(oppgavetyper, "oppgavetype")
-            ).asUpdate
-        )
-    }
-
-    fun fjernSendtMarkering(oppgavetype: String? = null) {
+    fun bestillDvhSending(oppgavetype: String? = null) {
         val oppgavetyperPerOmråde = if (oppgavetype != null) {
             val område = DVH_OPPGAVETYPER.entries.firstOrNull { oppgavetype in it.value }?.key ?: return
             mapOf(område to setOf(oppgavetype))
@@ -171,11 +151,11 @@ class StatistikkRepository(
         val DVH_OPPGAVETYPER: Map<Områder, Set<String>> = mapOf(
             Områder.K9 to setOf("k9sak", "k9klage"),
             Områder.AKTIVITETSPENGER to setOf(
-                AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1.kode,
-                AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2.kode,
+                AvpOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1.kode,
+                AvpOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2.kode,
             ),
             Områder.UNGDOMSPROGRAMYTELSEN to setOf(
-                UpyOppgavetypenavn.UNGDOMSPROGRAMYTELSENORDINÆR.kode,
+                UngOppgavetypenavn.UNGDOMSPROGRAMYTELSENORDINÆR.kode,
             ),
         )
     }

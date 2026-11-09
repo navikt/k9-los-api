@@ -1,8 +1,8 @@
 package no.nav.k9.los.nøkkeltall
 
 import no.nav.k9.los.AbstractK9LosIntegrationTest
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.Områdesetup
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.kodeverk.AktOppgavetypenavn
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.AvpOmrådesetup
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.kodeverk.AvpOppgavetypenavn
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.oppgavedefinisjon.AktivitetspengerOppgavetyper
 import no.nav.k9.los.infrastruktur.abac.cache.PepCache
 import no.nav.k9.los.infrastruktur.abac.cache.PepCacheRepository
@@ -30,10 +30,10 @@ import kotlin.test.assertEquals
 class AktivitetspengerStatusFordelingIntegrationTest : AbstractK9LosIntegrationTest() {
     @Test
     fun `statusfordeling og neddrilling avgrenser område del status og personbeskyttelse`() {
-        get<Områdesetup>().setup()
-        get<no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.Områdesetup>().setup()
-        val del1 = AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1.kode
-        val del2 = AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2.kode
+        get<AvpOmrådesetup>().setup()
+        get<no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.K9Områdesetup>().setup()
+        val del1 = AvpOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1.kode
+        val del2 = AvpOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2.kode
         lagreOppgave(Områder.AKTIVITETSPENGER, del1, Oppgavestatus.AAPEN)
         lagreOppgave(Områder.AKTIVITETSPENGER, del1, Oppgavestatus.VENTER)
         lagreOppgave(Områder.AKTIVITETSPENGER, del2, Oppgavestatus.UAVKLART)
@@ -63,8 +63,8 @@ class AktivitetspengerStatusFordelingIntegrationTest : AbstractK9LosIntegrationT
 
     @Test
     fun `klager og feilutbetalinger har egne kort og inngår i samlet antall`() {
-        get<Områdesetup>().setup()
-        val klage = AktOppgavetypenavn.AKTIVITETSPENGERKLAGE.kode
+        get<AvpOmrådesetup>().setup()
+        val klage = AvpOppgavetypenavn.AKTIVITETSPENGERKLAGE.kode
         val feilutbetaling = "test-feilutbetaling"
         // Testdefinisjoner inntil eventmottaket støtter disse oppgavetypene.
         val definisjon = AktivitetspengerOppgavetyper.tilDto("http://localhost")

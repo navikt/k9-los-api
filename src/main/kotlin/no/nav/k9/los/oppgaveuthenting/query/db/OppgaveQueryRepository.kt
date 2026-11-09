@@ -5,7 +5,7 @@ import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.kodeverk.AktOppgavetypenavn
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.kodeverk.AvpOppgavetypenavn
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.kodeverk.K9Oppgavetypenavn
 import no.nav.k9.los.kodeverk.PersonBeskyttelseType
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
@@ -103,7 +103,7 @@ class OppgaveQueryRepository(
                 gruppering = null
             )
         }
-        val aktOppgavetyper = AktOppgavetypenavn.entries.map {
+        val aktOppgavetyper = AvpOppgavetypenavn.entries.map {
             Verdiforklaring(
                 verdi = it.kode,
                 visningsnavn = it.navn,

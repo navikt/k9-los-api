@@ -3,7 +3,7 @@ package no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.mapper
 import no.nav.k9.los.domeneadaptere.eventlager.EventLagret
 import no.nav.k9.los.domeneadaptere.eventlager.Fagsystem
 import no.nav.k9.los.domeneadaptere.eventmottak.ung.sak.UngSakEventDto
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.kodeverk.AktOppgavetypenavn
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.kodeverk.AvpOppgavetypenavn
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.oppgavedefinisjon.AktivitetspengerFelter.Aksjonspunkt
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.oppgavedefinisjon.AktivitetspengerFelter.Behandling
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.oppgavedefinisjon.AktivitetspengerFelter.Sak
@@ -63,20 +63,20 @@ object SakEventTilOppgaveMapper {
     }
 
 
-    fun utledOppgavetype(event: UngSakEventDto): AktOppgavetypenavn {
+    fun utledOppgavetype(event: UngSakEventDto): AvpOppgavetypenavn {
         if (event.eventHendelse == EventHendelse.AVSLUTTE_NAVKONTOR) {
-            return AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1
+            return AvpOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1
         }
         if (event.eventHendelse == EventHendelse.GJENOPPTA_NAVKONTOR) {
-            return AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2
+            return AvpOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2
         }
         if (event.behandlingSteg == null) { //Såvidt vi ser, kan første eller siste melding for en behandling mangle behandlingSteg. Vi antar at det er del 2 som gjelder da.
-            return AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2
+            return AvpOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2
         }
 
         when (BehandlingStegDel.utled(FagsakYtelseType.AKTIVITETSPENGER, BehandlingStegType.fraKode(event.behandlingSteg)).get()) {
-            BehandlingDel.NAV_KONTOR -> return AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1
-            BehandlingDel.SENTRAL -> return AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2
+            BehandlingDel.NAV_KONTOR -> return AvpOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1
+            BehandlingDel.SENTRAL -> return AvpOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2
         }
     }
 
@@ -115,9 +115,9 @@ object SakEventTilOppgaveMapper {
     fun utledReservasjonsnokkel(eventLagret: EventLagret.UngSak, tilBeslutter: Boolean): String {
         val event = eventLagret.eventDto
         val del = when (utledOppgavetype(event)) {
-            AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1 -> "del1"
-            AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2 -> "del2"
-            AktOppgavetypenavn.AKTIVITETSPENGERKLAGE -> throw NotImplementedError()
+            AvpOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1 -> "del1"
+            AvpOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2 -> "del2"
+            AvpOppgavetypenavn.AKTIVITETSPENGERKLAGE -> throw NotImplementedError()
         }
         val behandlingtype = when (BehandlingType.fraKode(eventLagret.eventDto.behandlingTypeKode)) {
             BehandlingType.FØRSTEGANGSSØKNAD,
@@ -154,7 +154,7 @@ object SakEventTilOppgaveMapper {
     private fun lagFeltverdier(
         event: UngSakEventDto,
         forrigeOppgave: OppgaveV3?,
-        oppgavetype: AktOppgavetypenavn,
+        oppgavetype: AvpOppgavetypenavn,
     ): List<OppgaveFeltverdiDto> {
         val verdier = Feltverdier(AktivitetspengerOppgavetyper.hent(oppgavetype))
         mapEnkeltverdier(event, forrigeOppgave, oppgavetype, verdier)
@@ -167,7 +167,7 @@ object SakEventTilOppgaveMapper {
     private fun mapEnkeltverdier(
         event: UngSakEventDto,
         forrigeOppgave: OppgaveV3?,
-        oppgavetype: AktOppgavetypenavn,
+        oppgavetype: AvpOppgavetypenavn,
         verdier: Feltverdier,
     ) {
         verdier[Behandling.UUID] = event.eksternId.toString()
@@ -192,21 +192,21 @@ object SakEventTilOppgaveMapper {
         verdier[Vedtak.DATO] = event.vedtaksdato ?: forrigeOppgave?.hent(Vedtak.DATO)
         verdier[Vedtak.YTELSESTYPE] = FagsakYtelseType.fraKode(event.ytelseTypeKode)
         verdier[Saksbehandling.BEHANDLENDE_ENHET] = when (utledOppgavetype(event)) {
-            AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1 -> event.navKontorbehandlendeEnhet
+            AvpOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1 -> event.navKontorbehandlendeEnhet
 
-            AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2,
-            AktOppgavetypenavn.AKTIVITETSPENGERKLAGE -> event.behandlendeEnhet
+            AvpOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2,
+            AvpOppgavetypenavn.AKTIVITETSPENGERKLAGE -> event.behandlendeEnhet
         }
 
         verdier[Saksbehandling.LIGGER_HOS_BESLUTTER] = erTilBeslutter(event)
         verdier[Saksbehandling.HELAUTOMATISK] = event.aksjonspunktTilstander.none {
             val definisjon = it.definisjon()
             val gjelderOppgavetype = when (oppgavetype) {
-                AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1 ->
+                AvpOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1 ->
                     definisjon.aksjonspunktType == AksjonspunktType.NAV_KONTOR_MANUELL
 
-                AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2,
-                AktOppgavetypenavn.AKTIVITETSPENGERKLAGE ->
+                AvpOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2,
+                AvpOppgavetypenavn.AKTIVITETSPENGERKLAGE ->
                     definisjon.aksjonspunktType != AksjonspunktType.NAV_KONTOR_MANUELL
             }
             it.status == AksjonspunktStatus.UTFØRT &&
@@ -214,16 +214,16 @@ object SakEventTilOppgaveMapper {
                     gjelderOppgavetype
         }
         verdier[Saksbehandling.ANSVARLIG_BESLUTTER] = when (oppgavetype) {
-            AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1 -> event.navKontorBeslutter
+            AvpOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1 -> event.navKontorBeslutter
 
-            AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2,
-            AktOppgavetypenavn.AKTIVITETSPENGERKLAGE -> event.ansvarligBeslutterForTotrinn
+            AvpOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2,
+            AvpOppgavetypenavn.AKTIVITETSPENGERKLAGE -> event.ansvarligBeslutterForTotrinn
         }
         verdier[Saksbehandling.ANSVARLIG_SAKSBEHANDLER] = when (oppgavetype) {
-            AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1 -> event.navKontorAnsvarligSaksbehandler
+            AvpOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1 -> event.navKontorAnsvarligSaksbehandler
 
-            AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2,
-            AktOppgavetypenavn.AKTIVITETSPENGERKLAGE -> event.ansvarligSaksbehandlerForTotrinn
+            AvpOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2,
+            AvpOppgavetypenavn.AKTIVITETSPENGERKLAGE -> event.ansvarligSaksbehandlerForTotrinn
         }
         (forrigeOppgave?.hent(Saksbehandling.TID_FORSTE_GANG_HOS_BESLUTTER)
             ?: event.eventTid.takeIf { erTilBeslutter(event) })

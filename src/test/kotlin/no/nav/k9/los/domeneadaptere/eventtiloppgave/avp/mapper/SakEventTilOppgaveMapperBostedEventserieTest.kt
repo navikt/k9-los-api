@@ -5,7 +5,7 @@ import assertk.assertions.*
 import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 import no.nav.k9.los.domeneadaptere.eventlager.EventLagret
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.kodeverk.AktOppgavetypenavn
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.kodeverk.AvpOppgavetypenavn
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.oppgavedefinisjon.AktivitetspengerFelter
 import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
@@ -61,7 +61,7 @@ class SakEventTilOppgaveMapperBostedEventserieTest {
         eventer.indices.forEach { indeks ->
             val dto = map(indeks)
             val feltverdier = dto.feltverdier
-            val forventetEnhet = if (dto.type == AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1) "5701" else "0387"
+            val forventetEnhet = if (dto.type == AvpOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1) "5701" else "0387"
 
             assertThat(feltverdier.verdiFor(AktivitetspengerFelter.Behandling.UUID.id)).isEqualTo(eksternId)
             assertThat(feltverdier.verdiFor(AktivitetspengerFelter.Sak.AKTOR_ID.id)).isEqualTo(aktørId)

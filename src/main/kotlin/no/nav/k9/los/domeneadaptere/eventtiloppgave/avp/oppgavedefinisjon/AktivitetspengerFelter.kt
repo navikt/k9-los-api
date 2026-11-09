@@ -1,7 +1,7 @@
 package no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.oppgavedefinisjon
 
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.kodeverk.AktBehandlendeEnhet
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.kodeverk.AktFagsystem
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.kodeverk.AvpBehandlendeEnhet
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.kodeverk.AvpFagsystem
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.Synlighet.INTERNT
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.Synlighet.OVER_STREKEN
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.Synlighet.UNDER_STREKEN
@@ -36,7 +36,7 @@ object AktivitetspengerFelter : Feltkatalog(Områder.AKTIVITETSPENGER) {
 
     object Sak : Feltgruppe() {
         val AKTOR_ID = string("aktorId", "Søkers aktør-ID", INTERNT)
-        val FAGSYSTEM = string("fagsystem", "Fagsystem", UNDER_STREKEN, kodeverk = AktFagsystem::class)
+        val FAGSYSTEM = string("fagsystem", "Fagsystem", UNDER_STREKEN, kodeverk = AvpFagsystem::class)
         val SAKSNUMMER = string("saksnummer", "Saksnummer", UNDER_STREKEN)
         val MOTTATT_DATO = timestamp("mottattDato", "Mottatt dato", UNDER_STREKEN)
         val TID_SIDEN_MOTTATT_DATO = duration(
@@ -82,7 +82,7 @@ object AktivitetspengerFelter : Feltkatalog(Områder.AKTIVITETSPENGER) {
     object Saksbehandling : Feltgruppe() {
         val ANSVARLIG_SAKSBEHANDLER = string("ansvarligSaksbehandler", "Ansvarlig saksbehandler", UNDER_STREKEN)
         val ANSVARLIG_BESLUTTER = string("ansvarligBeslutter", "Ansvarlig beslutter", UNDER_STREKEN)
-        val BEHANDLENDE_ENHET = string("behandlendeEnhet", "Behandlende enhet", UNDER_STREKEN, kodeverk = AktBehandlendeEnhet::class)
+        val BEHANDLENDE_ENHET = string("behandlendeEnhet", "Behandlende enhet", UNDER_STREKEN, kodeverk = AvpBehandlendeEnhet::class)
         val LIGGER_HOS_BESLUTTER = boolean("liggerHosBeslutter", "Til beslutter", OVER_STREKEN)
         val TID_FORSTE_GANG_HOS_BESLUTTER = timestamp(
             "tidFørsteGangHosBeslutter", "Tidspunkt oppgaven gikk til beslutter første gang", OVER_STREKEN,

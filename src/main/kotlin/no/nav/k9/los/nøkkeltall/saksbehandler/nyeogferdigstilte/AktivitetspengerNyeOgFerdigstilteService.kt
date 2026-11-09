@@ -3,7 +3,7 @@ package no.nav.k9.los.nøkkeltall.saksbehandler.nyeogferdigstilte
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.kodeverk.AktOppgavetypenavn
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.kodeverk.AvpOppgavetypenavn
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.oppgavedefinisjon.AktivitetspengerFelter
 import no.nav.k9.los.infrastruktur.utils.Cache
 import no.nav.k9.los.infrastruktur.utils.CacheObject
@@ -61,8 +61,8 @@ class AktivitetspengerNyeOgFerdigstilteService(
     private data class TelleRad(val oppgavetype: String?, val behandlingstype: String?, val antall: Long) {
         fun matcher(gruppe: String): Boolean = when (gruppe) {
             "ALLE" -> true
-            "NAVKONTOR" -> oppgavetype == AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1.kode
-            "NAVFORVALTNING" -> oppgavetype == AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2.kode
+            "NAVKONTOR" -> oppgavetype == AvpOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1.kode
+            "NAVFORVALTNING" -> oppgavetype == AvpOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2.kode
             "KLAGE" -> behandlingstype in setOf(BehandlingType.KLAGE.kode, BehandlingType.ANKE.kode)
             "FEILUTBETALING" -> behandlingstype in setOf(BehandlingType.TILBAKEKREVING.kode, BehandlingType.REVURDERING_TILBAKEKREVING.kode)
             else -> error("Ukjent gruppe: $gruppe")

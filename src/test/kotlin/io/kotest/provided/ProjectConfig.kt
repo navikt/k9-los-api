@@ -8,7 +8,7 @@ import io.kotest.core.listeners.TestListener
 import io.kotest.core.test.TestCase
 import io.kotest.engine.test.TestResult
 import no.nav.k9.los.buildAndTestConfig
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.Områdesetup
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.K9Områdesetup
 import no.nav.k9.los.infrastruktur.db.runMigration
 import no.nav.k9.los.tjenester.mock.localSetup.getKoin
 import org.koin.core.context.startKoin
@@ -51,7 +51,7 @@ class ProjectConfig : AbstractProjectConfig() {
             )
         }
 
-        getKoin().get<Områdesetup>().setup()
+        getKoin().get<K9Områdesetup>().setup()
     }
 
     override suspend fun afterProject() {

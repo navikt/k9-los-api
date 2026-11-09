@@ -6,7 +6,7 @@ import no.nav.k9.los.kodeverk.Kodeverdi
 import no.nav.k9.los.kodeverk.TempAvledeKode
 
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)
-enum class UpyFagsystem(override val kode: String, override val kodeverk: String, override val navn: String):
+enum class UngFagsystem(override val kode: String, override val kodeverk: String, override val navn: String):
     Kodeverdi {
     UNGSAK("UNGSAK", "FAGSYSTEM", "Ung-sak"),
     UNGTILBAKE("UNGTILBAKE", "FAGSYSTEM", "Ung-tilbake");
@@ -14,7 +14,7 @@ enum class UpyFagsystem(override val kode: String, override val kodeverk: String
     companion object {
         @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
         @JvmStatic
-        fun fraKode(o: Any): UpyFagsystem {
+        fun fraKode(o: Any): UngFagsystem {
             val kode = TempAvledeKode.getVerdi(o)
             return entries.find { it.kode == kode } ?: throw IllegalStateException("Kjenner ikke igjen koden=$kode")
         }

@@ -3,7 +3,7 @@ package no.nav.k9.los
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.channels.Channel
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.Områdesetup
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.K9Områdesetup
 import no.nav.k9.los.domeneadaptere.avstemming.k9.AvstemmingsTjeneste
 import no.nav.k9.los.domeneadaptere.eventmottak.FeilRekkefølgeSjekker
 import no.nav.k9.los.domeneadaptere.eventlager.EventRepository
@@ -16,8 +16,8 @@ import no.nav.k9.los.domeneadaptere.eventtiloppgave.EventBeriker
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.EventTilOppgaveAdapter
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.HistorikkvaskTjeneste
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.OppgaveOppdatertHandler
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.Områdesetup as AktOmrådesetup
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.ung.Områdesetup as UpyOmrådesetup
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.AvpOmrådesetup as AktOmrådesetup
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.ung.UngOmrådesetup as UpyOmrådesetup
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.klagetillos.beriker.K9KlageBerikerInterfaceKludge
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.klagetillos.beriker.K9KlageBerikerKlientLocal
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.saktillos.beriker.K9SakSystemKlientInterfaceKludge
@@ -231,7 +231,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     single { FeltdefinisjonRepository(områdeRepository = get()) }
     single { OmrådeRepository(dataSource = get()) }
     single(createdAtStart = true) {
-        Områdesetup(
+        K9Områdesetup(
             områdeRepository = get(),
             feltdefinisjonTjeneste = get(),
             oppgavetypeTjeneste = get(),

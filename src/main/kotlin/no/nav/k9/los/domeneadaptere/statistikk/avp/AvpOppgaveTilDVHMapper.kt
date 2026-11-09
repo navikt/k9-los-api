@@ -1,8 +1,7 @@
 package no.nav.k9.los.domeneadaptere.statistikk.avp
 
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.kodeverk.AktOppgavetypenavn
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.kodeverk.AvpOppgavetypenavn
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.oppgavedefinisjon.AktivitetspengerFelter
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.oppgavedefinisjon.AktivitetspengerOppgavetyper
 import no.nav.k9.los.domeneadaptere.statistikk.Aktør
 import no.nav.k9.los.oppgaveuthenting.Oppgave
 import no.nav.ung.kodeverk.behandling.BehandlingResultatType
@@ -13,7 +12,6 @@ import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.ZoneId
 
-// TODO: Utkast - verifiser felter og verdier mot DVH-kontrakten for aktivitetspenger
 class AvpOppgaveTilDVHMapper {
 
     companion object {
@@ -49,7 +47,7 @@ class AvpOppgaveTilDVHMapper {
             helautomatiskBehandlet = oppgave.hentVerdi(AktivitetspengerFelter.Saksbehandling.HELAUTOMATISK.id).toBoolean(),
             avsender = "K9los",
             relatertBehandlingId = null, // TODO: klage
-            relatertBehandlingFagsystem = if (oppgave.oppgavetype.eksternId == AktOppgavetypenavn.AKTIVITETSPENGERKLAGE.kode) "ung-sak" else null,
+            relatertBehandlingFagsystem = if (oppgave.oppgavetype.eksternId == AvpOppgavetypenavn.AKTIVITETSPENGERKLAGE.kode) "ung-sak" else null,
             oversendtKlageinstans = null, // TODO: klage
         )
     }

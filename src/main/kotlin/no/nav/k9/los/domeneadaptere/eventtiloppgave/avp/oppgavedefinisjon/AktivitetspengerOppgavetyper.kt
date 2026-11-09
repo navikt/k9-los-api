@@ -1,6 +1,6 @@
 package no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.oppgavedefinisjon
 
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.kodeverk.AktOppgavetypenavn
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.kodeverk.AvpOppgavetypenavn
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.oppgavedefinisjon.AktivitetspengerFelter.Aksjonspunkt
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.oppgavedefinisjon.AktivitetspengerFelter.Behandling
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.oppgavedefinisjon.AktivitetspengerFelter.Sak
@@ -27,7 +27,7 @@ object AktivitetspengerOppgavetyper : Oppgavetypekatalog(AktivitetspengerFelter)
         påkrevd(Sak.AKTOR_ID)
         påkrevd(Sak.FAGSYSTEM, visPåOppgave = false)
         påkrevd(Sak.SAKSNUMMER)
-        valgfri(Sak.MOTTATT_DATO)
+        påkrevd(Sak.MOTTATT_DATO)
         valgfri(Sak.TID_SIDEN_MOTTATT_DATO)
         valgfri(Sak.REGISTRERT_DATO)
 
@@ -56,17 +56,17 @@ object AktivitetspengerOppgavetyper : Oppgavetypekatalog(AktivitetspengerFelter)
 
     private fun fagsakUrl(frontendUrl: String) = "$frontendUrl/fagsak/{${Sak.SAKSNUMMER.id}}/"
 
-    val ORDINÆR_DEL1 = Oppgavetypedefinisjon(AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1.kode, ::fagsakUrl) {
+    val ORDINÆR_DEL1 = Oppgavetypedefinisjon(AvpOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1.kode, ::fagsakUrl) {
         inkluder(fellesfelter)
     }
 
-    val ORDINÆR_DEL2 = Oppgavetypedefinisjon(AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2.kode, ::fagsakUrl) {
+    val ORDINÆR_DEL2 = Oppgavetypedefinisjon(AvpOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2.kode, ::fagsakUrl) {
         inkluder(fellesfelter)
     }
 
     //TODO: klage, feilutbetaling
     override val oppgavetyper = listOf(ORDINÆR_DEL1, ORDINÆR_DEL2)
 
-    fun hent(oppgavetype: AktOppgavetypenavn) = hent(oppgavetype.kode)
+    fun hent(oppgavetype: AvpOppgavetypenavn) = hent(oppgavetype.kode)
 }
 

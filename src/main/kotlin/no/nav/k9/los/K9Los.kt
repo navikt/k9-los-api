@@ -102,9 +102,9 @@ import java.time.Duration
 import java.util.*
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.Områdesetup as AktOmrådesetup
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.Områdesetup as K9Områdesetup
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.ung.Områdesetup as UpyOmrådesetup
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.AvpOmrådesetup as AvpOmrådesetup
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.K9Områdesetup as K9Områdesetup
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.ung.UngOmrådesetup as UngOmrådesetup
 
 fun main(args: Array<String>): Unit = EngineMain.main(args)
 
@@ -124,8 +124,8 @@ fun Application.k9Los() {
     val koin = getKoin()
 
     koin.get<K9Områdesetup>().setup()
-    koin.get<AktOmrådesetup>().setup()
-    koin.get<UpyOmrådesetup>().setup()
+    koin.get<AvpOmrådesetup>().setup()
+    koin.get<UngOmrådesetup>().setup()
 
     koin.get<EventlagerNokkeltallPrometheusCollector>()
 

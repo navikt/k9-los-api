@@ -6,7 +6,7 @@ import no.nav.k9.los.domeneadaptere.eventlager.Oppgavetype
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgavemottak.OppgaveDtoType
 
-enum class AktOppgavetypenavn(@JsonValue override val kode: String, val navn: String) : OppgaveDtoType, Oppgavetype {
+enum class AvpOppgavetypenavn(@JsonValue override val kode: String, val navn: String) : OppgaveDtoType, Oppgavetype {
     AKTIVITETSPENGERORDINÆRDEL1("aktivitetspenger-ordinær-del1", "Ord. del 1"),
     AKTIVITETSPENGERORDINÆRDEL2("aktivitetspenger-ordinær-del2", "Ord. del 2"),
     AKTIVITETSPENGERKLAGE("aktivitetspenger-klage", "Klage");
@@ -16,7 +16,7 @@ enum class AktOppgavetypenavn(@JsonValue override val kode: String, val navn: St
     companion object {
         @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
         @JvmStatic
-        fun fraKode(kode: String): AktOppgavetypenavn {
+        fun fraKode(kode: String): AvpOppgavetypenavn {
             return entries.find { it.kode == kode }
                 ?: throw IllegalStateException("Kjenner ikke igjen koden=$kode")
         }

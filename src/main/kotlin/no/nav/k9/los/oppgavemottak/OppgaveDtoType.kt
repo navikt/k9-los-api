@@ -1,8 +1,8 @@
 package no.nav.k9.los.oppgavemottak
 
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.kodeverk.K9Oppgavetypenavn
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.kodeverk.AktOppgavetypenavn
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.ung.kodeverk.UpyOppgavetypenavn
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.kodeverk.AvpOppgavetypenavn
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.ung.kodeverk.UngOppgavetypenavn
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 
 interface OppgaveDtoType {
@@ -12,8 +12,8 @@ interface OppgaveDtoType {
     companion object {
         fun fra(område: Områder, eksternId: String): OppgaveDtoType = when (område) {
             Områder.K9 -> K9Oppgavetypenavn.fraKode(eksternId)
-            Områder.AKTIVITETSPENGER -> AktOppgavetypenavn.fraKode(eksternId)
-            Områder.UNGDOMSPROGRAMYTELSEN -> UpyOppgavetypenavn.fraKode(eksternId)
+            Områder.AKTIVITETSPENGER -> AvpOppgavetypenavn.fraKode(eksternId)
+            Områder.UNGDOMSPROGRAMYTELSEN -> UngOppgavetypenavn.fraKode(eksternId)
         }
 
         fun fraEksternId(områdeEksternId: String, eksternId: String): OppgaveDtoType =

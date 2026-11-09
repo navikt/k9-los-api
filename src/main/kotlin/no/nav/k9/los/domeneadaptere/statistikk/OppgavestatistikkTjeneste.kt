@@ -223,6 +223,6 @@ class OppgavestatistikkTjeneste(
     }
 
     fun slettStatistikkgrunnlag(oppgavetype: String) {
-        statistikkRepository.fjernSendtMarkering(oppgavetype)
+        statistikkRepository.bestillDvhSending(oppgavetype)
     }
 }

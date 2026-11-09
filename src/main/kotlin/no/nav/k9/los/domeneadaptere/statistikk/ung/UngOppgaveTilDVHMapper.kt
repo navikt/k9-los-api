@@ -1,6 +1,6 @@
 package no.nav.k9.los.domeneadaptere.statistikk.ung
 
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.ung.kodeverk.UpyOppgavetypenavn
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.ung.kodeverk.UngOppgavetypenavn
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.ung.oppgavedefinisjon.UngdomsprogramytelsenFelter
 import no.nav.k9.los.domeneadaptere.statistikk.Aktør
 import no.nav.k9.los.oppgaveuthenting.Oppgave
@@ -47,7 +47,7 @@ class UngOppgaveTilDVHMapper {
             helautomatiskBehandlet = null, // TODO
             avsender = "K9los",
             relatertBehandlingId = null, // TODO: klage
-            relatertBehandlingFagsystem = if (oppgave.oppgavetype.eksternId == UpyOppgavetypenavn.UNGDOMSPROGRAMYTELSENKLAGE.kode) "ung-sak" else null,
+            relatertBehandlingFagsystem = if (oppgave.oppgavetype.eksternId == UngOppgavetypenavn.UNGDOMSPROGRAMYTELSENKLAGE.kode) "ung-sak" else null,
             oversendtKlageinstans = null, // TODO: klage
         )
     }

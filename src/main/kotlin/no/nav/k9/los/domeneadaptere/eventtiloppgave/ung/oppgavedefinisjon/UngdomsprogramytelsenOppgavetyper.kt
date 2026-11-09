@@ -1,6 +1,6 @@
 package no.nav.k9.los.domeneadaptere.eventtiloppgave.ung.oppgavedefinisjon
 
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.ung.kodeverk.UpyOppgavetypenavn
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.ung.kodeverk.UngOppgavetypenavn
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.ung.oppgavedefinisjon.UngdomsprogramytelsenFelter.Aksjonspunkt
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.ung.oppgavedefinisjon.UngdomsprogramytelsenFelter.Behandling
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.ung.oppgavedefinisjon.UngdomsprogramytelsenFelter.Sak
@@ -55,17 +55,17 @@ object UngdomsprogramytelsenOppgavetyper : Oppgavetypekatalog(Ungdomsprogramytel
     /**
      * UPY-oppgaver skal ikke vises for saksbehandlere, og har derfor ingen oppgavebehandlings-URL.
      */
-    val ORDINÆR = Oppgavetypedefinisjon(UpyOppgavetypenavn.UNGDOMSPROGRAMYTELSENORDINÆR.kode, behandlingsUrl = null) {
+    val ORDINÆR = Oppgavetypedefinisjon(UngOppgavetypenavn.UNGDOMSPROGRAMYTELSENORDINÆR.kode, behandlingsUrl = null) {
         inkluder(fellesfelter)
     }
 
-    val KLAGE = Oppgavetypedefinisjon(UpyOppgavetypenavn.UNGDOMSPROGRAMYTELSENKLAGE.kode, behandlingsUrl = null) {
+    val KLAGE = Oppgavetypedefinisjon(UngOppgavetypenavn.UNGDOMSPROGRAMYTELSENKLAGE.kode, behandlingsUrl = null) {
         inkluder(fellesfelter)
     }
 
     //TODO: feilutbetaling
     override val oppgavetyper = listOf(ORDINÆR, KLAGE)
 
-    fun hent(oppgavetype: UpyOppgavetypenavn) = hent(oppgavetype.kode)
+    fun hent(oppgavetype: UngOppgavetypenavn) = hent(oppgavetype.kode)
 }
 

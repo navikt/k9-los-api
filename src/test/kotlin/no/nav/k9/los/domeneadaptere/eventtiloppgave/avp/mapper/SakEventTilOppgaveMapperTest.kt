@@ -9,8 +9,8 @@ import io.mockk.every
 import io.mockk.mockk
 import no.nav.k9.los.domeneadaptere.eventlager.EventLagret
 import no.nav.k9.los.domeneadaptere.eventmottak.ung.sak.UngSakEventDto
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.kodeverk.AktBehandlendeEnhet
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.kodeverk.AktOppgavetypenavn
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.kodeverk.AvpBehandlendeEnhet
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.kodeverk.AvpOppgavetypenavn
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.oppgavedefinisjon.AktivitetspengerFelter
 import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
@@ -81,8 +81,8 @@ private fun lagEvent(
     eventHendelse = eventHendelse,
     behandlingStatus = behandlingStatus,
     behandlingSteg = behandlingSteg,
-    behandlendeEnhet = AktBehandlendeEnhet.STYRINGSENHET.kode,
-    navKontorbehandlendeEnhet = AktBehandlendeEnhet.FALKENBORG.kode,
+    behandlendeEnhet = AvpBehandlendeEnhet.STYRINGSENHET.kode,
+    navKontorbehandlendeEnhet = AvpBehandlendeEnhet.FALKENBORG.kode,
     ansvarligBeslutterForTotrinn = ansvarligBeslutterForTotrinn,
     ansvarligSaksbehandlerForTotrinn = ansvarligSaksbehandlerForTotrinn,
     navKontorAnsvarligSaksbehandler = navKontorAnsvarligSaksbehandler,
@@ -163,7 +163,7 @@ class SakEventTilOppgaveMapperTest {
             val event = lagEvent(behandlingSteg = steg.kode)
 
             assertThat(SakEventTilOppgaveMapper.utledOppgavetype(event))
-                .isEqualTo(AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1)
+                .isEqualTo(AvpOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1)
         }
     }
 
@@ -173,7 +173,7 @@ class SakEventTilOppgaveMapperTest {
             val event = lagEvent(behandlingSteg = steg.kode)
 
             assertThat(SakEventTilOppgaveMapper.utledOppgavetype(event))
-                .isEqualTo(AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2)
+                .isEqualTo(AvpOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2)
         }
     }
 
@@ -184,10 +184,10 @@ class SakEventTilOppgaveMapperTest {
 
             assertThat(SakEventTilOppgaveMapper.utledOppgavetype(
                 event.copy(behandlingSteg = BehandlingStegType.NAV_KONTOR_FORESLÅ_VILKÅR.kode)
-            )).isEqualTo(AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1)
+            )).isEqualTo(AvpOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1)
             assertThat(SakEventTilOppgaveMapper.utledOppgavetype(
                 event.copy(behandlingSteg = BehandlingStegType.FORESLÅ_VEDTAK.kode)
-            )).isEqualTo(AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2)
+            )).isEqualTo(AvpOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2)
         }
     }
 
@@ -199,7 +199,7 @@ class SakEventTilOppgaveMapperTest {
         )
 
         assertThat(SakEventTilOppgaveMapper.utledOppgavetype(event))
-            .isEqualTo(AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2)
+            .isEqualTo(AvpOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2)
     }
 
     @Test
@@ -216,10 +216,10 @@ class SakEventTilOppgaveMapperTest {
             )
 
             assertThat(SakEventTilOppgaveMapper.utledOppgavetype(event))
-                .isEqualTo(AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1)
+                .isEqualTo(AvpOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1)
             assertThat(SakEventTilOppgaveMapper.utledOppgavetype(
                 event.copy(behandlingSteg = BehandlingStegType.FORESLÅ_VEDTAK.kode)
-            )).isEqualTo(AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2)
+            )).isEqualTo(AvpOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2)
         }
     }
 
@@ -236,7 +236,7 @@ class SakEventTilOppgaveMapperTest {
                 1,
             ).dto
 
-            assertThat(dto.type).isEqualTo(AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1)
+            assertThat(dto.type).isEqualTo(AvpOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1)
             assertThat(dto.status).isEqualTo(Oppgavestatus.LUKKET)
             assertThat(dto.reservasjonsnøkkel).isEqualTo("AKT_b_del1_1234567890123")
         }
@@ -255,7 +255,7 @@ class SakEventTilOppgaveMapperTest {
                 1,
             ).dto
 
-            assertThat(dto.type).isEqualTo(AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2)
+            assertThat(dto.type).isEqualTo(AvpOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2)
             assertThat(dto.status).isEqualTo(Oppgavestatus.LUKKET)
             assertThat(dto.reservasjonsnøkkel).isEqualTo("AKT_b_del2_1234567890123")
         }
@@ -606,14 +606,14 @@ class SakEventTilOppgaveMapperTest {
     fun `del1 bruker navkontorets behandlende enhet`() {
         val feltverdier = feltverdier(lagEvent(behandlingSteg = BehandlingStegType.NAV_KONTOR_FORESLÅ_VILKÅR.kode))
 
-        assertThat(feltverdier.verdiFor(AktivitetspengerFelter.Saksbehandling.BEHANDLENDE_ENHET.id)).isEqualTo(AktBehandlendeEnhet.FALKENBORG.kode)
+        assertThat(feltverdier.verdiFor(AktivitetspengerFelter.Saksbehandling.BEHANDLENDE_ENHET.id)).isEqualTo(AvpBehandlendeEnhet.FALKENBORG.kode)
     }
 
     @Test
     fun `del2 bruker sentral behandlende enhet`() {
         val feltverdier = feltverdier(lagEvent(behandlingSteg = BehandlingStegType.FORESLÅ_VEDTAK.kode))
 
-        assertThat(feltverdier.verdiFor(AktivitetspengerFelter.Saksbehandling.BEHANDLENDE_ENHET.id)).isEqualTo(AktBehandlendeEnhet.STYRINGSENHET.kode)
+        assertThat(feltverdier.verdiFor(AktivitetspengerFelter.Saksbehandling.BEHANDLENDE_ENHET.id)).isEqualTo(AvpBehandlendeEnhet.STYRINGSENHET.kode)
     }
 
     @Test

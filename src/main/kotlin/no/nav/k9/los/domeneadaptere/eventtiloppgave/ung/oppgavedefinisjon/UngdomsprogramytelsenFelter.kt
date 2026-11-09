@@ -1,7 +1,7 @@
 package no.nav.k9.los.domeneadaptere.eventtiloppgave.ung.oppgavedefinisjon
 
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.ung.kodeverk.UpyBehandlendeEnhet
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.ung.kodeverk.UpyFagsystem
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.ung.kodeverk.UngBehandlendeEnhet
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.ung.kodeverk.UngFagsystem
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.Synlighet.INTERNT
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.Synlighet.OVER_STREKEN
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.Synlighet.UNDER_STREKEN
@@ -36,7 +36,7 @@ object UngdomsprogramytelsenFelter : Feltkatalog(Områder.UNGDOMSPROGRAMYTELSEN)
 
     object Sak : Feltgruppe() {
         val AKTOR_ID = string("aktorId", "Søkers aktør-ID", INTERNT)
-        val FAGSYSTEM = string("fagsystem", "Fagsystem", UNDER_STREKEN, kodeverk = UpyFagsystem::class)
+        val FAGSYSTEM = string("fagsystem", "Fagsystem", UNDER_STREKEN, kodeverk = UngFagsystem::class)
         val SAKSNUMMER = string("saksnummer", "Saksnummer", UNDER_STREKEN)
         val MOTTATT_DATO = timestamp("mottattDato", "Mottatt dato", UNDER_STREKEN)
         val TID_SIDEN_MOTTATT_DATO = duration(
@@ -49,7 +49,7 @@ object UngdomsprogramytelsenFelter : Feltkatalog(Områder.UNGDOMSPROGRAMYTELSEN)
     object Vedtak : Feltgruppe() {
         val DATO = dato("vedtaksdato", "Vedtaksdato", UNDER_STREKEN)
         val YTELSESTYPE = kode("ytelsestype", "Ytelsestype", OVER_STREKEN, FagsakYtelseType::class)
-        val BEHANDLENDE_ENHET = string("behandlendeEnhet", "Behandlende enhet", UNDER_STREKEN, kodeverk = UpyBehandlendeEnhet::class)
+        val BEHANDLENDE_ENHET = string("behandlendeEnhet", "Behandlende enhet", UNDER_STREKEN, kodeverk = UngBehandlendeEnhet::class)
         val TOTRINNSKONTROLL = boolean("totrinnskontroll", "Må gjennom totrinnskontroll", UNDER_STREKEN)
     }
 

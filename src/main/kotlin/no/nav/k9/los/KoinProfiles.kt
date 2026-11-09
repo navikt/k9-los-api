@@ -19,9 +19,9 @@ import no.nav.k9.los.domeneadaptere.eventmottak.kafka.KafkaConsumerLifecycleServ
 import no.nav.k9.los.domeneadaptere.eventmottak.ung.sak.UngSakEventHandler
 import no.nav.k9.los.domeneadaptere.eventmottak.ung.tilbake.UngTilbakeEventHandler
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.*
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.Områdesetup as AktOmrådesetup
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.Områdesetup as K9Områdesetup
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.ung.Områdesetup as UpyOmrådesetup
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.AvpOmrådesetup as AvpOmrådesetup
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.K9Områdesetup as K9Områdesetup
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.ung.UngOmrådesetup as UngOmrådesetup
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.klagetillos.beriker.K9KlageBerikerInterfaceKludge
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.klagetillos.beriker.K9KlageBerikerKlientLocal
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.klagetillos.beriker.K9KlageBerikerSystemKlient
@@ -373,7 +373,7 @@ fun common(app: Application, config: Configuration) = module {
         )
     }
     single {
-        AktOmrådesetup(
+        AvpOmrådesetup(
             områdeRepository = get(),
             feltdefinisjonTjeneste = get(),
             oppgavetypeTjeneste = get(),
@@ -381,7 +381,7 @@ fun common(app: Application, config: Configuration) = module {
         )
     }
     single {
-        UpyOmrådesetup(
+        UngOmrådesetup(
             områdeRepository = get(),
             feltdefinisjonTjeneste = get(),
             oppgavetypeTjeneste = get(),

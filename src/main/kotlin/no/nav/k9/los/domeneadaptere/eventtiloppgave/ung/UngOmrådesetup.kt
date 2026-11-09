@@ -1,10 +1,10 @@
-package no.nav.k9.los.domeneadaptere.eventtiloppgave.avp
+package no.nav.k9.los.domeneadaptere.eventtiloppgave.ung
 
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.kodeverk.AktFagsystem
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.kodeverk.AktBehandlendeEnhet
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.kodeverk.AktOppgavetypenavn
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.oppgavedefinisjon.AktivitetspengerFelter
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.oppgavedefinisjon.AktivitetspengerOppgavetyper
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.ung.kodeverk.UngFagsystem
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.ung.kodeverk.UngBehandlendeEnhet
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.ung.kodeverk.UngOppgavetypenavn
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.ung.oppgavedefinisjon.UngdomsprogramytelsenFelter
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.ung.oppgavedefinisjon.UngdomsprogramytelsenOppgavetyper
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.FeltdefinisjonTjeneste
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.KodeverkDto
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.KodeverkVerdiDto
@@ -22,19 +22,18 @@ import no.nav.ung.kodeverk.behandling.FagsakYtelseType
 import no.nav.ung.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
 import no.nav.ung.kodeverk.behandling.aksjonspunkt.Venteårsak
 
-class Områdesetup(
+class UngOmrådesetup(
     private val områdeRepository: OmrådeRepository,
     private val feltdefinisjonTjeneste: FeltdefinisjonTjeneste,
     private val oppgavetypeTjeneste: OppgavetypeTjeneste,
-    private val frontendUrl: String,
 ) {
-    private val område = Områder.AKTIVITETSPENGER
+    private val område = Områder.UNGDOMSPROGRAMYTELSEN
 
     fun setup() {
         områdeRepository.lagre(område)
         feltdefinisjonTjeneste.oppdater(oppdaterKodeverk())
-        feltdefinisjonTjeneste.oppdater(AktivitetspengerFelter.tilDto())
-        oppgavetypeTjeneste.oppdater(AktivitetspengerOppgavetyper.tilDto(frontendUrl))
+        feltdefinisjonTjeneste.oppdater(UngdomsprogramytelsenFelter.tilDto())
+        oppgavetypeTjeneste.oppdater(UngdomsprogramytelsenOppgavetyper.tilDto())
     }
 
     private fun oppdaterKodeverk(): List<KodeverkDto> {
@@ -56,10 +55,10 @@ class Områdesetup(
     private fun kodeverkOppgavetypenavn(): KodeverkDto {
         return KodeverkDto(
             område = område,
-            eksternId = AktOppgavetypenavn::class.java.simpleName,
+            eksternId = UngOppgavetypenavn::class.java.simpleName,
             beskrivelse = "Oppgavetype",
             uttømmende = true,
-            verdier = AktOppgavetypenavn.entries
+            verdier = UngOppgavetypenavn.entries
                 .map { oppgavetypenavn ->
                     KodeverkVerdiDto(
                         verdi = oppgavetypenavn.kode,
@@ -137,10 +136,10 @@ class Områdesetup(
     private fun kodeverkFagsystem(): KodeverkDto {
         return KodeverkDto(
             område = område,
-            eksternId = AktFagsystem::class.java.simpleName,
+            eksternId = UngFagsystem::class.java.simpleName,
             beskrivelse = null,
             uttømmende = true,
-            verdier = AktFagsystem.entries
+            verdier = UngFagsystem.entries
                 .map { fagsystem ->
                     KodeverkVerdiDto(
                         verdi = fagsystem.kode,
@@ -175,10 +174,10 @@ class Områdesetup(
     private fun kodeverkBehandlendeEnhet(): KodeverkDto {
         return KodeverkDto(
             område = område,
-            eksternId = AktBehandlendeEnhet::class.java.simpleName,
+            eksternId = UngBehandlendeEnhet::class.java.simpleName,
             beskrivelse = null,
             uttømmende = false,
-            verdier = AktBehandlendeEnhet.entries
+            verdier = UngBehandlendeEnhet.entries
                 .map { enhet ->
                     KodeverkVerdiDto(
                         verdi = enhet.kode,

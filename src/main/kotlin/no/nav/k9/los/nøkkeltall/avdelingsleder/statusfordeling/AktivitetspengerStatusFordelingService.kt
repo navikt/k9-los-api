@@ -1,6 +1,6 @@
 package no.nav.k9.los.nøkkeltall.avdelingsleder.statusfordeling
 
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.kodeverk.AktOppgavetypenavn
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.kodeverk.AvpOppgavetypenavn
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.oppgavedefinisjon.AktivitetspengerFelter
 import no.nav.k9.los.infrastruktur.utils.Cache
 import no.nav.k9.los.infrastruktur.utils.CacheObject
@@ -45,8 +45,8 @@ class AktivitetspengerStatusFordelingService(
             null, "personbeskyttelse", EksternFeltverdiOperator.EQUALS,
             listOf(if (kode6) PersonBeskyttelseType.KODE6.kode else PersonBeskyttelseType.UTEN_KODE6.kode),
         )
-        val del1 = AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1.kode
-        val del2 = AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2.kode
+        val del1 = AvpOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1.kode
+        val del2 = AvpOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2.kode
         fun oppgavetype(kode: String) = FeltverdiOppgavefilter(null, "oppgavetype", EksternFeltverdiOperator.IN, listOf(kode))
         fun behandlingstyper(vararg typer: BehandlingType) = FeltverdiOppgavefilter(
             Områder.AKTIVITETSPENGER, AktivitetspengerFelter.Behandling.TYPEKODE.id,
