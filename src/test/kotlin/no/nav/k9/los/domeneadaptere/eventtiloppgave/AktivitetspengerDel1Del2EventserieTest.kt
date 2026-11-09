@@ -11,6 +11,7 @@ import no.nav.k9.los.domeneadaptere.eventlager.EventNøkkel
 import no.nav.k9.los.domeneadaptere.eventlager.EventRepository
 import no.nav.k9.los.domeneadaptere.eventlager.Fagsystem
 import no.nav.k9.los.domeneadaptere.eventmottak.ung.sak.UngSakEventDto
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.kodeverk.AktBehandlendeEnhet
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.kodeverk.AktOppgavetypenavn
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.Områdesetup as AktOmrådesetup
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.ung.Områdesetup as UpyOmrådesetup
@@ -240,7 +241,8 @@ class AktivitetspengerDel1Del2EventserieTest : AbstractK9LosIntegrationTest() {
             eventHendelse = hendelse,
             behandlingStatus = BehandlingStatus.UTREDES.kode,
             behandlingSteg = åpentAksjonspunkt.behandlingSteg.kode,
-            behandlendeEnhet = "4416",
+            behandlendeEnhet = AktBehandlendeEnhet.STYRINGSENHET.kode,
+            navKontorbehandlendeEnhet = AktBehandlendeEnhet.FALKENBORG.kode,
             ansvarligBeslutterForTotrinn = null,
             ansvarligSaksbehandlerForTotrinn = null,
             navKontorAnsvarligSaksbehandler = if (lokalkontor) "Z123456" else null,
