@@ -3,7 +3,7 @@ package no.nav.k9.los.infrastruktur.abac
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.oppgavedefinisjon.AktivitetspengerFelter
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.oppgavedefinisjon.AktivitetspengerFelter
 import no.nav.k9.los.infrastruktur.abac.tilganger.Tilganger
 import no.nav.k9.los.infrastruktur.azuregraph.IAzureGraphService
 import no.nav.k9.los.infrastruktur.idtoken.IIdToken

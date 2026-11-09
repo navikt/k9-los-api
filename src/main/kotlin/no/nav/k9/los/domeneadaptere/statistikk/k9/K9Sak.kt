@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
 import no.nav.k9.statistikk.kontrakter.JsonSchemas
 import no.nav.k9.los.domeneadaptere.statistikk.Aktør
+import no.nav.k9.los.infrastruktur.utils.SensitiveField
 import java.time.LocalDate
 import java.time.OffsetDateTime
 
@@ -25,6 +26,7 @@ data class Sak(
     val opprettetDato: LocalDate? = null,
 
     @JsonProperty("aktorId")
+    @field:SensitiveField
     val aktorId: Long? = null,
 
     @JsonProperty("aktorer")

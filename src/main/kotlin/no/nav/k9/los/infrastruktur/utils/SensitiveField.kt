@@ -1,4 +1,4 @@
-package no.nav.k9.los.forvaltning
+package no.nav.k9.los.infrastruktur.utils
 
 @Target(AnnotationTarget.FIELD, AnnotationTarget.VALUE_PARAMETER, AnnotationTarget.PROPERTY)
 @Retention(AnnotationRetention.RUNTIME)

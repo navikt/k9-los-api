@@ -2,6 +2,7 @@ package no.nav.k9.los.domeneadaptere.statistikk.avp
 
 import com.fasterxml.jackson.annotation.JsonInclude
 import no.nav.k9.los.domeneadaptere.statistikk.Aktør
+import no.nav.k9.los.infrastruktur.utils.SensitiveField
 import no.nav.k9.statistikk.kontrakter.JsonSchemas
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -11,12 +12,8 @@ import java.time.OffsetDateTime
 data class AvpBehandling(
     val sakId: String? = null,
     val behandlingId: String,
-<<<<<<< Updated upstream
-    @field:no.nav.k9.los.forvaltning.SensitiveField
-    val søkersAktørId: AktørId,
-=======
+    @field:SensitiveField
     val søkersAktørId: Aktør,
->>>>>>> Stashed changes
     val funksjonellTid: OffsetDateTime? = null,
     val tekniskTid: OffsetDateTime? = null,
     val mottattDato: LocalDate? = null,
@@ -31,8 +28,11 @@ data class AvpBehandling(
     val resultatBeskrivelse: String? = null,
     val vedtakId: String? = null,
     val utenlandssak: Boolean? = null,
+    @field:SensitiveField
     val beslutter: String? = null,
+    @field:SensitiveField
     val saksbehandler: String? = null,
+    @field:SensitiveField
     val ansvarligEnhetKode: String,
     val totrinnsbehandling: Boolean? = null,
     val helautomatiskBehandlet: Boolean? = false,

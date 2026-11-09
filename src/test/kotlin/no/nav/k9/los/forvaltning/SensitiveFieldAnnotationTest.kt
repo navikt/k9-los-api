@@ -5,6 +5,7 @@ import no.nav.k9.los.domeneadaptere.eventmottak.k9.punsj.K9PunsjEventDto
 import no.nav.k9.los.domeneadaptere.eventmottak.k9.sak.K9SakEventDto
 import no.nav.k9.los.domeneadaptere.eventmottak.k9.tilbakekrav.K9TilbakeEventDto
 import no.nav.k9.los.domeneadaptere.eventmottak.ung.sak.UngSakEventDto
+import no.nav.k9.los.infrastruktur.utils.SensitiveField
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 

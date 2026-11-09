@@ -3,7 +3,6 @@ package no.nav.k9.los.domeneadaptere.statistikk
 import io.opentelemetry.instrumentation.annotations.SpanAttribute
 import io.opentelemetry.instrumentation.annotations.WithSpan
 import kotliquery.TransactionalSession
-import no.nav.k9.los.domeneadaptere.statistikk.avp.AvpBehandling
 import no.nav.k9.los.domeneadaptere.statistikk.avp.AvpOppgaveTilDVHMapper
 import no.nav.k9.los.domeneadaptere.statistikk.avp.AvpStatistikkPublisher
 import no.nav.k9.los.domeneadaptere.statistikk.k9.K9Behandling
@@ -11,7 +10,6 @@ import no.nav.k9.los.domeneadaptere.statistikk.k9.K9KlageOppgaveTilDVHMapper
 import no.nav.k9.los.domeneadaptere.statistikk.k9.K9SakOppgaveTilDVHMapper
 import no.nav.k9.los.domeneadaptere.statistikk.k9.Sak
 import no.nav.k9.los.domeneadaptere.statistikk.k9.K9StatistikkPublisher
-import no.nav.k9.los.domeneadaptere.statistikk.ung.UngBehandling
 import no.nav.k9.los.domeneadaptere.statistikk.ung.UngOppgaveTilDVHMapper
 import no.nav.k9.los.domeneadaptere.statistikk.ung.UngStatistikkPublisher
 import no.nav.k9.los.forvaltning.ForvaltningSensitiveObjectMapper
@@ -193,36 +191,7 @@ class OppgavestatistikkTjeneste(
         oppgaveIderTilKvittering.clear()
     }
 
-    private fun nullUtEventuelleSensitiveFelter(sak: Sak): Sak {
-        return sak.copy(aktorer = sak.aktorer.map { Aktør(aktorId = -5, rolle = "-5", rolleBeskrivelse = "-5") })
-    }
-
-    private fun nullUtEventuelleSensitiveFelter(behandling: K9Behandling): K9Behandling {
-        return behandling.copy(
-            beslutter = "-5",
-            saksbehandler = "-5",
-            behandlingOpprettetAv = "-5",
-            ansvarligEnhetKode = "-5"
-        )
-    }
-
-    private fun nullUtEventuelleSensitiveFelter(behandling: AvpBehandling): AvpBehandling {
-        return behandling.copy(
-            beslutter = "-5",
-            saksbehandler = "-5",
-            ansvarligEnhetKode = "-5",
-            søkersAktørId = Aktør(aktorId = -5, rolle = "-5", rolleBeskrivelse = "-5"),
-        )
-    }
-
-    private fun nullUtEventuelleSensitiveFelter(behandling: UngBehandling): UngBehandling {
-        return behandling.copy(
-            beslutter = "-5",
-            saksbehandler = "-5",
-            ansvarligEnhetKode = "-5",
-            søkersAktørId = Aktør(aktorId = -5, rolle = "-5", rolleBeskrivelse = "-5"),
-        )
-    }
+    private fun <T : Any> nullUtEventuelleSensitiveFelter(value: T): T = SensitiveFieldCensor.censor(value)
 
     private fun byggOppgavestatistikk(oppgave: Oppgave, versjon: Int): Oppgavestatistikkgrunnlag {
         return when (oppgave.oppgavetype.eksternId) {

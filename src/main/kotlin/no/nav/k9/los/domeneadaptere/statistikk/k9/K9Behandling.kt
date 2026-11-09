@@ -2,6 +2,7 @@ package no.nav.k9.los.domeneadaptere.statistikk.k9
 
 import com.fasterxml.jackson.annotation.JsonInclude
 import no.nav.k9.statistikk.kontrakter.JsonSchemas
+import no.nav.k9.los.infrastruktur.utils.SensitiveField
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
@@ -29,11 +30,15 @@ data class K9Behandling(
     val resultatBeskrivelse: String? = null,
     val resultatBegrunnelseBeskrivelse: String? = null,
     val utenlandstilsnittBeskrivelse: String? = null,
+    @field:SensitiveField
     val beslutter: String? = null,
+    @field:SensitiveField
     val saksbehandler: String? = null,
+    @field:SensitiveField
     val behandlingOpprettetAv: String? = null,
     val behandlingOpprettetType: String? = null,
     val behandlingOpprettetTypeBeskrivelse: String? = null,
+    @field:SensitiveField
     val ansvarligEnhetKode: String? = null,
     val ansvarligEnhetType: String? = null,
     val datoForUttak: LocalDate? = null,

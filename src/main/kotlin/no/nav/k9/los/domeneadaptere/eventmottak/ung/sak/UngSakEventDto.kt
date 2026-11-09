@@ -1,6 +1,6 @@
 package no.nav.k9.los.domeneadaptere.eventmottak.ung.sak
 
-import no.nav.k9.los.forvaltning.SensitiveField
+import no.nav.k9.los.infrastruktur.utils.SensitiveField
 import no.nav.ung.kodeverk.Fagsystem
 import no.nav.ung.kodeverk.hendelse.EventHendelse
 import no.nav.ung.sak.kontrakt.aksjonspunkt.AksjonspunktTilstandDto
