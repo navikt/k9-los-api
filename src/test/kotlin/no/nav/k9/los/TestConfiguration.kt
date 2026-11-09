@@ -18,6 +18,7 @@ object TestConfiguration {
     ): Map<String, String> {
         val map = mutableMapOf(
             Pair("ktor.deployment.port", "$port"),
+            Pair("ktor.deployment.host", "127.0.0.1"),
             Pair("nav.register_urls.tps_proxy_v1", "$tpsProxyBaseUrl"),
             Pair("nav.register_urls.pdl_url", "$tpsProxyBaseUrl")
         )
