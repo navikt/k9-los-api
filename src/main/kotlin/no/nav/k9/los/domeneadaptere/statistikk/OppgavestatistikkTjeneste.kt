@@ -69,7 +69,20 @@ class OppgavestatistikkTjeneste(
     }
 
     fun spillAvUsendtStatistikk() {
-        StatistikkRepository.DVH_OPPGAVETYPER.keys.forEach { spillAvUsendtStatistikk(it) }
+        val feil = mutableListOf<Exception>()
+        StatistikkRepository.DVH_OPPGAVETYPER.keys.forEach { område ->
+            try {
+                spillAvUsendtStatistikk(område)
+            } catch (e: Exception) {
+                log.error("Sending av statistikk for område $område til DVH feilet", e)
+                feil.add(e)
+            }
+        }
+        if (feil.isNotEmpty()) {
+            val første = feil.first()
+            feil.drop(1).forEach { første.addSuppressed(it) }
+            throw første
+        }
     }
 
     private fun spillAvUsendtStatistikk(område: Områder) {
