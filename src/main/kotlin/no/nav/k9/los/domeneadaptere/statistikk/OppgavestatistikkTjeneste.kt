@@ -131,20 +131,21 @@ class OppgavestatistikkTjeneste(
     }
 
     private fun sendAvpStatistikk(oppgave: Oppgave, pepCacheState: PepCachePerSaksnummerState, tx: TransactionalSession) {
-        val behandling = avpMapper.lagBehandling(oppgave)
         val erKode6 = pepCacheState.hentEllerOppdater(
             saksnummer = oppgave.hentVerdi("saksnummer")!!,
             oppgaveEksternId = oppgave.eksternId,
             tx = tx,
         )
-        val behandlingTilSending = if (erKode6) nullUtEventuelleSensitiveFelter(behandling) else behandling
+        if (erKode6) return
+
+        val behandling = avpMapper.lagBehandling(oppgave)
         if (log.isDebugEnabled) {
             log.debug(
                 "Utgående AvpBehandling: {}",
-                ForvaltningSensitiveObjectMapper.prettyInstance.writeValueAsString(behandlingTilSending),
+                ForvaltningSensitiveObjectMapper.prettyInstance.writeValueAsString(behandling),
             )
         }
-        avpStatistikkPublisher.publiserAsynkront(behandlingTilSending)
+        avpStatistikkPublisher.publiserAsynkront(behandling)
     }
 
     private fun sendUngStatistikk(oppgave: Oppgave, pepCacheState: PepCachePerSaksnummerState, tx: TransactionalSession) {
