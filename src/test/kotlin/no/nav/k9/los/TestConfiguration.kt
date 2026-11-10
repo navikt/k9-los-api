@@ -16,8 +16,6 @@ object TestConfiguration {
         "nav.register_urls.aktivitetspenger_frontend_url" to "http://localhost:9005",
         "nav.register_urls.sif_abac_pdp_url" to "http://localhost:8913",
 
-        "nav.auth.trustore.path" to "vtp",
-        "nav.auth.trustore.password" to "vtp",
         "nav.auth.clients.size" to "1",
         "nav.auth.clients.0.alias" to "azure-v2",
         "nav.auth.clients.0.client_id" to "k9-los",
@@ -25,7 +23,7 @@ object TestConfiguration {
         "nav.auth.clients.0.certificate_hex_thumbprint" to ClientCredentials.ClientA.certificateHexThumbprint,
         "nav.auth.clients.0.discovery_endpoint" to "http://azure-mock:8100/v2.0/.well-known/openid-configuration",
 
-        "nav.kafka_aiven.bootstrap_servers" to "vtp:9093",
+        "nav.kafka_aiven.bootstrap_servers" to "localhost:9093",
         "nav.kafka_aiven.key_store_path" to "$home/.modig/keystore.jks",
         "nav.kafka_aiven.trust_store_path" to "$home/.modig/truststore.jks",
         "nav.kafka_aiven.credstore_password" to "vtpvtp",

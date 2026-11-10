@@ -84,7 +84,7 @@ Etter bygging finner du:
 
 ## Kjøre lokalt
 
-1. Start Docker Compose. Er avhengig av vtp, kafka, postgresql og azure-mock.
+1. Start Docker Compose. Er avhengig av kafka, postgresql og azure-mock.
 
 2. Start klassen `no.nav.k9.los.K9LosDev`.
 
