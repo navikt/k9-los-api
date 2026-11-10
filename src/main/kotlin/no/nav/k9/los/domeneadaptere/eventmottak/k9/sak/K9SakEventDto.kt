@@ -11,7 +11,7 @@ import no.nav.k9.kodeverk.produksjonsstyring.MerknadType
 import no.nav.k9.los.domeneadaptere.eventlager.Fagsystem
 import no.nav.k9.los.domeneadaptere.eventmottak.EventHendelse
 import no.nav.k9.los.domeneadaptere.eventmottak.k9.KodeverkDeserializer
-import no.nav.k9.los.forvaltning.SensitiveField
+import no.nav.k9.los.infrastruktur.utils.SensitiveField
 import no.nav.k9.sak.kontrakt.aksjonspunkt.AksjonspunktTilstandDto
 import no.nav.k9.sak.typer.Periode
 import java.time.LocalDate

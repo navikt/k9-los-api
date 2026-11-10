@@ -14,8 +14,8 @@ import no.nav.k9.los.oppgaveuthenting.OppgaveNøkkelDto
 import no.nav.ung.kodeverk.behandling.BehandlingType
 import no.nav.ung.kodeverk.behandling.BehandlingType.fraKode
 import no.nav.ung.kodeverk.behandling.FagsakYtelseType
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.mapper.SakEventTilOppgaveMapper as AktSakEventTilOppgaveMapper
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.upy.mapper.SakEventTilOppgaveMapper as UpySakEventTilOppgaveMapper
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.mapper.SakEventTilOppgaveMapper as AktSakEventTilOppgaveMapper
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.ung.mapper.SakEventTilOppgaveMapper as UpySakEventTilOppgaveMapper
 
 /**
  * Ruting fra lagret event til riktig mapper. Mapperne er rene funksjoner – eventuelle

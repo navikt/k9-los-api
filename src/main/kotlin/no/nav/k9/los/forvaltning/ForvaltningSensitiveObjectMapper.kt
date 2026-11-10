@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.AnnotationIntrospector
 import com.fasterxml.jackson.databind.introspect.AnnotatedMember
 import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector
 import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
+import no.nav.k9.los.infrastruktur.utils.SensitiveField
 
 object ForvaltningSensitiveObjectMapper {
     // Dedicated mapper for forvaltning responses: strips fields annotated as sensitive.

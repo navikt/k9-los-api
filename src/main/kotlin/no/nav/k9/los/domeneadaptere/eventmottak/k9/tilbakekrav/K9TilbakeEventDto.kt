@@ -7,7 +7,7 @@ import com.fasterxml.jackson.databind.ser.std.ToStringSerializer
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer
 import no.nav.k9.los.domeneadaptere.eventmottak.EventHendelse
-import no.nav.k9.los.forvaltning.SensitiveField
+import no.nav.k9.los.infrastruktur.utils.SensitiveField
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*

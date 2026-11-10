@@ -2,9 +2,9 @@ package no.nav.k9.los.nøkkeltall
 
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.AbstractK9LosIntegrationTest
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.Områdesetup
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.kodeverk.AktOppgavetypenavn
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.oppgavedefinisjon.AktivitetspengerOppgavetyper
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.AvpOmrådesetup
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.kodeverk.AvpOppgavetypenavn
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.oppgavedefinisjon.AktivitetspengerOppgavetyper
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nøkkeltall.avdelingsleder.inngangogferdigstilte.InngangOgFerdigstilteService
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
@@ -27,10 +27,10 @@ import kotlin.test.assertTrue
 class AktivitetspengerInngangOgFerdigstilteIntegrationTest : AbstractK9LosIntegrationTest() {
     @Test
     fun `inngang og ferdigstilte avgrenser område periode Nav-enhet og behandlingstype`() {
-        get<Områdesetup>().setup()
-        get<no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.Områdesetup>().setup()
-        val del1 = AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1.kode
-        val del2 = AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2.kode
+        get<AvpOmrådesetup>().setup()
+        get<no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.K9Områdesetup>().setup()
+        val del1 = AvpOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1.kode
+        val del2 = AvpOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2.kode
         val førstegang = BehandlingType.FØRSTEGANGSSØKNAD.kode
         val revurdering = BehandlingType.REVURDERING.kode
         lagreOppgave(del1, førstegang, mottattDagerSiden = 0)
@@ -71,8 +71,8 @@ class AktivitetspengerInngangOgFerdigstilteIntegrationTest : AbstractK9LosIntegr
 
     @Test
     fun `klager og feilutbetalinger telles utenfor ordinære oppgavetyper i alle perioder`() {
-        get<Områdesetup>().setup()
-        val klage = AktOppgavetypenavn.AKTIVITETSPENGERKLAGE.kode
+        get<AvpOmrådesetup>().setup()
+        val klage = AvpOppgavetypenavn.AKTIVITETSPENGERKLAGE.kode
         val feilutbetaling = "test-feilutbetaling"
         // Testdefinisjoner inntil eventmottaket støtter disse oppgavetypene.
         val definisjon = AktivitetspengerOppgavetyper.tilDto("http://localhost")

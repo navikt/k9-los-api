@@ -19,26 +19,32 @@ import no.nav.k9.los.domeneadaptere.eventmottak.kafka.KafkaConsumerLifecycleServ
 import no.nav.k9.los.domeneadaptere.eventmottak.ung.sak.UngSakEventHandler
 import no.nav.k9.los.domeneadaptere.eventmottak.ung.tilbake.UngTilbakeEventHandler
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.*
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.Områdesetup as AktOmrådesetup
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.Områdesetup as K9Områdesetup
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.upy.Områdesetup as UpyOmrådesetup
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.AvpOmrådesetup as AvpOmrådesetup
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.K9Områdesetup as K9Områdesetup
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.ung.UngOmrådesetup as UngOmrådesetup
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.klagetillos.beriker.K9KlageBerikerInterfaceKludge
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.klagetillos.beriker.K9KlageBerikerKlientLocal
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.klagetillos.beriker.K9KlageBerikerSystemKlient
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.saktillos.beriker.K9SakSystemKlient
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.saktillos.beriker.K9SakSystemKlientInterfaceKludge
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.saktillos.beriker.K9SakSystemKlientLocal
-import no.nav.k9.los.domeneadaptere.k9.avstemming.AvstemmingsTjeneste
-import no.nav.k9.los.domeneadaptere.k9.avstemming.punsj.systemklient.LocalPunsjAvstemmingsklient
-import no.nav.k9.los.domeneadaptere.k9.avstemming.punsj.systemklient.RestPunsjAvstemmingsklient
-import no.nav.k9.los.domeneadaptere.k9.avstemming.saksbehandling.systemklient.LocalSakAvstemmingsklient
-import no.nav.k9.los.domeneadaptere.k9.avstemming.saksbehandling.systemklient.RestSakAvstemmingsklient
+import no.nav.k9.los.domeneadaptere.avstemming.k9.AvstemmingsTjeneste
+import no.nav.k9.los.domeneadaptere.avstemming.k9.punsj.systemklient.LocalPunsjAvstemmingsklient
+import no.nav.k9.los.domeneadaptere.avstemming.k9.punsj.systemklient.RestPunsjAvstemmingsklient
+import no.nav.k9.los.domeneadaptere.avstemming.k9.saksbehandling.systemklient.LocalSakAvstemmingsklient
+import no.nav.k9.los.domeneadaptere.avstemming.k9.saksbehandling.systemklient.RestSakAvstemmingsklient
 import no.nav.k9.los.domeneadaptere.k9.refreshk9sakoppgaver.RefreshK9v3Tjeneste
 import no.nav.k9.los.domeneadaptere.k9.refreshk9sakoppgaver.restklient.IK9SakService
 import no.nav.k9.los.domeneadaptere.k9.refreshk9sakoppgaver.restklient.K9SakBehandlingOppfrisketRepository
 import no.nav.k9.los.domeneadaptere.k9.refreshk9sakoppgaver.restklient.K9SakServiceLocal
 import no.nav.k9.los.domeneadaptere.k9.refreshk9sakoppgaver.restklient.K9SakServiceSystemClient
-import no.nav.k9.los.domeneadaptere.statistikk.*
+import no.nav.k9.los.domeneadaptere.statistikk.k9.K9KlageOppgaveTilDVHMapper
+import no.nav.k9.los.domeneadaptere.statistikk.k9.K9SakOppgaveTilDVHMapper
+import no.nav.k9.los.domeneadaptere.statistikk.avp.AvpStatistikkPublisher
+import no.nav.k9.los.domeneadaptere.statistikk.ung.UngStatistikkPublisher
+import no.nav.k9.los.domeneadaptere.statistikk.OppgavestatistikkTjeneste
+import no.nav.k9.los.domeneadaptere.statistikk.k9.K9StatistikkPublisher
+import no.nav.k9.los.domeneadaptere.statistikk.StatistikkRepository
 import no.nav.k9.los.driftsmelding.DriftsmeldingRepository
 import no.nav.k9.los.driftsmelding.DriftsmeldingTjeneste
 import no.nav.k9.los.forvaltning.ForvaltningRepository
@@ -303,7 +309,7 @@ fun common(app: Application, config: Configuration) = module {
     }
 
     single {
-        StatistikkPublisher(
+        K9StatistikkPublisher(
             kafkaConfig = config.getProfileAwareKafkaAivenConfig(),
             config = config
         )
@@ -311,10 +317,26 @@ fun common(app: Application, config: Configuration) = module {
 
     single {
         OppgavestatistikkTjeneste(
-            statistikkPublisher = get(),
+            k9StatistikkPublisher = get(),
+            avpStatistikkPublisher = get(),
+            ungStatistikkPublisher = get(),
             transactionalManager = get(),
             statistikkRepository = get(),
             pepCacheRepository = get(),
+        )
+    }
+
+    single {
+        AvpStatistikkPublisher(
+            kafkaConfig = config.getProfileAwareKafkaAivenConfig(),
+            config = config
+        )
+    }
+
+    single {
+        UngStatistikkPublisher(
+            kafkaConfig = config.getProfileAwareKafkaAivenConfig(),
+            config = config
         )
     }
 
@@ -351,7 +373,7 @@ fun common(app: Application, config: Configuration) = module {
         )
     }
     single {
-        AktOmrådesetup(
+        AvpOmrådesetup(
             områdeRepository = get(),
             feltdefinisjonTjeneste = get(),
             oppgavetypeTjeneste = get(),
@@ -359,7 +381,7 @@ fun common(app: Application, config: Configuration) = module {
         )
     }
     single {
-        UpyOmrådesetup(
+        UngOmrådesetup(
             områdeRepository = get(),
             feltdefinisjonTjeneste = get(),
             oppgavetypeTjeneste = get(),

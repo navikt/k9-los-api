@@ -3,8 +3,8 @@ package no.nav.k9.los.nøkkeltall.avdelingsleder.inngangogferdigstilte
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.kodeverk.AktOppgavetypenavn
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.oppgavedefinisjon.AktivitetspengerFelter
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.kodeverk.AvpOppgavetypenavn
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.oppgavedefinisjon.AktivitetspengerFelter
 import no.nav.k9.los.infrastruktur.utils.Cache
 import no.nav.k9.los.infrastruktur.utils.CacheObject
 import no.nav.k9.los.nøkkeltall.KodeOgNavn
@@ -38,8 +38,8 @@ class AktivitetspengerInngangOgFerdigstilteService(
         KodeOgNavn("FEILUTBETALING", "Feilutbetalinger"),
     )
     private val oppgavetyper = mapOf(
-        "NAVKONTOR" to AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1.kode,
-        "NAVFORVALTNING" to AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2.kode,
+        "NAVKONTOR" to AvpOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1.kode,
+        "NAVFORVALTNING" to AvpOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2.kode,
     )
     private val behandlingstyper = mapOf(
         "FØRSTEGANG" to setOf(BehandlingType.FØRSTEGANGSSØKNAD.kode),

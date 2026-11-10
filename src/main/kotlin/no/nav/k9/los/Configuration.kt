@@ -90,6 +90,16 @@ data class Configuration(private val config: ApplicationConfig) {
             ?: ""
     }
 
+    internal fun getÅpenAvpStatistikkBehandlingTopic(): String {
+        return config.getOptionalString("nav.kafka.åpenAvpStatistikkBehandlingTopic", secret = false)
+            ?: ""
+    }
+
+    internal fun getÅpenUngStatistikkBehandlingTopic(): String {
+        return config.getOptionalString("nav.kafka.åpenUngStatistikkBehandlingTopic", secret = false)
+            ?: ""
+    }
+
     internal fun getProfileAwareKafkaAivenConfig(): IKafkaConfig {
         val defaultOffsetResetStrategy =
             if (koinProfile == KoinProfile.LOCAL) OffsetResetStrategy.EARLIEST else OffsetResetStrategy.NONE

@@ -2,9 +2,9 @@ package no.nav.k9.los.nøkkeltall
 
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.AbstractK9LosIntegrationTest
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.Områdesetup
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.kodeverk.AktOppgavetypenavn
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.oppgavedefinisjon.AktivitetspengerOppgavetyper
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.AvpOmrådesetup
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.kodeverk.AvpOppgavetypenavn
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.oppgavedefinisjon.AktivitetspengerOppgavetyper
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nøkkeltall.saksbehandler.nyeogferdigstilte.NyeOgFerdigstilteService
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
@@ -29,11 +29,11 @@ import kotlin.test.assertSame
 class AktivitetspengerNyeOgFerdigstilteIntegrationTest : AbstractK9LosIntegrationTest() {
     @Test
     fun `saksbehandler får nye og ferdigstilte per dag og gruppe uten oppgaver fra andre områder`() {
-        get<Områdesetup>().setup()
-        get<no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.Områdesetup>().setup()
-        val del1 = AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1.kode
-        val del2 = AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2.kode
-        val klage = AktOppgavetypenavn.AKTIVITETSPENGERKLAGE.kode
+        get<AvpOmrådesetup>().setup()
+        get<no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.K9Områdesetup>().setup()
+        val del1 = AvpOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1.kode
+        val del2 = AvpOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2.kode
+        val klage = AvpOppgavetypenavn.AKTIVITETSPENGERKLAGE.kode
         val feilutbetaling = "test-feilutbetaling"
         val definisjon = AktivitetspengerOppgavetyper.tilDto("http://localhost")
         val mal = definisjon.oppgavetyper.first()

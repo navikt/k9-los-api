@@ -5,7 +5,7 @@ import no.nav.k9.los.oppgavemottak.OppgaveV3Tjeneste
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.koin.test.get
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.Områdesetup as AktOmrådesetup
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.AvpOmrådesetup as AktOmrådesetup
 
 class LocalSetupAktivitetspengerTest : AbstractK9LosIntegrationTest() {
 

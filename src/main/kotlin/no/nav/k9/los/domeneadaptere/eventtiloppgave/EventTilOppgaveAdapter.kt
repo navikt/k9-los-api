@@ -102,6 +102,7 @@ class EventTilOppgaveAdapter(
                 // Kun i normalflyt: ny versjon er usendt til DVH inntil kvittert.
                 // Historikkvask skal ikke trigge resend-semantikk for allerede sendte versjoner.
                 statistikkRepository.bestillDvhSending(
+                    område = oppgave.område,
                     eksternId = oppgave.eksternId,
                     eksternVersjon = oppgave.eksternVersjon,
                     oppgavetypeEksternId = oppgave.oppgavetype.eksternId,

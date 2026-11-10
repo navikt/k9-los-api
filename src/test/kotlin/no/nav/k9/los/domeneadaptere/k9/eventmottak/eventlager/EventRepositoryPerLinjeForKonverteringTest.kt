@@ -9,7 +9,7 @@ import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.domeneadaptere.eventlager.EventLagret
 import no.nav.k9.los.domeneadaptere.eventlager.EventNøkkel
 import no.nav.k9.los.domeneadaptere.eventlager.EventRepository
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.Områdesetup
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.K9Områdesetup
 import no.nav.k9.los.domeneadaptere.eventmottak.k9.punsj.K9PunsjEventDto
 import no.nav.k9.los.domeneadaptere.eventmottak.k9.punsj.PunsjId
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
@@ -90,9 +90,9 @@ class EventRepositoryPerLinjeForKonverteringTest() : AbstractK9LosIntegrationTes
             tx.run(
                 queryOf(
                     """
-                    insert into oppgave_v3_dvh_pending (ekstern_id, ekstern_versjon, oppgavetype_ekstern_id)
-                    values (:ekstern_id, :ekstern_versjon, :oppgavetype_ekstern_id)
-                    on conflict (ekstern_id, ekstern_versjon) do nothing
+                    insert into oppgave_v3_dvh_pending (omrade_ekstern_id, ekstern_id, ekstern_versjon, oppgavetype_ekstern_id)
+                    values ('K9', :ekstern_id, :ekstern_versjon, :oppgavetype_ekstern_id)
+                    on conflict do nothing
                     """.trimIndent(),
                     mapOf(
                         "ekstern_id" to eksternId,
@@ -122,7 +122,7 @@ class EventRepositoryPerLinjeForKonverteringTest() : AbstractK9LosIntegrationTes
 
     @BeforeEach
     fun setup() {
-        get<Områdesetup>().setup()
+        get<K9Områdesetup>().setup()
     }
 
     @Test

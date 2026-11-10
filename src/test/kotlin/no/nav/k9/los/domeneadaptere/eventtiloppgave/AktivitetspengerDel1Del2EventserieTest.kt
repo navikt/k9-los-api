@@ -11,10 +11,11 @@ import no.nav.k9.los.domeneadaptere.eventlager.EventNøkkel
 import no.nav.k9.los.domeneadaptere.eventlager.EventRepository
 import no.nav.k9.los.domeneadaptere.eventlager.Fagsystem
 import no.nav.k9.los.domeneadaptere.eventmottak.ung.sak.UngSakEventDto
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.kodeverk.AktOppgavetypenavn
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.Områdesetup as AktOmrådesetup
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.upy.Områdesetup as UpyOmrådesetup
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.upy.kodeverk.UpyOppgavetypenavn
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.kodeverk.AvpBehandlendeEnhet
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.kodeverk.AvpOppgavetypenavn
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.AvpOmrådesetup as AktOmrådesetup
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.ung.UngOmrådesetup as UpyOmrådesetup
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.ung.kodeverk.UngOppgavetypenavn
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
@@ -41,8 +42,8 @@ import no.nav.ung.kodeverk.Fagsystem as UngFagsystem
 
 class AktivitetspengerDel1Del2EventserieTest : AbstractK9LosIntegrationTest() {
 
-    private val DEL1 = AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1.kode
-    private val DEL2 = AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2.kode
+    private val DEL1 = AvpOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1.kode
+    private val DEL2 = AvpOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2.kode
 
     private val eksternId = UUID.randomUUID()
     private val opprettetBehandling = LocalDateTime.of(2026, 3, 1, 8, 0, 0)
@@ -131,7 +132,7 @@ class AktivitetspengerDel1Del2EventserieTest : AbstractK9LosIntegrationTest() {
         transactionalManager.transaction { tx ->
             val oppgave = oppgaveV3Tjeneste.hentAktivOppgave(
                 eksternId.toString(),
-                UpyOppgavetypenavn.UNGDOMSPROGRAMYTELSENORDINÆR.kode,
+                UngOppgavetypenavn.UNGDOMSPROGRAMYTELSENORDINÆR.kode,
                 Områder.UNGDOMSPROGRAMYTELSEN,
                 tx
             )
@@ -240,7 +241,8 @@ class AktivitetspengerDel1Del2EventserieTest : AbstractK9LosIntegrationTest() {
             eventHendelse = hendelse,
             behandlingStatus = BehandlingStatus.UTREDES.kode,
             behandlingSteg = åpentAksjonspunkt.behandlingSteg.kode,
-            behandlendeEnhet = "4416",
+            behandlendeEnhet = AvpBehandlendeEnhet.STYRINGSENHET.kode,
+            navKontorbehandlendeEnhet = AvpBehandlendeEnhet.FALKENBORG.kode,
             ansvarligBeslutterForTotrinn = null,
             ansvarligSaksbehandlerForTotrinn = null,
             navKontorAnsvarligSaksbehandler = if (lokalkontor) "Z123456" else null,

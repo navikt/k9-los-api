@@ -12,7 +12,7 @@ import no.nav.k9.klage.kontrakt.behandling.oppgavetillos.Aksjonspunkttilstand
 import no.nav.k9.klage.typer.AktørId
 import no.nav.k9.klage.typer.Periode
 import no.nav.k9.los.domeneadaptere.eventmottak.k9.KodeverkDeserializer
-import no.nav.k9.los.forvaltning.SensitiveField
+import no.nav.k9.los.infrastruktur.utils.SensitiveField
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*

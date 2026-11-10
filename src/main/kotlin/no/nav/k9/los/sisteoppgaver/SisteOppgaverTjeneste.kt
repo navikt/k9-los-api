@@ -3,7 +3,7 @@ package no.nav.k9.los.sisteoppgaver
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.extension.kotlin.asContextElement
 import kotlinx.coroutines.*
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.kodeverk.AktOppgavetypenavn
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.kodeverk.AvpOppgavetypenavn
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.infrastruktur.idtoken.IIdToken
@@ -73,8 +73,8 @@ class SisteOppgaverTjeneste(
                             "k9punsj" -> "Punsj"
                             "k9tilbake" -> "Tilbake"
                             "k9klage" -> "Klage"
-                            AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1.kode, AktOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2.kode -> ""
-                            AktOppgavetypenavn.AKTIVITETSPENGERKLAGE.kode -> AktOppgavetypenavn.AKTIVITETSPENGERKLAGE.navn
+                            AvpOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1.kode, AvpOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2.kode -> ""
+                            AvpOppgavetypenavn.AKTIVITETSPENGERKLAGE.kode -> AvpOppgavetypenavn.AKTIVITETSPENGERKLAGE.navn
                             else -> oppgave.oppgavetype.eksternId
                         }.let { if (it.isNotEmpty()) " ($it)" else "" }
                         SisteOppgaverDto(

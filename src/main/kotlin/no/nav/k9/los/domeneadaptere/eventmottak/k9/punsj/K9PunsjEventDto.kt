@@ -1,6 +1,6 @@
 package no.nav.k9.los.domeneadaptere.eventmottak.k9.punsj
 
-import no.nav.k9.los.forvaltning.SensitiveField
+import no.nav.k9.los.infrastruktur.utils.SensitiveField
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.sak.typer.AktørId
 import no.nav.k9.sak.typer.JournalpostId

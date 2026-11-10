@@ -52,6 +52,14 @@ internal fun Route.StatistikkApi() {
                     value = "k9klage"
                     description = "Oppgaver fra k9klage"
                 }
+                example("aktivitetspenger-ordinær-del1") {
+                    value = "aktivitetspenger-ordinær-del1"
+                    description = "Aktivitetspenger ordinær del 1"
+                }
+                example("aktivitetspenger-ordinær-del2") {
+                    value = "aktivitetspenger-ordinær-del2"
+                    description = "Aktivitetspenger ordinær del 2"
+                }
             }
         }
     }) {

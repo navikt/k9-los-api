@@ -28,7 +28,7 @@ import no.nav.k9.los.domeneadaptere.eventmottak.k9.tilbakekrav.K9TilbakeEventHan
 import no.nav.k9.los.domeneadaptere.eventmottak.ung.sak.UngSakEventDto
 import no.nav.k9.los.domeneadaptere.eventmottak.ung.sak.UngSakEventHandler
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.EventTilOppgaveAdapter
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.kodeverk.AktBehandlendeEnhet
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.kodeverk.AvpBehandlendeEnhet
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.kodeverk.K9FagsakYtelseType
 import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.kodeverk.BehandlingStatus
@@ -406,14 +406,14 @@ object localSetup : KoinComponent {
                 eventHendelse = UngEventHendelse.AKSJONSPUNKT_OPPRETTET,
                 behandlingStatus = UngBehandlingStatus.UTREDES.kode,
                 behandlingSteg = aksjonspunkt.behandlingSteg.kode,
-                behandlendeEnhet = AktBehandlendeEnhet.entries
-                    .filter { it != AktBehandlendeEnhet.UKJENT }
+                behandlendeEnhet = AvpBehandlendeEnhet.entries
+                    .filter { it != AvpBehandlendeEnhet.UKJENT }
                     .shuffled().first().kode,
                 ansvarligBeslutterForTotrinn = null,
                 ansvarligSaksbehandlerForTotrinn = null,
                 navKontorAnsvarligSaksbehandler = if (hosLokalkontor) "Z123456" else null,
                 navKontorBeslutter = null,
-                navKontorbehandlendeEnhet = if (hosLokalkontor) AktBehandlendeEnhet.FALKENBORG.kode else null,
+                navKontorbehandlendeEnhet = if (hosLokalkontor) AvpBehandlendeEnhet.FALKENBORG.kode else null,
                 resultatType = UngBehandlingResultatType.IKKE_FASTSATT.kode,
                 ytelseTypeKode = UngFagsakYtelseType.AKTIVITETSPENGER.kode,
                 behandlingTypeKode = behandlingType.kode,

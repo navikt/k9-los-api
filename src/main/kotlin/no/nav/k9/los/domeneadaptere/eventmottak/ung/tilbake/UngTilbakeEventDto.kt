@@ -1,7 +1,7 @@
 package no.nav.k9.los.domeneadaptere.eventmottak.ung.tilbake
 
 import no.nav.k9.los.domeneadaptere.eventmottak.EventHendelse
-import no.nav.k9.los.forvaltning.SensitiveField
+import no.nav.k9.los.infrastruktur.utils.SensitiveField
 import tools.jackson.databind.annotation.JsonDeserialize
 import tools.jackson.databind.annotation.JsonSerialize
 import tools.jackson.databind.ext.javatime.deser.LocalDateDeserializer
