@@ -32,7 +32,7 @@ data class UngBehandling(
     val beslutter: String? = null,
     @field:SensitiveField
     val saksbehandler: String? = null,
-    @field:SensitiveField
+    @field:SensitiveField("2103")
     val ansvarligEnhetKode: String?,
     val totrinnsbehandling: Boolean? = null,
     val helautomatiskBehandlet: Boolean? = false,
