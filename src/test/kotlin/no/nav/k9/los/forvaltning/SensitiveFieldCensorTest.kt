@@ -23,10 +23,10 @@ class SensitiveFieldCensorTest {
 
         val censored = SensitiveFieldCensor.censor(behandling)
 
-        assertEquals(Aktør(-5L, "-5", "-5"), censored.søkersAktørId)
-        assertEquals("-5", censored.beslutter)
-        assertEquals("-5", censored.saksbehandler)
-        assertEquals("-5", censored.ansvarligEnhetKode)
+        assertEquals(Aktør(-5L, "SKJERMET", "SKJERMET"), censored.søkersAktørId)
+        assertEquals("SKJERMET", censored.beslutter)
+        assertEquals("SKJERMET", censored.saksbehandler)
+        assertEquals("2103", censored.ansvarligEnhetKode)
         assertEquals("sak-1", censored.saksnummer)
         assertEquals("behandling-1", censored.behandlingId)
     }
@@ -42,7 +42,7 @@ class SensitiveFieldCensorTest {
         val censored = SensitiveFieldCensor.censor(sak)
 
         assertEquals(-5L, censored.aktorId)
-        assertEquals(listOf(Aktør(-5L, "-5", "-5")), censored.aktorer)
+        assertEquals(listOf(Aktør(-5L, "SKJERMET", "SKJERMET")), censored.aktorer)
         assertEquals("sak-1", censored.saksnummer)
     }
 
@@ -57,9 +57,9 @@ class SensitiveFieldCensorTest {
 
         val censored = SensitiveFieldCensor.censor(behandling)
 
-        assertEquals("-5", censored.beslutter)
-        assertEquals("-5", censored.saksbehandler)
-        assertEquals("-5", censored.ansvarligEnhetKode)
+        assertEquals("SKJERMET", censored.beslutter)
+        assertEquals("SKJERMET", censored.saksbehandler)
+        assertEquals("2103", censored.ansvarligEnhetKode)
         assertEquals("behandling-1", censored.behandlingId)
     }
 }
