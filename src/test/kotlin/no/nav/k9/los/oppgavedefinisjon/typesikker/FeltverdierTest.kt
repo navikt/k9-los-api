@@ -97,6 +97,26 @@ class FeltverdierTest {
     }
 
     @Test
+    fun `defaultverdi serialiseres og sendes med i dto`() {
+        val tidspunkt = LocalDateTime.of(2026, 1, 2, 3, 4, 5)
+        val medDefault = Oppgavetypedefinisjon("medDefault", null) {
+            påkrevd(TestFelter.Gruppe.STATUS, defaultverdi = BehandlingStatus.UTREDES)
+            påkrevd(TestFelter.Gruppe.TIDSPUNKT, defaultverdi = tidspunkt)
+            påkrevd(TestFelter.Gruppe.UTENFOR_TYPE, defaultverdi = false)
+            påkrevd(TestFelter.Gruppe.PÅKREVD)
+        }
+
+        assertThat(medDefault.tilDto(null).oppgavefelter.associate { it.id to it.defaultverdi }).isEqualTo(
+            mapOf(
+                "status" to BehandlingStatus.UTREDES.kode,
+                "tidspunkt" to tidspunkt.toString(),
+                "utenforType" to "false",
+                "påkrevd" to null,
+            )
+        )
+    }
+
+    @Test
     fun `oppgavetype med felt som ikke er i feltkatalogen avvises`() {
         val katalog = object : Oppgavetypekatalog(TestFelter) {
             override val oppgavetyper = listOf(Oppgavetypedefinisjon("ugyldig", { it }) { valgfri(UregistrertGruppe.FELT) })

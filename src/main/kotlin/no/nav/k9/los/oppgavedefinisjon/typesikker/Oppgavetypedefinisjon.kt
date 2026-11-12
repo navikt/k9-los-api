@@ -4,12 +4,16 @@ import no.nav.k9.los.oppgavedefinisjon.oppgavetype.OppgavefeltDto
 import no.nav.k9.los.oppgavedefinisjon.oppgavetype.OppgavetypeDto
 import no.nav.k9.los.oppgavedefinisjon.oppgavetype.OppgavetyperDto
 
-class Oppgavefelt(val felt: Felt<*>, val visPåOppgave: Boolean, val påkrevd: Boolean)
+class Oppgavefelt(val felt: Felt<*>, val visPåOppgave: Boolean, val påkrevd: Boolean, val defaultverdi: String? = null)
 
 class Oppgavefeltbygger internal constructor() {
     internal val felter = linkedMapOf<String, Oppgavefelt>()
 
-    fun påkrevd(felt: Felt<*>, visPåOppgave: Boolean = true) = leggTil(Oppgavefelt(felt, visPåOppgave, påkrevd = true))
+    /**
+     * [defaultverdi] må oppgis når et felt blir påkrevd på en oppgavetype som allerede har oppgaver.
+     */
+    fun <T : Any> påkrevd(felt: Felt<T>, visPåOppgave: Boolean = true, defaultverdi: T? = null) =
+        leggTil(Oppgavefelt(felt, visPåOppgave, påkrevd = true, defaultverdi = defaultverdi?.let(felt.serialiser)))
 
     fun valgfri(felt: Felt<*>, visPåOppgave: Boolean = true) = leggTil(Oppgavefelt(felt, visPåOppgave, påkrevd = false))
 
@@ -41,7 +45,9 @@ class Oppgavetypedefinisjon(
         oppgavebehandlingsUrlTemplate = behandlingsUrl?.invoke(
             requireNotNull(frontendUrl) { "Oppgavetype $id har behandlings-URL, men frontendUrl er ikke oppgitt" }
         ),
-        oppgavefelter = felter.map { OppgavefeltDto(it.felt.id, visPåOppgave = it.visPåOppgave, påkrevd = it.påkrevd) }.toSet(),
+        oppgavefelter = felter.map {
+            OppgavefeltDto(it.felt.id, visPåOppgave = it.visPåOppgave, påkrevd = it.påkrevd, defaultverdi = it.defaultverdi)
+        }.toSet(),
     )
 }
 
