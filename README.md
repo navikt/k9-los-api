@@ -84,15 +84,9 @@ Etter bygging finner du:
 
 ## Kjøre lokalt
 
-1. Start k9-verdikjede. Er avhengig av vtp, postgresql og azure-mock.
+1. Start Docker Compose. Er avhengig av kafka, postgresql og azure-mock.
 
-2. Start klassen `no.nav.k9.los.K9LosDev` med vm-options:
-```
--Djavax.net.ssl.trustStore=/Users/.../.modig/trustStore.jks 
--Djavax.net.ssl.keyStore=/Users/.../.modig/keyStore.jks 
--Djavax.net.ssl.trustStorePassword=changeit 
--Djavax.net.ssl.keyStorePassword=devillokeystore1234
-```
+2. Start klassen `no.nav.k9.los.K9LosDev`.
 
 Eller kjør direkte med JAR:
 ```bash

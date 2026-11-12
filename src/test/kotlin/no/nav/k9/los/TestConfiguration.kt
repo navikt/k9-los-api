@@ -1,70 +1,54 @@
 package no.nav.k9.los
 
-import io.ktor.client.*
-import io.ktor.client.request.*
-import io.ktor.client.statement.*
-import kotlinx.coroutines.runBlocking
-import com.github.tomakehurst.wiremock.WireMockServer
 import no.nav.helse.dusseldorf.testsupport.jws.ClientCredentials
-import no.nav.k9.los.wiremocks.getTpsProxyUrl
-import org.json.JSONObject
 
 object TestConfiguration {
+    private val home = System.getProperty("user.home")
 
-    fun asMap(
-        wireMockServer: WireMockServer? = null,
-        port: Int = 8020,
-        tpsProxyBaseUrl: String? = wireMockServer?.getTpsProxyUrl()
-    ): Map<String, String> {
-        val map = mutableMapOf(
-            Pair("ktor.deployment.port", "$port"),
-            Pair("nav.register_urls.tps_proxy_v1", "$tpsProxyBaseUrl"),
-            Pair("nav.register_urls.pdl_url", "$tpsProxyBaseUrl")
-        )
+    private val config = mapOf(
+        "ktor.deployment.port" to "8020",
+        "ktor.deployment.host" to "127.0.0.1",
 
-        map["nav.register_urls.k9_url"] = "http://localhost:8080"
-        map["nav.register_urls.k9_klage_url"] = "http://localhost:8080"
-        map["nav.register_urls.k9_frontend_url"] = "http://localhost:9000"
-        map["nav.register_urls.k9_punsj_frontend_url"] = "http://localhost:8080"
-        map["nav.register_urls.aktivitetspenger_frontend_url"] = "http://localhost:9005"
-        map["nav.register_urls.sif_abac_pdp_url"] = "http://localhost:8913"
-        map["nav.auth.trustore.path"] = "vtp"
-        map["nav.auth.trustore.password"] = "vtp"
+        "nav.register_urls.k9_url" to "http://localhost:8080",
+        "nav.register_urls.k9_klage_url" to "http://localhost:8080",
+        "nav.register_urls.k9_frontend_url" to "http://localhost:9000",
+        "nav.register_urls.k9_punsj_frontend_url" to "http://localhost:8080",
+        "nav.register_urls.aktivitetspenger_frontend_url" to "http://localhost:9005",
+        "nav.register_urls.sif_abac_pdp_url" to "http://localhost:8913",
 
-        map["nav.auth.clients.size"] = "1"
-        map["nav.auth.clients.0.alias"] = "azure-v2"
-        map["nav.auth.clients.0.client_id"] = "k9-los"
-        map["nav.auth.clients.0.private_key_jwk"] = ClientCredentials.ClientA.privateKeyJwk
-        map["nav.auth.clients.0.certificate_hex_thumbprint"] = ClientCredentials.ClientA.certificateHexThumbprint
-        map["nav.auth.clients.0.discovery_endpoint"] = "http://azure-mock:8100/v2.0/.well-known/openid-configuration"
+        "nav.auth.clients.size" to "1",
+        "nav.auth.clients.0.alias" to "azure-v2",
+        "nav.auth.clients.0.client_id" to "k9-los",
+        "nav.auth.clients.0.private_key_jwk" to ClientCredentials.ClientA.privateKeyJwk,
+        "nav.auth.clients.0.certificate_hex_thumbprint" to ClientCredentials.ClientA.certificateHexThumbprint,
+        "nav.auth.clients.0.discovery_endpoint" to "http://azure-mock:8100/v2.0/.well-known/openid-configuration",
 
-        map["nav.kafka_aiven.bootstrap_servers"] = "vtp:9093"
-        map["nav.kafka.unready_after_stream_stopped_in.amount"] = "1010"
-        map["nav.kafka.unready_after_stream_stopped_in.unit"] = "SECONDS"
-        map["nav.kafka_aiven.key_store_path"] = "${System.getProperty("user.home")}/.modig/keystore.jks"
-        map["nav.kafka_aiven.trust_store_path"] = "${System.getProperty("user.home")}/.modig/truststore.jks"
-        map["nav.kafka_aiven.credstore_password"] = "vtpvtp"
-        map["nav.kafka_aiven.application_id"] = "k9-los-api"
+        "nav.kafka_aiven.bootstrap_servers" to "localhost:9093",
+        "nav.kafka_aiven.key_store_path" to "$home/.modig/keystore.jks",
+        "nav.kafka_aiven.trust_store_path" to "$home/.modig/truststore.jks",
+        "nav.kafka_aiven.credstore_password" to "vtpvtp",
+        "nav.kafka_aiven.application_id" to "k9-los-api",
 
-        map["nav.kafka.statistikkSakTopic"] = "privat-k9statistikk-sak-v1"
-        map["nav.kafka.ungSakTopic"] = "k9saksbehandling.ung-sak-aksjonspunkthendelse"
-        map["nav.kafka.ungTilbakeTopic"] = "k9saksbehandling.ung-tilbakekreving-hendelse-los"
+        "nav.kafka.unready_after_stream_stopped_in.amount" to "1010",
+        "nav.kafka.unready_after_stream_stopped_in.unit" to "SECONDS",
+        "nav.kafka.statistikkSakTopic" to "privat-k9statistikk-sak-v1",
+        "nav.kafka.ungSakTopic" to "k9saksbehandling.ung-sak-aksjonspunkthendelse",
+        "nav.kafka.ungTilbakeTopic" to "k9saksbehandling.ung-tilbakekreving-hendelse-los",
+        "nav.kafka.åpenStatistikkBehandlingTopic" to "aapen-k9statistikk-behandling-v2",
+        "nav.kafka.åpenStatistikkSakTopic" to "aapen-k9statistikk-sak-v2",
 
-        map["nav.db.url"] = "jdbc:postgresql://localhost:5432/k9los_unit"
-        map["nav.db.username"] = "k9los_unit"
-        map["nav.db.password"] = "k9los_unit"
-        map["nav.db.migrering_etter_oppstart"] = "false"
-        map["nav.kafka.åpenStatistikkBehandlingTopic"] = "aapen-k9statistikk-behandling-v2"
-        map["nav.kafka.åpenStatistikkSakTopic"] = "aapen-k9statistikk-sak-v2"
-        map["nav.nokkeltall.enheter"] = "NAV DRIFT"
-        return map.toMap()
-    }
+        "nav.db.url" to "jdbc:postgresql://localhost:5432/k9los_unit",
+        "nav.db.username" to "k9los_unit",
+        "nav.db.password" to "k9los_unit",
+        "nav.db.migrering_etter_oppstart" to "false",
 
-    private fun String.getAsJson(): JSONObject {
-        val httpClient = HttpClient()
-        return runBlocking {
-            val response = httpClient.get(this@getAsJson)
-            JSONObject(response.bodyAsText())
+        "nav.nokkeltall.enheter" to "NAV DRIFT",
+    )
+
+    fun asArguments(): Array<String> {
+        val list = config.map { (configKey, configValue) ->
+            "-P:$configKey=$configValue"
         }
+        return list.toTypedArray()
     }
 }
