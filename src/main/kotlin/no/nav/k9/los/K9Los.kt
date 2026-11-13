@@ -52,6 +52,7 @@ import no.nav.k9.los.driftsmelding.DriftsmeldingerApisNy
 import no.nav.k9.los.forvaltning.K9ForvaltningApis
 import no.nav.k9.los.infrastruktur.abac.SifAbacPdpUtilgjengeligException
 import no.nav.k9.los.infrastruktur.abac.cache.PepCacheService
+import no.nav.k9.los.infrastruktur.db.Appversjonsvakt
 import no.nav.k9.los.infrastruktur.db.DB_AWARE_PARALLELISM
 import no.nav.k9.los.infrastruktur.db.migrate
 import no.nav.k9.los.infrastruktur.jobbplanlegger.Jobbplanlegger
@@ -114,7 +115,6 @@ fun Application.k9Los() {
     DefaultExports.initialize()
 
     val configuration = Configuration(environment.config)
-    migrate(configuration)
     val issuers = configuration.issuers()
 
     install(Koin) {
@@ -122,7 +122,15 @@ fun Application.k9Los() {
     }
 
     val koin = getKoin()
+    val appversjonsvakt = koin.get<Appversjonsvakt>()
 
+    try {
+        appversjonsvakt.taOverHvisTabellFinnes()
+    } catch (e: Exception) {
+        log.warn("Klarte ikke å ta over som aktiv appversjon før migrering", e)
+    }
+    migrate(configuration)
+    appversjonsvakt.taOver()
     koin.get<K9Områdesetup>().setup()
     koin.get<AvpOmrådesetup>().setup()
     koin.get<UngOmrådesetup>().setup()
@@ -181,6 +189,7 @@ fun Application.k9Los() {
         transactionalManager = koin.get(),
         statistikkRepository = koin.get(),
         pepCacheRepository = koin.get(),
+        appversjonsvakt = koin.get(),
     )
 
     install(CallLogging) {

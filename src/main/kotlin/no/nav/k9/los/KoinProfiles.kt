@@ -54,6 +54,7 @@ import no.nav.k9.los.infrastruktur.abac.cache.PepCacheService
 import no.nav.k9.los.infrastruktur.azuregraph.AzureGraphService
 import no.nav.k9.los.infrastruktur.azuregraph.AzureGraphServiceLocal
 import no.nav.k9.los.infrastruktur.azuregraph.IAzureGraphService
+import no.nav.k9.los.infrastruktur.db.Appversjonsvakt
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.infrastruktur.db.hikariConfig
 import no.nav.k9.los.infrastruktur.metrikker.EventlagerNokkeltallPrometheusCollector
@@ -138,6 +139,7 @@ fun common(app: Application, config: Configuration) = module {
     single { OppgaveRepository(get()) }
 
     single { TransactionalManager(dataSource = get()) }
+    single { Appversjonsvakt(dataSource = get()) }
     single<Clock> { Clock.systemDefaultZone() }
 
     single {
@@ -323,6 +325,7 @@ fun common(app: Application, config: Configuration) = module {
             transactionalManager = get(),
             statistikkRepository = get(),
             pepCacheRepository = get(),
+            appversjonsvakt = get(),
         )
     }
 
@@ -398,6 +401,7 @@ fun common(app: Application, config: Configuration) = module {
             ajourholdTjeneste = get<AktivOgPartisjonertOppgaveAjourholdTjeneste>(),
             statistikkRepository = get<StatistikkRepository>(),
             feilRekkefølgeSjekker = get(),
+            appversjonsvakt = get(),
         )
     }
 
@@ -471,7 +475,8 @@ fun common(app: Application, config: Configuration) = module {
             eventRepository = get(),
             oppgaveV3Tjeneste = get(),
             eventTilOppgaveAdapter = get(),
-            transactionalManager = get()
+            transactionalManager = get(),
+            appversjonsvakt = get(),
         )
     }
 

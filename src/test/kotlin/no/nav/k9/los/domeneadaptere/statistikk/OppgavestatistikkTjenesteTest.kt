@@ -7,6 +7,7 @@ import kotliquery.TransactionalSession
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.kodeverk.AvpOppgavetypenavn
 import no.nav.k9.los.domeneadaptere.statistikk.avp.AvpStatistikkPublisher
 import no.nav.k9.los.infrastruktur.abac.cache.PepCacheRepository
+import no.nav.k9.los.infrastruktur.db.Appversjonsvakt
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.Oppgave
@@ -23,6 +24,7 @@ class OppgavestatistikkTjenesteTest {
         every { eksternId } returns "behandling-1"
         every { hentVerdi("saksnummer") } returns "sak-1"
     }
+    private val appversjonsvakt = mockk<Appversjonsvakt> { every { erAktiv(any()) } returns true }
     private val tjeneste = OppgavestatistikkTjeneste(
         mockk(relaxUnitFun = true),
         avpPublisher,
@@ -30,6 +32,7 @@ class OppgavestatistikkTjenesteTest {
         transactionalManager,
         statistikkRepository,
         pepCacheRepository,
+        appversjonsvakt,
     )
 
     @Test
@@ -39,7 +42,7 @@ class OppgavestatistikkTjenesteTest {
         tjeneste.spillAvUsendtStatistikk()
 
         verify(exactly = 0) { avpPublisher.publiserAsynkront(any()) }
-        verify(exactly = 1) { statistikkRepository.kvitterSending(1L) }
+        verify(exactly = 1) { statistikkRepository.kvitterSending(tx, 1L) }
     }
 
     @Test
@@ -62,15 +65,28 @@ class OppgavestatistikkTjenesteTest {
                     it.ansvarligEnhetKode == "1234"
             })
         }
-        verify(exactly = 1) { statistikkRepository.kvitterSending(1L) }
+        verify(exactly = 1) { statistikkRepository.kvitterSending(tx, 1L) }
+    }
+
+    @Test
+    fun `sender og kvitterer ingenting når appversjonen ikke er aktiv`() {
+        klargjør(kode6 = false)
+        every { appversjonsvakt.erAktiv(tx) } returns false
+
+        tjeneste.spillAvUsendtStatistikk()
+
+        verify(exactly = 0) { statistikkRepository.hentOppgaveForId(any(), any(), any()) }
+        verify(exactly = 0) { avpPublisher.publiserAsynkront(any()) }
+        verify(exactly = 0) { avpPublisher.flushOgValider() }
+        verify(exactly = 0) { statistikkRepository.kvitterSending(any(), any()) }
     }
 
     private fun klargjør(kode6: Boolean) {
         every { statistikkRepository.hentOppgaverSomIkkeErSendt(any()) } returns emptyList()
         every { statistikkRepository.hentOppgaverSomIkkeErSendt(Områder.AKTIVITETSPENGER) } returns listOf(1L)
         every { statistikkRepository.hentOppgaveForId(tx, 1L, any()) } returns (oppgave to 1)
-        every { transactionalManager.transaction<Unit>(any()) } answers {
-            firstArg<(TransactionalSession) -> Unit>().invoke(tx)
+        every { transactionalManager.transaction<Boolean>(any()) } answers {
+            firstArg<(TransactionalSession) -> Boolean>().invoke(tx)
         }
         every { pepCacheRepository.hent(Områder.AKTIVITETSPENGER, "behandling-1", tx) } returns mockk {
             every { this@mockk.kode6 } returns kode6
