@@ -39,6 +39,7 @@ import no.nav.k9.los.infrastruktur.abac.cache.PepCacheRepository
 import no.nav.k9.los.infrastruktur.abac.cache.PepCacheService
 import no.nav.k9.los.infrastruktur.azuregraph.AzureGraphServiceLocal
 import no.nav.k9.los.infrastruktur.azuregraph.IAzureGraphService
+import no.nav.k9.los.infrastruktur.db.Appversjonsvakt
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.infrastruktur.metrikker.EventlagerNokkeltallRepository
 import no.nav.k9.los.infrastruktur.pdl.IPdlService
@@ -174,6 +175,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     single { pepClient }
 
     single { TransactionalManager(dataSource = get()) }
+    single { Appversjonsvakt(dataSource = get()) }
 
     single {
         K9SakEventHandler(
@@ -290,6 +292,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             transactionalManager = get(),
             statistikkRepository = get(),
             pepCacheRepository = get(),
+            appversjonsvakt = get(),
         )
     }
 
@@ -336,6 +339,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             ajourholdTjeneste = get<AktivOgPartisjonertOppgaveAjourholdTjeneste>(),
             statistikkRepository = get<StatistikkRepository>(),
             feilRekkefølgeSjekker = get(),
+            appversjonsvakt = get(),
         )
     }
 
@@ -351,7 +355,8 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             eventRepository = get(),
             oppgaveV3Tjeneste = get(),
             eventTilOppgaveAdapter = get(),
-            transactionalManager = get()
+            transactionalManager = get(),
+            appversjonsvakt = get(),
         )
     }
 

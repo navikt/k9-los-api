@@ -136,7 +136,7 @@ data class Oppgave(
 
     fun fyllDefaultverdier(): Oppgave {
         val defaultverdier = oppgavetype.oppgavefelter
-            .filter { oppgavefelt -> oppgavefelt.påkrevd }
+            .filter { oppgavefelt -> oppgavefelt.påkrevd && oppgavefelt.defaultverdi != null }
             .mapNotNull { påkrevdFelt ->
                 if (felter.find { it.eksternId == påkrevdFelt.feltDefinisjon.eksternId && !påkrevdFelt.feltDefinisjon.listetype } == null) {
                     Oppgavefelt(
@@ -144,7 +144,7 @@ data class Oppgave(
                         område = oppgavetype.område.tilOmråderEnum(),
                         listetype = false, //listetyper er aldri påkrevd
                         påkrevd = true,
-                        verdi = påkrevdFelt.defaultverdi.toString(),
+                        verdi = påkrevdFelt.defaultverdi!!,
                         verdiBigInt = null
                     )
                 } else null

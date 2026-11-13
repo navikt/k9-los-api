@@ -14,6 +14,7 @@ import no.nav.k9.los.domeneadaptere.statistikk.ung.UngOppgaveTilDVHMapper
 import no.nav.k9.los.domeneadaptere.statistikk.ung.UngStatistikkPublisher
 import no.nav.k9.los.forvaltning.ForvaltningSensitiveObjectMapper
 import no.nav.k9.los.infrastruktur.abac.cache.PepCacheRepository
+import no.nav.k9.los.infrastruktur.db.Appversjonsvakt
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.Oppgave
@@ -25,7 +26,8 @@ class OppgavestatistikkTjeneste(
     private val ungStatistikkPublisher: UngStatistikkPublisher,
     private val transactionalManager: TransactionalManager,
     private val statistikkRepository: StatistikkRepository,
-    private val pepCacheRepository: PepCacheRepository
+    private val pepCacheRepository: PepCacheRepository,
+    private val appversjonsvakt: Appversjonsvakt,
 ) {
 
     private class PepCachePerSaksnummerState(
@@ -92,19 +94,23 @@ class OppgavestatistikkTjeneste(
         val pepCacheState = PepCachePerSaksnummerState(pepCacheRepository, område)
         log.info("Fant ${oppgaverSomIkkeErSendt.size} oppgaveversjoner for område $område som ikke er sendt til DVH")
 
-        val oppgaveIderTilKvittering = mutableListOf<Long>()
-
-        oppgaverSomIkkeErSendt.forEachIndexed { index, oppgaveId ->
-            sendStatistikkAsynkront(oppgaveId, pepCacheState)
-            oppgaveIderTilKvittering.add(oppgaveId)
-
-            if ((index + 1).mod(FLUSH_INTERVAL) == 0) {
-                flushOgKvitter(område, oppgaveIderTilKvittering)
-                log.info("Sendt ${index + 1} av ${oppgaverSomIkkeErSendt.size} oppgaveversjoner for område $område")
+        var antallSendt = 0
+        for (bolk in oppgaverSomIkkeErSendt.chunked(FLUSH_INTERVAL)) {
+            // Mapping, publisering, flush og kvittering i én transaksjon som holder versjonslåsen,
+            // slik at en ny versjon venter til bolken er ferdig før den tar over.
+            val fullført = transactionalManager.transaction { tx ->
+                if (!appversjonsvakt.erAktiv(tx)) return@transaction false
+                bolk.forEach { oppgaveId -> sendStatistikkAsynkront(oppgaveId, pepCacheState, tx) }
+                flushOgKvitter(område, bolk, tx)
+                true
             }
+            if (!fullført) {
+                log.warn("Avbryter sending av statistikk for område $område etter $antallSendt oppgaveversjoner, appversjonen er ikke aktiv")
+                return
+            }
+            antallSendt += bolk.size
+            log.info("Sendt $antallSendt av ${oppgaverSomIkkeErSendt.size} oppgaveversjoner for område $område")
         }
-        // Flush og kvitter resterende
-        flushOgKvitter(område, oppgaveIderTilKvittering)
 
         val kjoretid = System.currentTimeMillis() - tidStatistikksendingStartet
         log.info("Sending av statistikk for område $område ferdig")
@@ -118,15 +124,14 @@ class OppgavestatistikkTjeneste(
     private fun sendStatistikkAsynkront(
         @SpanAttribute oppgaveId: Long,
         pepCacheState: PepCachePerSaksnummerState,
+        tx: TransactionalSession,
     ) {
-        transactionalManager.transaction { tx ->
-            val (oppgave, versjon) = statistikkRepository.hentOppgaveForId(tx, oppgaveId)
-            when (oppgave.område) {
-                Områder.K9 -> sendK9Statistikk(oppgave, versjon, pepCacheState, tx)
-                Områder.AKTIVITETSPENGER -> sendAvpStatistikk(oppgave, pepCacheState, tx)
-                Områder.UNGDOMSPROGRAMYTELSEN -> sendUngStatistikk(oppgave, pepCacheState, tx)
-                else -> throw IllegalStateException("Ukjent område for sending til DVH: ${oppgave.område}")
-            }
+        val (oppgave, versjon) = statistikkRepository.hentOppgaveForId(tx, oppgaveId)
+        when (oppgave.område) {
+            Områder.K9 -> sendK9Statistikk(oppgave, versjon, pepCacheState, tx)
+            Områder.AKTIVITETSPENGER -> sendAvpStatistikk(oppgave, pepCacheState, tx)
+            Områder.UNGDOMSPROGRAMYTELSEN -> sendUngStatistikk(oppgave, pepCacheState, tx)
+            else -> throw IllegalStateException("Ukjent område for sending til DVH: ${oppgave.område}")
         }
     }
 
@@ -192,7 +197,7 @@ class OppgavestatistikkTjeneste(
         }
     }
 
-    private fun flushOgKvitter(område: Områder, oppgaveIderTilKvittering: MutableList<Long>) {
+    private fun flushOgKvitter(område: Områder, oppgaveIderTilKvittering: List<Long>, tx: TransactionalSession) {
         when (område) {
             Områder.K9 -> k9StatistikkPublisher.flushOgValider()
             Områder.AKTIVITETSPENGER -> avpStatistikkPublisher.flushOgValider()
@@ -200,9 +205,8 @@ class OppgavestatistikkTjeneste(
             else -> throw IllegalStateException("Ukjent område for sending til DVH: $område")
         }
         oppgaveIderTilKvittering.forEach { oppgaveId ->
-            statistikkRepository.kvitterSending(oppgaveId)
+            statistikkRepository.kvitterSending(tx, oppgaveId)
         }
-        oppgaveIderTilKvittering.clear()
     }
 
     private fun <T : Any> nullUtEventuelleSensitiveFelter(value: T): T = SensitiveFieldCensor.censor(value)
