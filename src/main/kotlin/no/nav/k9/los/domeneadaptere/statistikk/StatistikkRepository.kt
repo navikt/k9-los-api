@@ -50,6 +50,12 @@ class StatistikkRepository(
                         ) saksnummer on true
                         where p.omrade_ekstern_id = :omrade
                           and p.oppgavetype_ekstern_id in (${InClauseHjelper.tilParameternavn(oppgavetyper, "oppgavetype")})
+                          and not exists (
+                              select 1
+                              from event_historikkvask_bestilt hb
+                              join event_nokkel en on en.id = hb.event_nokkel_id
+                              where en.ekstern_id = p.ekstern_id
+                          )
                         order by saksnummer.saksnummer nulls last, ov.ekstern_id, ov.ekstern_versjon, ov.oppgavetype_ekstern_id
                     """.trimIndent(),
                     mapOf("omrade" to område.eksternId) +

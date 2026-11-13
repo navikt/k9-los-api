@@ -5,7 +5,6 @@ import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.k9.los.feilhandtering.IllegalDeleteException
-import no.nav.k9.los.feilhandtering.MissingDefaultException
 import no.nav.k9.los.oppgavemottak.feltutlederforlagring.GyldigeFeltutledere
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.FeltdefinisjonRepository
 import no.nav.k9.los.oppgavedefinisjon.omraade.Område
@@ -191,7 +190,10 @@ class OppgavetypeRepository(
         val oppgaveFinnes = sjekkOmOppgaverFinnes(oppgavetypeId, tx)
         endring.felterSomSkalLeggesTil.forEach { felt ->
             if (oppgaveFinnes && felt.påkrevd && felt.defaultverdi.isNullOrEmpty()) {
-                throw MissingDefaultException("Kan ikke legge til påkrevd på eksisterende oppgave uten å oppgi defaultverdi")
+                val antall = bestillHistorikkvaskForOppgaverSomManglerFelt(oppgavetypeId, null, tx)
+                log.warn(
+                    "Feltet ${felt.feltDefinisjon.eksternId} er blitt påkrevd på oppgavetype ${endring.oppgavetype.eksternId} uten defaultverdi. Historikkvask bestilt for $antall eventnøkler."
+                )
             }
             leggTilOppgavefelt(tx, felt, oppgavetypeId)
         }
@@ -202,11 +204,50 @@ class OppgavetypeRepository(
 
         endring.felterSomSkalEndresMedNyeVerdier.forEach { felter ->
             if (oppgaveFinnes && felter.innkommendeFelt.påkrevd && !felter.eksisterendeFelt.påkrevd && felter.innkommendeFelt.defaultverdi == null) {
-                throw MissingDefaultException("Kan ikke legge til påkrevd på eksisterende oppgave uten å oppgi defaultverdi")
+                val antall = bestillHistorikkvaskForOppgaverSomManglerFelt(
+                    oppgavetypeId,
+                    felter.eksisterendeFelt.id!!,
+                    tx
+                )
+                log.warn(
+                    "Feltet ${felter.innkommendeFelt.feltDefinisjon.eksternId} er blitt påkrevd på oppgavetype ${endring.oppgavetype.eksternId} uten defaultverdi. Historikkvask bestilt for $antall eventnøkler."
+                )
             }
             oppdaterFelt(felter.eksisterendeFelt.id!!, felter.innkommendeFelt, tx)
         }
         oppdaterOppgavebehandlingsUrlTemplate(endring, tx)
+    }
+
+    private fun bestillHistorikkvaskForOppgaverSomManglerFelt(
+        oppgavetypeId: Long,
+        oppgavefeltId: Long?,
+        tx: TransactionalSession
+    ): Int {
+        return tx.run(
+            queryOf(
+                """
+                insert into event_historikkvask_bestilt(event_nokkel_id)
+                select en.id
+                from event_nokkel en
+                where en.ekstern_id in (
+                    select ov.ekstern_id
+                    from oppgave_v3 ov
+                    where ov.oppgavetype_id = :oppgavetypeId
+                      and (cast(:oppgavefeltId as bigint) is null or not exists (
+                          select 1 from oppgavefelt_verdi ofv
+                          where ofv.oppgave_id = ov.id
+                            and ofv.oppgavefelt_id = :oppgavefeltId
+                            and ofv.verdi is not null
+                      ))
+                )
+                on conflict do nothing
+                """.trimIndent(),
+                mapOf(
+                    "oppgavetypeId" to oppgavetypeId,
+                    "oppgavefeltId" to oppgavefeltId
+                )
+            ).asUpdate
+        )
     }
 
     private fun oppdaterOppgavebehandlingsUrlTemplate(endring: OppgavetypeEndring, tx: TransactionalSession) {
