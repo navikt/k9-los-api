@@ -294,6 +294,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             statistikkRepository = get(),
             pepCacheRepository = get(),
             appversjonsvakt = get(),
+            eventRepository = get(),
         )
     }
 

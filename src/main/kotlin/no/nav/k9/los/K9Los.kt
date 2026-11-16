@@ -190,6 +190,7 @@ fun Application.k9Los() {
         statistikkRepository = koin.get(),
         pepCacheRepository = koin.get(),
         appversjonsvakt = koin.get(),
+        eventRepository = koin.get(),
     )
 
     install(CallLogging) {

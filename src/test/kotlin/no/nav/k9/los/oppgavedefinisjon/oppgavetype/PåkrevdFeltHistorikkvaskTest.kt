@@ -3,7 +3,13 @@ package no.nav.k9.los.oppgavedefinisjon.oppgavetype
 import assertk.assertThat
 import assertk.assertions.isEmpty
 import assertk.assertions.isEqualTo
+import assertk.assertions.isNotEqualTo
 import assertk.assertions.isNotEmpty
+import assertk.assertions.isNull
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.verify
+import kotliquery.queryOf
 import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.FeltType
 import no.nav.k9.los.OppgaveTestDataBuilder
@@ -12,13 +18,19 @@ import no.nav.k9.los.domeneadaptere.eventlager.EventRepository
 import no.nav.k9.los.domeneadaptere.eventlager.Fagsystem
 import no.nav.k9.los.domeneadaptere.eventmottak.ung.sak.UngSakEventDto
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.EventTilOppgaveAdapter
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.HistorikkvaskTjeneste
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.AvpOmrådesetup
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.kodeverk.AvpBehandlendeEnhet
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.kodeverk.AvpOppgavetypenavn
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.oppgavedefinisjon.AktivitetspengerFelter
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.oppgavedefinisjon.AktivitetspengerOppgavetyper
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.kodeverk.K9Oppgavetypenavn
+import no.nav.k9.los.domeneadaptere.k9.eventtiloppgave.endreEvent
+import no.nav.k9.los.domeneadaptere.statistikk.DvhOppgaveversjon
+import no.nav.k9.los.domeneadaptere.statistikk.OppgavestatistikkTjeneste
 import no.nav.k9.los.domeneadaptere.statistikk.StatistikkRepository
+import no.nav.k9.los.domeneadaptere.statistikk.avp.AvpStatistikkPublisher
+import no.nav.k9.los.infrastruktur.db.Appversjonsvakt
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
@@ -36,10 +48,14 @@ import no.nav.ung.sak.kontrakt.aksjonspunkt.AksjonspunktTilstandDto
 import no.nav.ung.sak.typer.Periode
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.koin.test.get
+import org.postgresql.util.PSQLException
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 
 class PåkrevdFeltHistorikkvaskTest : AbstractK9LosIntegrationTest() {
 
@@ -185,30 +201,28 @@ class PåkrevdFeltHistorikkvaskTest : AbstractK9LosIntegrationTest() {
 
     @Test
     fun `dvh-sending skiller mellom k9sak og k9klage med samme ekstern id`() {
-        val oppgaveIder = mapOf(K9Oppgavetypenavn.SAK to Fagsystem.K9SAK, K9Oppgavetypenavn.KLAGE to Fagsystem.K9KLAGE)
+        val oppgaveversjoner = mapOf(K9Oppgavetypenavn.SAK to Fagsystem.K9SAK, K9Oppgavetypenavn.KLAGE to Fagsystem.K9KLAGE)
             .map { (oppgavetype, fagsystem) ->
                 val oppgave = OppgaveTestDataBuilder(oppgavetype.kode)
                     .medOppgaveFeltVerdi(FeltType.BEHANDLINGUUID, eksternId.toString())
                     .lagOgLagre()
-                val id = transactionalManager.transaction { tx ->
+                val oppgaveversjon = transactionalManager.transaction { tx ->
                     statistikkRepository.bestillDvhSending(
                         Områder.K9, oppgave.eksternId, oppgave.eksternVersjon, oppgavetype.kode, tx
                     )
                     eventRepository.upsertOgLåsEventnøkkel(fagsystem, oppgave.eksternId, tx)
-                    get<OppgaveV3Repository>().hentOppgaveIdStatusOgHøyesteInternversjon(
-                        tx, oppgave.eksternId, oppgavetype.kode, Områder.K9
-                    ).first!!.id
+                    DvhOppgaveversjon(oppgavetype, oppgave.eksternId, oppgave.eksternVersjon)
                 }
-                fagsystem to id
+                fagsystem to oppgaveversjon
             }.toMap()
-        val sakId = oppgaveIder.getValue(Fagsystem.K9SAK)
-        val klageId = oppgaveIder.getValue(Fagsystem.K9KLAGE)
-        assertThat(statistikkRepository.hentOppgaverSomIkkeErSendt(K9Oppgavetypenavn.SAK)).isEqualTo(listOf(sakId))
-        assertThat(statistikkRepository.hentOppgaverSomIkkeErSendt(K9Oppgavetypenavn.KLAGE)).isEqualTo(listOf(klageId))
+        val sakversjon = oppgaveversjoner.getValue(Fagsystem.K9SAK)
+        val klageversjon = oppgaveversjoner.getValue(Fagsystem.K9KLAGE)
+        assertThat(statistikkRepository.hentOppgaverSomIkkeErSendt(K9Oppgavetypenavn.SAK)).isEqualTo(listOf(sakversjon))
+        assertThat(statistikkRepository.hentOppgaverSomIkkeErSendt(K9Oppgavetypenavn.KLAGE)).isEqualTo(listOf(klageversjon))
 
         eventRepository.bestillHistorikkvask(Fagsystem.K9SAK, eksternId.toString())
         assertThat(statistikkRepository.hentOppgaverSomIkkeErSendt(K9Oppgavetypenavn.SAK)).isEmpty()
-        assertThat(statistikkRepository.hentOppgaverSomIkkeErSendt(K9Oppgavetypenavn.KLAGE)).isEqualTo(listOf(klageId))
+        assertThat(statistikkRepository.hentOppgaverSomIkkeErSendt(K9Oppgavetypenavn.KLAGE)).isEqualTo(listOf(klageversjon))
 
         eventRepository.bestillHistorikkvask(Fagsystem.K9KLAGE, eksternId.toString())
         assertThat(statistikkRepository.hentOppgaverSomIkkeErSendt(K9Oppgavetypenavn.SAK)).isEmpty()
@@ -217,14 +231,118 @@ class PåkrevdFeltHistorikkvaskTest : AbstractK9LosIntegrationTest() {
         transactionalManager.transaction { tx ->
             eventRepository.settHistorikkvaskFerdig(Fagsystem.K9SAK, eksternId.toString(), tx)
         }
-        assertThat(statistikkRepository.hentOppgaverSomIkkeErSendt(K9Oppgavetypenavn.SAK)).isEqualTo(listOf(sakId))
+        assertThat(statistikkRepository.hentOppgaverSomIkkeErSendt(K9Oppgavetypenavn.SAK)).isEqualTo(listOf(sakversjon))
         assertThat(statistikkRepository.hentOppgaverSomIkkeErSendt(K9Oppgavetypenavn.KLAGE)).isEmpty()
 
         transactionalManager.transaction { tx ->
             eventRepository.settHistorikkvaskFerdig(Fagsystem.K9KLAGE, eksternId.toString(), tx)
         }
-        assertThat(statistikkRepository.hentOppgaverSomIkkeErSendt(K9Oppgavetypenavn.SAK)).isEqualTo(listOf(sakId))
-        assertThat(statistikkRepository.hentOppgaverSomIkkeErSendt(K9Oppgavetypenavn.KLAGE)).isEqualTo(listOf(klageId))
+        assertThat(statistikkRepository.hentOppgaverSomIkkeErSendt(K9Oppgavetypenavn.SAK)).isEqualTo(listOf(sakversjon))
+        assertThat(statistikkRepository.hentOppgaverSomIkkeErSendt(K9Oppgavetypenavn.KLAGE)).isEqualTo(listOf(klageversjon))
+    }
+
+    @Test
+    fun `dvh-sending sjekker vask bestilt etter uttrekk og beholder pending`() {
+        prosesserOppgave()
+        val oppgaveversjoner = statistikkRepository.hentOppgaverSomIkkeErSendt(avpOppgavetype)
+        eventRepository.bestillHistorikkvask(Fagsystem.UNGSAK, eksternId.toString())
+
+        transactionalManager.transaction { tx ->
+            check(get<Appversjonsvakt>().erAktiv(tx))
+            eventRepository.hentOgLåsEventnøkkel(Fagsystem.UNGSAK, eksternId.toString(), tx)
+            oppgaveversjoner.forEach {
+                assertThat(statistikkRepository.hentOppgaveForSending(tx, it)).isNull()
+            }
+        }
+
+        transactionalManager.transaction { tx ->
+            eventRepository.settHistorikkvaskFerdig(Fagsystem.UNGSAK, eksternId.toString(), tx)
+        }
+        assertThat(statistikkRepository.hentOppgaverSomIkkeErSendt(avpOppgavetype)).isEqualTo(oppgaveversjoner)
+    }
+
+    @Test
+    fun `dvh-sending bruker rekonstruerte rader etter vask mellom uttrekk og sending`() {
+        prosesserOppgave()
+        val oppgaveversjoner = statistikkRepository.hentOppgaverSomIkkeErSendt(avpOppgavetype)
+        val opprinneligId = transactionalManager.transaction { tx ->
+            get<OppgaveV3Repository>().hentOppgaveIdStatusOgHøyesteInternversjon(
+                tx, eksternId.toString(), avpOppgavetype.kode, Områder.AKTIVITETSPENGER
+            ).first!!.id
+        }
+        transactionalManager.transaction { tx ->
+            val nøkkelId = eventRepository.hentOgLåsEventnøkkel(Fagsystem.UNGSAK, eksternId.toString(), tx)
+            eventRepository.endreEvent(
+                EventNøkkel(Fagsystem.UNGSAK, eksternId.toString(), nøkkelId),
+                LosObjectMapper.instance.writeValueAsString(lagEvent().copy(saksnummer = "AKT654321")),
+                tx,
+            )
+        }
+        eventRepository.bestillHistorikkvask(Fagsystem.UNGSAK, eksternId.toString())
+        get<HistorikkvaskTjeneste>().vaskBestilling(eventRepository.hentAlleHistorikkvaskbestillinger().single())
+
+        val rekonstruertId = transactionalManager.transaction { tx ->
+            get<OppgaveV3Repository>().hentOppgaveIdStatusOgHøyesteInternversjon(
+                tx, eksternId.toString(), avpOppgavetype.kode, Områder.AKTIVITETSPENGER
+            ).first!!.id
+        }
+        assertThat(rekonstruertId).isNotEqualTo(opprinneligId)
+        assertThat(statistikkRepository.hentOppgaverSomIkkeErSendt(avpOppgavetype)).isEqualTo(oppgaveversjoner)
+        transactionalManager.transaction { tx ->
+            check(get<Appversjonsvakt>().erAktiv(tx))
+            eventRepository.hentOgLåsEventnøkkel(Fagsystem.UNGSAK, eksternId.toString(), tx)
+            oppgaveversjoner.forEach {
+                val (oppgave, _) = checkNotNull(statistikkRepository.hentOppgaveForSending(tx, it))
+                assertThat(oppgave.hentVerdi("saksnummer")).isEqualTo("AKT654321")
+                statistikkRepository.kvitterSending(tx, it)
+                assertThat(statistikkRepository.hentOppgaveForSending(tx, it)).isNull()
+            }
+        }
+        assertThat(statistikkRepository.hentOppgaverSomIkkeErSendt(avpOppgavetype)).isEmpty()
+    }
+
+    @Test
+    fun `dvh-sending holder rekonstruksjonslåsen gjennom publisering og flush`() {
+        prosesserOppgave()
+        val publisher = mockk<AvpStatistikkPublisher>(relaxUnitFun = true)
+        val executor = Executors.newSingleThreadExecutor()
+        val sjekkLås = {
+            executor.submit {
+                val feil = assertThrows<PSQLException> {
+                    transactionalManager.transaction { tx ->
+                        check(get<Appversjonsvakt>().erAktiv(tx))
+                        tx.run(queryOf("set local lock_timeout = '100ms'").asExecute)
+                        eventRepository.hentOgLåsEventnøkkel(Fagsystem.UNGSAK, eksternId.toString(), tx)
+                    }
+                }
+                assertThat(feil.sqlState).isEqualTo("55P03")
+            }.get(10, TimeUnit.SECONDS)
+            Unit
+        }
+        every { publisher.publiserAsynkront(any()) } answers { sjekkLås() }
+        every { publisher.flushOgValider() } answers { sjekkLås() }
+        val tjeneste = OppgavestatistikkTjeneste(
+            k9StatistikkPublisher = mockk(),
+            avpStatistikkPublisher = publisher,
+            ungStatistikkPublisher = mockk(),
+            transactionalManager = transactionalManager,
+            statistikkRepository = statistikkRepository,
+            pepCacheRepository = mockk { every { hent(any(), any(), any()) } returns null },
+            appversjonsvakt = get(),
+            eventRepository = eventRepository,
+        )
+        try {
+            tjeneste.spillAvUsendtStatistikk()
+        } finally {
+            executor.shutdownNow()
+        }
+
+        verify(exactly = 1) { publisher.publiserAsynkront(any()) }
+        verify(exactly = 1) { publisher.flushOgValider() }
+        assertThat(statistikkRepository.hentOppgaverSomIkkeErSendt(avpOppgavetype)).isEmpty()
+        transactionalManager.transaction { tx ->
+            eventRepository.hentOgLåsEventnøkkel(Fagsystem.UNGSAK, eksternId.toString(), tx)
+        }
     }
 
     @Test
@@ -237,22 +355,22 @@ class PåkrevdFeltHistorikkvaskTest : AbstractK9LosIntegrationTest() {
         assertThat(statistikkRepository.hentOppgaverSomIkkeErSendt(K9Oppgavetypenavn.KLAGE)).isEmpty()
 
         statistikkRepository.bestillDvhSending()
-        val forventedeOppgaveIder = oppgavetyper.associateWith {
+        val forventedeOppgaveversjoner = oppgavetyper.associateWith {
             statistikkRepository.hentOppgaverSomIkkeErSendt(it).single()
         }
-        forventedeOppgaveIder.values.forEach { statistikkRepository.kvitterSending(it) }
+        forventedeOppgaveversjoner.values.forEach { statistikkRepository.kvitterSending(it) }
 
         transactionalManager.transaction { tx ->
             statistikkRepository.bestillDvhSendingForEksternIder(eksternIder, tx)
         }
-        forventedeOppgaveIder.forEach { (oppgavetype, id) ->
-            assertThat(statistikkRepository.hentOppgaverSomIkkeErSendt(oppgavetype)).isEqualTo(listOf(id))
+        forventedeOppgaveversjoner.forEach { (oppgavetype, oppgaveversjon) ->
+            assertThat(statistikkRepository.hentOppgaverSomIkkeErSendt(oppgavetype)).isEqualTo(listOf(oppgaveversjon))
         }
-        forventedeOppgaveIder.values.forEach { statistikkRepository.kvitterSending(it) }
+        forventedeOppgaveversjoner.values.forEach { statistikkRepository.kvitterSending(it) }
 
         assertThat(statistikkRepository.populerPendingFraOppgaveV3()).isEqualTo(2)
-        forventedeOppgaveIder.forEach { (oppgavetype, id) ->
-            assertThat(statistikkRepository.hentOppgaverSomIkkeErSendt(oppgavetype)).isEqualTo(listOf(id))
+        forventedeOppgaveversjoner.forEach { (oppgavetype, oppgaveversjon) ->
+            assertThat(statistikkRepository.hentOppgaverSomIkkeErSendt(oppgavetype)).isEqualTo(listOf(oppgaveversjon))
         }
     }
 

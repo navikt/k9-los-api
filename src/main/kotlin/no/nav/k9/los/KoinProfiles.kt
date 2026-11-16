@@ -327,6 +327,7 @@ fun common(app: Application, config: Configuration) = module {
             statistikkRepository = get(),
             pepCacheRepository = get(),
             appversjonsvakt = get(),
+            eventRepository = get(),
         )
     }
 
