@@ -46,6 +46,34 @@ class OppgavestatistikkTjenesteTest {
     }
 
     @Test
+    fun `henter usendte oppgaver for hver konfigurert oppgavetype`() {
+        klargjør(kode6 = true)
+
+        tjeneste.spillAvUsendtStatistikk()
+
+        StatistikkRepository.DVH_OPPGAVETYPER.values.flatten().forEach { oppgavetype ->
+            verify(exactly = 1) { statistikkRepository.hentOppgaverSomIkkeErSendt(oppgavetype) }
+        }
+    }
+
+    @Test
+    fun `sender og kvitterer begge AVP oppgavetyper hver for seg`() {
+        klargjør(kode6 = true)
+        every {
+            statistikkRepository.hentOppgaverSomIkkeErSendt(
+                AvpOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2
+            )
+        } returns listOf(2L)
+        every { statistikkRepository.hentOppgaveForId(tx, 2L, any()) } returns (oppgave to 1)
+
+        tjeneste.spillAvUsendtStatistikk()
+
+        verify(exactly = 1) { statistikkRepository.kvitterSending(tx, 1L) }
+        verify(exactly = 1) { statistikkRepository.kvitterSending(tx, 2L) }
+        verify(exactly = 2) { avpPublisher.flushOgValider() }
+    }
+
+    @Test
     fun `AVP uten kode6 publiseres uten sensur og kvitteres`() {
         klargjør(kode6 = false)
         every { oppgave.hentVerdi(any()) } returns null
@@ -83,7 +111,11 @@ class OppgavestatistikkTjenesteTest {
 
     private fun klargjør(kode6: Boolean) {
         every { statistikkRepository.hentOppgaverSomIkkeErSendt(any()) } returns emptyList()
-        every { statistikkRepository.hentOppgaverSomIkkeErSendt(Områder.AKTIVITETSPENGER) } returns listOf(1L)
+        every {
+            statistikkRepository.hentOppgaverSomIkkeErSendt(
+                AvpOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1
+            )
+        } returns listOf(1L)
         every { statistikkRepository.hentOppgaveForId(tx, 1L, any()) } returns (oppgave to 1)
         every { transactionalManager.transaction<Boolean>(any()) } answers {
             firstArg<(TransactionalSession) -> Boolean>().invoke(tx)

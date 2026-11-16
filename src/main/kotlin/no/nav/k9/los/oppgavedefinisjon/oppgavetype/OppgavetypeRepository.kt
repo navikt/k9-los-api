@@ -4,6 +4,8 @@ import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
+import no.nav.k9.los.domeneadaptere.eventlager.Fagsystem
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.kodeverk.K9Oppgavetypenavn
 import no.nav.k9.los.feilhandtering.IllegalDeleteException
 import no.nav.k9.los.oppgavemottak.feltutlederforlagring.GyldigeFeltutledere
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.FeltdefinisjonRepository
@@ -186,11 +188,12 @@ class OppgavetypeRepository(
     }
 
     fun endre(endring: OppgavetypeEndring, tx: TransactionalSession) {
-        val oppgavetypeId = hentOppgavetype(endring.oppgavetype.område, endring.oppgavetype.eksternId, tx).id!!
+        val oppgavetype = hentOppgavetype(endring.oppgavetype.område, endring.oppgavetype.eksternId, tx)
+        val oppgavetypeId = oppgavetype.id!!
         val oppgaveFinnes = sjekkOmOppgaverFinnes(oppgavetypeId, tx)
         endring.felterSomSkalLeggesTil.forEach { felt ->
             if (oppgaveFinnes && felt.påkrevd && felt.defaultverdi.isNullOrEmpty()) {
-                val antall = bestillHistorikkvaskForOppgaverSomManglerFelt(oppgavetypeId, null, tx)
+                val antall = bestillHistorikkvaskForOppgaverSomManglerFelt(oppgavetype, null, tx)
                 log.warn(
                     "Feltet ${felt.feltDefinisjon.eksternId} er blitt påkrevd på oppgavetype ${endring.oppgavetype.eksternId} uten defaultverdi. Historikkvask bestilt for $antall eventnøkler."
                 )
@@ -205,7 +208,7 @@ class OppgavetypeRepository(
         endring.felterSomSkalEndresMedNyeVerdier.forEach { felter ->
             if (oppgaveFinnes && felter.innkommendeFelt.påkrevd && !felter.eksisterendeFelt.påkrevd && felter.innkommendeFelt.defaultverdi == null) {
                 val antall = bestillHistorikkvaskForOppgaverSomManglerFelt(
-                    oppgavetypeId,
+                    oppgavetype,
                     felter.eksisterendeFelt.id!!,
                     tx
                 )
@@ -219,17 +222,22 @@ class OppgavetypeRepository(
     }
 
     private fun bestillHistorikkvaskForOppgaverSomManglerFelt(
-        oppgavetypeId: Long,
+        oppgavetype: Oppgavetype,
         oppgavefeltId: Long?,
         tx: TransactionalSession
     ): Int {
+        val fagsystem = when (oppgavetype.område.tilOmråderEnum()) {
+            Områder.K9 -> K9Oppgavetypenavn.fraKode(oppgavetype.eksternId).fagsystem
+            Områder.AKTIVITETSPENGER, Områder.UNGDOMSPROGRAMYTELSEN -> Fagsystem.UNGSAK
+        }
         return tx.run(
             queryOf(
                 """
                 insert into event_historikkvask_bestilt(event_nokkel_id)
                 select en.id
                 from event_nokkel en
-                where en.ekstern_id in (
+                where en.fagsystem = :fagsystem
+                  and en.ekstern_id in (
                     select ov.ekstern_id
                     from oppgave_v3 ov
                     where ov.oppgavetype_id = :oppgavetypeId
@@ -243,7 +251,8 @@ class OppgavetypeRepository(
                 on conflict do nothing
                 """.trimIndent(),
                 mapOf(
-                    "oppgavetypeId" to oppgavetypeId,
+                    "fagsystem" to fagsystem.kode,
+                    "oppgavetypeId" to oppgavetype.id,
                     "oppgavefeltId" to oppgavefeltId
                 )
             ).asUpdate

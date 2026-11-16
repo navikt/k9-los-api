@@ -3,6 +3,7 @@ package no.nav.k9.los.domeneadaptere.statistikk
 import io.opentelemetry.instrumentation.annotations.SpanAttribute
 import io.opentelemetry.instrumentation.annotations.WithSpan
 import kotliquery.TransactionalSession
+import no.nav.k9.los.domeneadaptere.eventlager.Oppgavetype
 import no.nav.k9.los.domeneadaptere.statistikk.avp.AvpOppgaveTilDVHMapper
 import no.nav.k9.los.domeneadaptere.statistikk.avp.AvpStatistikkPublisher
 import no.nav.k9.los.domeneadaptere.statistikk.k9.K9Behandling
@@ -72,9 +73,11 @@ class OppgavestatistikkTjeneste(
 
     fun spillAvUsendtStatistikk() {
         val feil = mutableListOf<Exception>()
-        StatistikkRepository.DVH_OPPGAVETYPER.keys.forEach { område ->
+        StatistikkRepository.DVH_OPPGAVETYPER.forEach { (område, oppgavetyper) ->
             try {
-                spillAvUsendtStatistikk(område)
+                oppgavetyper.forEach { oppgavetype ->
+                    spillAvUsendtStatistikk(oppgavetype)
+                }
             } catch (e: Exception) {
                 log.error("Sending av statistikk for område $område til DVH feilet", e)
                 feil.add(e)
@@ -87,12 +90,13 @@ class OppgavestatistikkTjeneste(
         }
     }
 
-    private fun spillAvUsendtStatistikk(område: Områder) {
-        log.info("Starter sending av statistikk for område $område til DVH")
+    private fun spillAvUsendtStatistikk(oppgavetype: Oppgavetype) {
+        val område = oppgavetype.område
+        log.info("Starter sending av statistikk for oppgavetype ${oppgavetype.kode} i område $område til DVH")
         val tidStatistikksendingStartet = System.currentTimeMillis()
-        val oppgaverSomIkkeErSendt = statistikkRepository.hentOppgaverSomIkkeErSendt(område)
+        val oppgaverSomIkkeErSendt = statistikkRepository.hentOppgaverSomIkkeErSendt(oppgavetype)
         val pepCacheState = PepCachePerSaksnummerState(pepCacheRepository, område)
-        log.info("Fant ${oppgaverSomIkkeErSendt.size} oppgaveversjoner for område $område som ikke er sendt til DVH")
+        log.info("Fant ${oppgaverSomIkkeErSendt.size} oppgaveversjoner for oppgavetype ${oppgavetype.kode} i område $område som ikke er sendt til DVH")
 
         var antallSendt = 0
         for (bolk in oppgaverSomIkkeErSendt.chunked(FLUSH_INTERVAL)) {
@@ -105,16 +109,16 @@ class OppgavestatistikkTjeneste(
                 true
             }
             if (!fullført) {
-                log.warn("Avbryter sending av statistikk for område $område etter $antallSendt oppgaveversjoner, appversjonen er ikke aktiv")
+                log.warn("Avbryter sending av statistikk for oppgavetype ${oppgavetype.kode} i område $område etter $antallSendt oppgaveversjoner, appversjonen er ikke aktiv")
                 return
             }
             antallSendt += bolk.size
-            log.info("Sendt $antallSendt av ${oppgaverSomIkkeErSendt.size} oppgaveversjoner for område $område")
+            log.info("Sendt $antallSendt av ${oppgaverSomIkkeErSendt.size} oppgaveversjoner for oppgavetype ${oppgavetype.kode} i område $område")
         }
 
         val kjoretid = System.currentTimeMillis() - tidStatistikksendingStartet
-        log.info("Sending av statistikk for område $område ferdig")
-        log.info("Sendt ${oppgaverSomIkkeErSendt.size} oppgaveversjoner for område $område. Totalt tidsbruk: ${kjoretid} ms")
+        log.info("Sending av statistikk for oppgavetype ${oppgavetype.kode} i område $område ferdig")
+        log.info("Sendt ${oppgaverSomIkkeErSendt.size} oppgaveversjoner for oppgavetype ${oppgavetype.kode} i område $område. Totalt tidsbruk: ${kjoretid} ms")
         if (oppgaverSomIkkeErSendt.isNotEmpty()) {
             log.info("Gjennomsnitt tidsbruk: ${kjoretid / oppgaverSomIkkeErSendt.size} ms pr oppgaveversjon")
         }
