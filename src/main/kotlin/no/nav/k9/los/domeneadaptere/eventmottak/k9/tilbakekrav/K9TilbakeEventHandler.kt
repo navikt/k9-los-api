@@ -42,7 +42,8 @@ class K9TilbakeEventHandler(
     ) {
         EventHandlerMetrics.time("k9tilbake", "gjennomført") {
             transactionalManager.transaction { tx ->
-                val eventnøkkel = eventRepository.lagre(Fagsystem.K9TILBAKE, eksternId, eksternVersjon, event, tx)
+                val eventnøkkel = eventRepository.lagreOgSjekkAktiv(Fagsystem.K9TILBAKE, eksternId, eksternVersjon, event, tx)
+                    ?: return@transaction
 
                 OpentelemetrySpanUtil.span("k9TilbakeTilLosAdapterTjeneste.oppdaterOppgaveForBehandlingUuid") {
                     try {

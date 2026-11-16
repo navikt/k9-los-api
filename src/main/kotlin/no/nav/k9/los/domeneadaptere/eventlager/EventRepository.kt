@@ -1,13 +1,15 @@
 package no.nav.k9.los.domeneadaptere.eventlager
 
 import kotliquery.*
+import no.nav.k9.los.infrastruktur.db.Appversjonsvakt
 import no.nav.k9.los.infrastruktur.db.util.InClauseHjelper
 import org.jetbrains.annotations.VisibleForTesting
 import org.slf4j.LoggerFactory
 import javax.sql.DataSource
 
 class EventRepository(
-    private val dataSource: DataSource
+    private val dataSource: DataSource,
+    private val appversjonsvakt: Appversjonsvakt,
 ) {
     private val log = LoggerFactory.getLogger(EventRepository::class.java)
 
@@ -102,6 +104,23 @@ class EventRepository(
         )
 
         return EventNøkkel(fagsystem, eksternId, eventnøkkelId)
+    }
+
+    /**
+     * Lagrer eventet som dirty og returnerer nøkkelen hvis appversjonen er aktiv, ellers null.
+     * Appversjonslåsen tas før eventnøkkelen, samme låserekkefølge som vaktmester og historikkvask,
+     * slik at mottak ikke kan deadlocke mot en overtakelse.
+     */
+    fun lagreOgSjekkAktiv(
+        fagsystem: Fagsystem,
+        eksternId: String,
+        eksternVersjon: String,
+        event: String,
+        tx: TransactionalSession,
+    ): EventNøkkel? {
+        val aktiv = appversjonsvakt.erAktiv(tx)
+        val eventnøkkel = lagre(fagsystem, eksternId, eksternVersjon, event, tx)
+        return eventnøkkel.takeIf { aktiv }
     }
 
     fun hentAlleEventer(fagsystem: Fagsystem, eksternId: String): List<EventLagret> {

@@ -40,7 +40,8 @@ class K9KlageEventHandler (
         val t0 = System.nanoTime()
 
         transactionalManager.transaction { tx ->
-            val eventnøkkel = eventRepository.lagre(Fagsystem.K9KLAGE, eksternId, eksternVersjon, event, tx)
+            val eventnøkkel = eventRepository.lagreOgSjekkAktiv(Fagsystem.K9KLAGE, eksternId, eksternVersjon, event, tx)
+                ?: return@transaction
 
             OpentelemetrySpanUtil.span("k9KlageTilLosAdapterTjeneste.oppdaterOppgaveForBehandlingUuid") {
                 try {

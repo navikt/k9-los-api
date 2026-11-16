@@ -227,6 +227,7 @@ fun common(app: Application, config: Configuration) = module {
     single {
         EventRepository(
             dataSource = get(),
+            appversjonsvakt = get(),
         )
     }
 

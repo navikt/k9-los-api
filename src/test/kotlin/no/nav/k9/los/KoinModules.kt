@@ -212,6 +212,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     single {
         EventRepository(
             dataSource = get(),
+            appversjonsvakt = get(),
         )
     }
 
@@ -326,6 +327,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     single {
         EventRepository(
             dataSource = get(),
+            appversjonsvakt = get(),
         )
     }
 

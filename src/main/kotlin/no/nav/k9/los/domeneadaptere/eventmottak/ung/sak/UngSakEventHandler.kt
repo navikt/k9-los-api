@@ -2,7 +2,6 @@ package no.nav.k9.los.domeneadaptere.eventmottak.ung.sak
 
 import no.nav.k9.los.domeneadaptere.eventlager.EventRepository
 import no.nav.k9.los.domeneadaptere.eventlager.Fagsystem
-import no.nav.k9.los.domeneadaptere.eventmottak.FeilRekkefølgeSjekker
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.EventTilOppgaveAdapter
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.infrastruktur.db.medSavepoint
@@ -16,7 +15,8 @@ class UngSakEventHandler (
     private val log = LoggerFactory.getLogger(UngSakEventHandler::class.java)
     fun prosesser(eksternId: String, eksternVersjon: String, event: String) {
         transactionalManager.transaction { tx ->
-            val eventnøkkel = eventRepository.lagre(Fagsystem.UNGSAK, eksternId, eksternVersjon, event, tx)
+            val eventnøkkel = eventRepository.lagreOgSjekkAktiv(Fagsystem.UNGSAK, eksternId, eksternVersjon, event, tx)
+                ?: return@transaction
 
             try {
                 tx.medSavepoint {
