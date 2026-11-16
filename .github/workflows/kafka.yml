@@ -15,38 +15,38 @@ jobs:
       contents: read
       id-token: write
     steps:
-      - uses: actions/checkout@v6
-      - uses: nais/deploy/actions/deploy@v2
+      - uses: actions/checkout@v7
+      - uses: nais/deploy/actions/deploy@v3
         env:
           CLUSTER: dev-gcp
           VAR: kafka-pool=nav-dev
           RESOURCE: nais/kafka/produksjonsstyring-k9sak.yml
-      - uses: nais/deploy/actions/deploy@v2
+      - uses: nais/deploy/actions/deploy@v3
         env:
           CLUSTER: dev-gcp
           VAR: kafka-pool=nav-dev
           RESOURCE: nais/kafka/produksjonsstyring-k9punsj.yml
-      - uses: nais/deploy/actions/deploy@v2
+      - uses: nais/deploy/actions/deploy@v3
         env:
           CLUSTER: dev-gcp
           VAR: kafka-pool=nav-dev
           RESOURCE: nais/kafka/aapen-k9statistikk-behandling-v2.yml
-      - uses: nais/deploy/actions/deploy@v2
+      - uses: nais/deploy/actions/deploy@v3
         env:
           CLUSTER: dev-gcp
           VAR: kafka-pool=nav-dev
           RESOURCE: nais/kafka/aapen-k9statistikk-sak-v2.yml
-      - uses: nais/deploy/actions/deploy@v2
+      - uses: nais/deploy/actions/deploy@v3
         env:
           CLUSTER: dev-gcp
           VAR: kafka-pool=nav-dev
           RESOURCE: nais/kafka/aapen-avpstatistikk-behandling-v1.yml
-      - uses: nais/deploy/actions/deploy@v2
+      - uses: nais/deploy/actions/deploy@v3
         env:
           CLUSTER: dev-gcp
           VAR: kafka-pool=nav-dev
           RESOURCE: nais/kafka/aapen-ungstatistikk-behandling-v1.yml
-      - uses: nais/deploy/actions/deploy@v2
+      - uses: nais/deploy/actions/deploy@v3
         env:
           CLUSTER: dev-gcp
           VAR: kafka-pool=nav-dev
@@ -60,38 +60,38 @@ jobs:
       contents: read
       id-token: write
     steps:
-      - uses: actions/checkout@v6
-      - uses: nais/deploy/actions/deploy@v2
+      - uses: actions/checkout@v7
+      - uses: nais/deploy/actions/deploy@v3
         env:
           CLUSTER: prod-gcp
           VAR: kafka-pool=nav-prod
           RESOURCE: nais/kafka/produksjonsstyring-k9sak.yml
-      - uses: nais/deploy/actions/deploy@v2
+      - uses: nais/deploy/actions/deploy@v3
         env:
           CLUSTER: prod-gcp
           VAR: kafka-pool=nav-prod
           RESOURCE: nais/kafka/produksjonsstyring-k9punsj.yml
-      - uses: nais/deploy/actions/deploy@v2
+      - uses: nais/deploy/actions/deploy@v3
         env:
           CLUSTER: prod-gcp
           VAR: kafka-pool=nav-prod
           RESOURCE: nais/kafka/oppgavemeldinger-klage-til-los.yml
-      - uses: nais/deploy/actions/deploy@v2
+      - uses: nais/deploy/actions/deploy@v3
         env:
           CLUSTER: prod-gcp
           VAR: kafka-pool=nav-prod
           RESOURCE: nais/kafka/aapen-k9statistikk-behandling-v2.yml
-      - uses: nais/deploy/actions/deploy@v2
+      - uses: nais/deploy/actions/deploy@v3
         env:
           CLUSTER: prod-gcp
           VAR: kafka-pool=nav-prod
           RESOURCE: nais/kafka/aapen-k9statistikk-sak-v2.yml
-      - uses: nais/deploy/actions/deploy@v2
+      - uses: nais/deploy/actions/deploy@v3
         env:
           CLUSTER: prod-gcp
           VAR: kafka-pool=nav-prod
           RESOURCE: nais/kafka/aapen-avpstatistikk-behandling-v1.yml
-      - uses: nais/deploy/actions/deploy@v2
+      - uses: nais/deploy/actions/deploy@v3
         env:
           CLUSTER: prod-gcp
           VAR: kafka-pool=nav-prod
