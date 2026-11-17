@@ -38,7 +38,8 @@ class K9PunsjEventHandler (
     fun prosesser(eksternId: String, eksternVersjon: String, event: String) {
         EventHandlerMetrics.time("k9punsj", "gjennomført") {
             transactionalManager.transaction { tx ->
-                val eventnøkkel = eventRepository.lagre(Fagsystem.PUNSJ, eksternId, eksternVersjon, event, tx)
+                val eventnøkkel = eventRepository.lagreOgSjekkAktiv(Fagsystem.PUNSJ, eksternId, eksternVersjon, event, tx)
+                    ?: return@transaction
 
                 OpentelemetrySpanUtil.span("punsjTilLosAdapterTjeneste.oppdaterOppgaveForEksternId") {
                     try {

@@ -1,8 +1,9 @@
 package no.nav.k9.los.domeneadaptere.statistikk
 
-import io.opentelemetry.instrumentation.annotations.SpanAttribute
 import io.opentelemetry.instrumentation.annotations.WithSpan
 import kotliquery.TransactionalSession
+import no.nav.k9.los.domeneadaptere.eventlager.EventRepository
+import no.nav.k9.los.domeneadaptere.eventlager.Oppgavetype
 import no.nav.k9.los.domeneadaptere.statistikk.avp.AvpOppgaveTilDVHMapper
 import no.nav.k9.los.domeneadaptere.statistikk.avp.AvpStatistikkPublisher
 import no.nav.k9.los.domeneadaptere.statistikk.k9.K9Behandling
@@ -14,6 +15,7 @@ import no.nav.k9.los.domeneadaptere.statistikk.ung.UngOppgaveTilDVHMapper
 import no.nav.k9.los.domeneadaptere.statistikk.ung.UngStatistikkPublisher
 import no.nav.k9.los.forvaltning.ForvaltningSensitiveObjectMapper
 import no.nav.k9.los.infrastruktur.abac.cache.PepCacheRepository
+import no.nav.k9.los.infrastruktur.db.Appversjonsvakt
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.Oppgave
@@ -25,7 +27,9 @@ class OppgavestatistikkTjeneste(
     private val ungStatistikkPublisher: UngStatistikkPublisher,
     private val transactionalManager: TransactionalManager,
     private val statistikkRepository: StatistikkRepository,
-    private val pepCacheRepository: PepCacheRepository
+    private val pepCacheRepository: PepCacheRepository,
+    private val appversjonsvakt: Appversjonsvakt,
+    private val eventRepository: EventRepository,
 ) {
 
     private class PepCachePerSaksnummerState(
@@ -70,9 +74,11 @@ class OppgavestatistikkTjeneste(
 
     fun spillAvUsendtStatistikk() {
         val feil = mutableListOf<Exception>()
-        StatistikkRepository.DVH_OPPGAVETYPER.keys.forEach { område ->
+        StatistikkRepository.DVH_OPPGAVETYPER.forEach { (område, oppgavetyper) ->
             try {
-                spillAvUsendtStatistikk(område)
+                oppgavetyper.forEach { oppgavetype ->
+                    spillAvUsendtStatistikk(oppgavetype)
+                }
             } catch (e: Exception) {
                 log.error("Sending av statistikk for område $område til DVH feilet", e)
                 feil.add(e)
@@ -85,49 +91,57 @@ class OppgavestatistikkTjeneste(
         }
     }
 
-    private fun spillAvUsendtStatistikk(område: Områder) {
-        log.info("Starter sending av statistikk for område $område til DVH")
+    private fun spillAvUsendtStatistikk(oppgavetype: Oppgavetype) {
+        val område = oppgavetype.område
+        log.info("Starter sending av statistikk for oppgavetype ${oppgavetype.kode} i område $område til DVH")
         val tidStatistikksendingStartet = System.currentTimeMillis()
-        val oppgaverSomIkkeErSendt = statistikkRepository.hentOppgaverSomIkkeErSendt(område)
+        val oppgaverSomIkkeErSendt = statistikkRepository.hentOppgaverSomIkkeErSendt(oppgavetype)
         val pepCacheState = PepCachePerSaksnummerState(pepCacheRepository, område)
-        log.info("Fant ${oppgaverSomIkkeErSendt.size} oppgaveversjoner for område $område som ikke er sendt til DVH")
+        log.info("Fant ${oppgaverSomIkkeErSendt.size} oppgaveversjoner for oppgavetype ${oppgavetype.kode} i område $område som ikke er sendt til DVH")
 
-        val oppgaveIderTilKvittering = mutableListOf<Long>()
-
-        oppgaverSomIkkeErSendt.forEachIndexed { index, oppgaveId ->
-            sendStatistikkAsynkront(oppgaveId, pepCacheState)
-            oppgaveIderTilKvittering.add(oppgaveId)
-
-            if ((index + 1).mod(FLUSH_INTERVAL) == 0) {
-                flushOgKvitter(område, oppgaveIderTilKvittering)
-                log.info("Sendt ${index + 1} av ${oppgaverSomIkkeErSendt.size} oppgaveversjoner for område $område")
+        var antallSendt = 0
+        for (bolk in oppgaverSomIkkeErSendt.chunked(FLUSH_INTERVAL)) {
+            // Mapping, publisering, flush og kvittering i én transaksjon som holder versjonslåsen,
+            // slik at en ny versjon venter til bolken er ferdig før den tar over.
+            val sendte = transactionalManager.transaction { tx ->
+                if (!appversjonsvakt.erAktiv(tx)) return@transaction null
+                val klareForKvittering = bolk.filter { sendStatistikkAsynkront(it, pepCacheState, tx) }
+                if (klareForKvittering.isNotEmpty()) {
+                    flushOgKvitter(område, klareForKvittering, tx)
+                }
+                klareForKvittering
             }
+            if (sendte == null) {
+                log.warn("Avbryter sending av statistikk for oppgavetype ${oppgavetype.kode} i område $område etter $antallSendt oppgaveversjoner, appversjonen er ikke aktiv")
+                return
+            }
+            antallSendt += sendte.size
+            log.info("Sendt $antallSendt av ${oppgaverSomIkkeErSendt.size} oppgaveversjoner for oppgavetype ${oppgavetype.kode} i område $område")
         }
-        // Flush og kvitter resterende
-        flushOgKvitter(område, oppgaveIderTilKvittering)
 
         val kjoretid = System.currentTimeMillis() - tidStatistikksendingStartet
-        log.info("Sending av statistikk for område $område ferdig")
-        log.info("Sendt ${oppgaverSomIkkeErSendt.size} oppgaveversjoner for område $område. Totalt tidsbruk: ${kjoretid} ms")
-        if (oppgaverSomIkkeErSendt.isNotEmpty()) {
-            log.info("Gjennomsnitt tidsbruk: ${kjoretid / oppgaverSomIkkeErSendt.size} ms pr oppgaveversjon")
+        log.info("Sending av statistikk for oppgavetype ${oppgavetype.kode} i område $område ferdig")
+        log.info("Sendt $antallSendt av ${oppgaverSomIkkeErSendt.size} oppgaveversjoner for oppgavetype ${oppgavetype.kode} i område $område. Totalt tidsbruk: ${kjoretid} ms")
+        if (antallSendt > 0) {
+            log.info("Gjennomsnitt tidsbruk: ${kjoretid / antallSendt} ms pr oppgaveversjon")
         }
     }
 
     @WithSpan
     private fun sendStatistikkAsynkront(
-        @SpanAttribute oppgaveId: Long,
+        oppgaveversjon: DvhOppgaveversjon,
         pepCacheState: PepCachePerSaksnummerState,
-    ) {
-        transactionalManager.transaction { tx ->
-            val (oppgave, versjon) = statistikkRepository.hentOppgaveForId(tx, oppgaveId)
-            when (oppgave.område) {
-                Områder.K9 -> sendK9Statistikk(oppgave, versjon, pepCacheState, tx)
-                Områder.AKTIVITETSPENGER -> sendAvpStatistikk(oppgave, pepCacheState, tx)
-                Områder.UNGDOMSPROGRAMYTELSEN -> sendUngStatistikk(oppgave, pepCacheState, tx)
-                else -> throw IllegalStateException("Ukjent område for sending til DVH: ${oppgave.område}")
-            }
+        tx: TransactionalSession,
+    ): Boolean {
+        eventRepository.hentOgLåsEventnøkkel(oppgaveversjon.oppgavetype.fagsystem, oppgaveversjon.eksternId, tx)
+        val (oppgave, versjon) = statistikkRepository.hentOppgaveForSending(tx, oppgaveversjon) ?: return false
+        when (oppgave.område) {
+            Områder.K9 -> sendK9Statistikk(oppgave, versjon, pepCacheState, tx)
+            Områder.AKTIVITETSPENGER -> sendAvpStatistikk(oppgave, pepCacheState, tx)
+            Områder.UNGDOMSPROGRAMYTELSEN -> sendUngStatistikk(oppgave, pepCacheState, tx)
+            else -> throw IllegalStateException("Ukjent område for sending til DVH: ${oppgave.område}")
         }
+        return true
     }
 
     private fun sendAvpStatistikk(oppgave: Oppgave, pepCacheState: PepCachePerSaksnummerState, tx: TransactionalSession) {
@@ -192,17 +206,16 @@ class OppgavestatistikkTjeneste(
         }
     }
 
-    private fun flushOgKvitter(område: Områder, oppgaveIderTilKvittering: MutableList<Long>) {
+    private fun flushOgKvitter(område: Områder, oppgaveversjonerTilKvittering: List<DvhOppgaveversjon>, tx: TransactionalSession) {
         when (område) {
             Områder.K9 -> k9StatistikkPublisher.flushOgValider()
             Områder.AKTIVITETSPENGER -> avpStatistikkPublisher.flushOgValider()
             Områder.UNGDOMSPROGRAMYTELSEN -> ungStatistikkPublisher.flushOgValider()
             else -> throw IllegalStateException("Ukjent område for sending til DVH: $område")
         }
-        oppgaveIderTilKvittering.forEach { oppgaveId ->
-            statistikkRepository.kvitterSending(oppgaveId)
+        oppgaveversjonerTilKvittering.forEach { oppgaveversjon ->
+            statistikkRepository.kvitterSending(tx, oppgaveversjon)
         }
-        oppgaveIderTilKvittering.clear()
     }
 
     private fun <T : Any> nullUtEventuelleSensitiveFelter(value: T): T = SensitiveFieldCensor.censor(value)

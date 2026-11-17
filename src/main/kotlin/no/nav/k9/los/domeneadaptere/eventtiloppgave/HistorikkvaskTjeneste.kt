@@ -4,6 +4,7 @@ import kotlinx.coroutines.*
 import no.nav.k9.los.domeneadaptere.eventlager.EventNøkkel
 import no.nav.k9.los.domeneadaptere.eventlager.EventRepository
 import no.nav.k9.los.domeneadaptere.eventlager.HistorikkvaskBestilling
+import no.nav.k9.los.infrastruktur.db.Appversjonsvakt
 import no.nav.k9.los.infrastruktur.db.DB_AWARE_PARALLELISM
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.oppgavemottak.OppgaveV3Tjeneste
@@ -16,6 +17,7 @@ class HistorikkvaskTjeneste(
     private val oppgaveV3Tjeneste: OppgaveV3Tjeneste,
     private val transactionalManager: TransactionalManager,
     private val eventTilOppgaveAdapter: EventTilOppgaveAdapter,
+    private val appversjonsvakt: Appversjonsvakt,
 ) {
     private val log: Logger = LoggerFactory.getLogger(HistorikkvaskTjeneste::class.java)
 
@@ -88,6 +90,7 @@ class HistorikkvaskTjeneste(
 
         var eventNrForBehandling = 0
         transactionalManager.transaction { tx ->
+            if (!appversjonsvakt.erAktiv(tx)) return@transaction
             // Lås eventnøkkelen før event-radene oppdateres, samme låserekkefølge som eventhandlerne.
             eventRepository.hentOgLåsEventnøkkel(eventNøkkel.fagsystem, eventNøkkel.eksternId, tx)
             // Dirty settes før eventene hentes, slik at samme uthenting kan gjenbrukes av adapteren.

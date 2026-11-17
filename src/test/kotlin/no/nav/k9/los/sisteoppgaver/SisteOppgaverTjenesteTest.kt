@@ -85,6 +85,7 @@ class SisteOppgaverTjenesteTest : AbstractK9LosIntegrationTest() {
 
             val oppgave1 = OppgaveTestDataBuilder()
                 .medOppgaveFeltVerdi(FeltType.AKTØR_ID, aktorId1)
+                .medOppgaveFeltVerdi(FeltType.SAKSNUMMER, "SAK1")
                 .lagOgLagre()
 
             val mockPerson: PersonPdl = mockk(relaxed = true)
@@ -118,10 +119,12 @@ class SisteOppgaverTjenesteTest : AbstractK9LosIntegrationTest() {
 
             val oppgave1 = OppgaveTestDataBuilder()
                 .medOppgaveFeltVerdi(FeltType.AKTØR_ID, aktorId1)
+                .medOppgaveFeltVerdi(FeltType.SAKSNUMMER, "SAK1")
                 .lagOgLagre()
 
             val oppgave2 = OppgaveTestDataBuilder()
                 .medOppgaveFeltVerdi(FeltType.AKTØR_ID, aktorId2)
+                .medOppgaveFeltVerdi(FeltType.SAKSNUMMER, "SAK2")
                 .lagOgLagre()
 
             val mockPerson: PersonPdl = mockk(relaxed = true)

@@ -9,6 +9,7 @@ import no.nav.k9.los.domeneadaptere.eventlager.EventRepository
 import no.nav.k9.los.domeneadaptere.eventlager.Oppgavetype
 import no.nav.k9.los.domeneadaptere.eventmottak.FeilRekkefølgeSjekker
 import no.nav.k9.los.domeneadaptere.statistikk.StatistikkRepository
+import no.nav.k9.los.infrastruktur.db.Appversjonsvakt
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.oppgavemottak.AktivOgPartisjonertOppgaveAjourholdTjeneste
 import no.nav.k9.los.oppgavemottak.OppgaveV3
@@ -26,6 +27,7 @@ class EventTilOppgaveAdapter(
     private val ajourholdTjeneste: AktivOgPartisjonertOppgaveAjourholdTjeneste,
     private val statistikkRepository: StatistikkRepository,
     private val feilRekkefølgeSjekker: FeilRekkefølgeSjekker,
+    private val appversjonsvakt: Appversjonsvakt,
 ) {
     private val log: Logger = LoggerFactory.getLogger(EventTilOppgaveAdapter::class.java)
 
@@ -78,6 +80,8 @@ class EventTilOppgaveAdapter(
         statistikktellerInn: Long = 0,
         eventer: List<EventLagret>? = null,
     ): Long {
+        // Eventet forblir dirty og plukkes av vaktmesteren i aktiv versjon.
+        if (!appversjonsvakt.erAktiv(tx)) return statistikktellerInn
         log.info("Oppdaterer oppgave for fagsystem: ${eventnøkkel.fagsystem}, eksternId: ${eventnøkkel.eksternId}")
         val låsteEventer = eventer ?: eventRepository.hentAlleEventerMedLås(eventnøkkel, tx)
         if (feilRekkefølgeSjekker.sjekkFeilRekkefølge(låsteEventer)) {

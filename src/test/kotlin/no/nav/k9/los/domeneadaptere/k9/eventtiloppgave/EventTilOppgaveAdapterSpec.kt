@@ -55,7 +55,8 @@ class EventTilOppgaveAdapterSpec : KoinTest, FreeSpec() {
 
     override suspend fun beforeTest(testCase: TestCase) {
         eventRepository = spyk(EventRepository(
-            dataSource = get()
+            dataSource = get(),
+            appversjonsvakt = get(),
         ))
         oppgaveOppdatertHandler = spyk(
             OppgaveOppdatertHandler(
@@ -75,6 +76,7 @@ class EventTilOppgaveAdapterSpec : KoinTest, FreeSpec() {
             ajourholdTjeneste = get(),
             statistikkRepository = get(),
             feilRekkefølgeSjekker = get(),
+            appversjonsvakt = get(),
         )
 
         oppgaveQueryService = get()

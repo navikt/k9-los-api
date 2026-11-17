@@ -2,6 +2,7 @@ package no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.kodeverk
 
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonValue
+import no.nav.k9.los.domeneadaptere.eventlager.Fagsystem
 import no.nav.k9.los.domeneadaptere.eventlager.Oppgavetype
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgavemottak.OppgaveDtoType
@@ -12,6 +13,7 @@ enum class AvpOppgavetypenavn(@JsonValue override val kode: String, val navn: St
     AKTIVITETSPENGERKLAGE("aktivitetspenger-klage", "Klage");
 
     override val område: Områder = Områder.AKTIVITETSPENGER
+    override val fagsystem: Fagsystem = Fagsystem.UNGSAK
 
     companion object {
         @JsonCreator(mode = JsonCreator.Mode.DELEGATING)

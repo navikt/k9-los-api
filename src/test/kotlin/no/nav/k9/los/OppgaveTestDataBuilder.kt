@@ -96,6 +96,7 @@ enum class FeltType(
     val tolkesSom: String = "String"
 ) {
     AKTØR_ID("aktorId"),
+    SAKSNUMMER("saksnummer"),
     BEHANDLINGUUID("behandlingUuid"),
     BEHANDLING_TYPE("behandlingTypekode"),
     OPPGAVE_STATUS("oppgavestatus", område = null),

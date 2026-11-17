@@ -1,7 +1,9 @@
 package no.nav.k9.los.domeneadaptere.statistikk
 
 import kotliquery.*
+import no.nav.k9.los.domeneadaptere.eventlager.Oppgavetype
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.kodeverk.AvpOppgavetypenavn
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.kodeverk.K9Oppgavetypenavn
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.ung.kodeverk.UngOppgavetypenavn
 import no.nav.k9.los.infrastruktur.db.util.InClauseHjelper
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
@@ -17,24 +19,33 @@ data class DvhPendingPerOppgavetypeDto(
     val antall: Long,
 )
 
+data class DvhOppgaveversjon(
+    val oppgavetype: Oppgavetype,
+    val eksternId: String,
+    val eksternVersjon: String,
+)
+
 
 class StatistikkRepository(
     private val dataSource: DataSource,
     private val oppgavetypeRepository: OppgavetypeRepository
 ) {
 
-    fun hentOppgaverSomIkkeErSendt(område: Områder = Områder.K9): List<Long> {
-        val oppgavetyper = DVH_OPPGAVETYPER[område] ?: return emptyList()
+    fun hentOppgaverSomIkkeErSendt(oppgavetype: Oppgavetype): List<DvhOppgaveversjon> {
+        require(oppgavetype in DVH_OPPGAVETYPER.getValue(oppgavetype.område)) {
+            "Oppgavetype ${oppgavetype.kode} er ikke konfigurert for DVH-sending i område ${oppgavetype.område}"
+        }
         return using(sessionOf(dataSource)) {
             it.run(
                 queryOf(
                     """
-                        select ov.id
+                        select p.ekstern_id, p.ekstern_versjon
                         from oppgave_v3_dvh_pending p
                         join oppgave_v3 ov
                             on ov.ekstern_id = p.ekstern_id
                            and ov.ekstern_versjon = p.ekstern_versjon
                            and ov.oppgavetype_ekstern_id = p.oppgavetype_ekstern_id
+                           and ov.kildeomrade = p.omrade_ekstern_id
                         left join lateral (
                             select ofv.verdi as saksnummer
                             from oppgavefelt_verdi ofv
@@ -49,42 +60,61 @@ class StatistikkRepository(
                                 and om.ekstern_id = :omrade
                         ) saksnummer on true
                         where p.omrade_ekstern_id = :omrade
-                          and p.oppgavetype_ekstern_id in (${InClauseHjelper.tilParameternavn(oppgavetyper, "oppgavetype")})
+                          and p.oppgavetype_ekstern_id = :oppgavetype
+                          and not exists (
+                              select 1
+                              from event_historikkvask_bestilt hb
+                              join event_nokkel en on en.id = hb.event_nokkel_id
+                              where en.ekstern_id = p.ekstern_id
+                                and en.fagsystem = :fagsystem
+                          )
                         order by saksnummer.saksnummer nulls last, ov.ekstern_id, ov.ekstern_versjon, ov.oppgavetype_ekstern_id
                     """.trimIndent(),
-                    mapOf("omrade" to område.eksternId) +
-                        InClauseHjelper.parameternavnTilVerdierMap(oppgavetyper, "oppgavetype")
-                ).map { row -> row.long("id") }.asList
+                    mapOf(
+                        "omrade" to oppgavetype.område.eksternId,
+                        "oppgavetype" to oppgavetype.kode,
+                        "fagsystem" to oppgavetype.fagsystem.kode
+                    )
+                ).map { row ->
+                    DvhOppgaveversjon(oppgavetype, row.string("ekstern_id"), row.string("ekstern_versjon"))
+                }.asList
             )
         }
     }
 
-    fun kvitterSending(id: Long) {
+    fun kvitterSending(oppgaveversjon: DvhOppgaveversjon) {
         using(sessionOf(dataSource)) {
-            it.run(kvitterSendingQuery(id).asUpdate)
+            it.run(kvitterSendingQuery(oppgaveversjon).asUpdate)
         }
     }
 
-    fun kvitterSending(tx: TransactionalSession, id: Long) {
-        tx.run(kvitterSendingQuery(id).asUpdate)
+    fun kvitterSending(tx: TransactionalSession, oppgaveversjon: DvhOppgaveversjon) {
+        tx.run(kvitterSendingQuery(oppgaveversjon).asUpdate)
     }
 
-    private fun kvitterSendingQuery(id: Long) = queryOf(
+    private fun kvitterSendingQuery(oppgaveversjon: DvhOppgaveversjon) = queryOf(
         """
             delete from oppgave_v3_dvh_pending p
-            using oppgave_v3 ov
-            where ov.id = :id
-              and p.ekstern_id = ov.ekstern_id
-              and p.ekstern_versjon = ov.ekstern_versjon
-              and p.oppgavetype_ekstern_id = ov.oppgavetype_ekstern_id
+            where p.omrade_ekstern_id = :omrade
+              and p.oppgavetype_ekstern_id = :oppgavetype
+              and p.ekstern_id = :eksternId
+              and p.ekstern_versjon = :eksternVersjon
         """.trimIndent(),
-        mapOf("id" to id)
+        oppgaveversjon.parametre()
+    )
+
+    private fun DvhOppgaveversjon.parametre() = mapOf(
+        "omrade" to oppgavetype.område.eksternId,
+        "oppgavetype" to oppgavetype.kode,
+        "fagsystem" to oppgavetype.fagsystem.kode,
+        "eksternId" to eksternId,
+        "eksternVersjon" to eksternVersjon,
     )
 
     fun bestillDvhSending(oppgavetype: String? = null) {
         val oppgavetyperPerOmråde = if (oppgavetype != null) {
-            val område = DVH_OPPGAVETYPER.entries.firstOrNull { oppgavetype in it.value }?.key ?: return
-            mapOf(område to setOf(oppgavetype))
+            val type = DVH_OPPGAVETYPER.values.flatten().find { it.kode == oppgavetype } ?: return
+            mapOf(type.område to setOf(type))
         } else {
             DVH_OPPGAVETYPER
         }
@@ -107,7 +137,7 @@ class StatistikkRepository(
         oppgavetypeEksternId: String,
         tx: TransactionalSession,
     ) {
-        if (oppgavetypeEksternId !in DVH_OPPGAVETYPER[område].orEmpty()) return
+        if (DVH_OPPGAVETYPER[område].orEmpty().none { it.kode == oppgavetypeEksternId }) return
         tx.run(
             queryOf(
                 """
@@ -127,7 +157,7 @@ class StatistikkRepository(
 
     fun bestillDvhSendingForEksternIder(eksternIder: List<String>, tx: TransactionalSession) {
         if (eksternIder.isEmpty()) return
-        val oppgavetyper = DVH_OPPGAVETYPER.getValue(Områder.K9)
+        val oppgavetyper = DVH_OPPGAVETYPER.getValue(Områder.K9).map { it.kode }
 
         tx.run(
             queryOf(
@@ -148,19 +178,19 @@ class StatistikkRepository(
 
     companion object {
         /** Oppgavetyper per område hvis versjoner spores i oppgave_v3_dvh_pending for sending til DVH. */
-        val DVH_OPPGAVETYPER: Map<Områder, Set<String>> = mapOf(
-            Områder.K9 to setOf("k9sak", "k9klage"),
+        val DVH_OPPGAVETYPER: Map<Områder, Set<Oppgavetype>> = mapOf(
+            Områder.K9 to setOf(K9Oppgavetypenavn.SAK, K9Oppgavetypenavn.KLAGE),
             Områder.AKTIVITETSPENGER to setOf(
-                AvpOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1.kode,
-                AvpOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2.kode,
+                AvpOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1,
+                AvpOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2,
             ),
             Områder.UNGDOMSPROGRAMYTELSEN to setOf(
-                UngOppgavetypenavn.UNGDOMSPROGRAMYTELSENORDINÆR.kode,
+                UngOppgavetypenavn.UNGDOMSPROGRAMYTELSENORDINÆR,
             ),
         )
     }
 
-    private fun leggTilPendingFraOppgaveV3Query(område: Områder, oppgavetyper: Set<String>) = queryOf(
+    private fun leggTilPendingFraOppgaveV3Query(område: Områder, oppgavetyper: Set<Oppgavetype>) = queryOf(
         """
         insert into oppgave_v3_dvh_pending (omrade_ekstern_id, oppgavetype_ekstern_id, ekstern_id, ekstern_versjon)
         select :omrade, ov.oppgavetype_ekstern_id, ov.ekstern_id, ov.ekstern_versjon
@@ -168,7 +198,8 @@ class StatistikkRepository(
         where ov.oppgavetype_ekstern_id in (${InClauseHjelper.tilParameternavn(oppgavetyper, "oppgavetype")})
         on conflict do nothing
         """.trimIndent(),
-        mapOf("omrade" to område.eksternId) + InClauseHjelper.parameternavnTilVerdierMap(oppgavetyper, "oppgavetype")
+        mapOf("omrade" to område.eksternId) +
+            InClauseHjelper.parameternavnTilVerdierMap(oppgavetyper.map { it.kode }, "oppgavetype")
     )
 
     /**
@@ -205,21 +236,41 @@ class StatistikkRepository(
         }
     }
 
-    fun hentOppgaveForId(tx: TransactionalSession, id: Long, now: LocalDateTime = LocalDateTime.now()): Pair<Oppgave, Int> {
-        val oppgave = tx.run(
+    fun hentOppgaveForSending(
+        tx: TransactionalSession,
+        oppgaveversjon: DvhOppgaveversjon,
+        now: LocalDateTime = LocalDateTime.now(),
+    ): Pair<Oppgave, Int>? {
+        return tx.run(
             queryOf(
                 """
                 select * 
                 from oppgave_v3 ov
-                where ov.id = :id
+                where ov.kildeomrade = :omrade
+                  and ov.oppgavetype_ekstern_id = :oppgavetype
+                  and ov.ekstern_id = :eksternId
+                  and ov.ekstern_versjon = :eksternVersjon
+                  and exists (
+                      select 1
+                      from oppgave_v3_dvh_pending p
+                      where p.omrade_ekstern_id = :omrade
+                        and p.oppgavetype_ekstern_id = :oppgavetype
+                        and p.ekstern_id = :eksternId
+                        and p.ekstern_versjon = :eksternVersjon
+                  )
+                  and not exists (
+                      select 1
+                      from event_historikkvask_bestilt hb
+                      join event_nokkel en on en.id = hb.event_nokkel_id
+                      where en.fagsystem = :fagsystem
+                        and en.ekstern_id = :eksternId
+                  )
             """.trimIndent(),
-                mapOf("id" to id)
+                oppgaveversjon.parametre()
             ).map { row ->
                 mapOppgave(row, now, tx)
             }.asSingle
-        ) ?: throw IllegalStateException("Fant ikke oppgave med id $id")
-
-        return oppgave
+        )
     }
 
     private fun mapOppgave(
