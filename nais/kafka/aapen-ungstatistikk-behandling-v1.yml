@@ -19,11 +19,11 @@ spec:
       application: k9-los-api
       access: write
     - team: ptsak
-      application: pt-sak-k9-dev
+      application: pt-sak-ung-dev
       access: read
     - team: ptsak
-      application: pt-sak-k9-preprod
+      application: pt-sak-ung-preprod
       access: read
     - team: ptsak
-      application: pt-sak-k9
+      application: pt-sak-ung
       access: read
