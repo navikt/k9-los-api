@@ -3,6 +3,7 @@ package no.nav.k9.los.nøkkeltall
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.AvpOmrådesetup
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.kodeverk.AvpBehandlendeEnhet
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.kodeverk.AvpOppgavetypenavn
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.oppgavedefinisjon.AktivitetspengerOppgavetyper
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
@@ -33,12 +34,14 @@ class AktivitetspengerInngangOgFerdigstilteIntegrationTest : AbstractK9LosIntegr
         val del2 = AvpOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2.kode
         val førstegang = BehandlingType.FØRSTEGANGSSØKNAD.kode
         val revurdering = BehandlingType.REVURDERING.kode
-        lagreOppgave(del1, førstegang, mottattDagerSiden = 0)
-        lagreOppgave(del2, revurdering, mottattDagerSiden = 7, ferdigstiltDagerSiden = 0)
-        lagreOppgave(del1, revurdering, mottattDagerSiden = 14, ferdigstiltDagerSiden = 7)
+        val falkenborg = AvpBehandlendeEnhet.FALKENBORG.kode
+        val lerkendal = AvpBehandlendeEnhet.LERKENDAL.kode
+        lagreOppgave(del1, førstegang, mottattDagerSiden = 0, behandlendeEnhet = falkenborg)
+        lagreOppgave(del2, revurdering, mottattDagerSiden = 7, ferdigstiltDagerSiden = 0, behandlendeEnhet = AvpBehandlendeEnhet.STYRINGSENHET.kode)
+        lagreOppgave(del1, revurdering, mottattDagerSiden = 14, ferdigstiltDagerSiden = 7, behandlendeEnhet = lerkendal)
         lagreOppgave(del2, førstegang, mottattDagerSiden = 28, ferdigstiltDagerSiden = 14)
         lagreOppgave(del2, førstegang, mottattDagerSiden = 29, ferdigstiltDagerSiden = 28)
-        lagreOppgave(del1, førstegang, mottattDagerSiden = 40, ferdigstiltDagerSiden = 29)
+        lagreOppgave(del1, førstegang, mottattDagerSiden = 40, ferdigstiltDagerSiden = 29, behandlendeEnhet = falkenborg)
         lagreOppgave(del2, revurdering, mottattDagerSiden = 29)
         lagreOppgave("k9sak", førstegang, mottattDagerSiden = 0, ferdigstiltDagerSiden = 0, område = Områder.K9)
 
@@ -54,6 +57,8 @@ class AktivitetspengerInngangOgFerdigstilteIntegrationTest : AbstractK9LosIntegr
         assertEquals(0L, førstegangIdag.second.hovedtall.verdi)
         val forventetPerGruppe = mapOf(
             "NAVKONTOR" to (listOf(1L, 1L, 2L, 2L) to listOf(0L, 1L, 1L, 1L)),
+            AvpBehandlendeEnhet.FALKENBORG.name to (listOf(1L, 1L, 1L, 1L) to listOf(0L, 0L, 0L, 0L)),
+            AvpBehandlendeEnhet.LERKENDAL.name to (listOf(0L, 0L, 1L, 1L) to listOf(0L, 1L, 1L, 1L)),
             "NAVFORVALTNING" to (listOf(0L, 1L, 1L, 2L) to listOf(1L, 1L, 2L, 3L)),
         )
         for ((gruppe, antall) in forventetPerGruppe) {
@@ -63,7 +68,9 @@ class AktivitetspengerInngangOgFerdigstilteIntegrationTest : AbstractK9LosIntegr
         }
         assertTrue(verdi.tall.all { rad -> rad.serier.values.all { it.first.linjer.isEmpty() && it.second.linjer.isEmpty() } })
         for ((periode, kort) in totalt.serier) {
-            val delkort = verdi.tall.filter { it.hovedgruppe != "ALLE" && it.undergruppe == "TOTALT" }.map { it.serier.getValue(periode) }
+            val delkort = verdi.tall
+                .filter { it.hovedgruppe in setOf("NAVKONTOR", "NAVFORVALTNING") && it.undergruppe == "TOTALT" }
+                .map { it.serier.getValue(periode) }
             assertEquals(kort.first.hovedtall.verdi, delkort.sumOf { it.first.hovedtall.verdi })
             assertEquals(kort.second.hovedtall.verdi, delkort.sumOf { it.second.hovedtall.verdi })
         }
@@ -110,6 +117,7 @@ class AktivitetspengerInngangOgFerdigstilteIntegrationTest : AbstractK9LosIntegr
         mottattDagerSiden: Long,
         ferdigstiltDagerSiden: Long? = null,
         område: Områder = Områder.AKTIVITETSPENGER,
+        behandlendeEnhet: String? = null,
     ) {
         get<TransactionalManager>().transaction { tx ->
             val områdeDefinisjon = get<OmrådeRepository>().hentOmråde(område, tx)
@@ -127,9 +135,10 @@ class AktivitetspengerInngangOgFerdigstilteIntegrationTest : AbstractK9LosIntegr
                 kildeområde = område,
                 reservasjonsnøkkel = id,
                 aktiv = true,
-                felter = listOf(
+                felter = listOfNotNull(
                     felt("mottattDato", LocalDate.now().minusDays(mottattDagerSiden).atStartOfDay().toString()),
                     felt("behandlingTypekode", behandlingstype),
+                    behandlendeEnhet?.let { felt("behandlendeEnhet", it) },
                 ),
             )
             get<OppgaveV3Repository>().nyOppgaveversjon(oppgave, tx)

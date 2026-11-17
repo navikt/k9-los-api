@@ -3,6 +3,7 @@ package no.nav.k9.los.nøkkeltall.avdelingsleder.inngangogferdigstilte
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.kodeverk.AvpBehandlendeEnhet
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.kodeverk.AvpOppgavetypenavn
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.oppgavedefinisjon.AktivitetspengerFelter
 import no.nav.k9.los.infrastruktur.utils.Cache
@@ -27,6 +28,8 @@ class AktivitetspengerInngangOgFerdigstilteService(
     private val log = LoggerFactory.getLogger(AktivitetspengerInngangOgFerdigstilteService::class.java)
     private val hovedgrupper = listOf(
         KodeOgNavn("ALLE", "Alle behandlinger"),
+        KodeOgNavn(AvpBehandlendeEnhet.FALKENBORG.name, AvpBehandlendeEnhet.FALKENBORG.navn),
+        KodeOgNavn(AvpBehandlendeEnhet.LERKENDAL.name, AvpBehandlendeEnhet.LERKENDAL.navn),
         KodeOgNavn("NAVKONTOR", "Nav-kontor"),
         KodeOgNavn("NAVFORVALTNING", "Nav-forvaltning"),
     )
@@ -37,10 +40,18 @@ class AktivitetspengerInngangOgFerdigstilteService(
         KodeOgNavn("KLAGE", "Klager"),
         KodeOgNavn("FEILUTBETALING", "Feilutbetalinger"),
     )
-    private val oppgavetyper = mapOf(
-        "NAVKONTOR" to AvpOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1.kode,
-        "NAVFORVALTNING" to AvpOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2.kode,
-    )
+    private val navKontorer = listOf(AvpBehandlendeEnhet.FALKENBORG, AvpBehandlendeEnhet.LERKENDAL)
+    private val hovedgruppefiltre: Map<String, (TelleRad) -> Boolean> = buildMap {
+        put("ALLE") { true }
+        put("NAVKONTOR") { rad -> rad.oppgavetype == AvpOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1.kode }
+        navKontorer.forEach { enhet ->
+            put(enhet.name) { rad ->
+                rad.oppgavetype == AvpOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1.kode && rad.behandlendeEnhet == enhet.kode
+            }
+        }
+        put("NAVFORVALTNING") { rad -> rad.oppgavetype == AvpOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2.kode }
+    }
+    private val hovedgrupperUtenFeilutbetaling = setOf("NAVKONTOR") + navKontorer.map { it.name }
     private val behandlingstyper = mapOf(
         "FØRSTEGANG" to setOf(BehandlingType.FØRSTEGANGSSØKNAD.kode),
         "REVURDERING" to setOf(BehandlingType.REVURDERING.kode),
@@ -63,7 +74,7 @@ class AktivitetspengerInngangOgFerdigstilteService(
         }
     }
 
-    private data class TelleRad(val oppgavetype: String?, val behandlingstype: String?, val antall: Long)
+    private data class TelleRad(val oppgavetype: String?, val behandlingstype: String?, val behandlendeEnhet: String?, val antall: Long)
 
     private fun hentGrupperte(filtre: List<Oppgavefilter>): List<TelleRad> {
         val resultat = queryService.query(
@@ -74,6 +85,7 @@ class AktivitetspengerInngangOgFerdigstilteService(
                     select = listOf(
                         EnkelSelectFelt(null, "oppgavetype"),
                         EnkelSelectFelt(Områder.AKTIVITETSPENGER, AktivitetspengerFelter.Behandling.TYPEKODE.id),
+                        EnkelSelectFelt(Områder.AKTIVITETSPENGER, AktivitetspengerFelter.Saksbehandling.BEHANDLENDE_ENHET.id),
                         AggregertSelectFelt(Aggregeringsfunksjon.ANTALL),
                     ),
                 ),
@@ -83,6 +95,7 @@ class AktivitetspengerInngangOgFerdigstilteService(
             TelleRad(
                 oppgavetype = rad.feltverdier.find { it.kode == "oppgavetype" }?.verdi?.toString(),
                 behandlingstype = rad.feltverdier.find { it.kode == AktivitetspengerFelter.Behandling.TYPEKODE.id }?.verdi?.toString(),
+                behandlendeEnhet = rad.feltverdier.find { it.kode == AktivitetspengerFelter.Saksbehandling.BEHANDLENDE_ENHET.id }?.verdi?.toString(),
                 antall = checkNotNull(rad.aggregeringer.first { it.type == Aggregeringsfunksjon.ANTALL }.verdi) as Long,
             )
         }
@@ -114,7 +127,7 @@ class AktivitetspengerInngangOgFerdigstilteService(
             hovedtall = InngangOgFerdigstilteLinjeDto(
                 navn,
                 filter { rad ->
-                    (hovedgruppe == "ALLE" || rad.oppgavetype == oppgavetyper[hovedgruppe]) &&
+                    hovedgruppefiltre.getValue(hovedgruppe)(rad) &&
                         (undergruppe == "TOTALT" || rad.behandlingstype in behandlingstyper.getValue(undergruppe))
                 }.sumOf { it.antall },
             ),
@@ -126,7 +139,7 @@ class AktivitetspengerInngangOgFerdigstilteService(
             undergrupper = undergrupper,
             tall = hovedgrupper.flatMap { hovedgruppe ->
                 undergrupper
-                    .filterNot { undergruppe -> hovedgruppe.kode == "NAVKONTOR" && undergruppe.kode == "FEILUTBETALING" }
+                    .filterNot { undergruppe -> hovedgruppe.kode in hovedgrupperUtenFeilutbetaling && undergruppe.kode == "FEILUTBETALING" }
                     .map { undergruppe ->
                         InngangOgFerdigstilteDto(
                             hovedgruppe.kode,

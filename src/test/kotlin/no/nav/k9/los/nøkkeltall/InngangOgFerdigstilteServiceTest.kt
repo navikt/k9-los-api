@@ -85,12 +85,16 @@ class InngangOgFerdigstilteServiceTest {
         assertNotNull(verdi.oppdatertTidspunkt)
         assertEquals(listOf(
             KodeOgNavn("ALLE", "Alle behandlinger"),
+            KodeOgNavn("FALKENBORG", "Nav Falkenborg"),
+            KodeOgNavn("LERKENDAL", "Nav Lerkendal"),
             KodeOgNavn("NAVKONTOR", "Nav-kontor"),
             KodeOgNavn("NAVFORVALTNING", "Nav-forvaltning"),
         ), verdi.hovedgrupper)
         assertEquals(listOf("TOTALT", "FØRSTEGANG", "REVURDERING", "KLAGE", "FEILUTBETALING"), verdi.undergrupper.map { it.kode })
         assertEquals(mapOf(
             "ALLE" to listOf("TOTALT", "FØRSTEGANG", "REVURDERING", "KLAGE", "FEILUTBETALING"),
+            "FALKENBORG" to listOf("TOTALT", "FØRSTEGANG", "REVURDERING", "KLAGE"),
+            "LERKENDAL" to listOf("TOTALT", "FØRSTEGANG", "REVURDERING", "KLAGE"),
             "NAVKONTOR" to listOf("TOTALT", "FØRSTEGANG", "REVURDERING", "KLAGE"),
             "NAVFORVALTNING" to listOf("TOTALT", "FØRSTEGANG", "REVURDERING", "KLAGE", "FEILUTBETALING"),
         ), verdi.tall.groupBy({ it.hovedgruppe }, { it.undergruppe }))
