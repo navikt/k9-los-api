@@ -33,7 +33,7 @@ data class AvpBehandling(
     @field:SensitiveField
     val saksbehandler: String? = null,
     @field:SensitiveField
-    val ansvarligEnhetKode: String,
+    val ansvarligEnhetKode: String?,
     val totrinnsbehandling: Boolean? = null,
     val helautomatiskBehandlet: Boolean? = false,
     val avsender: String? = null,

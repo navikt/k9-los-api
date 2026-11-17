@@ -42,7 +42,7 @@ class AvpOppgaveTilDVHMapper {
             utenlandssak = null, // TODO
             beslutter = oppgave.hentVerdi(AktivitetspengerFelter.Saksbehandling.ANSVARLIG_BESLUTTER.id),
             saksbehandler = oppgave.hentVerdi(AktivitetspengerFelter.Saksbehandling.ANSVARLIG_SAKSBEHANDLER.id),
-            ansvarligEnhetKode = oppgave.hentVerdi(AktivitetspengerFelter.Saksbehandling.BEHANDLENDE_ENHET.id)!!, //dvh kaller fagsystemets behandlende enhet for ansvarlig enhet. De utleder en egen behandlende enhet baser på ansvarlig saksbehandlers enhetstilhørighet
+            ansvarligEnhetKode = oppgave.hentVerdi(AktivitetspengerFelter.Saksbehandling.BEHANDLENDE_ENHET.id), //dvh kaller fagsystemets behandlende enhet for ansvarlig enhet. De utleder en egen behandlende enhet baser på ansvarlig saksbehandlers enhetstilhørighet
             totrinnsbehandling = oppgave.hentVerdi(AktivitetspengerFelter.Vedtak.TOTRINNSKONTROLL.id)?.toBoolean(),
             helautomatiskBehandlet = oppgave.hentVerdi(AktivitetspengerFelter.Saksbehandling.HELAUTOMATISK.id).toBoolean(),
             avsender = "K9los",
