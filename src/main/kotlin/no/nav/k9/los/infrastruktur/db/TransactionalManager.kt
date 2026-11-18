@@ -1,7 +1,6 @@
 package no.nav.k9.los.infrastruktur.db
 
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import kotliquery.TransactionalSession
 import kotliquery.sessionOf
@@ -21,13 +20,8 @@ class TransactionalManager(
 
     suspend fun <A> transactionSuspend(operation: suspend (TransactionalSession) -> A): A {
         return withContext(Dispatchers.IO) {
-            val context = coroutineContext
-            using(sessionOf(dataSource, returnGeneratedKey = true)) { session ->
-                session.transaction {
-                    runBlocking(context) {
-                        operation(it)
-                    }
-                }
+            sessionOf(dataSource, returnGeneratedKey = true).use { session ->
+                session.transaction { tx -> operation(tx) }
             }
         }
     }
