@@ -22,6 +22,7 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.koin.test.get
+import java.util.concurrent.CountDownLatch
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 
@@ -92,6 +93,26 @@ class TransactionalManagerTest : AbstractK9LosIntegrationTest() {
 
         skrevet.await()
         jobb.cancelAndJoin()
+
+        assertEquals(emptyList(), hentVerdier())
+    }
+
+    @Test
+    fun `skal rulle tilbake når coroutinen avbrytes under blokkerende arbeid`() = runTest {
+        val skrevet = CompletableDeferred<Unit>()
+        val avbrutt = CountDownLatch(1)
+        val jobb = launch(Dispatchers.Default) {
+            transactionalManager.transactionSuspend { tx ->
+                settInn(tx, "a")
+                skrevet.complete(Unit)
+                avbrutt.await()
+            }
+        }
+
+        skrevet.await()
+        jobb.cancel()
+        avbrutt.countDown()
+        jobb.join()
 
         assertEquals(emptyList(), hentVerdier())
     }
