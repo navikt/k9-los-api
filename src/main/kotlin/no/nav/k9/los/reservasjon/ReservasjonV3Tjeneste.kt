@@ -125,7 +125,7 @@ class ReservasjonV3Tjeneste(
         val oppgaverForReservasjonsnøkkel =
             reservasjonsnøkkelOppgaveOppslag.hentÅpneOppgaverForReservasjonsnøkkel(område, reservasjonsnøkkel, tx)
         if (oppgaverForReservasjonsnøkkel.isEmpty()) {
-            throw IngenÅpneOppgaverException()
+            throw FinnerIkkeDataException("Fant ingen ikke-lukkede oppgaver, reservasjonsforsøk feilet")
         }
         if (!sjekkTilganger(område, oppgaverForReservasjonsnøkkel, reserverForId, utføresAvId)) {
             val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedId(reserverForId)!!
