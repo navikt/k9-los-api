@@ -1,7 +1,5 @@
 {
   "memory_limit": "8096Mi",
-  "serviceuser_kvpath": "/serviceuser/data/prod/srvk9los",
-  "vault_kvpath": "/kv/prod/fss/k9-los-api/k9saksbehandling",
   "kafka_pool": "nav-prod",
   "azure_tenant": "nav.no",
   "cluster_name": "prod-gcp",

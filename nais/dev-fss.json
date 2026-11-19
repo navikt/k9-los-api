@@ -1,7 +1,5 @@
 {
   "memory_limit": "4096Mi",
-  "serviceuser_kvpath": "/serviceuser/data/dev/srvk9los",
-  "vault_kvpath": "/kv/preprod/fss/k9-los-api/k9saksbehandling",
   "kafka_pool": "nav-dev",
   "azure_tenant": "trygdeetaten.no",
   "cluster_name": "dev-gcp",

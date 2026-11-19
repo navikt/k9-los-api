@@ -44,9 +44,6 @@ spec:
         - id: "grafana-lgtm"
   vault:
     enabled: true
-    paths:
-      - mountPath: /var/run/secrets/nais.io/vault
-        kvPath: {{vault_kvpath}}
   webproxy: true
   kafka:
     pool: {{kafka_pool}}
