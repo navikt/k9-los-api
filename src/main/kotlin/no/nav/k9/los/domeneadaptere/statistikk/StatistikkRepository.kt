@@ -28,11 +28,13 @@ data class DvhOppgaveversjon(
 
 class StatistikkRepository(
     private val dataSource: DataSource,
-    private val oppgavetypeRepository: OppgavetypeRepository
+    private val oppgavetypeRepository: OppgavetypeRepository,
+    aktiveOmråder: Set<Områder>
 ) {
+    val aktiveDvhOppgavetyper: Map<Områder, Set<Oppgavetype>> = ALLE_DVH_OPPGAVETYPER.filterKeys { it in aktiveOmråder }
 
     fun hentOppgaverSomIkkeErSendt(oppgavetype: Oppgavetype): List<DvhOppgaveversjon> {
-        require(oppgavetype in DVH_OPPGAVETYPER.getValue(oppgavetype.område)) {
+        require(oppgavetype in aktiveDvhOppgavetyper[oppgavetype.område].orEmpty()) {
             "Oppgavetype ${oppgavetype.kode} er ikke konfigurert for DVH-sending i område ${oppgavetype.område}"
         }
         return using(sessionOf(dataSource)) {
@@ -113,10 +115,10 @@ class StatistikkRepository(
 
     fun bestillDvhSending(oppgavetype: String? = null) {
         val oppgavetyperPerOmråde = if (oppgavetype != null) {
-            val type = DVH_OPPGAVETYPER.values.flatten().find { it.kode == oppgavetype } ?: return
+            val type = aktiveDvhOppgavetyper.values.flatten().find { it.kode == oppgavetype } ?: return
             mapOf(type.område to setOf(type))
         } else {
-            DVH_OPPGAVETYPER
+            aktiveDvhOppgavetyper
         }
         using(sessionOf(dataSource)) { session ->
             oppgavetyperPerOmråde.forEach { (område, oppgavetyper) ->
@@ -128,7 +130,7 @@ class StatistikkRepository(
     /**
      * Dual-write: registrerer en ny oppgaveversjon i pending-tabellen så snart den er lagret
      * i oppgave_v3, men før den er sendt til DVH. Kalles fra EventTilOppgaveAdapter.
-     * Kun relevant for oppgavetyper som sendes til DVH, se [DVH_OPPGAVETYPER].
+     * Kun relevant for oppgavetyper som sendes til DVH, se [aktiveDvhOppgavetyper].
      */
     fun bestillDvhSending(
         område: Områder,
@@ -137,7 +139,7 @@ class StatistikkRepository(
         oppgavetypeEksternId: String,
         tx: TransactionalSession,
     ) {
-        if (DVH_OPPGAVETYPER[område].orEmpty().none { it.kode == oppgavetypeEksternId }) return
+        if (aktiveDvhOppgavetyper[område].orEmpty().none { it.kode == oppgavetypeEksternId }) return
         tx.run(
             queryOf(
                 """
@@ -157,7 +159,7 @@ class StatistikkRepository(
 
     fun bestillDvhSendingForEksternIder(eksternIder: List<String>, tx: TransactionalSession) {
         if (eksternIder.isEmpty()) return
-        val oppgavetyper = DVH_OPPGAVETYPER.getValue(Områder.K9).map { it.kode }
+        val oppgavetyper = aktiveDvhOppgavetyper.getValue(Områder.K9).map { it.kode }
 
         tx.run(
             queryOf(
@@ -177,8 +179,8 @@ class StatistikkRepository(
     }
 
     companion object {
-        /** Oppgavetyper per område hvis versjoner spores i oppgave_v3_dvh_pending for sending til DVH. */
-        val DVH_OPPGAVETYPER: Map<Områder, Set<Oppgavetype>> = mapOf(
+        /** Alle oppgavetyper per område som kan spores i oppgave_v3_dvh_pending for sending til DVH. */
+        val ALLE_DVH_OPPGAVETYPER: Map<Områder, Set<Oppgavetype>> = mapOf(
             Områder.K9 to setOf(K9Oppgavetypenavn.SAK, K9Oppgavetypenavn.KLAGE),
             Områder.AKTIVITETSPENGER to setOf(
                 AvpOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1,
@@ -210,7 +212,7 @@ class StatistikkRepository(
      */
     fun populerPendingFraOppgaveV3(): Int {
         return using(sessionOf(dataSource)) { session ->
-            DVH_OPPGAVETYPER.entries.sumOf { (område, oppgavetyper) ->
+            aktiveDvhOppgavetyper.entries.sumOf { (område, oppgavetyper) ->
                 session.run(leggTilPendingFraOppgaveV3Query(område, oppgavetyper).asUpdate)
             }
         }

@@ -60,7 +60,7 @@ class OppgavestatistikkTjenesteTest {
 
         tjeneste.spillAvUsendtStatistikk()
 
-        StatistikkRepository.DVH_OPPGAVETYPER.values.flatten().forEach { oppgavetype ->
+        StatistikkRepository.ALLE_DVH_OPPGAVETYPER.values.flatten().forEach { oppgavetype ->
             verify(exactly = 1) { statistikkRepository.hentOppgaverSomIkkeErSendt(oppgavetype) }
         }
     }
@@ -164,7 +164,21 @@ class OppgavestatistikkTjenesteTest {
         verify(exactly = 2) { avpPublisher.flushOgValider() }
     }
 
+    @Test
+    fun `områder som er skrudd av hentes ikke og sendes ikke`() {
+        klargjør(kode6 = false)
+        every { statistikkRepository.aktiveDvhOppgavetyper } returns
+            StatistikkRepository.ALLE_DVH_OPPGAVETYPER.filterKeys { it == Områder.K9 }
+
+        tjeneste.spillAvUsendtStatistikk()
+
+        verify(exactly = 0) { statistikkRepository.hentOppgaverSomIkkeErSendt(AvpOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1) }
+        verify(exactly = 0) { avpPublisher.publiserAsynkront(any()) }
+        verify(exactly = 0) { avpPublisher.flushOgValider() }
+    }
+
     private fun klargjør(kode6: Boolean) {
+        every { statistikkRepository.aktiveDvhOppgavetyper } returns StatistikkRepository.ALLE_DVH_OPPGAVETYPER
         every { statistikkRepository.hentOppgaverSomIkkeErSendt(any()) } returns emptyList()
         every {
             statistikkRepository.hentOppgaverSomIkkeErSendt(

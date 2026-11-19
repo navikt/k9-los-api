@@ -58,6 +58,7 @@ import no.nav.k9.los.nøkkeltall.saksbehandler.nyeogferdigstilte.K9NyeOgFerdigst
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.FeltdefinisjonRepository
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.FeltdefinisjonTjeneste
 import no.nav.k9.los.oppgavedefinisjon.omraade.OmrådeRepository
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgavedefinisjon.oppgavetype.OppgavetypeRepository
 import no.nav.k9.los.oppgavedefinisjon.oppgavetype.OppgavetypeTjeneste
 import no.nav.k9.los.oppgavemottak.AktivOgPartisjonertOppgaveAjourholdTjeneste
@@ -279,7 +280,8 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     single {
         StatistikkRepository(
             dataSource = get(),
-            oppgavetypeRepository = get()
+            oppgavetypeRepository = get(),
+            aktiveOmråder = Områder.entries.toSet(),
         )
     }
 

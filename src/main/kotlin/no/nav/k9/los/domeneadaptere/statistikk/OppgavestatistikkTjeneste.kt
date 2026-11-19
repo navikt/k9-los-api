@@ -74,7 +74,7 @@ class OppgavestatistikkTjeneste(
 
     fun spillAvUsendtStatistikk() {
         val feil = mutableListOf<Exception>()
-        StatistikkRepository.DVH_OPPGAVETYPER.forEach { (område, oppgavetyper) ->
+        statistikkRepository.aktiveDvhOppgavetyper.forEach { (område, oppgavetyper) ->
             try {
                 oppgavetyper.forEach { oppgavetype ->
                     spillAvUsendtStatistikk(oppgavetype)
@@ -139,7 +139,6 @@ class OppgavestatistikkTjeneste(
             Områder.K9 -> sendK9Statistikk(oppgave, versjon, pepCacheState, tx)
             Områder.AKTIVITETSPENGER -> sendAvpStatistikk(oppgave, pepCacheState, tx)
             Områder.UNGDOMSPROGRAMYTELSEN -> sendUngStatistikk(oppgave, pepCacheState, tx)
-            else -> throw IllegalStateException("Ukjent område for sending til DVH: ${oppgave.område}")
         }
         return true
     }
@@ -211,7 +210,6 @@ class OppgavestatistikkTjeneste(
             Områder.K9 -> k9StatistikkPublisher.flushOgValider()
             Områder.AKTIVITETSPENGER -> avpStatistikkPublisher.flushOgValider()
             Områder.UNGDOMSPROGRAMYTELSEN -> ungStatistikkPublisher.flushOgValider()
-            else -> throw IllegalStateException("Ukjent område for sending til DVH: $område")
         }
         oppgaveversjonerTilKvittering.forEach { oppgaveversjon ->
             statistikkRepository.kvitterSending(tx, oppgaveversjon)
