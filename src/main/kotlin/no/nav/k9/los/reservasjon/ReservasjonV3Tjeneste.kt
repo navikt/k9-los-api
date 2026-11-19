@@ -125,11 +125,11 @@ class ReservasjonV3Tjeneste(
         val oppgaverForReservasjonsnøkkel =
             reservasjonsnøkkelOppgaveOppslag.hentÅpneOppgaverForReservasjonsnøkkel(område, reservasjonsnøkkel, tx)
         if (oppgaverForReservasjonsnøkkel.isEmpty()) {
-            throw FinnerIkkeDataException("Fant ingen ikke-lukkede oppgaver for reservasjonsnøkkel $reservasjonsnøkkel")
+            throw FinnerIkkeDataException("Fant ingen ikke-lukkede oppgaver, reservasjonsforsøk feilet")
         }
         if (!sjekkTilganger(område, oppgaverForReservasjonsnøkkel, reserverForId, utføresAvId)) {
             val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedId(reserverForId)!!
-            throw ManglerTilgangException("Saksbehandler ${saksbehandler.navn} mangler tilgang til å reservere nøkkel $reservasjonsnøkkel")
+            throw ManglerTilgangException("Saksbehandler med id=${saksbehandler.id} mangler tilgang til å reservere oppgaven")
         }
 
         //prøv å ta reservasjon
