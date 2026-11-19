@@ -77,7 +77,7 @@ class ReservasjonV3TjenesteTilgangTest {
 
         for (område in listOf(Områder.K9, Områder.AKTIVITETSPENGER)) {
             for (mottakerId in listOf(innloggetId, annenId)) {
-                assertFailsWith<FinnerIkkeDataException> {
+                assertFailsWith<IngenÅpneOppgaverException> {
                     reserver(reserverForId = mottakerId, utføresAvId = innloggetId, område = område)
                 }
             }

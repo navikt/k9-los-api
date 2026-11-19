@@ -98,7 +98,7 @@ class PepClient(
                         setOfNotNull(oppgave.hentVerdi("aktorId"), oppgave.hentVerdi("pleietrengendeAktorId"))
                             .map { AktørId(it) }
                     if (aktørIder.isEmpty()) {
-                        log.warn("Ingen aktørIder funnet for punsj-oppgave. Gir tilgang for å unngå at den havner utenfor alle køer.")
+                        log.info("Ingen aktørIder funnet for punsj-oppgave. Gir tilgang for å unngå at den havner utenfor alle køer.")
                         return true
                     }
                     return sifAbacPdpKlient.harTilgangTilPersoner(område, action, aktørIder, idToken)
@@ -161,7 +161,7 @@ class PepClient(
                         setOfNotNull(oppgave.hentVerdi("aktorId"), oppgave.hentVerdi("pleietrengendeAktorId"))
                             .map { AktørId(it) }
                     if (aktørIder.isEmpty()) {
-                        log.warn("Ingen aktørIder funnet for punsj-oppgave. Gir tilgang for å unngå at den havner utenfor alle køer.")
+                        log.info("Ingen aktørIder funnet for punsj-oppgave. Gir tilgang for å unngå at den havner utenfor alle køer.")
                         return true
                     }
                     return sifAbacPdpKlient.harTilgangTilPersoner(
