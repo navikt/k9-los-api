@@ -72,6 +72,7 @@ import no.nav.k9.los.lagretsok.LagretSøkTjeneste
 import no.nav.k9.los.nøkkeltall.saksbehandler.nyeogferdigstilte.K9NyeOgFerdigstilteService
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.FeltdefinisjonRepository
 import no.nav.k9.los.oppgavedefinisjon.omraade.OmrådeRepository
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgavedefinisjon.oppgavetype.OppgavetypeRepository
 import no.nav.k9.los.oppgavemottak.AktivOgPartisjonertOppgaveAjourholdTjeneste
 import no.nav.k9.los.oppgavemottak.OppgaveV3Repository
@@ -167,7 +168,15 @@ fun common(app: Application, config: Configuration) = module {
     }
 
     single {
-        StatistikkRepository(get(), get())
+        StatistikkRepository(
+            dataSource = get(),
+            oppgavetypeRepository = get(),
+            aktiveOmråder = if (config.koinProfile() == PROD) {
+                setOf(Områder.K9)
+            } else {
+                Områder.entries.toSet()
+            },
+        )
     }
 
     single {
