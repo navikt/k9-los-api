@@ -1,8 +1,9 @@
 # syntax=docker/dockerfile:1.7.0-labs
-FROM ghcr.io/navikt/sif-baseimages/java-25:2026.11.09.0747Z
+FROM ghcr.io/navikt/sif-baseimages/java-chainguard-25:2026.11.19.0715Z
 
 LABEL org.opencontainers.image.source=https://github.com/navikt/k9-los-api
 
+WORKDIR /app
 COPY --link target/lib/ /app/lib/
 COPY --link target/app.jar /app/app.jar
 
