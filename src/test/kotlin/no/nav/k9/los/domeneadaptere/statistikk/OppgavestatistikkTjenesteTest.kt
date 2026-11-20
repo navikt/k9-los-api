@@ -35,10 +35,10 @@ class OppgavestatistikkTjenesteTest {
     private val appversjonsvakt = mockk<Appversjonsvakt> { every { erAktiv(any()) } returns true }
     private val tjeneste = OppgavestatistikkTjeneste(
         StatistikkPublishere(
-            k9StatistikkSak = mockk(relaxUnitFun = true),
-            k9StatistikkBehandling = mockk(relaxUnitFun = true),
-            avpStatistikkBehandling = avpPublisher,
-            ungStatistikkBehandling = mockk(relaxUnitFun = true),
+            sakK9 = mockk(relaxUnitFun = true),
+            behandlingK9 = mockk(relaxUnitFun = true),
+            behandlingAvp = avpPublisher,
+            behandlingUng = mockk(relaxUnitFun = true),
         ),
         transactionalManager,
         statistikkRepository,

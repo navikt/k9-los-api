@@ -142,10 +142,10 @@ fun kafkaConfig(config: Configuration) = module {
     single {
         val kafkaConfig = config.getProfileAwareKafkaAivenConfig()
         StatistikkPublishere(
-            k9StatistikkSak = StatistikkKafkaPublisher(kafkaConfig, "K9SakStatistikkPublisher", config.getÅpenStatistikkSakTopic()),
-            k9StatistikkBehandling = StatistikkKafkaPublisher(kafkaConfig, "K9BehandlingStatistikkPublisher", config.getÅpenStatistikkBehandlingTopic()),
-            avpStatistikkBehandling = StatistikkKafkaPublisher(kafkaConfig, "AvpStatistikkPublisher", config.getÅpenAvpStatistikkBehandlingTopic()),
-            ungStatistikkBehandling = StatistikkKafkaPublisher(kafkaConfig, "UngStatistikkPublisher", config.getÅpenUngStatistikkBehandlingTopic()),
+            sakK9 = StatistikkKafkaPublisher(kafkaConfig, "K9StatistikkSakPublisher", config.getÅpenStatistikkSakTopic()),
+            behandlingK9 = StatistikkKafkaPublisher(kafkaConfig, "K9StatistikkBehandlingPublisher", config.getÅpenStatistikkBehandlingTopic()),
+            behandlingAvp = StatistikkKafkaPublisher(kafkaConfig, "AvpStatistikkBehandlingPublisher", config.getÅpenAvpStatistikkBehandlingTopic()),
+            behandlingUng = StatistikkKafkaPublisher(kafkaConfig, "UngStatistikkBehandlingPublisher", config.getÅpenUngStatistikkBehandlingTopic()),
         )
     }
 }
@@ -155,10 +155,10 @@ fun utenKafkaConfig() = module {
     single { HealthService(healthChecks = emptySet()) }
     single {
         StatistikkPublishere(
-            k9StatistikkSak = StatistikkPublisherLocal("k9-statistikk-sak"),
-            k9StatistikkBehandling = StatistikkPublisherLocal("k9-statistikk-behandling"),
-            avpStatistikkBehandling = StatistikkPublisherLocal("avp-statistikk-behandling"),
-            ungStatistikkBehandling = StatistikkPublisherLocal("ung-statistikk-behandling"),
+            sakK9 = StatistikkPublisherLocal("sak-k9"),
+            behandlingK9 = StatistikkPublisherLocal("behandling-k9"),
+            behandlingAvp = StatistikkPublisherLocal("behandling-avp"),
+            behandlingUng = StatistikkPublisherLocal("behandling-ung"),
         )
     }
 }

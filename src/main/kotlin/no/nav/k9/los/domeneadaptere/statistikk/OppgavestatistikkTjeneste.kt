@@ -153,7 +153,7 @@ class OppgavestatistikkTjeneste(
                 ForvaltningSensitiveObjectMapper.prettyInstance.writeValueAsString(behandling),
             )
         }
-        publishere.avpStatistikkBehandling.publiserAsynkront(behandling.behandlingId, behandling)
+        publishere.behandlingAvp.publiserAsynkront(behandling.behandlingId, behandling)
     }
 
     private fun sendUngStatistikk(oppgave: Oppgave, pepCacheState: PepCachePerSaksnummerState, tx: TransactionalSession) {
@@ -170,7 +170,7 @@ class OppgavestatistikkTjeneste(
                 ForvaltningSensitiveObjectMapper.prettyInstance.writeValueAsString(behandlingTilSending),
             )
         }
-        publishere.ungStatistikkBehandling.publiserAsynkront(behandlingTilSending.behandlingId, behandlingTilSending)
+        publishere.behandlingUng.publiserAsynkront(behandlingTilSending.behandlingId, behandlingTilSending)
     }
 
     private fun sendK9Statistikk(
@@ -196,19 +196,19 @@ class OppgavestatistikkTjeneste(
                     ForvaltningSensitiveObjectMapper.prettyInstance.writeValueAsString(behandlingTilSending),
                 )
             }
-            publishere.k9StatistikkSak.publiserAsynkront(sakTilSending.saksnummer, sakTilSending)
-            publishere.k9StatistikkBehandling.publiserAsynkront(behandlingTilSending.behandlingId, behandlingTilSending)
+            publishere.sakK9.publiserAsynkront(sakTilSending.saksnummer, sakTilSending)
+            publishere.behandlingK9.publiserAsynkront(behandlingTilSending.behandlingId, behandlingTilSending)
         }
     }
 
     private fun flushOgKvitter(område: Områder, oppgaveversjonerTilKvittering: List<DvhOppgaveversjon>, tx: TransactionalSession) {
         when (område) {
             Områder.K9 -> {
-                publishere.k9StatistikkSak.flushOgValider()
-                publishere.k9StatistikkBehandling.flushOgValider()
+                publishere.sakK9.flushOgValider()
+                publishere.behandlingK9.flushOgValider()
             }
-            Områder.AKTIVITETSPENGER -> publishere.avpStatistikkBehandling.flushOgValider()
-            Områder.UNGDOMSPROGRAMYTELSEN -> publishere.ungStatistikkBehandling.flushOgValider()
+            Områder.AKTIVITETSPENGER -> publishere.behandlingAvp.flushOgValider()
+            Områder.UNGDOMSPROGRAMYTELSEN -> publishere.behandlingUng.flushOgValider()
         }
         oppgaveversjonerTilKvittering.forEach { oppgaveversjon ->
             statistikkRepository.kvitterSending(tx, oppgaveversjon)

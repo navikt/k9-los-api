@@ -324,10 +324,10 @@ class PåkrevdFeltHistorikkvaskTest : AbstractK9LosIntegrationTest() {
         every { publisher.flushOgValider() } answers { sjekkLås() }
         val tjeneste = OppgavestatistikkTjeneste(
             publishere = StatistikkPublishere(
-                k9StatistikkSak = mockk(),
-                k9StatistikkBehandling = mockk(),
-                avpStatistikkBehandling = publisher,
-                ungStatistikkBehandling = mockk(),
+                sakK9 = mockk(),
+                behandlingK9 = mockk(),
+                behandlingAvp = publisher,
+                behandlingUng = mockk(),
             ),
             transactionalManager = transactionalManager,
             statistikkRepository = statistikkRepository,
