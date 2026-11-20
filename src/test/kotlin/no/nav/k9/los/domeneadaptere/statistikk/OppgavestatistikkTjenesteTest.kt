@@ -7,7 +7,7 @@ import io.mockk.verifyOrder
 import kotliquery.TransactionalSession
 import no.nav.k9.los.domeneadaptere.eventlager.EventRepository
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.kodeverk.AvpOppgavetypenavn
-import no.nav.k9.los.domeneadaptere.statistikk.avp.AvpStatistikkPublisher
+import no.nav.k9.los.domeneadaptere.statistikk.avp.AvpBehandling
 import no.nav.k9.los.infrastruktur.abac.cache.PepCacheRepository
 import no.nav.k9.los.infrastruktur.db.Appversjonsvakt
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
@@ -16,7 +16,7 @@ import no.nav.k9.los.oppgaveuthenting.Oppgave
 import org.junit.jupiter.api.Test
 
 class OppgavestatistikkTjenesteTest {
-    private val avpPublisher = mockk<AvpStatistikkPublisher>(relaxUnitFun = true)
+    private val avpPublisher = mockk<StatistikkPublisher>(relaxUnitFun = true)
     private val transactionalManager = mockk<TransactionalManager>()
     private val statistikkRepository = mockk<StatistikkRepository>(relaxUnitFun = true)
     private val pepCacheRepository = mockk<PepCacheRepository>()
@@ -34,9 +34,12 @@ class OppgavestatistikkTjenesteTest {
     }
     private val appversjonsvakt = mockk<Appversjonsvakt> { every { erAktiv(any()) } returns true }
     private val tjeneste = OppgavestatistikkTjeneste(
-        mockk(relaxUnitFun = true),
-        avpPublisher,
-        mockk(relaxUnitFun = true),
+        StatistikkPublishere(
+            k9StatistikkSak = mockk(relaxUnitFun = true),
+            k9StatistikkBehandling = mockk(relaxUnitFun = true),
+            avpStatistikkBehandling = avpPublisher,
+            ungStatistikkBehandling = mockk(relaxUnitFun = true),
+        ),
         transactionalManager,
         statistikkRepository,
         pepCacheRepository,
@@ -50,7 +53,7 @@ class OppgavestatistikkTjenesteTest {
 
         tjeneste.spillAvUsendtStatistikk()
 
-        verify(exactly = 0) { avpPublisher.publiserAsynkront(any()) }
+        verify(exactly = 0) { avpPublisher.publiserAsynkront(any(), any()) }
         verify(exactly = 1) { statistikkRepository.kvitterSending(tx, oppgaveversjon) }
     }
 
@@ -96,7 +99,7 @@ class OppgavestatistikkTjenesteTest {
         tjeneste.spillAvUsendtStatistikk()
 
         verify(exactly = 1) {
-            avpPublisher.publiserAsynkront(match {
+            avpPublisher.publiserAsynkront("behandling-1", match<AvpBehandling> {
                 it.behandlingId == "behandling-1" &&
                     it.saksnummer == "sak-1" &&
                     it.søkersAktørId.aktorId == 123456789L &&
@@ -108,7 +111,7 @@ class OppgavestatistikkTjenesteTest {
             appversjonsvakt.erAktiv(tx)
             eventRepository.hentOgLåsEventnøkkel(oppgaveversjon.oppgavetype.fagsystem, oppgaveversjon.eksternId, tx)
             statistikkRepository.hentOppgaveForSending(tx, oppgaveversjon, any())
-            avpPublisher.publiserAsynkront(any())
+            avpPublisher.publiserAsynkront(any(), any())
             avpPublisher.flushOgValider()
             statistikkRepository.kvitterSending(tx, oppgaveversjon)
         }
@@ -123,7 +126,7 @@ class OppgavestatistikkTjenesteTest {
 
         verify(exactly = 0) { eventRepository.hentOgLåsEventnøkkel(any(), any(), any()) }
         verify(exactly = 0) { statistikkRepository.hentOppgaveForSending(any(), any(), any()) }
-        verify(exactly = 0) { avpPublisher.publiserAsynkront(any()) }
+        verify(exactly = 0) { avpPublisher.publiserAsynkront(any(), any()) }
         verify(exactly = 0) { avpPublisher.flushOgValider() }
         verify(exactly = 0) { statistikkRepository.kvitterSending(any(), any()) }
     }
@@ -141,7 +144,7 @@ class OppgavestatistikkTjenesteTest {
             statistikkRepository.hentOppgaveForSending(tx, oppgaveversjon, any())
         }
         verify(exactly = 0) { pepCacheRepository.hent(any(), any(), any()) }
-        verify(exactly = 0) { avpPublisher.publiserAsynkront(any()) }
+        verify(exactly = 0) { avpPublisher.publiserAsynkront(any(), any()) }
         verify(exactly = 0) { avpPublisher.flushOgValider() }
         verify(exactly = 0) { statistikkRepository.kvitterSending(any(), any()) }
     }
@@ -173,7 +176,7 @@ class OppgavestatistikkTjenesteTest {
         tjeneste.spillAvUsendtStatistikk()
 
         verify(exactly = 0) { statistikkRepository.hentOppgaverSomIkkeErSendt(AvpOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1) }
-        verify(exactly = 0) { avpPublisher.publiserAsynkront(any()) }
+        verify(exactly = 0) { avpPublisher.publiserAsynkront(any(), any()) }
         verify(exactly = 0) { avpPublisher.flushOgValider() }
     }
 

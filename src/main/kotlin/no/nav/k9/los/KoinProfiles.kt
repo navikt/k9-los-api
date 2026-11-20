@@ -40,16 +40,10 @@ import no.nav.k9.los.domeneadaptere.k9.refreshk9sakoppgaver.restklient.K9SakServ
 import no.nav.k9.los.domeneadaptere.k9.refreshk9sakoppgaver.restklient.K9SakServiceSystemClient
 import no.nav.k9.los.domeneadaptere.statistikk.k9.K9KlageOppgaveTilDVHMapper
 import no.nav.k9.los.domeneadaptere.statistikk.k9.K9SakOppgaveTilDVHMapper
-import no.nav.k9.los.domeneadaptere.statistikk.avp.AvpStatistikkKafkaPublisher
-import no.nav.k9.los.domeneadaptere.statistikk.avp.AvpStatistikkPublisher
-import no.nav.k9.los.domeneadaptere.statistikk.avp.AvpStatistikkPublisherLocal
-import no.nav.k9.los.domeneadaptere.statistikk.ung.UngStatistikkKafkaPublisher
-import no.nav.k9.los.domeneadaptere.statistikk.ung.UngStatistikkPublisher
-import no.nav.k9.los.domeneadaptere.statistikk.ung.UngStatistikkPublisherLocal
 import no.nav.k9.los.domeneadaptere.statistikk.OppgavestatistikkTjeneste
-import no.nav.k9.los.domeneadaptere.statistikk.k9.K9StatistikkKafkaPublisher
-import no.nav.k9.los.domeneadaptere.statistikk.k9.K9StatistikkPublisher
-import no.nav.k9.los.domeneadaptere.statistikk.k9.K9StatistikkPublisherLocal
+import no.nav.k9.los.domeneadaptere.statistikk.StatistikkKafkaPublisher
+import no.nav.k9.los.domeneadaptere.statistikk.StatistikkPublishere
+import no.nav.k9.los.domeneadaptere.statistikk.StatistikkPublisherLocal
 import no.nav.k9.los.domeneadaptere.statistikk.StatistikkRepository
 import no.nav.k9.los.driftsmelding.DriftsmeldingRepository
 import no.nav.k9.los.driftsmelding.DriftsmeldingTjeneste
@@ -145,24 +139,13 @@ fun kafkaConfig(config: Configuration) = module {
         )
     }
 
-    single<K9StatistikkPublisher> {
-        K9StatistikkKafkaPublisher(
-            kafkaConfig = config.getProfileAwareKafkaAivenConfig(),
-            config = config
-        )
-    }
-
-    single<AvpStatistikkPublisher> {
-        AvpStatistikkKafkaPublisher(
-            kafkaConfig = config.getProfileAwareKafkaAivenConfig(),
-            config = config
-        )
-    }
-
-    single<UngStatistikkPublisher> {
-        UngStatistikkKafkaPublisher(
-            kafkaConfig = config.getProfileAwareKafkaAivenConfig(),
-            config = config
+    single {
+        val kafkaConfig = config.getProfileAwareKafkaAivenConfig()
+        StatistikkPublishere(
+            k9StatistikkSak = StatistikkKafkaPublisher(kafkaConfig, "K9SakStatistikkPublisher", config.getÅpenStatistikkSakTopic()),
+            k9StatistikkBehandling = StatistikkKafkaPublisher(kafkaConfig, "K9BehandlingStatistikkPublisher", config.getÅpenStatistikkBehandlingTopic()),
+            avpStatistikkBehandling = StatistikkKafkaPublisher(kafkaConfig, "AvpStatistikkPublisher", config.getÅpenAvpStatistikkBehandlingTopic()),
+            ungStatistikkBehandling = StatistikkKafkaPublisher(kafkaConfig, "UngStatistikkPublisher", config.getÅpenUngStatistikkBehandlingTopic()),
         )
     }
 }
@@ -170,9 +153,14 @@ fun kafkaConfig(config: Configuration) = module {
 // Kun lokalt (K9LosDev): ingen Kafka-tilkobling
 fun utenKafkaConfig() = module {
     single { HealthService(healthChecks = emptySet()) }
-    single<K9StatistikkPublisher> { K9StatistikkPublisherLocal }
-    single<AvpStatistikkPublisher> { AvpStatistikkPublisherLocal }
-    single<UngStatistikkPublisher> { UngStatistikkPublisherLocal }
+    single {
+        StatistikkPublishere(
+            k9StatistikkSak = StatistikkPublisherLocal("k9-statistikk-sak"),
+            k9StatistikkBehandling = StatistikkPublisherLocal("k9-statistikk-behandling"),
+            avpStatistikkBehandling = StatistikkPublisherLocal("avp-statistikk-behandling"),
+            ungStatistikkBehandling = StatistikkPublisherLocal("ung-statistikk-behandling"),
+        )
+    }
 }
 
 fun common(app: Application, config: Configuration) = module {
@@ -360,9 +348,7 @@ fun common(app: Application, config: Configuration) = module {
 
     single {
         OppgavestatistikkTjeneste(
-            k9StatistikkPublisher = get(),
-            avpStatistikkPublisher = get(),
-            ungStatistikkPublisher = get(),
+            publishere = get(),
             transactionalManager = get(),
             statistikkRepository = get(),
             pepCacheRepository = get(),

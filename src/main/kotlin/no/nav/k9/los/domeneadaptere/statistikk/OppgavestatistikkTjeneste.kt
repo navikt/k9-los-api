@@ -5,14 +5,11 @@ import kotliquery.TransactionalSession
 import no.nav.k9.los.domeneadaptere.eventlager.EventRepository
 import no.nav.k9.los.domeneadaptere.eventlager.Oppgavetype
 import no.nav.k9.los.domeneadaptere.statistikk.avp.AvpOppgaveTilDVHMapper
-import no.nav.k9.los.domeneadaptere.statistikk.avp.AvpStatistikkPublisher
 import no.nav.k9.los.domeneadaptere.statistikk.k9.K9Behandling
 import no.nav.k9.los.domeneadaptere.statistikk.k9.K9KlageOppgaveTilDVHMapper
 import no.nav.k9.los.domeneadaptere.statistikk.k9.K9SakOppgaveTilDVHMapper
 import no.nav.k9.los.domeneadaptere.statistikk.k9.Sak
-import no.nav.k9.los.domeneadaptere.statistikk.k9.K9StatistikkPublisher
 import no.nav.k9.los.domeneadaptere.statistikk.ung.UngOppgaveTilDVHMapper
-import no.nav.k9.los.domeneadaptere.statistikk.ung.UngStatistikkPublisher
 import no.nav.k9.los.forvaltning.ForvaltningSensitiveObjectMapper
 import no.nav.k9.los.infrastruktur.abac.cache.PepCacheRepository
 import no.nav.k9.los.infrastruktur.db.Appversjonsvakt
@@ -22,9 +19,7 @@ import no.nav.k9.los.oppgaveuthenting.Oppgave
 import org.slf4j.LoggerFactory
 
 class OppgavestatistikkTjeneste(
-    private val k9StatistikkPublisher: K9StatistikkPublisher,
-    private val avpStatistikkPublisher: AvpStatistikkPublisher,
-    private val ungStatistikkPublisher: UngStatistikkPublisher,
+    private val publishere: StatistikkPublishere,
     private val transactionalManager: TransactionalManager,
     private val statistikkRepository: StatistikkRepository,
     private val pepCacheRepository: PepCacheRepository,
@@ -158,7 +153,7 @@ class OppgavestatistikkTjeneste(
                 ForvaltningSensitiveObjectMapper.prettyInstance.writeValueAsString(behandling),
             )
         }
-        avpStatistikkPublisher.publiserAsynkront(behandling)
+        publishere.avpStatistikkBehandling.publiserAsynkront(behandling.behandlingId, behandling)
     }
 
     private fun sendUngStatistikk(oppgave: Oppgave, pepCacheState: PepCachePerSaksnummerState, tx: TransactionalSession) {
@@ -175,7 +170,7 @@ class OppgavestatistikkTjeneste(
                 ForvaltningSensitiveObjectMapper.prettyInstance.writeValueAsString(behandlingTilSending),
             )
         }
-        ungStatistikkPublisher.publiserAsynkront(behandlingTilSending)
+        publishere.ungStatistikkBehandling.publiserAsynkront(behandlingTilSending.behandlingId, behandlingTilSending)
     }
 
     private fun sendK9Statistikk(
@@ -201,15 +196,19 @@ class OppgavestatistikkTjeneste(
                     ForvaltningSensitiveObjectMapper.prettyInstance.writeValueAsString(behandlingTilSending),
                 )
             }
-            k9StatistikkPublisher.publiserAsynkront(sakTilSending, behandlingTilSending)
+            publishere.k9StatistikkSak.publiserAsynkront(sakTilSending.saksnummer, sakTilSending)
+            publishere.k9StatistikkBehandling.publiserAsynkront(behandlingTilSending.behandlingId, behandlingTilSending)
         }
     }
 
     private fun flushOgKvitter(område: Områder, oppgaveversjonerTilKvittering: List<DvhOppgaveversjon>, tx: TransactionalSession) {
         when (område) {
-            Områder.K9 -> k9StatistikkPublisher.flushOgValider()
-            Områder.AKTIVITETSPENGER -> avpStatistikkPublisher.flushOgValider()
-            Områder.UNGDOMSPROGRAMYTELSEN -> ungStatistikkPublisher.flushOgValider()
+            Områder.K9 -> {
+                publishere.k9StatistikkSak.flushOgValider()
+                publishere.k9StatistikkBehandling.flushOgValider()
+            }
+            Områder.AKTIVITETSPENGER -> publishere.avpStatistikkBehandling.flushOgValider()
+            Områder.UNGDOMSPROGRAMYTELSEN -> publishere.ungStatistikkBehandling.flushOgValider()
         }
         oppgaveversjonerTilKvittering.forEach { oppgaveversjon ->
             statistikkRepository.kvitterSending(tx, oppgaveversjon)

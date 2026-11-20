@@ -187,9 +187,7 @@ fun Application.k9Los() {
     }
 
     OppgavestatistikkTjeneste(
-        k9StatistikkPublisher = koin.get(),
-        avpStatistikkPublisher = koin.get(),
-        ungStatistikkPublisher = koin.get(),
+        publishere = koin.get(),
         transactionalManager = koin.get(),
         statistikkRepository = koin.get(),
         pepCacheRepository = koin.get(),
