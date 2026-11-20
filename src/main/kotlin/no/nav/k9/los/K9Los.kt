@@ -228,7 +228,7 @@ fun Application.k9Los() {
         if ((KoinProfile.LOCAL == koin.get<KoinProfile>())) {
             api(eksponerSwagger = true)
             testdataApi(
-                TestdataTjeneste(koin.get(), koin.get(), koin.get(), koin.get(), koin.get())
+                TestdataTjeneste(koin.get(), koin.get(), koin.get(), koin.get(), koin.get(), koin.get())
             )
         } else {
             authenticate(*issuers.allIssuers()) {

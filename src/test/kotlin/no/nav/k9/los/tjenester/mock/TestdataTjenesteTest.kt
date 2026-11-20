@@ -20,8 +20,8 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.koin.test.get
 import kotlin.test.*
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.Områdesetup as K9Områdesetup
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.akt.Områdesetup as AvpOmrådesetup
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.K9Områdesetup
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.AvpOmrådesetup
 
 class TestdataTjenesteTest : AbstractK9LosIntegrationTest() {
     @BeforeEach
@@ -31,13 +31,13 @@ class TestdataTjenesteTest : AbstractK9LosIntegrationTest() {
         localSetup.initSaksbehandlere()
     }
 
-    private fun tjeneste() = TestdataTjeneste(get(), get(), get(), get(), get())
+    private fun tjeneste() = TestdataTjeneste(get(), get(), get(), get(), get(), get())
 
     @Test
     fun `mappingfeil ruller tilbake hendelsesopprettelsen`() {
         val adapter = mockk<EventTilOppgaveAdapter>()
         every { adapter.oppdaterOppgaveForEksternId(any<EventNøkkel>(), any<TransactionalSession>()) } throws IllegalStateException("Mapping feilet")
-        val tjeneste = TestdataTjeneste(get(), get(), adapter, get(), get())
+        val tjeneste = TestdataTjeneste(get(), get(), adapter, get(), get(), get())
 
         assertFailsWith<IllegalStateException> { tjeneste.opprettOppgave() }
         get<TransactionalManager>().transaction { tx ->

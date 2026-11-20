@@ -12,6 +12,7 @@ import no.nav.k9.los.domeneadaptere.eventlager.EventRepository
 import no.nav.k9.los.domeneadaptere.eventlager.Fagsystem
 import no.nav.k9.los.domeneadaptere.eventmottak.EventHendelse
 import no.nav.k9.los.domeneadaptere.eventmottak.k9.sak.K9SakEventDto
+import no.nav.k9.los.infrastruktur.abac.cache.PepCacheRepository
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.EventTilOppgaveAdapter as K9EventTilOppgaveAdapter
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
@@ -33,6 +34,7 @@ internal class TestdataTjeneste(
     private val adapter: K9EventTilOppgaveAdapter,
     private val oppgaveRepository: OppgaveRepository,
     private val oppgaveV3Repository: OppgaveV3Repository,
+    private val pepCacheRepository: PepCacheRepository,
 ) {
     private val oppgaver = mutableSetOf<UUID>()
 
@@ -63,6 +65,9 @@ internal class TestdataTjeneste(
     @Synchronized
     fun slettOppgave(id: UUID): Boolean {
         if (id !in oppgaver) return false
+
+        // Bruker kall i repositoriene som eier tabellene bare dersom det finnes metoder fra før som kan brukes.
+        // Ønsker ikke innføre testkode som behøves bare her i prodkode.
         transactionalManager.transaction { tx ->
             val eventId = eventRepository.hentOgLåsEventnøkkel(Fagsystem.K9SAK, id.toString(), tx)
             val oppgave = oppgaveRepository.hentNyesteOppgaveForEksternId(tx, Områder.K9, id.toString())
@@ -91,7 +96,6 @@ internal class TestdataTjeneste(
                     and oppgavetype_id = (select id from oppgavetype where ekstern_id = 'k9sak'
                         and omrade_id = (select id from omrade where ekstern_id = 'K9'))
                 """.trimIndent(),
-                "delete from oppgave_pep_cache where ekstern_id = :id and omrade = 'K9'",
                 "delete from oppgave_v3_dvh_pending where ekstern_id = :id and oppgavetype_ekstern_id = 'k9sak'",
                 """
                     delete from oppgavefelt_verdi_part where oppgave_id in (
@@ -101,10 +105,11 @@ internal class TestdataTjeneste(
                 """.trimIndent(),
                 "delete from oppgave_v3_part where oppgave_ekstern_id = :id and oppgavetype_ekstern_id = 'k9sak'",
                 "delete from oppgave_id_part where oppgave_ekstern_id = :id and oppgavetype_ekstern_id = 'k9sak'",
-                "delete from event_historikkvask_bestilt where event_nokkel_id = :eventId",
                 "delete from event where event_nokkel_id = :eventId",
                 "delete from event_nokkel where id = :eventId",
             ).forEach { sql -> tx.run(queryOf(sql, params).asUpdate) }
+            eventRepository.settHistorikkvaskFerdig(Fagsystem.K9SAK, id.toString(), tx)
+            pepCacheRepository.slett(Områder.K9, id.toString(), tx)
             oppgaveV3Repository.slettOppgave(OppgaveNøkkelDto(id.toString(), "k9sak", Områder.K9), tx)
         }
         return oppgaver.remove(id)
