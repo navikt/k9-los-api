@@ -99,7 +99,7 @@ import javax.sql.DataSource
 fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClientLocal()): Module = module {
 
     val config = mockk<Configuration>()
-    every { config.koinProfile() } returns KoinProfile.LOCAL
+    every { config.koinProfile } returns KoinProfile.LOCAL
     every { config.k9FrontendUrl() } returns "http://localhost:9000"
     every { config.k9PunsjFrontendUrl() } returns "http://localhost:8080"
     every { config.aktivitetspengerFrontendUrl() } returns "http://localhost:9005"

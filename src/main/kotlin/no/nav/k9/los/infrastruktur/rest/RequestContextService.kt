@@ -40,7 +40,7 @@ internal class RequestContextService(
         )
 
     private suspend fun establish(call: ApplicationCall) = coroutineContext + CoroutineRequestContext(
-        idToken = when (profile == KoinProfile.LOCAL) {
+        idToken = when (profile.kjørerUtenforNais) {
             true -> IdTokenLocal()
             false -> call.idToken()
         },

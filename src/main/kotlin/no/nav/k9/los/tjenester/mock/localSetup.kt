@@ -117,7 +117,7 @@ object localSetup : KoinComponent {
     }
 
     fun initSaksbehandlere() {
-        if (profile == KoinProfile.LOCAL) {
+        if (profile.kjørerUtenforNais) {
             runBlocking {
                 listOf(
                     mapOf(
@@ -147,7 +147,7 @@ object localSetup : KoinComponent {
     }
 
     fun initK9SakOppgaver(antall: Int) {
-        if (profile == KoinProfile.LOCAL) {
+        if (profile.kjørerUtenforNais) {
             for (i in 0..<antall) {
                 val eksternId = UUID.randomUUID()
                 val behandlingId = Random.nextLong(0, 2000)
@@ -249,7 +249,7 @@ object localSetup : KoinComponent {
     }
 
     fun initKlageoppgaver(antall: Int) {
-        if (profile == KoinProfile.LOCAL) {
+        if (profile.kjørerUtenforNais) {
             for (i in 0..<antall) {
                 val event = K9KlageEventDto(
                     eksternId = UUID.randomUUID(),
@@ -294,7 +294,7 @@ object localSetup : KoinComponent {
     }
 
     fun initTilbakeoppgaver(antall: Int) {
-        if (profile == KoinProfile.LOCAL) {
+        if (profile.kjørerUtenforNais) {
             for (i in 0..<antall) {
                 val event = K9TilbakeEventDto(
                     eksternId = UUID.randomUUID(),
@@ -325,7 +325,7 @@ object localSetup : KoinComponent {
     }
 
     fun initPunsjoppgaver(antall: Int) {
-        if (profile == KoinProfile.LOCAL) {
+        if (profile.kjørerUtenforNais) {
             for (i in 0..<antall) {
                 punsjEventHandler.prosesser(
                     K9PunsjEventDto(
@@ -366,7 +366,7 @@ object localSetup : KoinComponent {
     )
 
     fun initAktivitetspengeroppgaver(antall: Int) {
-        if (profile != KoinProfile.LOCAL) {
+        if (!profile.kjørerUtenforNais) {
             return
         }
         for (i in 0..<antall) {

@@ -37,7 +37,7 @@ data class Configuration(private val config: ApplicationConfig) {
     internal fun sifAbacPdpUrl() = config.getRequiredString("nav.register_urls.sif_abac_pdp_url", secret = false)
     internal fun sifAbacPdpScope(): String {
         return "api://${when (koinProfile) {
-            KoinProfile.LOCAL -> "local"
+            KoinProfile.LOCAL, KoinProfile.VERDIKJEDE -> "local"
             KoinProfile.PREPROD -> "dev"
             KoinProfile.PROD -> "prod"
         }}-fss.k9saksbehandling.sif-abac-pdp/.default"
@@ -102,7 +102,7 @@ data class Configuration(private val config: ApplicationConfig) {
 
     internal fun getProfileAwareKafkaAivenConfig(): IKafkaConfig {
         val defaultOffsetResetStrategy =
-            if (koinProfile == KoinProfile.LOCAL) OffsetResetStrategy.EARLIEST else OffsetResetStrategy.NONE
+            if (koinProfile.kjørerUtenforNais) OffsetResetStrategy.EARLIEST else OffsetResetStrategy.NONE
         return getKafkaAivenConfig(defaultOffsetResetStrategy)
     }
 
@@ -141,7 +141,8 @@ data class Configuration(private val config: ApplicationConfig) {
     init {
         val clustername = config.getOptionalString("nav.clustername", secret = false)
         if (config.getOptionalString("nav.db.vault_mountpath", secret = false).isNullOrBlank()) {
-            koinProfile = KoinProfile.LOCAL
+            // k9-verdikjede setter NAIS_CLUSTER_NAME=LOCALHOST-FSS
+            koinProfile = if (clustername?.startsWith("LOCALHOST") == true) KoinProfile.VERDIKJEDE else KoinProfile.LOCAL
         } else if (if (clustername.isNullOrBlank()) {
                 false
             } else clustername == "dev-fss"
@@ -153,13 +154,5 @@ data class Configuration(private val config: ApplicationConfig) {
         ) {
             koinProfile = KoinProfile.PROD
         }
-    }
-
-    fun koinProfile(): KoinProfile {
-        return koinProfile
-    }
-
-    fun enheter(): List<String> {
-        return config.getOptionalString("nav.nokkeltall.enheter", secret = false)?.split(",") ?: emptyList()
     }
 }

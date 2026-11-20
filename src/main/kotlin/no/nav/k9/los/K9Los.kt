@@ -174,12 +174,14 @@ fun Application.k9Los() {
     ) { start(koin.get<Channel<KøpåvirkendeHendelse>>(named("KøpåvirkendeHendelseChannel"))) }
 
 
-    val kafkaConsumerLifecycleService = koin.get<KafkaConsumerLifecycleService>()
+    val kafkaConsumerLifecycleService = koin.getOrNull<KafkaConsumerLifecycleService>()
 
     monitor.subscribe(ApplicationStopping) {
-        log.info("Stopper kafka-consumere.")
-        kafkaConsumerLifecycleService.stop()
-        log.info("Kafka-consumere stoppet.")
+        if (kafkaConsumerLifecycleService != null) {
+            log.info("Stopper kafka-consumere.")
+            kafkaConsumerLifecycleService.stop()
+            log.info("Kafka-consumere stoppet.")
+        }
         log.info("Stopper pipeline")
         refreshOppgaveV3Jobb.cancel()
     }
@@ -225,11 +227,14 @@ fun Application.k9Los() {
             frequency = Duration.ofMinutes(1)
         )
 
-        if ((KoinProfile.LOCAL == koin.get<KoinProfile>())) {
+        val profil = koin.get<KoinProfile>()
+        if (profil.kjørerUtenforNais) {
             api(eksponerSwagger = true)
-            testdataApi(
-                TestdataTjeneste(koin.get(), koin.get(), koin.get(), koin.get(), koin.get(), koin.get())
-            )
+            if (profil == KoinProfile.LOCAL) {
+                testdataApi(
+                    TestdataTjeneste(koin.get(), koin.get(), koin.get(), koin.get(), koin.get(), koin.get())
+                )
+            }
         } else {
             authenticate(*issuers.allIssuers()) {
                 api(eksponerSwagger = false)
@@ -405,7 +410,7 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
             )
         }
 
-        if (configuration.koinProfile == KoinProfile.LOCAL) {
+        if (configuration.koinProfile.kjørerUtenforNais) {
             add(
                 PlanlagtJobb.Oppstart(
                     navn = "Testdata",
