@@ -38,7 +38,7 @@ data class K9Behandling(
     val behandlingOpprettetAv: String? = null,
     val behandlingOpprettetType: String? = null,
     val behandlingOpprettetTypeBeskrivelse: String? = null,
-    @field:SensitiveField
+    @field:SensitiveField("2103")
     val ansvarligEnhetKode: String? = null,
     val ansvarligEnhetType: String? = null,
     val datoForUttak: LocalDate? = null,
