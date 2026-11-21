@@ -40,10 +40,10 @@ import no.nav.k9.los.domeneadaptere.k9.refreshk9sakoppgaver.restklient.K9SakServ
 import no.nav.k9.los.domeneadaptere.k9.refreshk9sakoppgaver.restklient.K9SakServiceSystemClient
 import no.nav.k9.los.domeneadaptere.statistikk.k9.K9KlageOppgaveTilDVHMapper
 import no.nav.k9.los.domeneadaptere.statistikk.k9.K9SakOppgaveTilDVHMapper
-import no.nav.k9.los.domeneadaptere.statistikk.avp.AvpStatistikkPublisher
-import no.nav.k9.los.domeneadaptere.statistikk.ung.UngStatistikkPublisher
 import no.nav.k9.los.domeneadaptere.statistikk.OppgavestatistikkTjeneste
-import no.nav.k9.los.domeneadaptere.statistikk.k9.K9StatistikkPublisher
+import no.nav.k9.los.domeneadaptere.statistikk.StatistikkKafkaPublisher
+import no.nav.k9.los.domeneadaptere.statistikk.StatistikkPublishere
+import no.nav.k9.los.domeneadaptere.statistikk.StatistikkPublisherLocal
 import no.nav.k9.los.domeneadaptere.statistikk.StatistikkRepository
 import no.nav.k9.los.driftsmelding.DriftsmeldingRepository
 import no.nav.k9.los.driftsmelding.DriftsmeldingTjeneste
@@ -111,15 +111,60 @@ import java.util.*
 import javax.sql.DataSource
 
 fun selectModulesBasedOnProfile(application: Application, config: Configuration): List<Module> {
-    return when (config.koinProfile()) {
-        LOCAL -> listOf(common(application, config), localDevConfig())
-        PREPROD -> listOf(common(application, config), naisCommonConfig(), preprodConfig(config))
-        PROD -> listOf(common(application, config), naisCommonConfig(), prodConfig(config))
+    return when (config.koinProfile) {
+        LOCAL -> listOf(common(application, config), localDevConfig(), utenKafkaConfig())
+        VERDIKJEDE -> listOf(common(application, config), localDevConfig(), kafkaConfig(config))
+        PREPROD -> listOf(common(application, config), naisCommonConfig(), kafkaConfig(config), preprodConfig(config))
+        PROD -> listOf(common(application, config), naisCommonConfig(), kafkaConfig(config), prodConfig(config))
+    }
+}
+
+fun kafkaConfig(config: Configuration) = module {
+    single {
+        KafkaConsumerLifecycleService(
+            kafkaAivenConfig = config.getProfileAwareKafkaAivenConfig(),
+            configuration = config,
+            k9sakEventHandler = get(),
+            k9TilbakeEventHandler = get(),
+            k9PunsjEventHandler = get(),
+            k9KlageEventHandler = get(),
+            ungSakEventHandler = get(),
+            ungTilbakeEventHandler = get(),
+        )
+    }
+
+    single {
+        HealthService(
+            healthChecks = get<KafkaConsumerLifecycleService>().isHealtyChecks()
+        )
+    }
+
+    single {
+        val kafkaConfig = config.getProfileAwareKafkaAivenConfig()
+        StatistikkPublishere(
+            sakK9 = StatistikkKafkaPublisher(kafkaConfig, "K9StatistikkSakPublisher", config.getÅpenStatistikkSakTopic()),
+            behandlingK9 = StatistikkKafkaPublisher(kafkaConfig, "K9StatistikkBehandlingPublisher", config.getÅpenStatistikkBehandlingTopic()),
+            behandlingAvp = StatistikkKafkaPublisher(kafkaConfig, "AvpStatistikkBehandlingPublisher", config.getÅpenAvpStatistikkBehandlingTopic()),
+            behandlingUng = StatistikkKafkaPublisher(kafkaConfig, "UngStatistikkBehandlingPublisher", config.getÅpenUngStatistikkBehandlingTopic()),
+        )
+    }
+}
+
+// Kun lokalt (K9LosDev): ingen Kafka-tilkobling
+fun utenKafkaConfig() = module {
+    single { HealthService(healthChecks = emptySet()) }
+    single {
+        StatistikkPublishere(
+            sakK9 = StatistikkPublisherLocal("sak-k9"),
+            behandlingK9 = StatistikkPublisherLocal("behandling-k9"),
+            behandlingAvp = StatistikkPublisherLocal("behandling-avp"),
+            behandlingUng = StatistikkPublisherLocal("behandling-ung"),
+        )
     }
 }
 
 fun common(app: Application, config: Configuration) = module {
-    single { config.koinProfile() }
+    single { config.koinProfile }
     single { config }
     single { RequestContextService(profile = get()) }
     single<DataSource> { hikariConfig(config) }
@@ -171,7 +216,7 @@ fun common(app: Application, config: Configuration) = module {
         StatistikkRepository(
             dataSource = get(),
             oppgavetypeRepository = get(),
-            aktiveOmråder = if (config.koinProfile() == PROD) {
+            aktiveOmråder = if (config.koinProfile == PROD) {
                 setOf(Områder.K9)
             } else {
                 Områder.entries.toSet()
@@ -251,19 +296,6 @@ fun common(app: Application, config: Configuration) = module {
     }
 
     single {
-        KafkaConsumerLifecycleService(
-            kafkaAivenConfig = config.getProfileAwareKafkaAivenConfig(),
-            configuration = config,
-            k9sakEventHandler = get(),
-            k9TilbakeEventHandler = get(),
-            k9PunsjEventHandler = get(),
-            k9KlageEventHandler = get(),
-            ungSakEventHandler = get(),
-            ungTilbakeEventHandler = get(),
-        )
-    }
-
-    single {
         SaksbehandlerAdminTjeneste(
             transactionalManager = get(),
             saksbehandlerRepository = get(),
@@ -283,12 +315,6 @@ fun common(app: Application, config: Configuration) = module {
 
     single {
         DriftsmeldingTjeneste(driftsmeldingRepository = get())
-    }
-
-    single {
-        HealthService(
-            healthChecks = get<KafkaConsumerLifecycleService>().isHealtyChecks()
-        )
     }
 
     single { FeltdefinisjonRepository(områdeRepository = get()) }
@@ -321,36 +347,13 @@ fun common(app: Application, config: Configuration) = module {
     }
 
     single {
-        K9StatistikkPublisher(
-            kafkaConfig = config.getProfileAwareKafkaAivenConfig(),
-            config = config
-        )
-    }
-
-    single {
         OppgavestatistikkTjeneste(
-            k9StatistikkPublisher = get(),
-            avpStatistikkPublisher = get(),
-            ungStatistikkPublisher = get(),
+            publishere = get(),
             transactionalManager = get(),
             statistikkRepository = get(),
             pepCacheRepository = get(),
             appversjonsvakt = get(),
             eventRepository = get(),
-        )
-    }
-
-    single {
-        AvpStatistikkPublisher(
-            kafkaConfig = config.getProfileAwareKafkaAivenConfig(),
-            config = config
-        )
-    }
-
-    single {
-        UngStatistikkPublisher(
-            kafkaConfig = config.getProfileAwareKafkaAivenConfig(),
-            config = config
         )
     }
 

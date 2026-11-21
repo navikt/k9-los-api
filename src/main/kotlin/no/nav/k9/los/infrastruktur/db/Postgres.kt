@@ -3,7 +3,6 @@ package no.nav.k9.los.infrastruktur.db
 import com.zaxxer.hikari.HikariDataSource
 import io.ktor.server.application.*
 import no.nav.k9.los.Configuration
-import no.nav.k9.los.KoinProfile
 import no.nav.vault.jdbc.hikaricp.HikariCPVaultUtil
 import org.flywaydb.core.Flyway
 import java.util.*
@@ -17,7 +16,7 @@ enum class Role {
 }
 
 fun getDataSource(configuration: Configuration): HikariDataSource =
-    if (configuration.koinProfile() == KoinProfile.LOCAL) {
+    if (configuration.koinProfile.kjørerUtenforNais) {
         HikariDataSource(configuration.hikariConfig())
     } else {
         dataSourceFromVault(configuration, Role.User)
@@ -37,7 +36,7 @@ fun Application.migrate(configuration: Configuration) {
     }
     log.info("Migrerer database")
     val (antallMigrert, tidsbruk) = measureTimedValue {
-        if (configuration.koinProfile() == KoinProfile.LOCAL) {
+        if (configuration.koinProfile.kjørerUtenforNais) {
             HikariDataSource(configuration.hikariConfig()).use { dataSource ->
                 runMigration(dataSource)
             }

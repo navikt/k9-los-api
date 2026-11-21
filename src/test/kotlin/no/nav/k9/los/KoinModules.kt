@@ -27,10 +27,8 @@ import no.nav.k9.los.domeneadaptere.k9.refreshk9sakoppgaver.restklient.IK9SakSer
 import no.nav.k9.los.domeneadaptere.k9.refreshk9sakoppgaver.restklient.K9SakServiceLocal
 import no.nav.k9.los.domeneadaptere.statistikk.k9.K9KlageOppgaveTilDVHMapper
 import no.nav.k9.los.domeneadaptere.statistikk.k9.K9SakOppgaveTilDVHMapper
-import no.nav.k9.los.domeneadaptere.statistikk.avp.AvpStatistikkPublisher
-import no.nav.k9.los.domeneadaptere.statistikk.ung.UngStatistikkPublisher
 import no.nav.k9.los.domeneadaptere.statistikk.OppgavestatistikkTjeneste
-import no.nav.k9.los.domeneadaptere.statistikk.k9.K9StatistikkPublisher
+import no.nav.k9.los.domeneadaptere.statistikk.StatistikkPublishere
 import no.nav.k9.los.domeneadaptere.statistikk.StatistikkRepository
 import no.nav.k9.los.driftsmelding.DriftsmeldingRepository
 import no.nav.k9.los.forvaltning.ForvaltningRepository
@@ -99,7 +97,7 @@ import javax.sql.DataSource
 fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClientLocal()): Module = module {
 
     val config = mockk<Configuration>()
-    every { config.koinProfile() } returns KoinProfile.LOCAL
+    every { config.koinProfile } returns KoinProfile.LOCAL
     every { config.k9FrontendUrl() } returns "http://localhost:9000"
     every { config.k9PunsjFrontendUrl() } returns "http://localhost:8080"
     every { config.aktivitetspengerFrontendUrl() } returns "http://localhost:9005"
@@ -285,13 +283,11 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
         )
     }
 
-    single { mockk<K9StatistikkPublisher>() }
+    single { StatistikkPublishere(mockk(), mockk(), mockk(), mockk()) }
 
     single {
         OppgavestatistikkTjeneste(
-            k9StatistikkPublisher = get(),
-            avpStatistikkPublisher = get(),
-            ungStatistikkPublisher = get(),
+            publishere = get(),
             transactionalManager = get(),
             statistikkRepository = get(),
             pepCacheRepository = get(),
@@ -300,8 +296,6 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
         )
     }
 
-    single { mockk<AvpStatistikkPublisher>() }
-    single { mockk<UngStatistikkPublisher>() }
 
     single {
         FeltdefinisjonTjeneste(

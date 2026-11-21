@@ -92,6 +92,8 @@ import no.nav.k9.los.sisteoppgaver.SisteOppgaverApiNy
 import no.nav.k9.los.søkeboks.K9SøkeboksApi
 import no.nav.k9.los.søkeboks.SøkeboksApiNy
 import no.nav.k9.los.tjenester.mock.localSetup
+import no.nav.k9.los.tjenester.mock.TestdataTjeneste
+import no.nav.k9.los.tjenester.mock.testdataApi
 import no.nav.k9.los.uttrekk.UttrekkApi
 import no.nav.k9.los.uttrekk.UttrekkApiNy
 import no.nav.k9.los.uttrekk.UttrekkJobb
@@ -172,20 +174,20 @@ fun Application.k9Los() {
     ) { start(koin.get<Channel<KøpåvirkendeHendelse>>(named("KøpåvirkendeHendelseChannel"))) }
 
 
-    val kafkaConsumerLifecycleService = koin.get<KafkaConsumerLifecycleService>()
+    val kafkaConsumerLifecycleService = koin.getOrNull<KafkaConsumerLifecycleService>()
 
     monitor.subscribe(ApplicationStopping) {
-        log.info("Stopper kafka-consumere.")
-        kafkaConsumerLifecycleService.stop()
-        log.info("Kafka-consumere stoppet.")
+        if (kafkaConsumerLifecycleService != null) {
+            log.info("Stopper kafka-consumere.")
+            kafkaConsumerLifecycleService.stop()
+            log.info("Kafka-consumere stoppet.")
+        }
         log.info("Stopper pipeline")
         refreshOppgaveV3Jobb.cancel()
     }
 
     OppgavestatistikkTjeneste(
-        k9StatistikkPublisher = koin.get(),
-        avpStatistikkPublisher = koin.get(),
-        ungStatistikkPublisher = koin.get(),
+        publishere = koin.get(),
         transactionalManager = koin.get(),
         statistikkRepository = koin.get(),
         pepCacheRepository = koin.get(),
@@ -223,8 +225,14 @@ fun Application.k9Los() {
             frequency = Duration.ofMinutes(1)
         )
 
-        if ((KoinProfile.LOCAL == koin.get<KoinProfile>())) {
+        val profil = koin.get<KoinProfile>()
+        if (profil.kjørerUtenforNais) {
             api(eksponerSwagger = true)
+            if (profil == KoinProfile.LOCAL) {
+                testdataApi(
+                    TestdataTjeneste(koin.get(), koin.get(), koin.get(), koin.get(), koin.get(), koin.get())
+                )
+            }
         } else {
             authenticate(*issuers.allIssuers()) {
                 api(eksponerSwagger = false)
@@ -400,7 +408,7 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
             )
         }
 
-        if (configuration.koinProfile == KoinProfile.LOCAL) {
+        if (configuration.koinProfile.kjørerUtenforNais) {
             add(
                 PlanlagtJobb.Oppstart(
                     navn = "Testdata",

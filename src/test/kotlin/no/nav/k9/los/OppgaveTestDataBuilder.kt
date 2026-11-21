@@ -85,7 +85,6 @@ class OppgaveTestDataBuilder(
         return transactionManager.transaction { tx ->
             oppgaverepo.nyOppgaveversjon(oppgave, tx)
             aktivOgPartisjonertOppgaveAjourholdTjeneste.ajourholdOppgave(oppgave, 0, tx)
-            oppgave
         }
     }
 }
