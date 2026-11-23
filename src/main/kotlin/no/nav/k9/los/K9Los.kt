@@ -414,12 +414,16 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
                     navn = "Testdata",
                     prioritet = 2,
                 ) {
+                    // Midlertidig for VERDIKJEDE: e2e-testene i k9-verdikjede forventer testsaksbehandlerne.
+                    // Kan begrenses til LOCAL når testene ikke lenger er avhengige av dem.
                     localSetup.initSaksbehandlere()
-                    localSetup.initPunsjoppgaver(0)
-                    localSetup.initTilbakeoppgaver(0)
-                    localSetup.initKlageoppgaver(0)
-                    localSetup.initK9SakOppgaver(0)
-                    localSetup.initAktivitetspengeroppgaver(0)
+                    if (configuration.koinProfile == KoinProfile.LOCAL) {
+                        localSetup.initPunsjoppgaver(0)
+                        localSetup.initTilbakeoppgaver(0)
+                        localSetup.initKlageoppgaver(0)
+                        localSetup.initK9SakOppgaver(0)
+                        localSetup.initAktivitetspengeroppgaver(0)
+                    }
                 })
         }
 
