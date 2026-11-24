@@ -84,15 +84,11 @@ Etter bygging finner du:
 
 ## Kjøre lokalt
 
-1. Start k9-verdikjede. Er avhengig av vtp, postgresql og azure-mock.
+1. Start Docker Compose. Er avhengig av postgresql og azure-mock. Kafka brukes ikke lokalt.
 
-2. Start klassen `no.nav.k9.los.K9LosDev` med vm-options:
-```
--Djavax.net.ssl.trustStore=/Users/.../.modig/trustStore.jks 
--Djavax.net.ssl.keyStore=/Users/.../.modig/keyStore.jks 
--Djavax.net.ssl.trustStorePassword=changeit 
--Djavax.net.ssl.keyStorePassword=devillokeystore1234
-```
+2. Start klassen `no.nav.k9.los.K9LosDev`.
+
+I k9-verdikjede kjører appen med profilen `VERDIKJEDE` (velges når `NAIS_CLUSTER_NAME` starter med `LOCALHOST`). Den bruker de samme mockene som lokalt, men leser og skriver til Kafka.
 
 Eller kjør direkte med JAR:
 ```bash

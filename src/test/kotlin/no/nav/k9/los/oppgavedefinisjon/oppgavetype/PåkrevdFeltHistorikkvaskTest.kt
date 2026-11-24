@@ -29,7 +29,8 @@ import no.nav.k9.los.domeneadaptere.k9.eventtiloppgave.endreEvent
 import no.nav.k9.los.domeneadaptere.statistikk.DvhOppgaveversjon
 import no.nav.k9.los.domeneadaptere.statistikk.OppgavestatistikkTjeneste
 import no.nav.k9.los.domeneadaptere.statistikk.StatistikkRepository
-import no.nav.k9.los.domeneadaptere.statistikk.avp.AvpStatistikkPublisher
+import no.nav.k9.los.domeneadaptere.statistikk.StatistikkPublisher
+import no.nav.k9.los.domeneadaptere.statistikk.StatistikkPublishere
 import no.nav.k9.los.infrastruktur.db.Appversjonsvakt
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
@@ -304,7 +305,7 @@ class PåkrevdFeltHistorikkvaskTest : AbstractK9LosIntegrationTest() {
     @Test
     fun `dvh-sending holder rekonstruksjonslåsen gjennom publisering og flush`() {
         prosesserOppgave()
-        val publisher = mockk<AvpStatistikkPublisher>(relaxUnitFun = true)
+        val publisher = mockk<StatistikkPublisher>(relaxUnitFun = true)
         val executor = Executors.newSingleThreadExecutor()
         val sjekkLås = {
             executor.submit {
@@ -319,12 +320,15 @@ class PåkrevdFeltHistorikkvaskTest : AbstractK9LosIntegrationTest() {
             }.get(10, TimeUnit.SECONDS)
             Unit
         }
-        every { publisher.publiserAsynkront(any()) } answers { sjekkLås() }
+        every { publisher.publiserAsynkront(any(), any()) } answers { sjekkLås() }
         every { publisher.flushOgValider() } answers { sjekkLås() }
         val tjeneste = OppgavestatistikkTjeneste(
-            k9StatistikkPublisher = mockk(),
-            avpStatistikkPublisher = publisher,
-            ungStatistikkPublisher = mockk(),
+            publishere = StatistikkPublishere(
+                sakK9 = mockk(),
+                behandlingK9 = mockk(),
+                behandlingAvp = publisher,
+                behandlingUng = mockk(),
+            ),
             transactionalManager = transactionalManager,
             statistikkRepository = statistikkRepository,
             pepCacheRepository = mockk { every { hent(any(), any(), any()) } returns null },
@@ -337,7 +341,7 @@ class PåkrevdFeltHistorikkvaskTest : AbstractK9LosIntegrationTest() {
             executor.shutdownNow()
         }
 
-        verify(exactly = 1) { publisher.publiserAsynkront(any()) }
+        verify(exactly = 1) { publisher.publiserAsynkront(any(), any()) }
         verify(exactly = 1) { publisher.flushOgValider() }
         assertThat(statistikkRepository.hentOppgaverSomIkkeErSendt(avpOppgavetype)).isEmpty()
         transactionalManager.transaction { tx ->
