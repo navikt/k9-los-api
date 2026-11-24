@@ -76,6 +76,7 @@ internal class TestdataTjeneste(
                 "eventId" to eventId,
                 "reservasjonsnokkel" to oppgave.reservasjonsnøkkel,
             )
+            eventRepository.settHistorikkvaskFerdig(eventId, tx)
             listOf(
                 """
                     delete from reservasjon_v3_endring
@@ -108,7 +109,6 @@ internal class TestdataTjeneste(
                 "delete from event where event_nokkel_id = :eventId",
                 "delete from event_nokkel where id = :eventId",
             ).forEach { sql -> tx.run(queryOf(sql, params).asUpdate) }
-            eventRepository.settHistorikkvaskFerdig(Fagsystem.K9SAK, id.toString(), tx)
             pepCacheRepository.slett(Områder.K9, id.toString(), tx)
             oppgaveV3Repository.slettOppgave(OppgaveNøkkelDto(id.toString(), "k9sak", Områder.K9), tx)
         }

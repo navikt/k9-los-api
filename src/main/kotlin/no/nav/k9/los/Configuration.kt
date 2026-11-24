@@ -19,6 +19,23 @@ data class Configuration(private val config: ApplicationConfig) {
         internal const val AZURE_V2_ALIAS = "azure-v2"
     }
 
+    val koinProfile: KoinProfile = run {
+        val clustername = config.getOptionalString("nav.clustername", secret = false)
+        val vaultMountpath = config.getOptionalString("nav.db.vault_mountpath", secret = false)
+        val profil = when {
+            clustername == "dev-fss" -> KoinProfile.PREPROD
+            clustername == "prod-fss" -> KoinProfile.PROD
+            // k9-verdikjede setter NAIS_CLUSTER_NAME=LOCALHOST-FSS
+            clustername?.startsWith("LOCALHOST") == true && vaultMountpath.isNullOrBlank() -> KoinProfile.VERDIKJEDE
+            clustername.isNullOrBlank() && vaultMountpath.isNullOrBlank() -> KoinProfile.LOCAL
+            else -> error("Ugyldig miljøkonfigurasjon: NAIS_CLUSTER_NAME='$clustername'")
+        }
+        check(profil.kjørerUtenforNais || !vaultMountpath.isNullOrBlank()) {
+            "DB_VAULT_MOUNTPATH må være satt for NAIS_CLUSTER_NAME='$clustername'"
+        }
+        profil
+    }
+
     private val clients = config.clients()
 
     internal fun issuers() = config.issuers().withoutAdditionalClaimRules()
@@ -134,25 +151,5 @@ data class Configuration(private val config: ApplicationConfig) {
 
     fun databaseName(): String {
         return "k9-los"
-    }
-
-    var koinProfile = KoinProfile.LOCAL
-
-    init {
-        val clustername = config.getOptionalString("nav.clustername", secret = false)
-        if (config.getOptionalString("nav.db.vault_mountpath", secret = false).isNullOrBlank()) {
-            // k9-verdikjede setter NAIS_CLUSTER_NAME=LOCALHOST-FSS
-            koinProfile = if (clustername?.startsWith("LOCALHOST") == true) KoinProfile.VERDIKJEDE else KoinProfile.LOCAL
-        } else if (if (clustername.isNullOrBlank()) {
-                false
-            } else clustername == "dev-fss"
-        ) {
-            koinProfile = KoinProfile.PREPROD
-        } else if (if (clustername.isNullOrBlank()) {
-                false
-            } else clustername == "prod-fss"
-        ) {
-            koinProfile = KoinProfile.PROD
-        }
     }
 }
