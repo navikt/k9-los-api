@@ -2,6 +2,7 @@ package no.nav.k9.los.domeneadaptere.eventtiloppgave.ung.oppgavedefinisjon
 
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.ung.kodeverk.UngBehandlendeEnhet
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.ung.kodeverk.UngFagsystem
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.tilbake.TilbakeAksjonspunkt
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.Synlighet.INTERNT
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.Synlighet.OVER_STREKEN
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.Synlighet.UNDER_STREKEN
@@ -19,7 +20,7 @@ import no.nav.ung.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
 import no.nav.ung.kodeverk.behandling.aksjonspunkt.Venteårsak
 
 object UngdomsprogramytelsenFelter : Feltkatalog(Områder.UNGDOMSPROGRAMYTELSEN) {
-    override val grupper get() = listOf(Behandling, Soknad, Sak, Vedtak, Aksjonspunkt, Saksbehandling, Ventetid)
+    override val grupper get() = listOf(Behandling, Soknad, Sak, Vedtak, Aksjonspunkt, Saksbehandling, Ventetid, Tilbake)
 
     object Behandling : Feltgruppe() {
         val UUID = string("behandlingUuid", "Behandling", INTERNT)
@@ -93,5 +94,12 @@ object UngdomsprogramytelsenFelter : Feltkatalog(Områder.UNGDOMSPROGRAMYTELSEN)
         val AKTIV_ARSAK = kode("aktivVenteårsak", "Aktiv venteårsak", UNDER_STREKEN, Venteårsak::class)
         val AKTIV_FRIST = timestamp("aktivVentefrist", "Aktiv ventefrist", UNDER_STREKEN)
     }
-}
 
+    object Tilbake : Feltgruppe() {
+        val FORSTE_FEILUTBETALING = dato("førsteFeilutbetalingDato", "Første feilutbetaling", UNDER_STREKEN)
+        val FEILUTBETALT_BELOP = string("feilutbetaltBeløp", "Feilutbetalt beløp", OVER_STREKEN)
+        val LOSBARE = stringliste("tilbakeLøsbartAksjonspunkt", "Løsbare aksjonspunkter", OVER_STREKEN, kodeverk = TilbakeAksjonspunkt::class)
+        val UTFORTE = stringliste("tilbakeUtførtAksjonspunkt", "Utførte aksjonspunkter", UNDER_STREKEN, kodeverk = TilbakeAksjonspunkt::class)
+        val AVBRUTTE = stringliste("tilbakeAvbruttAksjonspunkt", "Avbrutte aksjonspunkter", UNDER_STREKEN, kodeverk = TilbakeAksjonspunkt::class)
+    }
+}

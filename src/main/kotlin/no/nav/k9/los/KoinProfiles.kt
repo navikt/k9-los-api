@@ -274,7 +274,7 @@ fun common(app: Application, config: Configuration) = module {
         UngTilbakeEventHandler(
             eventRepository = get(),
             transactionalManager = get(),
-            feilRekkefølgeSjekker = get(),
+            eventTilOppgaveAdapter = get(),
         )
     }
 

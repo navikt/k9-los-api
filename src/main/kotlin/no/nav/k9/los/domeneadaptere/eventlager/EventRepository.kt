@@ -209,7 +209,7 @@ class EventRepository(
                         from event_historikkvask_bestilt hb
                         where hb.event_nokkel_id = en.id
                     )
-                    and en.FAGSYSTEM in ('K9SAK','K9TILBAKE','K9KLAGE','PUNSJ', 'UNGSAK')
+                    and en.FAGSYSTEM in ('K9SAK','K9TILBAKE','K9KLAGE','PUNSJ', 'UNGSAK', 'UNGTILBAKE')
                 """.trimIndent()
                 ).map { row ->
                     EventNøkkel(

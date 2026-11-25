@@ -5,6 +5,7 @@ import no.nav.k9.los.domeneadaptere.eventtiloppgave.ung.kodeverk.UngBehandlendeE
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.ung.kodeverk.UngOppgavetypenavn
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.ung.oppgavedefinisjon.UngdomsprogramytelsenFelter
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.ung.oppgavedefinisjon.UngdomsprogramytelsenOppgavetyper
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.tilbake.tilbakeAksjonspunktKodeverk
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.FeltdefinisjonTjeneste
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.KodeverkDto
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.KodeverkVerdiDto
@@ -47,6 +48,7 @@ class UngOmrådesetup(
             kodeverkYtelsetype(),
             kodeverkBehandlendeEnhet(),
             kodeverkAksjonspunkt(),
+            tilbakeAksjonspunktKodeverk(område),
             kodeverkVenteårsak(),
             kodeverkOppgavetypenavn()
         )

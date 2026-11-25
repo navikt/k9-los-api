@@ -5,6 +5,7 @@ import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.kodeverk.AvpBehandlendeE
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.kodeverk.AvpOppgavetypenavn
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.oppgavedefinisjon.AktivitetspengerFelter
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.oppgavedefinisjon.AktivitetspengerOppgavetyper
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.tilbake.tilbakeAksjonspunktKodeverk
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.FeltdefinisjonTjeneste
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.KodeverkDto
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.KodeverkVerdiDto
@@ -48,6 +49,7 @@ class AvpOmrådesetup(
             kodeverkYtelsetype(),
             kodeverkBehandlendeEnhet(),
             kodeverkAksjonspunkt(),
+            tilbakeAksjonspunktKodeverk(område),
             kodeverkVenteårsak(),
             kodeverkOppgavetypenavn()
         )

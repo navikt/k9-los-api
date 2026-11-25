@@ -107,6 +107,7 @@ object SakEventTilOppgaveMapper {
         val prefiks = when (utledOppgavetype(event)) {
             UngOppgavetypenavn.UNGDOMSPROGRAMYTELSENORDINÆR -> "UPY_b_del1"
             UngOppgavetypenavn.UNGDOMSPROGRAMYTELSENKLAGE -> "UPY_k"
+            UngOppgavetypenavn.UNGDOMSPROGRAMYTELSENTILBAKE -> throw IllegalStateException("Ugyldig oppgavetype for UNGSAK")
         }
         return if (tilBeslutter) {
             "${prefiks}_${event.aktørId}_beslutter"
@@ -217,4 +218,3 @@ object SakEventTilOppgaveMapper {
         verdier[Ventetid.AKTIV_FRIST] = ventendeAksjonspunkt?.fristTid
     }
 }
-

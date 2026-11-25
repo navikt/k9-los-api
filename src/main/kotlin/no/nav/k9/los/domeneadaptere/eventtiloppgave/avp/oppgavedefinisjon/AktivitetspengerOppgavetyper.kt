@@ -64,9 +64,33 @@ object AktivitetspengerOppgavetyper : Oppgavetypekatalog(AktivitetspengerFelter)
         inkluder(fellesfelter)
     }
 
-    //TODO: klage, feilutbetaling
-    override val oppgavetyper = listOf(ORDINÆR_DEL1, ORDINÆR_DEL2)
+    val TILBAKE = Oppgavetypedefinisjon(AvpOppgavetypenavn.AKTIVITETSPENGERTILBAKE.kode, ::fagsakUrl) {
+        påkrevd(Behandling.UUID)
+        påkrevd(Behandling.TYPEKODE)
+        påkrevd(Behandling.STATUS)
+        valgfri(Behandling.STEG)
+        påkrevd(Sak.AKTOR_ID)
+        påkrevd(Sak.FAGSYSTEM, visPåOppgave = false)
+        påkrevd(Sak.SAKSNUMMER)
+        valgfri(Sak.MOTTATT_DATO)
+        valgfri(Sak.TID_SIDEN_MOTTATT_DATO)
+        valgfri(Sak.REGISTRERT_DATO)
+        påkrevd(Vedtak.YTELSESTYPE)
+        valgfri(Saksbehandling.BEHANDLENDE_ENHET)
+        valgfri(Saksbehandling.ANSVARLIG_SAKSBEHANDLER)
+        valgfri(Saksbehandling.ANSVARLIG_BESLUTTER)
+        valgfri(Saksbehandling.LIGGER_HOS_BESLUTTER)
+        valgfri(Saksbehandling.TID_FORSTE_GANG_HOS_BESLUTTER)
+        valgfri(Saksbehandling.HELAUTOMATISK)
+        valgfri(AktivitetspengerFelter.Tilbake.FORSTE_FEILUTBETALING)
+        valgfri(AktivitetspengerFelter.Tilbake.FEILUTBETALT_BELOP)
+        valgfri(AktivitetspengerFelter.Tilbake.LOSBARE)
+        valgfri(AktivitetspengerFelter.Tilbake.UTFORTE)
+        valgfri(AktivitetspengerFelter.Tilbake.AVBRUTTE)
+    }
+
+    //TODO: klage
+    override val oppgavetyper = listOf(ORDINÆR_DEL1, ORDINÆR_DEL2, TILBAKE)
 
     fun hent(oppgavetype: AvpOppgavetypenavn) = hent(oppgavetype.kode)
 }
-

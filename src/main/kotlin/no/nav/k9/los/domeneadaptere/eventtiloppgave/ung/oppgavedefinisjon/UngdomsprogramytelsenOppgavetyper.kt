@@ -63,9 +63,31 @@ object UngdomsprogramytelsenOppgavetyper : Oppgavetypekatalog(Ungdomsprogramytel
         inkluder(fellesfelter)
     }
 
-    //TODO: feilutbetaling
-    override val oppgavetyper = listOf(ORDINÆR, KLAGE)
+    val TILBAKE = Oppgavetypedefinisjon(UngOppgavetypenavn.UNGDOMSPROGRAMYTELSENTILBAKE.kode, behandlingsUrl = null) {
+        påkrevd(Behandling.UUID)
+        påkrevd(Behandling.TYPEKODE)
+        påkrevd(Behandling.STATUS)
+        valgfri(Behandling.STEG)
+        påkrevd(Sak.AKTOR_ID)
+        påkrevd(Sak.FAGSYSTEM, visPåOppgave = false)
+        påkrevd(Sak.SAKSNUMMER)
+        valgfri(Sak.MOTTATT_DATO)
+        valgfri(Sak.TID_SIDEN_MOTTATT_DATO)
+        valgfri(Sak.REGISTRERT_DATO)
+        påkrevd(Vedtak.YTELSESTYPE)
+        valgfri(Vedtak.BEHANDLENDE_ENHET)
+        valgfri(Saksbehandling.ANSVARLIG_SAKSBEHANDLER)
+        valgfri(Saksbehandling.ANSVARLIG_BESLUTTER)
+        valgfri(Saksbehandling.LIGGER_HOS_BESLUTTER)
+        valgfri(Saksbehandling.TID_FORSTE_GANG_HOS_BESLUTTER)
+        valgfri(UngdomsprogramytelsenFelter.Tilbake.FORSTE_FEILUTBETALING)
+        valgfri(UngdomsprogramytelsenFelter.Tilbake.FEILUTBETALT_BELOP)
+        valgfri(UngdomsprogramytelsenFelter.Tilbake.LOSBARE)
+        valgfri(UngdomsprogramytelsenFelter.Tilbake.UTFORTE)
+        valgfri(UngdomsprogramytelsenFelter.Tilbake.AVBRUTTE)
+    }
+
+    override val oppgavetyper = listOf(ORDINÆR, KLAGE, TILBAKE)
 
     fun hent(oppgavetype: UngOppgavetypenavn) = hent(oppgavetype.kode)
 }
-

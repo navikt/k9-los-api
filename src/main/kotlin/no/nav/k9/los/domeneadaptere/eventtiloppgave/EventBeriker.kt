@@ -37,6 +37,7 @@ class EventBeriker(
             is EventLagret.K9Klage -> berikKlage(eventLagret, cache)
             is EventLagret.K9Punsj,
             is EventLagret.K9Tilbake,
+            is EventLagret.UngTilbake,
             is EventLagret.UngSak -> eventLagret
         }
 
@@ -105,4 +106,3 @@ class EventBeriker(
         private const val AVSLUTTET_BEHANDLINGSTATUS = "AVSLU"
     }
 }
-

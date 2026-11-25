@@ -10,12 +10,12 @@ import no.nav.k9.los.domeneadaptere.eventmottak.k9.klage.K9KlageEventDto
 import no.nav.k9.los.domeneadaptere.eventmottak.k9.punsj.K9PunsjEventDto
 import no.nav.k9.los.domeneadaptere.eventmottak.k9.sak.K9SakEventDto
 import no.nav.k9.los.domeneadaptere.eventmottak.k9.tilbakekrav.K9TilbakeEventDto
+import no.nav.k9.los.domeneadaptere.eventmottak.ung.tilbake.UngTilbakeEventDto
 import no.nav.k9.los.domeneadaptere.eventmottak.ung.sak.UngSakEventDto
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.EventTilOppgaveAdapter
 import no.nav.k9.los.forvaltning.*
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.infrastruktur.rest.RequestContextService
-import no.nav.k9.los.infrastruktur.utils.IkkeImplementertException
 import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
 import org.koin.ktor.ext.inject
 import java.util.*
@@ -72,7 +72,7 @@ internal fun Route.EventlagerApi() {
                     Fagsystem.UNGSAK -> {
                         eventStrenger.map { LosObjectMapper.prettyInstance.readValue<UngSakEventDto>(it) }.toList()
                     }
-                    Fagsystem.UNGTILBAKE -> throw IkkeImplementertException("Fagsystem $fagsystem is not implemented yet")
+                    Fagsystem.UNGTILBAKE -> eventStrenger.map { LosObjectMapper.prettyInstance.readValue<UngTilbakeEventDto>(it) }
                 }
                 val responsePayload = ForvaltningSensitiveObjectMapper.prettyInstance.writeValueAsString(eventerIkkeSensitive)
                 call.respond(responsePayload)
@@ -146,5 +146,3 @@ internal fun Route.EventlagerApi() {
     }
 
 }
-
-

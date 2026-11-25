@@ -9,10 +9,12 @@ import no.nav.k9.los.oppgavemottak.OppgaveDtoType
 
 enum class UngOppgavetypenavn(@JsonValue override val kode: String, val navn: String) : OppgaveDtoType, Oppgavetype {
     UNGDOMSPROGRAMYTELSENORDINÆR("ungdomsprogramytelsen-ordinær", "Ordinær"),
-    UNGDOMSPROGRAMYTELSENKLAGE("ungdomsprogramytelsen-klage", "Klage");
+    UNGDOMSPROGRAMYTELSENKLAGE("ungdomsprogramytelsen-klage", "Klage"),
+    UNGDOMSPROGRAMYTELSENTILBAKE("ungdomsprogramytelsen-tilbake", "Tilbakekreving");
 
     override val område: Områder = Områder.UNGDOMSPROGRAMYTELSEN
-    override val fagsystem: Fagsystem = Fagsystem.UNGSAK
+    override val fagsystem: Fagsystem
+        get() = if (this == UNGDOMSPROGRAMYTELSENTILBAKE) Fagsystem.UNGTILBAKE else Fagsystem.UNGSAK
 
     companion object {
         @JsonCreator(mode = JsonCreator.Mode.DELEGATING)

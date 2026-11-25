@@ -117,7 +117,8 @@ object SakEventTilOppgaveMapper {
         val del = when (utledOppgavetype(event)) {
             AvpOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1 -> "del1"
             AvpOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2 -> "del2"
-            AvpOppgavetypenavn.AKTIVITETSPENGERKLAGE -> throw NotImplementedError()
+            AvpOppgavetypenavn.AKTIVITETSPENGERKLAGE,
+            AvpOppgavetypenavn.AKTIVITETSPENGERTILBAKE -> throw IllegalStateException("Ugyldig oppgavetype for UNGSAK")
         }
         val behandlingtype = when (BehandlingType.fraKode(eventLagret.eventDto.behandlingTypeKode)) {
             BehandlingType.FØRSTEGANGSSØKNAD,
@@ -195,7 +196,8 @@ object SakEventTilOppgaveMapper {
             AvpOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1 -> event.navKontorbehandlendeEnhet
 
             AvpOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2,
-            AvpOppgavetypenavn.AKTIVITETSPENGERKLAGE -> event.behandlendeEnhet
+            AvpOppgavetypenavn.AKTIVITETSPENGERKLAGE,
+            AvpOppgavetypenavn.AKTIVITETSPENGERTILBAKE -> event.behandlendeEnhet
         }
 
         verdier[Saksbehandling.LIGGER_HOS_BESLUTTER] = erTilBeslutter(event)
@@ -206,7 +208,8 @@ object SakEventTilOppgaveMapper {
                     definisjon.aksjonspunktType == AksjonspunktType.NAV_KONTOR_MANUELL
 
                 AvpOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2,
-                AvpOppgavetypenavn.AKTIVITETSPENGERKLAGE ->
+                AvpOppgavetypenavn.AKTIVITETSPENGERKLAGE,
+                AvpOppgavetypenavn.AKTIVITETSPENGERTILBAKE ->
                     definisjon.aksjonspunktType != AksjonspunktType.NAV_KONTOR_MANUELL
             }
             it.status == AksjonspunktStatus.UTFØRT &&
@@ -217,13 +220,15 @@ object SakEventTilOppgaveMapper {
             AvpOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1 -> event.navKontorBeslutter
 
             AvpOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2,
-            AvpOppgavetypenavn.AKTIVITETSPENGERKLAGE -> event.ansvarligBeslutterForTotrinn
+            AvpOppgavetypenavn.AKTIVITETSPENGERKLAGE,
+            AvpOppgavetypenavn.AKTIVITETSPENGERTILBAKE -> event.ansvarligBeslutterForTotrinn
         }
         verdier[Saksbehandling.ANSVARLIG_SAKSBEHANDLER] = when (oppgavetype) {
             AvpOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1 -> event.navKontorAnsvarligSaksbehandler
 
             AvpOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2,
-            AvpOppgavetypenavn.AKTIVITETSPENGERKLAGE -> event.ansvarligSaksbehandlerForTotrinn
+            AvpOppgavetypenavn.AKTIVITETSPENGERKLAGE,
+            AvpOppgavetypenavn.AKTIVITETSPENGERTILBAKE -> event.ansvarligSaksbehandlerForTotrinn
         }
         (forrigeOppgave?.hent(Saksbehandling.TID_FORSTE_GANG_HOS_BESLUTTER)
             ?: event.eventTid.takeIf { erTilBeslutter(event) })
