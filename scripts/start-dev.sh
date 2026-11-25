@@ -12,4 +12,4 @@ else
     -DincludeScope=test -Dmdep.outputFile=target/dev-classpath.txt
 fi
 exec java -cp "target/test-classes:target/classes:$(cat target/dev-classpath.txt)" \
-  no.nav.k9.los.K9LosDev "$@"
+  no.nav.k9.los.K9LosDev "-P:nav.auth.clients.0.discovery_endpoint=$AZURE_APP_WELL_KNOWN_URL" "$@"
