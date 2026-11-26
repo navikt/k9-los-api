@@ -52,14 +52,13 @@ object UngdomsprogramytelsenOppgavetyper : Oppgavetypekatalog(Ungdomsprogramytel
         valgfri(Ventetid.AKTIV_FRIST)
     }
 
-    /**
-     * UPY-oppgaver skal ikke vises for saksbehandlere, og har derfor ingen oppgavebehandlings-URL.
-     */
-    val ORDINÆR = Oppgavetypedefinisjon(UngOppgavetypenavn.UNGDOMSPROGRAMYTELSENORDINÆR.kode, behandlingsUrl = null) {
+    private fun fagsakUrl(frontendUrl: String) = "$frontendUrl/fagsak/{${Sak.SAKSNUMMER.id}}/"
+
+    val ORDINÆR = Oppgavetypedefinisjon(UngOppgavetypenavn.UNGDOMSPROGRAMYTELSENORDINÆR.kode, ::fagsakUrl) {
         inkluder(fellesfelter)
     }
 
-    val KLAGE = Oppgavetypedefinisjon(UngOppgavetypenavn.UNGDOMSPROGRAMYTELSENKLAGE.kode, behandlingsUrl = null) {
+    val KLAGE = Oppgavetypedefinisjon(UngOppgavetypenavn.UNGDOMSPROGRAMYTELSENKLAGE.kode, ::fagsakUrl) {
         inkluder(fellesfelter)
     }
 
@@ -68,4 +67,3 @@ object UngdomsprogramytelsenOppgavetyper : Oppgavetypekatalog(Ungdomsprogramytel
 
     fun hent(oppgavetype: UngOppgavetypenavn) = hent(oppgavetype.kode)
 }
-

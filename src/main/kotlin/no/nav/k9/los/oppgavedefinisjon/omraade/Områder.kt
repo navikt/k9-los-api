@@ -16,7 +16,7 @@ package no.nav.k9.los.oppgavedefinisjon.omraade
 enum class Områder(val eksternId: String, val urlSegment: String) {
     K9("K9", "k9"),
     AKTIVITETSPENGER("AKTIVITETSPENGER", "akt"),
-    UNGDOMSPROGRAMYTELSEN("UNGDOMSPROGRAMYTELSEN", "upy");
+    UNGDOMSPROGRAMYTELSEN("UNGDOMSPROGRAMYTELSEN", "ung");
 
     companion object {
         fun fraEksternId(eksternId: String): Områder =

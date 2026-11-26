@@ -7,6 +7,7 @@ import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.kodeverk.AvpOppgavetypenavn
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.kodeverk.K9Oppgavetypenavn
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.ung.kodeverk.UngOppgavetypenavn
 import no.nav.k9.los.kodeverk.PersonBeskyttelseType
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.FeltdefinisjonRepository
@@ -111,6 +112,14 @@ class OppgaveQueryRepository(
                 gruppering = null
             )
         }
+        val ungOppgavetyper = UngOppgavetypenavn.entries.map {
+            Verdiforklaring(
+                verdi = it.kode,
+                visningsnavn = it.navn,
+                synlighet = Synlighet.OVER_STREKEN,
+                gruppering = null
+            )
+        }
 
         val standardfelter = listOf(
             Oppgavefelt(
@@ -138,7 +147,7 @@ class OppgaveQueryRepository(
                 verdiforklaringer = when (område) {
                     Områder.K9 -> k9Oppgavetyper
                     Områder.AKTIVITETSPENGER -> aktOppgavetyper
-                    Områder.UNGDOMSPROGRAMYTELSEN -> throw IllegalArgumentException("Unsupported område: $område")
+                    Områder.UNGDOMSPROGRAMYTELSEN -> ungOppgavetyper
                 }
             ),
             Oppgavefelt(
@@ -147,7 +156,7 @@ class OppgaveQueryRepository(
                 visningsnavn = "Oppgavetype",
                 tolkes_som = "String",
                 synlighet = Synlighet.SKJULT,
-                verdiforklaringer = k9Oppgavetyper + aktOppgavetyper
+                verdiforklaringer = k9Oppgavetyper + aktOppgavetyper + ungOppgavetyper
             ),
             Oppgavefelt(
                 område = null,

@@ -143,7 +143,7 @@ class OppgaveKoRepository(
                     EnkelOrderFelt(Områder.K9, "mottattDato", true)
                 )
             )
-            Områder.AKTIVITETSPENGER -> OppgaveQuery(
+            Områder.AKTIVITETSPENGER, Områder.UNGDOMSPROGRAMYTELSEN -> OppgaveQuery(
                 filtere = listOf(
                     FeltverdiOppgavefilter(null, "oppgavestatus", EksternFeltverdiOperator.IN, listOf(Oppgavestatus.AAPEN.kode)),
                     FeltverdiOppgavefilter(null, "personbeskyttelse", EksternFeltverdiOperator.IN, listOf(personBeskyttelseType.kode)),
@@ -151,7 +151,6 @@ class OppgaveKoRepository(
                 order = listOf(
                 )
             )
-            Områder.UNGDOMSPROGRAMYTELSEN -> throw IllegalArgumentException("Kan ikke opprette kø for område ${område.eksternId}")
         }
         val oppgaveKoId = tx.updateAndReturnGeneratedKey(
             queryOf(

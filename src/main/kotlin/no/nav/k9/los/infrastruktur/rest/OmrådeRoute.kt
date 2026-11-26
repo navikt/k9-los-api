@@ -11,6 +11,7 @@ val områdeAttributeKey = AttributeKey<Områder>("los-omrade")
 enum class OmrådeUrlSegment {
     k9,
     akt,
+    ung,
 }
 
 private fun Route.medOmrådePlugin(områdeProvider: suspend (ApplicationCall) -> Områder?): Route = apply {

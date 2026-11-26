@@ -4,8 +4,12 @@ import assertk.assertThat
 import assertk.assertions.isEqualTo
 import assertk.assertions.isFalse
 import assertk.assertions.isNotEqualTo
+import no.nav.k9.los.kodeverk.PersonBeskyttelseType
+import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
+import no.nav.k9.los.oppgaveuthenting.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.OppgaveQuery
+import no.nav.k9.los.oppgaveuthenting.query.mapping.EksternFeltverdiOperator
 import no.nav.k9.los.saksbehandleradmin.Saksbehandler
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -32,6 +36,40 @@ class LagretSøkTest {
         områder = listOf(Områder.K9),
         skjermet = false,
     )
+
+    @Test
+    fun `standard lagret søk for UNG har åpne og ventende oppgaver med riktig personbeskyttelse`() {
+        val forventedeFiltere = listOf(
+            FeltverdiOppgavefilter(
+                område = null,
+                kode = "oppgavestatus",
+                operator = EksternFeltverdiOperator.IN,
+                verdi = listOf(Oppgavestatus.AAPEN.kode, Oppgavestatus.VENTER.kode)
+            ),
+            FeltverdiOppgavefilter(
+                område = null,
+                kode = "personbeskyttelse",
+                operator = EksternFeltverdiOperator.IN,
+                verdi = listOf(PersonBeskyttelseType.UGRADERT.kode)
+            )
+        )
+
+        val standardSøk = LagretSøk.defaultQuery(Områder.UNGDOMSPROGRAMYTELSEN, kode6 = false)
+
+        assertThat(standardSøk.filtere).isEqualTo(forventedeFiltere)
+        assertThat(standardSøk.order).isEqualTo(emptyList())
+
+        val kode6Søk = LagretSøk.defaultQuery(Områder.UNGDOMSPROGRAMYTELSEN, kode6 = true)
+        assertThat(kode6Søk.filtere).isEqualTo(
+            forventedeFiltere.map { filter ->
+                if (filter.kode == "personbeskyttelse") {
+                    filter.copy(verdi = listOf(PersonBeskyttelseType.KODE6.kode))
+                } else {
+                    filter
+                }
+            }
+        )
+    }
 
     @Test
     fun `opprettSøk skal opprette nytt søk med riktige verdier`() {
