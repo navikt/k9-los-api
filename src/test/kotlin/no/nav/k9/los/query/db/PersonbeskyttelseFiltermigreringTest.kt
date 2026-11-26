@@ -13,7 +13,7 @@ import org.junit.jupiter.api.Test
 
 class PersonbeskyttelseFiltermigreringTest : AbstractPostgresTest() {
     @Test
-    fun `migrerer køer og lagrede søk én gang ved oppstart`() {
+    fun `gjentatt kjøring endrer ikke allerede migrerte køer og lagrede søk`() {
         val txManager = TransactionalManager(dataSource)
         val gammeltFilter = FeltverdiOppgavefilter(null, "personbeskyttelse", IN, listOf("UGRADERT"))
         val gammelQuery = OppgaveQuery(listOf(gammeltFilter))

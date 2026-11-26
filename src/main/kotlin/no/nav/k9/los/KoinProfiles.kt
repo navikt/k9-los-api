@@ -551,7 +551,8 @@ fun common(app: Application, config: Configuration) = module {
         PepCacheService(
             pepClient = get(),
             pepCacheRepository = get(),
-            transactionalManager = get()
+            transactionalManager = get(),
+            appversjonsvakt = get(),
         )
     }
 

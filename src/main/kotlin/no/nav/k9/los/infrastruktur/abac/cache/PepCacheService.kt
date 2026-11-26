@@ -6,6 +6,7 @@ import io.opentelemetry.instrumentation.annotations.WithSpan
 import kotlinx.coroutines.*
 import kotliquery.TransactionalSession
 import no.nav.k9.los.infrastruktur.abac.IPepClient
+import no.nav.k9.los.infrastruktur.db.Appversjonsvakt
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
@@ -16,28 +17,28 @@ import java.time.LocalDateTime
 class PepCacheService(
     private val pepClient: IPepClient,
     private val pepCacheRepository: PepCacheRepository,
-    private val transactionalManager: TransactionalManager
+    private val transactionalManager: TransactionalManager,
+    private val appversjonsvakt: Appversjonsvakt,
 ) {
 
     @WithSpan
-    fun oppdaterCacheForÅpneOgVentendeOppgaverEldreEnn(gyldighet: Duration = Duration.ofHours(23)) {
+    suspend fun oppdaterCacheForÅpneOgVentendeOppgaverEldreEnn(gyldighet: Duration = Duration.ofHours(23)) {
         oppdaterCacheForOppgaverMedStatusEldreEnn(gyldighet, setOf(Oppgavestatus.VENTER, Oppgavestatus.AAPEN))
     }
 
-    private fun oppdaterCacheForOppgaverMedStatusEldreEnn(
+    private suspend fun oppdaterCacheForOppgaverMedStatusEldreEnn(
         gyldighet: Duration = Duration.ofHours(23),
         status: Set<Oppgavestatus>
     ) {
-        transactionalManager.transaction { tx ->
-            runBlocking(Dispatchers.IO) {
-                val oppgaverSomMåOppdateres = pepCacheRepository.hentOppgaverMedStatusOgPepCacheEldreEnn(
-                    tidspunkt = LocalDateTime.now() - gyldighet,
-                    antall = 1,
-                    status = status,
-                    tx
-                )
-                oppgaverSomMåOppdateres.forEach { oppgave -> oppdater(tx, oppgave) }
-            }
+        transactionalManager.transactionSuspend { tx ->
+            if (!appversjonsvakt.erAktiv(tx)) return@transactionSuspend
+            val oppgaverSomMåOppdateres = pepCacheRepository.hentOppgaverMedStatusOgPepCacheEldreEnn(
+                tidspunkt = LocalDateTime.now() - gyldighet,
+                antall = 1,
+                status = status,
+                tx
+            )
+            oppgaverSomMåOppdateres.forEach { oppgave -> oppdater(tx, oppgave) }
         }
     }
 

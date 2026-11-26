@@ -20,6 +20,7 @@ import no.nav.k9.los.domeneadaptere.eventmottak.k9.sak.K9SakEventDto
 import no.nav.k9.los.domeneadaptere.eventmottak.k9.sak.K9SakEventHandler
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.EventTilOppgaveAdapter
 import no.nav.k9.los.infrastruktur.abac.IPepClient
+import no.nav.k9.los.infrastruktur.db.Appversjonsvakt
 import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.infrastruktur.jobbplanlegger.Jobbplanlegger
 import no.nav.k9.los.infrastruktur.jobbplanlegger.PlanlagtJobb
@@ -229,7 +230,7 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
     }
 
     @Test
-    fun `oppdaterCacheForOppgaverEldreEnn skal oppdatere alle oppgaver eldre enn oppgitt alder`() {
+    fun `oppdaterCacheForOppgaverEldreEnn skal oppdatere alle oppgaver eldre enn oppgitt alder`() = runTest {
         val k9sakEventHandler = get<K9SakEventHandler>()
         val pepRepository = spyk(get<PepCacheRepository>())
 
@@ -239,7 +240,8 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
         val pepCacheService = PepCacheService(
             pepCacheRepository = pepRepository,
             pepClient = pepClient,
-            transactionalManager = get()
+            transactionalManager = get(),
+            appversjonsvakt = get(),
         )
 
         val eksternId = UUID.randomUUID().toString()
@@ -259,6 +261,28 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
     }
 
     @Test
+    suspend fun `PEP-cachejobben hopper over oppdatering etter at en annen versjon har tatt over`() {
+        val saksnummer = "TEST-OVERTAKELSE"
+        val eksternId = UUID.randomUUID().toString()
+        val jobb = get<PepCacheService>()
+        val repository = get<PepCacheRepository>()
+        val hentCache = { repository.hent(Områder.K9, eksternId) }
+        gjørSakOrdinær(saksnummer)
+        get<K9SakEventHandler>().prosesser(lagBehandlingprosessEventMedStatus(eksternId, saksnummer))
+        val førOvertakelse = hentCache()
+        assertThat(førOvertakelse?.kode6).isEqualTo(false)
+        gjørSakKode6(saksnummer)
+
+        Appversjonsvakt(dataSource, versjon = "ny").taOver()
+        jobb.oppdaterCacheForÅpneOgVentendeOppgaverEldreEnn(gyldighet = Duration.ZERO)
+        assertThat(hentCache()).isEqualTo(førOvertakelse)
+
+        get<Appversjonsvakt>().taOver()
+        jobb.oppdaterCacheForÅpneOgVentendeOppgaverEldreEnn(gyldighet = Duration.ZERO)
+        assertThat(hentCache()?.kode6).isEqualTo(true)
+    }
+
+    @Test
     @Disabled
     fun `PepCacheService skal oppdatere oppgave når sikkerhetsklassifisering endrer seg`() = runTest {
         val k9sakEventHandler = get<K9SakEventHandler>()
@@ -268,7 +292,8 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
         val pepCacheService = PepCacheService(
             pepCacheRepository = pepRepository,
             pepClient = pepClient,
-            transactionalManager = get()
+            transactionalManager = get(),
+            appversjonsvakt = get(),
         )
 
         val jobbplanlegger =

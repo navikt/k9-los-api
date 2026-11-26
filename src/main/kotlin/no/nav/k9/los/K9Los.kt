@@ -135,8 +135,6 @@ fun Application.k9Los() {
     }
     migrate(configuration)
     appversjonsvakt.taOver()
-    // Gamle poder må være stoppet før formatbyttet. Appversjonsvakten sperrer ikke kø- og søke-API-ene.
-    PersonbeskyttelseFiltermigrering(koin.get<TransactionalManager>()).kjør()
     koin.get<K9Områdesetup>().setup()
     koin.get<AvpOmrådesetup>().setup()
     koin.get<UngOmrådesetup>().setup()
@@ -411,6 +409,16 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
                 }
             )
         }
+
+        // Kommenter inn etter første deploy
+//        add(
+//            PlanlagtJobb.Oppstart(
+//                navn = "PersonbeskyttelseFiltermigrering",
+//                prioritet = 1,
+//            ) {
+//                PersonbeskyttelseFiltermigrering(koin.get<TransactionalManager>()).kjør()
+//            }
+//        )
 
         if (configuration.koinProfile.kjørerUtenforNais) {
             add(

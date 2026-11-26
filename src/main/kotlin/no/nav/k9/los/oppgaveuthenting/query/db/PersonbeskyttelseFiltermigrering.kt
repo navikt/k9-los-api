@@ -15,21 +15,11 @@ internal class PersonbeskyttelseFiltermigrering(private val transactionalManager
     fun kjør() {
         val (antall, tidsbruk) = measureTimedValue {
             transactionalManager.transaction { tx ->
-                val nyKjøring = tx.run(queryOf(
-                    """
-                    INSERT INTO engangsjobb_fullfort(navn) VALUES ('splitt_personbeskyttelse_i_ko_og_sok')
-                    ON CONFLICT (navn) DO NOTHING
-                    """.trimIndent()
-                ).asUpdate) == 1
-                if (!nyKjøring) return@transaction null
-
                 migrer(tx, "oppgaveko_v3", "endret_tidspunkt", ":query") to
                     migrer(tx, "lagret_sok", "sist_endret", "cast(:query as jsonb)")
             }
         }
-        if (antall != null) {
-            log.info("Migrerte personbeskyttelsesfiltre: køer={}, lagredeSøk={}, tidsbruk={}", antall.first, antall.second, tidsbruk)
-        }
+        log.info("Migrerte personbeskyttelsesfiltre: køer={}, lagredeSøk={}, tidsbruk={}", antall.first, antall.second, tidsbruk)
     }
 
     private fun migrer(tx: TransactionalSession, tabell: String, tidsstempel: String, queryVerdi: String): Int {
