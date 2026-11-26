@@ -116,7 +116,7 @@ class LagretSøk private constructor(
                     order = emptyList()
                 )
 
-                Områder.AKTIVITETSPENGER -> OppgaveQuery(
+                Områder.AKTIVITETSPENGER, Områder.UNGDOMSPROGRAMYTELSEN -> OppgaveQuery(
                     filtere = listOf(
                         FeltverdiOppgavefilter(
                             område = null,
@@ -134,7 +134,6 @@ class LagretSøk private constructor(
                     order = emptyList()
                 )
 
-                Områder.UNGDOMSPROGRAMYTELSEN -> throw IllegalArgumentException("Ungdomsprogramytelsen er p.t. kun for statistikkrapportering")
             }
         }
 

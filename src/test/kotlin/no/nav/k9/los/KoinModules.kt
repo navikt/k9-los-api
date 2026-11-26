@@ -83,6 +83,7 @@ import no.nav.k9.los.søkeboks.Oppgavesøkere
 import no.nav.k9.los.søkeboks.SøkeboksTjeneste
 import no.nav.k9.los.søkeboks.aktivitetspenger.AktivitetspengerOppgavesøk
 import no.nav.k9.los.søkeboks.k9.K9Oppgavesøk
+import no.nav.k9.los.søkeboks.ung.UngOppgavesøk
 import no.nav.k9.los.uttrekk.UttrekkCsvGenerator
 import no.nav.k9.los.uttrekk.UttrekkJobb
 import no.nav.k9.los.uttrekk.UttrekkRepository
@@ -253,6 +254,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             områdeRepository = get(),
             feltdefinisjonTjeneste = get(),
             oppgavetypeTjeneste = get(),
+            frontendUrl = config.aktivitetspengerFrontendUrl(),
         )
     }
     single {
@@ -510,7 +512,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
         )
     }
 
-    single { Oppgavesøkere(K9Oppgavesøk(), AktivitetspengerOppgavesøk()) }
+    single { Oppgavesøkere(K9Oppgavesøk(), AktivitetspengerOppgavesøk(), UngOppgavesøk()) }
     single { OppgaveSammendragDtoBuilder(oppgavesøkere = get(), pdlService = get()) }
     single {
         SøkeboksTjeneste(

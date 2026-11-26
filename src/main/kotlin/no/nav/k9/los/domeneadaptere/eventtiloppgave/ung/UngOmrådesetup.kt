@@ -26,6 +26,7 @@ class UngOmrådesetup(
     private val områdeRepository: OmrådeRepository,
     private val feltdefinisjonTjeneste: FeltdefinisjonTjeneste,
     private val oppgavetypeTjeneste: OppgavetypeTjeneste,
+    private val frontendUrl: String,
 ) {
     private val område = Områder.UNGDOMSPROGRAMYTELSEN
 
@@ -33,7 +34,7 @@ class UngOmrådesetup(
         områdeRepository.lagre(område)
         feltdefinisjonTjeneste.oppdater(oppdaterKodeverk())
         feltdefinisjonTjeneste.oppdater(UngdomsprogramytelsenFelter.tilDto())
-        oppgavetypeTjeneste.oppdater(UngdomsprogramytelsenOppgavetyper.tilDto())
+        oppgavetypeTjeneste.oppdater(UngdomsprogramytelsenOppgavetyper.tilDto(frontendUrl))
     }
 
     private fun oppdaterKodeverk(): List<KodeverkDto> {

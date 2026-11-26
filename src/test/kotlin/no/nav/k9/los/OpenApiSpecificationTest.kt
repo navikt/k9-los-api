@@ -66,7 +66,9 @@ class OpenApiSpecificationTest {
         val frontendOperation = frontend.operation("/api/fleromrade/{omrade}/ressurs")
         assertEquals("frontendOperasjon", frontendOperation["operationId"].textValue())
         val områdeSchema = frontend.resolveSchema(frontendOperation.parameter("omrade")["schema"])
-        assertEquals(listOf("k9", "akt"), områdeSchema["enum"].map(JsonNode::textValue))
+        assertEquals(listOf("k9", "akt", "ung"), områdeSchema["enum"].map(JsonNode::textValue))
+        assertEquals(200, client.get("/api/fleromrade/ung/ressurs").status.value)
+        assertEquals(404, client.get("/api/fleromrade/upy/ressurs").status.value)
     }
 
     private fun JsonNode.operation(path: String): JsonNode {

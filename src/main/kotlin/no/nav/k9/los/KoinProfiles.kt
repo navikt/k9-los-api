@@ -97,6 +97,7 @@ import no.nav.k9.los.søkeboks.Oppgavesøkere
 import no.nav.k9.los.søkeboks.SøkeboksTjeneste
 import no.nav.k9.los.søkeboks.aktivitetspenger.AktivitetspengerOppgavesøk
 import no.nav.k9.los.søkeboks.k9.K9Oppgavesøk
+import no.nav.k9.los.søkeboks.ung.UngOppgavesøk
 import no.nav.k9.los.uttrekk.UttrekkCsvGenerator
 import no.nav.k9.los.uttrekk.UttrekkJobb
 import no.nav.k9.los.uttrekk.UttrekkRepository
@@ -402,6 +403,7 @@ fun common(app: Application, config: Configuration) = module {
             områdeRepository = get(),
             feltdefinisjonTjeneste = get(),
             oppgavetypeTjeneste = get(),
+            frontendUrl = config.aktivitetspengerFrontendUrl(),
         )
     }
 
@@ -579,7 +581,7 @@ fun common(app: Application, config: Configuration) = module {
         )
     }
 
-    single { Oppgavesøkere(K9Oppgavesøk(), AktivitetspengerOppgavesøk()) }
+    single { Oppgavesøkere(K9Oppgavesøk(), AktivitetspengerOppgavesøk(), UngOppgavesøk()) }
     single { OppgaveSammendragDtoBuilder(oppgavesøkere = get(), pdlService = get()) }
     single {
         SøkeboksTjeneste(

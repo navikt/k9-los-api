@@ -12,14 +12,38 @@ import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.infrastruktur.abac.IPepClient
 import no.nav.k9.los.ko.db.OppgaveKoRepository
+import no.nav.k9.los.kodeverk.PersonBeskyttelseType
+import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.oppgavedefinisjon.omraade.OmrådeRepository
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
+import no.nav.k9.los.oppgaveuthenting.query.dto.query.FeltverdiOppgavefilter
+import no.nav.k9.los.oppgaveuthenting.query.mapping.EksternFeltverdiOperator
 import no.nav.k9.los.saksbehandleradmin.OpprettSaksbehandler
 import no.nav.k9.los.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.saksbehandleradmin.TestSaksbehandlerRepository
 import org.junit.jupiter.api.Test
 
 class OppgaveKoTest : AbstractK9LosIntegrationTest() {
+
+    @Test
+    fun `standard oppgaveko kan opprettes for UNG med standard filter`() {
+        val områdeRepository = OmrådeRepository(dataSource)
+        områdeRepository.lagre(Områder.UNGDOMSPROGRAMYTELSEN)
+        val oppgaveKoRepository = OppgaveKoRepository(dataSource, områdeRepository)
+
+        val oppgaveKo = oppgaveKoRepository.leggTil(Områder.UNGDOMSPROGRAMYTELSEN, skjermet = false, tittel = "UNG-kø")
+
+        assertThat(oppgaveKo.område).isEqualTo(Områder.UNGDOMSPROGRAMYTELSEN)
+        assertThat(oppgaveKo.oppgaveQuery.filtere).isEqualTo(
+            listOf(
+                FeltverdiOppgavefilter(null, "oppgavestatus", EksternFeltverdiOperator.IN, listOf(Oppgavestatus.AAPEN.kode)),
+                FeltverdiOppgavefilter(null, "personbeskyttelse", EksternFeltverdiOperator.IN, listOf(PersonBeskyttelseType.UGRADERT.kode)),
+            )
+        )
+        assertThat(oppgaveKo.oppgaveQuery.order).isEqualTo(emptyList())
+
+        oppgaveKoRepository.slett(Områder.UNGDOMSPROGRAMYTELSEN, false, oppgaveKo.id)
+    }
 
     @Test
     fun `sjekker at oppgavekø kan opprettes og slettes`() {
