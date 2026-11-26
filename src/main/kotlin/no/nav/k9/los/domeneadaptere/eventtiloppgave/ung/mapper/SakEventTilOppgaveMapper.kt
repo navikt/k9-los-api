@@ -107,7 +107,7 @@ object SakEventTilOppgaveMapper {
         val prefiks = when (utledOppgavetype(event)) {
             UngOppgavetypenavn.UNGDOMSPROGRAMYTELSENORDINÆR -> "UPY_b_del1"
             UngOppgavetypenavn.UNGDOMSPROGRAMYTELSENKLAGE -> "UPY_k"
-            UngOppgavetypenavn.UNGDOMSPROGRAMYTELSENTILBAKE -> throw IllegalStateException("Ugyldig oppgavetype for UNGSAK")
+            UngOppgavetypenavn.UNGDOMSPROGRAMYTELSENTILBAKE -> "UPY_t"
         }
         return if (tilBeslutter) {
             "${prefiks}_${event.aktørId}_beslutter"
