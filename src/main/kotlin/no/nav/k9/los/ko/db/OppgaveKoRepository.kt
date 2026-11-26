@@ -7,11 +7,11 @@ import no.nav.k9.los.oppgavedefinisjon.omraade.OmrådeRepository
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.OppgaveQuery
 import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
-import no.nav.k9.los.kodeverk.PersonBeskyttelseType
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.EnkelOrderFelt
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.oppgaveuthenting.query.mapping.EksternFeltverdiOperator
+import no.nav.k9.los.oppgaveuthenting.query.mapping.Personbeskyttelsefilter
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 import javax.sql.DataSource
@@ -130,12 +130,12 @@ class OppgaveKoRepository(
     }
 
     fun leggTil(tx: TransactionalSession, tittel: String, skjermet: Boolean, område: Områder): OppgaveKo {
-        val personBeskyttelseType: PersonBeskyttelseType = if (skjermet) PersonBeskyttelseType.KODE6 else PersonBeskyttelseType.UGRADERT
+        val personbeskyttelse = Personbeskyttelsefilter.standard(kode6 = skjermet)
         val oppgaveQuery = when (område) {
             Områder.K9 -> OppgaveQuery(
                 filtere = listOf(
                     FeltverdiOppgavefilter(null, "oppgavestatus", EksternFeltverdiOperator.IN, listOf(Oppgavestatus.AAPEN.kode)),
-                    FeltverdiOppgavefilter(null, "personbeskyttelse", EksternFeltverdiOperator.IN, listOf(personBeskyttelseType.kode)),
+                    personbeskyttelse,
                     FeltverdiOppgavefilter(Områder.K9, "ytelsestype", EksternFeltverdiOperator.IN, listOf()),
                     FeltverdiOppgavefilter(Områder.K9, "liggerHosBeslutter", EksternFeltverdiOperator.IN, listOf()),
                 ),
@@ -146,7 +146,7 @@ class OppgaveKoRepository(
             Områder.AKTIVITETSPENGER -> OppgaveQuery(
                 filtere = listOf(
                     FeltverdiOppgavefilter(null, "oppgavestatus", EksternFeltverdiOperator.IN, listOf(Oppgavestatus.AAPEN.kode)),
-                    FeltverdiOppgavefilter(null, "personbeskyttelse", EksternFeltverdiOperator.IN, listOf(personBeskyttelseType.kode)),
+                    personbeskyttelse,
                 ),
                 order = listOf(
                 )

@@ -223,13 +223,23 @@ class PartisjonertOppgaveQuerySqlBuilder(
             }
 
             "personbeskyttelse" -> {
-                whereClause += " ${combineOperator.sql} " + when (feltverdier.first()) {
-                    PersonBeskyttelseType.KODE6.kode -> "opc.kode6 IS NOT FALSE"
-                    PersonBeskyttelseType.UTEN_KODE6.kode -> "opc.kode6 IS NOT TRUE"
-                    PersonBeskyttelseType.KODE7_ELLER_EGEN_ANSATT.kode -> "(opc.kode6 IS NOT TRUE AND opc.kode7_eller_egen_ansatt IS NOT FALSE)"
-                    PersonBeskyttelseType.UGRADERT.kode -> "(opc.kode6 IS NOT TRUE AND opc.kode7_eller_egen_ansatt IS NOT TRUE)"
-                    else -> throw IllegalStateException("Ukjent verdi for personbeskyttelse: ${feltverdier.first()}")
+                val vilkår = feltverdier.map { verdi ->
+                    when (verdi) {
+                        PersonBeskyttelseType.KODE6.kode -> "opc.kode6 IS NOT FALSE"
+                        PersonBeskyttelseType.UTEN_KODE6.kode -> "opc.kode6 IS NOT TRUE"
+                        PersonBeskyttelseType.KODE7.kode -> "COALESCE(opc.kode7, opc.kode7_eller_egen_ansatt)"
+                        PersonBeskyttelseType.EGEN_ANSATT.kode -> "COALESCE(opc.egen_ansatt, opc.kode7_eller_egen_ansatt)"
+                        PersonBeskyttelseType.KODE7_ELLER_EGEN_ANSATT.kode -> "(opc.kode6 IS NOT TRUE AND opc.kode7_eller_egen_ansatt IS NOT FALSE)"
+                        PersonBeskyttelseType.UGRADERT.kode -> "(opc.kode6 IS NOT TRUE AND opc.kode7_eller_egen_ansatt IS NOT TRUE)"
+                        else -> throw IllegalArgumentException("Ukjent verdi for personbeskyttelse: $verdi")
+                    }
                 }
+                val uttrykk = when (operator) {
+                    FeltverdiOperator.EQUALS, FeltverdiOperator.IN -> vilkår.joinToString(" OR ", "(", ")")
+                    FeltverdiOperator.NOT_EQUALS, FeltverdiOperator.NOT_IN -> vilkår.joinToString(" OR ", "NOT (", ")")
+                    else -> throw IllegalArgumentException("Ugyldig operator for personbeskyttelse: $operator")
+                }
+                whereClause += " ${combineOperator.sql} $uttrykk"
             }
 
             "reservasjonsnokkel" -> {

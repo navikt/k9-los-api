@@ -90,6 +90,29 @@ class PartisjonertOppgaveQuerySqlBuilderTest {
     }
 
     @Test
+    fun `NOT_IN utelater både kode 7 og egen ansatt`() {
+        val builder = PartisjonertOppgaveQuerySqlBuilder(
+            område = Områder.K9,
+            felter = mockFelter,
+            oppgavestatusFilter = listOf(Oppgavestatus.AAPEN),
+            now = LocalDateTime.now(),
+            ferdigstiltDatoFilter = null,
+        )
+
+        builder.medFeltverdi(
+            CombineOperator.AND,
+            null,
+            "personbeskyttelse",
+            FeltverdiOperator.NOT_IN,
+            listOf(PersonBeskyttelseType.KODE7.kode, PersonBeskyttelseType.EGEN_ANSATT.kode),
+        )
+
+        assertTrue(builder.getQuery().contains(
+            "AND NOT (COALESCE(opc.kode7, opc.kode7_eller_egen_ansatt) OR COALESCE(opc.egen_ansatt, opc.kode7_eller_egen_ansatt))"
+        ))
+    }
+
+    @Test
     fun `setter paging riktig`() {
         val builder = PartisjonertOppgaveQuerySqlBuilder(
             område = Områder.K9,

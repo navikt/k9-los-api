@@ -160,11 +160,13 @@ class OppgaveQueryRepository(
             Oppgavefelt(
                 område = null,
                 kode = "personbeskyttelse",
-                visningsnavn = "Kode 7 eller egen ansatt",
+                visningsnavn = "Personbeskyttelse",
                 tolkes_som = "String",
                 synlighet = Synlighet.UNDER_STREKEN,
                 verdiforklaringerErUttømmende = true,
-                verdiforklaringer = PersonBeskyttelseType.entries.map {
+                verdiforklaringer = PersonBeskyttelseType.entries.filterNot {
+                    it == PersonBeskyttelseType.KODE7_ELLER_EGEN_ANSATT || it == PersonBeskyttelseType.UGRADERT
+                }.map {
                     Verdiforklaring(
                         verdi = it.kode,
                         visningsnavn = it.beskrivelse,
@@ -221,6 +223,7 @@ class OppgaveQueryRepository(
         val felter = hentAlleFelterMedMer(request.område, medKodeverk = false, tx)
             .associateBy { felt -> OmrådeOgKode(felt.oppgavefelt.område, felt.oppgavefelt.kode) }
 
+        // TODO(rød sone): Krev serververifisert kode 6-leir og legg til et obligatorisk SQL-vilkår utenfor filtertreet.
         val sqlBuilder = OppgaveQueryToSqlMapper.toSql(request, felter, now)
         loggSqlDebug(sqlBuilder)
         return tx.run(

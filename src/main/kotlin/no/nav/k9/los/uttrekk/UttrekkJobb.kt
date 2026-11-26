@@ -2,6 +2,7 @@ package no.nav.k9.los.uttrekk
 
 import no.nav.k9.los.oppgaveuthenting.query.OppgaveQueryService
 import no.nav.k9.los.oppgaveuthenting.query.QueryRequest
+import no.nav.k9.los.oppgaveuthenting.query.mapping.Personbeskyttelsefilter
 import org.slf4j.LoggerFactory
 import kotlin.time.measureTime
 
@@ -15,10 +16,11 @@ class UttrekkJobb(
     fun kjørUttrekk(uttrekkId: Long) {
         try {
             val uttrekk = uttrekkTjeneste.startUttrekk(uttrekkId)
+            // TODO(rød sone): Hent kode 6-leiren fra saksbehandleren som bestilte uttrekket.
             val resultat = oppgaveQueryService.query(
                 QueryRequest(
                     område = uttrekk.område,
-                    oppgaveQuery = uttrekk.query,
+                    oppgaveQuery = Personbeskyttelsefilter.migrer(uttrekk.query),
                     avgrensning = uttrekk.avgrensning
                 )
             )

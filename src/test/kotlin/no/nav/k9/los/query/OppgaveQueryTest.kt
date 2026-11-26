@@ -1324,7 +1324,8 @@ byggFilter(FeltType.MOTTATT_DATO, EksternFeltverdiOperator.EQUALS, "2023-05-15")
                     eksternId = eksternId,
                     område = Områder.K9,
                     kode6 = kode6,
-                    kode7EllerEgenAnsatt = kode7EllerEgenAnsatt,
+                    kode7 = kode7EllerEgenAnsatt,
+                    egenAnsatt = kode7EllerEgenAnsatt,
                     oppdatert = LocalDateTime.now()
                 ), tx
             )

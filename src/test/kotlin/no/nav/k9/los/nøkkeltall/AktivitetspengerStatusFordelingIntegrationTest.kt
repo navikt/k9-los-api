@@ -124,7 +124,7 @@ class AktivitetspengerStatusFordelingIntegrationTest : AbstractK9LosIntegrationT
             get<OppgaveV3Repository>().nyOppgaveversjon(oppgave, tx)
             get<AktivOgPartisjonertOppgaveAjourholdTjeneste>().ajourholdOppgave(oppgave, 0, tx)
             get<PepCacheRepository>().lagre(
-                PepCache(id, område, beskyttelse == PersonBeskyttelseType.KODE6, false, LocalDateTime.now()),
+                PepCache(id, område, beskyttelse == PersonBeskyttelseType.KODE6, false, false, LocalDateTime.now()),
                 tx,
             )
         }

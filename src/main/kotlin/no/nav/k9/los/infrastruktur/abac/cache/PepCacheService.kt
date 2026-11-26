@@ -50,7 +50,8 @@ class PepCacheService(
             eksternId = oppgaveIdOgAktører.eksternId,
             område = oppgaveIdOgAktører.område,
             kode6 = false,
-            kode7EllerEgenAnsatt = false,
+            kode7 = false,
+            egenAnsatt = false,
             oppdatert = LocalDateTime.now()
         )
 
@@ -62,14 +63,7 @@ class PepCacheService(
     }
 
     private suspend fun PepCache.oppdater(saksnummer: String, område: Områder): PepCache {
-        val diskresjonskoder = pepClient.diskresjonskoderForSak(saksnummer, område)
-
-        val kode7ellerEgenAnsatt =
-            diskresjonskoder.contains(Diskresjonskode.KODE7) || diskresjonskoder.contains(Diskresjonskode.SKJERMET)
-        return oppdater(
-            kode6 = diskresjonskoder.contains(Diskresjonskode.KODE6),
-            kode7EllerEgenAnsatt = kode7ellerEgenAnsatt,
-        )
+        return oppdaterFra(pepClient.diskresjonskoderForSak(saksnummer, område))
     }
 
     private suspend fun PepCache.oppdater(aktører: List<String>, område: Områder): PepCache {
@@ -80,18 +74,15 @@ class PepCacheService(
                 }
             }
 
-            val diskresjonskoder = requests
-                .awaitAll()
-                .flatten()
-
-            val kode7ellerEgenAnsatt =
-                diskresjonskoder.contains(Diskresjonskode.KODE7) || diskresjonskoder.contains(Diskresjonskode.SKJERMET)
-            oppdater(
-                kode6 = diskresjonskoder.contains(Diskresjonskode.KODE6),
-                kode7EllerEgenAnsatt = kode7ellerEgenAnsatt,
-            )
+            oppdaterFra(requests.awaitAll().flatten())
         }
     }
+
+    private fun PepCache.oppdaterFra(diskresjonskoder: Collection<Diskresjonskode>): PepCache = oppdater(
+        kode6 = Diskresjonskode.KODE6 in diskresjonskoder,
+        kode7 = Diskresjonskode.KODE7 in diskresjonskoder,
+        egenAnsatt = Diskresjonskode.SKJERMET in diskresjonskoder,
+    )
 }
 
 data class PepCacheInput(

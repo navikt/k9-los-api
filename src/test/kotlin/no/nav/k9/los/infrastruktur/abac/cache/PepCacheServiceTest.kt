@@ -184,7 +184,30 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
         val pepCache = pepRepository.hent(Områder.K9, eksternId)!!
         assertThat(pepCache.kode6).isFalse()
         assertThat(pepCache.kode7EllerEgenAnsatt).isTrue()
+        assertThat(pepCache.kode7).isTrue()
+        assertThat(pepCache.egenAnsatt).isFalse()
         assertThat(pepCache.oppdatert).isGreaterThan(LocalDateTime.now().minusMinutes(1))
+    }
+
+    @Test
+    fun `PEP-oppslag erstatter arvet kombinasjonsverdi med egen ansatt alene`() = runTest {
+        val id = UUID.randomUUID().toString()
+        val saksnummer = "TEST-SKJERMET"
+        val repository = get<PepCacheRepository>()
+        val txManager = get<TransactionalManager>()
+        val service = get<PepCacheService>()
+        val input = PepCacheInput(id, saksnummer, emptyList(), Områder.K9)
+        txManager.transaction { tx ->
+            repository.lagre(PepCache(id, Områder.K9, false, true, true, LocalDateTime.now()), tx)
+        }
+        coEvery { pepClient.diskresjonskoderForSak(saksnummer, Områder.K9) } returns setOf(Diskresjonskode.SKJERMET)
+
+        txManager.transactionSuspend { tx -> service.oppdater(tx, input) }
+
+        val oppdatert = repository.hent(Områder.K9, id)!!
+        assertThat(oppdatert.kode7).isFalse()
+        assertThat(oppdatert.egenAnsatt).isTrue()
+        assertThat(oppdatert.kode7EllerEgenAnsatt).isTrue()
     }
 
     @Test

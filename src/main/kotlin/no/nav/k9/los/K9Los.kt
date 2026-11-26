@@ -54,6 +54,7 @@ import no.nav.k9.los.infrastruktur.abac.SifAbacPdpUtilgjengeligException
 import no.nav.k9.los.infrastruktur.abac.cache.PepCacheService
 import no.nav.k9.los.infrastruktur.db.Appversjonsvakt
 import no.nav.k9.los.infrastruktur.db.DB_AWARE_PARALLELISM
+import no.nav.k9.los.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.infrastruktur.db.migrate
 import no.nav.k9.los.infrastruktur.jobbplanlegger.Jobbplanlegger
 import no.nav.k9.los.infrastruktur.jobbplanlegger.PlanlagtJobb
@@ -71,6 +72,7 @@ import no.nav.k9.los.ko.OppgaveKoAvdelingslederApisNy
 import no.nav.k9.los.ko.OppgaveKoSaksbehandlerApisNy
 import no.nav.k9.los.lagretsok.LagretSøkApi
 import no.nav.k9.los.lagretsok.LagretSøkApiNy
+import no.nav.k9.los.oppgaveuthenting.query.db.PersonbeskyttelseFiltermigrering
 import no.nav.k9.los.nøkkeltall.K9NøkkeltallApis
 import no.nav.k9.los.nøkkeltall.AvdelingslederNøkkeltallApis
 import no.nav.k9.los.nøkkeltall.SaksbehandlerNøkkeltallApi
@@ -133,6 +135,8 @@ fun Application.k9Los() {
     }
     migrate(configuration)
     appversjonsvakt.taOver()
+    // Gamle poder må være stoppet før formatbyttet. Appversjonsvakten sperrer ikke kø- og søke-API-ene.
+    PersonbeskyttelseFiltermigrering(koin.get<TransactionalManager>()).kjør()
     koin.get<K9Områdesetup>().setup()
     koin.get<AvpOmrådesetup>().setup()
     koin.get<UngOmrådesetup>().setup()

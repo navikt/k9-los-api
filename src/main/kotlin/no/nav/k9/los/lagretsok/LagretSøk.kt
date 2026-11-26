@@ -1,11 +1,11 @@
 package no.nav.k9.los.lagretsok
 
-import no.nav.k9.los.kodeverk.PersonBeskyttelseType
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.oppgaveuthenting.query.dto.query.OppgaveQuery
 import no.nav.k9.los.oppgaveuthenting.query.mapping.EksternFeltverdiOperator
+import no.nav.k9.los.oppgaveuthenting.query.mapping.Personbeskyttelsefilter
 import no.nav.k9.los.saksbehandleradmin.Saksbehandler
 import java.time.LocalDateTime
 
@@ -100,12 +100,7 @@ class LagretSøk private constructor(
                             operator = EksternFeltverdiOperator.IN,
                             verdi = listOf(Oppgavestatus.AAPEN.kode, Oppgavestatus.VENTER.kode)
                         ),
-                        FeltverdiOppgavefilter(
-                            område = null,
-                            kode = "personbeskyttelse",
-                            operator = EksternFeltverdiOperator.IN,
-                            verdi = listOf(if (kode6) PersonBeskyttelseType.KODE6.kode else PersonBeskyttelseType.UGRADERT.kode)
-                        ),
+                        Personbeskyttelsefilter.standard(kode6),
                         FeltverdiOppgavefilter(
                             område = Områder.K9,
                             kode = "ytelsestype",
@@ -124,12 +119,7 @@ class LagretSøk private constructor(
                             operator = EksternFeltverdiOperator.IN,
                             verdi = listOf(Oppgavestatus.AAPEN.kode, Oppgavestatus.VENTER.kode)
                         ),
-                        FeltverdiOppgavefilter(
-                            område = null,
-                            kode = "personbeskyttelse",
-                            operator = EksternFeltverdiOperator.IN,
-                            verdi = listOf(if (kode6) PersonBeskyttelseType.KODE6.kode else PersonBeskyttelseType.UGRADERT.kode)
-                        ),
+                        Personbeskyttelsefilter.standard(kode6),
                     ),
                     order = emptyList()
                 )

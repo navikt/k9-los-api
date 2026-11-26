@@ -7,6 +7,9 @@ enum class PersonBeskyttelseType(val kode: String, val beskrivelse: String) {
     // slik at det blir lettere å forstå hva de ulike valgene betyr.
     KODE6("KODE6", "Kode 6"),
     UTEN_KODE6("UTEN_KODE6", "Alle"),
+    KODE7("KODE7", "Kode 7"),
+    EGEN_ANSATT("EGEN_ANSATT", "Egen ansatt"),
+    // Gamle koder leses fortsatt for lagrede spørringer fra før formatbyttet.
     KODE7_ELLER_EGEN_ANSATT("KODE7_ELLER_EGEN_ANSATT", "Kode 7 eller egen ansatt"),
     UGRADERT("UGRADERT", "Ikke kode 7 eller egen ansatt"),
     ;

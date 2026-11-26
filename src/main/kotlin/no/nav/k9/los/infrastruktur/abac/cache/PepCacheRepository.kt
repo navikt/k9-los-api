@@ -60,19 +60,23 @@ class PepCacheRepository(
     fun lagre(cache: PepCache, tx: TransactionalSession) {
         tx.run(
             queryOf("""
-                INSERT INTO OPPGAVE_PEP_CACHE (omrade, ekstern_id, kode6, kode7_eller_egen_ansatt, oppdatert) 
-                VALUES(:omrade, :ekstern_id, :kode6, :kode7_eller_egen_ansatt, :oppdatert) 
+                INSERT INTO OPPGAVE_PEP_CACHE (omrade, ekstern_id, kode6, kode7, egen_ansatt, kode7_eller_egen_ansatt, oppdatert)
+                VALUES(:omrade, :ekstern_id, :kode6, :kode7, :egen_ansatt, :kode7_eller_egen_ansatt, :oppdatert)
                 ON CONFLICT ON CONSTRAINT pep_omrade_eksternid
                 DO UPDATE SET 
                     omrade = :omrade, 
                     ekstern_id = :ekstern_id, 
                     kode6 = :kode6, 
+                    kode7 = :kode7,
+                    egen_ansatt = :egen_ansatt,
                     kode7_eller_egen_ansatt = :kode7_eller_egen_ansatt, 
                     oppdatert = :oppdatert
             """, mapOf(
                 "omrade" to cache.område.eksternId,
                 "ekstern_id" to cache.eksternId,
                 "kode6" to cache.kode6,
+                "kode7" to cache.kode7,
+                "egen_ansatt" to cache.egenAnsatt,
                 "kode7_eller_egen_ansatt" to cache.kode7EllerEgenAnsatt,
                 "oppdatert" to cache.oppdatert
             )).asUpdate
@@ -100,7 +104,10 @@ class PepCacheRepository(
     fun hent(område: Områder, eksternId: String, tx: TransactionalSession): PepCache? {
         return tx.run(
             queryOf("""
-                    SELECT * FROM OPPGAVE_PEP_CACHE WHERE omrade = :omrade AND ekstern_id = :ekstern_id 
+                    SELECT omrade, ekstern_id, kode6, oppdatert,
+                        coalesce(kode7, kode7_eller_egen_ansatt) AS kode7,
+                        coalesce(egen_ansatt, kode7_eller_egen_ansatt) AS egen_ansatt
+                    FROM OPPGAVE_PEP_CACHE WHERE omrade = :omrade AND ekstern_id = :ekstern_id
                 """, mapOf(
                     "omrade" to område.eksternId,
                     "ekstern_id" to eksternId
@@ -114,7 +121,8 @@ class PepCacheRepository(
         område = Områder.fraEksternId(string("omrade")),
         eksternId = string("ekstern_id"),
         kode6 = boolean("kode6"),
-        kode7EllerEgenAnsatt = boolean("kode7_eller_egen_ansatt"),
+        kode7 = boolean("kode7"),
+        egenAnsatt = boolean("egen_ansatt"),
         oppdatert = localDateTime("oppdatert"),
     )
 }
@@ -124,13 +132,17 @@ data class PepCache(
     val eksternId: String,
     val område: Områder,
     val kode6: Boolean,
-    val kode7EllerEgenAnsatt: Boolean,
+    val kode7: Boolean,
+    val egenAnsatt: Boolean,
     val oppdatert: LocalDateTime
 ) {
-    fun oppdater(kode6: Boolean, kode7EllerEgenAnsatt: Boolean): PepCache {
+    val kode7EllerEgenAnsatt: Boolean get() = kode7 || egenAnsatt
+
+    fun oppdater(kode6: Boolean, kode7: Boolean, egenAnsatt: Boolean): PepCache {
         return copy(
             kode6 = kode6,
-            kode7EllerEgenAnsatt = kode7EllerEgenAnsatt,
+            kode7 = kode7,
+            egenAnsatt = egenAnsatt,
             oppdatert = LocalDateTime.now()
         )
     }

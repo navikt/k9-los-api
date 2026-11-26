@@ -8,6 +8,7 @@ data class QueryRequest(
     val oppgaveQuery: OppgaveQuery,
     val fjernReserverte: Boolean = false,
     val avgrensning: Avgrensning? = null,
+    // TODO(rød sone): Gjør serververifisert kode 6-leir obligatorisk, også for telling og validering.
 )
 
 data class Avgrensning (
