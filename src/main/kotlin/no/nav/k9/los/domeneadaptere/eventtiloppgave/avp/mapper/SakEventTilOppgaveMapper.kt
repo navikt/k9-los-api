@@ -196,8 +196,9 @@ object SakEventTilOppgaveMapper {
             AvpOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1 -> event.navKontorbehandlendeEnhet
 
             AvpOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2,
-            AvpOppgavetypenavn.AKTIVITETSPENGERKLAGE,
-            AvpOppgavetypenavn.AKTIVITETSPENGERTILBAKE -> event.behandlendeEnhet
+            AvpOppgavetypenavn.AKTIVITETSPENGERKLAGE -> event.behandlendeEnhet
+
+            AvpOppgavetypenavn.AKTIVITETSPENGERTILBAKE -> throw IllegalStateException("Ugyldig oppgavetype for UNGSAK")
         }
 
         verdier[Saksbehandling.LIGGER_HOS_BESLUTTER] = erTilBeslutter(event)
@@ -208,9 +209,10 @@ object SakEventTilOppgaveMapper {
                     definisjon.aksjonspunktType == AksjonspunktType.NAV_KONTOR_MANUELL
 
                 AvpOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2,
-                AvpOppgavetypenavn.AKTIVITETSPENGERKLAGE,
-                AvpOppgavetypenavn.AKTIVITETSPENGERTILBAKE ->
+                AvpOppgavetypenavn.AKTIVITETSPENGERKLAGE ->
                     definisjon.aksjonspunktType != AksjonspunktType.NAV_KONTOR_MANUELL
+
+                AvpOppgavetypenavn.AKTIVITETSPENGERTILBAKE -> throw IllegalStateException("Ugyldig oppgavetype for UNGSAK")
             }
             it.status == AksjonspunktStatus.UTFØRT &&
                     !definisjon.erAutopunkt() &&
@@ -220,15 +222,17 @@ object SakEventTilOppgaveMapper {
             AvpOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1 -> event.navKontorBeslutter
 
             AvpOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2,
-            AvpOppgavetypenavn.AKTIVITETSPENGERKLAGE,
-            AvpOppgavetypenavn.AKTIVITETSPENGERTILBAKE -> event.ansvarligBeslutterForTotrinn
+            AvpOppgavetypenavn.AKTIVITETSPENGERKLAGE -> event.ansvarligBeslutterForTotrinn
+
+            AvpOppgavetypenavn.AKTIVITETSPENGERTILBAKE -> throw IllegalStateException("Ugyldig oppgavetype for UNGSAK")
         }
         verdier[Saksbehandling.ANSVARLIG_SAKSBEHANDLER] = when (oppgavetype) {
             AvpOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1 -> event.navKontorAnsvarligSaksbehandler
 
             AvpOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2,
-            AvpOppgavetypenavn.AKTIVITETSPENGERKLAGE,
-            AvpOppgavetypenavn.AKTIVITETSPENGERTILBAKE -> event.ansvarligSaksbehandlerForTotrinn
+            AvpOppgavetypenavn.AKTIVITETSPENGERKLAGE -> event.ansvarligSaksbehandlerForTotrinn
+
+            AvpOppgavetypenavn.AKTIVITETSPENGERTILBAKE -> throw IllegalStateException("Ugyldig oppgavetype for UNGSAK")
         }
         (forrigeOppgave?.hent(Saksbehandling.TID_FORSTE_GANG_HOS_BESLUTTER)
             ?: event.eventTid.takeIf { erTilBeslutter(event) })
