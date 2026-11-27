@@ -2,7 +2,7 @@ package no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.oppgavedefinisjon
 
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.kodeverk.AvpBehandlendeEnhet
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.kodeverk.AvpFagsystem
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.tilbake.TilbakeAksjonspunkt
+import no.nav.k9.los.domeneadaptere.eventmottak.ung.tilbake.TilbakeAksjonspunkt
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.Synlighet.INTERNT
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.Synlighet.OVER_STREKEN
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.Synlighet.UNDER_STREKEN
@@ -54,28 +54,28 @@ object AktivitetspengerFelter : Feltkatalog(Områder.AKTIVITETSPENGER) {
     }
 
     object Aksjonspunkt : Feltgruppe() {
-        val ALLE = kodeliste(
-            "aksjonspunkt", "Løsbare, fremtidige og tidligere aksjonspunkt", UNDER_STREKEN, AksjonspunktDefinisjon::class,
+        val ALLE = stringliste(
+            "aksjonspunkt", "Løsbare, fremtidige og tidligere aksjonspunkt", UNDER_STREKEN, kodeverk = AksjonspunktDefinisjon::class,
             beskrivelse = "Løsbare- (se aksjonspunkt som kan løses), fremtidige- (se Løsbare og fremtidige aksjonspunkt) og løste aksjonspunkt",
         )
-        val AKTIVE = kodeliste(
-            "aktivtAksjonspunkt", "Løsbare og fremtidige aksjonspunkt", UNDER_STREKEN, AksjonspunktDefinisjon::class,
+        val AKTIVE = stringliste(
+            "aktivtAksjonspunkt", "Løsbare og fremtidige aksjonspunkt", UNDER_STREKEN, kodeverk = AksjonspunktDefinisjon::class,
             beskrivelse = "Løsbare aksjonspunkt (se aksjonspunkt som kan løses) og åpne aksjonspunkter som kan løses først når behandlingen når riktig steg",
         )
-        val LOSBART = kode(
-            "løsbartAksjonspunkt", "Aksjonspunkt: løsbart", OVER_STREKEN, AksjonspunktDefinisjon::class,
+        val LOSBART = string(
+            "løsbartAksjonspunkt", "Aksjonspunkt: løsbart", OVER_STREKEN, kodeverk = AksjonspunktDefinisjon::class,
             beskrivelse = "Åpne aksjonspunkt som er løsbart akkurat nå, fordi de hører til steget behandlingen står i",
         )
-        val UTFORT = kodeliste(
-            "utførtAksjonspunkt", "Aksjonspunkt: utførte", UNDER_STREKEN, AksjonspunktDefinisjon::class,
+        val UTFORT = stringliste(
+            "utførtAksjonspunkt", "Aksjonspunkt: utførte", UNDER_STREKEN, kodeverk = AksjonspunktDefinisjon::class,
             beskrivelse = "Aksjonspunkter som er utført",
         )
-        val AVBRUTT = kodeliste(
-            "avbruttAksjonspunkt", "Aksjonspunkt: avbrutte", UNDER_STREKEN, AksjonspunktDefinisjon::class,
+        val AVBRUTT = stringliste(
+            "avbruttAksjonspunkt", "Aksjonspunkt: avbrutte", UNDER_STREKEN, kodeverk = AksjonspunktDefinisjon::class,
             beskrivelse = "Aksjonspunkter som er avbrutt",
         )
-        val FREMTIDIG = kodeliste(
-            "fremtidigAksjonspunkt", "Aksjonspunkt: fremtidige", UNDER_STREKEN, AksjonspunktDefinisjon::class,
+        val FREMTIDIG = stringliste(
+            "fremtidigAksjonspunkt", "Aksjonspunkt: fremtidige", UNDER_STREKEN, kodeverk = AksjonspunktDefinisjon::class,
             beskrivelse = "Åpne aksjonspunkter som ikke kan løses i steget behandlingen står i nå",
         )
     }

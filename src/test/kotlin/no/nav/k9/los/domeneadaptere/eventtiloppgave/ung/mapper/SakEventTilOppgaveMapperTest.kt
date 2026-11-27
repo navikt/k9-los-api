@@ -343,4 +343,17 @@ class SakEventTilOppgaveMapperTest {
             .isEqualTo(Venteårsak.VENT_INNTEKT_RAPPORTERINGSFRIST.kode)
         assertThat(verdier.verdiFor(UngdomsprogramytelsenFelter.Ventetid.AKTIV_FRIST.id)).isEqualTo(frist.toString())
     }
+
+    @Test
+    fun `helautomatisk er false kun når et manuelt aksjonspunkt er utført`() {
+        listOf(
+            emptyList<AksjonspunktTilstandDto>() to "true",
+            listOf(ap(MANUELT_AP), ap(MANUELT_AP, AksjonspunktStatus.AVBRUTT), ap(AUTOPUNKT_AP, AksjonspunktStatus.UTFØRT)) to "true",
+            listOf(ap(MANUELT_AP, AksjonspunktStatus.UTFØRT)) to "false",
+        ).forEach { (aksjonspunkter, forventet) ->
+            assertThat(feltverdier(lagEvent(aksjonspunktTilstander = aksjonspunkter))
+                .verdiFor(UngdomsprogramytelsenFelter.Saksbehandling.HELAUTOMATISK.id))
+                .isEqualTo(forventet)
+        }
+    }
 }

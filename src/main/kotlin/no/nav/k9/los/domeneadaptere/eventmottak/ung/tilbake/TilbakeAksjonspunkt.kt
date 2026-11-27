@@ -1,4 +1,4 @@
-package no.nav.k9.los.domeneadaptere.eventtiloppgave.tilbake
+package no.nav.k9.los.domeneadaptere.eventmottak.ung.tilbake
 
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.KodeverkDto
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.KodeverkVerdiDto
@@ -15,6 +15,15 @@ fun tilbakeAksjonspunktKodeverk(område: Områder): KodeverkDto = KodeverkDto(
     },
 )
 
+fun tilbakeAksjonspunktverdierForFellesKodeverk(): List<KodeverkVerdiDto> =
+    TilbakeAksjonspunkt.entries.map {
+        KodeverkVerdiDto(
+            verdi = it.feltkode,
+            visningsnavn = "Tilbake: ${it.navn}",
+            synlighet = OVER_STREKEN,
+        )
+    }
+
 enum class TilbakeAksjonspunkt(val kode: String, val navn: String, val erAutopunkt: Boolean = false) {
     VURDER_TILBAKEKREVING("5002", "Vurder tilbakekreving"),
     VURDER_FORELDELSE("5003", "Vurder foreldelse"),
@@ -24,6 +33,8 @@ enum class TilbakeAksjonspunkt(val kode: String, val navn: String, val erAutopun
     AVKLAR_FAKTA("7003", "Avklar fakta for feilutbetaling"),
     VENT_PA_BRUKER("7001", "Venter på tilbakemelding fra bruker", true),
     VENT_PA_GRUNNLAG("7002", "Venter på tilbakekrevingsgrunnlag fra økonomi", true);
+
+    val feltkode: String get() = "TILBAKE_$kode"
 
     companion object {
         fun fraKode(kode: String): TilbakeAksjonspunkt =

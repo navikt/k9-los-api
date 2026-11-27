@@ -44,7 +44,13 @@ class UngTilbakeEventTilOppgaveMapperTest {
         ytelseTypeKode = ytelse,
         behandlingTypeKode = BehandlingType.TILBAKEKREVING.kode,
         opprettetBehandling = tid.minusDays(1),
-        aksjonspunktKoderMedStatusListe = mapOf("5002" to "OPPR", "5003" to "UTFO", "5004" to "AVBR"),
+        aksjonspunktKoderMedStatusListe = mapOf(
+            "5002" to "OPPR",
+            "5003" to "UTFO",
+            "5004" to "AVBR",
+            "7001" to "UTFO",
+            "7003" to "OPPR",
+        ),
         førsteFeilutbetaling = LocalDate.of(2025, 1, 2),
         feilutbetaltBeløp = BigDecimal("1234.56"),
     )
@@ -73,12 +79,38 @@ class UngTilbakeEventTilOppgaveMapperTest {
             assertEquals(Oppgavestatus.AAPEN, oppgave.status)
             assertTrue(oppgave.feltverdier.all { verdi -> definisjon.felter.any { it.felt.id == verdi.nøkkel } })
             assertTrue(definisjon.felter.filter { it.påkrevd }.all { felt -> oppgave.feltverdier.any { it.nøkkel == felt.felt.id && it.verdi != null } })
+            assertTrue(definisjon.felter.none { it.felt.id in setOf("løsbartAksjonspunkt", "fremtidigAksjonspunkt") })
             val felt = oppgave.feltverdier.associate { it.nøkkel to it.verdi }
             assertEquals("1234.56", felt["feilutbetaltBeløp"])
             assertEquals("2025-01-02", felt["førsteFeilutbetalingDato"])
-            assertEquals("5002", felt["tilbakeLøsbartAksjonspunkt"])
-            assertEquals("5003", felt["tilbakeUtførtAksjonspunkt"])
-            assertEquals("5004", felt["tilbakeAvbruttAksjonspunkt"])
+            assertEquals(
+                setOf("5002", "7003"),
+                oppgave.feltverdier.filter { it.nøkkel == "tilbakeLøsbartAksjonspunkt" }.mapNotNull { it.verdi }.toSet(),
+            )
+            assertEquals(
+                setOf("5003", "7001"),
+                oppgave.feltverdier.filter { it.nøkkel == "tilbakeUtførtAksjonspunkt" }.mapNotNull { it.verdi }.toSet(),
+            )
+            assertEquals(
+                setOf("5004"),
+                oppgave.feltverdier.filter { it.nøkkel == "tilbakeAvbruttAksjonspunkt" }.mapNotNull { it.verdi }.toSet(),
+            )
+            assertEquals(
+                setOf("TILBAKE_5002", "TILBAKE_5003", "TILBAKE_5004", "TILBAKE_7001", "TILBAKE_7003"),
+                oppgave.feltverdier.filter { it.nøkkel == "aksjonspunkt" }.mapNotNull { it.verdi }.toSet(),
+            )
+            assertEquals(
+                setOf("TILBAKE_5002", "TILBAKE_7003"),
+                oppgave.feltverdier.filter { it.nøkkel == "aktivtAksjonspunkt" }.mapNotNull { it.verdi }.toSet(),
+            )
+            assertEquals(
+                setOf("TILBAKE_5003", "TILBAKE_7001"),
+                oppgave.feltverdier.filter { it.nøkkel == "utførtAksjonspunkt" }.mapNotNull { it.verdi }.toSet(),
+            )
+            assertEquals(
+                setOf("TILBAKE_5004"),
+                oppgave.feltverdier.filter { it.nøkkel == "avbruttAksjonspunkt" }.mapNotNull { it.verdi }.toSet(),
+            )
         }
         AktivitetspengerOppgavetyper.tilDto("https://example.test")
         UngdomsprogramytelsenOppgavetyper.tilDto()
@@ -102,8 +134,8 @@ class UngTilbakeEventTilOppgaveMapperTest {
         }
         val avpOppgave = AvpTilbakeMapper.lagOppgaveDto(avpEvent, null, 0).dto
         val ungOppgave = UngTilbakeEventTilOppgaveMapper.lagOppgaveDto(ungEvent, null, 0).dto
-        assertTrue(avpOppgave.feltverdier.any { it.nøkkel == "helautomatisk" })
-        assertTrue(ungOppgave.feltverdier.none { it.nøkkel == "helautomatisk" })
+        assertEquals("false", avpOppgave.feltverdier.single { it.nøkkel == "helautomatisk" }.verdi)
+        assertEquals("false", ungOppgave.feltverdier.single { it.nøkkel == "helautomatisk" }.verdi)
         assertEquals("AKT_t_1234567890123", avpOppgave.reservasjonsnøkkel)
         assertEquals("UPY_t_1234567890123", ungOppgave.reservasjonsnøkkel)
     }

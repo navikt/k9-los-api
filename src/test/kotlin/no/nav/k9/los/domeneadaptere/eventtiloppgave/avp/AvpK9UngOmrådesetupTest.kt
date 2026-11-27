@@ -122,6 +122,18 @@ class AvpK9UngOmrådesetupTest {
             Venteårsak::class.java.simpleName,
         ).forEach { assertThat(kodeverk.medEksternId(it).uttømmende).isFalse() }
     }
-}
 
+    @Test
+    fun `tilbakeaksjonspunkt har prefiks i felles aksjonspunktkodeverk`() {
+        val verdier = kjørSetup()
+            .kodeverk
+            .medEksternId(AksjonspunktDefinisjon::class.java.simpleName)
+            .verdier
+
+        assertThat(verdier.map { it.verdi }.distinct()).hasSize(verdier.size)
+        assertThat(verdier.single { it.verdi == "TILBAKE_7003" }.visningsnavn)
+            .isEqualTo("Tilbake: Avklar fakta for feilutbetaling")
+        assertThat(verdier.single { it.verdi == "7003" }.visningsnavn).isNotEqualTo("Tilbake: Avklar fakta for feilutbetaling")
+    }
+}
 

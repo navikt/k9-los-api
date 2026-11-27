@@ -44,7 +44,7 @@ class UngOppgaveTilDVHMapper {
             saksbehandler = oppgave.hentVerdi(UngdomsprogramytelsenFelter.Saksbehandling.ANSVARLIG_SAKSBEHANDLER.id),
             ansvarligEnhetKode = oppgave.hentVerdi(UngdomsprogramytelsenFelter.Vedtak.BEHANDLENDE_ENHET.id), //dvh kaller fagsystemets behandlende enhet for ansvarlig enhet. De utleder en egen behandlende enhet baser på ansvarlig saksbehandlers enhetstilhørighet
             totrinnsbehandling = oppgave.hentVerdi(UngdomsprogramytelsenFelter.Vedtak.TOTRINNSKONTROLL.id)?.toBoolean(),
-            helautomatiskBehandlet = null, // TODO
+            helautomatiskBehandlet = oppgave.hentVerdi(UngdomsprogramytelsenFelter.Saksbehandling.HELAUTOMATISK.id)?.toBoolean(),
             avsender = "K9los",
             relatertBehandlingId = null, // TODO: klage
             relatertBehandlingFagsystem = if (oppgave.oppgavetype.eksternId == UngOppgavetypenavn.UNGDOMSPROGRAMYTELSENKLAGE.kode) "ung-sak" else null,

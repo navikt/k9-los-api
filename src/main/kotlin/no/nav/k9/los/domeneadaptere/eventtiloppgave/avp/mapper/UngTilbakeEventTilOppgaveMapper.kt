@@ -4,7 +4,7 @@ import no.nav.k9.los.domeneadaptere.eventlager.EventLagret
 import no.nav.k9.los.domeneadaptere.eventlager.Fagsystem
 import no.nav.k9.los.domeneadaptere.eventmottak.ung.tilbake.UngTilbakeEventDto
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.kodeverk.AvpOppgavetypenavn
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.tilbake.TilbakeAksjonspunkt
+import no.nav.k9.los.domeneadaptere.eventmottak.ung.tilbake.TilbakeAksjonspunkt
 import no.nav.k9.los.kodeverk.AksjonspunktStatus
 import no.nav.k9.los.kodeverk.BehandlingStatus
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
@@ -63,6 +63,10 @@ object UngTilbakeEventTilOppgaveMapper {
         liste("tilbakeLøsbartAksjonspunkt", åpne.filterNot { it.erAutopunkt }.map { it.kode })
         liste("tilbakeUtførtAksjonspunkt", aksjonspunkter.filter { it.second == AksjonspunktStatus.UTFØRT.kode }.map { it.first.kode })
         liste("tilbakeAvbruttAksjonspunkt", aksjonspunkter.filter { it.second == AksjonspunktStatus.AVBRUTT.kode }.map { it.first.kode })
+        liste("aksjonspunkt", aksjonspunkter.map { it.first.feltkode })
+        liste("aktivtAksjonspunkt", aksjonspunkter.filter { it.second == AksjonspunktStatus.OPPRETTET.kode }.map { it.first.feltkode })
+        liste("utførtAksjonspunkt", aksjonspunkter.filter { it.second == AksjonspunktStatus.UTFØRT.kode }.map { it.first.feltkode })
+        liste("avbruttAksjonspunkt", aksjonspunkter.filter { it.second == AksjonspunktStatus.AVBRUTT.kode }.map { it.first.feltkode })
         felt("helautomatisk", aksjonspunkter.none { it.second == AksjonspunktStatus.UTFØRT.kode && !it.first.erAutopunkt })
         val oppgave = OppgaveDto(
             eksternId = event.eksternId.toString(),

@@ -8,6 +8,7 @@ import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.oppgavedefinisjon.Aktivi
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.oppgavedefinisjon.AktivitetspengerFelter.Soknad
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.oppgavedefinisjon.AktivitetspengerFelter.Vedtak
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.oppgavedefinisjon.AktivitetspengerFelter.Ventetid
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.oppgavedefinisjon.AktivitetspengerFelter.Tilbake
 import no.nav.k9.los.oppgavedefinisjon.typesikker.Oppgavefeltsett
 import no.nav.k9.los.oppgavedefinisjon.typesikker.Oppgavetypedefinisjon
 import no.nav.k9.los.oppgavedefinisjon.typesikker.Oppgavetypekatalog
@@ -19,10 +20,6 @@ object AktivitetspengerOppgavetyper : Oppgavetypekatalog(AktivitetspengerFelter)
         påkrevd(Behandling.TYPEKODE)
         påkrevd(Behandling.STATUS)
         valgfri(Behandling.STEG)
-        valgfri(Behandling.ARSAK)
-        påkrevd(Behandling.RESULTATTYPE)
-
-        valgfri(Soknad.NYE_KRAV)
 
         påkrevd(Sak.AKTOR_ID)
         påkrevd(Sak.FAGSYSTEM, visPåOppgave = false)
@@ -31,16 +28,12 @@ object AktivitetspengerOppgavetyper : Oppgavetypekatalog(AktivitetspengerFelter)
         valgfri(Sak.TID_SIDEN_MOTTATT_DATO)
         valgfri(Sak.REGISTRERT_DATO)
 
-        valgfri(Vedtak.DATO)
         påkrevd(Vedtak.YTELSESTYPE)
-        påkrevd(Vedtak.TOTRINNSKONTROLL)
 
         valgfri(Aksjonspunkt.ALLE)
         valgfri(Aksjonspunkt.AKTIVE)
-        valgfri(Aksjonspunkt.LOSBART)
         valgfri(Aksjonspunkt.UTFORT)
         valgfri(Aksjonspunkt.AVBRUTT)
-        valgfri(Aksjonspunkt.FREMTIDIG)
 
         valgfri(Saksbehandling.ANSVARLIG_SAKSBEHANDLER)
         valgfri(Saksbehandling.ANSVARLIG_BESLUTTER)
@@ -48,45 +41,45 @@ object AktivitetspengerOppgavetyper : Oppgavetypekatalog(AktivitetspengerFelter)
         valgfri(Saksbehandling.TID_FORSTE_GANG_HOS_BESLUTTER)
         valgfri(Saksbehandling.BEHANDLENDE_ENHET)
         valgfri(Saksbehandling.HELAUTOMATISK)
-        valgfri(Saksbehandling.UTENLANDSSAK) //TODO: mangler fra ung-sak
-
-        valgfri(Ventetid.AKTIV_ARSAK)
-        valgfri(Ventetid.AKTIV_FRIST)
     }
 
     private fun fagsakUrl(frontendUrl: String) = "$frontendUrl/fagsak/{${Sak.SAKSNUMMER.id}}/"
 
     val ORDINÆR_DEL1 = Oppgavetypedefinisjon(AvpOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1.kode, ::fagsakUrl) {
         inkluder(fellesfelter)
+        valgfri(Aksjonspunkt.LOSBART)
+        valgfri(Aksjonspunkt.FREMTIDIG)
+        valgfri(Behandling.ARSAK)
+        påkrevd(Behandling.RESULTATTYPE)
+        valgfri(Soknad.NYE_KRAV)
+        valgfri(Vedtak.DATO)
+        påkrevd(Vedtak.TOTRINNSKONTROLL)
+        valgfri(Saksbehandling.UTENLANDSSAK) //TODO: mangler fra ung-sak
+        valgfri(Ventetid.AKTIV_ARSAK)
+        valgfri(Ventetid.AKTIV_FRIST)
     }
 
     val ORDINÆR_DEL2 = Oppgavetypedefinisjon(AvpOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2.kode, ::fagsakUrl) {
         inkluder(fellesfelter)
+        valgfri(Aksjonspunkt.LOSBART)
+        valgfri(Aksjonspunkt.FREMTIDIG)
+        valgfri(Behandling.ARSAK)
+        påkrevd(Behandling.RESULTATTYPE)
+        valgfri(Soknad.NYE_KRAV)
+        valgfri(Vedtak.DATO)
+        påkrevd(Vedtak.TOTRINNSKONTROLL)
+        valgfri(Saksbehandling.UTENLANDSSAK) //TODO: mangler fra ung-sak
+        valgfri(Ventetid.AKTIV_ARSAK)
+        valgfri(Ventetid.AKTIV_FRIST)
     }
 
     val TILBAKE = Oppgavetypedefinisjon(AvpOppgavetypenavn.AKTIVITETSPENGERTILBAKE.kode, ::fagsakUrl) {
-        påkrevd(Behandling.UUID)
-        påkrevd(Behandling.TYPEKODE)
-        påkrevd(Behandling.STATUS)
-        valgfri(Behandling.STEG)
-        påkrevd(Sak.AKTOR_ID)
-        påkrevd(Sak.FAGSYSTEM, visPåOppgave = false)
-        påkrevd(Sak.SAKSNUMMER)
-        valgfri(Sak.MOTTATT_DATO)
-        valgfri(Sak.TID_SIDEN_MOTTATT_DATO)
-        valgfri(Sak.REGISTRERT_DATO)
-        påkrevd(Vedtak.YTELSESTYPE)
-        valgfri(Saksbehandling.BEHANDLENDE_ENHET)
-        valgfri(Saksbehandling.ANSVARLIG_SAKSBEHANDLER)
-        valgfri(Saksbehandling.ANSVARLIG_BESLUTTER)
-        valgfri(Saksbehandling.LIGGER_HOS_BESLUTTER)
-        valgfri(Saksbehandling.TID_FORSTE_GANG_HOS_BESLUTTER)
-        valgfri(Saksbehandling.HELAUTOMATISK)
-        valgfri(AktivitetspengerFelter.Tilbake.FORSTE_FEILUTBETALING)
-        valgfri(AktivitetspengerFelter.Tilbake.FEILUTBETALT_BELOP)
-        valgfri(AktivitetspengerFelter.Tilbake.LOSBARE)
-        valgfri(AktivitetspengerFelter.Tilbake.UTFORTE)
-        valgfri(AktivitetspengerFelter.Tilbake.AVBRUTTE)
+        inkluder(fellesfelter)
+        valgfri(Tilbake.FORSTE_FEILUTBETALING)
+        valgfri(Tilbake.FEILUTBETALT_BELOP)
+        valgfri(Tilbake.LOSBARE)
+        valgfri(Tilbake.UTFORTE)
+        valgfri(Tilbake.AVBRUTTE)
     }
 
     //TODO: klage

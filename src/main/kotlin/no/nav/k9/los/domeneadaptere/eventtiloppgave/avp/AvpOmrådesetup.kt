@@ -5,7 +5,8 @@ import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.kodeverk.AvpBehandlendeE
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.kodeverk.AvpOppgavetypenavn
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.oppgavedefinisjon.AktivitetspengerFelter
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.oppgavedefinisjon.AktivitetspengerOppgavetyper
-import no.nav.k9.los.domeneadaptere.eventtiloppgave.tilbake.tilbakeAksjonspunktKodeverk
+import no.nav.k9.los.domeneadaptere.eventmottak.ung.tilbake.tilbakeAksjonspunktKodeverk
+import no.nav.k9.los.domeneadaptere.eventmottak.ung.tilbake.tilbakeAksjonspunktverdierForFellesKodeverk
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.FeltdefinisjonTjeneste
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.KodeverkDto
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.KodeverkVerdiDto
@@ -201,7 +202,7 @@ class AvpOmrådesetup(
             // UNDEFINED har hverken kode eller navn
             verdier = AksjonspunktDefinisjon.entries
                 .filter { it != AksjonspunktDefinisjon.UNDEFINED }
-                .lagDto()
+                .lagDto() + tilbakeAksjonspunktverdierForFellesKodeverk()
         )
     }
 
