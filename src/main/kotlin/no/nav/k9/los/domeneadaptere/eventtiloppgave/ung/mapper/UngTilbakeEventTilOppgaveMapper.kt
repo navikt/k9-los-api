@@ -4,18 +4,28 @@ import no.nav.k9.los.domeneadaptere.eventlager.EventLagret
 import no.nav.k9.los.domeneadaptere.eventlager.Fagsystem
 import no.nav.k9.los.domeneadaptere.eventmottak.ung.tilbake.UngTilbakeEventDto
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.ung.kodeverk.UngOppgavetypenavn
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.ung.oppgavedefinisjon.UngdomsprogramytelsenFelter.Aksjonspunkt
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.ung.oppgavedefinisjon.UngdomsprogramytelsenFelter.Behandling
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.ung.oppgavedefinisjon.UngdomsprogramytelsenFelter.Sak
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.ung.oppgavedefinisjon.UngdomsprogramytelsenFelter.Saksbehandling
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.ung.oppgavedefinisjon.UngdomsprogramytelsenFelter.Tilbake
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.ung.oppgavedefinisjon.UngdomsprogramytelsenFelter.Vedtak
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.ung.oppgavedefinisjon.UngdomsprogramytelsenOppgavetyper
 import no.nav.k9.los.domeneadaptere.eventmottak.ung.tilbake.TilbakeAksjonspunkt
 import no.nav.k9.los.kodeverk.AksjonspunktStatus
 import no.nav.k9.los.kodeverk.BehandlingStatus
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
+import no.nav.k9.los.oppgavedefinisjon.typesikker.Feltverdier
+import no.nav.k9.los.oppgavedefinisjon.typesikker.hent
 import no.nav.k9.los.oppgavemottak.NyOppgaveVersjonInnsending
 import no.nav.k9.los.oppgavemottak.NyOppgaveversjon
 import no.nav.k9.los.oppgavemottak.OppgaveDto
-import no.nav.k9.los.oppgavemottak.OppgaveFeltverdiDto
 import no.nav.k9.los.oppgavemottak.OppgaveV3
 import no.nav.k9.los.oppgavemottak.VaskOppgaveversjon
 import no.nav.ung.kodeverk.behandling.BehandlingType
+import no.nav.ung.kodeverk.behandling.BehandlingStatus as UngBehandlingStatus
+import no.nav.ung.kodeverk.behandling.FagsakYtelseType
 
 object UngTilbakeEventTilOppgaveMapper {
     fun utledReservasjonsnøkkel(event: EventLagret.UngTilbake, erTilBeslutter: Boolean): String {
@@ -36,38 +46,38 @@ object UngTilbakeEventTilOppgaveMapper {
         }
         val åpne = aksjonspunkter.filter { it.second == AksjonspunktStatus.OPPRETTET.kode }.map { it.first }
         val tilBeslutter = TilbakeAksjonspunkt.FATTE_VEDTAK in åpne && TilbakeAksjonspunkt.FORESLA_VEDTAK !in åpne
-        val verdier = mutableListOf<OppgaveFeltverdiDto>()
-        fun felt(nøkkel: String, verdi: Any?) {
-            verdier.add(OppgaveFeltverdiDto(nøkkel = nøkkel, verdi = verdi?.toString()))
-        }
-        fun liste(nøkkel: String, verdierForFelt: List<String>) {
-            if (verdierForFelt.isEmpty()) felt(nøkkel, null) else verdierForFelt.forEach { felt(nøkkel, it) }
-        }
-        felt("behandlingUuid", event.eksternId)
-        felt("behandlingTypekode", event.behandlingTypeKode)
-        felt("behandlingsstatus", event.behandlingStatus)
-        felt("behandlingssteg", event.behandlingSteg)
-        felt("aktorId", event.aktørId)
-        felt("fagsystem", event.fagsystem)
-        felt("saksnummer", event.saksnummer)
-        felt("mottattDato", forrige?.hentVerdi("mottattDato") ?: event.opprettetBehandling)
-        felt("registrertDato", forrige?.hentVerdi("registrertDato") ?: event.opprettetBehandling)
-        felt("ytelsestype", event.ytelseTypeKode)
-        felt("behandlendeEnhet", event.behandlendeEnhet)
-        felt("ansvarligSaksbehandler", event.ansvarligSaksbehandlerIdent ?: forrige?.hentVerdi("ansvarligSaksbehandler"))
-        felt("ansvarligBeslutter", event.ansvarligBeslutterIdent ?: forrige?.hentVerdi("ansvarligBeslutter"))
-        felt("liggerHosBeslutter", tilBeslutter)
-        felt("tidFørsteGangHosBeslutter", forrige?.hentVerdi("tidFørsteGangHosBeslutter") ?: event.eventTid.takeIf { tilBeslutter })
-        felt("førsteFeilutbetalingDato", event.førsteFeilutbetaling ?: forrige?.hentVerdi("førsteFeilutbetalingDato"))
-        felt("feilutbetaltBeløp", event.feilutbetaltBeløp ?: forrige?.hentVerdi("feilutbetaltBeløp"))
-        liste("tilbakeLøsbartAksjonspunkt", åpne.filterNot { it.erAutopunkt }.map { it.kode })
-        liste("tilbakeUtførtAksjonspunkt", aksjonspunkter.filter { it.second == AksjonspunktStatus.UTFØRT.kode }.map { it.first.kode })
-        liste("tilbakeAvbruttAksjonspunkt", aksjonspunkter.filter { it.second == AksjonspunktStatus.AVBRUTT.kode }.map { it.first.kode })
-        liste("aksjonspunkt", aksjonspunkter.map { it.first.feltkode })
-        liste("aktivtAksjonspunkt", aksjonspunkter.filter { it.second == AksjonspunktStatus.OPPRETTET.kode }.map { it.first.feltkode })
-        liste("utførtAksjonspunkt", aksjonspunkter.filter { it.second == AksjonspunktStatus.UTFØRT.kode }.map { it.first.feltkode })
-        liste("avbruttAksjonspunkt", aksjonspunkter.filter { it.second == AksjonspunktStatus.AVBRUTT.kode }.map { it.first.feltkode })
-        felt("helautomatisk", aksjonspunkter.none { it.second == AksjonspunktStatus.UTFØRT.kode && !it.first.erAutopunkt })
+        val verdier = Feltverdier(UngdomsprogramytelsenOppgavetyper.TILBAKE)
+        verdier[Behandling.UUID] = event.eksternId.toString()
+        verdier[Behandling.TYPEKODE] = BehandlingType.fraKode(event.behandlingTypeKode)
+        verdier[Behandling.STATUS] = UngBehandlingStatus.fraKode(event.behandlingStatus)
+        verdier[Behandling.STEG] = event.behandlingSteg
+        verdier[Sak.AKTOR_ID] = event.aktørId
+        verdier[Sak.FAGSYSTEM] = event.fagsystem
+        verdier[Sak.SAKSNUMMER] = event.saksnummer
+        verdier[Sak.MOTTATT_DATO] = forrige?.hent(Sak.MOTTATT_DATO) ?: event.opprettetBehandling
+        verdier[Sak.REGISTRERT_DATO] = forrige?.hent(Sak.REGISTRERT_DATO) ?: event.opprettetBehandling
+        verdier[Vedtak.YTELSESTYPE] = FagsakYtelseType.fraKode(event.ytelseTypeKode)
+        verdier[Vedtak.BEHANDLENDE_ENHET] = event.behandlendeEnhet
+        verdier[Saksbehandling.ANSVARLIG_SAKSBEHANDLER] =
+            event.ansvarligSaksbehandlerIdent ?: forrige?.hent(Saksbehandling.ANSVARLIG_SAKSBEHANDLER)
+        verdier[Saksbehandling.ANSVARLIG_BESLUTTER] =
+            event.ansvarligBeslutterIdent ?: forrige?.hent(Saksbehandling.ANSVARLIG_BESLUTTER)
+        verdier[Saksbehandling.LIGGER_HOS_BESLUTTER] = tilBeslutter
+        verdier[Saksbehandling.TID_FORSTE_GANG_HOS_BESLUTTER] =
+            forrige?.hent(Saksbehandling.TID_FORSTE_GANG_HOS_BESLUTTER) ?: event.eventTid.takeIf { tilBeslutter }
+        verdier[Tilbake.FORSTE_FEILUTBETALING] =
+            event.førsteFeilutbetaling ?: forrige?.hent(Tilbake.FORSTE_FEILUTBETALING)
+        verdier[Tilbake.FEILUTBETALT_BELOP] =
+            event.feilutbetaltBeløp?.toString() ?: forrige?.hent(Tilbake.FEILUTBETALT_BELOP)
+        verdier[Tilbake.LOSBARE] = åpne.filterNot { it.erAutopunkt }.map { it.kode }
+        verdier[Tilbake.UTFORTE] = aksjonspunkter.filter { it.second == AksjonspunktStatus.UTFØRT.kode }.map { it.first.kode }
+        verdier[Tilbake.AVBRUTTE] = aksjonspunkter.filter { it.second == AksjonspunktStatus.AVBRUTT.kode }.map { it.first.kode }
+        verdier[Aksjonspunkt.ALLE] = aksjonspunkter.map { it.first.feltkode }
+        verdier[Aksjonspunkt.AKTIVE] = aksjonspunkter.filter { it.second == AksjonspunktStatus.OPPRETTET.kode }.map { it.first.feltkode }
+        verdier[Aksjonspunkt.UTFORT] = aksjonspunkter.filter { it.second == AksjonspunktStatus.UTFØRT.kode }.map { it.first.feltkode }
+        verdier[Aksjonspunkt.AVBRUTT] = aksjonspunkter.filter { it.second == AksjonspunktStatus.AVBRUTT.kode }.map { it.first.feltkode }
+        verdier[Saksbehandling.HELAUTOMATISK] =
+            aksjonspunkter.none { it.second == AksjonspunktStatus.UTFØRT.kode && !it.first.erAutopunkt }
         val oppgave = OppgaveDto(
             eksternId = event.eksternId.toString(),
             eksternVersjon = event.eventTid.toString(),
@@ -75,7 +85,7 @@ object UngTilbakeEventTilOppgaveMapper {
             status = utledStatus(event, åpne),
             endretTidspunkt = event.eventTid,
             reservasjonsnøkkel = utledReservasjonsnøkkel(eventLagret, tilBeslutter),
-            feltverdier = verdier,
+            feltverdier = verdier.tilDto(),
         )
         return if (eventLagret.erVaskeevent) VaskOppgaveversjon(oppgave, eventnummer) else NyOppgaveversjon(oppgave)
     }

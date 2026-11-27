@@ -13,6 +13,7 @@ import no.nav.k9.los.domeneadaptere.eventtiloppgave.ung.oppgavedefinisjon.Ungdom
 import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.oppgavedefinisjon.Oppgavestatus
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
+import no.nav.k9.los.oppgavemottak.OppgaveFeltverdiDto
 import no.nav.k9.los.oppgavemottak.OppgaveV3
 import no.nav.k9.los.oppgavemottak.VaskOppgaveversjon
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.mapper.UngTilbakeEventTilOppgaveMapper as AvpTilbakeMapper
@@ -180,6 +181,72 @@ class UngTilbakeEventTilOppgaveMapperTest {
         }
         assertThrows(IllegalArgumentException::class.java) {
             lagret(event.copy(behandlingTypeKode = BehandlingType.FØRSTEGANGSSØKNAD.kode)).tilOppgaveversjon(null, 0)
+        }
+    }
+
+    @Test
+    fun `mapper historiske verdier og tomme aksjonspunkter likt i begge områder`() {
+        val tidligere = mockk<OppgaveV3>()
+        every { tidligere.hentVerdi(any()) } answers {
+            when (firstArg<String>()) {
+                "mottattDato" -> "2024-02-03T04:05:06"
+                "registrertDato" -> "2024-03-04T05:06:07"
+                "ansvarligSaksbehandler" -> "S123"
+                "ansvarligBeslutter" -> "B456"
+                "tidFørsteGangHosBeslutter" -> "2024-04-05T06:07:08"
+                "førsteFeilutbetalingDato" -> "2024-05-06"
+                "feilutbetaltBeløp" -> "987.65"
+                else -> null
+            }
+        }
+
+        for ((ytelse, erAktivitetspenger) in listOf(
+            FagsakYtelseType.AKTIVITETSPENGER.kode to true,
+            FagsakYtelseType.UNGDOMSYTELSE.kode to false,
+        )) {
+            val event = event(ytelse).copy(
+                aksjonspunktKoderMedStatusListe = emptyMap(),
+                ansvarligSaksbehandlerIdent = null,
+                ansvarligBeslutterIdent = null,
+                førsteFeilutbetaling = null,
+                feilutbetaltBeløp = null,
+            )
+            val oppgave = if (erAktivitetspenger) {
+                AvpTilbakeMapper.lagOppgaveDto(lagret(event), tidligere, 0).dto
+            } else {
+                UngTilbakeEventTilOppgaveMapper.lagOppgaveDto(lagret(event), tidligere, 0).dto
+            }
+
+            assertEquals(
+                listOf(
+                    OppgaveFeltverdiDto("behandlingUuid", "11111111-2222-3333-4444-555555555555"),
+                    OppgaveFeltverdiDto("behandlingTypekode", BehandlingType.TILBAKEKREVING.kode),
+                    OppgaveFeltverdiDto("behandlingsstatus", "UTRED"),
+                    OppgaveFeltverdiDto("behandlingssteg", "VTILBSTEG"),
+                    OppgaveFeltverdiDto("aktorId", "1234567890123"),
+                    OppgaveFeltverdiDto("fagsystem", "UNGTILBAKE"),
+                    OppgaveFeltverdiDto("saksnummer", "123456"),
+                    OppgaveFeltverdiDto("mottattDato", "2024-02-03T04:05:06"),
+                    OppgaveFeltverdiDto("registrertDato", "2024-03-04T05:06:07"),
+                    OppgaveFeltverdiDto("ytelsestype", ytelse),
+                    OppgaveFeltverdiDto("behandlendeEnhet", "4416"),
+                    OppgaveFeltverdiDto("ansvarligSaksbehandler", "S123"),
+                    OppgaveFeltverdiDto("ansvarligBeslutter", "B456"),
+                    OppgaveFeltverdiDto("liggerHosBeslutter", "false"),
+                    OppgaveFeltverdiDto("tidFørsteGangHosBeslutter", "2024-04-05T06:07:08"),
+                    OppgaveFeltverdiDto("førsteFeilutbetalingDato", "2024-05-06"),
+                    OppgaveFeltverdiDto("feilutbetaltBeløp", "987.65"),
+                    OppgaveFeltverdiDto("tilbakeLøsbartAksjonspunkt", null),
+                    OppgaveFeltverdiDto("tilbakeUtførtAksjonspunkt", null),
+                    OppgaveFeltverdiDto("tilbakeAvbruttAksjonspunkt", null),
+                    OppgaveFeltverdiDto("aksjonspunkt", null),
+                    OppgaveFeltverdiDto("aktivtAksjonspunkt", null),
+                    OppgaveFeltverdiDto("utførtAksjonspunkt", null),
+                    OppgaveFeltverdiDto("avbruttAksjonspunkt", null),
+                    OppgaveFeltverdiDto("helautomatisk", "true"),
+                ),
+                oppgave.feltverdier,
+            )
         }
     }
 }
