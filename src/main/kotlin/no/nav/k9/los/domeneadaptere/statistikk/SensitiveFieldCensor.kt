@@ -14,41 +14,44 @@ object SensitiveFieldCensor {
     fun <T : Any> censor(value: T): T {
         val type = objectMapper.typeFactory.constructType(value.javaClass)
         val node = objectMapper.valueToTree<JsonNode>(value)
-        censor(node, type, force = false)
+        censor(node, type, replacement = null)
         return objectMapper.treeToValue(node, value.javaClass)
     }
 
-    private fun censor(node: JsonNode, type: JavaType, force: Boolean): JsonNode {
+    private fun censor(node: JsonNode, type: JavaType, replacement: String?): JsonNode {
         when (node) {
             is ObjectNode -> {
                 objectMapper.serializationConfig.introspect(type).findProperties().forEach { property ->
-                    val sensitive = force || property.primaryMember?.hasAnnotation(SensitiveField::class.java) == true
+                    val fieldReplacement = replacement
+                        ?: property.primaryMember?.getAnnotation(SensitiveField::class.java)?.replacement
                     val child = node.get(property.name)
                     if (child == null) {
-                        if (sensitive) node.set<JsonNode>(property.name, placeholder(property.primaryType))
+                        if (fieldReplacement != null) {
+                            node.set<JsonNode>(property.name, placeholder(property.primaryType, fieldReplacement))
+                        }
                         return@forEach
                     }
-                    node.set<JsonNode>(property.name, censor(child, property.primaryType, sensitive))
+                    node.set<JsonNode>(property.name, censor(child, property.primaryType, fieldReplacement))
                 }
                 return node
             }
             is ArrayNode -> {
                 val elementType = type.contentType ?: return node
                 for (index in 0 until node.size()) {
-                    node.set(index, censor(node[index], elementType, force))
+                    node.set(index, censor(node[index], elementType, replacement))
                 }
                 return node
             }
-            else -> return if (force) placeholder(type) else node
+            else -> return if (replacement != null) placeholder(type, replacement) else node
         }
     }
 
-    private fun placeholder(type: JavaType): JsonNode {
+    private fun placeholder(type: JavaType, replacement: String): JsonNode {
         return when {
-            type.isTypeOrSubTypeOf(String::class.java) -> JsonNodeFactory.instance.textNode("-5")
+            type.isTypeOrSubTypeOf(String::class.java) -> JsonNodeFactory.instance.textNode(replacement)
             type.isTypeOrSubTypeOf(Number::class.java) ||
                 (type.rawClass.isPrimitive && type.rawClass != Boolean::class.javaPrimitiveType && type.rawClass != Char::class.javaPrimitiveType) ->
-                JsonNodeFactory.instance.numberNode(-5)
+                JsonNodeFactory.instance.numberNode(replacement.toBigDecimalOrNull() ?: -5.toBigDecimal())
             else -> throw IllegalArgumentException("Unsupported @SensitiveField type: ${type.rawClass.name}")
         }
     }
