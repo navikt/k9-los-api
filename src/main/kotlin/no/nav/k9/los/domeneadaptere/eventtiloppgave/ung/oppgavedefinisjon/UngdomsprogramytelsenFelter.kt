@@ -2,6 +2,7 @@ package no.nav.k9.los.domeneadaptere.eventtiloppgave.ung.oppgavedefinisjon
 
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.ung.kodeverk.UngBehandlendeEnhet
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.ung.kodeverk.UngFagsystem
+import no.nav.k9.los.domeneadaptere.eventmottak.ung.tilbake.TilbakeAksjonspunkt
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.Synlighet.INTERNT
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.Synlighet.OVER_STREKEN
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.Synlighet.UNDER_STREKEN
@@ -19,7 +20,7 @@ import no.nav.ung.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
 import no.nav.ung.kodeverk.behandling.aksjonspunkt.Venteårsak
 
 object UngdomsprogramytelsenFelter : Feltkatalog(Områder.UNGDOMSPROGRAMYTELSEN) {
-    override val grupper get() = listOf(Behandling, Soknad, Sak, Vedtak, Aksjonspunkt, Saksbehandling, Ventetid)
+    override val grupper get() = listOf(Behandling, Soknad, Sak, Vedtak, Aksjonspunkt, Saksbehandling, Ventetid, Tilbake)
 
     object Behandling : Feltgruppe() {
         val UUID = string("behandlingUuid", "Behandling", INTERNT)
@@ -54,28 +55,28 @@ object UngdomsprogramytelsenFelter : Feltkatalog(Områder.UNGDOMSPROGRAMYTELSEN)
     }
 
     object Aksjonspunkt : Feltgruppe() {
-        val ALLE = kodeliste(
-            "aksjonspunkt", "Løsbare, fremtidige og tidligere aksjonspunkt", UNDER_STREKEN, AksjonspunktDefinisjon::class,
+        val ALLE = stringliste(
+            "aksjonspunkt", "Løsbare, fremtidige og tidligere aksjonspunkt", UNDER_STREKEN, kodeverk = AksjonspunktDefinisjon::class,
             beskrivelse = "Løsbare- (se aksjonspunkt som kan løses), fremtidige- (se Løsbare og fremtidige aksjonspunkt) og løste aksjonspunkt",
         )
-        val AKTIVE = kodeliste(
-            "aktivtAksjonspunkt", "Løsbare og fremtidige aksjonspunkt", UNDER_STREKEN, AksjonspunktDefinisjon::class,
+        val AKTIVE = stringliste(
+            "aktivtAksjonspunkt", "Løsbare og fremtidige aksjonspunkt", UNDER_STREKEN, kodeverk = AksjonspunktDefinisjon::class,
             beskrivelse = "Løsbare aksjonspunkt (se aksjonspunkt som kan løses) og åpne aksjonspunkter som kan løses først når behandlingen når riktig steg",
         )
-        val LOSBART = kode(
-            "løsbartAksjonspunkt", "Aksjonspunkt: løsbart", OVER_STREKEN, AksjonspunktDefinisjon::class,
+        val LOSBART = string(
+            "løsbartAksjonspunkt", "Aksjonspunkt: løsbart", OVER_STREKEN, kodeverk = AksjonspunktDefinisjon::class,
             beskrivelse = "Åpne aksjonspunkt som er løsbart akkurat nå, fordi de hører til steget behandlingen står i",
         )
-        val UTFORT = kodeliste(
-            "utførtAksjonspunkt", "Aksjonspunkt: utførte", UNDER_STREKEN, AksjonspunktDefinisjon::class,
+        val UTFORT = stringliste(
+            "utførtAksjonspunkt", "Aksjonspunkt: utførte", UNDER_STREKEN, kodeverk = AksjonspunktDefinisjon::class,
             beskrivelse = "Aksjonspunkter som er utført",
         )
-        val AVBRUTT = kodeliste(
-            "avbruttAksjonspunkt", "Aksjonspunkt: avbrutte", UNDER_STREKEN, AksjonspunktDefinisjon::class,
+        val AVBRUTT = stringliste(
+            "avbruttAksjonspunkt", "Aksjonspunkt: avbrutte", UNDER_STREKEN, kodeverk = AksjonspunktDefinisjon::class,
             beskrivelse = "Aksjonspunkter som er avbrutt",
         )
-        val FREMTIDIG = kodeliste(
-            "fremtidigAksjonspunkt", "Aksjonspunkt: fremtidige", UNDER_STREKEN, AksjonspunktDefinisjon::class,
+        val FREMTIDIG = stringliste(
+            "fremtidigAksjonspunkt", "Aksjonspunkt: fremtidige", UNDER_STREKEN, kodeverk = AksjonspunktDefinisjon::class,
             beskrivelse = "Åpne aksjonspunkter som ikke kan løses i steget behandlingen står i nå",
         )
     }
@@ -87,11 +88,19 @@ object UngdomsprogramytelsenFelter : Feltkatalog(Områder.UNGDOMSPROGRAMYTELSEN)
         val TID_FORSTE_GANG_HOS_BESLUTTER = timestamp(
             "tidFørsteGangHosBeslutter", "Tidspunkt oppgaven gikk til beslutter første gang", OVER_STREKEN,
         )
+        val HELAUTOMATISK = boolean("helautomatisk", "Helautomatisk behandlet", OVER_STREKEN)
     }
 
     object Ventetid : Feltgruppe() {
         val AKTIV_ARSAK = kode("aktivVenteårsak", "Aktiv venteårsak", UNDER_STREKEN, Venteårsak::class)
         val AKTIV_FRIST = timestamp("aktivVentefrist", "Aktiv ventefrist", UNDER_STREKEN)
     }
-}
 
+    object Tilbake : Feltgruppe() {
+        val FORSTE_FEILUTBETALING = dato("førsteFeilutbetalingDato", "Første feilutbetaling", UNDER_STREKEN)
+        val FEILUTBETALT_BELOP = string("feilutbetaltBeløp", "Feilutbetalt beløp", OVER_STREKEN)
+        val LOSBARE = stringliste("tilbakeLøsbartAksjonspunkt", "Løsbare aksjonspunkter", OVER_STREKEN, kodeverk = TilbakeAksjonspunkt::class)
+        val UTFORTE = stringliste("tilbakeUtførtAksjonspunkt", "Utførte aksjonspunkter", UNDER_STREKEN, kodeverk = TilbakeAksjonspunkt::class)
+        val AVBRUTTE = stringliste("tilbakeAvbruttAksjonspunkt", "Avbrutte aksjonspunkter", UNDER_STREKEN, kodeverk = TilbakeAksjonspunkt::class)
+    }
+}

@@ -7,6 +7,9 @@ import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.kodeverk.K9Oppgavetypenav
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.punsjtillos.PunsjEventTilOppgaveMapper
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.saktillos.SakEventTilOppgaveMapper
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.tilbaketillos.TilbakeEventTilOppgaveMapper
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.kodeverk.AvpOppgavetypenavn
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.ung.kodeverk.UngOppgavetypenavn
+import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.k9.los.infrastruktur.utils.IkkeImplementertException
 import no.nav.k9.los.oppgavemottak.NyOppgaveVersjonInnsending
 import no.nav.k9.los.oppgavemottak.OppgaveV3
@@ -15,7 +18,9 @@ import no.nav.ung.kodeverk.behandling.BehandlingType
 import no.nav.ung.kodeverk.behandling.BehandlingType.fraKode
 import no.nav.ung.kodeverk.behandling.FagsakYtelseType
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.mapper.SakEventTilOppgaveMapper as AktSakEventTilOppgaveMapper
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.mapper.UngTilbakeEventTilOppgaveMapper as AktTilbakeEventTilOppgaveMapper
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.ung.mapper.SakEventTilOppgaveMapper as UpySakEventTilOppgaveMapper
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.ung.mapper.UngTilbakeEventTilOppgaveMapper as UpyTilbakeEventTilOppgaveMapper
 
 /**
  * Ruting fra lagret event til riktig mapper. Mapperne er rene funksjoner – eventuelle
@@ -29,6 +34,11 @@ internal fun EventLagret.tilOppgaveversjon(
     is EventLagret.K9Tilbake -> TilbakeEventTilOppgaveMapper.lagOppgaveDto(this, forrigeOppgaveversjon, eventnummer)
     is EventLagret.K9Klage -> KlageEventTilOppgaveMapper.lagOppgaveDto(this, forrigeOppgaveversjon, eventnummer)
     is EventLagret.K9Punsj -> PunsjEventTilOppgaveMapper.lagOppgaveDto(this, forrigeOppgaveversjon)
+    is EventLagret.UngTilbake -> when (område) {
+        Områder.AKTIVITETSPENGER -> AktTilbakeEventTilOppgaveMapper.lagOppgaveDto(this, forrigeOppgaveversjon, eventnummer)
+        Områder.UNGDOMSPROGRAMYTELSEN -> UpyTilbakeEventTilOppgaveMapper.lagOppgaveDto(this, forrigeOppgaveversjon, eventnummer)
+        Områder.K9 -> throw IllegalArgumentException("UNGTILBAKE støtter ikke K9")
+    }
     is EventLagret.UngSak -> {
         when (FagsakYtelseType.fraKode(eventDto.ytelseTypeKode)) {
             FagsakYtelseType.AKTIVITETSPENGER -> {
@@ -51,6 +61,11 @@ internal fun EventLagret.oppgavetypeKode(): Oppgavetype = when (this) {
     is EventLagret.K9Tilbake -> K9Oppgavetypenavn.TILBAKE
     is EventLagret.K9Klage -> K9Oppgavetypenavn.KLAGE
     is EventLagret.K9Punsj -> K9Oppgavetypenavn.PUNSJ
+    is EventLagret.UngTilbake -> when (område) {
+        Områder.AKTIVITETSPENGER -> AvpOppgavetypenavn.AKTIVITETSPENGERTILBAKE
+        Områder.UNGDOMSPROGRAMYTELSEN -> UngOppgavetypenavn.UNGDOMSPROGRAMYTELSENTILBAKE
+        Områder.K9 -> throw IllegalArgumentException("UNGTILBAKE støtter ikke K9")
+    }
     is EventLagret.UngSak -> when (FagsakYtelseType.fraKode(eventDto.ytelseTypeKode)) {
         FagsakYtelseType.AKTIVITETSPENGER -> AktSakEventTilOppgaveMapper.utledOppgavetype(eventDto)
         FagsakYtelseType.UNGDOMSYTELSE -> UpySakEventTilOppgaveMapper.utledOppgavetype(eventDto)
@@ -69,6 +84,11 @@ internal fun EventLagret.utledReservasjonsnøkkel(erTilBeslutter: Boolean): Stri
     is EventLagret.K9Klage -> KlageEventTilOppgaveMapper.utledReservasjonsnøkkel(this, erTilBeslutter)
     is EventLagret.K9Punsj -> PunsjEventTilOppgaveMapper.utledReservasjonsnøkkel(this)
     is EventLagret.K9Tilbake -> TilbakeEventTilOppgaveMapper.utledReservasjonsnøkkel(this, erTilBeslutter)
+    is EventLagret.UngTilbake -> when (område) {
+        Områder.AKTIVITETSPENGER -> AktTilbakeEventTilOppgaveMapper.utledReservasjonsnøkkel(this, erTilBeslutter)
+        Områder.UNGDOMSPROGRAMYTELSEN -> UpyTilbakeEventTilOppgaveMapper.utledReservasjonsnøkkel(this, erTilBeslutter)
+        Områder.K9 -> throw IllegalArgumentException("UNGTILBAKE støtter ikke K9")
+    }
     is EventLagret.UngSak -> when (FagsakYtelseType.fraKode(eventDto.ytelseTypeKode)) {
         FagsakYtelseType.AKTIVITETSPENGER -> AktSakEventTilOppgaveMapper.utledReservasjonsnokkel(this, erTilBeslutter)
         FagsakYtelseType.UNGDOMSYTELSE -> UpySakEventTilOppgaveMapper.utledReservasjonsnokkel(this, erTilBeslutter)

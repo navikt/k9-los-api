@@ -107,6 +107,8 @@ object SakEventTilOppgaveMapper {
         val prefiks = when (utledOppgavetype(event)) {
             UngOppgavetypenavn.UNGDOMSPROGRAMYTELSENORDINÆR -> "UPY_b_del1"
             UngOppgavetypenavn.UNGDOMSPROGRAMYTELSENKLAGE -> "UPY_k"
+
+            UngOppgavetypenavn.UNGDOMSPROGRAMYTELSENTILBAKE -> throw IllegalStateException("Ugyldig oppgavetype for UNGSAK")
         }
         return if (tilBeslutter) {
             "${prefiks}_${event.aktørId}_beslutter"
@@ -171,6 +173,9 @@ object SakEventTilOppgaveMapper {
         verdier[Vedtak.BEHANDLENDE_ENHET] = event.behandlendeEnhet
 
         verdier[Saksbehandling.LIGGER_HOS_BESLUTTER] = erTilBeslutter(event)
+        verdier[Saksbehandling.HELAUTOMATISK] = event.aksjonspunktTilstander.none {
+            it.status == AksjonspunktStatus.UTFØRT && !it.definisjon().erAutopunkt()
+        }
         verdier[Saksbehandling.ANSVARLIG_BESLUTTER] = event.ansvarligBeslutterForTotrinn
         verdier[Saksbehandling.ANSVARLIG_SAKSBEHANDLER] = event.ansvarligSaksbehandlerForTotrinn
         (forrigeOppgave?.hent(Saksbehandling.TID_FORSTE_GANG_HOS_BESLUTTER)
@@ -181,22 +186,22 @@ object SakEventTilOppgaveMapper {
     private fun utledAksjonspunkter(event: UngSakEventDto, verdier: Feltverdier) {
         val åpneAksjonspunkter = getåpneAksjonspunkter(event).map { it.definisjon() }
 
-        verdier[Aksjonspunkt.ALLE] = event.aksjonspunktTilstander.map { it.definisjon() }
-        verdier[Aksjonspunkt.AKTIVE] = åpneAksjonspunkter
+        verdier[Aksjonspunkt.ALLE] = event.aksjonspunktTilstander.map { it.definisjon().kode }
+        verdier[Aksjonspunkt.AKTIVE] = åpneAksjonspunkter.map { it.kode }
         if (åpneAksjonspunkter.isNotEmpty()) {
             verdier[Aksjonspunkt.LOSBART] = event.behandlingSteg?.let { steg ->
-                åpneAksjonspunkter.firstOrNull { !it.erAutopunkt() && it.behandlingSteg?.kode == steg }
+                åpneAksjonspunkter.firstOrNull { !it.erAutopunkt() && it.behandlingSteg?.kode == steg }?.kode
             }
         }
         verdier[Aksjonspunkt.FREMTIDIG] = åpneAksjonspunkter.filter {
             !it.erAutopunkt() && (it.behandlingSteg == null || it.behandlingSteg.kode != event.behandlingSteg)
-        }
+        }.map { it.kode }
         verdier[Aksjonspunkt.UTFORT] = event.aksjonspunktTilstander
             .filter { it.status == AksjonspunktStatus.UTFØRT }
-            .map { it.definisjon() }
+            .map { it.definisjon().kode }
         verdier[Aksjonspunkt.AVBRUTT] = event.aksjonspunktTilstander
             .filter { it.status == AksjonspunktStatus.AVBRUTT }
-            .map { it.definisjon() }
+            .map { it.definisjon().kode }
     }
 
     private fun utledTotrinnskontroll(event: UngSakEventDto, verdier: Feltverdier) {
@@ -217,4 +222,3 @@ object SakEventTilOppgaveMapper {
         verdier[Ventetid.AKTIV_FRIST] = ventendeAksjonspunkt?.fristTid
     }
 }
-

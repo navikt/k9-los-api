@@ -19,10 +19,6 @@ object UngdomsprogramytelsenOppgavetyper : Oppgavetypekatalog(Ungdomsprogramytel
         påkrevd(Behandling.TYPEKODE)
         påkrevd(Behandling.STATUS)
         valgfri(Behandling.STEG)
-        valgfri(Behandling.ARSAK)
-        påkrevd(Behandling.RESULTATTYPE)
-
-        valgfri(Soknad.NYE_KRAV)
 
         påkrevd(Sak.AKTOR_ID)
         påkrevd(Sak.FAGSYSTEM, visPåOppgave = false)
@@ -31,25 +27,19 @@ object UngdomsprogramytelsenOppgavetyper : Oppgavetypekatalog(Ungdomsprogramytel
         valgfri(Sak.TID_SIDEN_MOTTATT_DATO)
         valgfri(Sak.REGISTRERT_DATO)
 
-        valgfri(Vedtak.DATO)
         påkrevd(Vedtak.YTELSESTYPE)
         valgfri(Vedtak.BEHANDLENDE_ENHET)
-        påkrevd(Vedtak.TOTRINNSKONTROLL)
 
         valgfri(Aksjonspunkt.ALLE)
         valgfri(Aksjonspunkt.AKTIVE)
-        valgfri(Aksjonspunkt.LOSBART)
         valgfri(Aksjonspunkt.UTFORT)
         valgfri(Aksjonspunkt.AVBRUTT)
-        valgfri(Aksjonspunkt.FREMTIDIG)
 
         valgfri(Saksbehandling.ANSVARLIG_SAKSBEHANDLER)
         valgfri(Saksbehandling.ANSVARLIG_BESLUTTER)
         valgfri(Saksbehandling.LIGGER_HOS_BESLUTTER)
         valgfri(Saksbehandling.TID_FORSTE_GANG_HOS_BESLUTTER)
-
-        valgfri(Ventetid.AKTIV_ARSAK)
-        valgfri(Ventetid.AKTIV_FRIST)
+        valgfri(Saksbehandling.HELAUTOMATISK)
     }
 
     /**
@@ -57,15 +47,40 @@ object UngdomsprogramytelsenOppgavetyper : Oppgavetypekatalog(Ungdomsprogramytel
      */
     val ORDINÆR = Oppgavetypedefinisjon(UngOppgavetypenavn.UNGDOMSPROGRAMYTELSENORDINÆR.kode, behandlingsUrl = null) {
         inkluder(fellesfelter)
+        valgfri(Aksjonspunkt.LOSBART)
+        valgfri(Aksjonspunkt.FREMTIDIG)
+        valgfri(Behandling.ARSAK)
+        påkrevd(Behandling.RESULTATTYPE)
+        valgfri(Soknad.NYE_KRAV)
+        valgfri(Vedtak.DATO)
+        påkrevd(Vedtak.TOTRINNSKONTROLL)
+        valgfri(Ventetid.AKTIV_ARSAK)
+        valgfri(Ventetid.AKTIV_FRIST)
     }
 
     val KLAGE = Oppgavetypedefinisjon(UngOppgavetypenavn.UNGDOMSPROGRAMYTELSENKLAGE.kode, behandlingsUrl = null) {
         inkluder(fellesfelter)
+        valgfri(Aksjonspunkt.LOSBART)
+        valgfri(Aksjonspunkt.FREMTIDIG)
+        valgfri(Behandling.ARSAK)
+        påkrevd(Behandling.RESULTATTYPE)
+        valgfri(Soknad.NYE_KRAV)
+        valgfri(Vedtak.DATO)
+        påkrevd(Vedtak.TOTRINNSKONTROLL)
+        valgfri(Ventetid.AKTIV_ARSAK)
+        valgfri(Ventetid.AKTIV_FRIST)
     }
 
-    //TODO: feilutbetaling
-    override val oppgavetyper = listOf(ORDINÆR, KLAGE)
+    val TILBAKE = Oppgavetypedefinisjon(UngOppgavetypenavn.UNGDOMSPROGRAMYTELSENTILBAKE.kode, behandlingsUrl = null) {
+        inkluder(fellesfelter)
+        valgfri(UngdomsprogramytelsenFelter.Tilbake.FORSTE_FEILUTBETALING)
+        valgfri(UngdomsprogramytelsenFelter.Tilbake.FEILUTBETALT_BELOP)
+        valgfri(UngdomsprogramytelsenFelter.Tilbake.LOSBARE)
+        valgfri(UngdomsprogramytelsenFelter.Tilbake.UTFORTE)
+        valgfri(UngdomsprogramytelsenFelter.Tilbake.AVBRUTTE)
+    }
+
+    override val oppgavetyper = listOf(ORDINÆR, KLAGE, TILBAKE)
 
     fun hent(oppgavetype: UngOppgavetypenavn) = hent(oppgavetype.kode)
 }
-

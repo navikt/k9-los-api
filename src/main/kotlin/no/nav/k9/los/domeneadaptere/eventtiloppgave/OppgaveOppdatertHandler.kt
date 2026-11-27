@@ -69,6 +69,9 @@ class OppgaveOppdatertHandler(
             is EventLagret.K9Klage  -> håndterKlageOppdatert(eventLagret, oppgave, tx)
             is EventLagret.K9Punsj  -> håndterPunsjOppdatert(oppgave, tx)
             is EventLagret.UngSak   -> håndterUngsakOppdatert(eventLagret, oppgave, tx)
+            is EventLagret.UngTilbake -> if (oppgave.status == Oppgavestatus.LUKKET || oppgave.status == Oppgavestatus.VENTER) {
+                annullerReservasjonerHvisAlleOppgaverPåVentEllerAvsluttet(eventLagret, oppgave, tx)
+            }
             else                     -> throw IkkeImplementertException("Håndtering av eventLagret=${eventLagret::class.simpleName} er ikke implementert")
         }
     }

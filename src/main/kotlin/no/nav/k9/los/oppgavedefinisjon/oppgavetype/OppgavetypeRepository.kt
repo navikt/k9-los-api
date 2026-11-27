@@ -4,8 +4,9 @@ import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
-import no.nav.k9.los.domeneadaptere.eventlager.Fagsystem
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.avp.kodeverk.AvpOppgavetypenavn
 import no.nav.k9.los.domeneadaptere.eventtiloppgave.k9.kodeverk.K9Oppgavetypenavn
+import no.nav.k9.los.domeneadaptere.eventtiloppgave.ung.kodeverk.UngOppgavetypenavn
 import no.nav.k9.los.feilhandtering.IllegalDeleteException
 import no.nav.k9.los.oppgavemottak.feltutlederforlagring.GyldigeFeltutledere
 import no.nav.k9.los.oppgavedefinisjon.feltdefinisjon.FeltdefinisjonRepository
@@ -228,7 +229,8 @@ class OppgavetypeRepository(
     ): Int {
         val fagsystem = when (oppgavetype.område.tilOmråderEnum()) {
             Områder.K9 -> K9Oppgavetypenavn.fraKode(oppgavetype.eksternId).fagsystem
-            Områder.AKTIVITETSPENGER, Områder.UNGDOMSPROGRAMYTELSEN -> Fagsystem.UNGSAK
+            Områder.AKTIVITETSPENGER -> AvpOppgavetypenavn.fraKode(oppgavetype.eksternId).fagsystem
+            Områder.UNGDOMSPROGRAMYTELSEN -> UngOppgavetypenavn.fraKode(oppgavetype.eksternId).fagsystem
         }
         return tx.run(
             queryOf(

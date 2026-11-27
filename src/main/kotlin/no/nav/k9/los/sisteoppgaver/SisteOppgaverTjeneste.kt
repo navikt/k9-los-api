@@ -75,6 +75,7 @@ class SisteOppgaverTjeneste(
                             "k9klage" -> "Klage"
                             AvpOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1.kode, AvpOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2.kode -> ""
                             AvpOppgavetypenavn.AKTIVITETSPENGERKLAGE.kode -> AvpOppgavetypenavn.AKTIVITETSPENGERKLAGE.navn
+                            AvpOppgavetypenavn.AKTIVITETSPENGERTILBAKE.kode -> AvpOppgavetypenavn.AKTIVITETSPENGERTILBAKE.navn
                             else -> oppgave.oppgavetype.eksternId
                         }.let { if (it.isNotEmpty()) " ($it)" else "" }
                         SisteOppgaverDto(

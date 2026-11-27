@@ -9,7 +9,7 @@ import no.nav.k9.los.domeneadaptere.eventmottak.k9.punsj.K9PunsjEventDto
 import no.nav.k9.los.domeneadaptere.eventmottak.k9.sak.K9SakEventDto
 import no.nav.k9.los.domeneadaptere.eventmottak.k9.tilbakekrav.K9TilbakeEventDto
 import no.nav.k9.los.domeneadaptere.eventmottak.ung.sak.UngSakEventDto
-import no.nav.k9.los.infrastruktur.utils.IkkeImplementertException
+import no.nav.k9.los.domeneadaptere.eventmottak.ung.tilbake.UngTilbakeEventDto
 import no.nav.k9.los.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.oppgavedefinisjon.omraade.Områder
 import no.nav.ung.kodeverk.behandling.FagsakYtelseType
@@ -44,7 +44,7 @@ sealed class EventLagret(
             Fagsystem.PUNSJ -> K9Punsj(nøkkelId, eksternId, eksternVersjon, eventJson, opprettet, dirty)
             Fagsystem.K9TILBAKE -> K9Tilbake(nøkkelId, eksternId, eksternVersjon, eventJson, opprettet, dirty)
             Fagsystem.UNGSAK -> UngSak(nøkkelId, eksternId, eksternVersjon, eventJson, opprettet, dirty)
-            Fagsystem.UNGTILBAKE -> throw IkkeImplementertException("Fagsystem $fagsystem is not implemented yet")
+            Fagsystem.UNGTILBAKE -> UngTilbake(nøkkelId, eksternId, eksternVersjon, eventJson, opprettet, dirty)
         }
     }
 
@@ -134,6 +134,28 @@ sealed class EventLagret(
                 FagsakYtelseType.AKTIVITETSPENGER -> Områder.AKTIVITETSPENGER
                 FagsakYtelseType.UNGDOMSYTELSE -> Områder.UNGDOMSPROGRAMYTELSEN
                 else -> throw IllegalArgumentException("Ukjent område for UNGSAK event med ytelseType=${eventDto.ytelseTypeKode}")
+            }
+        }
+    }
+
+    data class UngTilbake(
+        override val nøkkelId: Long,
+        override val eksternId: String,
+        override val eksternVersjon: String,
+        override val eventJson: String,
+        override val opprettet: LocalDateTime,
+        override val dirty: Boolean,
+    ) : EventLagret(nøkkelId, Fagsystem.UNGTILBAKE, eksternId, eksternVersjon, eventJson, opprettet, dirty) {
+        val eventDto: UngTilbakeEventDto by lazy { LosObjectMapper.instance.readValue(eventJson) }
+
+        override val erVaskeevent: Boolean
+            get() = eventDto.eventHendelse == LosEventHendelse.VASKEEVENT
+
+        override val område: Områder by lazy {
+            when (FagsakYtelseType.fraKode(eventDto.ytelseTypeKode)) {
+                FagsakYtelseType.AKTIVITETSPENGER -> Områder.AKTIVITETSPENGER
+                FagsakYtelseType.UNGDOMSYTELSE -> Områder.UNGDOMSPROGRAMYTELSEN
+                else -> throw IllegalArgumentException("Ukjent område for UNGTILBAKE event med ytelseType=${eventDto.ytelseTypeKode}")
             }
         }
     }

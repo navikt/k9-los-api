@@ -10,10 +10,12 @@ import no.nav.k9.los.oppgavemottak.OppgaveDtoType
 enum class AvpOppgavetypenavn(@JsonValue override val kode: String, val navn: String) : OppgaveDtoType, Oppgavetype {
     AKTIVITETSPENGERORDINÆRDEL1("aktivitetspenger-ordinær-del1", "Ord. del 1"),
     AKTIVITETSPENGERORDINÆRDEL2("aktivitetspenger-ordinær-del2", "Ord. del 2"),
-    AKTIVITETSPENGERKLAGE("aktivitetspenger-klage", "Klage");
+    AKTIVITETSPENGERKLAGE("aktivitetspenger-klage", "Klage"),
+    AKTIVITETSPENGERTILBAKE("aktivitetspenger-tilbake", "Tilbakekreving");
 
     override val område: Områder = Områder.AKTIVITETSPENGER
-    override val fagsystem: Fagsystem = Fagsystem.UNGSAK
+    override val fagsystem: Fagsystem
+        get() = if (this == AKTIVITETSPENGERTILBAKE) Fagsystem.UNGTILBAKE else Fagsystem.UNGSAK
 
     companion object {
         @JsonCreator(mode = JsonCreator.Mode.DELEGATING)

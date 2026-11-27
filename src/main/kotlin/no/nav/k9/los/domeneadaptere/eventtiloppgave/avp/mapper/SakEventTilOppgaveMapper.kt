@@ -117,7 +117,8 @@ object SakEventTilOppgaveMapper {
         val del = when (utledOppgavetype(event)) {
             AvpOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1 -> "del1"
             AvpOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2 -> "del2"
-            AvpOppgavetypenavn.AKTIVITETSPENGERKLAGE -> throw NotImplementedError()
+            AvpOppgavetypenavn.AKTIVITETSPENGERKLAGE,
+            AvpOppgavetypenavn.AKTIVITETSPENGERTILBAKE -> throw IllegalStateException("Ugyldig oppgavetype for UNGSAK")
         }
         val behandlingtype = when (BehandlingType.fraKode(eventLagret.eventDto.behandlingTypeKode)) {
             BehandlingType.FØRSTEGANGSSØKNAD,
@@ -196,6 +197,8 @@ object SakEventTilOppgaveMapper {
 
             AvpOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2,
             AvpOppgavetypenavn.AKTIVITETSPENGERKLAGE -> event.behandlendeEnhet
+
+            AvpOppgavetypenavn.AKTIVITETSPENGERTILBAKE -> throw IllegalStateException("Ugyldig oppgavetype for UNGSAK")
         }
 
         verdier[Saksbehandling.LIGGER_HOS_BESLUTTER] = erTilBeslutter(event)
@@ -208,6 +211,8 @@ object SakEventTilOppgaveMapper {
                 AvpOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2,
                 AvpOppgavetypenavn.AKTIVITETSPENGERKLAGE ->
                     definisjon.aksjonspunktType != AksjonspunktType.NAV_KONTOR_MANUELL
+
+                AvpOppgavetypenavn.AKTIVITETSPENGERTILBAKE -> throw IllegalStateException("Ugyldig oppgavetype for UNGSAK")
             }
             it.status == AksjonspunktStatus.UTFØRT &&
                     !definisjon.erAutopunkt() &&
@@ -218,12 +223,16 @@ object SakEventTilOppgaveMapper {
 
             AvpOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2,
             AvpOppgavetypenavn.AKTIVITETSPENGERKLAGE -> event.ansvarligBeslutterForTotrinn
+
+            AvpOppgavetypenavn.AKTIVITETSPENGERTILBAKE -> throw IllegalStateException("Ugyldig oppgavetype for UNGSAK")
         }
         verdier[Saksbehandling.ANSVARLIG_SAKSBEHANDLER] = when (oppgavetype) {
             AvpOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL1 -> event.navKontorAnsvarligSaksbehandler
 
             AvpOppgavetypenavn.AKTIVITETSPENGERORDINÆRDEL2,
             AvpOppgavetypenavn.AKTIVITETSPENGERKLAGE -> event.ansvarligSaksbehandlerForTotrinn
+
+            AvpOppgavetypenavn.AKTIVITETSPENGERTILBAKE -> throw IllegalStateException("Ugyldig oppgavetype for UNGSAK")
         }
         (forrigeOppgave?.hent(Saksbehandling.TID_FORSTE_GANG_HOS_BESLUTTER)
             ?: event.eventTid.takeIf { erTilBeslutter(event) })
@@ -233,22 +242,22 @@ object SakEventTilOppgaveMapper {
     private fun utledAksjonspunkter(event: UngSakEventDto, verdier: Feltverdier) {
         val åpneAksjonspunkter = getåpneAksjonspunkter(event).map { it.definisjon() }
 
-        verdier[Aksjonspunkt.ALLE] = event.aksjonspunktTilstander.map { it.definisjon() }
-        verdier[Aksjonspunkt.AKTIVE] = åpneAksjonspunkter
+        verdier[Aksjonspunkt.ALLE] = event.aksjonspunktTilstander.map { it.definisjon().kode }
+        verdier[Aksjonspunkt.AKTIVE] = åpneAksjonspunkter.map { it.kode }
         if (åpneAksjonspunkter.isNotEmpty()) {
             verdier[Aksjonspunkt.LOSBART] = event.behandlingSteg?.let { steg ->
-                åpneAksjonspunkter.firstOrNull { !it.erAutopunkt() && it.behandlingSteg?.kode == steg }
+                åpneAksjonspunkter.firstOrNull { !it.erAutopunkt() && it.behandlingSteg?.kode == steg }?.kode
             }
         }
         verdier[Aksjonspunkt.FREMTIDIG] = åpneAksjonspunkter.filter {
             !it.erAutopunkt() && (it.behandlingSteg == null || it.behandlingSteg.kode != event.behandlingSteg)
-        }
+        }.map { it.kode }
         verdier[Aksjonspunkt.UTFORT] = event.aksjonspunktTilstander
             .filter { it.status == AksjonspunktStatus.UTFØRT }
-            .map { it.definisjon() }
+            .map { it.definisjon().kode }
         verdier[Aksjonspunkt.AVBRUTT] = event.aksjonspunktTilstander
             .filter { it.status == AksjonspunktStatus.AVBRUTT }
-            .map { it.definisjon() }
+            .map { it.definisjon().kode }
     }
 
     private fun utledTotrinnskontroll(event: UngSakEventDto, verdier: Feltverdier) {
